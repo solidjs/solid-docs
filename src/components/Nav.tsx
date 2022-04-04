@@ -6,7 +6,7 @@ import {
   AccordionHeader,
   AccordionItem,
   AccordionPanel,
-  useHeadlessSelectOptionChild
+  useHeadlessSelectOptionChild,
 } from "solid-headless";
 import { For } from "solid-js";
 
@@ -25,7 +25,7 @@ function NavMenu() {
       class="lg:grow lg:flex flex-col w-full pt-4 pb-8 lg:pb-0 lg:max-w-xs fixed lg:sticky bg-wash dark:bg-wash-dark z-10 sm:top-16"
       classList={{
         "lg:block hidden": true,
-        "block z-40": false
+        "block z-40": false,
       }}
       aria-hidden="false"
     >
@@ -51,49 +51,64 @@ const HomeSections = {
   Foundations: {
     header: "Foundations",
     link: "/learn/foundations",
-    inSubsections: p => p.startsWith("/api/files")
+    inSubsections: (p) => p.startsWith("/api/files"),
   },
   Forms: {
     header: "Forms",
     link: "/api/forms",
-    inSubsections: p => p.startsWith("/api/forms")
+    inSubsections: (p) => p.startsWith("/api/forms"),
   },
   "Server Functions": {
     header: "Server Functions",
     link: "/api/server",
-    inSubsections: p => p.startsWith("/api/server")
+    inSubsections: (p) => p.startsWith("/api/server"),
   },
   Router: {
     header: "Router",
     link: "/api/router",
-    inSubsections: p => p.startsWith("/api/router")
+    inSubsections: (p) => p.startsWith("/api/router"),
   },
   Session: {
     header: "Session",
     link: "/api/session",
-    inSubsections: p => p.startsWith("/api/session")
-  }
+    inSubsections: (p) => p.startsWith("/api/session"),
+  },
 };
 
 const LEARN_SECTIONS = {
+  GettingStartedWithSolid: {
+    header: "Getting Started With Solid",
+    link: "/learn/getting-started",
+    inSubsections: (p) => p.startsWith("/learn/getting-started-with-solid"),
+    subsections: {
+      "Why Solid?": {
+        header: "Why Solid?",
+        link: "/learn/getting-started-with-solid/why-solid",
+      },
+      "From Javascript to Solid": {
+        header: "From Javascript to Solid",
+        link: "/learn/getting-started-with-solid/from-javascript-to-solid",
+      },
+    },
+  },
   Foundations: {
     header: "Foundations",
     link: "/learn/foundations",
     subsections: {
       "About Solid": {
         header: "About Solid",
-        link: "/learn/foundations/about-solid"
+        link: "/learn/foundations/about-solid",
       },
       "From Javascript to Solid": {
         header: "From Javascript to Solid",
-        link: "/learn/foundations/from-javascript-to-solid"
+        link: "/learn/foundations/from-javascript-to-solid",
       },
       "How SolidStart Works?": {
         header: "How SolidStart Works?",
-        link: "/learn/foundations/how-solidstart-works"
-      }
+        link: "/learn/foundations/how-solidstart-works",
+      },
     },
-    inSubsections: p => p.startsWith("/learn/foundations")
+    inSubsections: (p) => p.startsWith("/learn/foundations"),
   },
   "Create Your First App": {
     header: "Create Your First App",
@@ -101,27 +116,27 @@ const LEARN_SECTIONS = {
     subsections: {
       "Create a SolidStart App": {
         header: "Create a SolidStart App",
-        link: "/learn/create-your-first-app/create-a-solidstart-app"
+        link: "/learn/create-your-first-app/create-a-solidstart-app",
       },
       "Navigate between Pages": {
         header: "Navigate between Pages",
-        link: "/learn/create-your-first-app/navigate-between-pages"
+        link: "/learn/create-your-first-app/navigate-between-pages",
       },
       "Assets, Metadata and CSS": {
         header: "Assets, Metadata and CSS",
-        link: "/learn/create-your-first-app/assets-metadata-and-css"
+        link: "/learn/create-your-first-app/assets-metadata-and-css",
       },
       "Data fetching": {
         header: "Data fetching",
-        link: "/learn/create-your-first-app/data-fetching"
+        link: "/learn/create-your-first-app/data-fetching",
       },
       "Dynamic Routes": {
         header: "Dynamic Routes",
-        link: "/learn/create-your-first-app/dynamic-routes"
-      }
+        link: "/learn/create-your-first-app/dynamic-routes",
+      },
     },
-    inSubsections: p => p.startsWith("/learn/create-your-first-app")
-  }
+    inSubsections: (p) => p.startsWith("/learn/create-your-first-app"),
+  },
 };
 
 function HomeNav() {
@@ -135,7 +150,7 @@ function ApiNav() {
 function SectionNav(props) {
   const location = useLocation();
   let section = Object.keys(props.sections).find(
-    k =>
+    (k) =>
       location.pathname.startsWith(props.sections[k].link) ||
       props.sections[k].inSubsections(location.pathname)
   );
@@ -147,8 +162,11 @@ function SectionNav(props) {
       defaultValue={section ? props.sections[section].header : undefined}
     >
       <For each={Object.keys(props.sections)}>
-        {header => (
-          <NavSection href={props.sections[header].link} header={props.sections[header].header}>
+        {(header) => (
+          <NavSection
+            href={props.sections[header].link}
+            header={props.sections[header].header}
+          >
             <For each={Object.keys(props.sections[header].subsections ?? {})}>
               {(subsection, i) => (
                 <NavItem
@@ -300,20 +318,20 @@ const SECTIONS = {
     subsections: {
       "src/root.tsx": {
         header: "src/root.tsx",
-        link: "/api/files/root"
-      }
+        link: "/api/files/root",
+      },
     },
-    inSubsections: p => p.startsWith("/api/files")
+    inSubsections: (p) => p.startsWith("/api/files"),
   },
   Forms: {
     header: "Forms",
     link: "/api/forms",
-    inSubsections: p => p.startsWith("/api/forms")
+    inSubsections: (p) => p.startsWith("/api/forms"),
   },
   "Server Functions": {
     header: "Server Functions",
     link: "/api/server",
-    inSubsections: p => p.startsWith("/api/server")
+    inSubsections: (p) => p.startsWith("/api/server"),
   },
   Router: {
     header: "Router",
@@ -321,59 +339,64 @@ const SECTIONS = {
     subsections: {
       "useParams()": {
         header: "useParams()",
-        link: "/api/router/useParams"
+        link: "/api/router/useParams",
       },
       "useLocation()": {
         header: "useLocation()",
-        link: "/api/router/useLocation"
+        link: "/api/router/useLocation",
       },
       "useNavigate()": {
         header: "useNavigate()",
-        link: "/api/router/useNavigate"
+        link: "/api/router/useNavigate",
       },
       "useIsRouting()": {
         header: "useIsRouting()",
-        link: "/api/router/useIsRouting"
+        link: "/api/router/useIsRouting",
       },
       "useRouteData()": {
         header: "useRouteData()",
-        link: "/api/router/useRouteData"
+        link: "/api/router/useRouteData",
       },
       "useSearchParams()": {
         header: "useSearchParams()",
-        link: "/api/router/useSearchParams"
+        link: "/api/router/useSearchParams",
       },
       "useMatch()": {
         header: "useMatch()",
-        link: "/api/router/useMatch"
+        link: "/api/router/useMatch",
       },
       Navigate: {
         header: "<Navigate>",
-        link: "/api/router/Navigate"
+        link: "/api/router/Navigate",
       },
       NavLink: {
         header: "<NavLink>",
-        link: "/api/router/Navlink"
-      }
+        link: "/api/router/Navlink",
+      },
     },
-    inSubsections: p => p.startsWith("/api/router")
+    inSubsections: (p) => p.startsWith("/api/router"),
   },
   Session: {
     header: "Session",
     link: "/api/session",
-    inSubsections: p => p.startsWith("/api/session")
-  }
+    inSubsections: (p) => p.startsWith("/api/session"),
+  },
 };
 
 function _ApiNav() {
   const location = useLocation();
   let section = Object.keys(SECTIONS).find(
-    k =>
-      location.pathname.startsWith(SECTIONS[k].link) || SECTIONS[k].inSubsections(location.pathname)
+    (k) =>
+      location.pathname.startsWith(SECTIONS[k].link) ||
+      SECTIONS[k].inSubsections(location.pathname)
   );
 
   return (
-    <Accordion as="ul" toggleable defaultValue={section ? SECTIONS[section].header : undefined}>
+    <Accordion
+      as="ul"
+      toggleable
+      defaultValue={section ? SECTIONS[section].header : undefined}
+    >
       <NavSection
         header={SECTIONS.FileNameConventions.header}
         href={SECTIONS.FileNameConventions.link}
@@ -381,10 +404,16 @@ function _ApiNav() {
         <NavItem href="/api/files/root" title="solid-start/root">
           src/root.tsx
         </NavItem>
-        <NavItem href="/api/files/entry-client" title="solid-start/entry-client">
+        <NavItem
+          href="/api/files/entry-client"
+          title="solid-start/entry-client"
+        >
           src/entry-client.tsx
         </NavItem>
-        <NavItem href="/api/files/entry-server" title="solid-start/entry-server">
+        <NavItem
+          href="/api/files/entry-server"
+          title="solid-start/entry-server"
+        >
           src/entry-server.tsx
         </NavItem>
         <NavItem href="/api/files/routes" title="solid-start/entry-server">
@@ -422,7 +451,11 @@ function _ApiNav() {
         >
           createMemorySessionStorage()
         </NavItem>
-        <NavItem href="/api/session/createSessionStorage" end title="createSessionStorage()">
+        <NavItem
+          href="/api/session/createSessionStorage"
+          end
+          title="createSessionStorage()"
+        >
           createSessionStorage()
         </NavItem>
         <NavItem href="/api/session/createCookie" end title="createCookie()">
@@ -454,7 +487,7 @@ function SectionHeader(props) {
             true,
           "text-primary dark:text-primary-dark": !isActive(),
           "text-link dark:text-link-dark bg-highlight dark:bg-highlight-dark border-blue-40 hover:bg-highlight hover:text-link dark:hover:bg-highlight-dark dark:hover:text-link-dark active":
-            isActive()
+            isActive(),
         }}
         onClick={() => !child.isSelected() && child.select()}
         // title={props.faq.question}
@@ -464,7 +497,9 @@ function SectionHeader(props) {
           {props.children}
           <span class={`pr-1`}>
             <CollapsedIcon
-              class={`flex-0 transform ${child.isSelected() ? "rotate-0" : "-rotate-90"} w-5 h-5 `}
+              class={`flex-0 transform ${
+                child.isSelected() ? "rotate-0" : "-rotate-90"
+              } w-5 h-5 `}
             />
           </span>
         </>

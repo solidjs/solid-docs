@@ -75,16 +75,16 @@ const cookieSessionStorage = createCookieSessionStorage({
 import { createForm } from "solid-start/form";
 import server from "solid-start/server";
 
-const newItem = createForm(server(formData => {}));
+const newItem = createForm(server((formData) => {}));
 ```
 
 ```ts twoslash
 import { createForm } from "solid-start/form";
 
 const newItem = createForm({
-  action: formData => {
+  action: (formData) => {
     console.log(formData);
-  }
+  },
 });
 ```
 
@@ -146,8 +146,8 @@ const postMessageForm = createForm(
     if (message.length < 10) {
       throw new FormError("Invalid fields", {
         fieldErrors: {
-          message: "Must be longer than 10 characters."
-        }
+          message: "Must be longer than 10 characters.",
+        },
       });
     }
     await postMessage({ message });
@@ -166,15 +166,15 @@ const postMessageForm = createForm(
     if (message.length < 10) {
       throw new FormError("Invalid fields", {
         fieldErrors: {
-          message: "Must be longer than 10 characters."
-        }
+          message: "Must be longer than 10 characters.",
+        },
       });
       // ---cut---
     } else if (filter.isProfane(message)) {
       throw new FormError("Invalid fields", {
         fieldErrors: {
-          message: "Cannot contain foul language."
-        }
+          message: "Cannot contain foul language.",
+        },
       });
     }
     await postMessage({ message });

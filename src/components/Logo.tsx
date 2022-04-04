@@ -18,7 +18,8 @@ export function Sections() {
           </h4>
           <div class="my-4">
             <p>
-              Learn how to think in React with step-by-step explanations and interactive examples.
+              Learn how to think in React with step-by-step explanations and
+              interactive examples.
             </p>
           </div>
         </div>
@@ -41,8 +42,8 @@ export function Sections() {
           </h4>
           <div class="my-4">
             <p>
-              Look up the API signatures of the various SolidStart modules, and see how could use
-              them
+              Look up the API signatures of the various SolidStart modules, and
+              see how could use them
             </p>
           </div>
         </div>
@@ -119,7 +120,8 @@ export function SolidStartLogo() {
       </svg> */}
       <div class="flex flex-wrap">
         <h1 class="text-5xl mr-4 -mt-1 flex wrap font-bold leading-tight text-primary dark:text-primary-dark">
-          <span class="font-bold">Solid </span> <span class="italic font-normal">Start</span>
+          <span class="font-bold">Solid </span>{" "}
+          <span class="italic font-normal">Start</span>
         </h1>
         <div class="inline-flex self-center px-2 mt-1 bg-highlight dark:bg-highlight-dark w-auto rounded text-link dark:text-link-dark uppercase font-bold tracking-wide text-base whitespace-nowrap">
           Beta

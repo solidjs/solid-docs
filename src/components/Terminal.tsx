@@ -1,6 +1,6 @@
 import { useLocation } from "solid-app-router";
 
-useLocation
+useLocation;
 export default function Terminal() {
   return (
     <section className="my-8 grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-4">
@@ -46,7 +46,10 @@ export default function Terminal() {
             <div className="sp-stack">
               <pre className="sp-cm sp-pristine sp-javascript" translate="no">
                 <div className="cm-editor ͼ1 ͼ2 ͼn">
-                  <div aria-live="polite" style={{ position: "absolute", top: "-10000px" }} />
+                  <div
+                    aria-live="polite"
+                    style={{ position: "absolute", top: "-10000px" }}
+                  />
                   <div tabIndex={-1} className="cm-scroller">
                     <div
                       spellcheck={false}
@@ -61,24 +64,34 @@ export default function Terminal() {
                       data-gramm="false"
                     >
                       <div className="cm-line">
-                        <span className="ͼ10">// Importing a specific API:</span>
+                        <span className="ͼ10">
+                          // Importing a specific API:
+                        </span>
                       </div>
                       <div className="cm-line">
-                        <span className="ͼr">import</span> <span className="ͼz">{"{"}</span>{" "}
-                        <span className="ͼu">useState</span> <span className="ͼz">{"}"}</span>{" "}
-                        <span className="ͼr">from</span> <span className="ͼy">'react'</span>
+                        <span className="ͼr">import</span>{" "}
+                        <span className="ͼz">{"{"}</span>{" "}
+                        <span className="ͼu">useState</span>{" "}
+                        <span className="ͼz">{"}"}</span>{" "}
+                        <span className="ͼr">from</span>{" "}
+                        <span className="ͼy">'react'</span>
                         <span className="ͼz">;</span>
                       </div>
                       <div className="cm-line">
                         <br />
                       </div>
                       <div className="cm-line">
-                        <span className="ͼ10">// Importing all APIs together:</span>
+                        <span className="ͼ10">
+                          // Importing all APIs together:
+                        </span>
                       </div>
                       <div className="cm-line">
-                        <span className="ͼr">import</span> <span className="ͼr">*</span>{" "}
-                        <span className="ͼr">as</span> <span className="ͼu">React</span>{" "}
-                        <span className="ͼr">from</span> <span className="ͼy">'react'</span>
+                        <span className="ͼr">import</span>{" "}
+                        <span className="ͼr">*</span>{" "}
+                        <span className="ͼr">as</span>{" "}
+                        <span className="ͼu">React</span>{" "}
+                        <span className="ͼr">from</span>{" "}
+                        <span className="ͼy">'react'</span>
                         <span className="ͼz">;</span>
                       </div>
                     </div>

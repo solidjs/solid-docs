@@ -15,7 +15,7 @@ import Icons from "unplugin-icons/vite";
 export default defineConfig({
   plugins: [
     Icons({
-      compiler: "solid"
+      compiler: "solid",
       /* options */
     }),
     {
@@ -25,8 +25,11 @@ export default defineConfig({
         providerImportSource: "solid-mdx",
         rehypePlugins: [
           rehypeSlug,
-          [rehypeAutolinkHeadings, { behaviour: "append", test: ["h1", "h2", "h3"] }],
-          [rehypeRaw, { passThrough: nodeTypes }]
+          [
+            rehypeAutolinkHeadings,
+            { behaviour: "append", test: ["h1", "h2", "h3"] },
+          ],
+          [rehypeRaw, { passThrough: nodeTypes }],
         ],
         remarkPlugins: [
           [
@@ -47,14 +50,14 @@ export default defineConfig({
                 jsx: "preserve",
                 types: ["vite/client"],
                 paths: {
-                  "~/*": ["./src/*"]
-                }
-              }
-            }
-          ]
-        ]
+                  "~/*": ["./src/*"],
+                },
+              },
+            },
+          ],
+        ],
       }),
-      enforce: "pre"
+      enforce: "pre",
     },
     {
       name: "twoslash-fix-lsp-linebreaks",
@@ -63,12 +66,12 @@ export default defineConfig({
           return {
             code: code.replace(/lsp="([^"]*)"/g, (match, p1) => {
               return `lsp={\`${p1.replaceAll("`", `\\\``)}\`}`;
-            })
+            }),
           };
         }
         return { code };
       },
-      enforce: "pre"
+      enforce: "pre",
     },
     WindiCSS({
       config: {
@@ -77,16 +80,21 @@ export default defineConfig({
           extend: {
             fontFamily: {
               sans: ["DM Sans", "Inter var", "sans-serif"],
-              mono: ["Source Code Pro", "ui-monospace", "SFMono-Regular", "Menlo"]
+              mono: [
+                "Source Code Pro",
+                "ui-monospace",
+                "SFMono-Regular",
+                "Menlo",
+              ],
             },
             boxShadow: {
-              lg: "0px 0.8px 2px rgba(0,0,0,0.032),0px 2.7px 6.7px rgba(0,0,0,0.048),0px 12px 30px rgba(0,0,0,0.08)"
+              lg: "0px 0.8px 2px rgba(0,0,0,0.032),0px 2.7px 6.7px rgba(0,0,0,0.048),0px 12px 30px rgba(0,0,0,0.08)",
             },
             fontSize: {
               sm: "0.75rem",
               base: "0.9rem",
               lg: "1rem",
-              code: "calc(1em - 20%)"
+              code: "calc(1em - 20%)",
             },
             colors: {
               primary: colors.coolGray[700],
@@ -103,21 +111,21 @@ export default defineConfig({
               "highlight-dark": "rgba(88,175,223,.1)",
               wash: "white",
               "wash-dark": colors.gray[800],
-              "secondary-button": colors.slate[300]
-            }
-          }
-        }
-      }
+              "secondary-button": colors.slate[300],
+            },
+          },
+        },
+      },
     }),
 
     solid({
-      extensions: [".mdx", ".md"]
-    })
+      extensions: [".mdx", ".md"],
+    }),
   ],
   optimizeDeps: {
-    exclude: ["solid-headless"]
+    exclude: ["solid-headless"],
   },
   ssr: {
-    noExternal: ["solid-headless"]
-  }
+    noExternal: ["solid-headless"],
+  },
 });

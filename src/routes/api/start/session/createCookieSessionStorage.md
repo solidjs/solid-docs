@@ -13,8 +13,8 @@ let options = {
     path: "/",
     sameSite: "lax",
     secure: true,
-    httpOnly: true
-  }
+    httpOnly: true,
+  },
 } as const;
 // ---cut---
 const sessionStorage = createCookieSessionStorage(options);

@@ -85,9 +85,9 @@ const LEARN_SECTIONS = {
         header: "Why Solid?",
         link: "/learn/getting-started-with-solid/why-solid",
       },
-      "From Javascript to Solid": {
-        header: "From Javascript to Solid",
-        link: "/learn/getting-started-with-solid/from-javascript-to-solid",
+      "Installing Solid": {
+        header: "Installing Solid",
+        link: "/learn/getting-started-with-solid/installing-solid",
       },
     },
   },

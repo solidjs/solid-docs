@@ -53,7 +53,7 @@ function Anchor(props) {
 }
 
 export default {
-  h1: props => (
+  h1: (props) => (
     <h1
       {...props}
       class="heading mt-0 text-primary dark:text-primary-dark -mx-.5 break-words text-5xl font-bold leading-tight"
@@ -61,9 +61,9 @@ export default {
       {props.children}
     </h1>
   ),
-  ssr: props => <>{props.children}</>,
-  spa: props => <></>,
-  h2: props => (
+  ssr: (props) => <>{props.children}</>,
+  spa: (props) => <></>,
+  h2: (props) => (
     <h2
       {...props}
       class="heading text-3xl leading-10 text-primary dark:text-primary-dark font-bold my-6"
@@ -72,7 +72,7 @@ export default {
       {/* <Anchor text={children(() => props.children)} /> */}
     </h2>
   ),
-  h3: props => (
+  h3: (props) => (
     <h3
       {...props}
       class="heading text-2xl leading-9 text-primary dark:text-primary-dark font-bold my-6"
@@ -80,27 +80,27 @@ export default {
       {props.children}
     </h3>
   ),
-  h4: props => (
+  h4: (props) => (
     <h4 {...props} class="heading text-xl font-bold leading-9 my-4">
       {props.children}
     </h4>
   ),
-  h5: props => (
+  h5: (props) => (
     <h5 {...props} class="text-xl leading-9 my-4 font-medium">
       {props.children}
     </h5>
   ),
-  h6: props => (
+  h6: (props) => (
     <h6 {...props} class="text-xl font-400">
       {props.children}
     </h6>
   ),
-  p: props => (
+  p: (props) => (
     <p {...props} class="text-lg font-400 my-4">
       {props.children}
     </p>
   ),
-  a: props => (
+  a: (props) => (
     <Link
       {...props}
       class="text-link dark:text-link-dark break-normal border-b border-link border-opacity-0 hover:border-opacity-100 duration-100 ease-in transition leading-normal"
@@ -108,37 +108,40 @@ export default {
       {props.children}
     </Link>
   ),
-  li: props => (
+  li: (props) => (
     <li {...props} class="my-2">
       {props.children}
     </li>
   ),
-  ul: props => (
+  ul: (props) => (
     <ul {...props} class="list-disc pl-8 my-2">
       {props.children}
     </ul>
   ),
-  ol: props => (
+  ol: (props) => (
     <ol {...props} class="list-decimal pl-8 my-2">
       {props.children}
     </ol>
   ),
-  nav: props => <nav {...props}>{props.children}</nav>,
+  nav: (props) => <nav {...props}>{props.children}</nav>,
   Link,
-  TesterComponent: props => (
-    <p>Remove This Now!!! If you see this it means that markdown custom components does work</p>
+  TesterComponent: (props) => (
+    <p>
+      Remove This Now!!! If you see this it means that markdown custom
+      components does work
+    </p>
   ),
-  code: props => (
+  code: (props) => (
     <code className="inline text-code font-mono" {...props}>
       {props.children}
     </code>
   ),
-  pre: props => (
+  pre: (props) => (
     <pre classList={{ "font-mono": true }} {...props}>
       {props.children}
     </pre>
   ),
-  "data-lsp": props => {
+  "data-lsp": (props) => {
     const id = createUniqueId();
     createEffect(() => {
       tippy(`[data-template="${id}"]`, {
@@ -146,19 +149,21 @@ export default {
           const template = document.getElementById(id);
           return template.innerHTML;
         },
-        allowHTML: true
+        allowHTML: true,
       });
     });
     return (
       <span class={`data-lsp`} data-template={id}>
         {props.children}
         <div id={id} style="display: none;">
-          <pre class="text-white bg-transparent text-xs p-0 m-0 border-0">{props.lsp}</pre>
+          <pre class="text-white bg-transparent text-xs p-0 m-0 border-0">
+            {props.lsp}
+          </pre>
         </div>
       </span>
     );
   },
-  "docs-error": props => {
+  "docs-error": (props) => {
     return (
       <div class="docs-error">
         <p>
@@ -168,7 +173,7 @@ export default {
       </div>
     );
   },
-  "docs-info": props => {
+  "docs-info": (props) => {
     return (
       <div class="docs-error">
         <p>
@@ -178,15 +183,15 @@ export default {
       </div>
     );
   },
-  response: props => {
+  response: (props) => {
     return <span>{props.children}</span>;
   },
-  void: props => {
+  void: (props) => {
     return <span>{props.children}</span>;
   },
-  unknown: props => {
+  unknown: (props) => {
     return <span>{props.children}</span>;
   },
   terminal: Terminal,
-  title: Title
+  title: Title,
 };

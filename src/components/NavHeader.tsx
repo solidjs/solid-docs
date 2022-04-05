@@ -8,7 +8,7 @@ function ActiveLink(props) {
       classList={{
         [props.className]: true,
         [props.activeClass]: props.isActive(location),
-        [props.inactiveClass]: !props.isActive(location)
+        [props.inactiveClass]: !props.isActive(location),
       }}
     >
       {props.children}
@@ -19,7 +19,11 @@ function ActiveLink(props) {
 export const NavHeader = () => (
   <nav className="sticky top-0 items-center w-full flex lg:block justify-between bg-wash dark:bg-wash-dark pt-0 lg:pt-4 pr-5 lg:px-5 z-50">
     <div className="xl:w-full xl:max-w-xs flex items-center">
-      <button type="button" aria-label="Menu" className="flex lg:hidden items-center h-full px-4">
+      <button
+        type="button"
+        aria-label="Menu"
+        className="flex lg:hidden items-center h-full px-4"
+      >
         <MenuIcon />
       </button>
       <a
@@ -65,7 +69,7 @@ export const NavHeader = () => (
     </div>
     <div className="px-0 pt-2 w-full 2xl:max-w-xs hidden lg:flex items-center self-center border-b-0 lg:border-b border-border dark:border-border-dark">
       <ActiveLink
-        isActive={loc =>
+        isActive={(loc) =>
           loc.pathname.startsWith("/") &&
           !loc.pathname.startsWith("/api") &&
           !loc.pathname.startsWith("/learn")
@@ -77,7 +81,7 @@ export const NavHeader = () => (
         Home
       </ActiveLink>
       <ActiveLink
-        isActive={loc => loc.pathname.startsWith("/learn")}
+        isActive={(loc) => loc.pathname.startsWith("/learn")}
         activeClass="text-link border-link dark:text-link-dark dark:border-link-dark font-bold"
         className="border-transparent inline-flex w-full items-center border-b-2 justify-center text-base leading-9 px-3 py-0.5 hover:text-link dark:hover:text-link-dark whitespace-nowrap"
         href="/learn"
@@ -85,7 +89,7 @@ export const NavHeader = () => (
         Learn
       </ActiveLink>
       <ActiveLink
-        isActive={loc => loc.pathname.startsWith("/api")}
+        isActive={(loc) => loc.pathname.startsWith("/api")}
         activeClass="text-link border-link dark:text-link-dark dark:border-link-dark font-bold"
         className="border-transparent inline-flex w-full items-center border-b-2 justify-center text-base leading-9 px-3 py-0.5 hover:text-link dark:hover:text-link-dark whitespace-nowrap"
         href="/api"
@@ -192,7 +196,13 @@ export function SearchBar() {
 
 function ThumbsUpIcon() {
   return (
-    <svg width={16} height={18} viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      width={16}
+      height={18}
+      viewBox="0 0 16 18"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -205,7 +215,13 @@ function ThumbsUpIcon() {
 
 function ThumbsDownIcon() {
   return (
-    <svg width={16} height={18} viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      width={16}
+      height={18}
+      viewBox="0 0 16 18"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -218,7 +234,12 @@ function ThumbsDownIcon() {
 
 function SearchIcon(props) {
   return (
-    <svg width="1em" height="1em" viewBox="0 0 20 20" class={"align-middle " + props.class}>
+    <svg
+      width="1em"
+      height="1em"
+      viewBox="0 0 20 20"
+      class={"align-middle " + props.class}
+    >
       <path
         d="M14.386 14.386l4.0877 4.0877-4.0877-4.0877c-2.9418 2.9419-7.7115 2.9419-10.6533 0-2.9419-2.9418-2.9419-7.7115 0-10.6533 2.9418-2.9419 7.7115-2.9419 10.6533 0 2.9419 2.9418 2.9419 7.7115 0 10.6533z"
         stroke="currentColor"
@@ -234,7 +255,12 @@ function SearchIcon(props) {
 
 function SunIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={20}
+      height={20}
+      viewBox="0 0 24 24"
+    >
       <g fill="none" fillRule="evenodd" transform="translate(-444 -204)">
         <g fill="currentColor" transform="translate(354 144)">
           <path
@@ -255,7 +281,12 @@ function SunIcon() {
 
 function MoonIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 24 24">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={18}
+      height={18}
+      viewBox="0 0 24 24"
+    >
       <g fill="none" fillRule="evenodd" transform="translate(-444 -204)">
         <path
           fill="currentColor"
@@ -287,7 +318,14 @@ export function Logo(props) {
       viewBox="0 0 166 155.3"
     >
       <defs>
-        <linearGradient id="a" gradientUnits="userSpaceOnUse" x1="27.5" y1="3" x2="152" y2="63.5">
+        <linearGradient
+          id="a"
+          gradientUnits="userSpaceOnUse"
+          x1="27.5"
+          y1="3"
+          x2="152"
+          y2="63.5"
+        >
           <stop offset=".1" stop-color="#76b3e1" />
           <stop offset=".3" stop-color="#dcf2fd" />
           <stop offset="1" stop-color="#76b3e1" />
@@ -338,14 +376,23 @@ export function Logo(props) {
         opacity=".3"
         fill="url(#a)"
       />
-      <path d="m52 35-4 1c-17 5-22 21-13 35 10 13 31 20 48 15l62-21S92 26 52 35z" fill="#518ac8" />
+      <path
+        d="m52 35-4 1c-17 5-22 21-13 35 10 13 31 20 48 15l62-21S92 26 52 35z"
+        fill="#518ac8"
+      />
       <path
         d="m52 35-4 1c-17 5-22 21-13 35 10 13 31 20 48 15l62-21S92 26 52 35z"
         opacity=".3"
         fill="url(#b)"
       />
-      <path d="M134 80a45 45 0 0 0-48-15L24 85 4 120l112 19 20-36c4-7 3-15-2-23z" fill="url(#c)" />
-      <path d="M114 115a45 45 0 0 0-48-15L4 120s53 40 94 30l3-1c17-5 23-21 13-34z" fill="url(#d)" />
+      <path
+        d="M134 80a45 45 0 0 0-48-15L24 85 4 120l112 19 20-36c4-7 3-15-2-23z"
+        fill="url(#c)"
+      />
+      <path
+        d="M114 115a45 45 0 0 0-48-15L4 120s53 40 94 30l3-1c17-5 23-21 13-34z"
+        fill="url(#d)"
+      />
     </svg>
   );
 }

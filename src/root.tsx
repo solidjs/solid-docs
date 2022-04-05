@@ -13,7 +13,7 @@ import { Main } from "./components/Main";
 import { createStore } from "solid-js/store";
 
 export const [store, setStore] = createStore({
-  darkMode: false
+  darkMode: false,
 });
 
 export default function Root() {
@@ -43,7 +43,11 @@ export default function Root() {
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin=""
+        />
         <link rel="shortcut icon" href="/favicon.ico" />
         <link
           href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&display=swap"
@@ -59,7 +63,7 @@ export default function Root() {
       <body class="font-sans antialiased text-lg bg-wash dark:bg-wash-dark text-secondary dark:text-secondary-dark leading-base min-h-screen h-auto lg:h-screen flex flex-row">
         <MDXProvider
           components={{
-            ...md
+            ...md,
           }}
         >
           <Nav />

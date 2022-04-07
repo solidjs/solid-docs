@@ -89,6 +89,10 @@ const LEARN_SECTIONS = {
         header: "Installing Solid",
         link: "/learn/getting-started-with-solid/installing-solid",
       },
+      "Building UI with Components": {
+        header: "Building UI with Components",
+        link: "/learn/getting-started-with-solid/building-ui-with-components",
+      },
     },
   },
   Foundations: {

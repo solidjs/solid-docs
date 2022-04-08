@@ -1,4 +1,4 @@
-<title>Building UI with Components</title>
+<title>Building UI</title>
 
 Note: consider starting a simple example here that can be carried through the Getting Started with Solid sections.
 
@@ -17,12 +17,12 @@ Note: consider starting a simple example here that can be carried through the Ge
   - JSX doesn't support HTML Comments `<!--...-->` or special tags like `<!DOCTYPE>`.
 - Using variables in JSX
 
-## Composing multiple components together
-
-- Using example, compose a simple UI
-- Note how components are called as JSX in other components
-
 ## Mounting Solid to the DOM
 
 - We have built a UI, but we need to add it to our page
 - Show `render()` snippet, explain that it mounts the JSX to the specified DOM node
+
+## Composing multiple components together
+
+- Using example, compose a simple UI
+- Note how components are called as JSX in other components

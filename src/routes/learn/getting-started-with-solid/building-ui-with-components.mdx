@@ -1,0 +1,109 @@
+<title>Building User Interfaces with Components</title>
+
+## What are components?
+
+Components are functions that define how your application will look. Each component generally represents a small part of your application's entire user interface. Splitting your application into components has many advantages: components are small, reusable, easily-tested, and enable different team members to work on different parts of the application without stepping on each other.
+
+Let's build our first component, which will display `Hello World!` inside a `div` element:
+
+```jsx
+function HelloWorld() {
+  return <div>Hello World!</div>;
+}
+```
+
+There are a couple of things to note in our first component:
+
+- Our component name, `HelloWorld`, is title-cased (sometimes referred to as _Pascal_ case). This is intentional and we'll discuss this convention shorty.
+- Our component returns something that looks a lot like HTML, but isn't&mdash;it's _JSX_. We'll devote the whole next section to talking about JSX.
+
+## What is JSX?
+
+As we learned above, Solid components return JSX. JSX is an HTML-like syntax that you can use in you Solid JavaScript code to represent part of the document object model (DOM). In our `HelloWorld` example above, we returned the following JSX from our component:
+
+```jsx
+<div>Hello World!</div>
+```
+
+This JSX represents a `div` element with the text `Hello World!` inside it. In this case, our JSX looks exactly how it would look if you wrote it directly in an HTML document! Let's do something a bit more interesting and set some styles on this `div`:
+
+```jsx
+<div style="background-color: #2c4f7c; color: #FFF;">Hello world!</div>
+```
+
+This will render a div with a blue background color and white text:
+
+<div style="background-color: #2c4f7c; color: #FFF;">Hello world!</div>
+
+This syntax is alreadt a big win: trying to create a styled div using JavaScript _without_ JSX would be much more _imperative_ and far less readable:
+
+```js
+const div = document.createElement("div");
+div.style["background-color"] = "#2c4f7c";
+div.style.color = "#FFF";
+```
+
+### JSX + JavaScript
+
+JSX becomes even more powerful once you realize it can be used alongside&mdash;and mixed with&mdash;JavaScript expressions that you already use. For example, we can use variables to represent some of the text content in our `div`:
+
+```jsx
+const name = "Solid";
+
+<div style="background-color: #2c4f7c; color: #FFF;">Hello {name}!</div>;
+```
+
+<div style="background-color: #2c4f7c; color: #FFF;">Hello Solid!</div>
+
+We can take this a step further and specify our div's `style` attribute as a JavaScript object:
+
+```jsx
+const name = "Solid";
+const style = { "background-color": "#2c4f7c", color: "#FFF" };
+
+<div style={style}>Hello {name}!</div>;
+```
+
+All of a sudden, we have code that lets us take advantage of the dynamic nature of JavaScript with a declarative HTML-like syntax.
+
+As we progress through these tutorials, we'll discover how Solid's reactive system combines with JSX to make for a delighful experience when crafting user interfaces.
+
+### JSX is compiled
+
+JSX is syntax on top of JavaScript and is not directly part of any JavaScript standard. Therefore, JSX can't be run directly in the browser (or most other JavaScript runtimes). Solid and other frameworks that use JSX require their code to be run through a compiler. If you're using a starter template you probably don't have to worry about this&mdash;everything will just work out of the box.
+
+## Mounting Solid to the DOM
+
+While we have been talking about components and JSX, we haven't covered an important topic: how our components make it into the actual HTML page that we show our users.
+
+To add a Solid application to an HTML document, we want to make sure we have an element inside which we want our application to render. In this example, we want our Solid app to render inside a `div` that has an `id` of `"root"`.
+
+```html
+<body>
+  <div id="root"></div>
+</body>
+```
+
+Solid provides `render` function that will render our app inside this `div`:
+
+```jsx
+import { render } from "solid-js/web";
+
+function HelloWorld() {
+  const name = "Solid";
+  const style = { "background-color": "#2c4f7c", color: "#FFF" };
+
+  return <div style={style}>Hello {name}!</div>;
+}
+
+render(() => <HelloWorld />, document.getElementById("root"));
+```
+
+This snippet creates our `HelloWorld` component and inserts within the DOM node that has an `id` of `"root"`. This enables us to see our simple Hello World application. The `render` function _also_ enables Solid's reactive system and will allow our application to come to life as we make in more dynamic.
+
+## Composing multiple components together
+
+### Passing props between components
+
+- Using example, compose a simple UI
+- Note how components are called as JSX in other components

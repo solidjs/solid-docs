@@ -25,7 +25,7 @@ As we learned above, Solid components return JSX. JSX is an HTML-like syntax tha
 <div>Hello World!</div>
 ```
 
-This JSX represents a `div` element with the text `Hello World!` inside it. In this case, our JSX looks exactly how it would look if you wrote it directly in an HTML document! Let's do something a bit more interesting and set some styles on this `div`:
+This JSX represents a `div` element with the text `Hello World!` inside it. In this case, our JSX looks exactly how it would look if you wrote it directly in an HTML document! Let's do something a bit more interesting and set some styles on the `div`:
 
 ```jsx
 <div style="background-color: #2c4f7c; color: #FFF;">Hello world!</div>
@@ -35,7 +35,7 @@ This will render a div with a blue background color and white text:
 
 <div style="background-color: #2c4f7c; color: #FFF;">Hello world!</div>
 
-This syntax is alreadt a big win: trying to create a styled div using JavaScript _without_ JSX would be much more _imperative_ and far less readable:
+This syntax is already a big win: trying to create a styled div using JavaScript _without_ JSX would be much more _imperative_ and far less readable:
 
 ```js
 const div = document.createElement("div");
@@ -52,6 +52,8 @@ const name = "Solid";
 
 <div style="background-color: #2c4f7c; color: #FFF;">Hello {name}!</div>;
 ```
+
+And now we see JSX has incuded the variable `name` where it was used inside a pair of curly braces:
 
 <div style="background-color: #2c4f7c; color: #FFF;">Hello Solid!</div>
 
@@ -129,13 +131,15 @@ function HelloWorld() {
 render(() => <HelloWorld />, document.getElementById("root"));
 ```
 
-This snippet creates our `HelloWorld` component and inserts within the DOM node that has an `id` of `"root"`. This enables us to see our simple Hello World application. The `render` function _also_ enables Solid's reactive system and will allow our application to come to life as we make it more dynamic.
+This snippet creates our `HelloWorld` component and inserts within the DOM node that has an `id` of `"root"`. At this point, we have built a representation of our user interface in JavaScript and Solid has added it to the DOM: everything needed for us to see our simple Hello World application on a web page!
+
+**Note:** The `render` function _also_ is also doing some magic behind the scenes that enables Solid's _reactive system_, so you'll want to make sure the first argument passed to the render function is a function that returns a component `() => <Component />` rather than just the component itself.
 
 ## Composing multiple components together
 
-In most cases, we will split our application into _multiple_ components. Let's move on from our `HelloWorld` example to build something a little bigger&mdash;a virtual bookshelf. Our bookshelf will allow us to add books and mark books as "read."
+In most cases, out applications are big enough that we will want to split them into _multiple_ components. Let's move on from our `HelloWorld` example to build something a little bigger&mdash;a virtual bookshelf. Our bookshelf will allow us to add books, mark books as "read," and eventually fetch book titles from other services on the Internet.
 
-Given the intuitive nature of JSX, we can plan out our application a bit. Our main `Bookshelf` will be comprised of two other components:
+Given the intuitive nature of JSX, we can plan out our application a bit. Our main `Bookshelf` will be comprised of two top-level components:
 
 - A `<Books />` component, which lists all the books in our bookshelf
 - An `<AddBook />` component, which will allow us to add a book to our bookshelf
@@ -185,9 +189,13 @@ function Bookshelf() {
 render(() => <Bookshelf />, document.getElementById("root"));
 ```
 
+### Component relationships
+
+There are a couple terms worth learning when we talk about how components relate to one another&mdash;_parent_ and _child_. In our `Bookshelf` example, the `Bookshelf` component is called the _parent_ of both `Books` and `AddBook` because those two components are within `Bookshelf`. Accordingly, `Books` and `AddBook` are _children_ of `Bookshelf`. You may already be familiar with this terminology; it's how we tend to refer to HTML element relationships in our DOM tree.
+
 ### Passing props between components
 
-Components can communicate with their _children_ components by passing properties, which are commonly called `props`. To demonstrate the power of `props`, let's customize our bookshelf by adding our name to it! In the example below, we update our app to display "Solid's Bookshelf," but you should use your own name.
+Components can communicate with their children components by passing properties, which are commonly called `props`. To demonstrate the power of `props`, let's customize our bookshelf by adding our name to it! In the example below, we update our app to display "Solid's Bookshelf," but you should use your own name.
 
 ```jsx
 import { render } from "solid-js/web";
@@ -204,3 +212,7 @@ function Bookshelf(props) {
 
 render(() => <Bookshelf name="Solid" />, document.getElementById("root"));
 ```
+
+### Progress!
+
+Thus far, we learned about Solid components, JSX, and built the foundation of a handy bookshelf app. Next, we'll bring our bookshelf to life using Solid's reactive system!

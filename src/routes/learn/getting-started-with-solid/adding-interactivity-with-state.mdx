@@ -107,4 +107,345 @@ function Counter() {
 
 <BasicCounter />
 
-And now we have a functioning counter! Notably, our DOM updates whenever our `count` is incremented. Does this remind you of an effect? It should! In Solid, rendering is treated as an effect.
+And now we have a functioning counter! Notably, our DOM updates whenever our `count` is incremented. Does this remind you of an effect? It should! In Solid, rendering is treated as an effect. A driving philosophy of Solid is that, by treating everything as a signal or an effect, we can better reason about our application.
+
+## Revisting the bookshelf
+
+We now have the tools necessary to make our Bookshelf application interactive. As a refresher, here's the current state of the app. It currently has the following components:
+
+- `Books`, a list of books on our Bookshelf
+- `AddBook`, a form that will allow us to add more books to the shelf
+- `Bookshelf`, our main application component that contains the other two
+
+```jsx
+function Books() {
+  return (
+    <ul>
+      <li>Code Complete</li>
+      <li>JavaScript: The Good Parts</li>
+    </ul>
+  );
+}
+
+function AddBook() {
+  return (
+    <form>
+      <label for="book-name">Book name</label>
+      <input id="book-name" />
+      <button type="submit">Add book</button>
+    </form>
+  );
+}
+
+function Bookshelf(props) {
+  return (
+    <div>
+      <h1>{props.name}'s Bookshelf</h1>
+      <Books />
+      <AddBook />
+    </div>
+  );
+}
+
+render(() => <Bookshelf name="Solid" />, document.getElementById("root"));
+```
+
+As a first step to adding interactivity, let's add a signal that keeps track of our book list. We'll call it `books` and it wil llive in the `Books` component:
+
+```jsx
+import { createSignal } from "solid-js";
+
+function Books() {
+  const [books, setBooks] = createSignal([
+    "Code Complete",
+    "JavaScript: The Good Parts",
+  ]);
+
+  return (
+    <ul>
+      <li>{books()[0]}</li>
+      <li>{books()[1]}</li>
+    </ul>
+  );
+}
+```
+
+There are a couple things to note here:
+
+First, while we had only used `createSignal` to maintain the value of a number in state thus far, it can manage all kinds of state. In our Bookshelf application, our signal is an array of book titles.
+
+Second, we're now using `books` directly in our JSX code. We call `books()` to access the signal array, and then access the _0th_ element of that array in the first list item and the _1st_ element of that array in the second list item. This will work, but as you might imagine this is suboptimal: we want to handle a dynamic number of books.
+
+## Looping over items
+
+The best way to loop over items in Solid is the `<For />` component. The `<For />` component has an `each` prop, to which we can pass our `books()` array.
+
+```jsx
+<For each={books()}> </For>
+```
+
+Inside the `For` component, we use a _callback function_ that will be applied to _each_ element in the array. In this instance, we want each `book` to be rendered inside an `<li>`.
+
+```jsx
+<For each={books()}>
+  {(book) => {
+    return <li>{book}</li>;
+  }}
+</For>
+```
+
+Our `Books` component now looks like this:
+
+```jsx
+import { createSignal, For } from "solid-js";
+
+function Books() {
+  const [books, setBooks] = createSignal([
+    "Code Complete",
+    "JavaScript: The Good Parts",
+  ]);
+
+  return (
+    <ul>
+      <For each={books()}>
+        {(book) => {
+          return <li>{book}</li>;
+        }}
+      </For>
+    </ul>
+  );
+}
+```
+
+## Lifting state up
+
+We want to add a book to the list using our `AddBook` component. There's one problem though: how do we make the `setBooks` setter available to the `AddBooks` component?
+
+We know that parents can pass props to children, but how do _sibling_ components pass props to each other? This is a common problem in Solid and the solution is generally to _lift state up_ to a common parent. In this case, our `books` signal can live in the `Bookshelf` component. Then, the `Books` component can use the accessor (`books()`) and the `AddBook` component can use the setter (`setBooks`).
+
+Let's start out by lifting our `books` signal up to `Bookshelf` and passing it back down to the `Books` component:
+
+```jsx
+function Bookshelf(props) {
+  const [books, setBooks] = createSignal([
+    "Code Complete",
+    "JavaScript: The Good Parts",
+  ]);
+
+  return (
+    <div>
+      <h1>{props.name}'s Bookshelf</h1>
+      <Books books={books()} />
+      <AddBook />
+    </div>
+  );
+}
+
+function Books(props) {
+  return (
+    <ul>
+      <For each={props.books}>
+        {(book) => {
+          return <li>{book}</li>;
+        }}
+      </For>
+    </ul>
+  );
+}
+```
+
+Our array of books now lives in the `Bookshelf` component. We then pass `books()` to the `Books` component. We can now access our books withing the `Books` component by using `props.books`.
+
+**Note:** You may have noticed that we called `books()` when we passed it to the `Books` component&mdash;this is not a typo! In Solid, it's a best practice to call a signal accessor when you pass it to a component. In the background, Solid makes this a _reactive prop_ and reactivity will be tracked in the child component's JSX. (_Note: good place to link to a discussion/guide on props and reactivity_).
+
+## Adding books to the list
+
+Now that we have lifted state, we can add some books to the list. Let's pass our setter to the `AddBook` component and call `setBooks` when we click the `Add Book` button:
+
+```jsx
+function Bookshelf(props) {
+  const [books, setBooks] = createSignal([
+    "Code Complete",
+    "JavaScript: The Good Parts",
+  ]);
+
+  return (
+    <div>
+      <h1>{props.name}'s Bookshelf</h1>
+      <Books books={books()} />
+      <AddBook setBooks={setBooks} />
+    </div>
+  );
+}
+
+function AddBook(props) {
+  const addBook = (event) => {
+    event.preventDefault();
+    props.setBooks([]);
+  };
+
+  return (
+    <form>
+      <label for="book-name">Book name</label>
+      <input id="book-name" />
+      <button type="submit" onClick={addBook}>
+        Add book
+      </button>
+    </form>
+  );
+}
+```
+
+Inside `AddBook`, we created a function called `addBook` that is used as the _click handler_ for our form's button. Since we're submitting a real HTML form, we use `event.preventDefault()` to prevent the default form behavior of executing a post request. Next, we call `props.setBooks`, but we don't quite know what to pass to our setter.
+
+We know we want to keep the existing books on the list and then add a new book that comes from our form input. To get the existing books, we could use two different approaches: we _could_ pass the `books` signal down to our `AddBook` component. While that would work, it's worth exploring the second option: using the _callback function_ form of the setter. We haven't used this yet, and the syntax is as follows:
+
+```jsx
+setCount((currentCount) => {
+  return currentCount + 1;
+});
+```
+
+By using this form, our setter has access to the current value of the signal.
+
+That solves the first problem: our `addBook` function can be written as follows:
+
+```jsx
+const addBook = (event) => {
+  event.preventDefault();
+  props.setBooks((books) => {
+    return books;
+  });
+};
+```
+
+Now, we need to append the text from our form inptu to this list. To do so, we can create a new signal inside the `AddBook` component to track the value of the input. We'll make sure this signal is always equal to the input's value by using its `onInput` handler. Additionally, we'll _bind_ the `newBook()` to the `value` attribute of our `input` to make sure our `input` always reflects the value of the signal.
+
+```jsx
+function AddBook(props) {
+  const [newBook, setNewBook] = createSignal("");
+
+  const addBook = (event) => {
+    event.preventDefault();
+    props.setBooks((books) => {
+      return books;
+    });
+  };
+
+  return (
+    <form>
+      <label for="book-name">Book name</label>
+      <input
+        id="book-name"
+        value={newBook()}
+        onInput={(event) => {
+          setNewBook(event.currentTarget.value);
+        }}
+      />
+      <button type="submit" onClick={addBook}>
+        Add book
+      </button>
+    </form>
+  );
+}
+```
+
+Finally, we want to add the `newBook` to our books list and then clear the input field in case our user has more books to enter.
+
+```jsx
+function AddBook(props) {
+  const [newBook, setNewBook] = createSignal("");
+
+  const addBook = (event) => {
+    event.preventDefault();
+    props.setBooks((books) => {
+      return [...books, newBook()];
+    });
+    setNewBook("");
+  };
+
+  return (
+    <form>
+      <label for="book-name">Book name</label>
+      <input
+        id="book-name"
+        value={newBook()}
+        onInput={(event) => {
+          setNewBook(event.currentTarget.value);
+        }}
+      />
+      <button type="submit" onClick={addBook}>
+        Add book
+      </button>
+    </form>
+  );
+}
+```
+
+**Note:** We used the spread operator to create an new books array inside our books setter. This is a common pattern in Solid and helps to make sure we create a new array rather than updated (or _mutating_) the existing signal array. By default, Solid uses referential equality checks when determining if a signal has updated.
+
+## Test-driving our app
+
+We now have a dynamic Bookshelf application! Try it out yourself: you should be able to add books using the `AddBook` component and see those books addded to the list in the `Books` component.
+
+```jsx
+import { render } from "solid-js/web";
+import { createSignal, For } from "solid-js";
+
+function Books(props) {
+  return (
+    <ul>
+      <For each={props.books}>
+        {(book) => {
+          return <li>{book}</li>;
+        }}
+      </For>
+    </ul>
+  );
+}
+
+function AddBook(props) {
+  const [newBook, setNewBook] = createSignal("");
+
+  const addBook = (event) => {
+    event.preventDefault();
+    props.setBooks((books) => {
+      return [...books, newBook()];
+    });
+    setNewBook("");
+  };
+
+  return (
+    <form>
+      <label for="book-name">Book name</label>
+      <input
+        id="book-name"
+        value={newBook()}
+        onInput={(event) => {
+          setNewBook(event.currentTarget.value);
+        }}
+      />
+      <button type="submit" onClick={addBook}>
+        Add book
+      </button>
+    </form>
+  );
+}
+
+function Bookshelf(props) {
+  const [books, setBooks] = createSignal([
+    "Code Complete",
+    "JavaScript: The Good Parts",
+  ]);
+
+  return (
+    <div>
+      <h1>{props.name}'s Bookshelf</h1>
+      <Books books={books()} />
+      <AddBook setBooks={setBooks} />
+    </div>
+  );
+}
+
+render(() => <Bookshelf />, document.getElementById("root"));
+```

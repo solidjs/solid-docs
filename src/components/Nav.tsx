@@ -93,6 +93,10 @@ const LEARN_SECTIONS = {
         header: "Building UI with Components",
         link: "/learn/getting-started-with-solid/building-ui-with-components",
       },
+      "Adding Interactivity with State": {
+        header: "Adding Interactivity with State",
+        link: "/learn/getting-started-with-solid/adding-interactivity-with-state",
+      },
     },
   },
   Foundations: {

@@ -26,13 +26,12 @@ export const NavHeader = () => (
       >
         <MenuIcon />
       </button>
-      <a
-        className="inline-flex text-lg font-normal items-center text-primary dark:text-primary-dark py-1 mr-0 sm:mr-3 whitespace-nowrap"
-        href="/"
-      >
-        <Logo className="text-sm mr-2 w-8 h-8 text-link dark:text-link-dark" />
-        <span class="font-bold">Solid </span> <span class="italic">Start</span>
-      </a>
+      <div className="inline-flex space-x-1 text-lg font-normal items-center text-primary dark:text-primary-dark py-1 mr-0 sm:mr-3 whitespace-nowrap">
+        <Logo className="text-sm w-8 h-8 text-link dark:text-link-dark" />
+        <span class="font-bold">Solid </span>
+        <span>+</span>
+        <span class="font-bold">SolidStart</span>
+      </div>
       <div className="lg:w-full leading-loose hidden sm:flex flex-initial items-center h-auto pr-5 lg:pr-5 pt-0.5">
         <div className="px-1 mb-px bg-highlight dark:bg-highlight-dark rounded text-link dark:text-link-dark uppercase font-bold tracking-wide text-xs whitespace-nowrap">
           Beta

@@ -96,11 +96,10 @@ function ChevronIcon() {
   );
 }
 
-export function SolidStartLogo() {
+export function SolidDocsLogo() {
   return (
     <div class="mt-8 lg:mt-10 mb-0 sm:mt-8 sm:mb-8 lg:mb-6 flex-col sm:flex-row flex grow items-start sm:items-center justify-start mx-auto max-w-4xl">
       <Logo className="text-link dark:text-link-dark w-20 sm:w-28 mr-4 mb-4 sm:mb-0 h-auto" />
-
       {/* <svg
         width="100%"
         height="100%"
@@ -119,9 +118,9 @@ export function SolidStartLogo() {
         ></path>
       </svg> */}
       <div class="flex flex-wrap">
-        <h1 class="text-5xl mr-4 -mt-1 flex wrap font-bold leading-tight text-primary dark:text-primary-dark">
-          <span class="font-bold">Solid </span>{" "}
-          <span class="italic font-normal">Start</span>
+        <h1 class="text-5xl mr-4 -mt-1 flex wrap space-x-2 font-bold leading-tight text-primary dark:text-primary-dark">
+          <span class="font-bold">Solid </span>
+          <span class="italic font-normal">Docs</span>
         </h1>
         <div class="inline-flex self-center px-2 mt-1 bg-highlight dark:bg-highlight-dark w-auto rounded text-link dark:text-link-dark uppercase font-bold tracking-wide text-base whitespace-nowrap">
           Beta

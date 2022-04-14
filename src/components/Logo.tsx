@@ -1,79 +1,6 @@
 import { Logo } from "./NavHeader";
 
-function Cards(props) {
-  return (
-    <section class="my-8 sm:my-10 grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-4">
-      {props.children}
-    </section>
-  );
-}
-
-export function Sections() {
-  return (
-    <Cards>
-      <Card>
-        <div>
-          <h4 class="text-primary dark:text-primary-dark font-bold text-2xl leading-tight">
-            Learn
-          </h4>
-          <div class="my-4">
-            <p>
-              Learn how to think in React with step-by-step explanations and
-              interactive examples.
-            </p>
-          </div>
-        </div>
-        <div>
-          <a
-            class="mt-1 inline-flex font-bold items-center border-2 border-transparent outline-none focus:ring-1 focus:ring-offset-2 focus:ring-link active:bg-link active:text-white active:ring-0 active:ring-offset-0 leading-normal bg-link text-white hover:bg-opacity-80 text-base rounded-lg px-4 py-1.5"
-            aria-label="Learn React"
-            target="_self"
-            href="/learn"
-          >
-            Read More
-            <ChevronIcon />
-          </a>
-        </div>
-      </Card>
-      <Card>
-        <div>
-          <h4 class="text-primary dark:text-primary-dark font-bold text-2xl leading-tight">
-            API Reference
-          </h4>
-          <div class="my-4">
-            <p>
-              Look up the API signatures of the various SolidStart modules, and
-              see how could use them
-            </p>
-          </div>
-        </div>
-        <div>
-          <a
-            class="mt-1 inline-flex font-bold items-center border-2 border-transparent outline-none focus:ring-1 focus:ring-offset-2 focus:ring-link active:bg-link active:text-white active:ring-0 active:ring-offset-0 leading-normal bg-link text-white hover:bg-opacity-80 text-base rounded-lg px-4 py-1.5"
-            aria-label="API Reference"
-            target="_self"
-            href="/apis"
-          >
-            Read More
-            <ChevronIcon />
-          </a>
-        </div>
-      </Card>
-    </Cards>
-  );
-}
-
-function Card(props) {
-  return (
-    <div class="flex flex-col justify-center">
-      <div class="flex flex-col h-full bg-card dark:bg-card-dark shadow-inner justify-between rounded-lg pb-8 p-6 xl:p-8 mt-3">
-        {props.children}
-      </div>
-    </div>
-  );
-}
-
-function ChevronIcon() {
+export function ChevronIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -96,11 +23,10 @@ function ChevronIcon() {
   );
 }
 
-export function SolidStartLogo() {
+export function SolidDocsLogo() {
   return (
     <div class="mt-8 lg:mt-10 mb-0 sm:mt-8 sm:mb-8 lg:mb-6 flex-col sm:flex-row flex grow items-start sm:items-center justify-start mx-auto max-w-4xl">
       <Logo className="text-link dark:text-link-dark w-20 sm:w-28 mr-4 mb-4 sm:mb-0 h-auto" />
-
       {/* <svg
         width="100%"
         height="100%"
@@ -119,12 +45,12 @@ export function SolidStartLogo() {
         ></path>
       </svg> */}
       <div class="flex flex-wrap">
-        <h1 class="text-5xl mr-4 -mt-1 flex wrap font-bold leading-tight text-primary dark:text-primary-dark">
-          <span class="font-bold">Solid </span>{" "}
-          <span class="italic font-normal">Start</span>
+        <h1 class="text-5xl mr-4 -mt-1 flex wrap space-x-2 font-bold leading-tight text-primary dark:text-primary-dark">
+          <span class="font-bold">Solid </span>
+          <span class="italic font-normal">Docs</span>
         </h1>
         <div class="inline-flex self-center px-2 mt-1 bg-highlight dark:bg-highlight-dark w-auto rounded text-link dark:text-link-dark uppercase font-bold tracking-wide text-base whitespace-nowrap">
-          Beta
+          Next
         </div>
       </div>
     </div>

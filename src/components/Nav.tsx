@@ -48,31 +48,31 @@ function NavMenu() {
 }
 
 const HomeSections = {
-  Foundations: {
-    header: "Foundations",
-    link: "/learn/foundations",
-    inSubsections: (p) => p.startsWith("/api/files"),
-  },
-  Forms: {
-    header: "Forms",
-    link: "/api/forms",
-    inSubsections: (p) => p.startsWith("/api/forms"),
-  },
-  "Server Functions": {
-    header: "Server Functions",
-    link: "/api/server",
-    inSubsections: (p) => p.startsWith("/api/server"),
-  },
-  Router: {
-    header: "Router",
-    link: "/api/router",
-    inSubsections: (p) => p.startsWith("/api/router"),
-  },
-  Session: {
-    header: "Session",
-    link: "/api/session",
-    inSubsections: (p) => p.startsWith("/api/session"),
-  },
+  // Foundations: {
+  //   header: "Foundations",
+  //   link: "/learn/foundations",
+  //   inSubsections: (p) => p.startsWith("/api/files"),
+  // },
+  // Forms: {
+  //   header: "Forms",
+  //   link: "/api/forms",
+  //   inSubsections: (p) => p.startsWith("/api/forms"),
+  // },
+  // "Server Functions": {
+  //   header: "Server Functions",
+  //   link: "/api/server",
+  //   inSubsections: (p) => p.startsWith("/api/server"),
+  // },
+  // Router: {
+  //   header: "Router",
+  //   link: "/api/router",
+  //   inSubsections: (p) => p.startsWith("/api/router"),
+  // },
+  // Session: {
+  //   header: "Session",
+  //   link: "/api/session",
+  //   inSubsections: (p) => p.startsWith("/api/session"),
+  // },
 };
 
 const LEARN_SECTIONS = {

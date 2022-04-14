@@ -8,66 +8,44 @@ function Cards(props) {
   );
 }
 
-export function SectionCards() {
-  return (
-    <Cards>
-      <Card>
-        <div>
-          <h4 class="text-primary dark:text-primary-dark font-bold text-2xl leading-tight">
-            Learn
-          </h4>
-          <div class="my-4">
-            <p>
-              Learn how to think in React with step-by-step explanations and
-              interactive examples.
-            </p>
-          </div>
-        </div>
-        <div>
-          <a
-            class="mt-1 inline-flex font-bold items-center border-2 border-transparent outline-none focus:ring-1 focus:ring-offset-2 focus:ring-link active:bg-link active:text-white active:ring-0 active:ring-offset-0 leading-normal bg-link text-white hover:bg-opacity-80 text-base rounded-lg px-4 py-1.5"
-            aria-label="Learn React"
-            target="_self"
-            href="/learn"
-          >
-            Read More
-            <ChevronIcon />
-          </a>
-        </div>
-      </Card>
-      <Card>
-        <div>
-          <h4 class="text-primary dark:text-primary-dark font-bold text-2xl leading-tight">
-            API Reference
-          </h4>
-          <div class="my-4">
-            <p>
-              Look up the API signatures of the various SolidStart modules, and
-              see how could use them
-            </p>
-          </div>
-        </div>
-        <div>
-          <a
-            class="mt-1 inline-flex font-bold items-center border-2 border-transparent outline-none focus:ring-1 focus:ring-offset-2 focus:ring-link active:bg-link active:text-white active:ring-0 active:ring-offset-0 leading-normal bg-link text-white hover:bg-opacity-80 text-base rounded-lg px-4 py-1.5"
-            aria-label="API Reference"
-            target="_self"
-            href="/apis"
-          >
-            Read More
-            <ChevronIcon />
-          </a>
-        </div>
-      </Card>
-    </Cards>
-  );
-}
 function Card(props) {
   return (
     <div class="flex flex-col justify-center">
       <div class="flex flex-col h-full bg-card dark:bg-card-dark shadow-inner justify-between rounded-lg pb-8 p-6 xl:p-8 mt-3">
-        {props.children}
+        <div>
+          <h4 class="text-primary dark:text-primary-dark font-bold text-2xl leading-tight">
+            {props.title}
+          </h4>
+          <div class="my-4">
+            <p>{props.children}</p>
+          </div>
+        </div>
+        <div>
+          <a
+            class="mt-1 inline-flex font-bold items-center border-2 border-transparent outline-none focus:ring-1 focus:ring-offset-2 focus:ring-link active:bg-link active:text-white active:ring-0 active:ring-offset-0 leading-normal bg-link text-white hover:bg-opacity-80 text-base rounded-lg px-4 py-1.5"
+            aria-label={props.cta}
+            target="_self"
+            href={props.href}
+          >
+            {props.cta}
+            <ChevronIcon />
+          </a>
+        </div>
       </div>
     </div>
+  );
+}
+
+export function SectionCards() {
+  return (
+    <Cards>
+      <Card title="Tutorials" cta="Learn by Doing" href="/learn">
+        Work through project-based guides and beginner-focused explanations.
+      </Card>
+      <Card title="API Reference" cta="Read More" href="/apis">
+        Read concise and comprehensive technical documentation on the Solid and
+        SolidStart API.
+      </Card>
+    </Cards>
   );
 }

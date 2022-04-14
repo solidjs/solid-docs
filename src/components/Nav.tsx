@@ -76,6 +76,29 @@ const HomeSections = {
 };
 
 const LEARN_SECTIONS = {
+  GettingStartedWithSolid: {
+    header: "Getting Started With Solid",
+    link: "/learn/getting-started",
+    inSubsections: (p) => p.startsWith("/learn/getting-started-with-solid"),
+    subsections: {
+      "Why Solid?": {
+        header: "Why Solid?",
+        link: "/learn/getting-started-with-solid/why-solid",
+      },
+      "Installing Solid": {
+        header: "Installing Solid",
+        link: "/learn/getting-started-with-solid/installing-solid",
+      },
+      "Building UI with Components": {
+        header: "Building UI with Components",
+        link: "/learn/getting-started-with-solid/building-ui-with-components",
+      },
+      "Adding Interactivity with State": {
+        header: "Adding Interactivity with State",
+        link: "/learn/getting-started-with-solid/adding-interactivity-with-state",
+      },
+    },
+  },
   Foundations: {
     header: "Foundations",
     link: "/learn/foundations",

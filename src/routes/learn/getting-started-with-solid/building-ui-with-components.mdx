@@ -1,0 +1,218 @@
+<title>Building User Interfaces with Components</title>
+
+## What are components?
+
+Components are functions that define how your application looks. Each component you write represents a small part of your application's entire user interface. Splitting your application into components has many advantages: components are small, reusable, easily-tested, and enable different team members to work on different parts of the application without stepping on each other.
+
+Let's build our first component, which will display `Hello World!` inside a `div` element:
+
+```jsx
+function HelloWorld() {
+  return <div>Hello World!</div>;
+}
+```
+
+There are a couple of things to note in our first component:
+
+- Our component name, `HelloWorld`, is title-cased (sometimes referred to as _Pascal_ case). This is intentional and we'll discuss this convention shorty.
+- Our component returns something that looks a lot like HTML, but isn't&mdash;it's _JSX_. We'll devote the whole next section to talking about JSX.
+
+## What is JSX?
+
+As we learned above, Solid components return JSX. JSX is an HTML-like syntax that you can use in you Solid JavaScript code to represent part of the document object model (DOM). In our `HelloWorld` example above, we returned the following JSX from our component:
+
+```jsx
+<div>Hello World!</div>
+```
+
+This JSX represents a `div` element with the text `Hello World!` inside it. In this case, our JSX looks exactly how it would look if you wrote it directly in an HTML document! Let's do something a bit more interesting and set some styles on the `div`:
+
+```jsx
+<div style="background-color: #2c4f7c; color: #FFF;">Hello world!</div>
+```
+
+This will render a div with a blue background color and white text:
+
+<div style="background-color: #2c4f7c; color: #FFF;">Hello world!</div>
+
+This syntax is already a big win: trying to create a styled div using JavaScript _without_ JSX would be much more _imperative_ and far less readable:
+
+```js
+const div = document.createElement("div");
+div.style["background-color"] = "#2c4f7c";
+div.style.color = "#FFF";
+```
+
+### JSX + JavaScript
+
+JSX becomes even more powerful once you realize it can be used alongside&mdash;and mixed with&mdash;JavaScript expressions that you already use. For example, we can use variables to represent some of the text content in our `div`:
+
+```jsx
+const name = "Solid";
+
+<div style="background-color: #2c4f7c; color: #FFF;">Hello {name}!</div>;
+```
+
+And now we see JSX has incuded the variable `name` where it was used inside a pair of curly braces:
+
+<div style="background-color: #2c4f7c; color: #FFF;">Hello Solid!</div>
+
+We can take this a step further and specify our div's `style` attribute as a JavaScript object:
+
+```jsx
+const name = "Solid";
+const style = { "background-color": "#2c4f7c", color: "#FFF" };
+
+<div style={style}>Hello {name}!</div>;
+```
+
+All of a sudden, we have code that lets us take advantage of the dynamic nature of JavaScript with a declarative HTML-like syntax.
+
+As we progress through these tutorials, we'll discover how Solid's reactive system combines with JSX to make for a delighful experience when crafting user interfaces.
+
+### Using custom components in JSX
+
+Let's update our initial `HelloWorld` component with what we learned in our JSX exploration:
+
+```jsx
+function HelloWorld() {
+  const name = "Solid";
+  const style = { "background-color": "#2c4f7c", color: "#FFF" };
+
+  <div style={style}>Hello {name}!</div>;
+}
+```
+
+We can now, in turn, use `HelloWorld` as a JSX component _inside_ another component:
+
+```jsx
+function MyApp() {
+  return (
+    <div>
+      <h1>Welcome</h1>
+      <HelloWorld />
+    </div>
+  );
+}
+```
+
+`MyApp` is a component that displays some header text, `Welcome`, alongside our `HelloWorld` component. We're starting to get a sense of the _composability_ of JSX: we have a good bit of information inside our `HelloWorld` component that can now be used very simply inside the `myApp` component!
+
+### JSX is compiled
+
+JSX is syntax on top of JavaScript and is not directly part of any JavaScript standard. Therefore, JSX can't be run directly in the browser (or most other JavaScript runtimes). Solid and other frameworks that use JSX require their code to be run through a compiler. If you're using a starter template you probably don't have to worry about this&mdash;everything will just work out of the box.
+
+**Note:** Remember how we discussed that component function names are title-cased? This is so the compiler understands the difference between native DOM elements (like `div`) and custom components (like `HelloWorld`).
+
+## Mounting Solid to the DOM
+
+While we have been talking about components and JSX, we haven't covered an important topic: how our components make it into the actual HTML page that we show our users.
+
+To add a Solid application to an HTML document, we want to make sure we have an element inside which we want our application to render. In this example, we want our Solid app to render inside a `div` that has an `id` of `"root"`.
+
+```html
+<body>
+  <div id="root"></div>
+</body>
+```
+
+Solid provides a `render` function that will render our app inside this `div`:
+
+```jsx
+import { render } from "solid-js/web";
+
+function HelloWorld() {
+  const name = "Solid";
+  const style = { "background-color": "#2c4f7c", color: "#FFF" };
+
+  return <div style={style}>Hello {name}!</div>;
+}
+
+render(() => <HelloWorld />, document.getElementById("root"));
+```
+
+This snippet creates our `HelloWorld` component and inserts within the DOM node that has an `id` of `"root"`. At this point, we have built a representation of our user interface in JavaScript and Solid has added it to the DOM: everything needed for us to see our simple Hello World application on a web page!
+
+**Note:** The `render` function _also_ is also doing some magic behind the scenes that enables Solid's _reactive system_, so you'll want to make sure the first argument passed to the render function is a function that returns a component `() => <Component />` rather than just the component itself.
+
+## Composing multiple components together
+
+In most cases, out applications are big enough that we will want to split them into _multiple_ components. Let's move on from our `HelloWorld` example to build something a little bigger&mdash;a virtual bookshelf. Our bookshelf will allow us to add books, mark books as "read," and eventually fetch book titles from other services on the Internet.
+
+Given the intuitive nature of JSX, we can plan out our application a bit. Our main `Bookshelf` will be comprised of two top-level components:
+
+- A `<Books />` component, which lists all the books in our bookshelf
+- An `<AddBook />` component, which will allow us to add a book to our bookshelf
+
+While we'll eventually want to make our bookshelf interactive, let's first create non-interactive versions of each component. First, we can make the `Books` component and list a couple books:
+
+```jsx
+function Books() {
+  return (
+    <ul>
+      <li>Code Complete</li>
+      <li>JavaScript: The Good Parts</li>
+    </ul>
+  );
+}
+```
+
+Next, we create an `AddBook` component. This will be a form that eventually allows us to add a book to our `Books` list.
+
+```jsx
+function AddBook() {
+  return (
+    <form>
+      <label for="book-name">Book name</label>
+      <input id="book-name" />
+      <button type="submit">Add book</button>
+    </form>
+  );
+}
+```
+
+Finally, we can _compose_ our `Books` and `AddBook` components together inside our `Bookshelf` app.
+
+```jsx
+import { render } from "solid-js/web";
+
+function Bookshelf() {
+  return (
+    <div>
+      <h1>My Bookshelf</h1>
+      <Books />
+      <AddBook />
+    </div>
+  );
+}
+
+render(() => <Bookshelf />, document.getElementById("root"));
+```
+
+### Component relationships
+
+There are a couple terms worth learning when we talk about how components relate to one another&mdash;_parent_ and _child_. In our `Bookshelf` example, the `Bookshelf` component is called the _parent_ of both `Books` and `AddBook` because those two components are within `Bookshelf`. Accordingly, `Books` and `AddBook` are _children_ of `Bookshelf`. You may already be familiar with this terminology; it's how we tend to refer to HTML element relationships in our DOM tree.
+
+### Passing props between components
+
+Components can communicate with their children components by passing properties, which are commonly called `props`. To demonstrate the power of `props`, let's customize our bookshelf by adding our name to it! In the example below, we update our app to display "Solid's Bookshelf," but you should use your own name.
+
+```jsx
+import { render } from "solid-js/web";
+
+function Bookshelf(props) {
+  return (
+    <div>
+      <h1>{props.name}'s Bookshelf</h1>
+      <Books />
+      <AddBook />
+    </div>
+  );
+}
+
+render(() => <Bookshelf name="Solid" />, document.getElementById("root"));
+```
+
+### Progress!
+
+Thus far, we learned about Solid components, JSX, and built the foundation of a handy bookshelf app. Next, we'll bring our bookshelf to life using Solid's reactive system!

@@ -1,7 +1,11 @@
 import { NavLink, useLocation } from "solid-app-router";
+import { createEffect } from "solid-js";
 
 function ActiveLink(props) {
   const location = useLocation();
+  createEffect(() => {
+    console.log(location);
+  });
   return (
     <a
       href={props.href}
@@ -16,6 +20,13 @@ function ActiveLink(props) {
   );
 }
 
+const sections = [
+  { title: "Tutorials", href: "/learn" },
+  { title: "API", href: "/api" },
+  { title: "Recipes", href: "/recipes" },
+  { title: "Concepts", href: "/concepts" },
+];
+
 export const NavHeader = () => (
   <nav className="sticky top-0 items-center w-full flex lg:block justify-between bg-wash dark:bg-wash-dark pt-0 lg:pt-4 pr-5 lg:px-5 z-50">
     <div className="xl:w-full xl:max-w-xs flex items-center">
@@ -26,12 +37,15 @@ export const NavHeader = () => (
       >
         <MenuIcon />
       </button>
-      <div className="inline-flex space-x-1 text-lg font-normal items-center text-primary dark:text-primary-dark py-1 mr-0 sm:mr-3 whitespace-nowrap">
+      <a
+        href="/"
+        className="inline-flex space-x-1 text-lg font-normal items-center text-primary dark:text-primary-dark py-1 mr-0 sm:mr-3 whitespace-nowrap"
+      >
         <Logo className="text-sm w-8 h-8 text-link dark:text-link-dark" />
         <span class="font-bold">Solid </span>
         <span>+</span>
         <span class="font-bold">SolidStart</span>
-      </div>
+      </a>
       <div className="lg:w-full leading-loose hidden sm:flex flex-initial items-center h-auto pr-5 lg:pr-5 pt-0.5">
         <div className="px-1 mb-px bg-highlight dark:bg-highlight-dark rounded text-link dark:text-link-dark uppercase font-bold tracking-wide text-xs whitespace-nowrap">
           Next
@@ -66,35 +80,39 @@ export const NavHeader = () => (
         </button>
       </div>
     </div>
-    <div className="px-0 pt-2 w-full 2xl:max-w-xs hidden lg:flex items-center self-center border-b-0 lg:border-b border-border dark:border-border-dark">
+    {/* <div class="border-y grid grid-cols-2 border-border dark:border-border-dark">
       <ActiveLink
-        isActive={(loc) =>
-          loc.pathname.startsWith("/") &&
-          !loc.pathname.startsWith("/api") &&
-          !loc.pathname.startsWith("/learn")
-        }
+        isActive={(loc) => loc.pathname == "/"}
         activeClass="text-link border-link dark:text-link-dark dark:border-link-dark font-bold"
-        className="border-transparent inline-flex w-full items-center border-b-2 justify-center text-base leading-9 px-3 py-0.5 hover:text-link dark:hover:text-link-dark whitespace-nowrap"
+        className="border-transparent inline-flex items-center border-b-2 justify-center text-base leading-9 px-3 hover:text-link dark:hover:text-link-dark whitespace-nowrap"
         href="/"
       >
         Home
       </ActiveLink>
       <ActiveLink
-        isActive={(loc) => loc.pathname.startsWith("/learn")}
+        isActive={(loc) => loc.pathname == "/contribute"}
         activeClass="text-link border-link dark:text-link-dark dark:border-link-dark font-bold"
-        className="border-transparent inline-flex w-full items-center border-b-2 justify-center text-base leading-9 px-3 py-0.5 hover:text-link dark:hover:text-link-dark whitespace-nowrap"
-        href="/learn"
+        className="border-transparent inline-flex items-center border-b-2 justify-center text-base leading-9 px-3 hover:text-link dark:hover:text-link-dark whitespace-nowrap"
+        href="/contribute"
       >
-        Learn
+        Contribute
       </ActiveLink>
-      <ActiveLink
-        isActive={(loc) => loc.pathname.startsWith("/api")}
-        activeClass="text-link border-link dark:text-link-dark dark:border-link-dark font-bold"
-        className="border-transparent inline-flex w-full items-center border-b-2 justify-center text-base leading-9 px-3 py-0.5 hover:text-link dark:hover:text-link-dark whitespace-nowrap"
-        href="/api"
-      >
-        API
-      </ActiveLink>
+    </div> */}
+    <div className="px-0 pt-2 w-full 2xl:max-w-xs hidden lg:flex items-center self-center border-b-0 lg:border-b border-border dark:border-border-dark">
+      <div class="w-full grid grid-cols-2">
+        <For each={sections}>
+          {({ title, href }) => (
+            <ActiveLink
+              isActive={(loc) => loc.pathname.startsWith(href)}
+              activeClass="text-link border-link dark:text-link-dark font-bold"
+              className="border-transparent inline-flex w-full items-center border-2 rounded justify-center text-base leading-9 px-3 py-0.5 hover:text-link dark:hover:text-link-dark whitespace-nowrap"
+              href={href}
+            >
+              {title}
+            </ActiveLink>
+          )}
+        </For>
+      </div>
     </div>
     <div className="flex my-4 h-10 mx-0 w-full lg:hidden justify-end lg:max-w-sm">
       <SearchBar />

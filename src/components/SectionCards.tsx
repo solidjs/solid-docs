@@ -44,7 +44,14 @@ export function SectionCards() {
       </Card>
       <Card title="API Reference" cta="Read More" href="/apis">
         Read concise and comprehensive technical documentation on the Solid and
-        SolidStart API.
+        SolidStart APIs.
+      </Card>
+      <Card title="Recipes" cta="Build My Skills" href="/recipes">
+        Follow how-to guides that teach you how to accomplish common tasks and
+        solve specific problems.
+      </Card>
+      <Card title="Concepts" cta="Explore" href="/recipes">
+        Understand the concepts that make up Solid from the ground up.
       </Card>
     </Cards>
   );

@@ -50,7 +50,7 @@ export function SolidDocsLogo() {
           <span class="italic font-normal">Docs</span>
         </h1>
         <div class="inline-flex self-center px-2 mt-1 bg-highlight dark:bg-highlight-dark w-auto rounded text-link dark:text-link-dark uppercase font-bold tracking-wide text-base whitespace-nowrap">
-          Beta
+          Next
         </div>
       </div>
     </div>

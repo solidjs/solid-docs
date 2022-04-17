@@ -302,7 +302,7 @@ const loudDeclaration = myArray.reduce(
 );
 ```
 
-Here, we accomplsihed the same thing in one line of code by using the `reduce` method, which "accumulates" a single value based on the elements of an array. `reduce` takes two arguments: a function that takes two arguments, the accumulation and the current value, and the initial value of the accumulation. Behind the scenes, `reduce` looks at the first element of the array and passes it and the initial value ("I declare") to the arrow function we passed. Then it takes the resulting value, looks at the next element of the array, and calls the arrow function again, and so on for all of the elements in the array.
+Here, we accomplsihed the same thing in one line of code by using the `reduce` method, which "accumulates" a single value based on the elements of an array. `reduce` takes two arguments: the first is a function that itself two arguments, the accumulation and the current value; the second is the initial value of the accumulation. Behind the scenes, `reduce` looks at the first element of the array and passes it and the initial value ("I declare") to the arrow function we passed. Then it takes the resulting value, looks at the next element of the array, and calls the arrow function again, and so on for all of the elements in the array.
 
 When we say we write "declarative code", we mean that we make use of abstractions to write code that is more streamlined: focused more on the "what" than the "how". Using `reduce` allows us to write less "boilerplate" looping code, and instead focus on the core functionality that we want.
 

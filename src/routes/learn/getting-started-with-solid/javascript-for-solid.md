@@ -10,7 +10,7 @@ When first writing modern JavaScript you might be tempted to use one of these ke
 var, new, this, class
 ```
 
-Don't use these. You can build any Solid app without them, and there are replacements for them that we'll talk about below. There are some occasional use cases for `this` that we'll introduce later on in the docs. And some very opinionated, advanced users build their systems with `class`, but they're not taking our advice.
+It's a good rule of thumb to avoid these. You can build any Solid app without them, they add unwarranted complexity to your code, and there are replacements for them that we'll talk about below. There are some occasional use cases for `this` that we'll introduce later on in the docs. And some very opinionated, advanced users build their systems with `class`, but they're not taking our advice.
 
 ## `let` and `const`
 
@@ -62,7 +62,7 @@ import { areaOfCircle } from "./utils.js";
 console.log(areaOfCircle(4));
 ```
 
-## Factory Functions
+## Factory Functions and Closures
 
 There are many ways of doing object-oriented programming in JavaScript, but the most common you'll find alongside Solid is the technique of defining a function that returns an object.
 
@@ -199,7 +199,7 @@ function App() {
 
 ```
 
-## Functions as Arguments
+## Arrow Functions
 
 There are many ways to declare a function in JavaScript. Here are most of them:
 
@@ -244,6 +244,68 @@ There are nuanced differences between these declarations - for example, add `con
 
 If you're in doubt, use an arrow function (example #4). As long as you're following the earlier advice and not using the `this` keyword, there will be no difference between an arrow function and a function expression.
 
+## Functions as Arguments
+
+Earlier, we saw how you can return a function from a function. You can also accept a function as an argument to a function:
+
+```js
+function callForEach(array, func) {
+  for (let i = 0; i < array.length; i++) {
+    const currentElement = array[i];
+    func(currentElement);
+  }
+}
+
+const myArray = ["I", "love", "Solid"];
+callForEach(myArray, console.log);
+//I
+//love
+//Solid
+```
+
+Many functions that are built-in to JavaScript (and many that come with Solid) take a function argument. The above is actually built-in to JavaScript arrays:
+
+```js
+const myArray = ["I", "love", "Solid"];
+myArray.forEach(console.log);
+//I
+//love
+//Solid
+```
+
+Another common example is the built-in `map` method. It takes as its argument a function that maps the current element of the array to a new result:
+
+```js
+const myArray = ["I", "love", "Solid"];
+const uppercase = myArray.map(element => element.toUpperCase())) // ["I", "LOVE", "SOLID"]
+```
+
 ## Declarative vs Imperative Code
+
+JavaScript array methods like `map` (and others like [`reduce`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce) and [`filter`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)) can replace loops that you might make with `for` or `while`. Those traditional loop techniques are called "imperative" - they state step-by-step how to accomplish something:
+
+```js
+const myArray = ["I", "love", "Solid"];
+let loudDeclaration = "I declare:";
+for (element of myArray) {
+  loudDeclaration.push(" " + element.toUpperCase());
+}
+```
+
+Using JavaScript array methods allow for more "declarative" code, where you stay _what_ to do but not the full details of _how_.
+
+```js
+const myArray = ["I", "love", "Solid"];
+const loudDeclaration = myArray.reduce(
+  (string, current) => `${string} ${current}`,
+  "I declare:"
+);
+```
+
+Here, we accomplsihed the same thing in one line of code by using the `reduce` method, which "accumulates" a single value based on the elements of an array. `reduce` takes two arguments: a function that takes two arguments, the accumulation and the current value, and the initial value of the accumulation. Behind the scenes, `reduce` looks at the first element of the array and passes it and the initial value ("I declare") to the arrow function we passed. Then it takes the resulting value, looks at the next element of the array, and calls the arrow function again, and so on for all of the elements in the array.
+
+When we say we write "declarative code", we mean that we make use of abstractions to write code that is more streamlined: focused more on the "what" than the "how". Using `reduce` allows us to write less "boilerplate" looping code, and instead focus on the core functionality that we want.
+
+## Getters and Proxies
 
 ## Promises

@@ -1,19 +1,29 @@
-import { createEffect, createSignal, PropsWithChildren, Show } from "solid-js";
+import {
+  Accessor,
+  createContext,
+  createEffect,
+  createSignal,
+  PropsWithChildren,
+  Show,
+  useContext,
+} from "solid-js";
+import { isServer } from "solid-js/web";
 
-type Mode = "jsx" | "tsx";
+type Mode = "jsx" | "tsx" | undefined;
 
-const mode: Mode =
-  typeof window !== "undefined" && localStorage.getItem("mode") === "tsx"
-    ? "tsx"
-    : "jsx";
+const DisplayModeContext = createContext<Accessor<Mode>>(() => "jsx");
 
-const [displayMode, setDisplayMode] = createSignal<Mode>(mode);
-
-createEffect(() => {
-  typeof window !== "undefined" && localStorage.setItem("mode", displayMode());
-});
+const getDisplayMode: () => Mode = () => {
+  return !isServer && localStorage.getItem("mode") === "tsx" ? "tsx" : "jsx";
+};
 
 const Container = (props: PropsWithChildren) => {
+  const [displayMode, setDisplayMode] = createSignal<Mode>(getDisplayMode());
+
+  createEffect(() => {
+    !isServer && localStorage.setItem("mode", displayMode());
+  });
+
   return (
     <>
       <div class="flex justify-end gap-x-2">
@@ -42,13 +52,16 @@ const Container = (props: PropsWithChildren) => {
           Typescript
         </button>
       </div>
-      {props.children}
+      <DisplayModeContext.Provider value={displayMode}>
+        {props.children}
+      </DisplayModeContext.Provider>
     </>
   );
 };
 
-const Code = (props: PropsWithChildren<{ language: Mode }>) => (
-  <Show when={displayMode() === props.language}>{props.children}</Show>
-);
+const Code = (props: PropsWithChildren<{ language: Mode }>) => {
+  const displayMode = useContext(DisplayModeContext);
+  return <Show when={displayMode() === props.language}>{props.children}</Show>;
+};
 
 export default { Container, Code };

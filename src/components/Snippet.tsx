@@ -1,67 +1,53 @@
-import {
-  Accessor,
-  createContext,
-  createEffect,
-  createSignal,
-  PropsWithChildren,
-  Show,
-  useContext,
-} from "solid-js";
-import { isServer } from "solid-js/web";
-
-type Mode = "jsx" | "tsx" | undefined;
-
-const DisplayModeContext = createContext<Accessor<Mode>>(() => "jsx");
-
-const getDisplayMode: () => Mode = () => {
-  return !isServer && localStorage.getItem("mode") === "tsx" ? "tsx" : "jsx";
-};
+import { PropsWithChildren, useContext } from "solid-js";
+import { CodeFormat, ConfigContext } from "./ConfigContext";
 
 const Container = (props: PropsWithChildren) => {
-  const [displayMode, setDisplayMode] = createSignal<Mode>(getDisplayMode());
-
-  createEffect(() => {
-    !isServer && localStorage.setItem("mode", displayMode());
-  });
+  const [config, setConfig] = useContext(ConfigContext);
 
   return (
     <>
       <div class="flex justify-end gap-x-2">
         <button
           class={
-            displayMode() === "jsx"
+            config().codeFormat === "jsx"
               ? "border-bottom-2 border-yellow-400"
               : "ease-in duration-300 border-bottom-2 border-transparent hover:border-yellow-300"
           }
           onClick={() => {
-            setDisplayMode("jsx");
+            setConfig((c) => ({ ...c, codeFormat: "jsx" }));
           }}
         >
           JavaScript
         </button>
         <button
           class={
-            displayMode() === "tsx"
+            config().codeFormat === "tsx"
               ? "border-bottom-2 border-blue-500"
               : "ease-in duration-300 border-bottom-2 border-transparent hover:border-blue-500"
           }
           onClick={() => {
-            setDisplayMode("tsx");
+            setConfig((c) => ({ ...c, codeFormat: "tsx" }));
           }}
         >
           Typescript
         </button>
       </div>
-      <DisplayModeContext.Provider value={displayMode}>
-        {props.children}
-      </DisplayModeContext.Provider>
+      {props.children}
     </>
   );
 };
 
-const Code = (props: PropsWithChildren<{ language: Mode }>) => {
-  const displayMode = useContext(DisplayModeContext);
-  return <Show when={displayMode() === props.language}>{props.children}</Show>;
+const Code = (props: PropsWithChildren<{ language: CodeFormat }>) => {
+  const [config] = useContext(ConfigContext);
+  return (
+    <div
+      style={{
+        display: config().codeFormat === props.language ? "block" : "none",
+      }}
+    >
+      {props.children}
+    </div>
+  );
 };
 
 export default { Container, Code };

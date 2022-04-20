@@ -61,19 +61,21 @@ export default function Root() {
         <Links />
       </head>
       <body class="font-sans antialiased text-lg bg-wash dark:bg-wash-dark text-secondary dark:text-secondary-dark leading-base min-h-screen h-auto lg:h-screen flex flex-row">
-        <MDXProvider
-          components={{
-            ...md,
-          }}
-        >
-          <Nav />
-          <Main>
-            <Routes />
-          </Main>
-          {/* <div class="h-screen overflow-scroll flex-1 bg-blue-50 px-12">
+        <ConfigProvider>
+          <MDXProvider
+            components={{
+              ...md,
+            }}
+          >
+            <Nav />
+            <Main>
+              <Routes />
+            </Main>
+            {/* <div class="h-screen overflow-scroll flex-1 bg-blue-50 px-12">
             <div class="flex flex-col w-full"> <Routes /> </div>
           </div> */}
-        </MDXProvider>
+          </MDXProvider>
+        </ConfigProvider>
         <Scripts />
       </body>
     </html>
@@ -82,6 +84,7 @@ export default function Root() {
 
 import { useParams, Router, Route } from "solid-app-router";
 import { createResource, JSX } from "solid-js";
+import { ConfigProvider } from "./components/ConfigContext";
 
 function App() {
   return (

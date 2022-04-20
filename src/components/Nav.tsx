@@ -81,6 +81,10 @@ const LEARN_SECTIONS = {
     link: "/learn/getting-started",
     inSubsections: (p) => p.startsWith("/learn/getting-started-with-solid"),
     subsections: {
+      Welcome: {
+        header: "Welcome",
+        link: "/learn/getting-started-with-solid/welcome",
+      },
       "Why Solid?": {
         header: "Why Solid?",
         link: "/learn/getting-started-with-solid/why-solid",

@@ -25,7 +25,7 @@ export const FrameworkAside = (
       style={{
         display: config().comingFrom === props.framework ? "block" : "none",
       }}
-      class="border-1 p-2 rounded my-10"
+      class="border-1 p-5 rounded my-10"
     >
       <h3 class="text-xl">{title()}</h3>
       {props.children}

@@ -105,6 +105,10 @@ const LEARN_SECTIONS = {
         header: "Adding Interactivity with State",
         link: "/learn/getting-started-with-solid/adding-interactivity-with-state",
       },
+      "Control Flow": {
+        header: "Control Flow",
+        link: "/learn/getting-started-with-solid/control-flow",
+      },
     },
   },
   Foundations: {

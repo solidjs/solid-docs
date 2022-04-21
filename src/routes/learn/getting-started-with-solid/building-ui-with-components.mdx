@@ -139,6 +139,47 @@ function MyApp() {
 
 `MyApp` is a component that displays some header text, `Welcome`, alongside our `HelloWorld` component. We're starting to get a sense of the _composability_ of JSX: we have a good bit of information inside our `HelloWorld` component that can now be used very simply inside the `myApp` component!
 
+### Using fragments
+
+One rule when using JSX is that JSX must return a single element. For example, the following is valid JSX because there is a single `<div />` that contains the rest of the JSX:
+
+<Snippet.Container>
+
+```jsx
+<div>
+  <h1>Welcome</h1>
+  <HelloWorld />
+</div>
+```
+
+</Snippet.Container>
+
+But the following is _not_ valid JSX because there is no single containing element:
+
+<Snippet.Container>
+
+```jsx
+<h1>Welcome</h1>
+<HelloWorld />
+```
+
+</Snippet.Container>
+
+However, we may not actually _want_ a `<div />` (or some other element) surrounding this code when it's rendered to the DOM. _JSX fragments_ give us a way to both write valid JSX and also not actually render a containing element to the DOM. Fragments look like `<></>` and can be used like other JSX components:
+
+<Snippet.Container>
+
+```jsx
+<>
+  <h1>Welcome</h1>
+  <HelloWorld />
+</>
+```
+
+</Snippet.Container>
+
+Now we have valid JSX but we won't have a containing element rendered to the DOM.
+
 ### JSX is compiled
 
 JSX is syntax on top of JavaScript and is not directly part of any JavaScript standard. Therefore, JSX can't be run directly in the browser (or most other JavaScript runtimes). Solid and other frameworks that use JSX require their code to be run through a compiler. If you're using a starter template you probably don't have to worry about this&mdash;everything will just work out of the box.
@@ -301,6 +342,29 @@ render(() => <Bookshelf name="Solid" />, document.getElementById("root"));
 </Snippet.Code>
 
 </Snippet.Container>
+
+<FrameworkAside framework="react">
+  In React, it's common to use _destructuring assignment_ when accessing props inside a component. For example, our `Bookshelf` component may be written like this in React:
+
+```jsx
+import { render } from "solid-js/web";
+
+function Bookshelf({ name }) {
+  return (
+    <div>
+      <h1>{name}'s Bookshelf</h1>
+      <Books />
+      <AddBook />
+    </div>
+  );
+}
+
+render(() => <Bookshelf name="Solid" />, document.getElementById("root"));
+```
+
+**But destructuring `props` is usually a bad idea in Solid**. Under the hood, Solid uses _proxies_ to hook into `props` objects to know when a prop is accessed. When we destructure our props object in the function signature, we immediately access the object's properties and lose reactivity.
+
+</FrameworkAside>
 
 ### Progress!
 

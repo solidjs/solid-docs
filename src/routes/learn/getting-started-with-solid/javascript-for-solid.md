@@ -285,27 +285,26 @@ const uppercase = myArray.map(element => element.toUpperCase())) // ["I", "LOVE"
 JavaScript array methods like `map` (and others like [`reduce`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce) and [`filter`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)) can replace loops that you might make with `for` or `while`. Those traditional loop techniques are called "imperative" - they state step-by-step how to accomplish something:
 
 ```js
-const myArray = ["I", "love", "Solid"];
-let loudDeclaration = "I declare:";
-for (element of myArray) {
-  loudDeclaration.push(" " + element.toUpperCase());
+const myNumbers = [1, 2, 3, 4, 5, 11, 18, 65];
+let oddNumbers = [];
+for (const number of myNumbers) {
+  if (number % 2 !== 0) {
+    oddNumbers.push(number);
+  }
 }
+console.log(oddNumbers); // [ 1, 3, 5, 11, 65 ]
 ```
 
-Using JavaScript array methods allow for more "declarative" code, where you stay _what_ to do but not the full details of _how_.
+Using JavaScript array methods allow for more "declarative" code, where you state _what_ to do but not the full details of _how_.
 
 ```js
-const myArray = ["I", "love", "Solid"];
-const loudDeclaration = myArray.reduce(
-  (string, current) => `${string} ${current}`,
-  "I declare:"
-);
+const myNumbers = [1, 2, 3, 4, 5, 11, 18, 65];
+const oddNumbers = myNumbers.filter((number) => number % 2 !== 0);
+console.log(oddNumbers); // [ 1, 3, 5, 11, 65 ]
 ```
 
-Here, we accomplsihed the same thing in one line of code by using the `reduce` method, which "accumulates" a single value based on the elements of an array. `reduce` takes two arguments: the first is a function that itself two arguments, the accumulation and the current value; the second is the initial value of the accumulation. Behind the scenes, `reduce` looks at the first element of the array and passes it and the initial value ("I declare") to the arrow function we passed. Then it takes the resulting value, looks at the next element of the array, and calls the arrow function again, and so on for all of the elements in the array.
+Here, we accomplished the same thing in one line of code by using the `filter` array method, which takes a function and returns a new array that contains only the elements that return true when passed to the function.
 
-When we say we write "declarative code", we mean that we make use of abstractions to write code that is more streamlined: focused more on the "what" than the "how". Using `reduce` allows us to write less "boilerplate" looping code, and instead focus on the core functionality that we want.
+When we say we write "declarative code", we mean that we make use of abstractions to write code that is more streamlined: focused more on _what_ we are trying to accomplish than exactly _how_. Using `filter` allows us to write less "boilerplate" looping code, and instead focus on the core functionality that we want. The code is simpler to read: `for` loops can be used for all sorts of purposes, but whenever you see `filter` you know that the purpose of the looping is to ignoring some items in an array.
 
-## Getters and Proxies
-
-## Promises
+HTML is a great example of a _declarative_ way of writing: you state _what_ you want the structure to be, not _how_ it should be put together or rendered. As we hope to show you in this tutorial, Solid makes it easier to write declarative code when working with UIs.

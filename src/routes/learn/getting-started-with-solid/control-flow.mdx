@@ -81,11 +81,110 @@ In Solid, if we want to conditionally display JSX in a component, we need that c
 
 </FrameworkAside>
 
-## Iterating over data
+## Iterating over data with `<For />`
 
-- `<For />`
+User interfaces often require us to display lists of data. These lists can typically be any length, and therefore we can't just hardcode each element. Instead, Solid gives us the `<For />` component. If you have been coding along with the Bookshelf app example, you'll notice we already had to use this component.
+
+The `<For />` component takes the array you want to loop over in the `each` prop:
+
+```jsx
+const books = ["Book 1", "Book 2"];
+
+<For each={books}>...</For>;
+```
+
+Inside the `<For />` component, you use a _callback function_ to loop over the items. In this case, we create a new list item `<li>` for each book in our `books` array:
+
+```jsx
+const books = ["Book 1", "Book 2"];
+
+<For each={books}>
+  {(book) => {
+    return <li>{book}</li>;
+  }}
+</For>;
+```
+
+<FrameworkAside framework="react">
+
+In React, you iterate over arrays in JSX using the array `map` method:
+
+```jsx
+<>
+  {books.map((book) => {
+    return <li key={book}>{book}</li>;
+  })}
+</>
+```
+
+This would actually work in Solid, but in not optimal. You can think of `<For />` as an optimized version of `map`. When using `<For /> `, Solid is able to intelligently determine which array elements to update without you having to provide a `key`.
+
+</FrameworkAside>
 
 ## Revisiting the bookshelf
 
-- Already implemented `For`
-- Use `Show` to hide/show the `AddBook` form
+In the [Adding Interactivity with State](../adding-interactivity-with-state) section of this tutorial, we found ourselves already needing the `<For /.` component. This allowed us to iterate over any number of books that are on our bookshelf:
+
+```jsx
+function Books(props) {
+  return (
+    <ul>
+      <For each={props.books}>
+        {(book) => {
+          return <li>{book}</li>;
+        }}
+      </For>
+    </ul>
+  );
+}
+```
+
+Let's now use the `<Show />` component. As a reminder, our `Bookshelf` app code is currently as follows:
+
+```jsx
+function Bookshelf(props) {
+  const [books, setBooks] = createSignal([
+    "Code Complete",
+    "JavaScript: The Good Parts",
+  ]);
+
+  return (
+    <div>
+      <h1>{props.name}'s Bookshelf</h1>
+      <Books books={books()} />
+      <AddBook setBooks={setBooks} />
+    </div>
+  );
+}
+```
+
+Let's only show our `AddBook` form if the user wants to add a book. We'll create a boolean signal in the `Bookshelf` component that tracks whether or not the form is open and add buttons to open and close the form. We will use the `<Show />` component to conditionally display the form.
+
+```jsx
+function Bookshelf(props) {
+  const [books, setBooks] = createSignal([
+    "Code Complete",
+    "JavaScript: The Good Parts",
+  ]);
+
+  const [showForm, setShowForm] = createSignal(false);
+
+  const toggleForm = () => setShowForm(!showForm());
+
+  return (
+    <div>
+      <h1>{props.name}'s Bookshelf</h1>
+      <Books books={books()} />
+      <Show
+        when={showForm()}
+        fallback={<button onClick={toggleForm}>Add a book</button>}
+      >
+        <AddBook setBooks={setBooks} />
+        <button onClick={toggleForm}>Finished adding books</button>
+      </Show>
+    </div>
+  );
+}
+```
+
+When `showForm()` is `true`, the app displays the `<AddBook />` form and a button that allows us to hide the form again. When `showForm()` is `false`, the `fallback` component is displayed&mdash;a button to show the `<AddBook />` form.

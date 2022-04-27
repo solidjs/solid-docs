@@ -3,6 +3,8 @@ import { FrameworkAside } from "../../../components/FrameworkAside";
 
 <title>Building User Interfaces with Components</title>
 
+# Building User Interfaces with Components
+
 ## What are components?
 
 Components are functions that define how your application looks. Each component you write represents a small part of your application's entire user interface. Splitting your application into components has many advantages: components are small, reusable, easily-tested, and enable different team members to work on different parts of the application without stepping on each other.
@@ -11,7 +13,7 @@ Let's build our first component, which will display `Hello World!` inside a `div
 
 <Snippet.Container>
 
-```jsx
+```tsx twoslash
 function HelloWorld() {
   return <div>Hello World!</div>;
 }
@@ -36,7 +38,7 @@ As we learned above, Solid components return JSX. JSX is an HTML-like syntax tha
 
 <Snippet.Container>
 
-```jsx
+```tsx twoslash
 <div>Hello World!</div>
 ```
 
@@ -46,7 +48,7 @@ This JSX represents a `div` element with the text `Hello World!` inside it. In t
 
 <Snippet.Container>
 
-```jsx
+```tsx twoslash
 <div style="background-color: #2c4f7c; color: #FFF;">Hello world!</div>
 ```
 
@@ -60,7 +62,7 @@ This syntax is already a big win: trying to create a styled div using JavaScript
 
 <Snippet.Container>
 
-```js
+```ts twoslash
 const div = document.createElement("div");
 div.style["background-color"] = "#2c4f7c";
 div.style.color = "#FFF";
@@ -74,7 +76,7 @@ JSX becomes even more powerful once you realize it can be used alongside&mdash;a
 
 <Snippet.Container>
 
-```jsx
+```tsx twoslash
 const name = "Solid";
 
 <div style="background-color: #2c4f7c; color: #FFF;">Hello {name}!</div>;
@@ -90,7 +92,7 @@ We can take this a step further and specify our div's `style` attribute as a Jav
 
 <Snippet.Container>
 
-```jsx
+```tsx twoslash
 const name = "Solid";
 const style = { "background-color": "#2c4f7c", color: "#FFF" };
 
@@ -109,12 +111,15 @@ Let's update our initial `HelloWorld` component with what we learned in our JSX 
 
 <Snippet.Container>
 
-```jsx
-function HelloWorld() {
+```tsx twoslash
+// @module: esnext
+// @filename: HelloWorld.jsx
+
+export function HelloWorld() {
   const name = "Solid";
   const style = { "background-color": "#2c4f7c", color: "#FFF" };
 
-  <div style={style}>Hello {name}!</div>;
+  return <div style={style}>Hello {name}!</div>;
 }
 ```
 
@@ -123,8 +128,23 @@ function HelloWorld() {
 We can now, in turn, use `HelloWorld` as a JSX component _inside_ another component:
 
 <Snippet.Container>
-  
-```jsx
+
+```tsx twoslash
+// @module: esnext
+// @filename: HelloWorld.jsx
+
+export function HelloWorld() {
+  const name = "Solid";
+  const style = { "background-color": "#2c4f7c", color: "#FFF" };
+
+  return <div style={style}>Hello {name}!</div>;
+}
+
+// ---cut---
+// @filename: App.jsx
+
+import { HelloWorld } from "./HelloWorld";
+
 function MyApp() {
   return (
     <div>
@@ -145,7 +165,7 @@ One rule when using JSX is that JSX must return a single element. For example, t
 
 <Snippet.Container>
 
-```jsx
+```tsx
 <div>
   <h1>Welcome</h1>
   <HelloWorld />
@@ -158,7 +178,7 @@ But the following is _not_ valid JSX because there is no single containing eleme
 
 <Snippet.Container>
 
-```jsx
+```tsx
 <h1>Welcome</h1>
 <HelloWorld />
 ```
@@ -169,7 +189,7 @@ However, we may not actually _want_ a `<div />` (or some other element) surround
 
 <Snippet.Container>
 
-```jsx
+```tsx
 <>
   <h1>Welcome</h1>
   <HelloWorld />
@@ -202,7 +222,7 @@ Solid provides a `render` function that will render our app inside this `div`:
 
 <Snippet.Container>
 
-```jsx
+```tsx twoslash
 import { render } from "solid-js/web";
 
 function HelloWorld() {
@@ -212,12 +232,16 @@ function HelloWorld() {
   return <div style={style}>Hello {name}!</div>;
 }
 
-render(() => <HelloWorld />, document.getElementById("root"));
+const root = document.getElementById("root");
+
+if (root) {
+  render(() => <HelloWorld />, root);
+}
 ```
 
 </Snippet.Container>
 
-This snippet creates our `HelloWorld` component and inserts within the DOM node that has an `id` of `"root"`. At this point, we have built a representation of our user interface in JavaScript and Solid has added it to the DOM: everything needed for us to see our simple Hello World application on a web page!
+This snippet creates our `HelloWorld` component, checks to see if our root node exists, and inserts within that DOM node. At this point, we have built a representation of our user interface in JavaScript and Solid has added it to the DOM: everything needed for us to see our simple Hello World application on a web page!
 
 **Note:** The `render` function _also_ is also doing some magic behind the scenes that enables Solid's _reactive system_, so you'll want to make sure the first argument passed to the render function is a function that returns a component `() => <Component />` rather than just the component itself.
 
@@ -227,32 +251,50 @@ In most cases, out applications are big enough that we will want to split them i
 
 Given the intuitive nature of JSX, we can plan out our application a bit. Our main `Bookshelf` will be comprised of two top-level components:
 
-- A `<Books />` component, which lists all the books in our bookshelf
+- A `<BookList />` component, which lists all the books in our bookshelf
 - An `<AddBook />` component, which will allow us to add a book to our bookshelf
 
-While we'll eventually want to make our bookshelf interactive, let's first create non-interactive versions of each component. First, we can make the `Books` component and list a couple books:
+While we'll eventually want to make our bookshelf interactive, let's first create non-interactive versions of each component. First, we can make the `BookList` component inside and list a couple books alongside their authors:
 
 <Snippet.Container>
 
-```jsx
-function Books() {
+<Snippet.Code language="tsx">
+
+```jsx twoslash
+// @module: esnext
+// @filename: BookList.tsx
+
+export function BookList() {
   return (
     <ul>
-      <li>Code Complete</li>
-      <li>JavaScript: The Good Parts</li>
+      <li>
+        Code Complete{" "}
+        <span style={{ "font-style": "italic" }}>(Steve McConnell)</span>
+      </li>
+      <li>
+        The Hobbit{" "}
+        <span style={{ "font-style": "italic" }}>(J.R.R. Tolkien)</span>
+      </li>
     </ul>
   );
 }
 ```
 
+</Snippet.Code>
+
 </Snippet.Container>
 
-Next, we create an `AddBook` component. This will be a form that eventually allows us to add a book to our `Books` list.
+Next, we create an `AddBook` component. This will be a form that eventually allows us to add a book to our `BookList` list.
 
 <Snippet.Container>
 
-```jsx
-function AddBook() {
+<Snippet.Code language="tsx">
+
+```jsx twoslash
+// @module: esnext
+// @filename: AddBook.tsx
+
+export function AddBook() {
   return (
     <form>
       <label for="book-name">Book name</label>
@@ -263,26 +305,66 @@ function AddBook() {
 }
 ```
 
+</Snippet.Code>
+
 </Snippet.Container>
 
-Finally, we can _compose_ our `Books` and `AddBook` components together inside our `Bookshelf` app.
+Finally, we can _compose_ our `BookList` and `AddBook` components together inside our `Bookshelf` app.
 
 <Snippet.Container>
 
-```jsx
+```tsx twoslash
+// @module: esnext
+// @filename: AddBook.tsx
+export function AddBook() {
+  return (
+    <form>
+      <label for="book-name">Book name</label>
+      <input id="book-name" />
+      <button type="submit">Add book</button>
+    </form>
+  );
+}
+
+// @filename: BookList.tsx
+export function BookList() {
+  return (
+    <ul>
+      <li>
+        Code Complete{" "}
+        <span style={{ "font-style": "italic" }}>(Steve McConnell)</span>
+      </li>
+      <li>
+        The Hobbit{" "}
+        <span style={{ "font-style": "italic" }}>(J.R.R. Tolkien)</span>
+      </li>
+    </ul>
+  );
+}
+
+// ---cut---
+
+// @filename: App.tsx
+
 import { render } from "solid-js/web";
+import { BookList } from "./BookList";
+import { AddBook } from "./AddBook";
 
 function Bookshelf() {
   return (
     <div>
       <h1>My Bookshelf</h1>
-      <Books />
+      <BookList />
       <AddBook />
     </div>
   );
 }
 
-render(() => <Bookshelf />, document.getElementById("root"));
+const root = document.getElementById("root");
+
+if (root) {
+  render(() => <Bookshelf />, root);
+}
 ```
 
 </Snippet.Container>
@@ -297,30 +379,42 @@ Components can communicate with their children components by passing properties,
 
 <Snippet.Container>
 
-<Snippet.Code language="jsx">
-
-```jsx
-import { render } from "solid-js/web";
-
-function Bookshelf(props) {
+```tsx twoslash
+// @module: esnext
+// @filename: AddBook.tsx
+export function AddBook() {
   return (
-    <div>
-      <h1>{props.name}'s Bookshelf</h1>
-      <Books />
-      <AddBook />
-    </div>
+    <form>
+      <label for="book-name">Book name</label>
+      <input id="book-name" />
+      <button type="submit">Add book</button>
+    </form>
   );
 }
 
-render(() => <Bookshelf name="Solid" />, document.getElementById("root"));
-```
+// @filename: BookList.tsx
+export function BookList() {
+  return (
+    <ul>
+      <li>
+        Code Complete{" "}
+        <span style={{ "font-style": "italic" }}>(Steve McConnell)</span>
+      </li>
+      <li>
+        The Hobbit{" "}
+        <span style={{ "font-style": "italic" }}>(J.R.R. Tolkien)</span>
+      </li>
+    </ul>
+  );
+}
 
-</Snippet.Code>
+// ---cut---
 
-<Snippet.Code language="tsx">
+// @filename: App.tsx
 
-```tsx
 import { render } from "solid-js/web";
+import { BookList } from "./BookList";
+import { AddBook } from "./AddBook";
 
 interface IBookshelfProps {
   name: string;
@@ -330,16 +424,18 @@ function Bookshelf(props: IBookshelfProps) {
   return (
     <div>
       <h1>{props.name}'s Bookshelf</h1>
-      <Books />
+      <BookList />
       <AddBook />
     </div>
   );
 }
 
-render(() => <Bookshelf name="Solid" />, document.getElementById("root"));
-```
+const root = document.getElementById("root");
 
-</Snippet.Code>
+if (root) {
+  render(() => <Bookshelf name="Solid" />, root);
+}
+```
 
 </Snippet.Container>
 
@@ -347,8 +443,6 @@ render(() => <Bookshelf name="Solid" />, document.getElementById("root"));
   In React, it's common to use _destructuring assignment_ when accessing props inside a component. For example, our `Bookshelf` component may be written like this in React:
 
 ```jsx
-import { render } from "solid-js/web";
-
 function Bookshelf({ name }) {
   return (
     <div>
@@ -358,8 +452,6 @@ function Bookshelf({ name }) {
     </div>
   );
 }
-
-render(() => <Bookshelf name="Solid" />, document.getElementById("root"));
 ```
 
 **But destructuring `props` is usually a bad idea in Solid**. Under the hood, Solid uses _proxies_ to hook into `props` objects to know when a prop is accessed. When we destructure our props object in the function signature, we immediately access the object's properties and lose reactivity.

@@ -85,17 +85,9 @@ const LEARN_SECTIONS = {
         header: "Welcome",
         link: "/learn/getting-started-with-solid/welcome",
       },
-      "Why Solid?": {
-        header: "Why Solid?",
-        link: "/learn/getting-started-with-solid/why-solid",
-      },
       "Installing Solid": {
         header: "Installing Solid",
         link: "/learn/getting-started-with-solid/installing-solid",
-      },
-      "JavaScript for Solid": {
-        header: "JavaScript for Solid",
-        link: "/learn/getting-started-with-solid/javascript-for-solid",
       },
       "Building UI with Components": {
         header: "Building UI with Components",
@@ -115,6 +107,14 @@ const LEARN_SECTIONS = {
     header: "Foundations",
     link: "/learn/foundations",
     subsections: {
+      "Why Solid?": {
+        header: "Why Solid?",
+        link: "/learn/getting-started-with-solid/why-solid",
+      },
+      "JavaScript for Solid": {
+        header: "JavaScript for Solid",
+        link: "/learn/getting-started-with-solid/javascript-for-solid",
+      },
       "About Solid": {
         header: "About Solid",
         link: "/learn/foundations/about-solid",

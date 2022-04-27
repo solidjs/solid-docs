@@ -5,6 +5,8 @@ import { BasicBookshelf } from "../components/BasicBookshelf";
 
 <title>Adding Interactivity with State</title>
 
+# Adding Interactivity with State
+
 In the previous lesson, we learned how to architect a Solid application using components and JSX. We then built a Bookshelf application using our new knowledge, but it's not quite complete. In this lesson, we'll learn about some building blocks that help us _manage application state_. We will then apply this knowledge to our Bookshelf application to bring it to life.
 
 ## A note on primitives
@@ -17,7 +19,7 @@ In Solid, the most basic way to manage state in our application is to use a _sig
 
 <Snippet.Container>
 
-```jsx
+```tsx twoslash
 import { createSignal } from "solid-js";
 
 const [count, setCount] = createSignal(0);
@@ -31,7 +33,7 @@ The first element, `count`, is an _accessor_ function (also referred to as a _ge
 
 <Snippet.Container>
 
-```jsx
+```tsx twoslash
 import { createSignal } from "solid-js";
 
 const [count, setCount] = createSignal(0);
@@ -45,7 +47,7 @@ The second element, `setCount`, is a _setter_ function. If we want to increment 
 
 <Snippet.Container>
 
-```jsx
+```jsx twoslash
 import { createSignal } from "solid-js";
 
 const [count, setCount] = createSignal(0);
@@ -67,7 +69,7 @@ The ability to react to signal changes underpins Solid's reactive system. The mo
 
 <Snippet.Container>
 
-```jsx
+```jsx twoslash
 import { createSignal, createEffect } from "solid-js";
 
 const [count, setCount] = createSignal(0);
@@ -93,7 +95,7 @@ Now that we've gained some exposure to two of Solid's core primitives, signals a
 
 <Snippet.Container>
 
-```jsx
+```tsx twoslash
 import { createSignal } from "solid-js";
 
 function Counter() {
@@ -111,7 +113,7 @@ We see that, much like other variables, we can use signals inside our JSX code b
 
 <Snippet.Container>
 
-```jsx
+```jsx twoslash
 import { createSignal } from "solid-js";
 
 function Counter() {
@@ -140,62 +142,34 @@ And now we have a functioning counter! Notably, our DOM updates whenever our `co
 
 We now have the tools necessary to make our Bookshelf application interactive. As a refresher, here's the current state of the app. It currently has the following components:
 
-- `Books`, a list of books on our Bookshelf
+- `BookList`, a list of books on our Bookshelf
 - `AddBook`, a form that will allow us to add more books to the shelf
 - `Bookshelf`, our main application component that contains the other two
 
 <Snippet.Container>
 
-<Snippet.Code language="jsx">
-
-```jsx
-function Books() {
-  return (
-    <ul>
-      <li>Code Complete</li>
-      <li>JavaScript: The Good Parts</li>
-    </ul>
-  );
-}
-
-function AddBook() {
-  return (
-    <form>
-      <label for="book-name">Book name</label>
-      <input id="book-name" />
-      <button type="submit">Add book</button>
-    </form>
-  );
-}
-
-function Bookshelf(props) {
-  return (
-    <div>
-      <h1>{props.name}'s Bookshelf</h1>
-      <Books />
-      <AddBook />
-    </div>
-  );
-}
-
-render(() => <Bookshelf name="Solid" />, document.getElementById("root"));
-```
-
-</Snippet.Code>
-
 <Snippet.Code language="tsx">
 
-```jsx
-function Books() {
+```tsx twoslash
+// @module: esnext
+// @filename: BookList.tsx
+export function BookList() {
   return (
     <ul>
-      <li>Code Complete</li>
-      <li>JavaScript: The Good Parts</li>
+      <li>
+        Code Complete{" "}
+        <span style={{ "font-style": "italic" }}>(Steve McConnell)</span>
+      </li>
+      <li>
+        The Hobbit{" "}
+        <span style={{ "font-style": "italic" }}>(J.R.R. Tolkien)</span>
+      </li>
     </ul>
   );
 }
 
-function AddBook() {
+// @filename: AddBook.tsx
+export function AddBook() {
   return (
     <form>
       <label for="book-name">Book name</label>
@@ -204,6 +178,11 @@ function AddBook() {
     </form>
   );
 }
+
+// @filename: App.tsx
+import { render } from "solid-js/web";
+import { BookList } from "./BookList";
+import { AddBook } from "./AddBook";
 
 interface IBookshelfProps {
   name: string;
@@ -213,42 +192,57 @@ function Bookshelf(props: IBookshelfProps) {
   return (
     <div>
       <h1>{props.name}'s Bookshelf</h1>
-      <Books />
+      <BookList />
       <AddBook />
     </div>
   );
 }
 
-render(() => <Bookshelf name="Solid" />, document.getElementById("root"));
+const root = document.getElementById("root");
+
+if (root) {
+  render(() => <Bookshelf name="Solid" />, root);
+}
 ```
 
 </Snippet.Code>
 
 </Snippet.Container>
 
-As a first step to adding interactivity, let's add a signal that keeps track of our book list. We'll call it `books` and it wil llive in the `Books` component:
+As a first step to adding interactivity, let's add a signal that keeps track of our book list. We'll call it `books` and it wil live in the `BookList` component. Each book will have a `title` and an `author`.
 
-<Snippet.Container>
-
-```jsx
+```tsx twoslash
+// @module: esnext
+// @filename: BookList.tsx
 import { createSignal } from "solid-js";
 
-function Books() {
-  const [books, setBooks] = createSignal([
-    "Code Complete",
-    "JavaScript: The Good Parts",
-  ]);
+type Book = {
+  title: string;
+  author: string;
+};
+
+const initialBooks: Book[] = [
+  { title: "Code Complete", author: "Steve McConnell" },
+  { title: "The Hobbit", author: "J.R.R. Tolkien" },
+];
+
+export function BookList() {
+  const [books, setBooks] = createSignal<Book[]>(initialBooks);
 
   return (
     <ul>
-      <li>{books()[0]}</li>
-      <li>{books()[1]}</li>
+      <li>
+        {books()[0].title}{" "}
+        <span style={{ "font-style": "italic" }}>({books()[0].author})</span>
+      </li>
+      <li>
+        {books()[1].title}{" "}
+        <span style={{ "font-style": "italic" }}>({books()[1].author})</span>
+      </li>
     </ul>
   );
 }
 ```
-
-</Snippet.Container>
 
 There are a couple things to note here:
 

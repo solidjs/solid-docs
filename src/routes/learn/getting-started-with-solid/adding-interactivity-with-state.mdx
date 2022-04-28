@@ -1,4 +1,5 @@
 import Snippet from "../../../components/Snippet";
+import { Tab, Tabs } from "../../../components/Tabs";
 import { FrameworkAside } from "../../../components/FrameworkAside";
 import { BasicCounter } from "../components/BasicCounter";
 import { BasicBookshelf } from "../components/BasicBookshelf";
@@ -19,7 +20,7 @@ In Solid, the most basic way to manage state in our application is to use a _sig
 
 <Snippet.Container>
 
-```tsx twoslash
+```tsx
 import { createSignal } from "solid-js";
 
 const [count, setCount] = createSignal(0);
@@ -33,7 +34,7 @@ The first element, `count`, is an _accessor_ function (also referred to as a _ge
 
 <Snippet.Container>
 
-```tsx twoslash
+```tsx
 import { createSignal } from "solid-js";
 
 const [count, setCount] = createSignal(0);
@@ -47,7 +48,7 @@ The second element, `setCount`, is a _setter_ function. If we want to increment 
 
 <Snippet.Container>
 
-```jsx twoslash
+```tsx
 import { createSignal } from "solid-js";
 
 const [count, setCount] = createSignal(0);
@@ -69,7 +70,7 @@ The ability to react to signal changes underpins Solid's reactive system. The mo
 
 <Snippet.Container>
 
-```jsx twoslash
+```tsx
 import { createSignal, createEffect } from "solid-js";
 
 const [count, setCount] = createSignal(0);
@@ -95,7 +96,7 @@ Now that we've gained some exposure to two of Solid's core primitives, signals a
 
 <Snippet.Container>
 
-```tsx twoslash
+```tsx
 import { createSignal } from "solid-js";
 
 function Counter() {
@@ -113,7 +114,7 @@ We see that, much like other variables, we can use signals inside our JSX code b
 
 <Snippet.Container>
 
-```jsx twoslash
+```tsx
 import { createSignal } from "solid-js";
 
 function Counter() {
@@ -146,40 +147,10 @@ We now have the tools necessary to make our Bookshelf application interactive. A
 - `AddBook`, a form that will allow us to add more books to the shelf
 - `Bookshelf`, our main application component that contains the other two
 
-<Snippet.Container>
+<Tabs files={["App.tsx", "BookList.tsx", "AddBook.tsx"]} selected="App.tsx">
+  <Tab name="App.tsx">
 
-<Snippet.Code language="tsx">
-
-```tsx twoslash
-// @module: esnext
-// @filename: BookList.tsx
-export function BookList() {
-  return (
-    <ul>
-      <li>
-        Code Complete{" "}
-        <span style={{ "font-style": "italic" }}>(Steve McConnell)</span>
-      </li>
-      <li>
-        The Hobbit{" "}
-        <span style={{ "font-style": "italic" }}>(J.R.R. Tolkien)</span>
-      </li>
-    </ul>
-  );
-}
-
-// @filename: AddBook.tsx
-export function AddBook() {
-  return (
-    <form>
-      <label for="book-name">Book name</label>
-      <input id="book-name" />
-      <button type="submit">Add book</button>
-    </form>
-  );
-}
-
-// @filename: App.tsx
+```tsx
 import { render } from "solid-js/web";
 import { BookList } from "./BookList";
 import { AddBook } from "./AddBook";
@@ -205,13 +176,47 @@ if (root) {
 }
 ```
 
-</Snippet.Code>
+  </Tab>
+  <Tab name="BookList.tsx">
 
-</Snippet.Container>
+```tsx
+export function BookList() {
+  return (
+    <ul>
+      <li>
+        Code Complete{" "}
+        <span style={{ "font-style": "italic" }}>(Steve McConnell)</span>
+      </li>
+      <li>
+        The Hobbit{" "}
+        <span style={{ "font-style": "italic" }}>(J.R.R. Tolkien)</span>
+      </li>
+    </ul>
+  );
+}
+```
+
+  </Tab>
+  <Tab name="AddBook.tsx">
+
+```tsx
+export function AddBook() {
+  return (
+    <form>
+      <label for="book-name">Book name</label>
+      <input id="book-name" />
+      <button type="submit">Add book</button>
+    </form>
+  );
+}
+```
+
+  </Tab>
+</Tabs>
 
 As a first step to adding interactivity, let's add a signal that keeps track of our book list. We'll call it `books` and it wil live in the `BookList` component. Each book will have a `title` and an `author`.
 
-```tsx twoslash
+```tsx
 // @module: esnext
 // @filename: BookList.tsx
 import { createSignal } from "solid-js";
@@ -227,7 +232,7 @@ const initialBooks: Book[] = [
 ];
 
 export function BookList() {
-  const [books, setBooks] = createSignal<Book[]>(initialBooks);
+  const [books, setBooks] = createSignal(initialBooks);
 
   return (
     <ul>
@@ -256,8 +261,8 @@ The best way to loop over items in Solid is the `<For />` component. The `<For /
 
 <Snippet.Container>
 
-```jsx
-<For each={books()}> </For>
+```jsx twoslash
+<For each={books()}></For>
 ```
 
 </Snippet.Container>
@@ -280,7 +285,7 @@ Our `Books` component now looks like this:
 
 <Snippet.Container>
 
-```jsx
+```jsx twoslash
 import { createSignal, For } from "solid-js";
 
 function Books() {

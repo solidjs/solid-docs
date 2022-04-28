@@ -1,11 +1,7 @@
-import { NavLink, useLocation } from "solid-app-router";
-import { createEffect } from "solid-js";
+import { useLocation } from "solid-app-router";
 
 function ActiveLink(props) {
   const location = useLocation();
-  createEffect(() => {
-    console.log(location);
-  });
   return (
     <a
       href={props.href}

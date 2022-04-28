@@ -1,4 +1,4 @@
-import { Logo } from "./NavHeader";
+import { Logo } from "./nav/NavHeader";
 
 export function ChevronIcon() {
   return (

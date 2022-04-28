@@ -5,7 +5,7 @@ import "./code.css";
 import "virtual:windi.css";
 
 import { MDXProvider } from "solid-mdx";
-import Nav from "./components/Nav";
+import Nav from "./components/nav/Nav";
 import md from "./md";
 import { createEffect } from "solid-js";
 import tippy from "tippy.js";

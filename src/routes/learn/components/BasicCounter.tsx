@@ -10,7 +10,12 @@ export function BasicCounter() {
   return (
     <div>
       Current count: {count()}
-      <button onClick={increment}>Increment</button>
+      <button
+        class="ml-2 bg-gray-200 text-black px-2 rounded"
+        onClick={increment}
+      >
+        Increment
+      </button>
     </div>
   );
 }

@@ -1,15 +1,46 @@
-import { createSignal, For, Setter, JSX } from "solid-js";
+import { createSignal, For, JSX, Setter } from "solid-js";
 
-interface IBooksProps {
-  books: string[];
+type Book = {
+  title: string;
+  author: string;
+};
+
+const initialBooks: Book[] = [
+  { title: "Code Complete", author: "Steve McConnell" },
+  { title: "The Hobbit", author: "J.R.R. Tolkien" },
+];
+
+interface IBookshelfProps {
+  name: string;
 }
 
-function Books(props: IBooksProps) {
+export function BasicBookshelf(props: IBookshelfProps) {
+  const [books, setBooks] = createSignal(initialBooks);
+
   return (
-    <ul>
+    <div class="my-5 p-5 border-2">
+      <h1 class="text-xl mb-3">{props.name}'s Bookshelf</h1>
+      <BookList books={books()} />
+      <AddBook setBooks={setBooks} />
+    </div>
+  );
+}
+
+interface IBookListProps {
+  books: Book[];
+}
+
+export function BookList(props: IBookListProps) {
+  return (
+    <ul class="list-disc ml-5 mb-5">
       <For each={props.books}>
         {(book) => {
-          return <li>{book}</li>;
+          return (
+            <li>
+              {book.title}{" "}
+              <span style={{ "font-style": "italic" }}>({book.author})</span>
+            </li>
+          );
         }}
       </For>
     </ul>
@@ -17,52 +48,51 @@ function Books(props: IBooksProps) {
 }
 
 interface IAddBookProps {
-  setBooks: Setter<string[]>;
+  setBooks: Setter<Book[]>;
 }
 
+const emptyBook: Book = { title: "", author: "" };
+
 function AddBook(props: IAddBookProps) {
-  const [newBook, setNewBook] = createSignal("");
+  const [newBook, setNewBook] = createSignal(emptyBook);
 
   const addBook: JSX.EventHandler<HTMLButtonElement, MouseEvent> = (event) => {
     event.preventDefault();
-    props.setBooks((books) => {
-      return [...books, newBook()];
-    });
-    setNewBook("");
+    props.setBooks((books) => [...books, newBook()]);
+    setNewBook(emptyBook);
   };
 
   return (
     <form>
-      <label for="book-name">Book name</label>
-      <input
-        id="book-name"
-        value={newBook()}
-        onInput={(event) => {
-          setNewBook(event.currentTarget.value);
-        }}
-      />
-      <button type="submit" onClick={addBook}>
+      <div>
+        <label for="title">Book name</label>
+        <input
+          id="title"
+          class="ml-2 text-black"
+          value={newBook().title}
+          onInput={(e) => {
+            setNewBook({ ...newBook(), title: e.currentTarget.value });
+          }}
+        />
+      </div>
+      <div class="my-2">
+        <label for="author">Author</label>
+        <input
+          id="author"
+          class="ml-2 text-black"
+          value={newBook().author}
+          onInput={(e) => {
+            setNewBook({ ...newBook(), author: e.currentTarget.value });
+          }}
+        />
+      </div>
+      <button
+        class="px-2 bg-gray-200 text-black"
+        type="submit"
+        onClick={addBook}
+      >
         Add book
       </button>
     </form>
-  );
-}
-
-interface IBookshelfProps {
-  name: string;
-}
-
-export function BasicBookshelf(props: IBookshelfProps) {
-  const [books, setBooks] = createSignal([
-    "Code Complete",
-    "JavaScript: The Good Parts",
-  ]);
-
-  return (
-    <div>
-      <h1>{props.name}'s Bookshelf</h1>
-      <Books books={books()} />
-      <AddBook setBooks={setBooks} />
-    </div>
   );
 }

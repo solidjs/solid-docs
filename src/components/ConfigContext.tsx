@@ -10,7 +10,7 @@ import { isServer } from "solid-js/web";
 export type CodeFormat = "jsx" | "tsx";
 export type ComingFrom = "react" | "vue" | "svelte" | "none";
 
-type Config = { codeFormat: CodeFormat; comingFrom: ComingFrom };
+export type Config = { codeFormat: CodeFormat; comingFrom: ComingFrom };
 
 export const ConfigContext = createContext<Signal<Config>>();
 

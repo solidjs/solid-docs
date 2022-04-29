@@ -400,6 +400,112 @@ export function AddBook() {
   </Tab>
 </Tabs>
 
+## Derived state
+
+Solid makes it easy to track _derived state_. You can think of derived state as a computation based only on other information you're alread tracking in state. In our Bookshelf application, an example of derived state would be the number of books on our list: it's the length of our `books` array at any point in time.
+
+In Solid, all we have to do to compute derived state is to create a _derived signal_: a function that relies on another signal:
+
+```tsx
+const totalBooks = () => books().length;
+```
+
+Now, our `totalBooks` function is a signal of its own and will always be up-to-date with the length of our `books` array.
+
+<Tabs files={["App.tsx", "BookList.tsx", "AddBook.tsx"]} selected="BookList.tsx">
+  <Tab name="App.tsx">
+
+```tsx
+import { render } from "solid-js/web";
+import { BookList } from "./BookList";
+import { AddBook } from "./AddBook";
+
+interface IBookshelfProps {
+  name: string;
+}
+
+function Bookshelf(props: IBookshelfProps) {
+  return (
+    <div>
+      <h1>{props.name}'s Bookshelf</h1>
+      <BookList />
+      <AddBook />
+    </div>
+  );
+}
+
+const root = document.getElementById("root");
+
+if (root) {
+  render(() => <Bookshelf name="Solid" />, root);
+}
+```
+
+  </Tab>
+  <Tab name="BookList.tsx">
+
+```tsx
+import { createSignal } from "solid-js";
+
+type Book = {
+  title: string;
+  author: string;
+};
+
+const initialBooks: Book[] = [
+  { title: "Code Complete", author: "Steve McConnell" },
+  { title: "The Hobbit", author: "J.R.R. Tolkien" },
+];
+
+export function BookList() {
+  const [books, setBooks] = createSignal(initialBooks);
+
+  const totalBooks = () => books().length;
+
+  return (
+    <>
+      <h2>My books ({totalBooks()})</h2>
+      <ul>
+        <For each={books()}>
+          {(book) => {
+            return (
+              <li>
+                {book.title}{" "}
+                <span style={{ "font-style": "italic" }}>({book.author})</span>
+              </li>
+            );
+          }}
+        </For>
+      </ul>
+    </>
+  );
+}
+```
+
+  </Tab>
+  <Tab name="AddBook.tsx">
+
+```tsx
+export function AddBook() {
+  return (
+    <form>
+      <div>
+        <label for="title">Book name</label>
+        <input id="title" />
+      </div>
+      <div>
+        <label for="author">Author</label>
+        <input id="author" />
+      </div>
+      <button type="submit">Add book</button>
+    </form>
+  );
+}
+```
+
+  </Tab>
+</Tabs>
+
 ## Lifting state up
 
 We want to add a book to the list using our `AddBook` component. There's one problem though: how do we make the `setBooks` setter available to the `AddBooks` component?
@@ -461,19 +567,24 @@ interface IBookListProps {
 }
 
 export function BookList(props: IBookListProps) {
+  const totalBooks = () => props.books.length;
+
   return (
-    <ul>
-      <For each={props.books}>
-        {(book) => {
-          return (
-            <li>
-              {book.title}{" "}
-              <span style={{ "font-style": "italic" }}>({book.author})</span>
-            </li>
-          );
-        }}
-      </For>
-    </ul>
+    <>
+      <h2>My books ({totalBooks()})</h2>
+      <ul>
+        <For each={props.books}>
+          {(book) => {
+            return (
+              <li>
+                {book.title}{" "}
+                <span style={{ "font-style": "italic" }}>({book.author})</span>
+              </li>
+            );
+          }}
+        </For>
+      </ul>
+    </>
   );
 }
 ```
@@ -563,19 +674,24 @@ interface IBookListProps {
 }
 
 export function BookList(props: IBookListProps) {
+  const totalBooks = () => props.books.length;
+
   return (
-    <ul>
-      <For each={props.books}>
-        {(book) => {
-          return (
-            <li>
-              {book.title}{" "}
-              <span style={{ "font-style": "italic" }}>({book.author})</span>
-            </li>
-          );
-        }}
-      </For>
-    </ul>
+    <>
+      <h2>My books ({totalBooks()})</h2>
+      <ul>
+        <For each={props.books}>
+          {(book) => {
+            return (
+              <li>
+                {book.title}{" "}
+                <span style={{ "font-style": "italic" }}>({book.author})</span>
+              </li>
+            );
+          }}
+        </For>
+      </ul>
+    </>
   );
 }
 ```
@@ -702,19 +818,24 @@ interface IBookListProps {
 }
 
 export function BookList(props: IBookListProps) {
+  const totalBooks = () => props.books.length;
+
   return (
-    <ul>
-      <For each={props.books}>
-        {(book) => {
-          return (
-            <li>
-              {book.title}{" "}
-              <span style={{ "font-style": "italic" }}>({book.author})</span>
-            </li>
-          );
-        }}
-      </For>
-    </ul>
+    <>
+      <h2>Total books ({totalBooks()})</h2>
+      <ul>
+        <For each={props.books}>
+          {(book) => {
+            return (
+              <li>
+                {book.title}{" "}
+                <span style={{ "font-style": "italic" }}>({book.author})</span>
+              </li>
+            );
+          }}
+        </For>
+      </ul>
+    </>
   );
 }
 ```

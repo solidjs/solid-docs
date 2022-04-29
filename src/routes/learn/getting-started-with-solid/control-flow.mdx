@@ -1,19 +1,23 @@
 import { FrameworkAside } from "../../../components/FrameworkAside";
+import { Tabs, Tab } from "../../../components/Tabs";
+import { BasicBookshelfShow } from "../components/BasicBookshelfShow";
 
-# Control Flow
+<title>Conditional UI Display</title>
+
+# Conditional User Interface Display
 
 In dynamic front-end applications, we typically want to show different user interfaces when the application is in different states. An example of this is displaying a welcome message to either a guest or an authenticated user.
 
 For a guest, we might want to display a generic welcome message alongside a sign-in form:
 
-```jsx
+```tsx
 <div>Welcome to the application. Please sign in to continue.</div>
 <SignInForm />
 ```
 
 For an authenticated user, we might want to greet them by their name and provide them with their custom dashboard:
 
-```jsx
+```tsx
 <div>Welcome back, Jessica!</div>
 <Dashboard />
 ```
@@ -27,10 +31,17 @@ In Solid, we can use the `<Show />` component to conditionally show content. The
 
 The following example shows how we would use the `<Show />` component to conditionally display a sign-in or dashboard page:
 
-```jsx
+<Tabs files={["Home.tsx"]} selected="Home.tsx">
+
+```tsx
 import { Show } from "solid-js";
 
-function Home(props) {
+interface IHomeProps {
+  isLoggedIn: boolean;
+  firstName: string;
+}
+
+function Home(props: IHomeProps) {
   return (
     <Show
       when={props.isLoggedin}
@@ -47,6 +58,8 @@ function Home(props) {
   );
 }
 ```
+
+</Tabs>
 
 When `props.isLoggedIn` is `true`, we welcome the user back and show the `<Dashboard />`. When `props.isLoggedIn` is `false`, we display the `fallback` content, which is our generic greeting message and the `<SignInForm />`.
 
@@ -123,58 +136,175 @@ This would actually work in Solid, but in not optimal. You can think of `<For />
 
 ## Revisiting the bookshelf
 
-In the [Adding Interactivity with State](../adding-interactivity-with-state) section of this tutorial, we found ourselves already needing the `<For /.` component. This allowed us to iterate over any number of books that are on our bookshelf:
+In the [Adding Interactivity with State](../adding-interactivity-with-state) section of this tutorial, we found ourselves already needing the `<For />` component. This allowed us to iterate over any number of books in on our bookshelf:
 
-```jsx
-function Books(props) {
-  return (
-    <ul>
-      <For each={props.books}>
-        {(book) => {
-          return <li>{book}</li>;
-        }}
-      </For>
-    </ul>
-  );
+<Tabs files={["App.tsx", "BookList.tsx", "AddBook.tsx"]} selected="BookList.tsx">
+  <Tab name="App.tsx">
+
+```tsx
+import { render } from "solid-js/web";
+import { createSignal } from "solid-js";
+import { BookList } from "./BookList";
+import { AddBook } from "./AddBook";
+
+export type Book = {
+  title: string;
+  author: string;
+};
+
+const initialBooks: Book[] = [
+  { title: "Code Complete", author: "Steve McConnell" },
+  { title: "The Hobbit", author: "J.R.R. Tolkien" },
+];
+
+interface IBookshelfProps {
+  name: string;
 }
-```
 
-Let's now use the `<Show />` component. As a reminder, our `Bookshelf` app code is currently as follows:
-
-```jsx
-function Bookshelf(props) {
-  const [books, setBooks] = createSignal([
-    "Code Complete",
-    "JavaScript: The Good Parts",
-  ]);
+function Bookshelf(props: IBookshelfProps) {
+  const [books, setBooks] = createSignal(initialBooks);
 
   return (
     <div>
       <h1>{props.name}'s Bookshelf</h1>
-      <Books books={books()} />
+      <BookList books={books()} />
       <AddBook setBooks={setBooks} />
     </div>
   );
 }
+
+const root = document.getElementById("root");
+
+if (root) {
+  render(() => <Bookshelf name="Solid" />, root);
+}
 ```
 
-Let's only show our `AddBook` form if the user wants to add a book. We'll create a boolean signal in the `Bookshelf` component that tracks whether or not the form is open and add buttons to open and close the form. We will use the `<Show />` component to conditionally display the form.
+  </Tab>
+  <Tab name="BookList.tsx">
 
-```jsx
-function Bookshelf(props) {
-  const [books, setBooks] = createSignal([
-    "Code Complete",
-    "JavaScript: The Good Parts",
-  ]);
+```tsx
+import { Book } from "./App";
 
+interface IBookListProps {
+  books: Book[];
+}
+
+export function BookList(props: IBookListProps) {
+  const totalBooks = () => props.books.length;
+
+  return (
+    <>
+      <h2>Total books ({totalBooks()})</h2>
+      <ul>
+        <For each={props.books}>
+          {(book) => {
+            return (
+              <li>
+                {book.title}{" "}
+                <span style={{ "font-style": "italic" }}>({book.author})</span>
+              </li>
+            );
+          }}
+        </For>
+      </ul>
+    </>
+  );
+}
+```
+
+  </Tab>
+  <Tab name="AddBook.tsx">
+
+```tsx
+import { createSignal, Setter, JSX } from "solid-js";
+import { Book } from "./App.tsx";
+
+interface IAddBookProps {
+  setBooks: Setter<Book[]>;
+}
+
+const emptyBook: Book = { title: "", author: "" };
+
+function AddBook(props: IAddBookProps) {
+  const [newBook, setNewBook] = createSignal(emptyBook);
+
+  const addBook: JSX.EventHandler<HTMLButtonElement, MouseEvent> = (event) => {
+    event.preventDefault();
+    props.setBooks((books) => [...books, newBook()]);
+    setNewBook(emptyBook);
+  };
+
+  return (
+    <form>
+      <div>
+        <label for="title">Book name</label>
+        <input
+          id="title"
+          value={newBook().title}
+          onInput={(e) => {
+            setNewBook({ ...newBook(), title: e.currentTarget.value });
+          }}
+        />
+      </div>
+      <div>
+        <label for="author">Author</label>
+        <input
+          id="author"
+          value={newBook().author}
+          onInput={(e) => {
+            setNewBook({ ...newBook(), author: e.currentTarget.value });
+          }}
+        />
+      </div>
+      <button type="submit" onClick={addBook}>
+        Add book
+      </button>
+    </form>
+  );
+}
+```
+
+  </Tab>
+</Tabs>
+
+Let's now use the `<Show />` component. We will only show our `AddBook` form if the user wants to add a book.
+
+We will create a boolean signal in the `Bookshelf` component that tracks whether or not the form is open and add buttons to open and close the form. We will use the `<Show />` component to conditionally display the form.
+
+<Tabs files={["App.tsx", "BookList.tsx", "AddBook.tsx"]} selected="App.tsx">
+  <Tab name="App.tsx">
+
+```tsx
+import { render } from "solid-js/web";
+import { createSignal, Show } from "solid-js";
+import { BookList } from "./BookList";
+import { AddBook } from "./AddBook";
+
+export type Book = {
+  title: string;
+  author: string;
+};
+
+const initialBooks: Book[] = [
+  { title: "Code Complete", author: "Steve McConnell" },
+  { title: "The Hobbit", author: "J.R.R. Tolkien" },
+];
+
+interface IBookshelfProps {
+  name: string;
+}
+
+function Bookshelf(props: IBookshelfProps) {
+  const [books, setBooks] = createSignal(initialBooks);
   const [showForm, setShowForm] = createSignal(false);
 
-  const toggleForm = () => setShowForm(!showForm());
+  toggleForm = () => setShowForm(!showForm());
 
   return (
     <div>
       <h1>{props.name}'s Bookshelf</h1>
-      <Books books={books()} />
+      <BookList books={books()} />
       <Show
         when={showForm()}
         fallback={<button onClick={toggleForm}>Add a book</button>}
@@ -185,6 +315,102 @@ function Bookshelf(props) {
     </div>
   );
 }
+
+const root = document.getElementById("root");
+
+if (root) {
+  render(() => <Bookshelf name="Solid" />, root);
+}
 ```
 
+  </Tab>
+  <Tab name="BookList.tsx">
+
+```tsx
+import { Book } from "./App";
+
+interface IBookListProps {
+  books: Book[];
+}
+
+export function BookList(props: IBookListProps) {
+  const totalBooks = () => props.books.length;
+
+  return (
+    <>
+      <h2>Total books ({totalBooks()})</h2>
+      <ul>
+        <For each={props.books}>
+          {(book) => {
+            return (
+              <li>
+                {book.title}{" "}
+                <span style={{ "font-style": "italic" }}>({book.author})</span>
+              </li>
+            );
+          }}
+        </For>
+      </ul>
+    </>
+  );
+}
+```
+
+  </Tab>
+  <Tab name="AddBook.tsx">
+
+```tsx
+import { createSignal, Setter, JSX } from "solid-js";
+import { Book } from "./App.tsx";
+
+interface IAddBookProps {
+  setBooks: Setter<Book[]>;
+}
+
+const emptyBook: Book = { title: "", author: "" };
+
+function AddBook(props: IAddBookProps) {
+  const [newBook, setNewBook] = createSignal(emptyBook);
+
+  const addBook: JSX.EventHandler<HTMLButtonElement, MouseEvent> = (event) => {
+    event.preventDefault();
+    props.setBooks((books) => [...books, newBook()]);
+    setNewBook(emptyBook);
+  };
+
+  return (
+    <form>
+      <div>
+        <label for="title">Book name</label>
+        <input
+          id="title"
+          value={newBook().title}
+          onInput={(e) => {
+            setNewBook({ ...newBook(), title: e.currentTarget.value });
+          }}
+        />
+      </div>
+      <div>
+        <label for="author">Author</label>
+        <input
+          id="author"
+          value={newBook().author}
+          onInput={(e) => {
+            setNewBook({ ...newBook(), author: e.currentTarget.value });
+          }}
+        />
+      </div>
+      <button type="submit" onClick={addBook}>
+        Add book
+      </button>
+    </form>
+  );
+}
+```
+
+  </Tab>
+</Tabs>
+
 When `showForm()` is `true`, the app displays the `<AddBook />` form and a button that allows us to hide the form again. When `showForm()` is `false`, the `fallback` component is displayed&mdash;a button to show the `<AddBook />` form.
+
+<BasicBookshelfShow name="Solid" />

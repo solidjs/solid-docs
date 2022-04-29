@@ -139,7 +139,9 @@ export const CodeTabs = (props: ICodeTabsProps) => {
           </button>
         </div>
       </nav>
-      <Dynamic component={selectedTab().component} />
+      <div class="-mt-4">
+        <Dynamic component={selectedTab().component} />
+      </div>
     </div>
   );
 };

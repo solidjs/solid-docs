@@ -1,5 +1,17 @@
-import { Tabs, Tab } from "../../../components/Tabs";
+import { CodeTabs } from "../../../components/Tabs";
 import { FinishedBookshelf } from "../components/FinishedBookshelf";
+import App5js from "./snippets/bookshelf/App5js.mdx";
+import AddBook3js from "./snippets/bookshelf/AddBook3js.mdx";
+import AddBook4js from "./snippets/bookshelf/AddBook4js.mdx";
+import AddBook5js from "./snippets/bookshelf/AddBook5js.mdx";
+import BookList5js from "./snippets/bookshelf/BookList5js.mdx";
+import SearchBooksjs from "./snippets/bookshelf/SearchBooksjs.mdx";
+import App5ts from "./snippets/bookshelf/App5ts.mdx";
+import AddBook3ts from "./snippets/bookshelf/AddBook3ts.mdx";
+import AddBook4ts from "./snippets/bookshelf/AddBook4ts.mdx";
+import BookList5ts from "./snippets/bookshelf/BookList5ts.mdx";
+import SearchBooksts from "./snippets/bookshelf/SearchBooksts.mdx";
+import AddBook5ts from "./snippets/bookshelf/AddBook5ts.mdx";
 
 <title>Fetching Data</title>
 
@@ -25,308 +37,56 @@ Fortunately, [OpenLibrary.org](https://openlibrary.org/) provides an excellent, 
 
 Let's first write a data fetching fucntion called `searchBooks` based on this API. The function will take a search term and return an array of matches from the OpenLibrary.org API:
 
-<Tabs files={["searchBooks.ts"]} selected="searchBooks.ts">
-
-```tsx
-export async function searchBooks(query: string) {
-  if (query.trim() === "") return [];
-
-  const response = await fetch(
-    `https://openlibrary.org/search.json?q=${encodeURI(query)}`
-  );
-  const results = await response.json();
-  return results.docs.slice(0, 10).map(({ title, author_name }) => ({
-    title,
-    author: author_name?.join(", "),
-  }));
-}
-```
-
-</Tabs>
+<CodeTabs
+  files={{
+    jsx: [
+      { name: "App.jsx", component: App5js },
+      { name: "AddBook.jsx", component: AddBook3js },
+      { name: "BookList.jsx", component: BookList5js },
+      { name: "searchBooks.js*", component: SearchBooksjs, default: true },
+    ],
+    tsx: [
+      { name: "App.tsx", component: App5ts },
+      { name: "AddBook.tsx", component: AddBook3ts },
+      { name: "BookList.tsx", component: BookList5ts },
+      { name: "searchBooks.ts*", component: SearchBooksts, default: true },
+    ],
+  }}
+/>
 
 This code fetches data from the OpenLibrary.org API, selects the first 10 results, and then transforms the results a bit to only return `title` and `author` properties for each result.
 
-Let's set this data-fetching function aside for a moment so we can refactor our `AddBooks.tsx` component. It currently consists of a form that lets users enter the title and author of a book they want to add to their bookshelf:
-
-<Tabs files={["App.tsx", "BookList.tsx", "AddBook.tsx"]} selected="AddBook.tsx">
-  <Tab name="App.tsx">
-
-```tsx
-import { render } from "solid-js/web";
-import { createSignal, Show } from "solid-js";
-import { BookList } from "./BookList";
-import { AddBook } from "./AddBook";
-
-export type Book = {
-  title: string;
-  author: string;
-};
-
-const initialBooks: Book[] = [
-  { title: "Code Complete", author: "Steve McConnell" },
-  { title: "The Hobbit", author: "J.R.R. Tolkien" },
-];
-
-interface IBookshelfProps {
-  name: string;
-}
-
-function Bookshelf(props: IBookshelfProps) {
-  const [books, setBooks] = createSignal(initialBooks);
-  const [showForm, setShowForm] = createSignal(false);
-
-  toggleForm = () => setShowForm(!showForm());
-
-  return (
-    <div>
-      <h1>{props.name}'s Bookshelf</h1>
-      <BookList books={books()} />
-      <Show
-        when={showForm()}
-        fallback={<button onClick={toggleForm}>Add a book</button>}
-      >
-        <AddBook setBooks={setBooks} />
-        <button onClick={toggleForm}>Finished adding books</button>
-      </Show>
-    </div>
-  );
-}
-
-const root = document.getElementById("root");
-
-if (root) {
-  render(() => <Bookshelf name="Solid" />, root);
-}
-```
-
-  </Tab>
-  <Tab name="BookList.tsx">
-
-```tsx
-import { Book } from "./App";
-
-interface IBookListProps {
-  books: Book[];
-}
-
-export function BookList(props: IBookListProps) {
-  const totalBooks = () => props.books.length;
-
-  return (
-    <>
-      <h2>Total books ({totalBooks()})</h2>
-      <ul>
-        <For each={props.books}>
-          {(book) => {
-            return (
-              <li>
-                {book.title}{" "}
-                <span style={{ "font-style": "italic" }}>({book.author})</span>
-              </li>
-            );
-          }}
-        </For>
-      </ul>
-    </>
-  );
-}
-```
-
-  </Tab>
-  <Tab name="AddBook.tsx">
-
-```tsx
-import { createSignal, Setter, JSX } from "solid-js";
-import { Book } from "./App.tsx";
-
-interface IAddBookProps {
-  setBooks: Setter<Book[]>;
-}
-
-const emptyBook: Book = { title: "", author: "" };
-
-function AddBook(props: IAddBookProps) {
-  const [newBook, setNewBook] = createSignal(emptyBook);
-
-  const addBook: JSX.EventHandler<HTMLButtonElement, MouseEvent> = (event) => {
-    event.preventDefault();
-    props.setBooks((books) => [...books, newBook()]);
-    setNewBook(emptyBook);
-  };
-
-  return (
-    <form>
-      <div>
-        <label for="title">Book name</label>
-        <input
-          id="title"
-          value={newBook().title}
-          onInput={(e) => {
-            setNewBook({ ...newBook(), title: e.currentTarget.value });
-          }}
-        />
-      </div>
-      <div>
-        <label for="author">Author</label>
-        <input
-          id="author"
-          value={newBook().author}
-          onInput={(e) => {
-            setNewBook({ ...newBook(), author: e.currentTarget.value });
-          }}
-        />
-      </div>
-      <button type="submit" onClick={addBook}>
-        Add book
-      </button>
-    </form>
-  );
-}
-```
-
-  </Tab>
-</Tabs>
+Let's set this data-fetching function aside for a moment so we can refactor our `AddBooks.tsx` component. It currently consists of a form that lets users enter _both_ the title and author of a book they want to add to their bookshelf.
 
 Now that we know we'll be using the OpenLibrary.org API, we can simplify this form a bit: we're just going to ask users to search for a book by its title. The text the user is typing will be tracking in the `input` signal. Once the user hits the `Search` button, the current value of the `input` signal will be stored in the `query` signal.
 
-<Tabs files={["App.tsx", "BookList.tsx", "AddBook.tsx"]} selected="AddBook.tsx">
-  <Tab name="App.tsx">
-
-```tsx
-import { render } from "solid-js/web";
-import { createSignal, Show } from "solid-js";
-import { BookList } from "./BookList";
-import { AddBook } from "./AddBook";
-
-export type Book = {
-  title: string;
-  author: string;
-};
-
-const initialBooks: Book[] = [
-  { title: "Code Complete", author: "Steve McConnell" },
-  { title: "The Hobbit", author: "J.R.R. Tolkien" },
-];
-
-interface IBookshelfProps {
-  name: string;
-}
-
-function Bookshelf(props: IBookshelfProps) {
-  const [books, setBooks] = createSignal(initialBooks);
-  const [showForm, setShowForm] = createSignal(false);
-
-  toggleForm = () => setShowForm(!showForm());
-
-  return (
-    <div>
-      <h1>{props.name}'s Bookshelf</h1>
-      <BookList books={books()} />
-      <Show
-        when={showForm()}
-        fallback={<button onClick={toggleForm}>Add a book</button>}
-      >
-        <AddBook setBooks={setBooks} />
-        <button onClick={toggleForm}>Finished adding books</button>
-      </Show>
-    </div>
-  );
-}
-
-const root = document.getElementById("root");
-
-if (root) {
-  render(() => <Bookshelf name="Solid" />, root);
-}
-```
-
-  </Tab>
-  <Tab name="BookList.tsx">
-
-```tsx
-import { Book } from "./App";
-
-interface IBookListProps {
-  books: Book[];
-}
-
-export function BookList(props: IBookListProps) {
-  const totalBooks = () => props.books.length;
-
-  return (
-    <>
-      <h2>Total books ({totalBooks()})</h2>
-      <ul>
-        <For each={props.books}>
-          {(book) => {
-            return (
-              <li>
-                {book.title}{" "}
-                <span style={{ "font-style": "italic" }}>({book.author})</span>
-              </li>
-            );
-          }}
-        </For>
-      </ul>
-    </>
-  );
-}
-```
-
-  </Tab>
-  <Tab name="AddBook.tsx">
-
-```tsx
-import { createSignal, Setter, JSX } from "solid-js";
-import { Book } from "./App.tsx";
-
-interface IAddBookProps {
-  setBooks: Setter<Book[]>;
-}
-
-function AddBook(props: IAddBookProps) {
-  const [input, setInput] = createSignal("");
-  const [query, setQuery] = createSignal("");
-
-  return (
-    <form>
-      <div>
-        <label for="title">Search books</label>
-        <input
-          id="title"
-          value={input()}
-          onInput={(e) => {
-            setInput(e.currentTarget.value);
-          }}
-        />
-      </div>
-      <button
-        type="submit"
-        onClick={(e) => {
-          e.preventDefault();
-          setQuery(input());
-        }}
-      >
-        Search
-      </button>
-    </form>
-  );
-}
-```
-
-  </Tab>
-</Tabs>
+<CodeTabs
+  files={{
+    jsx: [
+      { name: "App.jsx", component: App5js },
+      { name: "AddBook.jsx*", component: AddBook4js, default: true },
+      { name: "BookList.jsx", component: BookList5js },
+      { name: "searchBooks.js", component: SearchBooksjs },
+    ],
+    tsx: [
+      { name: "App.tsx", component: App5ts },
+      { name: "AddBook.tsx*", component: AddBook4ts, default: true },
+      { name: "BookList.tsx", component: BookList5ts },
+      { name: "searchBooks.ts", component: SearchBooksts },
+    ],
+  }}
+/>
 
 Now that we have our source signal, `query`, and our data-fetching function, `searchBooks`, we can use `createSignal` to query the OpenLibrary.org API! As a reminder, `createResource` will take the source signal and data-fetcher function as arguments:
 
 ```tsx
-const [data] = createSignal(query, searchBooks);
+const [data] = createResource(query, searchBooks);
 ```
 
 Knowing that we'll have access to `data.loading` when we're in a loading state, we can display "Searching..." when data is loading or a list of results when data is loaded. This combines both `<Show />` and `<For />` control flow concepts that we learned in the previous tutorial.
 
 ```tsx
-const [data] = createSignal(query, searchBooks);
+const [data] = createResource(query, searchBooks);
 
 <Show when={!data.loading} fallback={<>Searching...</>}>
   <ul>
@@ -344,7 +104,7 @@ const [data] = createSignal(query, searchBooks);
 Finally, we'll want to make sure we the `<button />` in each list item adds the item to our book list.
 
 ```tsx
-const [data] = createSignal(query, searchBooks);
+const [data] = createResource(query, searchBooks);
 
 <Show when={!data.loading} fallback={<>Searching...</>}>
   <ul>
@@ -367,181 +127,28 @@ const [data] = createSignal(query, searchBooks);
 </Show>;
 ```
 
-**Note:** We can include an `aria-label` on our Add button to make the action taken by the button clear to screen readers. As a matter of course, Solid will never get in the way of writing accessible code.
+**Note:** We can include an `aria-label` on our Add button to make the action taken by the button clear to screen readers. As a matter of principle, Solid will never get in the way of writing accessible code.
 
 ## Finishing the app
 
-<Tabs files={["App.tsx", "BookList.tsx", "AddBook.tsx", "searchBooks.ts"]} selected="AddBook.tsx">
-  <Tab name="App.tsx">
+Let's plug this resource fetching and display codee into our `AddBook` file, which will complete the application:
 
-```tsx
-import { render } from "solid-js/web";
-import { createSignal, Show } from "solid-js";
-import { BookList } from "./BookList";
-import { AddBook } from "./AddBook";
-
-export type Book = {
-  title: string;
-  author: string;
-};
-
-const initialBooks: Book[] = [
-  { title: "Code Complete", author: "Steve McConnell" },
-  { title: "The Hobbit", author: "J.R.R. Tolkien" },
-];
-
-interface IBookshelfProps {
-  name: string;
-}
-
-function Bookshelf(props: IBookshelfProps) {
-  const [books, setBooks] = createSignal(initialBooks);
-  const [showForm, setShowForm] = createSignal(false);
-
-  toggleForm = () => setShowForm(!showForm());
-
-  return (
-    <div>
-      <h1>{props.name}'s Bookshelf</h1>
-      <BookList books={books()} />
-      <Show
-        when={showForm()}
-        fallback={<button onClick={toggleForm}>Add a book</button>}
-      >
-        <AddBook setBooks={setBooks} />
-        <button onClick={toggleForm}>Finished adding books</button>
-      </Show>
-    </div>
-  );
-}
-
-const root = document.getElementById("root");
-
-if (root) {
-  render(() => <Bookshelf name="Solid" />, root);
-}
-```
-
-  </Tab>
-  <Tab name="BookList.tsx">
-
-```tsx
-import { Book } from "./App";
-
-interface IBookListProps {
-  books: Book[];
-}
-
-export function BookList(props: IBookListProps) {
-  const totalBooks = () => props.books.length;
-
-  return (
-    <>
-      <h2>Total books ({totalBooks()})</h2>
-      <ul>
-        <For each={props.books}>
-          {(book) => {
-            return (
-              <li>
-                {book.title}{" "}
-                <span style={{ "font-style": "italic" }}>({book.author})</span>
-              </li>
-            );
-          }}
-        </For>
-      </ul>
-    </>
-  );
-}
-```
-
-  </Tab>
-  <Tab name="AddBook.tsx">
-
-```tsx
-import { createSignal, Setter, JSX, createResource, For } from "solid-js";
-import { Book } from "./App.tsx";
-import { searchBooks } from "./searchBooks";
-
-interface IAddBookProps {
-  setBooks: Setter<Book[]>;
-}
-
-function AddBook(props: IAddBookProps) {
-  const [input, setInput] = createSignal("");
-  const [query, setQuery] = createSignal("");
-
-  const [data] = createResource<Book[], string>(query, searchBooks);
-
-  return (
-    <>
-      <form>
-        <div>
-          <label for="title">Search books</label>
-          <input
-            id="title"
-            value={input()}
-            onInput={(e) => {
-              setInput(e.currentTarget.value);
-            }}
-          />
-        </div>
-        <button
-          type="submit"
-          onClick={(e) => {
-            e.preventDefault();
-            setQuery(input());
-          }}
-        >
-          Search
-        </button>
-      </form>
-      <Show when={!data.loading} fallback={<>Searching...</>}>
-        <ul>
-          <For each={data()}>
-            {(book) => (
-              <li>
-                {book.title} by {book.author}{" "}
-                <button
-                  aria-label={`Add ${book.title} by ${book.author} to the bookshelf`}
-                  onClick={() => {
-                    props.setBooks((books) => [...books, book]);
-                  }}
-                >
-                  Add
-                </button>
-              </li>
-            )}
-          </For>
-        </ul>
-      </Show>
-    </>
-  );
-}
-```
-
-  </Tab>
-
-  <Tab name="searchBooks.ts">
-
-```tsx
-export async function searchBooks(query: string) {
-  if (query.trim() === "") return [];
-
-  const response = await fetch(
-    `https://openlibrary.org/search.json?q=${encodeURI(query)}`
-  );
-  const results = await response.json();
-  return results.docs.slice(0, 10).map(({ title, author_name }) => ({
-    title,
-    author: author_name?.join(", "),
-  }));
-}
-```
-
-  </Tab>
-
-</Tabs>
+<CodeTabs
+  files={{
+    jsx: [
+      { name: "App.jsx", component: App5js },
+      { name: "AddBook.jsx*", component: AddBook5js, default: true },
+      { name: "BookList.jsx", component: BookList5js },
+      { name: "searchBooks.js", component: SearchBooksjs },
+    ],
+    tsx: [
+      { name: "App.tsx", component: App5ts },
+      { name: "AddBook.tsx*", component: AddBook5ts, default: true },
+      { name: "BookList.tsx", component: BookList5ts },
+      { name: "searchBooks.ts", component: SearchBooksts },
+    ],
+  }}
+/>
 
 <FinishedBookshelf name="Solid" />
 

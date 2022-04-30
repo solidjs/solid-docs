@@ -1,4 +1,4 @@
-import { createSignal, For, JSX, Setter } from "solid-js";
+import { createSignal, For, JSX, Setter, Show } from "solid-js";
 
 type Book = {
   title: string;
@@ -14,14 +14,29 @@ interface IBookshelfProps {
   name: string;
 }
 
-export function BasicBookshelf(props: IBookshelfProps) {
+export function BasicBookshelfShow(props: IBookshelfProps) {
   const [books, setBooks] = createSignal(initialBooks);
+  const [showForm, setShowForm] = createSignal(false);
+
+  const toggleForm = () => setShowForm(!showForm());
 
   return (
     <div class="my-5 p-5 border-2">
       <h1 class="text-2xl mb-3">{props.name}'s Bookshelf</h1>
       <BookList books={books()} />
-      <AddBook setBooks={setBooks} />
+      <Show
+        when={showForm()}
+        fallback={
+          <button class="bg-gray-200 text-black px-2" onClick={toggleForm}>
+            Add a book
+          </button>
+        }
+      >
+        <AddBook setBooks={setBooks} />
+        <button class="bg-gray-200 text-black px-2 mt-3" onClick={toggleForm}>
+          Finished adding books
+        </button>
+      </Show>
     </div>
   );
 }

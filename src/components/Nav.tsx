@@ -101,6 +101,10 @@ const LEARN_SECTIONS = {
         header: "Control Flow",
         link: "/learn/getting-started-with-solid/control-flow",
       },
+      "Fetching Data": {
+        header: "Fetching Data",
+        link: "/learn/getting-started-with-solid/fetching-data",
+      },
     },
   },
   Foundations: {

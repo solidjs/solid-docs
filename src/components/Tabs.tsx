@@ -1,35 +1,52 @@
-import {
-  Accessor,
-  createContext,
-  createSignal,
-  For,
-  PropsWithChildren,
-  useContext,
-} from "solid-js";
-import { ConfigContext } from "./ConfigContext";
+import { createSignal, For, JSX, useContext } from "solid-js";
+import { Dynamic } from "solid-js/web";
+import { Config, ConfigContext } from "./ConfigContext";
 
-const TabContext = createContext<Accessor<string>>();
+type File = {
+  name: string;
+  component: () => JSX.Element;
+  default?: boolean;
+};
 
-export const Tabs = (
-  props: PropsWithChildren<{ files: string[]; selected: string }>
-) => {
-  const [selected, setSelected] = createSignal<string>(props.selected);
+interface ICodeTabsProps {
+  files: Record<Config["codeFormat"], File[]>;
+}
+
+export const CodeTabs = (props: ICodeTabsProps) => {
+  const [selected, setSelected] = createSignal<string>();
   const [config, setConfig] = useContext(ConfigContext);
+
+  const availableTabs = () => props.files[config().codeFormat];
+
+  const selectedTab = () => {
+    const customSelected = availableTabs().find(
+      (file) => file.name === selected()
+    );
+    if (customSelected) {
+      return customSelected;
+    }
+    const defaultSelected = availableTabs().find((file) => file.default);
+    if (defaultSelected) {
+      return defaultSelected;
+    }
+    return availableTabs()[0];
+  };
 
   return (
     <div class="my-10">
       <nav aria-label="Code example files" class="flex justify-between">
         <div>
-          <For each={props.files}>
+          <For each={availableTabs()}>
             {(file) => (
               <button
                 classList={{
-                  "border-b-2 border-blue-400": selected() === file,
+                  "border-b-2 border-blue-400":
+                    selectedTab().name === file.name,
                   "p-2": true,
                 }}
-                onClick={() => setSelected(file)}
+                onClick={() => setSelected(file.name)}
               >
-                {file}
+                {file.name}
               </button>
             )}
           </For>
@@ -53,18 +70,9 @@ export const Tabs = (
           </button>
         </div>
       </nav>
-      <TabContext.Provider value={selected}>
-        <div class="-mt-4">{props.children}</div>
-      </TabContext.Provider>
-    </div>
-  );
-};
-
-export const Tab = (props: PropsWithChildren<{ name: string }>) => {
-  const selected = useContext(TabContext);
-  return (
-    <div style={{ display: selected() == props.name ? "block" : "none" }}>
-      {props.children}
+      <div class="-mt-4">
+        <Dynamic component={selectedTab().component} />
+      </div>
     </div>
   );
 };

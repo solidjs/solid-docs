@@ -6,13 +6,25 @@ import { BasicBookshelf } from "../components/BasicBookshelf";
 import Counter1 from "./snippets/Counter1.mdx";
 import Counter2 from "./snippets/Counter2.mdx";
 import AddBook1 from "./snippets/bookshelf/AddBook1.mdx";
+import AddBook2js from "./snippets/bookshelf/AddBook2js.mdx";
+import AddBook2ts from "./snippets/bookshelf/AddBook2ts.mdx";
+import AddBook3js from "./snippets/bookshelf/AddBook3js.mdx";
+import AddBook3ts from "./snippets/bookshelf/AddBook3ts.mdx";
 import BookList1 from "./snippets/bookshelf/BookList1.mdx";
 import BookList2js from "./snippets/bookshelf/BookList2js.mdx";
 import BookList2ts from "./snippets/bookshelf/BookList2ts.mdx";
 import BookList3js from "./snippets/bookshelf/BookList3js.mdx";
 import BookList3ts from "./snippets/bookshelf/BookList3ts.mdx";
+import BookList4js from "./snippets/bookshelf/BookList4js.mdx";
+import BookList4ts from "./snippets/bookshelf/BookList4ts.mdx";
+import BookList5js from "./snippets/bookshelf/BookList5js.mdx";
+import BookList5ts from "./snippets/bookshelf/BookList5ts.mdx";
 import App2js from "./snippets/bookshelf/App2js.mdx";
 import App2ts from "./snippets/bookshelf/App2ts.mdx";
+import App3js from "./snippets/bookshelf/App3js.mdx";
+import App3ts from "./snippets/bookshelf/App3ts.mdx";
+import App4js from "./snippets/bookshelf/App4js.mdx";
+import App4ts from "./snippets/bookshelf/App4ts.mdx";
 
 <title>Adding Interactivity with State</title>
 
@@ -207,99 +219,20 @@ const totalBooks = () => books().length;
 
 Now, our `totalBooks` function is a signal of its own and will always be up-to-date with the length of our `books` array.
 
-<Tabs files={["App.tsx", "BookList.tsx", "AddBook.tsx"]} selected="BookList.tsx">
-  <Tab name="App.tsx">
-
-```tsx
-import { render } from "solid-js/web";
-import { BookList } from "./BookList";
-import { AddBook } from "./AddBook";
-
-interface IBookshelfProps {
-  name: string;
-}
-
-function Bookshelf(props: IBookshelfProps) {
-  return (
-    <div>
-      <h1>{props.name}'s Bookshelf</h1>
-      <BookList />
-      <AddBook />
-    </div>
-  );
-}
-
-const root = document.getElementById("root");
-
-if (root) {
-  render(() => <Bookshelf name="Solid" />, root);
-}
-```
-
-  </Tab>
-  <Tab name="BookList.tsx">
-
-```tsx
-import { createSignal } from "solid-js";
-
-type Book = {
-  title: string;
-  author: string;
-};
-
-const initialBooks: Book[] = [
-  { title: "Code Complete", author: "Steve McConnell" },
-  { title: "The Hobbit", author: "J.R.R. Tolkien" },
-];
-
-export function BookList() {
-  const [books, setBooks] = createSignal(initialBooks);
-
-  const totalBooks = () => books().length;
-
-  return (
-    <>
-      <h2>My books ({totalBooks()})</h2>
-      <ul>
-        <For each={books()}>
-          {(book) => {
-            return (
-              <li>
-                {book.title}{" "}
-                <span style={{ "font-style": "italic" }}>({book.author})</span>
-              </li>
-            );
-          }}
-        </For>
-      </ul>
-    </>
-  );
-}
-```
-
-  </Tab>
-  <Tab name="AddBook.tsx">
-
-```tsx
-export function AddBook() {
-  return (
-    <form>
-      <div>
-        <label for="title">Book name</label>
-        <input id="title" />
-      </div>
-      <div>
-        <label for="author">Author</label>
-        <input id="author" />
-      </div>
-      <button type="submit">Add book</button>
-    </form>
-  );
-}
-```
-
-  </Tab>
-</Tabs>
+<CodeTabs
+  files={{
+    jsx: [
+      { name: "App.jsx", component: App2js },
+      { name: "AddBook.jsx", component: AddBook1 },
+      { name: "BookList.jsx", component: BookList4js, default: true },
+    ],
+    tsx: [
+      { name: "App.tsx", component: App2ts },
+      { name: "AddBook.tsx", component: AddBook1 },
+      { name: "BookList.tsx", component: BookList4ts, default: true },
+    ],
+  }}
+/>
 
 ## Lifting state up
 
@@ -309,104 +242,20 @@ We know that parents can pass props to children, but how do _sibling_ components
 
 Let's start out by lifting our `books` signal up to `Bookshelf` and passing it back down to the `BookList` component. You can see the changes we have made in both the `App.tsx` and `BookList.tsx` files.
 
-<Tabs files={["App.tsx", "BookList.tsx", "AddBook.tsx"]} selected="App.tsx">
-  <Tab name="App.tsx">
-
-```tsx
-import { render } from "solid-js/web";
-import { createSignal } from "solid-js";
-import { BookList } from "./BookList";
-import { AddBook } from "./AddBook";
-
-export type Book = {
-  title: string;
-  author: string;
-};
-
-const initialBooks: Book[] = [
-  { title: "Code Complete", author: "Steve McConnell" },
-  { title: "The Hobbit", author: "J.R.R. Tolkien" },
-];
-
-interface IBookshelfProps {
-  name: string;
-}
-
-function Bookshelf(props: IBookshelfProps) {
-  const [books, setBooks] = createSignal(initialBooks);
-
-  return (
-    <div>
-      <h1>{props.name}'s Bookshelf</h1>
-      <BookList books={books()} />
-      <AddBook />
-    </div>
-  );
-}
-
-const root = document.getElementById("root");
-
-if (root) {
-  render(() => <Bookshelf name="Solid" />, root);
-}
-```
-
-  </Tab>
-  <Tab name="BookList.tsx">
-
-```tsx
-import { Book } from "./App";
-
-interface IBookListProps {
-  books: Book[];
-}
-
-export function BookList(props: IBookListProps) {
-  const totalBooks = () => props.books.length;
-
-  return (
-    <>
-      <h2>My books ({totalBooks()})</h2>
-      <ul>
-        <For each={props.books}>
-          {(book) => {
-            return (
-              <li>
-                {book.title}{" "}
-                <span style={{ "font-style": "italic" }}>({book.author})</span>
-              </li>
-            );
-          }}
-        </For>
-      </ul>
-    </>
-  );
-}
-```
-
-  </Tab>
-  <Tab name="AddBook.tsx">
-
-```tsx
-export function AddBook() {
-  return (
-    <form>
-      <div>
-        <label for="title">Book name</label>
-        <input id="title" />
-      </div>
-      <div>
-        <label for="author">Author</label>
-        <input id="author" />
-      </div>
-      <button type="submit">Add book</button>
-    </form>
-  );
-}
-```
-
-  </Tab>
-</Tabs>
+<CodeTabs
+  files={{
+    jsx: [
+      { name: "App.jsx", component: App3js },
+      { name: "AddBook.jsx", component: AddBook1 },
+      { name: "BookList.jsx", component: BookList5js },
+    ],
+    tsx: [
+      { name: "App.tsx", component: App3ts },
+      { name: "AddBook.tsx", component: AddBook1 },
+      { name: "BookList.tsx", component: BookList5ts },
+    ],
+  }}
+/>
 
 Our array of books now lives in the `Bookshelf` component. We then pass `books()` to the `BookList` component. We can now access our books withing the `BookList` component by using `props.books`.
 
@@ -416,118 +265,20 @@ Our array of books now lives in the `Bookshelf` component. We then pass `books()
 
 Now that we have lifted state, we can add some books to the list. Let's pass our setter to the `AddBook` component and call `setBooks` when we click the `Add Book` button. You can see these changes in the `App.tsx` and `AddBook.tsx` files:
 
-<Tabs files={["App.tsx", "BookList.tsx", "AddBook.tsx"]} selected="App.tsx">
-  <Tab name="App.tsx">
-
-```tsx
-import { render } from "solid-js/web";
-import { createSignal } from "solid-js";
-import { BookList } from "./BookList";
-import { AddBook } from "./AddBook";
-
-export type Book = {
-  title: string;
-  author: string;
-};
-
-const initialBooks: Book[] = [
-  { title: "Code Complete", author: "Steve McConnell" },
-  { title: "The Hobbit", author: "J.R.R. Tolkien" },
-];
-
-interface IBookshelfProps {
-  name: string;
-}
-
-function Bookshelf(props: IBookshelfProps) {
-  const [books, setBooks] = createSignal(initialBooks);
-
-  return (
-    <div>
-      <h1>{props.name}'s Bookshelf</h1>
-      <BookList books={books()} />
-      <AddBook setBooks={setBooks} />
-    </div>
-  );
-}
-
-const root = document.getElementById("root");
-
-if (root) {
-  render(() => <Bookshelf name="Solid" />, root);
-}
-```
-
-  </Tab>
-  <Tab name="BookList.tsx">
-
-```tsx
-import { Book } from "./App";
-
-interface IBookListProps {
-  books: Book[];
-}
-
-export function BookList(props: IBookListProps) {
-  const totalBooks = () => props.books.length;
-
-  return (
-    <>
-      <h2>My books ({totalBooks()})</h2>
-      <ul>
-        <For each={props.books}>
-          {(book) => {
-            return (
-              <li>
-                {book.title}{" "}
-                <span style={{ "font-style": "italic" }}>({book.author})</span>
-              </li>
-            );
-          }}
-        </For>
-      </ul>
-    </>
-  );
-}
-```
-
-  </Tab>
-  <Tab name="AddBook.tsx">
-
-```tsx
-import { Setter } from "solid-js";
-import { Book } from "./App.tsx";
-
-interface IAddBookProps {
-  setBooks: Setter<Book[]>;
-}
-
-function AddBook(props: IAddBookProps) {
-  const addBook: JSX.EventHandler<HTMLButtonElement, MouseEvent> = (event) => {
-    event.preventDefault();
-    props.setBooks([]);
-  };
-
-  return (
-    <form>
-      <div>
-        <label for="title">Book name</label>
-        <input id="title" />
-      </div>
-      <div>
-        <label for="author">Author</label>
-        <input id="author" />
-      </div>
-      <button type="submit" onClick={addBook}>
-        Add book
-      </button>
-    </form>
-  );
-}
-```
-
-  </Tab>
-</Tabs>
+<CodeTabs
+  files={{
+    jsx: [
+      { name: "App.jsx*", component: App4js },
+      { name: "AddBook.jsx*", component: AddBook2js },
+      { name: "BookList.jsx", component: BookList5js },
+    ],
+    tsx: [
+      { name: "App.tsx*", component: App4ts },
+      { name: "AddBook.tsx*", component: AddBook2ts },
+      { name: "BookList.tsx", component: BookList5ts },
+    ],
+  }}
+/>
 
 Inside `AddBook`, we created a function called `addBook` that is used as the _click handler_ for our form's button. Since we're submitting a real HTML form, we use `event.preventDefault()` to prevent the default form behavior of executing a post request. Next, we call `props.setBooks`, but we don't quite know what to pass to our setter.
 
@@ -541,12 +292,10 @@ setCount((currentCount) => {
 
 By using this form, our setter has access to the current value of the signal.
 
-That solves the first problem: our `addBook` function can be written as follows:
+This form for our `setBooks` function solves the first problem: our `addBook` function can be written as follows:
 
-<Tabs>
-
-```tsx
-const addBook: JSX.EventHandler<HTMLButtonElement, MouseEvent> = (event) => {
+```jsx
+const addBook = (event) => {
   event.preventDefault();
   props.setBooks((books) => {
     return books;
@@ -554,141 +303,24 @@ const addBook: JSX.EventHandler<HTMLButtonElement, MouseEvent> = (event) => {
 };
 ```
 
-</Tabs>
-
 Now, we need to append the text from our form inputs to this list. To do so, we can create a new signal inside the `AddBook` component to track the value of the inputs. We'll make sure this signal is always equal to the inputs' values by using its `onInput` handler. Additionally, we'll _bind_ the `newBook()` to the `value` attribute of our `input` to make sure our `input` always reflects the value of the signal.
 
 Finally, we want to add the `newBook` to our books list and then clear the input field in case our user has more books to enter.
 
-<Tabs files={["App.tsx", "BookList.tsx", "AddBook.tsx"]} selected="AddBook.tsx">
-  <Tab name="App.tsx">
-
-```tsx
-import { render } from "solid-js/web";
-import { createSignal } from "solid-js";
-import { BookList } from "./BookList";
-import { AddBook } from "./AddBook";
-
-export type Book = {
-  title: string;
-  author: string;
-};
-
-const initialBooks: Book[] = [
-  { title: "Code Complete", author: "Steve McConnell" },
-  { title: "The Hobbit", author: "J.R.R. Tolkien" },
-];
-
-interface IBookshelfProps {
-  name: string;
-}
-
-function Bookshelf(props: IBookshelfProps) {
-  const [books, setBooks] = createSignal(initialBooks);
-
-  return (
-    <div>
-      <h1>{props.name}'s Bookshelf</h1>
-      <BookList books={books()} />
-      <AddBook setBooks={setBooks} />
-    </div>
-  );
-}
-
-const root = document.getElementById("root");
-
-if (root) {
-  render(() => <Bookshelf name="Solid" />, root);
-}
-```
-
-  </Tab>
-  <Tab name="BookList.tsx">
-
-```tsx
-import { Book } from "./App";
-
-interface IBookListProps {
-  books: Book[];
-}
-
-export function BookList(props: IBookListProps) {
-  const totalBooks = () => props.books.length;
-
-  return (
-    <>
-      <h2>Total books ({totalBooks()})</h2>
-      <ul>
-        <For each={props.books}>
-          {(book) => {
-            return (
-              <li>
-                {book.title}{" "}
-                <span style={{ "font-style": "italic" }}>({book.author})</span>
-              </li>
-            );
-          }}
-        </For>
-      </ul>
-    </>
-  );
-}
-```
-
-  </Tab>
-  <Tab name="AddBook.tsx">
-
-```tsx
-import { createSignal, Setter, JSX } from "solid-js";
-import { Book } from "./App.tsx";
-
-interface IAddBookProps {
-  setBooks: Setter<Book[]>;
-}
-
-const emptyBook: Book = { title: "", author: "" };
-
-function AddBook(props: IAddBookProps) {
-  const [newBook, setNewBook] = createSignal(emptyBook);
-
-  const addBook: JSX.EventHandler<HTMLButtonElement, MouseEvent> = (event) => {
-    event.preventDefault();
-    props.setBooks((books) => [...books, newBook()]);
-    setNewBook(emptyBook);
-  };
-
-  return (
-    <form>
-      <div>
-        <label for="title">Book name</label>
-        <input
-          id="title"
-          value={newBook().title}
-          onInput={(e) => {
-            setNewBook({ ...newBook(), title: e.currentTarget.value });
-          }}
-        />
-      </div>
-      <div>
-        <label for="author">Author</label>
-        <input
-          id="author"
-          value={newBook().author}
-          onInput={(e) => {
-            setNewBook({ ...newBook(), author: e.currentTarget.value });
-          }}
-        />
-      </div>
-      <button type="submit" onClick={addBook}>
-        Add book
-      </button>
-    </form>
-  );
-}
-```
-
-  </Tab>
-</Tabs>
+<CodeTabs
+  files={{
+    jsx: [
+      { name: "App.jsx", component: App4js },
+      { name: "AddBook.jsx*", component: AddBook3js, default: true },
+      { name: "BookList.jsx", component: BookList5js },
+    ],
+    tsx: [
+      { name: "App.tsx", component: App4ts },
+      { name: "AddBook.tsx*", component: AddBook3ts, default: true },
+      { name: "BookList.tsx", component: BookList5ts },
+    ],
+  }}
+/>
 
 **Note:** We used the spread operator to create an new books array inside our books setter. This is a common pattern in Solid and helps to make sure we create a new array rather than updated (or _mutating_) the existing signal array. By default, Solid uses referential equality checks when determining if a signal has updated.
 

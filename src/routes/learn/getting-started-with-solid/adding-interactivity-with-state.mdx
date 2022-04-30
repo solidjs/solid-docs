@@ -1,8 +1,18 @@
 import Snippet from "../../../components/Snippet";
-import { Tab, Tabs } from "../../../components/Tabs";
+import { Tab, Tabs, CodeTabs } from "../../../components/Tabs";
 import { FrameworkAside } from "../../../components/FrameworkAside";
 import { BasicCounter } from "../components/BasicCounter";
 import { BasicBookshelf } from "../components/BasicBookshelf";
+import Counter1 from "./snippets/Counter1.mdx";
+import Counter2 from "./snippets/Counter2.mdx";
+import AddBook1 from "./snippets/bookshelf/AddBook1.mdx";
+import BookList1 from "./snippets/bookshelf/BookList1.mdx";
+import BookList2js from "./snippets/bookshelf/BookList2js.mdx";
+import BookList2ts from "./snippets/bookshelf/BookList2ts.mdx";
+import BookList3js from "./snippets/bookshelf/BookList3js.mdx";
+import BookList3ts from "./snippets/bookshelf/BookList3ts.mdx";
+import App2js from "./snippets/bookshelf/App2js.mdx";
+import App2ts from "./snippets/bookshelf/App2ts.mdx";
 
 <title>Adding Interactivity with State</title>
 
@@ -78,46 +88,23 @@ Automatic effect dependency tracking is made possible by `count` being a functio
 
 Now that we've gained some exposure to two of Solid's core primitives, signals and effects, it's time to add them into our components. Let's keep using our `count` example but, instead of logging the count, let's render it to the DOM:
 
-<Tabs files={["Counter.tsx"]} selected="Counter.tsx">
-
-```tsx
-import { createSignal } from "solid-js";
-
-function Counter() {
-  const [count, setCount] = createSignal(0);
-
-  return <div>Current count: {count()}</div>;
-}
-```
-
-</Tabs>
+<CodeTabs
+  files={{
+    jsx: [{ name: "Counter.jsx", component: Counter1 }],
+    tsx: [{ name: "Counter.tsx", component: Counter1 }],
+  }}
+/>
 
 <div>Current count: 0</div>
 
 We see that, much like other variables, we can use signals inside our JSX code by including them inside curly braces. This component is not too interesting yet; so let's add the ability to increment our count. We can do this by adding `<button>` element and giving it a _click handler_. This click handler will increment our count by using the `setCount` function:
 
-<Tabs files={["Counter.tsx"]} selected="Counter.tsx">
-
-```tsx
-import { createSignal } from "solid-js";
-
-function Counter() {
-  const [count, setCount] = createSignal(0);
-
-  const increment = () => {
-    setCount(count() + 1);
-  };
-
-  return (
-    <div>
-      Current count: {count()}
-      <button onClick={increment}>Increment</button>
-    </div>
-  );
-}
-```
-
-</Tabs>
+<CodeTabs
+  files={{
+    jsx: [{ name: "Counter.jsx", component: Counter2 }],
+    tsx: [{ name: "Counter.tsx", component: Counter2 }],
+  }}
+/>
 
 <BasicCounter />
 
@@ -125,161 +112,43 @@ And now we have a functioning counter! Notably, our DOM updates whenever our `co
 
 ## Revisting the bookshelf
 
-We now have the tools necessary to make our Bookshelf application interactive. As a refresher, here's the current state of the app. It currently has the following components:
+We now have the tools necessary to make our Bookshelf application interactive. As a refresher, here's the current state of the app with the following components:
 
 - `BookList`, a list of books on our Bookshelf
 - `AddBook`, a form that will allow us to add more books to the shelf
 - `Bookshelf`, our main application component that contains the other two
 
-<Tabs files={["App.tsx", "BookList.tsx", "AddBook.tsx"]} selected="App.tsx">
-  <Tab name="App.tsx">
-
-```tsx
-import { render } from "solid-js/web";
-import { BookList } from "./BookList";
-import { AddBook } from "./AddBook";
-
-interface IBookshelfProps {
-  name: string;
-}
-
-function Bookshelf(props: IBookshelfProps) {
-  return (
-    <div>
-      <h1>{props.name}'s Bookshelf</h1>
-      <BookList />
-      <AddBook />
-    </div>
-  );
-}
-
-const root = document.getElementById("root");
-
-if (root) {
-  render(() => <Bookshelf name="Solid" />, root);
-}
-```
-
-  </Tab>
-  <Tab name="BookList.tsx">
-
-```tsx
-export function BookList() {
-  return (
-    <ul>
-      <li>
-        Code Complete{" "}
-        <span style={{ "font-style": "italic" }}>(Steve McConnell)</span>
-      </li>
-      <li>
-        The Hobbit{" "}
-        <span style={{ "font-style": "italic" }}>(J.R.R. Tolkien)</span>
-      </li>
-    </ul>
-  );
-}
-```
-
-  </Tab>
-  <Tab name="AddBook.tsx">
-
-```tsx
-export function AddBook() {
-  return (
-    <form>
-      <label for="book-name">Book name</label>
-      <input id="book-name" />
-      <button type="submit">Add book</button>
-    </form>
-  );
-}
-```
-
-  </Tab>
-</Tabs>
+<CodeTabs
+  files={{
+    jsx: [
+      { name: "App.jsx", component: App2js },
+      { name: "AddBook.jsx", component: AddBook1 },
+      { name: "BookList.jsx", component: BookList1 },
+    ],
+    tsx: [
+      { name: "App.tsx", component: App2ts },
+      { name: "AddBook.tsx", component: AddBook1 },
+      { name: "BookList.tsx", component: BookList1 },
+    ],
+  }}
+/>
 
 As a first step to adding interactivity, let's add a signal that keeps track of our book list. We'll call it `books` and it wil live in the `BookList` component. Each book will have a `title` and an `author`.
 
-<Tabs files={["App.tsx", "BookList.tsx", "AddBook.tsx"]} selected="BookList.tsx">
-  <Tab name="App.tsx">
-
-```tsx
-import { render } from "solid-js/web";
-import { BookList } from "./BookList";
-import { AddBook } from "./AddBook";
-
-interface IBookshelfProps {
-  name: string;
-}
-
-function Bookshelf(props: IBookshelfProps) {
-  return (
-    <div>
-      <h1>{props.name}'s Bookshelf</h1>
-      <BookList />
-      <AddBook />
-    </div>
-  );
-}
-
-const root = document.getElementById("root");
-
-if (root) {
-  render(() => <Bookshelf name="Solid" />, root);
-}
-```
-
-  </Tab>
-  <Tab name="BookList.tsx">
-
-```tsx
-import { createSignal } from "solid-js";
-
-type Book = {
-  title: string;
-  author: string;
-};
-
-const initialBooks: Book[] = [
-  { title: "Code Complete", author: "Steve McConnell" },
-  { title: "The Hobbit", author: "J.R.R. Tolkien" },
-];
-
-export function BookList() {
-  const [books, setBooks] = createSignal(initialBooks);
-
-  return (
-    <ul>
-      <li>
-        {books()[0].title}{" "}
-        <span style={{ "font-style": "italic" }}>({books()[0].author})</span>
-      </li>
-      <li>
-        {books()[1].title}{" "}
-        <span style={{ "font-style": "italic" }}>({books()[1].author})</span>
-      </li>
-    </ul>
-  );
-}
-```
-
-  </Tab>
-  <Tab name="AddBook.tsx">
-
-```tsx
-export function AddBook() {
-  return (
-    <form>
-      <label for="book-name">Book name</label>
-      <input id="book-name" />
-      <button type="submit">Add book</button>
-    </form>
-  );
-}
-```
-
-  </Tab>
-</Tabs>
+<CodeTabs
+  files={{
+    jsx: [
+      { name: "App.jsx", component: App2js },
+      { name: "AddBook.jsx", component: AddBook1 },
+      { name: "BookList.jsx", component: BookList2js, default: true },
+    ],
+    tsx: [
+      { name: "App.tsx", component: App2ts },
+      { name: "AddBook.tsx", component: AddBook1 },
+      { name: "BookList.tsx", component: BookList2ts, default: true },
+    ],
+  }}
+/>
 
 There are a couple things to note here:
 
@@ -311,94 +180,20 @@ Inside the `For` component, we use a _callback function_ that will be applied to
 
 Our `BookList` component now looks like this:
 
-<Tabs files={["App.tsx", "BookList.tsx", "AddBook.tsx"]} selected="BookList.tsx">
-  <Tab name="App.tsx">
-
-```tsx
-import { render } from "solid-js/web";
-import { BookList } from "./BookList";
-import { AddBook } from "./AddBook";
-
-interface IBookshelfProps {
-  name: string;
-}
-
-function Bookshelf(props: IBookshelfProps) {
-  return (
-    <div>
-      <h1>{props.name}'s Bookshelf</h1>
-      <BookList />
-      <AddBook />
-    </div>
-  );
-}
-
-const root = document.getElementById("root");
-
-if (root) {
-  render(() => <Bookshelf name="Solid" />, root);
-}
-```
-
-  </Tab>
-  <Tab name="BookList.tsx">
-
-```tsx
-import { createSignal } from "solid-js";
-
-type Book = {
-  title: string;
-  author: string;
-};
-
-const initialBooks: Book[] = [
-  { title: "Code Complete", author: "Steve McConnell" },
-  { title: "The Hobbit", author: "J.R.R. Tolkien" },
-];
-
-export function BookList() {
-  const [books, setBooks] = createSignal(initialBooks);
-
-  return (
-    <ul>
-      <For each={books()}>
-        {(book) => {
-          return (
-            <li>
-              {book.title}{" "}
-              <span style={{ "font-style": "italic" }}>({book.author})</span>
-            </li>
-          );
-        }}
-      </For>
-    </ul>
-  );
-}
-```
-
-  </Tab>
-  <Tab name="AddBook.tsx">
-
-```tsx
-export function AddBook() {
-  return (
-    <form>
-      <div>
-        <label for="title">Book name</label>
-        <input id="title" />
-      </div>
-      <div>
-        <label for="author">Author</label>
-        <input id="author" />
-      </div>
-      <button type="submit">Add book</button>
-    </form>
-  );
-}
-```
-
-  </Tab>
-</Tabs>
+<CodeTabs
+  files={{
+    jsx: [
+      { name: "App.jsx", component: App2js },
+      { name: "AddBook.jsx", component: AddBook1 },
+      { name: "BookList.jsx", component: BookList3js, default: true },
+    ],
+    tsx: [
+      { name: "App.tsx", component: App2ts },
+      { name: "AddBook.tsx", component: AddBook1 },
+      { name: "BookList.tsx", component: BookList3ts, default: true },
+    ],
+  }}
+/>
 
 ## Derived state
 

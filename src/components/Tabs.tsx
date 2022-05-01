@@ -30,7 +30,7 @@ export const CodeTabs = (props: ICodeTabsProps) => {
     const initialSelected = props.files[config().codeFormat].findIndex(
       (el) => el.default
     );
-    if (initialSelected) setSelected(initialSelected);
+    if (initialSelected !== -1) setSelected(initialSelected);
   });
 
   return (

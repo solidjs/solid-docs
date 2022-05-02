@@ -2,9 +2,9 @@ import { useContext, JSX, JSXElement, For } from "solid-js";
 import { ConfigContext } from "~/components/ConfigContext";
 import IconJs from "~icons/logos/javascript";
 import IconTs from "~icons/logos/typescript-icon";
-import IconReact from "~icons/mdi/react";
-import IconVue from "~icons/mdi/vuejs";
-import IconSvelte from "~icons/simple-icons/svelte";
+import IconReact from "~icons/vscode-icons/file-type-reactjs";
+import IconVue from "~icons/vscode-icons/file-type-vue";
+import IconSvelte from "~icons/vscode-icons/file-type-svelte";
 
 export const Preferences = () => {
   const [config, setConfig] = useContext(ConfigContext);
@@ -26,7 +26,7 @@ export const Preferences = () => {
         ]}
       />
       <RadioGroup
-        legend="Are you coming from Any of the following frameworks?"
+        legend="Are you coming from any of the following frameworks?"
         name="comingFrom"
         checked={config().comingFrom}
         onChange={configChange}
@@ -56,7 +56,7 @@ interface IRadioGroupProps<T extends string> {
 const RadioGroup = <T extends string>(props: IRadioGroupProps<T>) => {
   return (
     <fieldset class="mt-10">
-      <legend>{props.legend}</legend>
+      <legend class="text-xl">{props.legend}</legend>
       <For each={props.radios}>
         {(radio) => (
           <div

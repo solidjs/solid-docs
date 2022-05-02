@@ -1,4 +1,4 @@
-import { JSXElement, PropsWithChildren, Show, useContext } from "solid-js";
+import { JSXElement, PropsWithChildren, useContext } from "solid-js";
 import { ConfigContext, OtherFramework } from "./ConfigContext";
 import { BiLogoReact, BiLogoVuejs, BiSolidBrain, BiBook } from "solid-icons/bi";
 import { IoAccessibility } from "solid-icons/io";
@@ -41,7 +41,9 @@ const logos: Record<AsideType, () => JSXElement> = {
 
 // TODO: why is this having trouble in SSR?
 const AsideLogo = (props: { type: AsideType }) => {
-  return <Show when={!isServer}>{logos[props.type]()}</Show>;
+  if (isServer) return;
+
+  return logos[props.type]();
 };
 
 const asideTitles: Record<AsideType, JSXElement> = {

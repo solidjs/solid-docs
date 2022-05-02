@@ -5,6 +5,7 @@ import IconReact from "~icons/mdi/react";
 import IconVue from "~icons/mdi/vuejs";
 import IconSvelte from "~icons/simple-icons/svelte";
 import IconBulb from "~icons/mdi/lightbulb";
+import "./Aside.css";
 
 export const FrameworkAside = (
   props: PropsWithChildren<{ framework: OtherFramework }>
@@ -71,7 +72,7 @@ export const Aside = (props: PropsWithChildren<IAsideProps>) => {
       style={{
         display: props.show !== false ? "flex" : "none",
       }}
-      class="p-5 rounded my-10 text-base dark:text-dark bg-highlight dark:bg-highlight-dark gap-2"
+      class="aside p-5 rounded my-10 text-base dark:text-dark bg-highlight dark:bg-highlight-dark gap-2"
     >
       <div class="my-3">{logo()}</div>
       <div>

@@ -1,5 +1,7 @@
-import { useContext, JSX } from "solid-js";
+import { useContext, JSX, JSXElement, For } from "solid-js";
 import { ConfigContext } from "~/components/ConfigContext";
+import IconJs from "~icons/logos/javascript";
+import IconTs from "~icons/logos/typescript-icon";
 
 export const Preferences = () => {
   const [config, setConfig] = useContext(ConfigContext);
@@ -10,32 +12,33 @@ export const Preferences = () => {
 
   return (
     <>
-      <fieldset class="mt-5">
-        <legend>
-          Before we get started, do you use JavaScript or Typescript?
-        </legend>
-        <input
-          type="radio"
-          name="codeFormat"
-          id="jsx"
-          value="jsx"
-          onChange={configChange}
-          checked={config().codeFormat === "jsx"}
-        />
-        <label for="jsx">JavaScript</label>
-        <input
-          class="ml-5"
-          type="radio"
-          name="codeFormat"
-          id="tsx"
-          value="tsx"
-          onChange={configChange}
-          checked={config().codeFormat === "tsx"}
-        />
-        <label for="tsx">Typescript</label>
-      </fieldset>
+      <RadioGroup
+        legend="Do you prefer JavaScript or Typescript?"
+        name="codeFormat"
+        checked={config().codeFormat}
+        radios={[
+          {
+            label: (
+              <>
+                <IconJs /> JavaScript
+              </>
+            ),
+            value: "jsx",
+            onChange: configChange,
+          },
+          {
+            label: (
+              <>
+                <IconTs /> Typescript
+              </>
+            ),
+            value: "tsx",
+            onChange: configChange,
+          },
+        ]}
+      />
 
-      <fieldset class="mt-5">
+      <fieldset class="mt-10">
         <legend>Are you coming from Any of the following frameworks?</legend>
         <input
           type="radio"
@@ -78,5 +81,50 @@ export const Preferences = () => {
         <label for="none">None</label>
       </fieldset>
     </>
+  );
+};
+
+interface IRadioGroupProps<T extends string> {
+  legend: string;
+  name: string;
+  checked: T;
+  radios: {
+    value: T;
+    label: JSXElement | string;
+    onChange: JSX.EventHandler<HTMLInputElement, InputEvent>;
+  }[];
+}
+
+const RadioGroup = <T extends string>(props: IRadioGroupProps<T>) => {
+  return (
+    <fieldset class="mt-10">
+      <legend>{props.legend}</legend>
+      <For each={props.radios}>
+        {(radio) => (
+          <div
+            classList={{
+              "p-5 flex gap-2 text-2xl mt-5 align-start": true,
+              "rounded text-base dark:text-dark bg-highlight dark:bg-highlight-dark":
+                props.checked === radio.value,
+            }}
+          >
+            <input
+              type="radio"
+              name={props.name}
+              id={`${props.name}-${radio.value}`}
+              value={radio.value}
+              onChange={radio.onChange}
+              checked={props.checked === radio.value}
+            />
+            <label
+              class="flex gap-2 cursor-pointer"
+              for={`${props.name}-${radio.value}`}
+            >
+              {radio.label}
+            </label>
+          </div>
+        )}
+      </For>
+    </fieldset>
   );
 };

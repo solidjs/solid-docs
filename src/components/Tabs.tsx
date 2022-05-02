@@ -83,7 +83,7 @@ export const CodeTabs = (props: ICodeTabsProps) => {
           </button>
           <button
             class={`py-2 px-3 rounded ${
-              config().codeFormat === "tsx" ? "bg-blue-500" : ""
+              config().codeFormat === "tsx" ? "bg-blue-700 text-white" : ""
             }`}
             onClick={() => setConfig((c) => ({ ...c, codeFormat: "tsx" }))}
           >

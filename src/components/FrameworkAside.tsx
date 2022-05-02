@@ -1,9 +1,10 @@
-import { JSXElement, PropsWithChildren, useContext } from "solid-js";
+import { JSX, PropsWithChildren, Show, useContext } from "solid-js";
 import { ConfigContext, OtherFramework } from "./ConfigContext";
-import { BiLogoReact, BiLogoVuejs, BiSolidBrain, BiBook } from "solid-icons/bi";
-import { IoAccessibility } from "solid-icons/io";
-import { SiSvelte } from "solid-icons/si";
-import { isServer } from "solid-js/web";
+import IconAccessibility from "~icons/icomoon-free/accessibility";
+import IconReact from "~icons/mdi/react";
+import IconVue from "~icons/mdi/vuejs";
+import IconSvelte from "~icons/simple-icons/svelte";
+import IconBulb from "~icons/mdi/lightbulb";
 
 export const FrameworkAside = (
   props: PropsWithChildren<{ framework: OtherFramework }>
@@ -26,63 +27,34 @@ type AsideType =
   | "vue"
   | "accessibility"
   | "theory"
-  | "advanced";
+  | "advanced"
+  | "general";
 
-const logoProps = { size: "1.6rem", class: "inline mr-2" };
+const logoProps = { "font-size": "1.6rem" };
 
-const logos: Record<AsideType, () => JSXElement> = {
-  react: () => <BiLogoReact {...logoProps} />,
-  svelte: () => <SiSvelte {...logoProps} />,
-  vue: () => <BiLogoVuejs {...logoProps} />,
-  accessibility: () => <IoAccessibility {...logoProps} />,
-  theory: () => <BiBook {...logoProps} />,
-  advanced: () => <BiSolidBrain {...logoProps} />,
-};
-
-// TODO: why is this having trouble in SSR?
-const AsideLogo = (props: { type: AsideType }) => {
-  if (isServer) return;
-
-  return logos[props.type]();
-};
-
-const asideTitles: Record<AsideType, JSXElement> = {
-  react: (
-    <>
-      <AsideLogo type="react" />
-      Since you're coming from React
-    </>
-  ),
-  svelte: (
-    <>
-      <AsideLogo type="svelte" />
-      Since you're coming from Svelte
-    </>
-  ),
-  vue: (
-    <>
-      <AsideLogo type="vue" />
-      Since you're coming from Vue
-    </>
-  ),
-  accessibility: (
-    <>
-      <AsideLogo type="accessibility" />
-      Accessibility note
-    </>
-  ),
-  theory: (
-    <>
-      <AsideLogo type="theory" />
-      Some theory
-    </>
-  ),
-  advanced: (
-    <>
-      <AsideLogo type="advanced" />
-      Advanced concepts (Optional)
-    </>
-  ),
+const asideDefinition: Record<
+  AsideType,
+  { title: string | null; logo: JSX.Element }
+> = {
+  react: {
+    title: "Since you're coming from React",
+    logo: <IconReact {...logoProps} />,
+  },
+  svelte: {
+    title: "Since you're coming from Svelte",
+    logo: <IconSvelte {...logoProps} />,
+  },
+  vue: {
+    title: "Since you're coming from Vue",
+    logo: <IconVue {...logoProps} />,
+  },
+  accessibility: {
+    title: "Accessibility note",
+    logo: <IconAccessibility {...logoProps} />,
+  },
+  theory: { title: "Some theory", logo: <></> },
+  advanced: { title: "Advanced concepts", logo: <></> },
+  general: { title: null, logo: <IconBulb {...logoProps} /> },
 };
 
 interface IAsideProps {
@@ -91,17 +63,23 @@ interface IAsideProps {
 }
 
 export const Aside = (props: PropsWithChildren<IAsideProps>) => {
-  const title = () => asideTitles[props.type];
+  const title = () => asideDefinition[props.type].title;
+  const logo = () => asideDefinition[props.type].logo;
 
   return (
     <div
       style={{
-        display: props.show !== false ? "block" : "none",
+        display: props.show !== false ? "flex" : "none",
       }}
-      class="p-5 rounded my-10 text-base dark:text-dark bg-highlight dark:bg-highlight-dark"
+      class="p-5 rounded my-10 text-base dark:text-dark bg-highlight dark:bg-highlight-dark gap-2"
     >
-      <h3 class="text-xl">{title()}</h3>
-      {props.children}
+      <div class="my-3">{logo()}</div>
+      <div>
+        <Show when={!!title()}>
+          <h3 class="text-xl mt-3">{title()}</h3>
+        </Show>
+        {props.children}
+      </div>
     </div>
   );
 };

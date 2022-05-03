@@ -1,5 +1,10 @@
-import { useContext, JSX } from "solid-js";
+import { useContext, JSX, JSXElement, For } from "solid-js";
 import { ConfigContext } from "~/components/ConfigContext";
+import IconJs from "~icons/logos/javascript";
+import IconTs from "~icons/logos/typescript-icon";
+import IconReact from "~icons/vscode-icons/file-type-reactjs";
+import IconVue from "~icons/vscode-icons/file-type-vue";
+import IconSvelte from "~icons/vscode-icons/file-type-svelte";
 
 export const Preferences = () => {
   const [config, setConfig] = useContext(ConfigContext);
@@ -10,73 +15,75 @@ export const Preferences = () => {
 
   return (
     <>
-      <fieldset class="mt-5">
-        <legend>
-          Before we get started, do you use JavaScript or Typescript?
-        </legend>
-        <input
-          type="radio"
-          name="codeFormat"
-          id="jsx"
-          value="jsx"
-          onChange={configChange}
-          checked={config().codeFormat === "jsx"}
-        />
-        <label for="jsx">JavaScript</label>
-        <input
-          class="ml-5"
-          type="radio"
-          name="codeFormat"
-          id="tsx"
-          value="tsx"
-          onChange={configChange}
-          checked={config().codeFormat === "tsx"}
-        />
-        <label for="tsx">Typescript</label>
-      </fieldset>
-
-      <fieldset class="mt-5">
-        <legend>Are you coming from Any of the following frameworks?</legend>
-        <input
-          type="radio"
-          name="comingFrom"
-          id="react"
-          value="react"
-          onChange={configChange}
-          checked={config().comingFrom === "react"}
-        />
-        <label for="react">React</label>
-        <input
-          class="ml-5"
-          type="radio"
-          name="comingFrom"
-          id="vue"
-          value="vue"
-          onChange={configChange}
-          checked={config().comingFrom === "vue"}
-        />
-        <label for="vue">Vue</label>
-        <input
-          class="ml-5"
-          type="radio"
-          name="comingFrom"
-          id="svelte"
-          value="svelte"
-          onChange={configChange}
-          checked={config().comingFrom === "svelte"}
-        />
-        <label for="svelte">Svelte</label>
-        <input
-          class="ml-5"
-          type="radio"
-          name="comingFrom"
-          id="none"
-          value="none"
-          onChange={configChange}
-          checked={config().comingFrom === "none"}
-        />
-        <label for="none">None</label>
-      </fieldset>
+      <RadioGroup
+        legend="Do you prefer JavaScript or Typescript?"
+        name="codeFormat"
+        checked={config().codeFormat}
+        onChange={configChange}
+        radios={[
+          { icon: <IconJs />, label: "JavaScript", value: "jsx" },
+          { icon: <IconTs />, label: "Typescript", value: "tsx" },
+        ]}
+      />
+      <RadioGroup
+        legend="Are you coming from any of the following frameworks?"
+        name="comingFrom"
+        checked={config().comingFrom}
+        onChange={configChange}
+        radios={[
+          { icon: <IconReact />, label: "React", value: "react" },
+          { icon: <IconVue />, label: "Vue", value: "vue" },
+          { icon: <IconSvelte />, label: "Svelte", value: "svelte" },
+          { icon: <></>, label: "None of the above", value: "none" },
+        ]}
+      />
     </>
+  );
+};
+
+interface IRadioGroupProps<T extends string> {
+  legend: string;
+  name: string;
+  checked: T;
+  onChange: JSX.EventHandler<HTMLInputElement, InputEvent>;
+  radios: {
+    value: T;
+    label: string;
+    icon: JSXElement | null;
+  }[];
+}
+
+const RadioGroup = <T extends string>(props: IRadioGroupProps<T>) => {
+  return (
+    <fieldset class="mt-10">
+      <legend class="text-xl">{props.legend}</legend>
+      <For each={props.radios}>
+        {(radio) => (
+          <div
+            classList={{
+              "p-5 flex gap-2 text-2xl mt-5 align-start": true,
+              "rounded text-base dark:text-dark bg-highlight dark:bg-highlight-dark":
+                props.checked === radio.value,
+            }}
+          >
+            <input
+              type="radio"
+              name={props.name}
+              id={`${props.name}-${radio.value}`}
+              value={radio.value}
+              onChange={props.onChange}
+              checked={props.checked === radio.value}
+            />
+            <label
+              class="flex gap-2 cursor-pointer"
+              for={`${props.name}-${radio.value}`}
+            >
+              {radio.icon}
+              {radio.label}
+            </label>
+          </div>
+        )}
+      </For>
+    </fieldset>
   );
 };

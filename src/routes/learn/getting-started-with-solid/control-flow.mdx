@@ -1,19 +1,34 @@
+import { NextSection } from "../../../components/NextSection";
 import { FrameworkAside } from "../../../components/FrameworkAside";
+import { CodeTabs } from "../../../components/Tabs";
+import { BasicBookshelfShow } from "../components/BasicBookshelfShow";
+import Dashboardjs from "./snippets/Dashboardjs.mdx";
+import Dashboardts from "./snippets/Dashboardts.mdx";
+import App4js from "./snippets/bookshelf/App4js.mdx";
+import App4ts from "./snippets/bookshelf/App4ts.mdx";
+import App5js from "./snippets/bookshelf/App5js.mdx";
+import App5ts from "./snippets/bookshelf/App5ts.mdx";
+import AddBook3js from "./snippets/bookshelf/AddBook3js.mdx";
+import AddBook3ts from "./snippets/bookshelf/AddBook3ts.mdx";
+import BookList5js from "./snippets/bookshelf/BookList5js.mdx";
+import BookList5ts from "./snippets/bookshelf/BookList5ts.mdx";
 
-# Control Flow
+<title>Conditional UI Display</title>
+
+# Conditional User Interface Display
 
 In dynamic front-end applications, we typically want to show different user interfaces when the application is in different states. An example of this is displaying a welcome message to either a guest or an authenticated user.
 
 For a guest, we might want to display a generic welcome message alongside a sign-in form:
 
-```jsx
+```tsx
 <div>Welcome to the application. Please sign in to continue.</div>
 <SignInForm />
 ```
 
 For an authenticated user, we might want to greet them by their name and provide them with their custom dashboard:
 
-```jsx
+```tsx
 <div>Welcome back, Jessica!</div>
 <Dashboard />
 ```
@@ -27,26 +42,12 @@ In Solid, we can use the `<Show />` component to conditionally show content. The
 
 The following example shows how we would use the `<Show />` component to conditionally display a sign-in or dashboard page:
 
-```jsx
-import { Show } from "solid-js";
-
-function Home(props) {
-  return (
-    <Show
-      when={props.isLoggedin}
-      fallback={
-        <>
-          <div>Welcome to the application. Please sign in to continue.</div>
-          <SignInForm />
-        </>
-      }
-    >
-      <div>Welcome back, {props.firstName}!</div>
-      <Dashboard />
-    </Show>
-  );
-}
-```
+<CodeTabs
+  files={{
+    jsx: [{ name: "Home.jsx", component: Dashboardjs }],
+    tsx: [{ name: "Home.tsx", component: Dashboardts }],
+  }}
+/>
 
 When `props.isLoggedIn` is `true`, we welcome the user back and show the `<Dashboard />`. When `props.isLoggedIn` is `false`, we display the `fallback` content, which is our generic greeting message and the `<SignInForm />`.
 
@@ -117,74 +118,50 @@ In React, you iterate over arrays in JSX using the array `map` method:
 </>
 ```
 
-This would actually work in Solid, but in not optimal. You can think of `<For />` as an optimized version of `map`. When using `<For /> `, Solid is able to intelligently determine which array elements to update without you having to provide a `key`.
+While this would work in Solid, it's not optimal. You can think of `<For />` as an optimized version of `map`. When using `<For /> `, Solid is able to intelligently determine which array elements to update. This is why we don't have to use a `key` like we would in React.
 
 </FrameworkAside>
 
 ## Revisiting the bookshelf
 
-In the [Adding Interactivity with State](../adding-interactivity-with-state) section of this tutorial, we found ourselves already needing the `<For /.` component. This allowed us to iterate over any number of books that are on our bookshelf:
+In the [Adding Interactivity with State](../adding-interactivity-with-state) section of this tutorial, we found ourselves already needing the `<For />` component. This allowed us to iterate over any number of books in on our bookshelf:
 
-```jsx
-function Books(props) {
-  return (
-    <ul>
-      <For each={props.books}>
-        {(book) => {
-          return <li>{book}</li>;
-        }}
-      </For>
-    </ul>
-  );
-}
-```
+<CodeTabs
+  files={{
+    jsx: [
+      { name: "App.jsx", component: App4js },
+      { name: "AddBook.jsx", component: AddBook3js },
+      { name: "BookList.jsx", component: BookList5js, default: true },
+    ],
+    tsx: [
+      { name: "App.tsx", component: App4ts },
+      { name: "AddBook.tsx", component: AddBook3ts },
+      { name: "BookList.tsx", component: BookList5ts, default: true },
+    ],
+  }}
+/>
 
-Let's now use the `<Show />` component. As a reminder, our `Bookshelf` app code is currently as follows:
+Let's now use the `<Show />` component. We will only show our `AddBook` form if the user wants to add a book.
 
-```jsx
-function Bookshelf(props) {
-  const [books, setBooks] = createSignal([
-    "Code Complete",
-    "JavaScript: The Good Parts",
-  ]);
+We will create a boolean signal in the `Bookshelf` component that tracks whether or not the form is open and add buttons to open and close the form. We will use the `<Show />` component to conditionally display the form.
 
-  return (
-    <div>
-      <h1>{props.name}'s Bookshelf</h1>
-      <Books books={books()} />
-      <AddBook setBooks={setBooks} />
-    </div>
-  );
-}
-```
-
-Let's only show our `AddBook` form if the user wants to add a book. We'll create a boolean signal in the `Bookshelf` component that tracks whether or not the form is open and add buttons to open and close the form. We will use the `<Show />` component to conditionally display the form.
-
-```jsx
-function Bookshelf(props) {
-  const [books, setBooks] = createSignal([
-    "Code Complete",
-    "JavaScript: The Good Parts",
-  ]);
-
-  const [showForm, setShowForm] = createSignal(false);
-
-  const toggleForm = () => setShowForm(!showForm());
-
-  return (
-    <div>
-      <h1>{props.name}'s Bookshelf</h1>
-      <Books books={books()} />
-      <Show
-        when={showForm()}
-        fallback={<button onClick={toggleForm}>Add a book</button>}
-      >
-        <AddBook setBooks={setBooks} />
-        <button onClick={toggleForm}>Finished adding books</button>
-      </Show>
-    </div>
-  );
-}
-```
+<CodeTabs
+  files={{
+    jsx: [
+      { name: "App.jsx*", component: App5js },
+      { name: "AddBook.jsx", component: AddBook3js },
+      { name: "BookList.jsx", component: BookList5js },
+    ],
+    tsx: [
+      { name: "App.tsx*", component: App5ts },
+      { name: "AddBook.tsx", component: AddBook3ts },
+      { name: "BookList.tsx", component: BookList5ts },
+    ],
+  }}
+/>
 
 When `showForm()` is `true`, the app displays the `<AddBook />` form and a button that allows us to hide the form again. When `showForm()` is `false`, the `fallback` component is displayed&mdash;a button to show the `<AddBook />` form.
+
+<BasicBookshelfShow name="Solid" />
+
+<NextSection title="Fetching Data" href="../fetching-data" />

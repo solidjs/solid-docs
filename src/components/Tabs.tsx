@@ -1,39 +1,77 @@
-import {
-  Accessor,
-  createContext,
-  createSignal,
-  For,
-  PropsWithChildren,
-  useContext,
-} from "solid-js";
-import { ConfigContext } from "./ConfigContext";
+import { createSignal, For, JSX, onMount, useContext } from "solid-js";
+import { Config, ConfigContext } from "./ConfigContext";
 
-const TabContext = createContext<Accessor<string>>();
+type File = {
+  name: string;
+  component: () => JSX.Element;
+  default?: boolean;
+};
 
-export const Tabs = (
-  props: PropsWithChildren<{ files: string[]; selected: string }>
-) => {
-  const [selected, setSelected] = createSignal<string>(props.selected);
+interface ICodeTabsProps {
+  files: Record<Config["codeFormat"], File[]>;
+}
+
+/*
+  This component should be refactored to use the Dynamic and Show components
+  Once the hydration issues with those components are resolved. Right now,
+  this component eager-loads everything and simply hides the non-selected 
+  content using the CSS display property.
+*/
+
+export const CodeTabs = (props: ICodeTabsProps) => {
+  const [selected, setSelected] = createSignal(0);
   const [config, setConfig] = useContext(ConfigContext);
+
+  const jsxTabs = () => props.files.jsx;
+  const tsxTabs = () => props.files.tsx;
+
+  // Initial selected tab
+  onMount(() => {
+    const initialSelected = props.files[config().codeFormat].findIndex(
+      (el) => el.default
+    );
+    if (initialSelected !== -1) setSelected(initialSelected);
+  });
 
   return (
     <div class="my-10">
       <nav aria-label="Code example files" class="flex justify-between">
-        <div>
-          <For each={props.files}>
-            {(file) => (
+        <div
+          style={{ display: config().codeFormat === "jsx" ? "block" : "none" }}
+        >
+          <For each={jsxTabs()}>
+            {(file, i) => (
               <button
                 classList={{
-                  "border-b-2 border-blue-400": selected() === file,
+                  "border-b-2 border-blue-400": i() === selected(),
                   "p-2": true,
                 }}
-                onClick={() => setSelected(file)}
+                onClick={() => setSelected(i())}
               >
-                {file}
+                {file.name}
               </button>
             )}
           </For>
         </div>
+
+        <div
+          style={{ display: config().codeFormat === "tsx" ? "block" : "none" }}
+        >
+          <For each={tsxTabs()}>
+            {(file, i) => (
+              <button
+                classList={{
+                  "border-b-2 border-blue-400": i() === selected(),
+                  "p-2": true,
+                }}
+                onClick={() => setSelected(i())}
+              >
+                {file.name}
+              </button>
+            )}
+          </For>
+        </div>
+
         <div class="flex gap-1">
           <button
             class={`py-2 px-3 rounded ${
@@ -45,7 +83,7 @@ export const Tabs = (
           </button>
           <button
             class={`py-2 px-3 rounded ${
-              config().codeFormat === "tsx" ? "bg-blue-500" : ""
+              config().codeFormat === "tsx" ? "bg-blue-700 text-white" : ""
             }`}
             onClick={() => setConfig((c) => ({ ...c, codeFormat: "tsx" }))}
           >
@@ -53,18 +91,31 @@ export const Tabs = (
           </button>
         </div>
       </nav>
-      <TabContext.Provider value={selected}>
-        <div class="-mt-4">{props.children}</div>
-      </TabContext.Provider>
-    </div>
-  );
-};
+      <div class="-mt-4">
+        <div
+          style={{ display: config().codeFormat === "jsx" ? "block" : "none" }}
+        >
+          <For each={jsxTabs()}>
+            {(file, i) => (
+              <div style={{ display: selected() === i() ? "block" : "none" }}>
+                {file.component()}
+              </div>
+            )}
+          </For>
+        </div>
 
-export const Tab = (props: PropsWithChildren<{ name: string }>) => {
-  const selected = useContext(TabContext);
-  return (
-    <div style={{ display: selected() == props.name ? "block" : "none" }}>
-      {props.children}
+        <div
+          style={{ display: config().codeFormat === "tsx" ? "block" : "none" }}
+        >
+          <For each={tsxTabs()}>
+            {(file, i) => (
+              <div style={{ display: selected() === i() ? "block" : "none" }}>
+                {file.component()}
+              </div>
+            )}
+          </For>
+        </div>
+      </div>
     </div>
   );
 };

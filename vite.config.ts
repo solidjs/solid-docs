@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import solid from "solid-start";
+import netlify from "solid-start-netlify";
 import mdx from "@mdx-js/rollup";
 import WindiCSS from "vite-plugin-windicss";
 import rehypeRaw from "rehype-raw";
@@ -117,8 +118,8 @@ export default defineConfig({
         },
       },
     }),
-
     solid({
+      adapter: netlify(),
       extensions: [".mdx", ".md"],
     }),
   ],

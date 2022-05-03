@@ -5,6 +5,10 @@ import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import { Title } from "./components/Main";
 import Terminal from "./components/Terminal";
+
+import { usePageState } from "./components/PageStateContext";
+import { onMount } from "solid-js";
+
 let hashCode = function (str) {
   var hash = 0;
   for (var i = 0; i < str.length; i++) {
@@ -35,6 +39,10 @@ export default {
   ssr: (props) => <>{props.children}</>,
   spa: (props) => <></>,
   h2: (props) => {
+    const { addSection } = usePageState();
+    onMount(() => {
+      addSection(props.children, props.id);
+    });
     return (
       <h2
         {...props}

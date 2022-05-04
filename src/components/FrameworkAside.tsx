@@ -73,7 +73,7 @@ export const Aside = (props: PropsWithChildren<IAsideProps>) => {
       style={{
         display: props.show !== false ? "flex" : "none",
       }}
-      class="aside p-5 rounded my-10 text-base dark:text-dark bg-highlight dark:bg-highlight-dark gap-2"
+      class="aside p-5 rounded my-10 text-white bg-solid-medium dark:bg-darkdefault gap-2"
     >
       <div class="my-3">{logo()}</div>
       <div>

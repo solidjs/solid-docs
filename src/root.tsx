@@ -54,10 +54,7 @@ export default function Root() {
           crossOrigin=""
         />
         <link rel="shortcut icon" href="/favicon.ico" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&display=swap"
-          rel="stylesheet"
-        />
+        <link rel="stylesheet" href="/main.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@200;300;400&display=swap"
           rel="stylesheet"
@@ -65,7 +62,7 @@ export default function Root() {
         <Meta />
         <Links />
       </head>
-      <body class="font-sans antialiased text-lg bg-wash dark:bg-wash-dark text-secondary dark:text-secondary-dark leading-base min-h-screen h-auto lg:h-screen flex flex-row">
+      <body class="font-sans antialiased text-lg bg-white dark:bg-solid-darkbg text-black dark:text-white leading-base min-h-screen h-auto lg:h-screen flex flex-row">
         <ConfigProvider>
           <PageStateProvider>
             <MDXProvider

@@ -24,8 +24,8 @@ const sections = [
 ];
 
 export const NavHeader = () => (
-  <nav className="sticky top-0 items-center w-full flex lg:block justify-between bg-wash dark:bg-wash-dark pt-0 lg:pt-4 pr-5 lg:px-5 z-50">
-    <div className="xl:w-full xl:max-w-xs flex items-center">
+  <nav className="sticky top-0 items-center w-full flex lg:block justify-between pt-0 lg:pt-4 pr-5 lg:px-5 z-50">
+    <div className="xl:w-full xl:max-w-xs flex items-center justify-between">
       <button
         type="button"
         aria-label="Menu"
@@ -35,18 +35,12 @@ export const NavHeader = () => (
       </button>
       <a
         href="/"
-        className="inline-flex space-x-1 text-lg font-normal items-center text-primary dark:text-primary-dark py-1 mr-0 sm:mr-3 whitespace-nowrap"
+        className="inline-flex space-x-1 text-xl font-normal items-center text-primary dark:text-primary-dark py-1 mr-0 sm:mr-3 whitespace-nowrap"
       >
-        <Logo className="text-sm w-8 h-8 text-link dark:text-link-dark" />
+        <Logo className="w-8 h-8 -mt-2 text-link dark:text-link-dark" />
         <span class="font-bold">Solid </span>
-        <span>+</span>
-        <span class="font-bold">SolidStart</span>
+        <span class="">Docs</span>
       </a>
-      <div className="lg:w-full leading-loose hidden sm:flex flex-initial items-center h-auto pr-5 lg:pr-5 pt-0.5">
-        <div className="px-1 mb-px bg-highlight dark:bg-highlight-dark rounded text-link dark:text-link-dark uppercase font-bold tracking-wide text-xs whitespace-nowrap">
-          Next
-        </div>
-      </div>
       <div className="block dark:hidden">
         <button
           type="button"
@@ -111,7 +105,6 @@ export const NavHeader = () => (
       </div>
     </div>
     <div className="flex my-4 h-10 mx-0 w-full lg:hidden justify-end lg:max-w-sm">
-      <SearchBar />
       <button
         aria-label="Give feedback"
         type="button"
@@ -178,34 +171,6 @@ export const NavHeader = () => (
     </div>
   </nav>
 );
-export function SearchBar() {
-  return (
-    <>
-      <button
-        aria-label="Search"
-        type="button"
-        className="inline-flex md:hidden items-center text-lg p-1 ml-4 lg:ml-6"
-      >
-        <SearchIcon />
-      </button>
-      <button
-        type="button"
-        className="hidden md:flex relative pl-4 pr-0.5 py-1 h-10 bg-secondary-button dark:bg-gray-700 outline-none focus:ring focus:outline-none betterhover:hover:bg-opacity-80 pointer items-center shadow-inner text-left w-full text-gray-30 rounded-lg align-middle text-sm"
-      >
-        <SearchIcon class="mr-3 align-middle text-gray-30 shrink-0 group-betterhover:hover:text-gray-70" />
-        Search
-        <span className="ml-auto hidden sm:flex item-center">
-          <kbd className="h-6 w-6 border border-transparent mr-1 bg-wash dark:bg-wash-dark text-gray-30 align-middle p-0 inline-flex justify-center items-center text-xs text-center rounded">
-            ⌘
-          </kbd>
-          <kbd className="h-6 w-6 border border-transparent mr-1 bg-wash dark:bg-wash-dark text-gray-30 align-middle p-0 inline-flex justify-center items-center text-xs text-center rounded">
-            K
-          </kbd>
-        </span>
-      </button>
-    </>
-  );
-}
 
 function ThumbsUpIcon() {
   return (

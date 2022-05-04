@@ -27,11 +27,16 @@ function Anchor(props: PropsWithChildren<{ id: string }>) {
   );
 }
 
+const boldClass = "font-bold text-solid-default dark:text-solid-darkdefault ";
+
 export default {
+  strong: (props) => <span class={boldClass}>{props.children}</span>,
   h1: (props) => (
     <h1
       {...props}
-      class="heading mt-0 text-primary dark:text-primary-dark -mx-.5 break-words text-5xl font-bold leading-tight"
+      class={
+        boldClass + "heading mt-0 -mx-.5 break-words text-5xl leading-tight"
+      }
     >
       <Anchor id={props.id}>{props.children}</Anchor>
     </h1>
@@ -44,19 +49,13 @@ export default {
       addSection(props.children, props.id);
     });
     return (
-      <h2
-        {...props}
-        class="heading text-3xl leading-10 text-primary dark:text-primary-dark font-bold my-6"
-      >
+      <h2 {...props} class={boldClass + "heading text-3xl leading-10 my-6"}>
         <Anchor id={props.id}>{props.children}</Anchor>
       </h2>
     );
   },
   h3: (props) => (
-    <h3
-      {...props}
-      class="heading text-2xl leading-9 text-primary dark:text-primary-dark font-bold my-6"
-    >
+    <h3 {...props} class={boldClass + "heading text-2xl leading-9 my-6"}>
       <Anchor id={props.id}>{props.children}</Anchor>
     </h3>
   ),

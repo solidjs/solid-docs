@@ -1,6 +1,6 @@
 import { NavLink, Route, Routes, useLocation } from "solid-app-router";
-import { NavHeader, SearchBar } from "./NavHeader";
-import { NavGroup } from "./NavSection";
+import { NavHeader } from "./NavHeader";
+import { NavGroup, NavItem } from "./NavSection";
 import {
   Accordion,
   AccordionButton,
@@ -13,7 +13,7 @@ import { For } from "solid-js";
 
 export default function Nav() {
   return (
-    <div class="no-bg-scrollbar bg-wash dark:bg-wash-dark lg:min-h-screen h-auto lg:h-[calc(100%-40px)] lg:overflow-y-scroll fixed flex flex-row lg:flex-col py-0 left-0 right-0 lg:max-w-xs w-full shadow lg:shadow-none z-50">
+    <div class="no-bg-scrollbar lg:min-h-screen h-auto lg:h-[calc(100%-40px)] lg:overflow-y-scroll fixed flex flex-row lg:flex-col py-0 left-0 right-0 lg:max-w-xs w-full shadow lg:shadow-none z-50">
       <NavHeader />
       <TopMenu />
     </div>
@@ -23,16 +23,13 @@ export default function Nav() {
 function TopMenu() {
   return (
     <aside
-      class="lg:grow lg:flex flex-col w-full pt-4 pb-8 lg:pb-0 lg:max-w-xs fixed lg:sticky bg-wash dark:bg-wash-dark z-10 sm:top-16"
+      class="lg:grow lg:flex flex-col w-full pt-4 pb-8 lg:pb-0 lg:max-w-xs fixed lg:sticky z-10 sm:top-16"
       classList={{
         "lg:block hidden": true,
         "block z-40": false,
       }}
       aria-hidden="false"
     >
-      <div class="px-5 pt-16 sm:pt-10 lg:pt-0">
-        <SearchBar />
-      </div>
       <nav
         role="navigation"
         class="w-full h-screen lg:h-auto grow pr-0 lg:pr-5 pt-6 pb-44 lg:pb-0 lg:py-6 md:pt-4 lg:pt-4 overflow-y-scroll lg:overflow-y-auto scrolling-touch scrolling-gpu"
@@ -170,17 +167,4 @@ function LearnNav() {
   return <SectionNav sections={LEARN_SECTIONS} />;
 }
 
-function NavItem(props) {
-  return (
-    <li>
-      <NavLink
-        class="p-2 pr-2 w-full rounded-none lg:rounded-r-lg text-left relative flex items-center justify-between pl-5 text-base"
-        {...props}
-        inactiveClass="text-secondary dark:text-secondary-dark hover:bg-gray-50 dark:hover:bg-gray-800"
-        activeClass="text-link dark:text-link-dark bg-highlight dark:bg-highlight-dark border-blue-40 hover:bg-highlight hover:text-link dark:hover:bg-highlight-dark dark:hover:text-link-dark active"
-      >
-        {props.children}
-      </NavLink>
-    </li>
-  );
-}
+//dark:hover:bg-solid-darkLighterBg pointer-fine:hover:text-white pointer-fine:hover:bg-solid-medium dark:bg-solid-light text-white

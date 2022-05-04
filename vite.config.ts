@@ -80,7 +80,7 @@ export default defineConfig({
         theme: {
           extend: {
             fontFamily: {
-              sans: ["DM Sans", "Inter var", "sans-serif"],
+              sans: ["Gordita", "sans-serif"],
               mono: [
                 "Source Code Pro",
                 "ui-monospace",
@@ -102,8 +102,8 @@ export default defineConfig({
               "primary-dark": colors.coolGray[50],
               secondary: colors.coolGray[700],
               "secondary-dark": colors.coolGray[50],
-              link: colors.lightBlue[700],
-              "link-dark": colors.lightBlue[500],
+              link: "#2c4f7c",
+              "link-dark": "#b8d7ff",
               card: colors.gray[100],
               "card-dark": colors.gray[700],
               border: colors.slate[300],
@@ -113,6 +113,21 @@ export default defineConfig({
               wash: "white",
               "wash-dark": colors.gray[800],
               "secondary-button": colors.slate[300],
+              solid: {
+                default: "#2c4f7c",
+                darkbg: "#222222",
+                darkLighterBg: "#444444",
+                darkdefault: "#b8d7ff", //'#87b1e6',
+                darkgray: "#252525",
+                gray: "#414042",
+                mediumgray: "#9d9d9d",
+                lightgray: "#f3f5f7",
+                dark: "#07254A",
+                medium: "#446b9e",
+                light: "#4f88c6",
+                accent: "#0cdc73",
+                secondaccent: "#0dfc85",
+              },
             },
           },
         },

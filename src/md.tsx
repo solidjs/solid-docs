@@ -80,14 +80,16 @@ export default {
       {props.children}
     </p>
   ),
-  a: (props) => (
-    <Link
-      {...props}
-      class="text-link dark:text-link-dark break-normal border-b border-link border-opacity-0 hover:border-opacity-100 duration-100 ease-in transition leading-normal"
-    >
-      {props.children}
-    </Link>
-  ),
+  a: (props) => {
+    return (
+      <Link
+        {...props}
+        class="text-link dark:text-link-dark break-normal border-b border-link border-opacity-0 hover:border-opacity-100 duration-100 ease-in transition leading-normal"
+      >
+        {props.children}
+      </Link>
+    );
+  },
   li: (props) => (
     <li {...props} class="my-2">
       {props.children}

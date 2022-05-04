@@ -26,10 +26,10 @@ export default defineConfig({
         providerImportSource: "solid-mdx",
         rehypePlugins: [
           rehypeSlug,
-          [
-            rehypeAutolinkHeadings,
-            { behaviour: "append", test: ["h1", "h2", "h3"] },
-          ],
+          // [
+          //   rehypeAutolinkHeadings,
+          //   { behaviour: "append", test: ["h1", "h2", "h3"] },
+          // ],
           [rehypeRaw, { passThrough: nodeTypes }],
         ],
         remarkPlugins: [

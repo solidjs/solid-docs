@@ -7,6 +7,7 @@ import {
   PropsWithChildren,
   Signal,
 } from "solid-js";
+import { createStore } from "solid-js/store";
 
 type Section = {
   title: string;
@@ -14,37 +15,41 @@ type Section = {
 };
 
 type PageStateData = {
-  sections: Accessor<Section[]>;
+  sections: () => readonly Section[];
   addSection: (title: string, href: string) => void;
 };
 
 export const PageStateContext = createContext<PageStateData>();
 
 export const PageStateProvider = (props: PropsWithChildren) => {
-  const [sections, setSections] = createSignal([]);
-  const [path, setPath] = createSignal("");
+  const [store, setStore] = createStore<{ sections: Section[]; path: string }>({
+    sections: [],
+    path: "",
+  });
 
-  const store: PageStateData = {
-    sections,
+  const data: PageStateData = {
+    sections() {
+      return store.sections;
+    },
     addSection(title, href) {
-      setSections((sections) => [...sections, { title, href }]);
+      setStore("sections", (sections) => [...sections, { title, href }]);
     },
   };
 
   createEffect(() => {
-    console.log(sections());
+    console.log(store.sections);
   });
 
   createEffect(() => {
     const { pathname } = useLocation();
-    if (pathname !== path()) {
-      setSections([]);
-      setPath(pathname);
+    if (pathname !== store.path) {
+      setStore("sections", []);
+      setStore("path", pathname);
     }
   });
 
   return (
-    <PageStateContext.Provider value={store}>
+    <PageStateContext.Provider value={data}>
       {props.children}
     </PageStateContext.Provider>
   );

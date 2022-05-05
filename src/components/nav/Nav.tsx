@@ -23,7 +23,7 @@ export default function Nav() {
 function TopMenu() {
   return (
     <aside
-      class="lg:grow lg:flex flex-col w-full pt-4 pb-8 lg:pb-0 lg:max-w-xs fixed lg:sticky z-10 sm:top-16"
+      class="lg:grow lg:flex flex-col w-full pt-4 lg:max-w-xs fixed lg:sticky z-10 sm:top-16"
       classList={{
         "lg:block hidden": true,
         "block z-40": false,
@@ -32,12 +32,12 @@ function TopMenu() {
     >
       <nav
         role="navigation"
-        class="w-full h-screen lg:h-auto grow pr-0 lg:pr-5 pt-6 pb-44 lg:pb-0 lg:py-6 md:pt-4 lg:pt-4 overflow-y-scroll lg:overflow-y-auto scrolling-touch scrolling-gpu"
+        class="w-full h-screen lg:h-auto grow overflow-y-scroll lg:overflow-y-auto scrolling-touch scrolling-gpu"
         style="--bg-opacity:0.2;"
       >
         <Routes>
-          <Route path="/api/**/*" component={ApiNav} />
-          <Route path="/learn/**/*" component={LearnNav} />
+          <Route path="/reference/**/*" component={ApiNav} />
+          <Route path="/guides/**/*" component={GuidesNav} />
           <Route path="/**/*" component={HomeNav} />
         </Routes>
       </nav>
@@ -48,7 +48,7 @@ function TopMenu() {
 const HomeSections = {
   // Foundations: {
   //   header: "Foundations",
-  //   link: "/learn/foundations",
+  //   link: "/guides/foundations",
   //   inSubsections: (p) => p.startsWith("/api/files"),
   // },
   // Forms: {
@@ -73,48 +73,48 @@ const HomeSections = {
   // },
 };
 
-const LEARN_SECTIONS = {
+const GUIDES_SECTIONS = {
   GettingStartedWithSolid: {
     header: "Getting Started With Solid",
-    link: "/learn/getting-started",
-    inSubsections: (p) => p.startsWith("/learn/getting-started-with-solid"),
+    link: "/guides/getting-started/welcome",
+    inSubsections: (p) => p.startsWith("/guides/getting-started-with-solid"),
     subsections: {
       Welcome: {
         header: "Welcome",
-        link: "/learn/getting-started-with-solid/welcome",
+        link: "/guides/getting-started-with-solid/welcome",
       },
       "Installing Solid": {
         header: "Installing Solid",
-        link: "/learn/getting-started-with-solid/installing-solid",
+        link: "/guides/getting-started-with-solid/installing-solid",
       },
       "Building UI with Components": {
         header: "Building UI with Components",
-        link: "/learn/getting-started-with-solid/building-ui-with-components",
+        link: "/guides/getting-started-with-solid/building-ui-with-components",
       },
       "Adding Interactivity with State": {
         header: "Adding Interactivity with State",
-        link: "/learn/getting-started-with-solid/adding-interactivity-with-state",
+        link: "/guides/getting-started-with-solid/adding-interactivity-with-state",
       },
       "Control Flow": {
         header: "Control Flow",
-        link: "/learn/getting-started-with-solid/control-flow",
+        link: "/guides/getting-started-with-solid/control-flow",
       },
     },
   },
   Foundations: {
     header: "Foundations",
-    link: "/learn/foundations",
+    link: "/guides/foundations/why-solid",
     subsections: {
       "Why Solid?": {
         header: "Why Solid?",
-        link: "/learn/getting-started-with-solid/why-solid",
+        link: "/guides/getting-started-with-solid/why-solid",
       },
       "JavaScript for Solid": {
         header: "JavaScript for Solid",
-        link: "/learn/getting-started-with-solid/javascript-for-solid",
+        link: "/guides/getting-started-with-solid/javascript-for-solid",
       },
     },
-    inSubsections: (p) => p.startsWith("/learn/foundations"),
+    inSubsections: (p) => p.startsWith("/guides/foundations"),
   },
 };
 
@@ -163,8 +163,8 @@ function SectionNav(props) {
   );
 }
 
-function LearnNav() {
-  return <SectionNav sections={LEARN_SECTIONS} />;
+function GuidesNav() {
+  return <SectionNav sections={GUIDES_SECTIONS} />;
 }
 
 //dark:hover:bg-solid-darkLighterBg pointer-fine:hover:text-white pointer-fine:hover:bg-solid-medium dark:bg-solid-light text-white

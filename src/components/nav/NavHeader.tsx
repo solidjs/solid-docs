@@ -19,10 +19,8 @@ function ActiveLink(props) {
 }
 
 const sections = [
-  { title: "Tutorials", href: "/learn" },
-  { title: "API", href: "/api" },
-  { title: "Recipes", href: "/recipes" },
-  { title: "Concepts", href: "/concepts" },
+  { title: "Guides", href: "/guides" },
+  { title: "Reference", href: "/reference" },
 ];
 
 export const NavHeader = () => (
@@ -72,7 +70,7 @@ export const NavHeader = () => (
           {({ title, href }) => (
             <ActiveLink
               isActive={(loc) => loc.pathname.startsWith(href)}
-              activeClass="border-solid-default font-bold"
+              activeClass="border-solid-default dark:border-solid-darkdefault font-bold"
               className="border-transparent inline-flex w-full items-center border-2 rounded justify-center text-base leading-9 px-3 py-0.5 hover:text-link dark:hover:text-link-dark whitespace-nowrap"
               href={href}
             >

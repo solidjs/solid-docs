@@ -99,6 +99,10 @@ const GUIDES_SECTIONS = {
         header: "Control Flow",
         link: "/guides/getting-started-with-solid/control-flow",
       },
+      "Fetching Data": {
+        header: "Fetching Data",
+        link: "/guides/getting-started-with-solid/fetching-data",
+      },
     },
   },
   Foundations: {

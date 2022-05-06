@@ -4,8 +4,13 @@ import { Links, Meta, Routes, Scripts } from "solid-start/root";
 import "./code.css";
 import "virtual:windi.css";
 
+import { useParams, Router, Route } from "solid-app-router";
+import { createResource, JSX } from "solid-js";
+import { ConfigProvider } from "./components/ConfigContext";
+import { PageStateProvider } from "./components/PageStateContext";
+
 import { MDXProvider } from "solid-mdx";
-import Nav from "./components/Nav";
+import Nav from "./components/nav/Nav";
 import md from "./md";
 import { createEffect } from "solid-js";
 import tippy from "tippy.js";
@@ -49,10 +54,7 @@ export default function Root() {
           crossOrigin=""
         />
         <link rel="shortcut icon" href="/favicon.ico" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&display=swap"
-          rel="stylesheet"
-        />
+        <link rel="stylesheet" href="/main.css" />
         <link
           href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@200;300;400&display=swap"
           rel="stylesheet"
@@ -60,50 +62,23 @@ export default function Root() {
         <Meta />
         <Links />
       </head>
-      <body class="font-sans antialiased text-lg bg-wash dark:bg-wash-dark text-secondary dark:text-secondary-dark leading-base min-h-screen h-auto lg:h-screen flex flex-row">
+      <body class="font-sans antialiased text-lg bg-white dark:bg-solid-darkbg text-black dark:text-white leading-base min-h-screen h-auto lg:h-screen flex flex-row">
         <ConfigProvider>
-          <MDXProvider
-            components={{
-              ...md,
-            }}
-          >
-            <Nav />
-            <Main>
-              <Routes />
-            </Main>
-            {/* <div class="h-screen overflow-scroll flex-1 bg-blue-50 px-12">
-            <div class="flex flex-col w-full"> <Routes /> </div>
-          </div> */}
-          </MDXProvider>
+          <PageStateProvider>
+            <MDXProvider
+              components={{
+                ...md,
+              }}
+            >
+              <Nav />
+              <Main>
+                <Routes />
+              </Main>
+            </MDXProvider>
+          </PageStateProvider>
         </ConfigProvider>
         <Scripts />
       </body>
     </html>
   );
-}
-
-import { useParams, Router, Route } from "solid-app-router";
-import { createResource, JSX } from "solid-js";
-import { ConfigProvider } from "./components/ConfigContext";
-
-function App() {
-  return (
-    <Router>
-      <Route path="/user/:id" component={User} />
-    </Router>
-  );
-}
-
-function fetchUser(id: string) {
-  return { name: "John" };
-}
-
-// ---cut---
-function User() {
-  const params = useParams();
-
-  // fetch user based on the id that we get as a path parameter
-  const [user] = createResource(() => params.slug, fetchUser);
-
-  return <h1>{user().name}</h1>;
 }

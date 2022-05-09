@@ -5,7 +5,6 @@ import {
   PropsWithChildren,
   Signal,
 } from "solid-js";
-import { isServer } from "solid-js/web";
 
 export type CodeFormat = "jsx" | "tsx";
 export type OtherFramework = "react" | "vue" | "svelte";
@@ -15,31 +14,26 @@ export type Config = { codeFormat: CodeFormat; comingFrom: ComingFrom };
 
 export const ConfigContext = createContext<Signal<Config>>();
 
-const defaultConfig: Config = {
+export const defaultConfig: Config = {
   codeFormat: "jsx",
   comingFrom: "none",
 };
 
-const getStoredOrDefault = (): Config => {
-  if (isServer) {
-    return defaultConfig;
-  }
+// Cookie max-age = one year since this is not sensitive info
+const MAX_AGE = 60 * 60 * 24 * 365;
 
-  const stored = localStorage.getItem("docs-config");
-
-  return stored ? JSON.parse(stored) : defaultConfig;
-};
-
-export const ConfigProvider = (props: PropsWithChildren) => {
-  const config = createSignal(getStoredOrDefault());
+export const ConfigProvider = (
+  props: PropsWithChildren<{ initialConfig: Config }>
+) => {
+  const [config, setConfig] = createSignal(props.initialConfig);
 
   createEffect(() => {
-    if (!isServer)
-      localStorage.setItem("docs-config", JSON.stringify(config[0]()));
+    const serialized = JSON.stringify(config());
+    document.cookie = `docs_config=${serialized}; SameSite=Lax; Secure; max-age=${MAX_AGE}`;
   });
 
   return (
-    <ConfigContext.Provider value={config}>
+    <ConfigContext.Provider value={[config, setConfig]}>
       {props.children}
     </ConfigContext.Provider>
   );

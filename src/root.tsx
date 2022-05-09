@@ -1,27 +1,43 @@
 // @refresh reload
 import { Links, Meta, Routes, Scripts } from "solid-start/root";
+import cookie from "cookie";
 
 import "./code.css";
 import "virtual:windi.css";
 
-import { useParams, Router, Route } from "solid-app-router";
-import { createResource, JSX } from "solid-js";
-import { ConfigProvider } from "./components/ConfigContext";
+import {
+  Config,
+  ConfigProvider,
+  defaultConfig,
+} from "./components/ConfigContext";
 import { PageStateProvider } from "./components/PageStateContext";
 
 import { MDXProvider } from "solid-mdx";
 import Nav from "./components/nav/Nav";
 import md from "./md";
-import { createEffect } from "solid-js";
-import tippy from "tippy.js";
+import { createEffect, createResource, Show } from "solid-js";
 import { Main } from "./components/Main";
 import { createStore } from "solid-js/store";
+import server from "solid-start/server";
+import { isServer } from "solid-js/web";
 
 export const [store, setStore] = createStore({
   darkMode: false,
 });
 
+async function getInitialConfig(): Promise<Config> {
+  const cookies = isServer
+    ? server(async () => server.request.headers.get("Cookie"))
+    : async () => document.cookie;
+  const parsed = cookie.parse(await cookies());
+  return parsed?.["docs_config"]
+    ? JSON.parse(parsed["docs_config"])
+    : defaultConfig;
+}
+
 export default function Root() {
+  const [data] = createResource(getInitialConfig);
+
   createEffect(() => {
     // setTimeout(() => {
     //   tippy("[data-template]", {
@@ -63,20 +79,23 @@ export default function Root() {
         <Links />
       </head>
       <body class="font-sans antialiased text-lg bg-white dark:bg-solid-darkbg text-black dark:text-white leading-base min-h-screen h-auto lg:h-screen flex flex-row">
-        <ConfigProvider>
-          <PageStateProvider>
-            <MDXProvider
-              components={{
-                ...md,
-              }}
-            >
-              <Nav />
-              <Main>
-                <Routes />
-              </Main>
-            </MDXProvider>
-          </PageStateProvider>
-        </ConfigProvider>
+        <Show when={data()}>
+          <ConfigProvider initialConfig={data()}>
+            <PageStateProvider>
+              <MDXProvider
+                components={{
+                  ...md,
+                }}
+              >
+                <Nav />
+                <Main>
+                  <Routes />
+                </Main>
+              </MDXProvider>
+            </PageStateProvider>
+          </ConfigProvider>
+        </Show>
+
         <Scripts />
       </body>
     </html>

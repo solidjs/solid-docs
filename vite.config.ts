@@ -127,6 +127,6 @@ export default defineConfig({
     exclude: ["solid-headless"],
   },
   ssr: {
-    noExternal: ["solid-headless"],
+    noExternal: ["solid-headless", "solid-heroicons"],
   },
 });

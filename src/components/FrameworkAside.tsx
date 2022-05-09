@@ -69,19 +69,16 @@ export const Aside = (props: PropsWithChildren<IAsideProps>) => {
   const logo = () => definition.logo;
 
   return (
-    <div
-      style={{
-        display: props.show !== false ? "flex" : "none",
-      }}
-      class="aside p-5 rounded my-10 text-white bg-solid-medium dark:bg-darkdefault gap-2"
-    >
-      <div class="my-3">{logo()}</div>
-      <div>
-        <Show when={!!title()}>
-          <h3 class="text-xl mt-3">{title()}</h3>
-        </Show>
-        {props.children}
+    <Show when={props.show !== false}>
+      <div class="flex aside p-5 rounded my-10 text-white bg-solid-medium dark:bg-darkdefault gap-2">
+        <div class="my-3">{logo()}</div>
+        <div>
+          <Show when={!!title()}>
+            <h3 class="text-xl mt-3">{title()}</h3>
+          </Show>
+          {props.children}
+        </div>
       </div>
-    </div>
+    </Show>
   );
 };

@@ -21,10 +21,6 @@ import { createStore } from "solid-js/store";
 import server from "solid-start/server";
 import { isServer } from "solid-js/web";
 
-export const [store, setStore] = createStore({
-  darkMode: false,
-});
-
 async function getInitialConfig(): Promise<Config> {
   const cookies = isServer
     ? server(async () => server.request.headers.get("Cookie"))
@@ -40,15 +36,6 @@ export default function Root() {
 
   let mainRef;
 
-  createEffect(() => {
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      document.documentElement.classList.add("dark");
-      setStore("darkMode", true);
-    } else {
-      document.documentElement.classList.add("light");
-      setStore("darkMode", false);
-    }
-  });
   return (
     <html lang="en" class="h-full">
       <head>

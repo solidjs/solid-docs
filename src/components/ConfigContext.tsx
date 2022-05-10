@@ -9,14 +9,20 @@ import {
 export type CodeFormat = "jsx" | "tsx";
 export type OtherFramework = "react" | "vue" | "svelte";
 export type ComingFrom = OtherFramework | "none";
+type ColorMode = "dark" | "light" | "none";
 
-export type Config = { codeFormat: CodeFormat; comingFrom: ComingFrom };
+export type Config = {
+  codeFormat: CodeFormat;
+  comingFrom: ComingFrom;
+  mode: ColorMode;
+};
 
 export const ConfigContext = createContext<Signal<Config>>();
 
 export const defaultConfig: Config = {
   codeFormat: "jsx",
   comingFrom: "none",
+  mode: "none",
 };
 
 // Cookie max-age = one year since this is not sensitive info
@@ -28,8 +34,20 @@ export const ConfigProvider = (
   const [config, setConfig] = createSignal(props.initialConfig);
 
   createEffect(() => {
+    // Save to cookie
     const serialized = JSON.stringify(config());
     document.cookie = `docs_config=${serialized}; SameSite=Lax; Secure; max-age=${MAX_AGE}; path=/`;
+    // Toggle mode
+    if (config().mode !== "none") {
+      document.documentElement.classList.remove(
+        config().mode === "light" ? "dark" : "light"
+      );
+      document.documentElement.classList.add(config().mode);
+    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.add("light");
+    }
   });
 
   return (

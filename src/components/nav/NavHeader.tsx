@@ -1,6 +1,7 @@
 import { useLocation } from "solid-app-router";
 import { moon, sun } from "solid-heroicons/outline";
 import { Icon } from "solid-heroicons";
+import { For } from "solid-js";
 
 function ActiveLink(props) {
   const location = useLocation();

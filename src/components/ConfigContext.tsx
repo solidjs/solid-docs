@@ -29,7 +29,7 @@ export const ConfigProvider = (
 
   createEffect(() => {
     const serialized = JSON.stringify(config());
-    document.cookie = `docs_config=${serialized}; SameSite=Lax; Secure; max-age=${MAX_AGE}`;
+    document.cookie = `docs_config=${serialized}; SameSite=Lax; Secure; max-age=${MAX_AGE}; path=/`;
   });
 
   return (

@@ -9,6 +9,7 @@ export function Main(props) {
                 <div ref={props.ref} class="max-w-4xl ml-0 2xl:mx-auto">
                   {props.children}
                 </div>
+                <HelpButton />
               </div>
             </div>
           </article>
@@ -18,6 +19,7 @@ export function Main(props) {
   );
 }
 import { Title as MetaTitle } from "solid-meta";
+import { HelpButton } from "./HelpButton";
 
 export function Title(props) {
   return (

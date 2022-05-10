@@ -15,7 +15,7 @@ import { PageStateProvider } from "./components/PageStateContext";
 import { MDXProvider } from "solid-mdx";
 import Nav from "./components/nav/Nav";
 import md from "./md";
-import { createEffect, createResource, Show } from "solid-js";
+import { createEffect, createResource, Show, Suspense } from "solid-js";
 import { Main } from "./components/Main";
 import { createStore } from "solid-js/store";
 import server from "solid-start/server";
@@ -68,23 +68,24 @@ export default function Root() {
         <Links />
       </head>
       <body class="font-sans antialiased text-lg bg-white dark:bg-solid-darkbg text-black dark:text-white leading-base min-h-screen h-auto lg:h-screen flex flex-row">
-        <Show when={data()}>
-          <ConfigProvider initialConfig={data()}>
-            <PageStateProvider>
-              <MDXProvider
-                components={{
-                  ...md,
-                }}
-              >
-                <Nav />
-                <Main>
-                  <Routes />
-                </Main>
-              </MDXProvider>
-            </PageStateProvider>
-          </ConfigProvider>
-        </Show>
-
+        <Suspense>
+          <Show when={data()}>
+            <ConfigProvider initialConfig={data()}>
+              <PageStateProvider>
+                <MDXProvider
+                  components={{
+                    ...md,
+                  }}
+                >
+                  <Nav />
+                  <Main>
+                    <Routes />
+                  </Main>
+                </MDXProvider>
+              </PageStateProvider>
+            </ConfigProvider>
+          </Show>
+        </Suspense>
         <Scripts />
       </body>
     </html>

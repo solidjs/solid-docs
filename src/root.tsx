@@ -38,6 +38,8 @@ async function getInitialConfig(): Promise<Config> {
 export default function Root() {
   const [data] = createResource(getInitialConfig);
 
+  let mainRef;
+
   createEffect(() => {
     if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
       document.documentElement.classList.add("dark");
@@ -77,8 +79,16 @@ export default function Root() {
                     ...md,
                   }}
                 >
+                  <button
+                    onClick={() => {
+                      mainRef.querySelector("a").focus();
+                    }}
+                    class="skip-to-content-link"
+                  >
+                    Skip to content
+                  </button>
                   <Nav />
-                  <Main>
+                  <Main ref={mainRef}>
                     <Routes />
                   </Main>
                 </MDXProvider>

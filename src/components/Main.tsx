@@ -6,7 +6,9 @@ export function Main(props) {
           <article class="h-full mx-auto relative w-full min-w-0">
             <div class="lg:pt-0 pt-20 pl-0 lg:pl-80 2xl:px-80 ">
               <div class="px-5 sm:px-12 pt-5">
-                <div class="max-w-4xl ml-0 2xl:mx-auto">{props.children}</div>
+                <div ref={props.ref} class="max-w-4xl ml-0 2xl:mx-auto">
+                  {props.children}
+                </div>
               </div>
             </div>
           </article>

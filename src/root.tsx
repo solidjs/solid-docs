@@ -17,7 +17,6 @@ import Nav from "./components/nav/Nav";
 import md from "./md";
 import { createEffect, createResource, Show, Suspense } from "solid-js";
 import { Main } from "./components/Main";
-import { createStore } from "solid-js/store";
 import server from "solid-start/server";
 import { isServer } from "solid-js/web";
 
@@ -56,7 +55,11 @@ export default function Root() {
         <Meta />
         <Links />
       </head>
-      <body class="font-sans antialiased text-lg bg-white dark:bg-solid-darkbg text-black dark:text-white leading-base min-h-screen h-auto lg:h-screen flex flex-row">
+      <body
+        class={`font-sans antialiased text-lg bg-white dark:bg-solid-darkbg text-black dark:text-white leading-base min-h-screen h-auto lg:h-screen flex flex-row ${
+          data()?.mode === "dark" ? "dark" : "light"
+        }`}
+      >
         <Suspense>
           <Show when={data()}>
             <ConfigProvider initialConfig={data()}>

@@ -35,7 +35,8 @@ export default {
     <h1
       {...props}
       class={
-        boldClass + "heading mt-0 -mx-.5 break-words text-5xl leading-tight"
+        boldClass +
+        "heading mt-14 mb-6 -mx-.5 break-words text-5xl leading-tight"
       }
     >
       <Anchor id={props.id}>{props.children}</Anchor>
@@ -49,23 +50,26 @@ export default {
       addSection(props.children, props.id);
     });
     return (
-      <h2 {...props} class={boldClass + "heading text-3xl leading-10 my-6"}>
+      <h2
+        {...props}
+        class={boldClass + "heading text-3xl leading-10 mt-14 mb-6"}
+      >
         <Anchor id={props.id}>{props.children}</Anchor>
       </h2>
     );
   },
   h3: (props) => (
-    <h3 {...props} class={boldClass + "heading text-2xl leading-9 my-6"}>
+    <h3 {...props} class={boldClass + "heading text-2xl leading-9 mt-14 mb-6"}>
       <Anchor id={props.id}>{props.children}</Anchor>
     </h3>
   ),
   h4: (props) => (
-    <h4 {...props} class="heading text-xl font-bold leading-9 my-4">
+    <h4 {...props} class="heading text-xl font-bold leading-9 mt-14 mb-4">
       <Anchor id={props.id}>{props.children}</Anchor>
     </h4>
   ),
   h5: (props) => (
-    <h5 {...props} class="text-xl leading-9 my-4 font-medium">
+    <h5 {...props} class="text-xl leading-9 mt-14 mb-4 font-medium">
       <Anchor id={props.id}>{props.children}</Anchor>
     </h5>
   ),
@@ -90,17 +94,17 @@ export default {
     );
   },
   li: (props) => (
-    <li {...props} class="my-2">
+    <li {...props} class="mb-2">
       {props.children}
     </li>
   ),
   ul: (props) => (
-    <ul {...props} class="list-disc pl-8 my-2">
+    <ul {...props} class="list-disc pl-8 mb-2">
       {props.children}
     </ul>
   ),
   ol: (props) => (
-    <ol {...props} class="list-decimal pl-8 my-2">
+    <ol {...props} class="list-decimal pl-8 mb-2">
       {props.children}
     </ol>
   ),

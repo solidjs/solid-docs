@@ -34,6 +34,7 @@ export const CodeTabs = (props: ICodeTabsProps) => {
           <For each={selectedTabSet()}>
             {(file, i) => (
               <button
+                aria-label={`Display the ${file.name} code`}
                 classList={{
                   "border-b-2 border-blue-400": i() === selected(),
                   "p-2": true,
@@ -49,12 +50,15 @@ export const CodeTabs = (props: ICodeTabsProps) => {
           <For each={["jsx", "tsx"]}>
             {(format: "jsx" | "tsx") => (
               <button
+                aria-label={`Change code examples to ${
+                  format === "jsx" ? "JavaScript" : "typescript"
+                }`}
                 classList={{
                   "py-2 px-3 rounded": true,
-                  "text-black": config().codeFormat === format,
-                  "bg-blue-300":
+                  "font-bold": true,
+                  "btn-typescript":
                     config().codeFormat === format && format === "tsx",
-                  "bg-yellow-300":
+                  "btn-javascript":
                     config().codeFormat === format && format === "jsx",
                 }}
                 onClick={() => setConfig((c) => ({ ...c, codeFormat: format }))}
@@ -66,7 +70,7 @@ export const CodeTabs = (props: ICodeTabsProps) => {
         </div>
       </nav>
 
-      <div class="-mt-4">
+      <div class="-mt-4" aria-live="polite">
         <Dynamic component={selectedFile().component} />
       </div>
     </div>

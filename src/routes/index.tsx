@@ -1,3 +1,5 @@
-export default function Layout(props) {
-  return <div class="p-2">{props.children}</div>;
+import { Navigate } from "solid-app-router";
+
+export default function Layout() {
+  return <Navigate href="/guides" />;
 }

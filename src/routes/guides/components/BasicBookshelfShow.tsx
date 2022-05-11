@@ -27,13 +27,19 @@ export function BasicBookshelfShow(props: IBookshelfProps) {
       <Show
         when={showForm()}
         fallback={
-          <button class="bg-gray-200 text-black px-2" onClick={toggleForm}>
+          <button
+            class="px-3 py-2 rounded bg-blue-200 text-black"
+            onClick={toggleForm}
+          >
             Add a book
           </button>
         }
       >
         <AddBook setBooks={setBooks} />
-        <button class="bg-gray-200 text-black px-2 mt-3" onClick={toggleForm}>
+        <button
+          class="px-3 py-2 rounded bg-blue-200 text-black mt-4"
+          onClick={toggleForm}
+        >
           Finished adding books
         </button>
       </Show>
@@ -88,7 +94,7 @@ function AddBook(props: IAddBookProps) {
         <label for="title">Book name</label>
         <input
           id="title"
-          class="ml-2 text-black"
+          class="ml-2 p-1 text-black border-1 border-black"
           value={newBook().title}
           onInput={(e) => {
             setNewBook({ ...newBook(), title: e.currentTarget.value });
@@ -99,7 +105,7 @@ function AddBook(props: IAddBookProps) {
         <label for="author">Author</label>
         <input
           id="author"
-          class="ml-2 text-black"
+          class="ml-2 p-1 text-black border-1 border-black"
           value={newBook().author}
           onInput={(e) => {
             setNewBook({ ...newBook(), author: e.currentTarget.value });
@@ -107,7 +113,7 @@ function AddBook(props: IAddBookProps) {
         />
       </div>
       <button
-        class="px-2 bg-gray-200 text-black"
+        class="px-3 py-2 rounded bg-blue-200 text-black"
         type="submit"
         onClick={addBook}
       >

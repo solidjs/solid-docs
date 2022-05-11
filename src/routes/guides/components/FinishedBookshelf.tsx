@@ -27,13 +27,19 @@ export function FinishedBookshelf(props: IBookshelfProps) {
       <Show
         when={showForm()}
         fallback={
-          <button class="bg-gray-200 text-black px-2" onClick={toggleForm}>
+          <button
+            class="px-3 py-2 rounded bg-blue-200 text-black"
+            onClick={toggleForm}
+          >
             Add a book
           </button>
         }
       >
         <AddBook setBooks={setBooks} />
-        <button class="bg-gray-200 text-black px-2 mt-3" onClick={toggleForm}>
+        <button
+          class="px-3 py-2 rounded bg-blue-200 text-black mt-4"
+          onClick={toggleForm}
+        >
           Finished adding books
         </button>
       </Show>
@@ -95,7 +101,7 @@ function AddBook(props: IAddBookProps) {
         <div>
           <label for="title">Search books</label>
           <input
-            class="ml-2 text-black"
+            class="ml-2 p-1 text-black border-1 border-black"
             id="title"
             value={input()}
             onInput={(e) => {
@@ -104,7 +110,7 @@ function AddBook(props: IAddBookProps) {
           />
         </div>
         <button
-          class="px-2 bg-gray-200 text-black"
+          class="px-3 py-2 rounded bg-blue-200 text-black"
           type="submit"
           onClick={(e) => {
             e.preventDefault();
@@ -121,7 +127,7 @@ function AddBook(props: IAddBookProps) {
               <li>
                 {book.title} by {book.author}{" "}
                 <button
-                  class="px-2 bg-gray-200 text-black"
+                  class="ml-2 p-1 text-black border-1 border-black"
                   aria-label={`Add ${book.title} by ${book.author} to the bookshelf`}
                   onClick={() => {
                     props.setBooks((books) => [...books, book]);

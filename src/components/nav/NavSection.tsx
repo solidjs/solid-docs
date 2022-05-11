@@ -1,6 +1,4 @@
 import {
-  Accordion,
-  AccordionButton,
   AccordionHeader,
   AccordionItem,
   AccordionPanel,
@@ -10,9 +8,9 @@ import {
 import { NavLink, useLocation } from "solid-app-router";
 
 import { usePageState } from "../PageStateContext";
-import { createEffect, createSignal } from "solid-js";
+import { For, Show } from "solid-js";
 
-function CollapsedIcon(props) {
+export function CollapsedIcon(props) {
   return <div class={"duration-100 ease-in transition" + props.class}>▼</div>;
 }
 

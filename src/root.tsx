@@ -47,7 +47,7 @@ function useCookies() {
     ? context.request.headers.get("Cookie")
     : document.cookie;
 
-  return cookie.parse(cookies);
+  return cookie.parse(cookies ?? "");
 }
 
 function useCookieConfig(): Config {

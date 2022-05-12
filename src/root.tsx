@@ -30,8 +30,16 @@ async function getInitialConfig(): Promise<Config> {
     : defaultConfig;
 }
 
+async function getDocsMode() {
+  const path = isServer
+    ? server(async () => server.request.url)
+    : async () => document.location.href;
+  return /\/start/i.test(await path()) ? "start" : "regular";
+}
+
 export default function Root() {
   const [data] = createResource(getInitialConfig);
+  const [docsMode] = createResource(getDocsMode);
 
   let mainRef;
 
@@ -57,7 +65,7 @@ export default function Root() {
       </head>
       <body class="font-sans antialiased text-lg bg-white dark:bg-solid-darkbg text-black dark:text-white leading-base min-h-screen h-auto lg:h-screen flex flex-row">
         <Suspense>
-          <Show when={data()}>
+          <Show when={data() && docsMode()}>
             <ConfigProvider initialConfig={data()}>
               <PageStateProvider>
                 <MDXProvider components={{ ...md }}>
@@ -67,7 +75,12 @@ export default function Root() {
                   >
                     Skip to content
                   </button>
-                  <Nav />
+                  <Show
+                    when={docsMode() === "regular"}
+                    fallback={<>Start nav</>}
+                  >
+                    <Nav />
+                  </Show>
                   <Main ref={mainRef}>
                     <Routes />
                   </Main>

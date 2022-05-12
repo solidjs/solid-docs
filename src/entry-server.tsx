@@ -1,3 +1,4 @@
+import { apiRoutes } from "solid-start/api";
 import {
   createHandler,
   renderAsync,

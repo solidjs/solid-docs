@@ -15,31 +15,11 @@ import { PageStateProvider } from "./components/PageStateContext";
 import { MDXProvider } from "solid-mdx";
 import Nav from "./components/nav/Nav";
 import md from "./md";
-import { createResource, Show, Suspense, useContext } from "solid-js";
+import { createEffect, Show, Suspense, useContext } from "solid-js";
 import { Main } from "./components/Main";
-import server, { StartContext } from "solid-start/server";
+import { StartContext } from "solid-start/server";
 import { isServer } from "solid-js/web";
-// const cookies = isServer
-//   ? server(async () => {
-//       console.log(server.request);
-//       console.log(server.request.headers);
-//       return server.request.headers.get("Cookie");
-//     })
-//   : async () => document.cookie;
-// async function getInitialConfig(): Promise<Config> {
-//   // console.log(await cookies());
-//   const parsed = cookie.parse((await cookies()) ?? "");
-//   return parsed?.["docs_config"]
-//     ? JSON.parse(parsed["docs_config"])
-//     : defaultConfig;
-// }
-
-// async function getDocsMode() {
-//   const path = isServer
-//     ? server(async () => server.request.url)
-//     : async () => document.location.href;
-//   return /\/start/i.test(await path()) ? "start" : "regular";
-// }
+import { useLocation } from "solid-app-router";
 
 function useCookies() {
   const context = useContext(StartContext);
@@ -59,11 +39,10 @@ function useCookieConfig(): Config {
 
 export default function Root() {
   const config = useCookieConfig();
-  const context = useContext(StartContext);
-  const docsMode = () => {
-    const path = isServer ? context.request.url : document.location.href;
-    return /\/start/i.test(path) ? "start" : "regular";
-  };
+  const location = useLocation();
+
+  const docsMode = () =>
+    /\/start/i.test(location.pathname) ? "start" : "regular";
 
   let mainRef;
 
@@ -98,9 +77,7 @@ export default function Root() {
                 >
                   Skip to content
                 </button>
-                <Show when={docsMode() === "regular"} fallback={<>Start nav</>}>
-                  <Nav />
-                </Show>
+                <Nav docsMode={docsMode()} />
                 <Main ref={mainRef}>
                   <Routes />
                 </Main>

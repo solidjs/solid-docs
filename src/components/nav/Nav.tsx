@@ -1,21 +1,16 @@
 import { NavLink, Route, Routes, useLocation } from "solid-app-router";
 import { NavHeader } from "./NavHeader";
 import { NavGroup, NavItem } from "./NavSection";
-import {
-  Accordion,
-  AccordionButton,
-  AccordionHeader,
-  AccordionItem,
-  AccordionPanel,
-  useHeadlessSelectOptionChild,
-} from "solid-headless";
-import { For } from "solid-js";
+import { Accordion } from "solid-headless";
+import { For, Show } from "solid-js";
 
-export default function Nav() {
+export default function Nav(props: { docsMode: "start" | "regular" }) {
   return (
     <div class="no-bg-scrollbar lg:min-h-screen h-auto lg:h-[calc(100%-40px)] lg:overflow-y-scroll fixed flex flex-row lg:flex-col py-0 left-0 right-0 lg:max-w-xs w-full shadow lg:shadow-none z-50">
-      <NavHeader />
-      <TopMenu />
+      <NavHeader docsMode={props.docsMode} />
+      <Show when={props.docsMode === "regular"} fallback={<StartMenu />}>
+        <TopMenu />
+      </Show>
     </div>
   );
 }
@@ -72,6 +67,99 @@ const HomeSections = {
   //   inSubsections: (p) => p.startsWith("/api/session"),
   // },
 };
+
+const START_SECTIONS = [
+  {
+    header: "Getting started",
+    subsections: [
+      {
+        header: "What is SolidStart?",
+        link: "/start/getting-started/what-is-solidstart",
+      },
+      { header: "Motivations", link: "/start/getting-started/motivations" },
+      { header: "Project setup", link: "/start/core-concepts/project-setup" },
+    ],
+  },
+  {
+    header: "Core concepts",
+    subsections: [
+      {
+        header: "Request lifecycle",
+        link: "/start/core-concepts/request-lifecycle",
+      },
+      { header: "Routing", link: "/start/core-concepts/routing" },
+      {
+        header: "Assets, metadata, and CSS",
+        link: "/start/core-concepts/assets-metadata-css",
+      },
+      { header: "Data fetching", link: "/start/core-concepts/data-fetching" },
+      { header: "Actions", link: "/start/core-concepts/actions" },
+      { header: "Middleware", link: "/start/core-concepts/middleware" },
+      {
+        header: "Server-only code",
+        link: "/start/core-concepts/server-only-code",
+      },
+      {
+        header: "State management",
+        link: "/start/core-concepts/state-management",
+      },
+    ],
+  },
+  {
+    header: "Advanced concepts",
+    subsections: [
+      { header: "Streaming", link: "/start/advanced/streaming" },
+      { header: "Caching", link: "/start/advanced/caching" },
+      { header: "Usage with databases", link: "/start/advanced/databases" },
+      { header: "Authentication", link: "/start/advanced/authentication" },
+      { header: "Testing", link: "/start/advanced/testing" },
+      { header: "Internationalization", link: "/start/advanced/i18n" },
+      { header: "Static site generation", link: "/start/advanced/ssg" },
+    ],
+  },
+  {
+    header: "API",
+    subsections: [
+      { header: "Error boundary", link: "/start/api/error-boundary" },
+      { header: "Files", link: "/start/api/files" },
+      { header: "Forms", link: "/start/api/forms" },
+      { header: "Head", link: "/start/api/head" },
+      { header: "Router", link: "/start/api/router" },
+      { header: "Server", link: "/start/api/server" },
+      { header: "Session", link: "/start/api/session" },
+    ],
+  },
+];
+
+function StartMenu() {
+  return (
+    <ul class="m-5">
+      <For each={START_SECTIONS}>
+        {(section) => (
+          <li class="my-6">
+            <span class="font-bold mb-2 block">{section.header}</span>
+            <ul>
+              <For each={section.subsections}>
+                {(subsection) => (
+                  <li class="px-2 my-1 py-0">
+                    <NavLink
+                      style="font-size: 0.95rem"
+                      class="hover:underline"
+                      activeClass="underline"
+                      href={subsection.link}
+                    >
+                      {subsection.header}
+                    </NavLink>
+                  </li>
+                )}
+              </For>
+            </ul>
+          </li>
+        )}
+      </For>
+    </ul>
+  );
+}
 
 const GUIDES_SECTIONS = {
   GettingStartedWithSolid: {

@@ -66,7 +66,7 @@ export default function Root() {
         <Meta />
         <Links />
       </head>
-      <body class="font-sans antialiased text-lg bg-white dark:bg-solid-darkbg text-black dark:text-white leading-base min-h-screen h-auto lg:h-screen flex flex-row">
+      <body class="font-sans antialiased text-lg bg-white dark:bg-solid-darkbg text-black dark:text-white leading-base min-h-screen lg:flex lg:flex-row">
         <Suspense>
           <ConfigProvider initialConfig={config}>
             <PageStateProvider>

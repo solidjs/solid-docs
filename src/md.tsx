@@ -36,7 +36,7 @@ export default {
       {...props}
       class={
         boldClass +
-        "heading mt-14 mb-6 -mx-.5 break-words text-5xl leading-tight"
+        "heading mt-10 mb-6 -mx-.5 break-words text-5xl leading-tight"
       }
     >
       <Anchor id={props.id}>{props.children}</Anchor>

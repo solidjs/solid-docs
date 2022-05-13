@@ -29,8 +29,8 @@ export const NavHeader = (props: { docsMode: "start" | "regular" }) => {
   const [, setConfig] = useContext(ConfigContext);
 
   return (
-    <nav class="bg-white dark:bg-solid-darkbg sticky top-0 items-center w-full flex lg:block justify-between lg:pt-4 pr-5 lg:px-5 z-50">
-      <div class="xl:w-full xl:max-w-xs flex items-center justify-between">
+    <nav class="bg-white dark:bg-solid-darkbg sticky top-0 items-center w-full lg:px-5 pt-8 pb-4">
+      <div class="w-full flex items-center justify-between">
         <a
           href="/"
           class="inline-flex space-x-1 text-xl font-normal items-center text-primary dark:text-primary-dark py-1 mr-0 sm:mr-3 whitespace-nowrap"

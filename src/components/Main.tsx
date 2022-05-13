@@ -1,21 +1,17 @@
 export function Main(props) {
   return (
-    <div class="flex flex-1 w-full h-full self-stretch">
-      <div class="w-full min-w-0">
-        <main class="flex flex-1 self-stretch flex-col items-end justify-around">
-          <article class="h-full mx-auto relative w-full min-w-0">
-            <div class="lg:pt-0 pt-20 pl-0 lg:pl-80 2xl:px-80 ">
-              <div class="px-5 sm:px-12 pt-5">
-                <div ref={props.ref} class="max-w-4xl ml-0 2xl:mx-auto">
-                  {props.children}
-                </div>
-                <HelpButton />
-              </div>
+    <main class="flex-grow">
+      <article class="mx-auto relative w-full min-w-0">
+        <div class="lg:pt-0 pt-10">
+          <div class="px-5 sm:px-12">
+            <div ref={props.ref} class="max-w-4xl ml-0 2xl:mx-auto">
+              {props.children}
+              <HelpButton />
             </div>
-          </article>
-        </main>
-      </div>
-    </div>
+          </div>
+        </div>
+      </article>
+    </main>
   );
 }
 import { Title as MetaTitle } from "solid-meta";

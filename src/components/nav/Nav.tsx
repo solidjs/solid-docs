@@ -87,11 +87,12 @@ const START_SECTIONS = [
         header: "Request lifecycle",
         link: "/start/core-concepts/request-lifecycle",
       },
-      { header: "Routing", link: "/start/core-concepts/routing" },
+      { header: "Pages", link: "/start/core-concepts/pages" },
       {
         header: "Assets, metadata, and CSS",
         link: "/start/core-concepts/assets-metadata-css",
       },
+      { header: "Routing", link: "/start/core-concepts/routing" },
       { header: "Data fetching", link: "/start/core-concepts/data-fetching" },
       { header: "Actions", link: "/start/core-concepts/actions" },
       { header: "Middleware", link: "/start/core-concepts/middleware" },
@@ -110,6 +111,7 @@ const START_SECTIONS = [
     subsections: [
       { header: "Streaming", link: "/start/advanced/streaming" },
       { header: "Caching", link: "/start/advanced/caching" },
+      { header: "API routes", link: "/start/advanced/api-routes" },
       { header: "Usage with databases", link: "/start/advanced/databases" },
       { header: "Authentication", link: "/start/advanced/authentication" },
       { header: "Testing", link: "/start/advanced/testing" },

@@ -2,15 +2,36 @@ import { NavLink, Route, Routes, useLocation } from "solid-app-router";
 import { NavHeader } from "./NavHeader";
 import { NavGroup, NavItem } from "./NavSection";
 import { Accordion } from "solid-headless";
-import { For, Show } from "solid-js";
+import { createEffect, createSignal, For, on, Show } from "solid-js";
 
 export default function Nav(props: { docsMode: "start" | "regular" }) {
+  const [showMenu, setShowMenu] = createSignal(false);
+  const location = useLocation();
+
+  createEffect((prev) => {
+    if (location.pathname !== prev) {
+      setShowMenu(false);
+    }
+    return location.pathname;
+  });
+
   return (
     <div class="lg:max-h-screen lg:sticky lg:top-0 no-bg-scrollbar py-0 lg:max-w-xs w-full shadow lg:shadow-none z-50 overflow-y-scroll">
-      <NavHeader docsMode={props.docsMode} />
-      <Show when={props.docsMode === "regular"} fallback={<StartMenu />}>
-        <TopMenu />
-      </Show>
+      <NavHeader
+        docsMode={props.docsMode}
+        showMenu={showMenu()}
+        setShowMenu={setShowMenu}
+      />
+      <div
+        classList={{
+          hidden: !showMenu(),
+          "lg:block": true,
+        }}
+      >
+        <Show when={props.docsMode === "regular"} fallback={<StartMenu />}>
+          <TopMenu />
+        </Show>
+      </div>
     </div>
   );
 }

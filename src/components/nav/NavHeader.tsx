@@ -1,7 +1,7 @@
 import { useLocation } from "solid-app-router";
-import { moon, sun } from "solid-heroicons/outline";
+import { moon, sun, menu, x } from "solid-heroicons/outline";
 import { Icon } from "solid-heroicons";
-import { For, Show, useContext } from "solid-js";
+import { For, Setter, Show, useContext } from "solid-js";
 import { ConfigContext } from "../ConfigContext";
 
 function ActiveLink(props) {
@@ -25,15 +25,19 @@ const sections = [
   { title: "Reference", href: "/reference" },
 ];
 
-export const NavHeader = (props: { docsMode: "start" | "regular" }) => {
-  const [, setConfig] = useContext(ConfigContext);
+export const NavHeader = (props: {
+  docsMode: "start" | "regular";
+  showMenu: boolean;
+  setShowMenu: Setter<boolean>;
+}) => {
+  const [config, setConfig] = useContext(ConfigContext);
 
   return (
-    <nav class="bg-white dark:bg-solid-darkbg sticky top-0 items-center w-full lg:px-5 pt-8 pb-4">
-      <div class="w-full flex items-center justify-between">
+    <nav class="bg-white dark:bg-solid-darkbg sticky top-0 items-center w-full px-5 pt-8 pb-4">
+      <div class="flex items-center justify-between">
         <a
           href="/"
-          class="inline-flex space-x-1 text-xl font-normal items-center text-primary dark:text-primary-dark py-1 mr-0 sm:mr-3 whitespace-nowrap"
+          class="inline-flex space-x-1 text-xl font-normal items-center text-primary dark:text-primary-dark py-1 mr-0"
         >
           <Logo class="w-8 h-8 -mt-2 text-link dark:text-link-dark" />
           <span class="font-bold">
@@ -41,36 +45,46 @@ export const NavHeader = (props: { docsMode: "start" | "regular" }) => {
           </span>
           <span>Docs</span>
         </a>
-        <div class="block dark:hidden">
+        <div class="flex gap-3">
           <button
             type="button"
-            aria-label="Use Dark Mode"
-            class="hidden lg:flex items-center w-10 h-10 pr-2 transform -translate-y-1"
+            aria-label={`Use ${
+              config().mode === "dark" ? "light" : "dark"
+            } mode`}
+            class="flex items-center justify-center w-10 h-10 transform -translate-y-1"
             onClick={() => {
-              setConfig((c) => ({ ...c, mode: "dark" }));
+              setConfig((c) => ({
+                ...c,
+                mode: config().mode === "dark" ? "light" : "dark",
+              }));
             }}
           >
-            <Icon class="w-full h-full" path={moon} />
+            <Icon
+              class="w-full h-full"
+              path={config().mode === "dark" ? sun : moon}
+            />
           </button>
-        </div>
-        <div
-          class="hidden dark:block w-10 h-10"
-          onClick={() => {
-            setConfig((c) => ({ ...c, mode: "light" }));
-          }}
-        >
           <button
             type="button"
-            aria-label="Use Light Mode"
-            class="hidden lg:flex items-center pr-2"
+            aria-label={`${props.showMenu ? "Hide" : "Show"} navigation menu`}
+            class="lg:hidden flex items-center justify-center w-10 h-10 transform -translate-y-1"
+            onClick={() => {
+              props.setShowMenu((m) => !m);
+            }}
           >
-            <Icon class="w-full h-full" path={sun} />
+            <Icon class="w-full h-full" path={props.showMenu ? x : menu} />
           </button>
         </div>
       </div>
 
       <Show when={props.docsMode === "regular"}>
-        <div class="px-0 pt-2 w-full 2xl:max-w-xs hidden lg:flex items-center self-center border-b-0 lg:border-b border-border dark:border-border-dark">
+        <div
+          class="px-0 pt-2 w-full 2xl:max-w-xs items-center self-center border-b-0 lg:border-b border-border dark:border-border-dark"
+          classList={{
+            hidden: !props.showMenu,
+            "lg:flex": true,
+          }}
+        >
           <div class="w-full grid grid-cols-2">
             <For each={sections}>
               {({ title, href }) => (

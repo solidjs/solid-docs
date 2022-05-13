@@ -1,7 +1,7 @@
 import { useLocation } from "solid-app-router";
 import { moon, sun } from "solid-heroicons/outline";
 import { Icon } from "solid-heroicons";
-import { For, useContext } from "solid-js";
+import { For, Show, useContext } from "solid-js";
 import { ConfigContext } from "../ConfigContext";
 
 function ActiveLink(props) {
@@ -25,25 +25,27 @@ const sections = [
   { title: "Reference", href: "/reference" },
 ];
 
-export const NavHeader = () => {
+export const NavHeader = (props: { docsMode: "start" | "regular" }) => {
   const [, setConfig] = useContext(ConfigContext);
 
   return (
-    <nav className="sticky top-0 items-center w-full flex lg:block justify-between pt-0 lg:pt-4 pr-5 lg:px-5 z-50">
-      <div className="xl:w-full xl:max-w-xs flex items-center justify-between">
+    <nav class="bg-white dark:bg-solid-darkbg sticky top-0 items-center w-full flex lg:block justify-between lg:pt-4 pr-5 lg:px-5 z-50">
+      <div class="xl:w-full xl:max-w-xs flex items-center justify-between">
         <a
           href="/"
-          className="inline-flex space-x-1 text-xl font-normal items-center text-primary dark:text-primary-dark py-1 mr-0 sm:mr-3 whitespace-nowrap"
+          class="inline-flex space-x-1 text-xl font-normal items-center text-primary dark:text-primary-dark py-1 mr-0 sm:mr-3 whitespace-nowrap"
         >
-          <Logo className="w-8 h-8 -mt-2 text-link dark:text-link-dark" />
-          <span class="font-bold">Solid </span>
-          <span class="">Docs</span>
+          <Logo class="w-8 h-8 -mt-2 text-link dark:text-link-dark" />
+          <span class="font-bold">
+            Solid{props.docsMode === "start" ? "Start " : " "}
+          </span>
+          <span>Docs</span>
         </a>
-        <div className="block dark:hidden">
+        <div class="block dark:hidden">
           <button
             type="button"
             aria-label="Use Dark Mode"
-            className="hidden lg:flex items-center w-10 h-10 pr-2 transform -translate-y-1"
+            class="hidden lg:flex items-center w-10 h-10 pr-2 transform -translate-y-1"
             onClick={() => {
               setConfig((c) => ({ ...c, mode: "dark" }));
             }}
@@ -52,7 +54,7 @@ export const NavHeader = () => {
           </button>
         </div>
         <div
-          className="hidden dark:block w-10 h-10"
+          class="hidden dark:block w-10 h-10"
           onClick={() => {
             setConfig((c) => ({ ...c, mode: "light" }));
           }}
@@ -60,29 +62,31 @@ export const NavHeader = () => {
           <button
             type="button"
             aria-label="Use Light Mode"
-            className="hidden lg:flex items-center pr-2"
+            class="hidden lg:flex items-center pr-2"
           >
             <Icon class="w-full h-full" path={sun} />
           </button>
         </div>
       </div>
 
-      <div className="px-0 pt-2 w-full 2xl:max-w-xs hidden lg:flex items-center self-center border-b-0 lg:border-b border-border dark:border-border-dark">
-        <div class="w-full grid grid-cols-2">
-          <For each={sections}>
-            {({ title, href }) => (
-              <ActiveLink
-                isActive={(loc) => loc.pathname.startsWith(href)}
-                activeClass="border-solid-default dark:border-solid-darkdefault font-bold"
-                className="border-transparent inline-flex w-full items-center border-2 rounded justify-center text-base leading-9 px-3 py-0.5 hover:text-link dark:hover:text-link-dark whitespace-nowrap"
-                href={href}
-              >
-                {title}
-              </ActiveLink>
-            )}
-          </For>
+      <Show when={props.docsMode === "regular"}>
+        <div class="px-0 pt-2 w-full 2xl:max-w-xs hidden lg:flex items-center self-center border-b-0 lg:border-b border-border dark:border-border-dark">
+          <div class="w-full grid grid-cols-2">
+            <For each={sections}>
+              {({ title, href }) => (
+                <ActiveLink
+                  isActive={(loc) => loc.pathname.startsWith(href)}
+                  activeClass="border-solid-default dark:border-solid-darkdefault font-bold"
+                  class="border-transparent inline-flex w-full items-center border-2 rounded justify-center text-base leading-9 px-3 py-0.5 hover:text-link dark:hover:text-link-dark whitespace-nowrap"
+                  href={href}
+                >
+                  {title}
+                </ActiveLink>
+              )}
+            </For>
+          </div>
         </div>
-      </div>
+      </Show>
     </nav>
   );
 };

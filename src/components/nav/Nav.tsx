@@ -97,15 +97,17 @@ const START_SECTIONS = [
     link: "/start/core-concepts",
     subsections: [
       { header: "Request lifecycle", link: "/request-lifecycle" },
-      { header: "Pages", link: "/pages" },
+      { header: "Routing & pages", link: "/routing-and-pages" },
       { header: "Assets, metadata, and CSS", link: "/assets-metadata-css" },
-      { header: "Routing", link: "/routing" },
       { header: "Data fetching", link: "/data-fetching" },
       { header: "Actions", link: "/actions" },
       { header: "Middleware", link: "/middleware" },
       { header: "Server-only code", link: "/server-only-code" },
       { header: "State management", link: "/state-management" },
-      { header: "Deployment", link: "/deployment" },
+      {
+        header: "Environments & deployment",
+        link: "/environments-and-deployment",
+      },
     ],
   },
   {

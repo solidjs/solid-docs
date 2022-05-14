@@ -97,10 +97,9 @@ const START_SECTIONS = [
     link: "/start/core-concepts",
     subsections: [
       { header: "Routing & pages", link: "/routing-and-pages" },
-      { header: "Assets, metadata, and CSS", link: "/assets-metadata-css" },
+      { header: "Assets, metadata, and CSS", link: "/assets-metadata-and-css" },
       { header: "Data fetching", link: "/data-fetching" },
       { header: "Actions", link: "/actions" },
-      { header: "Server-only code", link: "/server-only-code" },
       { header: "State management", link: "/state-management" },
       { header: "Request lifecycle", link: "/request-lifecycle" },
       { header: "Middleware", link: "/middleware" },

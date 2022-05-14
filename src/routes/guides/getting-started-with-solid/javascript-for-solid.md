@@ -1,6 +1,6 @@
 <title>JavaScript for Solid</title>
 
-Are you new to frontend frameworks or coming back to JavaScript after a few years? Here's a refresher on the most important JavaScript features and patterns you need to know. JavaScript is a flexible language and there are many approaches to writing it, so this isn't a conclusive manual for all JavaScript codebeases but a "best practices" guide for working with Solid.
+Are you new to frontend frameworks or coming back to JavaScript after a few years? Here's a refresher on the most important JavaScript features and patterns you need to know. JavaScript is a flexible language and there are many approaches to writing it, so this isn't a conclusive manual for all JavaScript codebases but a "best practices" guide for working with Solid.
 
 ## The Red Herrings of Good JavaScript
 

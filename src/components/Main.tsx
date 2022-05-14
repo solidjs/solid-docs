@@ -1,11 +1,34 @@
+import { NavLink, useLocation } from "solid-app-router";
+import { Show } from "solid-js";
+import { Title as MetaTitle } from "solid-meta";
+import { HelpButton } from "./HelpButton";
+import { getStartSection } from "./nav/Nav";
+
 export function Main(props) {
+  const location = useLocation();
+
+  const nextStartSection = () => getStartSection(location.pathname);
+
   return (
     <main class="flex-grow">
-      <article class="mx-auto relative w-full min-w-0">
-        <div class="lg:pt-0 pt-10">
-          <div class="px-5 sm:px-12">
-            <div ref={props.ref} class="max-w-4xl ml-0 2xl:mx-auto">
-              {props.children}
+      <article class="min-w-0 max-w-5xl">
+        <div class="flex justify-start">
+          <div class="flex flex-col min-h-screen px-5 sm:px-12">
+            <div
+              ref={props.ref}
+              class="w-full flex-grow ml-0 flex justify-center"
+            >
+              <div>{props.children}</div>
+            </div>
+            <div>
+              <Show when={!!nextStartSection()}>
+                <NavLink
+                  class="hover:underline block mt-20 mb-10 text-center"
+                  href={nextStartSection().link}
+                >
+                  Next up: {nextStartSection().title} &raquo;
+                </NavLink>
+              </Show>
               <HelpButton />
             </div>
           </div>
@@ -14,8 +37,6 @@ export function Main(props) {
     </main>
   );
 }
-import { Title as MetaTitle } from "solid-meta";
-import { HelpButton } from "./HelpButton";
 
 export function Title(props) {
   return (

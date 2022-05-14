@@ -1,4 +1,4 @@
-import { useLocation } from "solid-app-router";
+import { NavLink, useLocation } from "solid-app-router";
 import { moon, sun, menu, x } from "solid-heroicons/outline";
 import { Icon } from "solid-heroicons";
 import { For, Setter, Show, useContext } from "solid-js";
@@ -35,8 +35,8 @@ export const NavHeader = (props: {
   return (
     <nav class="bg-white dark:bg-solid-darkbg sticky top-0 items-center w-full px-5 pt-8 pb-4">
       <div class="flex items-center justify-between">
-        <a
-          href="/"
+        <NavLink
+          href={props.docsMode === "start" ? "/start" : "/"}
           class="inline-flex space-x-1 text-xl font-normal items-center text-primary dark:text-primary-dark py-1 mr-0"
         >
           <Logo class="w-8 h-8 -mt-2 text-link dark:text-link-dark" />
@@ -44,7 +44,7 @@ export const NavHeader = (props: {
             Solid{props.docsMode === "start" ? "Start " : " "}
           </span>
           <span>Docs</span>
-        </a>
+        </NavLink>
         <div class="flex gap-3">
           <button
             type="button"

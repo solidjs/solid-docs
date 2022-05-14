@@ -88,7 +88,7 @@ const START_SECTIONS = [
     link: "/start/getting-started",
     subsections: [
       { header: "What is SolidStart?", link: "/what-is-solidstart" },
-      { header: "Motivations", link: "/motivations" },
+      { header: "Motivation & goals", link: "/motivation-and-goals" },
       { header: "Project setup", link: "/project-setup" },
     ],
   },
@@ -165,6 +165,26 @@ function StartMenu() {
       </For>
     </ul>
   );
+}
+
+const allStartSections: Record<"title" | "link", string>[] = [];
+for (const section of START_SECTIONS) {
+  for (const subsection of section.subsections) {
+    allStartSections.push({
+      link: section.link + subsection.link,
+      title: `${section.header} — ${subsection.header}`,
+    });
+  }
+}
+
+export function getStartSection(pathname: string) {
+  const current = allStartSections.findIndex((section) =>
+    pathname.startsWith(section.link)
+  );
+  if (current === allStartSections.length - 1 || current === -1) {
+    return undefined;
+  }
+  return allStartSections[current + 1];
 }
 
 const GUIDES_SECTIONS = {

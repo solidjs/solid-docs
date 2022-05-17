@@ -42,10 +42,8 @@ export const PageStateProvider = (props: PropsWithChildren) => {
 
   createEffect(() => {
     const { pathname } = useLocation();
-    if (pathname !== store.path) {
-      setStore("sections", []);
-      setStore("path", pathname);
-    }
+    setStore("sections", []);
+    setStore("path", pathname);
   });
 
   return (

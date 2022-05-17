@@ -178,5 +178,5 @@ export default {
     return <span>{props.children}</span>;
   },
   terminal: Terminal,
-  title: Title,
+  Title,
 };

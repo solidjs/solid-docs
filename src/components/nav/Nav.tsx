@@ -97,12 +97,13 @@ const START_SECTIONS = [
     link: "/start/core-concepts",
     subsections: [
       { header: "Routing & pages", link: "/routing-and-pages" },
-      { header: "Assets, metadata, and CSS", link: "/assets-metadata-and-css" },
+      { header: "CSS and styling", link: "/css-and-styling" },
+      { header: "Static assets", link: "/static-assets" },
+      { header: "Head & metadata", link: "/head-and-metadata" },
       { header: "Data fetching", link: "/data-fetching" },
       { header: "Actions", link: "/actions" },
       { header: "State management", link: "/state-management" },
       { header: "Request lifecycle", link: "/request-lifecycle" },
-      { header: "Middleware", link: "/middleware" },
       {
         header: "Environments & deployment",
         link: "/environments-and-deployment",
@@ -117,10 +118,12 @@ const START_SECTIONS = [
       { header: "Caching", link: "/caching" },
       { header: "API routes", link: "/api-routes" },
       { header: "Usage with databases", link: "/databases" },
+      { header: "Middleware", link: "/middleware" },
       { header: "Authentication", link: "/authentication" },
       { header: "Testing", link: "/testing" },
       { header: "Internationalization", link: "/i18n" },
       { header: "Static site generation", link: "/ssg" },
+      { header: "SEO", link: "/seo" },
     ],
   },
   {

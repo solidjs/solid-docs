@@ -15,11 +15,25 @@ import { PageStateProvider } from "./components/PageStateContext";
 import { MDXProvider } from "solid-mdx";
 import Nav from "./components/nav/Nav";
 import md from "./md";
-import { createEffect, Show, Suspense, useContext } from "solid-js";
+import { createRenderEffect, Suspense, useContext } from "solid-js";
 import { Main } from "./components/Main";
 import { StartContext } from "solid-start/server";
 import { isServer } from "solid-js/web";
 import { useLocation } from "solid-app-router";
+
+function PageHeaders(props: { headers: Object }) {
+  const ctx = useContext(StartContext);
+
+  createRenderEffect(() => {
+    if (isServer) {
+      Object.entries(props.headers).forEach(([key, value]) => {
+        ctx.responseHeaders.set(key, value);
+      });
+    }
+  });
+
+  return null;
+}
 
 function useCookies() {
   const context = useContext(StartContext);
@@ -65,6 +79,7 @@ export default function Root() {
         />
         <Meta />
         <Links />
+        <PageHeaders headers={{ "x-robots-tag": "nofollow" }} />
       </head>
       <body class="font-sans antialiased text-lg bg-white dark:bg-solid-darkbg text-black dark:text-white leading-base min-h-screen lg:flex lg:flex-row">
         <Suspense>

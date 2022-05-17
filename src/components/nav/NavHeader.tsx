@@ -1,6 +1,8 @@
 import { NavLink, useLocation } from "solid-app-router";
-import { moon, sun, menu, x } from "solid-heroicons/outline";
-import { Icon } from "solid-heroicons";
+import IconMenu from "~icons/heroicons-outline/menu";
+import IconX from "~icons/heroicons-outline/x";
+import IconSun from "~icons/heroicons-outline/sun";
+import IconMoon from "~icons/heroicons-outline/moon";
 import { For, Setter, Show, useContext } from "solid-js";
 import { ConfigContext } from "../ConfigContext";
 
@@ -59,10 +61,16 @@ export const NavHeader = (props: {
               }));
             }}
           >
-            <Icon
+            {/* <Icon
               class="w-full h-full"
               path={config().mode === "dark" ? sun : moon}
-            />
+            /> */}
+            <Show
+              when={config().mode === "dark"}
+              fallback={<IconMoon class="w-full h-full"></IconMoon>}
+            >
+              <IconSun class="w-full h-full"></IconSun>
+            </Show>
           </button>
           <button
             type="button"
@@ -72,7 +80,12 @@ export const NavHeader = (props: {
               props.setShowMenu((m) => !m);
             }}
           >
-            <Icon class="w-full h-full" path={props.showMenu ? x : menu} />
+            <Show
+              when={props.showMenu}
+              fallback={<IconMenu class="w-full h-full"></IconMenu>}
+            >
+              <IconX class="w-full h-full" />
+            </Show>
           </button>
         </div>
       </div>

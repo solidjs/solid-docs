@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "solid-app-router";
 import { Show } from "solid-js";
 import { Title as MetaTitle } from "solid-meta";
-import { HelpButton } from "./HelpButton";
+import Footer from "./footer/Footer";
 import { getStartSection } from "./nav/Nav";
 
 export function Main(props) {
@@ -29,7 +29,7 @@ export function Main(props) {
                   Next up: {nextStartSection().title} &raquo;
                 </NavLink>
               </Show>
-              <HelpButton />
+              <Footer />
             </div>
           </div>
         </div>

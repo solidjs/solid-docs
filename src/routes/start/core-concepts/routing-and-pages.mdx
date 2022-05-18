@@ -4,10 +4,6 @@ import { Aside } from "../../../components/FrameworkAside";
 
 Routing is the foundation of SolidStart. SolidStart uses the [Solid App Router](https://github.com/solidjs/solid-app-router) and enables _isomorphic routing_: the ability to write routes code once and have it work on both the server and client. In this section, you'll learn how to write basic routes, navigate between routes, and handle more complex/dynamic routing scenarios.
 
-<Aside type="general">
-
-</Aside>
-
 ## Creating a route
 
 SolidStart uses file system-based routing. This means that the directory path of your route files will translate exactly to the route structure in your application.
@@ -18,11 +14,11 @@ Here are a few examples of files in our directory structure and how they would t
 - `/src/root/admin/index.tsx` -> mysite.com/admin
 - `/src/root/admin/edit-settings.tsx` -> mysite.com/admin/edit-settings
 
-Under the hood, SolidStart is able to traverse this directory structure, automatically collect all the routes, and populate the `<Routes />` component in the `src/root.tsx` file. This means that creating a route in your directory structure makes it immediately available to visit in your application!
+Under the hood, SolidStart is able to traverse this directory structure, automatically collect all the routes, and populate the `<Routes />` component in the `src/root.tsx` file. This means that all you have to do is create a route in your directory structure and SolidStart takes care of everything else needed to make that route avaiable to visit in your application!
 
 ### Route file structure
 
-Each route file should export a default component. This component represents the content that will be rendered when users visit the route:
+For routing to work, each route file should export a default component. This component represents the content that will be rendered when users visit the route:
 
 ```tsx
 export default function Index() {
@@ -30,10 +26,37 @@ export default function Index() {
 }
 ```
 
-- Opinionated, file system-based Routing
-  - Show `Routes` import in `root.tsx`
-  - Export default component, export named `routeData` function
-  - Explain how this equates to inline routing you would have written by hand
+In this example, visiting mysite.com/ will render a `<div>` with the text "Welcome to SolidStart!" inside it.
+
+### Using route data
+
+In many cases, we need to do more than just render some HTML&mdash;we need to also pass some data to our route. For this, we can export a named `routeData` function. In this example, we'll greet the user by name:
+
+```tsx
+import { useRouteData } from "solid-js";
+
+export function routeData() {
+  return { name: "Jane" };
+}
+
+export default function Index() {
+  const data = useRouteData<ReturnType<typeof routeData>>();
+
+  return <div>Welcome to SolidStart, {data().name}!</div>;
+}
+```
+
+And this will render "Welcome to SolidStart, Jane!" In reality, `routeData` will be more complex: for example, it could be checking if a user is authenticated.
+
+<Aside type="advanced" title="How this looks without file system routing" collapsible>
+
+If you have used Solid App Router in a SolidJS app before, you may notice that the exported component and route data map closely to the properties of the `<Route />` component exported by `solid-app-router`. This is no coincidence! If we were to write these routes without file system-based routing, our handwritten routes would use the default-exported component and `routeData` function:
+
+```tsx
+<Route component={Index} data={routeData} />
+```
+
+</Aside>
 
 ## Nested route relationships
 

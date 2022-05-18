@@ -116,11 +116,16 @@ export default {
       components does work
     </p>
   ),
-  code: (props) => (
-    <code className="inline text-code font-mono" {...props}>
-      {props.children}
-    </code>
-  ),
+  code: (props) => {
+    createEffect(() => {
+      console.log(props);
+    });
+    return (
+      <code className="inline text-code font-mono" {...props}>
+        {props.children}
+      </code>
+    );
+  },
   pre: (props) => (
     <pre classList={{ "font-mono": true }} {...props}>
       {props.children}

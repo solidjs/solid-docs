@@ -13,12 +13,12 @@ export function Main(props) {
     <main class="flex-grow">
       <article class="min-w-0 max-w-5xl">
         <div class="flex justify-start">
-          <div class="flex flex-col min-h-screen px-5 sm:px-12">
+          <div class="flex w-full flex-col min-h-screen px-5 sm:px-12">
             <div
               ref={props.ref}
               class="w-full flex-grow ml-0 flex justify-center"
             >
-              <div>{props.children}</div>
+              <div class="w-full">{props.children}</div>
             </div>
             <div>
               <Show when={!!nextStartSection()}>

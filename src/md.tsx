@@ -1,5 +1,5 @@
 import { Link } from "solid-app-router";
-import { PropsWithChildren } from "solid-js";
+import { ParentProps } from "solid-js";
 import { createEffect, children, createMemo, createUniqueId } from "solid-js";
 import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
@@ -19,7 +19,7 @@ let hashCode = function (str) {
   return hash;
 };
 
-function Anchor(props: PropsWithChildren<{ id: string }>) {
+function Anchor(props: ParentProps<{ id: string }>) {
   return (
     <a class="hover:underline" href={`#${props.id}`}>
       {props.children}

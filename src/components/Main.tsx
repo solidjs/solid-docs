@@ -40,7 +40,7 @@ export function Main(props) {
 
 export function Title(props) {
   return (
-    <h1 class="heading mt-0 text-primary dark:text-primary-dark -mx-.5 break-words text-5xl font-bold leading-tight">
+    <h1 class="heading mt-10 text-primary dark:text-primary-dark -mx-.5 break-words text-5xl font-bold leading-tight">
       {props.children}
       <MetaTitle>{props.children}</MetaTitle>
       <a

@@ -88,7 +88,6 @@ const START_SECTIONS = [
     link: "/start/getting-started",
     subsections: [
       { header: "What is SolidStart?", link: "/what-is-solidstart" },
-      { header: "Motivation & goals", link: "/motivation-and-goals" },
       { header: "Project setup", link: "/project-setup" },
     ],
   },

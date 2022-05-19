@@ -228,11 +228,11 @@ const GUIDES_SECTIONS = {
     subsections: {
       "Why Solid?": {
         header: "Why Solid?",
-        link: "/guides/getting-started-with-solid/why-solid",
+        link: "/guides/foundations/why-solid",
       },
       "JavaScript for Solid": {
         header: "JavaScript for Solid",
-        link: "/guides/getting-started-with-solid/javascript-for-solid",
+        link: "/guides/foundations/javascript-for-solid",
       },
     },
     inSubsections: (p) => p.startsWith("/guides/foundations"),

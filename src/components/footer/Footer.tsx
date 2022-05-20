@@ -4,10 +4,10 @@ import { useLocation } from "solid-app-router";
 import { createEffect } from "solid-js";
 
 export default function Footer() {
-  const { pathname } = useLocation();
+  const location = useLocation();
 
   const url = () =>
-    `https://github.com/solidjs/solid-docs-next/edit/main/src/routes${pathname}.mdx`;
+    `https://github.com/solidjs/solid-docs-next/edit/main/src/routes${location.pathname}.mdx`;
 
   return (
     <footer class="flex flex-col sm:flex-row justify-between pb-8 border-t-1 border-dotted pt-10">

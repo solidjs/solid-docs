@@ -47,7 +47,7 @@ function TopMenu() {
         <Routes>
           <Route path="/reference/**/*" component={ApiNav} />
           <Route path="/guides/**/*" component={GuidesNav} />
-          <Route path="/**/*" component={HomeNav} />
+          <Route path="/**/*" component={GuidesNav} />
         </Routes>
       </nav>
     </aside>

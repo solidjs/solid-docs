@@ -49,7 +49,9 @@ const [count, setCount] = createSignal(0);
 
 There's a lot going on here: first, we call `createSignal` with the initial value of state. In this case, our `count` is going to start at `0`. The `createSignal` function returns a two-element array and we use JavaScript _destructuring assignment_ to unpack this array. In this case, we assign the first element to a variable called `count` and the second element to a variable called `setCount`.
 
-The first element, `count`, is an _accessor_ function (also referred to as a _getter_) that returns the current value of state. It's important to note that this is a _function that gets the current value_ rather than the value itself.
+The first element, `count`, is an _accessor_ function (also referred to as a _getter_) that returns the current value of state.
+
+It's important to note that this is a _function that gets the current value_, rather than the value itself. Along the way, this function call tells Solid to take note that we've accessed the signal here.
 
 ```tsx
 import { createSignal } from "solid-js";
@@ -58,6 +60,31 @@ const [count, setCount] = createSignal(0);
 
 console.log(count()); // 0
 ```
+
+<FrameworkAside framework="svelte">
+  This is equivalent to `let count = 0` in Svelte. 
+  
+  In Svelte, you can use your
+  reactive value without calling it like a function. That's because Svelte's
+  reactivity uses a compiler, whereas Solid's reactivity is part of the library.
+  Because we're working within the restrictions of JavaScript, we need to run code when we access the value so that we can 
+  tell the reactive system, "This value is used here!"
+</FrameworkAside>
+<FrameworkAside framework="react">
+This is equivalent to `const [count, setCount] = useState(0)` in React.
+
+In React, you can use your reactive value without calling it like a function.
+That's because React's rendering system will rerun your entire component any time any state changes - there's nothing special to set up for any individual piece of state, so there's no need to run any code when you use a reactive value.
+
+</FrameworkAside>
+<FrameworkAside framework="vue">
+This is equivalent to `const count = ref(0)` in Vue.
+
+Instead of splitting count into a getter function and a setter function, Vue has you use `count.value` for both getting and setting
+the value. Vue's reactive system is similar to Solid's: we need to run code behind the scenes whenever a `ref` is accessed.
+In Vue, this code lives inside the `.value` [getter function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get).
+
+</FrameworkAside>
 
 The second element, `setCount`, is a _setter_ function. If we want to increment our `count`, we can pass `count() + 1` to `setCount`:
 
@@ -91,11 +118,28 @@ createEffect(() => {
 setCount(count() + 1);
 ```
 
-To use `createEffect`, we pass it a function that will run whenever any signals on which that function depends update.
+To use `createEffect`, we pass it a function. When any signals used in that function update, the function will rerun.
 
 In this example, our effect depends on `count` and therefore the effect runs whenever `count` changes. Accordingly, we log `1` to the console just like before.
 
 Automatic effect dependency tracking is made possible by `count` being a function. When the `count` function is called inside an effect, that effect is registered as a listener for the signal. This is why it's so important that our signals are functions!
+
+<FrameworkAside framework="svelte">
+  This is equivalent to `$: console.log(count)`
+</FrameworkAside>
+<FrameworkAside framework="react">
+  In React, you'd declare the dependencies explicitly using the dependency array:
+  ```js
+    useEffect(() => {
+      console.log(count);
+    }, [count])
+  ```
+    If you didn't, the effect would rerun whenever _any_ state in the component changes.
+    In Solid, dependencies are tracked automatically, and you don't have to worry about extra reruns.
+</FrameworkAside>
+<FrameworkAside framework="vue">
+  This is equivalent to `watchEffect(() => console.log(count.value))`
+</FrameworkAside>
 
 ## Rendering with signals
 

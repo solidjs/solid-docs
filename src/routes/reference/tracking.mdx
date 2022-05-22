@@ -21,7 +21,7 @@ function Counter() {
   const [count, setCount] = createSignal(0);
   const increment = () => setCount(count() + 1);
 
-  /* When count() is called, the count" signal is tracked as a dependency of this effect,
+  /* When count() is called, the count" signal is tracked as a subscription of this effect,
     so this code reruns when (and only when) count changes */
   createEffect(() => {
     console.log("My effect says " + count());
@@ -34,7 +34,7 @@ function Counter() {
   return (
     /*
       JSX is a tracking context (it uses effects behind the scenes), so this code
-      registers count as a dependency when count() is called
+      registers count as a subscription when count() is called
     */
     <button type="button" onClick={increment}>
       {count()}
@@ -122,7 +122,7 @@ Here, the reactive value is the `value` prop, passed from the parent. Where is t
 const { value } = props;
 ```
 
-This destructuring assignment is only code that actually accesses `props.value`!
+This destructuring assignment is the only code that actually accesses `props.value`!
 After that, `value` just represents the static value that was accessed at that time.
 
 To fix this, we need to make sure we _access_ the value at the same time that we _use_ it.

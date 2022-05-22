@@ -45,7 +45,7 @@ function TopMenu() {
         style="--bg-opacity:0.2;"
       >
         <Routes>
-          <Route path="/reference/**/*" component={ApiNav} />
+          <Route path="/reference/**/*" component={ReferenceNav} />
           <Route path="/guides/**/*" component={GuidesNav} />
           <Route path="/**/*" component={GuidesNav} />
         </Routes>
@@ -190,6 +190,19 @@ export function getStartSection(pathname: string) {
   return allStartSections[current + 1];
 }
 
+const REFERENCE_SECTIONS = {
+  Concepts: {
+    header: "Concepts",
+    link: "/reference/tracking",
+    inSubsections: (p) => p.startsWith("/reference"),
+    subsections: {
+      Tracking: {
+        header: "Tracking",
+        link: "/reference/tracking",
+      },
+    },
+  },
+};
 const GUIDES_SECTIONS = {
   GettingStartedWithSolid: {
     header: "Getting Started With Solid",
@@ -239,12 +252,8 @@ const GUIDES_SECTIONS = {
   },
 };
 
-function HomeNav() {
-  return <SectionNav sections={HomeSections} />;
-}
-
-function ApiNav() {
-  return <SectionNav sections={{}} />;
+function ReferenceNav() {
+  return <SectionNav sections={REFERENCE_SECTIONS} />;
 }
 
 function SectionNav(props) {

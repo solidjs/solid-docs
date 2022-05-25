@@ -5,6 +5,7 @@ import IconTs from "~icons/logos/typescript-icon";
 import IconReact from "~icons/vscode-icons/file-type-reactjs";
 import IconVue from "~icons/vscode-icons/file-type-vue";
 import IconSvelte from "~icons/vscode-icons/file-type-svelte";
+import IconAngular from "~icons/vscode-icons/file-type-angular";
 
 export const Preferences = () => {
   const [config, setConfig] = useContext(ConfigContext);
@@ -34,6 +35,7 @@ export const Preferences = () => {
           { icon: <IconReact />, label: "React", value: "react" },
           { icon: <IconVue />, label: "Vue", value: "vue" },
           { icon: <IconSvelte />, label: "Svelte", value: "svelte" },
+          { icon: <IconAngular />, label: "Angular", value: "angular" },
           { icon: <></>, label: "None of the above", value: "none" },
         ]}
       />

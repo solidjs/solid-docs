@@ -18,9 +18,9 @@ pnpm run dev
 
 ### How We Work
 
-## The Docs Manifesto
+## The Solid Docs Manifesto
 
-1. <h4>Documentation is a product.</h4> A product has users. Product teams design, engineer, and maintain solutions that serve them. We’re not writing text that describes SolidJS, we’re using everything at our disposal to teach SolidJS and make our users feel great about themselves throughout the process.
+1. <h4>Documentation is a product.</h4> A product has users, and product teams design, engineer, and maintain solutions that serve them. We’re not writing text that describes SolidJS, we’re using everything at our disposal to teach SolidJS and make our users feel great about themselves throughout the process.
 2. <h4>Documentation is <em>the product</em>.</h4> The SolidJS user experience depends on the docs. The Docs Team cares about the entire onboarding and learning experience, and SolidJS is not an independent project from its docs. Docs are a Core concern, and include examples, videos, and templates.
 3. <h4>Documentation is inclusive and collaborative.</h4> The best docs are not written by the most experienced or entrenched user, they’re not written with one user in mind, and they’re not written alone. The Docs Team seeks to recruit contributors across a wide range of disciplines, perspectives, and experiences.
 4. <h4>Documentation is accessible.</h4> Language, disability, and background should not be a barrier to learning SolidJS. Any user that wants to learn SolidJS must be able to, and docs can enable skills and experiences previously closed off to people.

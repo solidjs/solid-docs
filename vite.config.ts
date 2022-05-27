@@ -119,13 +119,14 @@ export default defineConfig({
       },
     }),
     solid({
-      adapter: netlify(),
+      ...(process.env.CI ? {} : { adapter: netlify() }),
       extensions: [".mdx", ".md"],
     }),
   ],
   optimizeDeps: {
     exclude: ["solid-headless"],
   },
+  //@ts-ignore
   ssr: {
     noExternal: ["solid-headless", "solid-heroicons"],
   },

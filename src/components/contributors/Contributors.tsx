@@ -1,4 +1,4 @@
-import { createResource, For, Show } from "solid-js";
+import { createResource, ErrorBoundary, For, Show, Suspense } from "solid-js";
 
 type GithubUser = Record<"avatar_url" | "html_url" | "login", string>;
 
@@ -12,22 +12,26 @@ export const Contributors = () => {
 
   return (
     <div class="flex gap-3 mb-10">
-      <Show when={!!contributors()}>
-        <For each={contributors()}>
-          {(contributor) => (
-            <a
-              href={contributor.html_url}
-              class="hover:opacity-70 ease-in duration-200"
-            >
-              <img
-                alt={`GitHub user ${contributor.login}`}
-                src={`${contributor.avatar_url}&s=48`}
-                class="rounded-full w-15"
-              />
-            </a>
-          )}
-        </For>
-      </Show>
+      <ErrorBoundary fallback={<>Error loading contributors!</>}>
+        <Suspense fallback={<>Loading contributors...</>}>
+          <Show when={!!contributors()}>
+            <For each={contributors()}>
+              {(contributor) => (
+                <a
+                  href={contributor.html_url}
+                  class="hover:opacity-70 ease-in duration-200"
+                >
+                  <img
+                    alt={`GitHub user ${contributor.login}`}
+                    src={`${contributor.avatar_url}&s=48`}
+                    class="rounded-full w-15"
+                  />
+                </a>
+              )}
+            </For>
+          </Show>
+        </Suspense>
+      </ErrorBoundary>
     </div>
   );
 };

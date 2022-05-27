@@ -21,8 +21,13 @@ npm run dev
 
 ## The Solid Docs Manifesto
 
-1. <h4>Documentation is a product.</h4> A product has users, and product teams design, engineer, and maintain solutions that serve them. We’re not writing text that describes SolidJS, we’re using everything at our disposal to teach SolidJS and make our users feel great about themselves throughout the learning process.
-2. <h4>Documentation is <em>the product</em>.</h4> The SolidJS user experience depends on the docs. The Docs Team cares about the entire onboarding and learning experience, which extends beyond written docs into examples, videos, and templates. SolidJS is not an independent project from its docs, and docs are a Core concern.
-3. <h4>Documentation is inclusive and collaborative.</h4> The best docs are not written by the most experienced or entrenched user, they’re not written with one user in mind, and they’re not written alone. The Docs Team seeks to recruit contributors across a wide range of disciplines, perspectives, and experiences, and to foster an environment where every voice is heard.
-4. <h4>Documentation is accessible.</h4> Language, disability, and background should not be a barrier to learning SolidJS. Any user that wants to learn or teach SolidJS must be able to, and docs can enable skills and experiences previously closed off to someone.
-5. <h4>Documentation is fun.</h4> It feels and should feel amazing to learn a new skill, and it should certainly feel great to teach it. We’re a community of volunteers, and that community matters: we care about our users, and we care about each other.
+1. <h4>Documentation is a product.</h4> A product has users, and product teams design, engineer, and maintain solutions that serve them. We’re not writing text that describes SolidJS, we’re using everything at our disposal to teach SolidJS and empower our users throughout the learning process.
+2. <h4>Documentation is <em>the product</em>.</h4> The SolidJS user experience depends on the docs. SolidJS is not an independent project from its docs, and docs are a core concern. The Docs Team cares about the entire onboarding and learning experience, from your first time installing the library from your first dive into Solid's source code.
+
+
+
+
+3. <h4>Documentation is inclusive and collaborative.</h4> The Docs Team prioritizes inclusion because good design is inclusive. Docs should be written for and by folks of different perspectives, backgrounds, and level of tech expertise. We aim to foster an environment where every voice is heard.
+4. <h4>Documentation is accessible.</h4> Learning SolidJS should be possible for anyone. At their best, docs break down barriers and create new opportunities. To do that, we must accomodate all learners. Beyond accessible text, documentation includes code examples, videos, and drawings, so we can support different needs and learning styles.
+
+5. <h4>Documentation is fun.</h4> It feels and should feel amazing to learn a new skill, and it feels fun to teach it. We’re a community of volunteers, and that community matters: we care about our users, and we care about each other.

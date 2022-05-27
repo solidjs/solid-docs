@@ -29,4 +29,4 @@ npm run dev
 
 4. <h4>Documentation is accessible.</h4> Learning Solid should be possible for anyone. At their best, docs break down barriers and create new opportunities. To do that, we must accomodate all learners. Beyond accessible text, docs include code examples, videos, and drawings, so we can support different needs and learning styles.
 
-5. <h4>Documentation is fun.</h4> It feels and should feel amazing to learn a new skill; let's make sure it feels fun to teach it. We’re a community of volunteers, and that community matters: we care about our users, and we care about each other.
+5. <h4>Documentation is fun.</h4> Learning a new skill feels amazing. Let’s make it fun to teach, too! We’re a community of volunteers, and that community matters: we care about our users, and we care about each other.

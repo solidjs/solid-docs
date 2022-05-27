@@ -6,11 +6,11 @@ This is the working repository for our new docs effort. The infrastructure is bu
 
 Our [Stackblitz](https://stackblitz.com/fork/github/solidjs/solid-docs-next/) or [Gitpod](https://gitpod.io/#https://github.com/solidjs/solid-docs-next) or links are the quickest way to set up a development environment, which lets you browse and edit the project files and run the resulting site locally.
 
-We use **pnpm** as our a package manager. If you [clone this project](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) locally, [install PNPM](https://pnpm.io/installation), then run these commands to start the project:
+We use **npm** as our a package manager. If you [clone this project](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) locally, [install npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm), then run these commands to start the project:
 
 ```shell
-pnpm install
-pnpm run dev
+npm install
+npm run dev
 ```
 ## Contributing
 

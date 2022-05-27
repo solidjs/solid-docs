@@ -119,7 +119,7 @@ export default defineConfig({
       },
     }),
     solid({
-      ...(process.env.CI ? {} : { adapter: netlify() }),
+      ...(process.env.GITHUB_ACTIONS ? {} : { adapter: netlify() }),
       extensions: [".mdx", ".md"],
     }),
   ],

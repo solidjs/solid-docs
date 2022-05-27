@@ -21,12 +21,12 @@ npm run dev
 
 ## The Solid Docs Manifesto
 
-1. <h4>Documentation is a product.</h4> A product has users, and product teams design, engineer, and maintain solutions that serve them. We’re not writing text that describes SolidJS, we’re using everything at our disposal to teach SolidJS and empower our users throughout their learning process.
+1. <h4>Documentation is a product.</h4> A product has users, and product teams design, engineer, and maintain solutions that serve them. We’re not writing text that describes Solid, we’re using everything at our disposal to teach Solid and empower our users throughout their learning process.
 
-2. <h4>Documentation is <em>the product</em>.</h4> Solid's user experience depends on the docs. Solid is not an independent project from its docs, and docs are a core concern for the Solid team. We care about the entire onboarding and learning experience, from your first time installing the library from your first dive into Solid's source code.
+2. <h4>Documentation is <em>the product</em>.</h4> Solid's user experience depends on the docs. Solid is not an independent project from its docs, and docs are a core concern for the Solid team. We care about the entire onboarding and learning experience, from your first time installing the library to your first dive into Solid's source code.
 
 3. <h4>Documentation is inclusive and collaborative.</h4> We prioritize inclusion because good design is inclusive. Docs should be written for and by folks of different perspectives, backgrounds, and level of tech expertise. We aim to foster an environment where every voice is heard.
 
-4. <h4>Documentation is accessible.</h4> Learning SolidJS should be possible for anyone. At their best, docs break down barriers and create new opportunities. To do that, we must accomodate all learners. Beyond accessible text, docs include code examples, videos, and drawings, so we can support different needs and learning styles.
+4. <h4>Documentation is accessible.</h4> Learning Solid should be possible for anyone. At their best, docs break down barriers and create new opportunities. To do that, we must accomodate all learners. Beyond accessible text, docs include code examples, videos, and drawings, so we can support different needs and learning styles.
 
 5. <h4>Documentation is fun.</h4> It feels and should feel amazing to learn a new skill; let's make sure it feels fun to teach it. We’re a community of volunteers, and that community matters: we care about our users, and we care about each other.

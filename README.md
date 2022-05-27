@@ -12,11 +12,10 @@ We use **npm** as our a package manager. If you [clone this project](https://doc
 npm install
 npm run dev
 ```
+
 ## Contributing
 
-### The Docs Team
-
-### How We Work
+(Contributing guide and writing guide in progress!)
 
 ## The Solid Docs Manifesto
 

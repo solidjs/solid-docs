@@ -124,10 +124,10 @@ function AddBook(props: IAddBookProps) {
         <ul class="list-disc ml-5 my-4">
           <For each={data()}>
             {(book) => (
-              <li>
+              <li class="mb-1">
                 {book.title} by {book.author}{" "}
                 <button
-                  class="ml-2 p-1 text-black border-1 border-black"
+                  class="p-1 pb-0 text-black border-1 rounded-md border-black dark:text-white dark:border-white"
                   aria-label={`Add ${book.title} by ${book.author} to the bookshelf`}
                   onClick={() => {
                     props.setBooks((books) => [...books, book]);

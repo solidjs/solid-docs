@@ -62,12 +62,12 @@ console.log(count()); // 0
 ```
 
 <FrameworkAside framework="svelte">
-  This is equivalent to `let count = 0` in Svelte. 
-  
+  This is equivalent to `let count = 0` in Svelte.
+
   In Svelte, you can use your
   reactive value without calling it like a function. That's because Svelte's
   reactivity uses a compiler, whereas Solid's reactivity is part of the library.
-  Because we're working within the restrictions of JavaScript, we need to run code when we access the value so that we can 
+  Because we're working within the restrictions of JavaScript, we need to run code when we access the value so that we can
   tell the reactive system, "This value is used here!"
 </FrameworkAside>
 <FrameworkAside framework="react">
@@ -83,6 +83,15 @@ This is equivalent to `const count = ref(0)` in Vue.
 Instead of splitting count into a getter function and a setter function, Vue has you use `count.value` for both getting and setting
 the value. Vue's reactive system is similar to Solid's: we need to run code behind the scenes whenever a `ref` is accessed.
 In Vue, this code lives inside the `.value` [getter function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get).
+
+</FrameworkAside>
+<FrameworkAside framework="angular">
+In Angular, this might just be a class property that you mutate. This is one of the biggest differences that Solid has from Angular.
+While Solid relies on explicit property updates, Angular enables mutations of variables to trigger change detection.
+
+While this might seem like pure mental overhead, there are two main benefits of Solid's read/write separation:
+1) It doesn't require additional performance overhead for change detection
+2) It doesn't require any additional logic (like [`runOutsideAngular`](https://angular.io/api/core/NgZone#runOutsideAngular)) to avoid change detection
 
 </FrameworkAside>
 
@@ -139,6 +148,14 @@ Automatic effect dependency tracking is made possible by `count` being a functio
 </FrameworkAside>
 <FrameworkAside framework="vue">
   This is equivalent to `watchEffect(() => console.log(count.value))` in Vue.
+</FrameworkAside>
+<FrameworkAside framework="angular">
+    While Angular doesn't have a 1:1 comparison to Solid's `createEffect`, they're tangentially similar to Angular's [lifecycle hooks](https://angular.io/guide/lifecycle-hooks).
+
+    However, `createEffect` has some primary benefits over lifecycle methods:
+    - They can run outside of components.
+    - They have a more consolidated API as a result of their decoupling from components.
+    - They're "composable" (You can put an effect inside another effect)
 </FrameworkAside>
 
 ## Rendering with signals
@@ -257,6 +274,8 @@ Our `BookList` component now looks like this:
     ],
   }}
 />
+
+{/* TODO: Add mention of Angular's `trackBy` and add `<Aside>` advanced */}
 
 ## Derived state
 

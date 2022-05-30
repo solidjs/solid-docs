@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import solid from "solid-start";
 import netlify from "solid-start-netlify";
+import node from "solid-start-node";
 import mdx from "@mdx-js/rollup";
 import WindiCSS from "vite-plugin-windicss";
 import rehypeRaw from "rehype-raw";
@@ -12,6 +13,8 @@ import remarkShikiTwoslash from "remark-shiki-twoslash";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
 import Icons from "unplugin-icons/vite";
+
+const adapter = process.env.GITHUB_ACTIONS ? node() : netlify();
 
 export default defineConfig({
   plugins: [
@@ -119,13 +122,14 @@ export default defineConfig({
       },
     }),
     solid({
-      adapter: netlify(),
+      adapter,
       extensions: [".mdx", ".md"],
     }),
   ],
   optimizeDeps: {
     exclude: ["solid-headless"],
   },
+  //@ts-ignore
   ssr: {
     noExternal: ["solid-headless", "solid-heroicons"],
   },

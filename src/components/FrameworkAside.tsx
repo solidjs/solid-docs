@@ -35,6 +35,7 @@ type AsideType =
   | "react"
   | "svelte"
   | "vue"
+  | "angular"
   | "accessibility"
   | "theory"
   | "advanced"

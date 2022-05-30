@@ -7,7 +7,7 @@ import {
 } from "solid-js";
 
 export type CodeFormat = "jsx" | "tsx";
-export type OtherFramework = "react" | "vue" | "svelte";
+export type OtherFramework = "react" | "vue" | "svelte" | "angular";
 export type ComingFrom = OtherFramework | "none";
 type ColorMode = "dark" | "light" | "none";
 

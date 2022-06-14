@@ -29,6 +29,9 @@ If you'd like to contribute to this guide itself, feel free to submit an Issue o
 
 ## Our approach to teaching
 
+- Tell a story
+- Introduce, demonstrate,  explain
+
 ## Content types
 
 ## Tone

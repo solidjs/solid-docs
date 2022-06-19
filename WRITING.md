@@ -112,11 +112,16 @@ The reader is always coming from somewhere, and there's always somewhere to go n
 
 ## Content types
 
-We're using [Diataxis](https://diataxis.fr/) as a starting point for our docs. That said, we may modify parts of it as we work.
+We're using [Diataxis](https://diataxis.fr/) as a starting point for our docs. Their [needs](https://diataxis.fr/needs/) page is a must-read introduction!
 
 The key insight of Diataxis is that documentation requires different _kinds_ of writing to meet the various needs of learners. A detailed API reference won't serve someone who's starting from scratch. A project-based beginner tutorial is great for onboarding new users holistically, but not great for "filling in the gaps" of someone's knowledge.
 
-(TODO: summary table of diataxis, and our renamings)
+| Diataxis Content Type                               | What We Call Them                       | Focus                                                                                                               |
+| --------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| [Tutorials](https://diataxis.fr/tutorials/)         | (Project-based / interactive) Tutorials | To _introduce, educate_. Get the reader up and running and comfortable using Solid.                                 |
+| [How-to Guides](https://diataxis.fr/how-to-guides/) | How-to Guides                           | To _guide, demonstrate_. Show how to accomplish a task or a set of tasks.                                           |
+| [Reference](https://diataxis.fr/reference/)         | API Reference                           | To _describe, inform_. Provide a comprehensive description of Solid's API.                                          |
+| [Explanation](https://diataxis.fr/explanation/)     | Concept Guides, Diving Deeper Guides    | To _clarify, discuss_. Allow the reader to understand the concepts at play; explain the behind-the-scenes of Solid. |
 
 ## Tone and Style
 

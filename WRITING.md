@@ -2,7 +2,7 @@
 
 _Read the [Solid Docs Manifesto](https://www.solidjs.com/tutorial/introduction_basics) first!_
 
-_We're looking for feedback on this guide._
+_This is a draft! Help us improve it by making an issue or [reaching out directly](https://twitter.com/jutanium)._
 
 This document explains how to write content for the new Solid docs.
 
@@ -122,6 +122,8 @@ The key insight of Diataxis is that documentation requires different _kinds_ of 
 | [How-to Guides](https://diataxis.fr/how-to-guides/) | How-to Guides                           | To _guide, demonstrate_. Show how to accomplish a task or a set of tasks.                                           |
 | [Reference](https://diataxis.fr/reference/)         | API Reference                           | To _describe, inform_. Provide a comprehensive description of Solid's API.                                          |
 | [Explanation](https://diataxis.fr/explanation/)     | Concept Guides, Diving Deeper Guides    | To _clarify, discuss_. Allow the reader to understand the concepts at play; explain the behind-the-scenes of Solid. |
+
+![image](https://user-images.githubusercontent.com/4033662/174461439-01f1c0f6-687d-4807-ac43-f61654144886.png)
 
 ## Tone and Style
 

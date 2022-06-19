@@ -1,6 +1,6 @@
 # Solid Docs Writing Guide
 
-_Read the [Solid Docs Manifesto](https://www.solidjs.com/tutorial/introduction_basics) first!_
+_Read the [Solid Docs Manifesto](https://github.com/solidjs/solid-docs-next#the-solid-docs-manifesto) first!_
 
 _This is a draft! Help us improve it by making an issue or [reaching out directly](https://twitter.com/jutanium)._
 

@@ -23,7 +23,7 @@ export const Contributors = () => {
                 >
                   <img
                     alt={`GitHub user ${contributor.login}`}
-                    src={`${contributor.avatar_url}&s=48`}
+                    src={`${contributor.avatar_url}&s=128`}
                     class="rounded-full w-15"
                   />
                 </a>

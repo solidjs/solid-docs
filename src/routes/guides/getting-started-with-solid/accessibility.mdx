@@ -34,6 +34,10 @@ For example, your user could have:
 
 > [These examples come directly from Microsoft's Invlusive Toolkit manual](https://download.microsoft.com/download/b/0/d/b0d4bf87-09ce-4417-8f28-d60703d672ed/inclusive_toolkit_manual_final.pdf)
 
+These users might use assistive technologies like [screen readers](https://www.afb.org/blindness-and-low-vision/using-technology/assistive-technology-products/screen-readers)
+or [specialized toggle buttons](https://www.youtube.com/watch?v=XB4cjbYywqg) in order to operate their computers. As a result,
+it's our duty to ensure that our apps are compatible with these assistive technologies to the best of our abilities.
+
 On top of the moral obligation to make your apps accessible, in many jurisdictions there are also legal obligations to do so.
 For example, sites built by the U.S. Federal Government are subject to [Section 508](https://www.section508.gov/manage/laws-and-policies/),
 which requires compliance with a set of standards made for accessibility.
@@ -43,13 +47,107 @@ These guidelines are created by a governance body called "W3C", which is the org
 
 ## Semantic HTML
 
-## Aria Attributes and Roles
+One of the most important things to do when adding accessibility into your app is using semantic HTML. This means that instead
+of using `div`s, you use the appropriate HTML tags for a given scenario. For example, when using a list of items, instead of:
+
+```html
+<div>
+    <div>Item 1</div>
+    <div>Item 2</div>
+    <div>Item 3</div>
+</div>
+```
+
+You'd want to use the appropriate HTML tag for a list:
+
+```html
+<ul>
+    <li>Item 1</li>
+    <li>Item 2</li>
+    <li>Item 3</li>
+</ul>
+```
+
+This allows tools like screen-readers to better understand what information your page is trying to communicate.
+
+While SolidJS uses JSX to render out HTML, what tags you use in your JSX will directly tie into what HTML is rendered.
+This means that you should use the same HTML tags you would expect to use in any other web application to make your Solid
+apps accessible.
+
+## ARIA Attributes and Roles
+
+While using semantic HTML is often enough to convey proper information to assistive technologies, sometimes additional metadata
+on HTML elements are required. This is where [Accessible Rich Internet Applications (ARIA) roles and attributes](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA)
+come into play.
+
+These roles and attributes provide supplemental information to an element that can help assistive technologies understand
+more advanced UI states.
+
+For example, if you had an expandable menu, you might want to utilize [`aria-expanded`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-expanded)
+to indicate if the user had the menu expanded or not.
+
+Solid does nothing more than vanilla HTML to add default aria roles and attributes. ARIA attributes, and especially ARIA
+roles, can be challenging interactions to properly tackle. Because of this, it's highly suggested to use the community package
+[`solid-aria`](https://github.com/solidjs-community/solid-aria) for supported use-cases.
 
 ## Element Association
 
-- Implicit element attribution (label<->input)
-- Explicit element attribution
-- Unique ID Generation/handling
+Often in web accessibility, you need to associate two HTML elements to one another. To do this, there are two typical methods
+for doing so:
+
+1) Implicit element association
+2) Explicit element association
+
+### Implicit element association
+
+When using [`<label>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/label) alongside an [`<input/>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input),
+you're able to nest an `input` within a label, like so:
+
+```
+<label>What is your name?
+  <input type="text" name="usersName">
+</label>
+```
+
+This is an example of implement element association that allows the HTML standard to associate the `label`'s text with
+the child `input` element. This enables assistive technologies to communicate this association back to the user when
+accessing one element or the other.
+
+### Explicit element association
+
+While implicit element association is preferred, it's not always possible for various reasons. Because of this, many
+HTML attributes allow you to use a unique `id` in order to explicitly associate two HTML elements.
+
+One example of this can be seen when using `<label>`'s `for` attribute:
+
+```
+<label for="usersName">What is your name?</label>
+<input id="usersName" type="text" name="usersName"/>
+```
+
+Here, we use an HTML `id` attribute to bind the `input` to the `label` via a matching `for` attribute ID.
+
+However, one caveat of this method is that, according to HTML specification, an HTML element's `id` attribute must
+be unique on the rendered page. Because of this, it's common for apps using UI frameworks (like Solid) to dynamically
+generate globally unique IDs for this purpose.
+
+In Solid, this is trivial to implement using `createUniqueId`:
+
+```jsx
+import { createUniqueId } from "solid-js";
+
+const NameInput = () => {
+    const userNameInputId = createUniqueId();
+
+    return <div>
+        <label for={userNameInputId}>What is your name?</label>
+        <input id={userNameInputId} type="text" name="usersName"/>
+    </div>
+}
+```
+
+> Historically, one challenge with unique IDs has been the lack of stable ID generation between client and server hydration
+> within the context of SSR. Luckily, Solid's `createUniqueId` creates stable IDs between initial render and hydration.
 
 ## Tab focusing
 

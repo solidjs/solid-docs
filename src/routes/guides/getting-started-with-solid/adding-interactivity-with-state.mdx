@@ -272,6 +272,35 @@ Our `BookList` component now looks like this:
   }}
 />
 
+Solid's `For` component also supports the ability to assign a `key` for each item in the list in order to do index tracking.
+
+<Aside title="Read more about index tracking (optional)" type="advanced" collapsible>
+Let's assume that you have a list of items that you want to render using the `For` component:
+
+```jsx
+<For each={books()}></For>
+```
+
+In its initial render, this `For` renders two books since `books()` has an initial array value of two items.
+
+Later, you attempt to [re-fetch the books list from an external API](/guides/getting-started-with-solid/fetching-data),
+which creates a new object reference for each item in the array, despite containing the same information in the same order.
+
+Solid, seeing a new list of items, re-renders the lists. Because the object references have changed, despite the
+information remaining consistent, it will trigger a re-render of every item in the list: A unoptimized process.
+
+Ideally, we could tell Solid to simply render the DOM nodes based on the index rather than object reference.
+That way, Solid wouldn't re-render DOM nodes that already contained up-to-date information thanks to remaining in the
+same index.
+
+Luckily, there's an easy way to do this: Simply replace the `For` component with the `Index` component:
+
+```jsx
+<Index items={books()}></Index>
+```
+
+</Aside>
+
 ## Derived state
 
 Solid makes it easy to track _derived state_. You can think of derived state as a computation based only on other information you're already tracking in state. In our Bookshelf application, an example of derived state would be the number of books on our list: it's the length of our `books` array at any point in time.

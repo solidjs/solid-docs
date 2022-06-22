@@ -39,19 +39,39 @@ const Repl = isServer ? () => {} : (await srepl).Repl;
 const createTabList = isServer
   ? () => [() => {}, () => {}]
   : (await srepl).createTabList;
-const defaultTabs = isServer ? [] : (await srepl).defaultTabs;
 const formatter = new (await formatterWorker).default();
 const compiler = new (await compilerWorker).default();
 
 import "solid-repl/lib/bundle.css";
 
 export const MyRepl = () => {
-  const [tabs, setTabs] = createTabList(defaultTabs);
+  const [tabs, setTabs] = createTabList([
+    {
+      name: "main",
+      type: "tsx",
+      source:
+        'import { render } from "solid-js/web";\n' +
+        'import { createSignal } from "solid-js";\n' +
+        "\n" +
+        "function Counter() {\n" +
+        "  const [count, setCount] = createSignal(0);\n" +
+        "  const increment = () => setCount(count() + 1);\n" +
+        "\n" +
+        "  return (\n" +
+        '    <button type="button" onClick={increment}>\n' +
+        "      {count()}\n" +
+        "    </button>\n" +
+        "  );\n" +
+        "}\n" +
+        "\n" +
+        'render(() => <Counter />, document.getElementById("app"));\n',
+    },
+  ]);
   const [current, setCurrent] = createSignal("main.tsx");
 
   return (
     <Repl
-      isHorizontal={false}
+      isHorizontal={true}
       dark={false}
       interactive
       editableTabs

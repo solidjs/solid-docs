@@ -1,9 +1,10 @@
+import { createSignal } from "solid-js";
 import { isServer } from "solid-js/web";
 
-const stub = (() => {}) as any;
+const stub = Promise.resolve({ default: function () {} as any });
 const editorWorker = isServer
   ? stub
-  : await import("monaco-editor/esm/vs/editor/editor.worker?worker");
+  : import("monaco-editor/esm/vs/editor/editor.worker?worker");
 const tsWorker = isServer
   ? stub
   : import("monaco-editor/esm/vs/language/typescript/ts.worker?worker");
@@ -19,19 +20,49 @@ const compilerWorker = isServer
 
 if (!isServer)
   (window as any).MonacoEnvironment = {
-    getWorker: function (_moduleId: unknown, label: string) {
+    async getWorker(_moduleId: unknown, label: string) {
       switch (label) {
         case "css":
-          return new cssWorker();
+          return new (await cssWorker).default();
         case "typescript":
         case "javascript":
-          return new tsWorker();
+          return new (await tsWorker).default();
         default:
-          return new editorWorker();
+          return new (await editorWorker).default();
       }
     },
   };
 
-export { Repl, createTabList } from "solid-repl";
-export const formatter = new formatterWorker();
-export const compiler = new compilerWorker();
+const srepl = isServer ? undefined : import("solid-repl");
+
+const Repl = isServer ? () => {} : (await srepl).Repl;
+const createTabList = isServer
+  ? () => [() => {}, () => {}]
+  : (await srepl).createTabList;
+const defaultTabs = isServer ? [] : (await srepl).defaultTabs;
+const formatter = new (await formatterWorker).default();
+const compiler = new (await compilerWorker).default();
+
+import "solid-repl/lib/bundle.css";
+
+export const MyRepl = () => {
+  const [tabs, setTabs] = createTabList(defaultTabs);
+  const [current, setCurrent] = createSignal("main.tsx");
+
+  return (
+    <Repl
+      isHorizontal={false}
+      dark={false}
+      interactive
+      editableTabs
+      actionBar
+      id="HI"
+      tabs={tabs()}
+      current={current()}
+      setCurrent={setCurrent}
+      setTabs={setTabs}
+      compiler={compiler}
+      formatter={formatter}
+    />
+  );
+};

@@ -85,6 +85,15 @@ the value. Vue's reactive system is similar to Solid's: we need to run code behi
 In Vue, this code lives inside the `.value` [getter function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get).
 
 </FrameworkAside>
+<FrameworkAside framework="angular">
+In Angular, this might just be a class property that you mutate. This is one of the biggest differences that Solid has from Angular.
+While Solid relies on explicit property updates, Angular enables mutations of variables to trigger change detection.
+
+While this might seem like pure mental overhead, there are two main benefits of Solid's read/write separation:
+1) It doesn't require additional performance overhead for change detection
+2) It doesn't require any additional logic (like [`runOutsideAngular`](https://angular.io/api/core/NgZone#runOutsideAngular)) to avoid change detection
+
+</FrameworkAside>
 
 The second element, `setCount`, is a _setter_ function. If we want to increment our `count`, we can pass `count() + 1` to `setCount`:
 
@@ -139,6 +148,14 @@ Automatic effect dependency tracking is made possible by `count` being a functio
 </FrameworkAside>
 <FrameworkAside framework="vue">
   This is equivalent to `watchEffect(() => console.log(count.value))` in Vue.
+</FrameworkAside>
+<FrameworkAside framework="angular">
+    While Angular doesn't have a 1:1 comparison to Solid's `createEffect`, they're tangentially similar to Angular's [lifecycle hooks](https://angular.io/guide/lifecycle-hooks).
+
+    However, `createEffect` has some primary benefits over lifecycle methods:
+    - They can run outside of components.
+    - They have a more consolidated API as a result of their decoupling from components.
+    - They're "composable" (You can put an effect inside another effect)
 </FrameworkAside>
 
 ## Rendering with signals
@@ -271,6 +288,8 @@ Our `BookList` component now looks like this:
     ],
   }}
 />
+
+{/* TODO: Add mention of Angular's `trackBy` and add `<Aside>` advanced */}
 
 ## Derived state
 

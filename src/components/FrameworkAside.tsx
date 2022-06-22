@@ -9,6 +9,7 @@ import { ConfigContext, OtherFramework } from "./ConfigContext";
 import IconAccessibility from "~icons/icomoon-free/accessibility";
 import IconReact from "~icons/mdi/react";
 import IconVue from "~icons/mdi/vuejs";
+import IconAngular from "~icons/mdi/angular";
 import IconSvelte from "~icons/simple-icons/svelte";
 import IconBulb from "~icons/mdi/lightbulb";
 import IconBrain from "~icons/mdi/brain";
@@ -34,6 +35,7 @@ type AsideType =
   | "react"
   | "svelte"
   | "vue"
+  | "angular"
   | "accessibility"
   | "theory"
   | "advanced"
@@ -56,6 +58,10 @@ const asideDefinition: () => Record<
   vue: {
     title: "Since you're coming from Vue",
     logo: <IconVue {...logoProps} />,
+  },
+  angular: {
+    title: "Since you're coming from Angular",
+    logo: <IconAngular {...logoProps} />,
   },
   accessibility: {
     title: "Accessibility note",

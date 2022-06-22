@@ -126,11 +126,12 @@ export default defineConfig({
       extensions: [".mdx", ".md"],
     }),
   ],
+
   optimizeDeps: {
     exclude: ["solid-headless"],
   },
   //@ts-ignore
   ssr: {
-    noExternal: ["solid-headless", "solid-heroicons"],
+    noExternal: ["solid-headless", "solid-heroicons", "solid-repl"],
   },
 });

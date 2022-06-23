@@ -81,7 +81,7 @@ interface IAsideProps {
 
 export const Aside = (props: PropsWithChildren<IAsideProps>) => {
   const [showContent, setShowContent] = createSignal(!props.collapsible);
-  const definition = asideDefinition()[props.type];
+  const definition = asideDefinition()[props.type || "general"];
   const title = () => props.title || definition.title;
   const logo = () => definition.logo;
 

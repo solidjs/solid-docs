@@ -112,6 +112,26 @@ const START_SECTIONS = [
   },
 ];
 
+const allStartSections: Record<"title" | "link", string>[] = [];
+for (const section of START_SECTIONS) {
+  for (const subsection of section.subsections) {
+    allStartSections.push({
+      link: section.link + subsection.link,
+      title: `${section.header} — ${subsection.header}`,
+    });
+  }
+}
+
+export function getStartSection(pathname: string) {
+  const current = allStartSections.findIndex((section) =>
+    pathname.startsWith(section.link)
+  );
+  if (current === allStartSections.length - 1 || current === -1) {
+    return undefined;
+  }
+  return allStartSections[current + 1];
+}
+
 function StartMenu() {
   return (
     <ul class="m-5">
@@ -140,26 +160,6 @@ function StartMenu() {
       </For>
     </ul>
   );
-}
-
-const allStartSections: Record<"title" | "link", string>[] = [];
-for (const section of START_SECTIONS) {
-  for (const subsection of section.subsections) {
-    allStartSections.push({
-      link: section.link + subsection.link,
-      title: `${section.header} — ${subsection.header}`,
-    });
-  }
-}
-
-export function getStartSection(pathname: string) {
-  const current = allStartSections.findIndex((section) =>
-    pathname.startsWith(section.link)
-  );
-  if (current === allStartSections.length - 1 || current === -1) {
-    return undefined;
-  }
-  return allStartSections[current + 1];
 }
 
 type SECTION_LEAF_PAGE = {
@@ -272,34 +272,50 @@ function ReferenceNav() {
   return <SectionNav sections={REFERENCE_SECTIONS} />;
 }
 
-function SectionNav(props) {
+function GuidesNav() {
+  return <SectionNav sections={GUIDES_SECTIONS} />;
+}
+
+function SectionNav(props: { sections: SECTIONS }) {
   const location = useLocation();
-  let section = Object.keys(props.sections).find(
-    (k) =>
-      location.pathname.startsWith(props.sections[k].link) ||
-      props.sections[k].inSubsections(location.pathname)
-  );
+
+  // let = Object.keys(props.sections).find(
+  //   (k) =>
+  //     location.pathname.startsWith(props.sections[k].link)
+  // );
 
   return (
-    <Accordion
-      as="ul"
-      toggleable
-      defaultValue={section ? props.sections[section].header : undefined}
-    >
+    <Accordion<string> as={"ul" as "div"} toggleable>
       <For each={Object.keys(props.sections)}>
-        {(header) => (
+        {(name) => (
           <NavGroup
-            href={props.sections[header].link}
-            header={props.sections[header].header}
+            href={props.sections[name].link}
+            header={props.sections[name].name}
           >
-            <For each={Object.keys(props.sections[header].subsections ?? {})}>
+            <For each={props.sections[name].pages}>
               {(subsection, i) => (
-                <NavItem
-                  href={props.sections[header].subsections[subsection].link}
-                  title={props.sections[header].subsections[subsection].header}
-                >
-                  {props.sections[header].subsections[subsection].header}
-                </NavItem>
+                <>
+                  <Show when={(subsection as SECTION_LEAF_PAGE).link}>
+                    <NavItem
+                      href={(subsection as SECTION_LEAF_PAGE).link}
+                      title={subsection.name}
+                    >
+                      {subsection.name}
+                    </NavItem>
+                  </Show>
+                  <Show when={(subsection as SECTION_PAGE).pages}>
+                    <For each={(subsection as SECTION_PAGE).pages}>
+                      {(subpage, i) => (
+                        <NavItem
+                          href={(subpage as SECTION_LEAF_PAGE).link}
+                          title={subpage.name}
+                        >
+                          {subpage.name}
+                        </NavItem>
+                      )}
+                    </For>
+                  </Show>
+                </>
               )}
             </For>
           </NavGroup>
@@ -307,10 +323,6 @@ function SectionNav(props) {
       </For>
     </Accordion>
   );
-}
-
-function GuidesNav() {
-  return <SectionNav sections={GUIDES_SECTIONS} />;
 }
 
 //dark:hover:bg-solid-darkLighterBg pointer-fine:hover:text-white pointer-fine:hover:bg-solid-medium dark:bg-solid-light text-white

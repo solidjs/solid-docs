@@ -276,6 +276,38 @@ function GuidesNav() {
   return <SectionNav sections={GUIDES_SECTIONS} />;
 }
 
+function SectionsNavIterate({
+  pages,
+}: {
+  pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>;
+}) {
+  return (
+    <For each={pages}>
+      {(subsection, i) => (
+        <>
+          <Show when={(subsection as SECTION_LEAF_PAGE).link}>
+            <NavItem
+              href={(subsection as SECTION_LEAF_PAGE).link}
+              title={subsection.name}
+            >
+              {subsection.name}
+            </NavItem>
+          </Show>
+          <Show when={(subsection as SECTION_PAGE).pages}>
+            <Accordion<string> as={"ul" as "div"} toggleable>
+              <NavGroup href={""} header={subsection.name}>
+                <SectionsNavIterate
+                  pages={(subsection as SECTION_PAGE).pages}
+                />
+              </NavGroup>
+            </Accordion>
+          </Show>
+        </>
+      )}
+    </For>
+  );
+}
+
 function SectionNav(props: { sections: SECTIONS }) {
   const location = useLocation();
 
@@ -284,44 +316,22 @@ function SectionNav(props: { sections: SECTIONS }) {
   //     location.pathname.startsWith(props.sections[k].link)
   // );
 
+  const sectionNames = Object.keys(props.sections);
+
   return (
-    <Accordion<string> as={"ul" as "div"} toggleable>
-      <For each={Object.keys(props.sections)}>
-        {(name) => (
-          <NavGroup
-            href={props.sections[name].link}
-            header={props.sections[name].name}
-          >
-            <For each={props.sections[name].pages}>
-              {(subsection, i) => (
-                <>
-                  <Show when={(subsection as SECTION_LEAF_PAGE).link}>
-                    <NavItem
-                      href={(subsection as SECTION_LEAF_PAGE).link}
-                      title={subsection.name}
-                    >
-                      {subsection.name}
-                    </NavItem>
-                  </Show>
-                  <Show when={(subsection as SECTION_PAGE).pages}>
-                    <For each={(subsection as SECTION_PAGE).pages}>
-                      {(subpage, i) => (
-                        <NavItem
-                          href={(subpage as SECTION_LEAF_PAGE).link}
-                          title={subpage.name}
-                        >
-                          {subpage.name}
-                        </NavItem>
-                      )}
-                    </For>
-                  </Show>
-                </>
-              )}
-            </For>
-          </NavGroup>
+    <ul>
+      <For each={sectionNames}>
+        {(name, i) => (
+          <li>
+            <p class="p-2 pr-2 w-full h-full text-solid-dark dark:text-white rounded-none lg:rounded-r-lg text-left relative flex items-center justify-between pl-5 text-xl font-bold">
+              {props.sections[name].name}
+            </p>
+            <SectionsNavIterate pages={props.sections[name].pages} />
+            {i() !== sectionNames.length - 1 ? <hr class="w-full " /> : null}
+          </li>
         )}
       </For>
-    </Accordion>
+    </ul>
   );
 }
 

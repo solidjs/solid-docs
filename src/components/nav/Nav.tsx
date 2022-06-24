@@ -54,34 +54,6 @@ function TopMenu() {
   );
 }
 
-const HomeSections = {
-  // Foundations: {
-  //   header: "Foundations",
-  //   link: "/guides/foundations",
-  //   inSubsections: (p) => p.startsWith("/api/files"),
-  // },
-  // Forms: {
-  //   header: "Forms",
-  //   link: "/api/forms",
-  //   inSubsections: (p) => p.startsWith("/api/forms"),
-  // },
-  // "Server Functions": {
-  //   header: "Server Functions",
-  //   link: "/api/server",
-  //   inSubsections: (p) => p.startsWith("/api/server"),
-  // },
-  // Router: {
-  //   header: "Router",
-  //   link: "/api/router",
-  //   inSubsections: (p) => p.startsWith("/api/router"),
-  // },
-  // Session: {
-  //   header: "Session",
-  //   link: "/api/session",
-  //   inSubsections: (p) => p.startsWith("/api/session"),
-  // },
-};
-
 const START_SECTIONS = [
   {
     header: "Getting started",
@@ -190,65 +162,109 @@ export function getStartSection(pathname: string) {
   return allStartSections[current + 1];
 }
 
-const REFERENCE_SECTIONS = {
-  Concepts: {
-    header: "Concepts",
-    link: "/reference/tracking",
-    inSubsections: (p) => p.startsWith("/reference"),
-    subsections: {
-      Tracking: {
-        header: "Tracking",
-        link: "/reference/tracking",
-      },
-    },
-  },
+type SECTION_LEAF_PAGE = {
+  name: string;
+  link: string;
 };
-const GUIDES_SECTIONS = {
-  GettingStartedWithSolid: {
-    header: "Getting Started With Solid",
-    link: "/guides/getting-started/welcome",
-    inSubsections: (p) => p.startsWith("/guides/getting-started-with-solid"),
-    subsections: {
-      Welcome: {
-        header: "Welcome",
-        link: "/guides/getting-started-with-solid/welcome",
+
+type SECTION_PAGE = {
+  name: string;
+  pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>;
+};
+
+type SECTIONS = {
+  [key: string]: {
+    name: string;
+    // If this exists, then when the user clicks on the name of the section, it will direct here
+    link?: string;
+    pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>;
+  };
+};
+
+const REFERENCE_SECTIONS: SECTIONS = {
+  concepts: {
+    name: "Concepts",
+    pages: [
+      {
+        name: "Tracking",
+        link: "/concepts/tracking",
       },
-      "Installing Solid": {
-        header: "Installing Solid",
-        link: "/guides/getting-started-with-solid/installing-solid",
-      },
-      "Building UI with Components": {
-        header: "Building UI with Components",
-        link: "/guides/getting-started-with-solid/building-ui-with-components",
-      },
-      "Adding Interactivity with State": {
-        header: "Adding Interactivity with State",
-        link: "/guides/getting-started-with-solid/adding-interactivity-with-state",
-      },
-      "Control Flow": {
-        header: "Control Flow",
-        link: "/guides/getting-started-with-solid/control-flow",
-      },
-      "Fetching Data": {
-        header: "Fetching Data",
-        link: "/guides/getting-started-with-solid/fetching-data",
-      },
-    },
+    ],
   },
-  Foundations: {
-    header: "Foundations",
-    link: "/guides/foundations/why-solid",
-    subsections: {
-      "Why Solid?": {
-        header: "Why Solid?",
-        link: "/guides/foundations/why-solid",
+  api: {
+    name: "API Reference",
+    pages: [
+      {
+        name: "Coming Soon",
+        link: "/api-reference",
       },
-      "JavaScript for Solid": {
-        header: "JavaScript for Solid",
-        link: "/guides/foundations/javascript-for-solid",
+    ],
+  },
+  // concepts: {
+  //   header: "Concepts",
+  //   link: "/reference/tracking",
+  //   subsections: [
+  //     {
+  //       header: "Tracking",
+  //       link: "/reference/tracking",
+  //     },
+  //   ]
+  // },
+};
+
+const GUIDES_SECTIONS: SECTIONS = {
+  tutorials: {
+    name: "Tutorials",
+    pages: [
+      {
+        name: "Getting Started with Solid",
+        // navigating to /guides/getting-started-with-solid takes you to /guides/getting-started-with-solid/welcome
+        pages: [
+          {
+            name: "Welcome",
+            link: "/tutorials/getting-started-with-solid/welcome",
+          },
+          {
+            name: "Installing Solid",
+            link: "/tutorials/getting-started-with-solid/installing-solid",
+          },
+          {
+            name: "Building UI with Components",
+            link: "/tutorials/getting-started-with-solid/building-ui-with-components",
+          },
+          {
+            name: "Adding Interactivity with State",
+            link: "/tutorials/getting-started-with-solid/adding-interactivity-with-state",
+          },
+          {
+            name: "Control Flow",
+            link: "/tutorials/getting-started-with-solid/control-flow",
+          },
+          {
+            name: "Fetching Data",
+            link: "/tutorials/getting-started-with-solid/fetching-data",
+          },
+        ],
       },
-    },
-    inSubsections: (p) => p.startsWith("/guides/foundations"),
+    ],
+  },
+  howTos: {
+    name: "How-To Guides",
+    pages: [
+      {
+        name: "Get Ready for Solid",
+        pages: [
+          {
+            name: "Welcome",
+            link: "/how-to-guides/get-ready-for-solid/",
+          },
+          {
+            name: "JavaScript for Solid",
+            link: "/how-to-guides/get-ready-for-solid/javascript-for-solid",
+          },
+        ],
+      },
+    ],
   },
 };
 

@@ -303,7 +303,7 @@ function SectionsNavIterate(props: {
     <For each={props.pages}>
       {(subsection) => (
         <>
-          <Show when={(subsection as SECTION_LEAF_PAGE).link}>
+          <Show when={isLeafPage(subsection)}>
             <NavItem
               href={(subsection as SECTION_LEAF_PAGE).link}
               title={subsection.name}

@@ -294,7 +294,7 @@ function SectionsNavIterate(props: {
   //Wouldn't work if we actually went recursive (where the next level would have the possibility of not having any links)
   const isCollapsed = (pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>) => {
 
-    return pages.some(page => {
+    return !pages.some(page => {
       return isLeafPage(page) && location.pathname == page?.link
     })
   }

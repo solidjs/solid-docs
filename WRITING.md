@@ -210,6 +210,12 @@ Google's [inclusive language](https://developers.google.com/style/inclusive-docu
 
 ## Terminology
 
+### American English
+
+We're using Standard American English spellings.
+
+### Solid Terms
+
 This is a list of Solid-specific words and what they mean. In the second column, we put:
 
 - terms that mean the same thing but shouldn't be used for the sake of consistency.

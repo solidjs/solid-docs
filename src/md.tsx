@@ -117,9 +117,6 @@ export default {
     </p>
   ),
   code: (props) => {
-    createEffect(() => {
-      console.log(props);
-    });
     return (
       <code className="inline text-code font-mono" {...props}>
         {props.children}

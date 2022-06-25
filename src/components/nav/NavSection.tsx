@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "solid-app-router";
 
 import { usePageState } from "../PageStateContext";
-import { For, Show, createSignal, ParentProps, createUniqueId } from "solid-js";
+import { For, Show, createSignal, ParentProps, createUniqueId, createEffect } from "solid-js";
 
 export function CollapsedIcon(props) {
   return <div class={"duration-100 ease-in transition" + props.class}>▼</div>;
@@ -66,7 +66,14 @@ function SectionPanel(props: ParentProps<{id: string}>) {
 }
 
 export function NavItem(props) {
-  const isActive = () => props.href === useLocation().pathname;
+
+  const isActive = () => { 
+    return props.href === useLocation().pathname;
+  }
+
+  // createEffect ( () => {
+  //   console.log( {href: props.href, path: useLocation().pathname });
+  // });
 
   const { sections } = usePageState();
 
@@ -77,6 +84,7 @@ export function NavItem(props) {
         {...props}
         inactiveClass="hover:text-solid-light hover:dark:text-solid-darkdefault"
         activeClass="text-white bg-solid-light dark:bg-solid-light border-blue-40 active"
+        end={true}
       >
         {props.children}
       </NavLink>

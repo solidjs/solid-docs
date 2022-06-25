@@ -295,7 +295,7 @@ function SectionsNavIterate(props: {
   const isCollapsed = (pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>) => {
 
     return pages.some(page => {
-      return isLeafPage(page) && location.pathname.includes(page?.link)
+      return isLeafPage(page) && location.pathname == page?.link
     })
   }
 

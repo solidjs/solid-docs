@@ -1,7 +1,7 @@
 import { NavLink, Route, Routes, useLocation } from "solid-app-router";
 import { NavHeader } from "./NavHeader";
-import { NavGroup, NavItem } from "./NavSection";
-import { Accordion } from "solid-headless";
+import { Collapsable, NavItem } from "./NavSection";
+// import { Accordion } from "solid-headless";
 import { createEffect, createSignal, For, on, Show } from "solid-js";
 
 export default function Nav(props: { docsMode: "start" | "regular" }) {
@@ -276,14 +276,32 @@ function GuidesNav() {
   return <SectionNav sections={GUIDES_SECTIONS} />;
 }
 
-function SectionsNavIterate({
-  pages,
-}: {
+function SectionsNavIterate(props: {
   pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>;
 }) {
+
+
+  const location = useLocation();
+
+  createEffect( () => {
+    console.log(location.pathname);
+  })
+  
+  function isLeafPage (page: SECTION_PAGE | SECTION_LEAF_PAGE) : page is SECTION_LEAF_PAGE {
+    return "link" in page;
+  }
+
+  //Wouldn't work if we actually went recursive (where the next level would have the possibility of not having any links)
+  const isCollapsed = (pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>) => {
+
+    return pages.some(page => {
+      return isLeafPage(page) && location.pathname.includes(page?.link)
+    })
+  }
+
   return (
-    <For each={pages}>
-      {(subsection, i) => (
+    <For each={props.pages}>
+      {(subsection) => (
         <>
           <Show when={(subsection as SECTION_LEAF_PAGE).link}>
             <NavItem
@@ -294,13 +312,13 @@ function SectionsNavIterate({
             </NavItem>
           </Show>
           <Show when={(subsection as SECTION_PAGE).pages}>
-            <Accordion<string> as={"ul" as "div"} toggleable>
-              <NavGroup href={""} header={subsection.name}>
+            <ul>
+              <Collapsable header={subsection.name} startCollapsed={isCollapsed((subsection as SECTION_PAGE).pages)}>
                 <SectionsNavIterate
                   pages={(subsection as SECTION_PAGE).pages}
                 />
-              </NavGroup>
-            </Accordion>
+              </Collapsable>
+            </ul>
           </Show>
         </>
       )}
@@ -309,7 +327,6 @@ function SectionsNavIterate({
 }
 
 function SectionNav(props: { sections: SECTIONS }) {
-  const location = useLocation();
 
   // let = Object.keys(props.sections).find(
   //   (k) =>
@@ -319,13 +336,13 @@ function SectionNav(props: { sections: SECTIONS }) {
   const sectionNames = Object.keys(props.sections);
 
   return (
-    <ul>
+    <ul class="list-none">
       <For each={sectionNames}>
         {(name, i) => (
           <li>
-            <p class="p-2 pr-2 w-full h-full text-solid-dark dark:text-white rounded-none lg:rounded-r-lg text-left relative flex items-center justify-between pl-5 text-xl font-bold">
+            <h3 class="pl-4 text-solid-dark font-bold text-xl">
               {props.sections[name].name}
-            </p>
+            </h3>
             <SectionsNavIterate pages={props.sections[name].pages} />
             {i() !== sectionNames.length - 1 ? <hr class="w-full " /> : null}
           </li>

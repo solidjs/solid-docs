@@ -4,7 +4,6 @@ import { createEffect, children, createMemo, createUniqueId } from "solid-js";
 import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import { Title } from "./components/Main";
-import Terminal from "./components/Terminal";
 
 import { usePageState } from "./components/PageStateContext";
 import { onMount } from "solid-js";
@@ -182,6 +181,5 @@ export default {
   unknown: (props) => {
     return <span>{props.children}</span>;
   },
-  terminal: Terminal,
   Title,
 };

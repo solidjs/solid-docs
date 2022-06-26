@@ -3,12 +3,7 @@ import { createEffect, createUniqueId, onMount, ParentProps } from "solid-js";
 import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import { Title } from "./components/Main";
-<<<<<<< HEAD
-
-=======
->>>>>>> kaleem68/main
 import { usePageState } from "./components/PageStateContext";
-import Terminal from "./components/Terminal";
 
 function Anchor(props: ParentProps<{ id: string }>) {
   return (

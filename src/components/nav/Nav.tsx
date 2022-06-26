@@ -279,25 +279,24 @@ function GuidesNav() {
 function SectionsNavIterate(props: {
   pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>;
 }) {
-
-
   const location = useLocation();
 
-  createEffect( () => {
+  createEffect(() => {
     console.log(location.pathname);
-  })
-  
-  function isLeafPage (page: SECTION_PAGE | SECTION_LEAF_PAGE) : page is SECTION_LEAF_PAGE {
+  });
+
+  function isLeafPage(
+    page: SECTION_PAGE | SECTION_LEAF_PAGE
+  ): page is SECTION_LEAF_PAGE {
     return "link" in page;
   }
 
   //Wouldn't work if we actually went recursive (where the next level would have the possibility of not having any links)
   const isCollapsed = (pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>) => {
-
-    return !pages.some(page => {
-      return isLeafPage(page) && location.pathname == page?.link
-    })
-  }
+    return !pages.some((page) => {
+      return isLeafPage(page) && location.pathname == page?.link;
+    });
+  };
 
   return (
     <For each={props.pages}>
@@ -313,7 +312,10 @@ function SectionsNavIterate(props: {
           </Show>
           <Show when={(subsection as SECTION_PAGE).pages}>
             <ul>
-              <Collapsable header={subsection.name} startCollapsed={isCollapsed((subsection as SECTION_PAGE).pages)}>
+              <Collapsable
+                header={subsection.name}
+                startCollapsed={isCollapsed((subsection as SECTION_PAGE).pages)}
+              >
                 <SectionsNavIterate
                   pages={(subsection as SECTION_PAGE).pages}
                 />
@@ -327,7 +329,6 @@ function SectionsNavIterate(props: {
 }
 
 function SectionNav(props: { sections: SECTIONS }) {
-
   // let = Object.keys(props.sections).find(
   //   (k) =>
   //     location.pathname.startsWith(props.sections[k].link)
@@ -340,11 +341,13 @@ function SectionNav(props: { sections: SECTIONS }) {
       <For each={sectionNames}>
         {(name, i) => (
           <li>
-            <h3 class="pl-4 text-solid-dark font-bold text-xl">
+            <h1 class="pl-4 text-solid-dark dark:text-white font-bold text-xl">
               {props.sections[name].name}
-            </h3>
+            </h1>
             <SectionsNavIterate pages={props.sections[name].pages} />
-            {i() !== sectionNames.length - 1 ? <hr class="w-full " /> : null}
+            {i() !== sectionNames.length - 1 ? (
+              <hr class="w-full mb-2" />
+            ) : null}
           </li>
         )}
       </For>

@@ -1,22 +1,14 @@
 import { Link } from "solid-app-router";
-import { ParentProps } from "solid-js";
-import { createEffect, children, createMemo, createUniqueId } from "solid-js";
+import { createEffect, createUniqueId, onMount, ParentProps } from "solid-js";
 import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import { Title } from "./components/Main";
+<<<<<<< HEAD
 
+=======
+>>>>>>> kaleem68/main
 import { usePageState } from "./components/PageStateContext";
-import { onMount } from "solid-js";
-
-let hashCode = function (str) {
-  var hash = 0;
-  for (var i = 0; i < str.length; i++) {
-    var code = str.charCodeAt(i);
-    hash = (hash << 5) - hash + code;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return hash;
-};
+import Terminal from "./components/Terminal";
 
 function Anchor(props: ParentProps<{ id: string }>) {
   return (

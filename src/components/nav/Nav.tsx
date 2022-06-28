@@ -341,9 +341,9 @@ function SectionNav(props: { sections: SECTIONS }) {
       <For each={sectionNames}>
         {(name, i) => (
           <li>
-            <h1 class="pl-4 text-solid-dark dark:text-white font-bold text-xl">
+            <h2 class="pl-4 text-solid-dark dark:text-white font-bold text-xl">
               {props.sections[name].name}
-            </h1>
+            </h2>
             <SectionsNavIterate pages={props.sections[name].pages} />
             {i() !== sectionNames.length - 1 ? (
               <hr class="w-full mb-2" />

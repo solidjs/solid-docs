@@ -38,7 +38,7 @@ export const NavHeader = (props: {
     <nav
       aria-label="Docs header navigation"
       role="navigation"
-      class="bg-white dark:bg-solid-darkbg sticky top-0 items-center w-full px-5 pt-8 pb-4"
+      class="bg-white dark:bg-solid-darkbg sticky top-0 items-center w-full px-5 pt-8 pb-4 z-1"
     >
       <div class="flex items-center justify-between">
         <NavLink

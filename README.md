@@ -2,7 +2,7 @@
 
 ![Tests](https://github.com/solidjs/solid-docs-next/actions/workflows/playwright.yml/badge.svg)
 
-This is the working repository for our new docs effort. The infrastructure is built on [SolidStart](https://github.com/solidjs/solid-start) and the content structure and goals are inspired by [Diataxis](https://diataxis.fr/) and the [React Beta Docs.](https://diataxis.fr/)
+This is the working repository for our new docs effort. The infrastructure is built on [SolidStart](https://github.com/solidjs/solid-start) and the content structure and goals are inspired by [Diataxis](https://diataxis.fr/) and the [React Beta Docs.](https://beta.reactjs.org/)
 
 ## Running the Site
 

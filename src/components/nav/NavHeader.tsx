@@ -42,6 +42,7 @@ export const NavHeader = (props: {
       <div class="flex items-center justify-between">
         <NavLink
           href={props.docsMode === "start" ? "/start" : "/"}
+          end={true}
           class="inline-flex space-x-1 text-xl font-normal items-center text-primary dark:text-primary-dark py-1 mr-0"
         >
           <Logo class="w-8 h-8 -mt-2 text-link dark:text-link-dark" />

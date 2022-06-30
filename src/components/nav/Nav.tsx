@@ -40,7 +40,6 @@ function TopMenu() {
   return (
     <aside class="w-full pt-4 lg:max-w-xs">
       <nav
-        role="navigation"
         class="scrolling-touch scrolling-gpu"
         style="--bg-opacity:0.2;"
       >

@@ -36,13 +36,13 @@ export const NavHeader = (props: {
 
   return (
     <nav
-      aria-label="Docs header navigation"
-      role="navigation"
+      aria-label="Docs header"
       class="bg-white dark:bg-solid-darkbg sticky top-0 items-center w-full px-5 pt-8 pb-4 z-1"
     >
       <div class="flex items-center justify-between">
         <NavLink
           href={props.docsMode === "start" ? "/start" : "/"}
+          end={true}
           class="inline-flex space-x-1 text-xl font-normal items-center text-primary dark:text-primary-dark py-1 mr-0"
         >
           <Logo class="w-8 h-8 -mt-2 text-link dark:text-link-dark" />

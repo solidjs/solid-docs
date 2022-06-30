@@ -15,7 +15,7 @@ export default function Footer() {
     <footer class="flex flex-col sm:flex-row justify-between pb-8 border-t-1 border-dotted pt-10">
       <HelpButton />
 
-      <a class="flex gap-2 hover:underline" href={url()}>
+      <a class="flex items-center gap-2 hover:underline" href={url()}>
         <IconEdit></IconEdit> Edit this page
       </a>
     </footer>

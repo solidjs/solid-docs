@@ -4,23 +4,24 @@ _Read the [Solid Docs Manifesto](https://github.com/solidjs/solid-docs-next#the-
 
 # Contributing to the Solid Docs
 
-We welcome contributions of any size and contributors of any skill level. As an open source project, we believe in giving back to our contributors. We are happy to help with guidance on PRs, technical writing, and turning any feature idea into a reality.
+We welcome contributions of any size and contributors of any skill level. As an open source project, we believe in giving back to our contributors. We are happy to help with guidance on PRs, technical writing, and turning a feature idea into a reality.
 
 > **Tip for new contributors:**
 > Take a look at [this GitHub guide](https://docs.github.com/en/get-started/quickstart/hello-world) to learn how to use Git and GitHub to contribute to open-source.
 
-
 ## Getting Started
 
-Our `#docs` channel on Discord is our home for general docs discussion. Feel free to introduce yourself there!
+Our `#docs` channel on [Discord](https://discord.com/invite/solidjs) is our home for general docs discussion. Feel free to introduce yourself there!
 
-[Submit a new GitHub Issue](https://github.com/solidjs/solid-docs-next/issues/new/choose) to propose a change or addition to the docs.
+### Using GitHub Issues
 
-Bugs must be reported as Issues; it isn't enough to tell us on Discord! 
+- [Submit a new GitHub Issue](https://github.com/solidjs/solid-docs-next/issues/new/choose) to propose a change or addition to the docs.
 
-GitHub Issues allow us to assign tasks and prioritize them, thanks to our [GitHub project board](https://github.com/solidjs/solid-docs-next/projects/1). This is our task management tool.
+- Bugs must be reported as Issues; it isn't enough to tell us on Discord! 
 
-Because this project is new, most of our Issues represent new content that must be created. If you're interested in writing new content—or editing content to our standards—be sure to read the [Writing Guide](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md) before contributing.
+- GitHub Issues allow us to assign tasks and prioritize them, thanks to our [GitHub project board](https://github.com/solidjs/solid-docs-next/projects/1). This is our task management tool.
+
+- Because this project is new, most of our Issues represent new content that must be created. If you're interested in writing new content—or editing content to our standards—be sure to read the [Writing Guide](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md) before contributing.
 
 ### Do you need to know Solid to contribute?
 
@@ -36,62 +37,65 @@ If you don't _yet_ know how to use Solid, but you're learning, here's how you ca
 
 That said, if you want to contribute to open-source but aren't interested in Solid or documentation, we'd be happy to help you find an open-source project that suits you.
 
-## Finding something to work on
+## Finding Something to Work On
 
-To find something to help with, check out our [existing Issues](https://github.com/solidjs/solid-docs-next/issues). You can sort by labels, which categorize the issues.
+To find something to help with, check out our [existing Issues](https://github.com/solidjs/solid-docs-next/issues). We're also happy to help you find something that suits you: ask a member of the Docs Team on [Discord](https://discord.com/invite/solidjs) to help get you situated.
 
-We have a label for each [Content Type](https://github.com/solidjs/solid-docs-next/issues). For example, you know you prefer to work on deep concept explanations, you can choose the `concept` label.
+### Issue Labels
+You can sort by labels, which categorize the issues. These include:
+- a label for each of the four [content types](https://github.com/solidjs/solid-docs-next/issues). For example, you know you prefer to work on deep concept explanations, you can choose the `concept` label.
+- `new content` for when something needs to be written from scratch.
+- `docs-migration` is used when content already exists but needs to be rewritten.
+- `infrastructure` for technical changes; great if you're interested in diving into our codebase
+- `advanced-experience` for issues that require advanced Solid knowledge to implement
+- `no-experience-needed` for issues that you can help with even if you don't have Solid knowledge
 
-We use the `new content` label when something needs to be written from scratch, and `docs-migration` when content already exists but needs to be rewritten.
+## Submitting a Pull Request
 
+> **Note**
+> If you've never submitted a pull request on GitHub before, check out [this overview](https://opensource.guide/how-to-contribute/#opening-a-pull-request).
 
+- Make sure your PR addresses an existing Issue.
+- Group your work so that one PR solves one problem.
+- Before you make a large PR, try to discuss it with the Docs Team on #docs. This will make sure we're on the same page and increase the chance of your PR getting merged. 
+on, as unsolicited material may not fit into our existing plans. 
+- When you make a PR, you get a Netlify preview link. If you're not done with your changes but want that link to share with us, feel free to make a draft PR and add `[Draft]` to the title.
 
-- The kanban board
-- The roadmap
+> **Note** Existing PRs and Issues need reviewing, triaging, and feedback, too! You can make valuable contributions by commenting, suggesting, testing, researching, brainstorming and generally helping in all areas on GitHub!
 
-- CATEGORIES:
+## Navigating the Codebase
 
-  - Content
-  - Structure
-  - Infrastructure
-  - Meta / Management
+Our site is build on [SolidStart](https://github.com/solidjs/solid-start). This is a framework that's still in development, so if you have any issues, check out the #docs or #solid-start channels on Discord. (In fact, the SolidStart team is working on documentation [within our repo](https://github.com/solidjs/solid-docs-next/tree/main/src/routes/start), too!)
 
-- TYPES:
+### Folder structure
 
-  - BUG (fix either a code bug or content typo / mistake)
-  - NEW (add a feature or section / piece of writing / proposal)
-  - REVISE
+The action happens in the `src` folder. Of note:
+- `src/components`: General components, like the sidebar navigation, footer, and Asides.
+- `src/routes`: Content pages and components that are specific to them. Within are folders corresponding to our [four content types](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md#content-types):
+  - `src/routes/tutorials`
+  - `src/routes/concepts`
+  - `src/routes/how-to-guides`
+  - `src/routes/api-reference`
+- `src/NAV_SECTIONS.ts`: This file determines the two sidebar navigation sections, **Guides** and **Reference**. **Guides** contains Tutorials and How-To Guides, and **Reference** contains Concept pages and API reference.
 
-- SOLID EXPERIENCE NEEDED:
-  - NONE
-  - LOW
-  - ADVANCEDs
-  - RYAN
+Every content page must have its own folder, even if it only has one page. For example, the Tracking concept page is one page, so it is found in an `index.md` file inside `routes/concepts/tracking`. The Getting Started with Solid tutorial has several pages, which are found inside `routes/tutorials/getting-started-with-solid`.
 
+These folders will automatically generate routes; so, `routes/tutorials/getting-started-with-solid/installing-solid` will be shown at `https://docs.solidjs.com/tutorials/getting-started-with-solid/installing-solid`.
 
-## Making a new issue
+If a content page has its own custom components and code snippets, place these inside its content folder. See [the Getting Started with Solid folder](https://github.com/solidjs/solid-docs-next/tree/main/src/routes/tutorials/getting-started-with-solid) for an example.
+ 
+> **Warning** There is also `start` folder in `src/routes`; it is a heavy work-in-progress managed by the SolidStart team and does not follow these rules. 
 
+### Adding New Content Pages
 
+1. Choose one of the four folders inside `src/routes/`, corresponding to your page's [content type](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md#content-types)
+2. Create a new folder inside that folder. The new folder's name should be the kebab case of your page's title: e.g., `getting-started-with-solid`.
+3. Add `mdx` files for each subpage. 
 
-Solve one issue at a time
+Feel free to submit a PR at this stage, and we can handle adding it to the nav. But if you'd like to do that:
 
+4. Open `NAV_SECTIONS.ts`. This will allow you to add your new page to the nav. If your page is a tutorial or how-to guide, edit the `GUIDES_SECTIONS` object; if it's a concept page, edit the `REFERENCE_SECTIONS` object. 
+5. Find the object key corresponding to your content type. Then, add a new object to its `pages` array.
+6. If your page doesn't have subpages, provide a `name` and a `link` property. (Search the file for "Tracking" for an example)
+7. If your page does subpages, provide a `name` property and a `pages` array which contains your subpages. (Search the file for "Getting Started with Solid" for an example)
 
-## How to contribute
-
-- How to use GitHub
-
-- How to use Discord
-
-- Code Style Guide
-
-- Writing Style Guide (probably a separate link)
-
-- Before you make a new feature / content PR, try to discuss it with other docs contributors on #docs! This will make sure we're on the same page and increase the chance of your PR getting merged.
-
-
-
-Submitting an Issue is usually the first step to making a change. After an Issue has been considered by the community, we often reach out to community members to encourage them to submit PRs based on existing Issues.
-
-Larger contributions to the docs are encouraged after consultation, as unsolicited material may not fit into our existing plans. 
-
-> Tip: Existing PRs and Issues need reviewing, triaging, and feedback, too! You can make valuable contributions by commenting, suggesting, testing, researching, brainstorming and generally helping in all areas on GitHub!

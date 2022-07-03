@@ -3,6 +3,13 @@ import { NavHeader } from "./NavHeader";
 import { Collapsable, NavItem } from "./NavSection";
 // import { Accordion } from "solid-headless";
 import { createEffect, createSignal, For, on, Show } from "solid-js";
+import {
+  GUIDES_SECTIONS,
+  REFERENCE_SECTIONS,
+  SECTIONS,
+  SECTION_LEAF_PAGE,
+  SECTION_PAGE,
+} from "~/NAV_SECTIONS";
 
 export default function Nav(props: { docsMode: "start" | "regular" }) {
   const [showMenu, setShowMenu] = createSignal(false);
@@ -39,10 +46,7 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
 function TopMenu() {
   return (
     <aside class="w-full pt-4 lg:max-w-xs">
-      <nav
-        class="scrolling-touch scrolling-gpu"
-        style="--bg-opacity:0.2;"
-      >
+      <nav class="scrolling-touch scrolling-gpu" style="--bg-opacity:0.2;">
         <Routes>
           <Route path="/reference/**/*" component={ReferenceNav} />
           <Route path="/guides/**/*" component={GuidesNav} />
@@ -160,112 +164,6 @@ function StartMenu() {
     </ul>
   );
 }
-
-type SECTION_LEAF_PAGE = {
-  name: string;
-  link: string;
-};
-
-type SECTION_PAGE = {
-  name: string;
-  pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>;
-};
-
-type SECTIONS = {
-  [key: string]: {
-    name: string;
-    // If this exists, then when the user clicks on the name of the section, it will direct here
-    link?: string;
-    pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>;
-  };
-};
-
-const REFERENCE_SECTIONS: SECTIONS = {
-  concepts: {
-    name: "Concepts",
-    pages: [
-      {
-        name: "Tracking",
-        link: "/concepts/tracking",
-      },
-    ],
-  },
-  api: {
-    name: "API Reference",
-    pages: [
-      {
-        name: "Coming Soon",
-        link: "/api-reference",
-      },
-    ],
-  },
-  // concepts: {
-  //   header: "Concepts",
-  //   link: "/reference/tracking",
-  //   subsections: [
-  //     {
-  //       header: "Tracking",
-  //       link: "/reference/tracking",
-  //     },
-  //   ]
-  // },
-};
-
-const GUIDES_SECTIONS: SECTIONS = {
-  tutorials: {
-    name: "Tutorials",
-    pages: [
-      {
-        name: "Getting Started with Solid",
-        // navigating to /guides/getting-started-with-solid takes you to /guides/getting-started-with-solid/welcome
-        pages: [
-          {
-            name: "Welcome",
-            link: "/tutorials/getting-started-with-solid/welcome",
-          },
-          {
-            name: "Installing Solid",
-            link: "/tutorials/getting-started-with-solid/installing-solid",
-          },
-          {
-            name: "Building UI with Components",
-            link: "/tutorials/getting-started-with-solid/building-ui-with-components",
-          },
-          {
-            name: "Adding Interactivity with State",
-            link: "/tutorials/getting-started-with-solid/adding-interactivity-with-state",
-          },
-          {
-            name: "Control Flow",
-            link: "/tutorials/getting-started-with-solid/control-flow",
-          },
-          {
-            name: "Fetching Data",
-            link: "/tutorials/getting-started-with-solid/fetching-data",
-          },
-        ],
-      },
-    ],
-  },
-  howTos: {
-    name: "How-To Guides",
-    pages: [
-      {
-        name: "Get Ready for Solid",
-        pages: [
-          {
-            name: "Welcome",
-            link: "/how-to-guides/get-ready-for-solid/",
-          },
-          {
-            name: "JavaScript for Solid",
-            link: "/how-to-guides/get-ready-for-solid/javascript-for-solid",
-          },
-        ],
-      },
-    ],
-  },
-};
 
 function ReferenceNav() {
   return <SectionNav sections={REFERENCE_SECTIONS} />;

@@ -57,8 +57,7 @@ You can sort by labels, which categorize the issues. These include:
 
 - Make sure your PR addresses an existing Issue.
 - Group your work so that one PR solves one problem.
-- Before you make a large PR, try to discuss it with the Docs Team on #docs. This will make sure we're on the same page and increase the chance of your PR getting merged. 
-on, as unsolicited material may not fit into our existing plans. 
+- Before you make a large PR, try to discuss it with the Docs Team on #docs. This will make sure we're on the same page and increase the chance of your PR getting merged on, as unsolicited material may not fit into our existing plans.
 - When you make a PR, you get a Netlify preview link. If you're not done with your changes but want that link to share with us, feel free to make a draft PR and add `[Draft]` to the title.
 
 > **Note** Existing PRs and Issues need reviewing, triaging, and feedback, too! You can make valuable contributions by commenting, suggesting, testing, researching, brainstorming and generally helping in all areas on GitHub!

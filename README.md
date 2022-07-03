@@ -17,7 +17,7 @@ npm run dev
 
 ## Contributing
 
-(Contributing guide and writing guide in progress!)
+We're looking for new contributors! Please check out our [Contributing Guide](https://github.com/solidjs/solid-docs-next/blob/main/CONTRIBUTING.md) to get started. If you're interested in writing and editing content, please read our [Writing Guide](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md).
 
 ## The Solid Docs Manifesto
 

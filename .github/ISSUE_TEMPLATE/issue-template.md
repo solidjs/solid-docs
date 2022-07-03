@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-A good issue _descriptive_ and _explanatory_: it describes precisely what should change and why that change should happen.
+A good issue is _descriptive_ and _explanatory_: it describes precisely what should change and why that change should happen.
 
 **For reporting bugs and problems with content, include:**
 

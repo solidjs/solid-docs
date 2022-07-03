@@ -12,7 +12,7 @@ A good issue is _descriptive_ and _explanatory_: it describes precisely what the
 **For reporting bugs and problems with content, include:**
 
 - A description of the problem
-- A link to the page that has the problem
+- A link to the page that has the problem (if it's on a specific page)
 - An explanation as to why this is a problem. Ideally, explain _who_ is affected by this. "It was confusing for me" _is_ a valid answer to this!
 - A suggestion of a fix, if you have one in mind!
 

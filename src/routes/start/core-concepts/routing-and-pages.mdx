@@ -2,7 +2,7 @@ import { Aside } from "../../../components/FrameworkAside";
 
 <Title>Routing & pages</Title>
 
-Routing is the foundation of SolidStart. SolidStart uses the [Solid App Router](https://github.com/solidjs/solid-app-router) and enables _isomorphic routing_: the ability to write routes code once and have it work on both the server and client. In this section, you'll learn how to write basic routes, navigate between routes, and handle more complex/dynamic routing scenarios.
+Routing is the foundation of SolidStart. SolidStart uses the [Solid App Router](https://github.com/solidjs/solid-app-router) behind the scenes and enables _isomorphic routing_: the ability to write routes code once and have it work on both the server and client. In this section, you'll learn how to write basic routes, navigate between routes, and handle more complex/dynamic routing scenarios.
 
 ## Creating a route
 
@@ -10,9 +10,9 @@ SolidStart uses file system-based routing. This means that the directory path of
 
 Here are a few examples of files in our directory structure and how they would translate to application routes:
 
-- `/src/root/index.tsx` -> mysite.com
-- `/src/root/admin/index.tsx` -> mysite.com/admin
-- `/src/root/admin/edit-settings.tsx` -> mysite.com/admin/edit-settings
+- `/src/routes/index.tsx` -> mysite.com
+- `/src/routes/admin/index.tsx` -> mysite.com/admin
+- `/src/routes/admin/edit-settings.tsx` -> mysite.com/admin/edit-settings
 
 Under the hood, SolidStart is able to traverse this directory structure, automatically collect all the routes, and populate the `<Routes />` component in the `src/root.tsx` file. This means that all you have to do is create a route in your directory structure and SolidStart takes care of everything else needed to make that route available to visit in your application!
 
@@ -68,21 +68,54 @@ If you have used Solid App Router in a SolidJS app before, you may notice that t
 
 - Redirecting with `<Navigate />` (works on client and server)
 
-## Creating dynamic routes
+## Dynamic routes
 
+<Aside type="advanced" title="For users of solid-app-router">
+
+The file based route syntax dramatically differs from that of solid-app-router and some features are missing.
+
+</Aside>
+
+In some cases, it would be horribly inefficient to create each route manually. When you are dealing with dynamic content, it only makes sense to use dynamic routes!
+
+### Route parameters
+
+In solid-start, route parameters are defined in the file name. The most basic type of route parameter is enclosed in brackets, like `[id].tsx`. parameters acts as a placeholder for any string. There can be multiple parameters for a single file, but you should ensure there is a delimiter between those parameters.
+
+```
+src/
+├── routes/
+│   ├── @[username]/
+│   │   ├── index.tsx
+│   │   ├── [post].tsx
+```
+  
+### Catch-all routes
+
+For routes, any subpath invalidates that route (with the noatable exception of folders). This behavior is often what we want, but not always. `/sometimes/nesting/forever/and/ever/is/ok`. For this, solid-start offers catch-all routes.
+
+Catch-all routes are defined like `[...id].tsx`. A common use of catch-all routes is a 404 page. You want the route to apply everywhere so you define the catch-all route at the root, and if nothing more specific matches, the 404 route will.
+
+### Accessing route parameters
+
+Naturally, there is little use to dynamic routes if there is no way to provide dynamic content in response. To do so, you need to have a way to access the contents of each parameter.
+
+Solid-app-router exports `useParams()`, a function that retrieves a reactive, store-like object that holds the route's parameters and their values.
+
+```tsx
+import { useParams } from "solid-app-router";
+
+const params = useParams();
+
+return (<p>username: {params.username}</p>)
+```
+
+- routeData, accessing parent route data
+  - Throwing in route data
 - Search query params (not sure yet optimal API for this)
-
 - Instructions for creating basic pages
 - Nested routes (e.g., `auth.tsx` vs `auth/login.tsx`)
   - Talk about using route data function in parent route
-- Catch-all/404 pages
-
-## Dynamic routes
-
-- Pages with route parameters
-  - File naming, accessing route params
-- routeData, accessing parent route data
-  - Throwing in route data
 
 ## Status codes, headers, and other parts of the response
 

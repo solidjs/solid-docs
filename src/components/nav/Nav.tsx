@@ -1,6 +1,6 @@
 import { NavLink, Route, Routes, useLocation } from "solid-app-router";
 import { NavHeader } from "./NavHeader";
-import { Collapsable, NavItem } from "./NavSection";
+import { Collapsible, NavItem } from "./NavSection";
 // import { Accordion } from "solid-headless";
 import { createEffect, createSignal, For, on, Show } from "solid-js";
 import {
@@ -209,14 +209,14 @@ function SectionsNavIterate(props: {
           </Show>
           <Show when={(subsection as SECTION_PAGE).pages}>
             <ul>
-              <Collapsable
+              <Collapsible
                 header={subsection.name}
                 startCollapsed={isCollapsed((subsection as SECTION_PAGE).pages)}
               >
                 <SectionsNavIterate
                   pages={(subsection as SECTION_PAGE).pages}
                 />
-              </Collapsable>
+              </Collapsible>
             </ul>
           </Show>
         </>

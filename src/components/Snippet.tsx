@@ -29,7 +29,7 @@ const Container = (props: PropsWithChildren) => {
             setConfig((c) => ({ ...c, codeFormat: "tsx" }));
           }}
         >
-          Typescript
+          TypeScript
         </button>
       </div>
       {props.children}

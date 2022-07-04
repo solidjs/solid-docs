@@ -51,7 +51,7 @@ export const CodeTabs = (props: ICodeTabsProps) => {
             {(format: "jsx" | "tsx") => (
               <button
                 aria-label={`Change code examples to ${
-                  format === "jsx" ? "JavaScript" : "typescript"
+                  format === "jsx" ? "JavaScript" : "TypeScript"
                 }`}
                 classList={{
                   "py-2 px-3 rounded": true,

@@ -135,7 +135,7 @@ Let's create a form that has inputs for email and password. This form uses the [
 
 Before we execute the logic to handle the form submission, we should check the user's submission for any invalid fields. We want to do this on the server itself, so we can be sure that nobody is using our APIs from outside the web client. We can do this inside the `server function`.
 
-Let's add a check for the message being atleast 10 characters long.
+Let's add a check for the message being at least 10 characters long.
 
 ```tsx twoslash {4-10}
 // @include: main

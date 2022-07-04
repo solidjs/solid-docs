@@ -7,9 +7,9 @@ export function CollapsedIcon(props) {
   return <div class={"duration-100 ease-in transition" + props.class}>▼</div>;
 }
 
-type CollapsableProps = ParentProps<{ startCollapsed?: boolean, header: string }>
+type CollapsibleProps = ParentProps<{ startCollapsed?: boolean, header: string }>
 
-export function Collapsable(props: CollapsableProps) {
+export function Collapsible(props: CollapsibleProps) {
   
   const [collapsed, setCollapsed] = createSignal(props.startCollapsed || false);
 

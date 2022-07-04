@@ -17,13 +17,13 @@ export const Preferences = () => {
   return (
     <>
       <RadioGroup
-        legend="Do you prefer JavaScript or Typescript?"
+        legend="Do you prefer JavaScript or TypeScript?"
         name="codeFormat"
         checked={config().codeFormat}
         onChange={configChange}
         radios={[
           { icon: <IconJs />, label: "JavaScript", value: "jsx" },
-          { icon: <IconTs />, label: "Typescript", value: "tsx" },
+          { icon: <IconTs />, label: "TypeScript", value: "tsx" },
         ]}
       />
       <RadioGroup

@@ -27,57 +27,56 @@ export default defineConfig({
         jsx: true,
         jsxImportSource: "solid-js",
         providerImportSource: "solid-mdx",
-        // rehypePlugins: [
-        //   rehypeSlug,
-        //   // [
-        //   //   rehypeAutolinkHeadings,
-        //   //   { behaviour: "append", test: ["h1", "h2", "h3"] },
-        //   // ],
-        //   [rehypeRaw, { passThrough: nodeTypes }],
-        // ],
-        // remarkPlugins: [
-        //   [
-        //     // @ts-ignore
-        //     remarkShikiTwoslash.default,
-        //     {
-        //       disableImplicitReactImport: true,
-        //       includeJSDocInHover: true,
-        //       // theme: "css-variables",
-        //       themes: ["github-light", "github-dark"],
-        //       defaultCompilerOptions: {
-        //         allowSyntheticDefaultImports: true,
-        //         esModuleInterop: true,
-        //         target: "ESNext",
-        //         lib: ["DOM", "ES2015"],
-        //         module: "ESNext",
-        //         jsxImportSource: "solid-js",
-        //         jsx: "preserve",
-        //         types: ["vite/client"],
-        //         paths: {
-        //           "~/*": ["./src/*"],
-        //         },
-        //       },
-        //     },
-        //   ],
-        // ],
+        rehypePlugins: [
+          rehypeSlug,
+          // [
+          //   rehypeAutolinkHeadings,
+          //   { behaviour: "append", test: ["h1", "h2", "h3"] },
+          // ],
+          [rehypeRaw, { passThrough: nodeTypes }],
+        ],
+        remarkPlugins: [
+          [
+            // @ts-ignore
+            remarkShikiTwoslash.default,
+            {
+              disableImplicitReactImport: true,
+              includeJSDocInHover: true,
+              // theme: "css-variables",
+              themes: ["github-light", "github-dark"],
+              defaultCompilerOptions: {
+                allowSyntheticDefaultImports: true,
+                esModuleInterop: true,
+                target: "ESNext",
+                lib: ["DOM", "ES2015"],
+                module: "ESNext",
+                jsxImportSource: "solid-js",
+                jsx: "preserve",
+                types: ["vite/client"],
+                paths: {
+                  "~/*": ["./src/*"],
+                },
+              },
+            },
+          ],
+        ],
       }),
       enforce: "pre",
     },
-
-    // {
-    //   name: "twoslash-fix-lsp-linebreaks",
-    //   transform: (code, id) => {
-    //     if (id.endsWith(".md") || id.endsWith(".mdx")) {
-    //       return {
-    //         code: code.replace(/lsp="([^"]*)"/g, (match, p1) => {
-    //           return `lsp={\`${p1.replaceAll("`", `\\\``)}\`}`;
-    //         }),
-    //       };
-    //     }
-    //     return { code };
-    //   },
-    //   enforce: "pre",
-    // },
+    {
+      name: "twoslash-fix-lsp-linebreaks",
+      transform: (code, id) => {
+        if (id.endsWith(".md") || id.endsWith(".mdx")) {
+          return {
+            code: code.replace(/lsp="([^"]*)"/g, (match, p1) => {
+              return `lsp={\`${p1.replaceAll("`", `\\\``)}\`}`;
+            }),
+          };
+        }
+        return { code };
+      },
+      enforce: "pre",
+    },
     WindiCSS({
       config: {
         darkMode: "class",

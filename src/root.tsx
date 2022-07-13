@@ -1,7 +1,7 @@
 // @refresh reload
-import { Links, Meta, Routes, Scripts } from "solid-start/root";
-import cookie from "cookie";
-
+import { Links, Meta, FileRoutes, Scripts } from "solid-start/root";
+import { Routes } from "solid-app-router";
+import { parseCookie } from "solid-start/session";
 import "./code.css";
 import "virtual:windi.css";
 
@@ -17,31 +17,17 @@ import Nav from "./components/nav/Nav";
 import md from "./md";
 import { createRenderEffect, Suspense, useContext } from "solid-js";
 import { Main } from "./components/Main";
-import { StartContext } from "solid-start/server";
+import { HttpHeader, ServerContext } from "solid-start/server";
 import { isServer } from "solid-js/web";
 import { useLocation } from "solid-app-router";
 
-function PageHeaders(props: { headers: Object }) {
-  const ctx = useContext(StartContext);
-
-  createRenderEffect(() => {
-    if (isServer) {
-      Object.entries(props.headers).forEach(([key, value]) => {
-        ctx.responseHeaders.set(key, value);
-      });
-    }
-  });
-
-  return null;
-}
-
 function useCookies() {
-  const context = useContext(StartContext);
+  const context = useContext(ServerContext);
   const cookies = isServer
     ? context.request.headers.get("Cookie")
     : document.cookie;
 
-  return cookie.parse(cookies ?? "");
+  return parseCookie(cookies ?? "");
 }
 
 function useCookieConfig(): Config {
@@ -79,7 +65,7 @@ export default function Root() {
         />
         <Meta />
         <Links />
-        <PageHeaders headers={{ "x-robots-tag": "nofollow" }} />
+        <HttpHeader headers={{ "x-robots-tag": "nofollow" }} />
       </head>
       <body class="font-sans antialiased text-lg bg-white dark:bg-solid-darkbg text-black dark:text-white leading-base min-h-screen lg:flex lg:flex-row">
         <Suspense>
@@ -94,7 +80,9 @@ export default function Root() {
                 </button>
                 <Nav docsMode={docsMode()} />
                 <Main ref={mainRef}>
-                  <Routes />
+                  <Routes>
+                    <FileRoutes />
+                  </Routes>
                 </Main>
               </MDXProvider>
             </PageStateProvider>

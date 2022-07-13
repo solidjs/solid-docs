@@ -1,23 +1,36 @@
 import { NavLink, useLocation } from "solid-app-router";
 
 import { usePageState } from "../PageStateContext";
-import { For, Show, createSignal, ParentProps, createUniqueId, createEffect } from "solid-js";
+import {
+  For,
+  Show,
+  createSignal,
+  ParentProps,
+  createUniqueId,
+  createEffect,
+} from "solid-js";
 
 export function CollapsedIcon(props) {
   return <div class={"duration-100 ease-in transition" + props.class}>▼</div>;
 }
 
-type CollapsibleProps = ParentProps<{ startCollapsed?: boolean, header: string }>
+type CollapsibleProps = ParentProps<{
+  startCollapsed?: boolean;
+  header: string;
+}>;
 
 export function Collapsible(props: CollapsibleProps) {
-  
   const [collapsed, setCollapsed] = createSignal(props.startCollapsed || false);
 
   const id = createUniqueId();
 
   return (
     <li value={props.header} class="mt-2">
-      <SectionHeader collapsed={collapsed()} onClick={() => setCollapsed(prev => !prev)} panelId={id}>
+      <SectionHeader
+        collapsed={collapsed()}
+        onClick={() => setCollapsed((prev) => !prev)}
+        panelId={id}
+      >
         {props.header}
       </SectionHeader>
       <Show when={!collapsed()}>
@@ -27,8 +40,13 @@ export function Collapsible(props: CollapsibleProps) {
   );
 }
 
-function SectionHeader(props: ParentProps<{ collapsed: boolean, panelId: string, onClick: () => void }>) {
-
+function SectionHeader(
+  props: ParentProps<{
+    collapsed: boolean;
+    panelId: string;
+    onClick: () => void;
+  }>
+) {
   return (
     <h3>
       <button
@@ -37,23 +55,20 @@ function SectionHeader(props: ParentProps<{ collapsed: boolean, panelId: string,
         aria-expanded={!props.collapsed}
         aria-controls={props.panelId}
       >
-        <>
-          {props.children}
-          <span class={`pr-1`}>
-            <CollapsedIcon
-              class={`flex-0 transform ${
-                props.collapsed ? "-rotate-90 -translate-y-px" : "rotate-0"
-              }`}
-            />
-          </span>
-        </>
+        {props.children}
+        <span class={`pr-1`}>
+          <CollapsedIcon
+            class={`flex-0 transform ${
+              props.collapsed ? "-rotate-90 -translate-y-px" : "rotate-0"
+            }`}
+          />
+        </span>
       </button>
     </h3>
   );
 }
 
-function SectionPanel(props: ParentProps<{id: string}>) {
-  
+function SectionPanel(props: ParentProps<{ id: string }>) {
   return (
     <ul
       id={props.id}
@@ -66,10 +81,9 @@ function SectionPanel(props: ParentProps<{id: string}>) {
 }
 
 export function NavItem(props) {
-
-  const isActive = () => { 
+  const isActive = () => {
     return props.href === useLocation().pathname;
-  }
+  };
 
   // createEffect ( () => {
   //   console.log( {href: props.href, path: useLocation().pathname });

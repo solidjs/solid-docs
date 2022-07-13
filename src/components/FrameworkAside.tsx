@@ -73,7 +73,7 @@ const asideDefinition: () => Record<
   warning: {
     title: "Warning",
     logo: <IconAlertDecagram {...logoProps} />,
-    bgColor: 'rgb(223 109 54)'
+    bgColor: '#eab308'
   },
   advanced: { title: "Advanced concepts", logo: <IconBrain {...logoProps} /> },
   general: { title: null, logo: <IconBulb {...logoProps} /> },

@@ -47,7 +47,12 @@ const logoProps = { "font-size": "1.2rem" };
 
 const asideDefinition: () => Record<
   AsideType,
-  { title: string | null; logo: JSX.Element, bgColor?: string }
+  {
+    title: string | null;
+    logo: JSX.Element,
+    bgColor?: string,
+    preferDarkText?: boolean
+  }
 > = () => ({
   react: {
     title: "Since you're coming from React",
@@ -73,7 +78,8 @@ const asideDefinition: () => Record<
   warning: {
     title: "Warning",
     logo: <IconAlertDecagram {...logoProps} />,
-    bgColor: '#eab308'
+    bgColor: '#eab308',
+    preferDarkText: true
   },
   advanced: { title: "Advanced concepts", logo: <IconBrain {...logoProps} /> },
   general: { title: null, logo: <IconBulb {...logoProps} /> },
@@ -85,12 +91,14 @@ interface IAsideProps {
   collapsible?: boolean;
   title?: string;
   bgColor?: string;
+  preferDarkText: boolean;
 }
 
 export const Aside = (props: PropsWithChildren<IAsideProps>) => {
   const [showContent, setShowContent] = createSignal(!props.collapsible);
   const definition = asideDefinition()[props.type || "general"];
   const bgColor = () => props.bgColor || definition.bgColor || false
+  const preferDark = () => props.preferDarkText || definition.preferDarkText || false
   const title = () => props.title || definition.title;
   const logo = () => definition.logo;
 
@@ -98,7 +106,7 @@ export const Aside = (props: PropsWithChildren<IAsideProps>) => {
     <Show when={props.show !== false}>
       <div
         aria-live="polite"
-        class={`flex aside p-5 rounded mt-10 mb-14 text-white${bgColor() ? '' : ' bg-solid-medium dark:bg-darkdefault'} gap-2`} style={`${bgColor() ? `background-color: ${bgColor()}` : ''}`}
+        class={`flex aside p-5 rounded mt-10 mb-14${preferDark() ? ' text-black' : ' text-white'}${bgColor() ? '' : ' bg-solid-medium dark:bg-darkdefault'} gap-2`} style={`${bgColor() ? `background-color: ${bgColor()}` : ''}`}
       >
         <div class="my-3">{logo()}</div>
         <div>

@@ -1,0 +1,17 @@
+{
+  "files": [
+    {
+      "name": "main",
+      "content": "import { render } from \"solid-js/web\";\nimport { onMount, onCleanup } from \"solid-js\";\n\nimport Canvas from \"./canvas\";\n\nfunction App() {\n  let canvas;\n  onMount(() => {\n    const ctx = canvas.getContext(\"2d\");\n    let frame = requestAnimationFrame(loop);\n\n    function loop(t) {\n      frame = requestAnimationFrame(loop);\n\n      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);\n\n      for (let p = 0; p < imageData.data.length; p += 4) {\n        const i = p / 4;\n        const x = i % canvas.width;\n        const y = (i / canvas.height) >>> 0;\n\n        const r = 64 + (128 * x) / canvas.width + 64 * Math.sin(t / 1000);\n        const g = 64 + (128 * y) / canvas.height + 64 * Math.cos(t / 1000);\n        const b = 128;\n\n        imageData.data[p + 0] = r;\n        imageData.data[p + 1] = g;\n        imageData.data[p + 2] = b;\n        imageData.data[p + 3] = 255;\n      }\n\n      ctx.putImageData(imageData, 0, 0);\n    }\n\n    onCleanup(() => cancelAnimationFrame(frame));\n  });\n\n  return <Canvas ref={canvas} />;\n}\n\nrender(() => <App />, document.getElementById(\"app\"));\n"
+    },
+    {
+      "name": "canvas",
+      "content": "import \"./style.css\";\n\nexport default function Canvas(props) {\n  return <canvas width=\"256\" height=\"256\" />;\n}\n"
+    },
+    {
+      "name": "style",
+      "type": "css",
+      "content": "canvas {\n  background-color: #666;\n  -webkit-mask: url(https://dev.solidjs.com/img/logo/dark-without-wordmark/logo.svg) 50% 50% no-repeat;\n  mask: url(https://dev.solidjs.com/img/logo/dark-without-wordmark/logo.svg) 50% 50% no-repeat;\n}"
+    }
+  ]
+}

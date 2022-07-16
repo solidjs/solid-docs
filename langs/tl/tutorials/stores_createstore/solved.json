@@ -1,0 +1,8 @@
+{
+  "files": [
+    {
+      "name": "main",
+      "content": "import { render } from \"solid-js/web\";\nimport { For } from \"solid-js\";\nimport { createStore } from \"solid-js/store\";\n\nconst App = () => {\n  let input;\n  let todoId = 0;\n  const [store, setStore] = createStore({ todos: [] })\n  const addTodo = (text) => {\n    setStore(\"todos\", todos => [...todos, { id: ++todoId, text, completed: false }]);\n  }\n  const toggleTodo = (id) => {\n    setStore(\"todos\", todo => todo.id === id, \"completed\", completed => !completed);\n  }\n\n  return (\n    <>\n      <div>\n        <input ref={input} />\n        <button\n          onClick={(e) => {\n            if (!input.value.trim()) return;\n            addTodo(input.value);\n            input.value = \"\";\n          }}\n        >\n          Add Todo\n        </button>\n      </div>\n      <For each={store.todos}>\n        {(todo) => {\n          const { id, text } = todo;\n          console.log(`Creating ${text}`)\n          return <div>\n            <input\n              type=\"checkbox\"\n              checked={todo.completed}\n              onchange={[toggleTodo, id]}\n            />\n            <span\n              style={{ \"text-decoration\": todo.completed ? \"line-through\" : \"none\" }}\n            >{text}</span>\n          </div>\n        }}\n      </For>\n    </>\n  );\n};\n\nrender(App, document.getElementById(\"app\"));\n"
+    }
+  ]
+}

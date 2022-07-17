@@ -83,7 +83,7 @@ setReady(true);
 console.assert(ready() === true);
 ```
 
-코드가 배치 혹은 트랜지션(예: 라이브러리 코드)으로 실행될지 확실하지 않다면, 이러한 가정은 피해야 합니다.
+코드가 batch 혹은 transition(예: 라이브러리 코드)으로 실행될지 확실하지 않다면, 이러한 가정은 피해야 합니다.
 
 ##### Options
 
@@ -162,7 +162,7 @@ createEffect((prev) => {
 
 이펙트 함수의 _첫 번째_ 실행은 바로 실행되지 않으며, 현재 렌더링 단계 이후에 실행되도록 예약됩니다(예: [`render`](#render), [`createRoot`](#createroot), [`runWithOwner`](#runwithowner) 에 전달된 함수를 호출한 후).
 첫 번째 실행시까지 대기하려면, 브라우저가 DOM을 렌더링하기 전에 실행되는 [`queueMicrotask`](https://developer.mozilla.org/en-US/docs/Web/API/queueMicrotask) 를 사용하거나, 브라우저 렌더링 후에 실행되는 `await Promise.resolve()` 혹은 `setTimeout(..., 0)` 을 사용하세요.
-첫 번째 실행 후, 이펙트는 일반적으로 디펜던시가 업데이트될 때 즉시 실행됩니다([batch](#batch) 혹은 [transition](#use-transition)인 경우는 예외입니다). 
+첫 번째 실행 후, 이펙트는 일반적으로 디펜던시가 업데이트될 때 즉시 실행됩니다([batch](#batch) 혹은 [transition](#use-transition)인 경우는 예외입니다).
 예를 들어:
 
 ```js
@@ -195,7 +195,7 @@ queueMicrotask(() => {
 특히, [`ref`](#ref) 는 이미 설정된 상태가 됩니다.
 따라서 이펙트를 사용해 DOM을 수동으로 조작하거나, 바닐라 JS 라이브러리를 호출하거나, 다른 사이드 이펙트를 일으킬 수 있습니다.
 
-이펙트의 첫 번째 실행은 브라우저가 DOM을 렌더링하기 전에 실행됩니다(리액트의 `createLayoutEffect`와 유사합니다).
+이펙트의 첫 번째 실행은 브라우저가 DOM을 렌더링하기 전에 실행됩니다(리액트의 `useLayoutEffect`와 유사합니다).
 렌더링 후까지 대기해야 하는 경우 (예: 렌더링 시간 측정), `await Promise.resolve()` (혹은 `Promise.resolve().then(...)`)를 사용할 수 있지만, 시그널 같은 리액티브 상태를 사용하게 되면 재실행을 위한 이펙트가 트리거되지 않게 됩니다. 이는 `async` 함수가 `await`를 사용한 후에는 추적이 불가능하기 때문입니다.
 따라서 promise 전에 모든 디펜던시를 사용해야 합니다.
 
@@ -330,7 +330,7 @@ const [data, { mutate, refetch }] = createResource(sourceSignal, fetchData);
 `mutate`를 호출해 `data` 시그널을 직접 업데이트((다른 시그널 setter 처럼 동작)할 수 있습니다.
 `refetch`를 호출해 fetcher를 직접 다시 실행하고, `refetch(info)`와 같이 옵셔널 인수를 전달하여 fetcher에 추가 정보를 제공할 수 있습니다: .
 
-`data`는 일반 시그널 getter처럼 작동합니다: `data()`를 사용해 `fetchData`의 마지막 반환 값을 읽습니다. 
+`data`는 일반 시그널 getter처럼 작동합니다: `data()`를 사용해 `fetchData`의 마지막 반환 값을 읽습니다.
 하지만 두 가지 추가 리액티브 속성이 있습니다: `data.loading`은 fetcher가 호출되었지만 아직 반환되지 않았는지를 알려주며, `data.error`는 요청에 에러가 발생했는지 알려줍니다; 에러에는 fetcher에서 발생한 오류도 포합됩니다. (참고: 에러가 예상된다면, [ErrorBoundary](#<errorboundary>)에 `createResource`를 래핑할 수 있습니다.)
 
 **1.4.0** 버전에서는, `data.latest`는 마지막으로 반환된 값을 반환하며, [Suspense](#<suspense>)와 [트랜지션](#usetransition)을 트리거하지 않습니다; 아직 값이 반환된 적이 없다면, `data.latest`는 `data()`와 동일하게 작동합니다. 이는 새 데이터를 로딩하는 도중에는 이전 데이터를 보여주고자 하는 경우 유용합니다.
@@ -348,7 +348,7 @@ async function fetchData(source, { value, refetching }) {
   //`source`: 소스 시그널의 현재 값을 알려줍니다;
   //`value`: fetcher의 마지막 반환값을 알려줍니다;
   //`refetching`: fetcher가 `refetch()`를 호출해 트리거될 때, 또는 `refetch(info)` 처럼 전달된 옵셔널 인수와 동일한 경우 true
-  
+
 
 const [data, { mutate, refetch }] = createResource(getQuery, fetchData);
 
@@ -442,7 +442,7 @@ function batch<T>(fn: () => T): T;
 
 불필요한 재계산을 막기 위해, 블럭 내에서의 업데이트 커밋을 마지막까지 미룹니다.
 이는 다음 행에서 읽는 값이 아직 업데이트되지 않았음을 의미합니다.
-[Solid 스토의](#createstore)의 set 메서드와 이펙트는 자동으로 해당 코드를 일괄 처리합니다.
+[Solid 스토어](#createstore)의 set 메서드, [Mutable 스토어](#createmutable)의 array 메서드, 이펙트는 자동으로 해당 코드를 일괄 처리합니다.
 
 ## `on`
 
@@ -530,7 +530,7 @@ function runWithOwner<T>(owner: Owner, fn: (() => void) => T): T;
 
 (올바른) 소유자를 갖는 것은 다음과 같은 두 가지 이유때문에 중요합니다:
 
-- 소유자가 없는 계산은 삭제할 수 없습니다. 예를 들어, 소유자 없이 `createEffect`를 호출하게 되면(예: 전역 스코프), 이펙트는 소유자가 삭제될 때 같이 삭제되는 대신 영원히 실행됩니다. 
+- 소유자가 없는 계산은 삭제할 수 없습니다. 예를 들어, 소유자 없이 `createEffect`를 호출하게 되면(예: 전역 스코프), 이펙트는 소유자가 삭제될 때 같이 삭제되는 대신 영원히 실행됩니다.
 - [`useContext`](#usecontext)는 소유자 트리를 찾아 올라가면서 원하는 컨텍스트를 제공하는 가장 가까운 조상을 찾아 컨텍스트를 얻습니다. 따라서 소유자가 없으면 제공된 컨텍스트를 찾을 수 없으며, 잘못된 소유자가 있다면 잘못된 컨텍스트를 얻을 수 있습니다.
 
 소유자를 수동으로 설정하면, 소유자의 스코프 외부에서 반응성을 수행할 때 유용합니다.
@@ -616,7 +616,7 @@ function MyComponent(props) {
 <MyComponent a={1} b={2} c={3} d={4} e={5} foo="bar"/>
 function MyComponent(props) {
   console.log(props) // {a: 1, b: 2, c: 3, d: 4, e: 5, foo: "bar"}
-  const [vowels, consonants, leftovers] = splitProps(props, 
+  const [vowels, consonants, leftovers] = splitProps(props,
           ["a", "e"], ["b", "c", "d"]);
   console.log(vowels) // {a: 1, e: 5}
   console.log(consonants) // {b: 2, c: 3, d: 4}
@@ -807,6 +807,7 @@ import type { StoreNode, Store, SetStoreFunction } from "solid-js/store";
 function createStore<T extends StoreNode>(
   state: T | Store<T>
 ): [get: Store<T>, set: SetStoreFunction<T>];
+type Store<T> = T;  // 개념상 읽기 전용이지만, 타입은 그렇게 설정되지 않음
 ```
 
 create 함수는 초기 상태를 가져와 저장소에 래핑하고, 읽기 전용 프록시 객체와 setter 함수를 반환합니다.
@@ -828,6 +829,8 @@ setState("path", "to", "value", newValue);
 중첩된 객체에 액세스할 때 스토어는 중첩된 스토어 객체를 생성하며, 이는 트리 아래 끝까지 적용됩니다.
 하지만 이는 배열과 일반 객체에만 적용됩니다.
 클래스는 래핑되지 않기 때문에, `Date`, `HTMLElement`, `RegExp`, `Map`, `Set` 과 같은 객체는 스토어의 속성으로 세분화된 반응성을 제공하지 않습니다.
+
+#### 스토어에서의 배열
 
 **1.4.0** 버전에서는, 최상위 상태 객체는 배열이 될 수 있습니다. 이전 버전에서는 배열을 감싸는 객체를 사용해야 합니다:
 
@@ -852,12 +855,17 @@ const [state, setState] = createStore({
 <For each={state.todos}>{(todo) => <Todo todo={todo} />}<For>;
 ```
 
-```js
-// 목록을 상태 객체의 키에 저장
-const [state, setState] = createStore({ list: [] });
+스토어 안에 있는 배열을 변경하는 경우, 배열을 직접 구독하는 계산은 트리거되지 않습니다. 예를 들어:
 
-// 상태 객체의 `list` 속성에 액세스
-<For each={state.list}>{item => /*...*/}</For>
+```js
+createEffect(() => {
+  console.log(state.todos);
+});
+
+// 이펙트를 트리거하지 않습니다:
+setState(todos, state.todos.length, { id: 3 });
+// 배열의 레퍼런스가 변경되었기 때문에, 이펙트를 트리거합니다:
+setState("todos", (prev) => [...prev, { id: 3 }]);
 ```
 
 ### Getters
@@ -1060,7 +1068,7 @@ import { createMutable } from "solid-js/store";
 
 function createMutable<T extends StoreNode>(
   state: T | Store<T>,
-): Store<T> {
+): Store<T>;
 ```
 
 새로운 변경 가능한 스토어 프록시 객체를 생성합니다.
@@ -1100,20 +1108,64 @@ const user = createMutable({
 });
 ```
 
-부모 객체에서 프로퍼티를 추가하거나 삭제하면 예상치 못한 이펙트가 트리거됩니다.
-`createMutable`을 사용하면 Array와 같은 객체에서 이터레이션을 지원합니다.
+### `modifyMutable`
 
-```js
-let state = createMutable({ nested: { a: 1 } });
+**v1.4.0에서 추가**
 
-createEffect(
-  on(
-    () => state.nested.a,
-    () => console.log("could be unexpected")
-  )
-);
+```ts
+import { modifyMutable } from 'solid-js/store';
 
-setTimeout(() => (state.nested.b = 2)); // 이펙트 트리거
+function modifyMutable<T>(mutable: T, modifier: (state: T) => T): void;
+```
+
+이 헬퍼 함수는 단일 [`batch`](#batch)에서 ([`createMutable`](#createmutable)에서 반환하는) 변경 가능한 스토어를 여러 번 변경하는 것을 단순화함으로써, 의존관계에 있는 계산이 업데이트마다 실행되는 대신 한 번만 업데이트되도록 합니다.
+첫 번째 인수는 수정할 변경 가능한 스토어이며, 두 번째 인수는 [`reconcile`](#reconcile) 또는 [`produce`](#produce) 에서 반환된 것과 같은 스토어 수정자입니다.
+(커스텀 수정자 함수를 전달하는 경우, 해당 인수가 래핑되지 않은 스토어임을 조심해야 합니다.)
+
+예를 들어, 변경 가능한 여러 필드에 의존성이 있는 UI가 있다고 가정해 보겠습니다:
+
+```tsx
+const state = createMutable({
+  user: {
+    firstName: "John",
+    lastName: "Smith",
+  },
+});
+
+<h1>Hello {state.user.firstName + ' ' + state.user.lastName}</h1>
+```
+
+
+*n* 개의 필드를 순서대로 수정하게 되면, UI는 *n* 번 업데이트됩니다:
+
+```ts
+state.user.firstName = "Jake";  // 업데이트 트리거
+state.user.lastName = "Johnson";  // 또다른 업데이트 트리거
+```
+
+단 한 번만 업데이트를 트리거하려면, 필드를 `batch` 내에서 변경합니다:
+
+```ts
+batch(() => {
+  state.user.firstName = "Jake";
+  state.user.lastName = "Johnson";
+});
+```
+
+`modifyMutable` 를 `reconcile` 또는 `produce` 와 결합하면, 유사한 작업을 수행하는 두 가지 방법을 제공할 수 있습니다:
+
+```ts
+// state.user 를 지정한 객체로 교체 (다른 필드들은 모두 삭제)
+modifyMutable(state.user, reconcile({
+  firstName: "Jake",
+  lastName: "Johnson",
+});
+
+// batch에서 두 필드를 수정하며, 한 번의 업데이트만 트리거
+modifyMutable(state.user, produce((u) => {
+  u.firstName = "Jake";
+  u.lastName = "Johnson";
+});
 ```
 
 # Component APIs
@@ -1143,7 +1195,7 @@ export const CounterContext = createContext([{ count: 0 }, {}]);
 
 export function CounterProvider(props) {
   const [state, setState] = createStore({ count: props.count || 0 });
-  const store = [
+  const counter = [
     state,
     {
       increment() {
@@ -1156,7 +1208,7 @@ export function CounterProvider(props) {
   ];
 
   return (
-    <CounterContext.Provider value={store}>
+    <CounterContext.Provider value={counter}>
       {props.children}
     </CounterContext.Provider>
   );
@@ -1184,19 +1236,77 @@ const [state, { increment, decrement }] = useContext(CounterContext);
 
 ```ts
 import { children } from "solid-js";
+import type { JSX, ResolvedChildren } from "solid-js";
 
-function children(fn: () => any): () => any;
+function children(fn: () => JSX.Element): () => ResolvedChildren;
 ```
 
-`props.children`과 더 쉽게 상호 작용할 수 있도록 하는데 사용됩니다.
-이 헬퍼는 중첩된 반응성을 찾아서 메모를 반환합니다.
-JSX를 통해 직접 전달하는 것 이외에는 모두 `props.children`을 사용하는데 권장되는 방식입니다.
+`children` 헬퍼는 JSX에서 `{props.children}` 을 단 한 번만 사용해 다른 컴포넌트로 자식을 전달하는 경우를 제외한, 다른 모든 경우 `props.children` 과의 복잡한 상호 작용을 위한 것입니다.
+일반적으로 `props.children` 에 대한 getter를 다음과 같이 전달합니다:
 
 ```js
-const list = children(() => props.children);
+const resolved = children(() => props.children);
+```
 
-// do something with them
-createEffect(() => list());
+반환값은 자식을 나타내는 [memo](#creatememo) 이며, 자식이 변경될 때마다 업데이트됩니다.
+`props.children` 에 직접 접근하는 대신 memo를 사용하면, 일부 시나리오에서 몇 가지 중요한 이점이 있습니다.
+근본적인 문제는 JSX를 통해 컴포넌트 자식을 지정하는 경우, Solid는 자동으로 `props.children`을 프로퍼티 getter로 정의하며, 이로 인해 `props.children` 이 액세스될 때마다 자식이 생성(DOM이 생성)됩니다.
+이로 인한 두 가지 특징적인 결과는:
+
+- `props.children` 에 여러 번 액세스하면 자식(및 관련된 DOM)이 여러 번 생성됩니다.
+  이는 DOM을 복사하려는 경우에는 유용하지만(DOM 노드는 하나의 부모 엘리먼트에만 나타날 수 있음), 대부분의 경우 중복된 DOM 노드를 생성하게 됩니다.
+  대신 `resolved()` 를 여러 번 호출하게 되면, 같은 자식을 재사용하게 됩니다.
+- `props.children` 를 추적 범위 외부에서 (예: 이벤트 핸들러에서) 액세스하는 경우, 절대 정리되지 않는 자식을 생성하게 됩니다.
+  대신 `resolved()` 를 호출하면 자식을 재사용하게 됩니다.
+  또한 (다른 컴포넌트 같은) 다른 추적범위가 아닌, 현재 컴포넌트에서 자식이 추적되는 것을 보장합니다,
+
+또한 `children` 헬퍼는 인수가 없는 함수를 호출하고 2차원 배열을 1차원 배열로 평탄화하여 자식을 결정합니다.
+예를 들어, `{signal() * 2}`와 같이 JSX로 지정된 자식은 `props.children` 에서 getter 함수 `() => count() * 2` 로 래핑되지만, `count` 시그널에 따라 `resolved` 에서는 실제 숫자로 적절하게 평가됩니다.
+
+`props.children` 이 배열이 아닌 경우(JSX 태그가 자식을 하나만 가지는 경우), `children` 헬퍼는 이를 배열로 정규화하지 않습니다.
+이는 단일 함수를 자식으로 전달하려는 경우 유용한데, `typeof resolved() === 'function'` 을 통해 이를 감지할 수 있습니다.
+배열로 정규화하고 싶다면, `Array.isArray(resolved()) ? resolved() : [resolved()]` 처럼 사용할 수 있습니다.
+
+다음은 자식을 렌더링하는 것 외에도 `Element` 타입이 되는 모든 자식의 `class` 속성을 자동으로 설정하는 예입니다:
+
+```tsx
+const resolved = children(() => props.children);
+
+createEffect(() => {
+  let list = resolved();
+  if (!Array.isArray(list)) list = [list];
+  for (let child of list) child?.setAttribute?.("class", myClass());
+});
+
+return <div>{resolved()}</div>;
+```
+
+(이 방법은 별로 권장되지는 않습니다:
+일반적으로 props 또는 컨텍스트를 통해 원하는 클래스를 자식 컴포넌트로 전달하는 선언적 접근 방식을 따르는 것이 좋습니다.)
+
+반면에, JSX를 통해 `props.children`을 다른 컴포넌트나 엘리먼트에 전달하는 경우, `children` 헬퍼를 사용할 필요가 없습니다(경우에 따라서 원치 않는 경우도 있습니다).
+
+```tsx
+const Wrapper = (props) => {
+  return <div>{props.children}</div>;
+};
+```
+
+`children` 헬퍼의 중요한 측면은 `props.children`에 바로 액세스하므로 자식을 강제로 생성하고 결정해야 한다는 것입니다. 
+이는 [`<Show>`](#<show>) 컴포넌트 내에서 자식을 사용하는 것과 같은 조건부 렌더링시에는 바람직하지 않을 수 있습니다.
+예를 들어, 다음 코드는 항상 자식을 평가합니다:
+
+```tsx
+const resolved = children(() => props.children);
+
+return <Show when={visible()}>{resolved()}</Show>;
+```
+
+`<Show>`가 자식을 렌더링할 때만 자식을 평가하고 싶다면, 컴포넌트 내부 혹은 `<Show>` 내부 함수에서 `children` 호출을 푸시합니다. 이렇게 되면 `when` 조건이 true인 경우에만 자식을 평가합니다.
+또 다른 좋은 방법은 자식을 실제로 평가하고 싶은 경우에만 `props.children`을 `children` 헬퍼에 전달하는 것입니다:
+
+```ts
+const resolved = children(() => visible() && props.children);
 ```
 
 ## `lazy`
@@ -1395,15 +1505,15 @@ import { render } from 'solid-js/web';
 function render(code: () => JSX.Element, element: MountableElement): () => void;
 ```
 
-이 함수는 브라우저 앱 진입점입니다. 
+이 함수는 브라우저 앱 진입점입니다.
 마운트할 최상위 컴포넌트나 함수, 그리고 마운트할 대상 엘리먼트를 지정합니다.
-이 엘리먼트는 비워두는 것이 좋습니다: 
+이 엘리먼트는 비워두는 것이 좋습니다:
 `render` 실행 중에 자식을 추가하기 때문에, 반환되는 dispose 함수는 모든 자식들을 삭제합니다.
 
 ```js
 const dispose = render(App, document.getElementById("app"));
 // 또는
-const dispose = render(() => <App/>, document.getElementById("app")); 
+const dispose = render(() => <App/>, document.getElementById("app"));
 ```
 
 첫 번째 인수가 함수라는 것이 중요합니다:
@@ -1505,7 +1615,7 @@ const { readable, writable } = new TransformStream();
 renderToStream(App).pipeTo(writable);
 ```
 
-`onCompleteShell`은 스트림에 대한 첫 플러시를 브라우저에 쓰기전에, 동기 렌더링이 완료되면 실행됩니다.  
+`onCompleteShell`은 스트림에 대한 첫 플러시를 브라우저에 쓰기전에, 동기 렌더링이 완료되면 실행됩니다.
 `onCompleteAll`은 모든 서버 Suspense 경계가 해결되면 호출됩니다.
 `renderId` 는 여러 최상위 루트가 있는 경우 네임스페이스 렌더링에 사용됩니다.
 
@@ -1808,7 +1918,7 @@ function Portal(props: {
 }): Text;
 ```
 
-mount 노드에 컴포넌트를 삽입합니다. 
+mount 노드에 컴포넌트를 삽입합니다.
 페이지 레이아웃 외부에 모달을 삽입는데 유용하게 사용할 수 있으며, 이벤트는 컴포넌트 계층을 통해 전파됩니다.
 
 대상이 `HTMLHeadElement`가 아니라면 Portal 은 `<div>`에 마운트됩니다.
@@ -1884,24 +1994,24 @@ function App() {
 ## `classList`
 
 Solid는 엘리먼트의 `class`를 설정하기 위해 `class`와 `classList` 속성을 제공합니다.
- 
-먼저, 다른 속성들처럼 `class=...`를 사용합니다. 예를 들면: 
- 
-```jsx 
+
+먼저, 다른 속성들처럼 `class=...`를 사용합니다. 예를 들면:
+
+```jsx
 // 2개의 정적 class
-<div class="active editing" /> 
- 
+<div class="active editing" />
+
 // 필요없는 경우 class 속성을 삭제하는 하나의 동적 class
-<div class={state.active ? 'active' : undefined} /> 
- 
+<div class={state.active ? 'active' : undefined} />
+
 // 2개의 동적 class
-<div class={`${state.active ? 'active' : ''} ${state.currentId === row.id ? 'editing' : ''}} /> 
-``` 
- 
-(참고로 `className=...`는 Solid 1.4 부터 더 이상 사용되지 않습니다.) 
- 
+<div class={`${state.active ? 'active' : ''} ${state.currentId === row.id ? 'editing' : ''}} />
+```
+
+(참고로 `className=...`는 Solid 1.4 부터 더 이상 사용되지 않습니다.)
+
 대신 `classList` 속성을 사용하면 각 키는 class 이고, 해당 class 를 포함할지 여부를 나타내는 boolean 형식의 값을 가지는 객체를 지정할 수 있습니다.
-예를 들면 (위의 마지막 예제에 해당함): 
+예를 들면 (위의 마지막 예제에 해당함):
 
 ```jsx
 <div
@@ -1911,26 +2021,26 @@ Solid는 엘리먼트의 `class`를 설정하기 위해 `class`와 `classList` �
 
 이 예제는 해당 boolean 값이 변경될 때만 [`element.classList.toggle`](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/toggle) 을 동적으로 호출하여 각 class 를 켜거나 끄는 [렌더 이펙트](#createrendereffect)로 컴파일됩니다.
 예를 들어, `state.active`가 `true`가 되면, 엘리먼트는 `active` class를 얻게 됩니다.
- 
+
 `classList`에 전달되는 값은 적절한 객체로 평가되는 모든 표현식(시그널 getter 포함)이 가능합니다.
-몇 가지 예를 들면: 
- 
-```jsx 
+몇 가지 예를 들면:
+
+```jsx
 // 동적 class 이름, 값
-<div classList={{ [className()]: classOn() }} /> 
- 
+<div classList={{ [className()]: classOn() }} />;
+
 // 시그널 class 리스트
-const [classes, setClasses] = createSignal({}); 
-setClasses((c) => ({...c, active: true})); 
-<div classList={classes()} /> 
-``` 
- 
+const [classes, setClasses] = createSignal({});
+setClasses((c) => ({...c, active: true}));
+<div classList={classes()} />;
+```
+
 `class`와 `classList`를 섞어쓸 수는 있지만 위험합니다.
 안전한 상황은 `class`가 정적 문자열로 설정하거나 설정하지 않고, `classList`가 리액티브한 경우입니다.
-(`class` 는 `class={baseClass()}`처럼 정적 계산 값으로 설정할 수도 있지만, `classList` 보다는 앞에 설정해야 합니다) 
+(`class` 는 `class={baseClass()}`처럼 정적 계산 값으로 설정할 수도 있지만, `classList` 보다는 앞에 설정해야 합니다)
 만일 `class`와 `classList` 모두 리액티브하다면, 예상치 못한 동작이 발생할 수 있습니다:
 `class` 값이 변경되면, Solid 는 전체 `class` 속성을 설정하므로, `classList`에서 설정된 모든 토글을 덮어쓰게 됩니다.
- 
+
  `classList`는 컴파일 타임 속성이기 때문에, `<div {...props} />` 과 같은 스프레드 연산자나 `<Dynamic>`내에서는 작동하지 않습니다.
 
 ## `style`
@@ -1943,7 +2053,7 @@ Solid의 `style` 속성에 CSS 문자열이나 키가 CSS 속성 이름인 객�
 
 // 객체
 <div style={{
-  color: "green", 
+  color: "green",
   height: state.height + "px" }}
 />
 ```
@@ -1973,7 +2083,7 @@ Solid의 `style` 속성에 CSS 문자열이나 키가 CSS 속성 이름인 객�
 ## `innerHTML`/`textContent`
 
 이는 해당 프로퍼티와 동일하게 문자열을 설정하면 작동합니다.
-**조심하세요!!** `innerHTML`에 설정하는 데이터는 최종 사용자에게 노출되며, 악성 공격에 사용될 수 있습니다. 
+**조심하세요!!** `innerHTML`에 설정하는 데이터는 최종 사용자에게 노출되며, 악성 공격에 사용될 수 있습니다.
 `textContent`는 일반적으로는 필요하지 않지만, 일반적인 diffing 루틴을 건너뛰기 때문에 자식이 텍스트로만 구성되어 있다는 것을 알고 있는 경우 사용하면 성능을 최적화할 수 있습니다.
 
 ```jsx
@@ -1991,7 +2101,7 @@ Solid는 버블링되는 일반 UI 이벤트에 대해 반-합성<sub>semi-synth
 <div onClick={(e) => console.log(e.currentTarget)} />
 ```
 
-Solid는 이벤트 핸들러의 첫 번째 인수에 값을 바인딩하기 위해 배열을 사용할 수 있습니다. 
+Solid는 이벤트 핸들러의 첫 번째 인수에 값을 바인딩하기 위해 배열을 사용할 수 있습니다.
 이는 `bind`를 사용하거나 추가 클로저를 생성하지 않으므로, 이벤트를 위임하는 고도로 최적화된 방법입니다.
 
 ```jsx

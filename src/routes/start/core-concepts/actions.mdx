@@ -8,36 +8,51 @@ Actions are isomorphic. This means that a submission can be handled on the serve
 
 ### Creating actions
 
-Let's stop getting ahead of ourselves though. Let's create our first action!
+Let's stop getting ahead of ourselves! First let's create an action!
 
 ```tsx
 import { createRouteAction } from "solid-start/data";
 
 const action = createRouteAction(async (data) => {
-  await fetch('https://postman-echo.com/post',{
+  console.log(await (await fetch('https://postman-echo.com/post', {
     body: data.message
-  })
+  })).text()
 })
 ```
 
-Postman's JSON API will act as our backend, but you are free to do anything here, provided you are ok with it running on the client. Typically, route actions are used with some sort of solution like fetch or graphql, and/or return a `Response`, such as a redirect. If you want to ensure the action only runs on the server for things like databases, you will want to use a different function explained below.
+Postman's JSON API will act as our backend, but you are free to do anything here, provided you are ok with it running on the client. Typically, route actions are used with some sort of solution like fetch or graphql, and return a `Response`, such as a redirect (we are not returning anything quite yet!). If you want to ensure the action only runs on the server for things like databases, you will want to use a different function explained below.
 
-This action isn't actually doing anything! We still need to call it somewhere in our code.
+Naturally, this action won't do anything quite yet. We still need to call it somewhere! For now, let's call it manually from some component using the `submit` method.
 
-### Submissions
+```ts
+action.submit('Hello from solid!')
+```
 
-To use our action, we need to submit data. 
+### Responses
+
+### Using forms to submit data
+
+We highly recommend using HTML forms as your method to submit data with actions. HTML forms can be used even before JavaScript loads, leading to instantly interactive applications. They have the added benefit of implicit accessibility, and can save you valuable time that would have otherwise been spent designing a UI library that will never have the aforementioned benefits.
+
+Forms become available when your action signature matches `(formData: FormData) => Response`. Writing forms using actions is trivial, simply use the `Form` method of your action instead of the normal `<form>` tag, and walk away with amazing, progressively enhanced forms!
+
+```tsx
+export function MyComponent() {
+  return <action.Form>
+    <label for="username">Username:</label>
+    <input type="text" name="username" />
+    <input type="submit" value="submit" />
+  </action.Form>
+}
+```
+
+The only difference between `action.Form` and a normal form is that `action.Form` calls the action as it's submit handler automatically.
 
 - `createAction`
 
-  - Gives a way to submit an action and track the submission. Similar to a form on the web.
-  - Represents the `POST` side of HTTP verbs
   - retriggers route resources
   - what does it give you:
-    - an async function (`action.submit(args)`, `action(args)`) to trigger the action
     - `action.submissions()` a signal to track the ongoing and failed submissions
-    - `action.Form` to render a Form component that calls this action as its submit handler (Progressively enhanced forms)
-      - caveat: `action.Form` will only be available when your action signature matches `(formData: FormData) => Response`
   - Errors, each submission state has an error field that's populated if the submission errored, and a status field that's set to `error`
     - if you read the `submissionState.error` field in your code (JSX, or effects) then the error is considered user-handled and we don't trigger ErrorBoundaries.
     - if you don't use the error field, then we trigger the error boundary on an error because we assume its unexpected for you

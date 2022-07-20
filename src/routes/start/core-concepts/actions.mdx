@@ -1,20 +1,41 @@
 <Title>Actions</Title>
 
-One question you will likely have when developing any sort of app is "how do I communicate new information to my server?". Solid's answer to this is _actions_. Actions give you an asynchronous function and elegant tools to help you easily manage updates.
+One question you will likely have when developing any sort of app is "how do I communicate new information to my server?". Solid's answer to this is _actions_. Actions give you an asynchronous function and elegant tools to help you easily manage and track submissions. They generally represent a `POST` request.
 
 ## Actions
 
+Actions are isomorphic. This means that a submission can be handled on the server *or* the client, which ever is optimal. They represent the server component of a [HTML form](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form), and even help you use HTML forms to submit data.
 
+### Creating actions
+
+Let's stop getting ahead of ourselves though. Let's create our first action!
+
+```tsx
+import { createRouteAction } from "solid-start/data";
+
+const action = createRouteAction(async (data) => {
+  await fetch('https://postman-echo.com/post',{
+    body: data.message
+  })
+})
+```
+
+Postman's JSON API will act as our backend, but you are free to do anything here, provided you are ok with it running on the client. Typically, route actions are used with some sort of solution like fetch or graphql, and/or return a `Response`, such as a redirect. If you want to ensure the action only runs on the server for things like databases, you will want to use a different function explained below.
+
+This action isn't actually doing anything! We still need to call it somewhere in our code.
+
+### Submissions
+
+To use our action, we need to submit data. 
 
 - `createAction`
 
-  - isomorphic
   - Gives a way to submit an action and track the submission. Similar to a form on the web.
   - Represents the `POST` side of HTTP verbs
   - retriggers route resources
   - what does it give you:
     - an async function (`action.submit(args)`, `action(args)`) to trigger the action
-    - `action.submissions()` a signal to track the ongoing and failed submissiions
+    - `action.submissions()` a signal to track the ongoing and failed submissions
     - `action.Form` to render a Form component that calls this action as its submit handler (Progressively enhanced forms)
       - caveat: `action.Form` will only be available when your action signature matches `(formData: FormData) => Response`
   - Errors, each submission state has an error field that's populated if the submission errored, and a status field that's set to `error`

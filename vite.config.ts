@@ -122,7 +122,7 @@ export default defineConfig({
       },
     }),
     solid({
-      adapter,
+      adapter: node(),
       extensions: [".mdx", ".md"],
     }),
   ],

@@ -109,11 +109,7 @@ export default {
       </code>
     );
   },
-  pre: (props) => (
-    <pre classList={{ "font-mono": true }} {...props}>
-      {props.children}
-    </pre>
-  ),
+  pre: (props) => <pre {...props}>{props.children}</pre>,
   "data-lsp": (props) => {
     const id = createUniqueId();
     createEffect(() => {

@@ -11,12 +11,16 @@
 ストアを使ってネストしたリアクティビティを実現するのがどれほど簡単か見てみましょう。コンポーネントの初期化を以下のように置き換えることができます:
 
 ```js
-const [store, setStore] = createStore({ todos: [] });
+const [todos, setTodos] = createStore([]);
 const addTodo = (text) => {
-  setStore('todos', (todos) => [...todos, { id: ++todoId, text, completed: false }]);
+  setTodos([...todos, { id: ++todoId, text, completed: false }]);
 };
 const toggleTodo = (id) => {
-  setStore('todos', (t) => t.id === id, 'completed', (completed) => !completed);
+  setTodos(
+    (todo) => todo.id === id,
+    "completed",
+    (completed) => !completed
+  );
 };
 ```
 

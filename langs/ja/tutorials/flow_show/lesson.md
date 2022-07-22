@@ -6,7 +6,7 @@ JSX では、JavaScript を使ってテンプレート内のロジックフロ�
 ```jsx
 <Show
   when={loggedIn()}
-  fallback={() => <button onClick={toggle}>Log in</button>}
+  fallback={<button onClick={toggle}>Log in</button>}
 >
   <button onClick={toggle}>Log out</button>
 </Show>

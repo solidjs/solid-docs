@@ -8,7 +8,7 @@ clone | 複製
 design | 設計
 fire | （イベントの）発生
 first argument | 第一引数 | 第1引数
-handler | ハンドラー
+handler | ハンドラー | ハンドラ
 helper | ヘルパー
 interface | インターフェイス | インターフェース、インタフェイス
 leaf | 葉ノード
@@ -23,6 +23,7 @@ prop | プロパティ | プロップ
 props | props
 reactivity | リアクティビティ | リアクティブ性
 read value | 値の読み取り
+return value | 戻り値 | 返り値
 set value | 値の設定
 state | 状態
 testing | テスト

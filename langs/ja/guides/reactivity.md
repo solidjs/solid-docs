@@ -25,7 +25,7 @@ render(() => <App />, document.getElementById("app"));
 
 Solid は、Signal、Memo、Effect の 3 つの主要なプリミティブで構成されています。これらのプリミティブの核となるのは、Memo と Effect をラップすることで Signal（と Memo）を追跡するオブザーバーパターンです。
 
-Signal は最もシンプルなプリミティブです。Signal には値が含まれており、読み書きされたときにインターセプトできるように get と set の関数が用意されています。
+Signal は最もコアとなるプリミティブです。Signal には値が含まれており、読み書きされたときにインターセプトできるように get と set の関数が用意されています。
 
 ```js
 const [count, setCount] = createSignal(0);

@@ -6,18 +6,16 @@ Solid は、状態の更新に浅いイミュータブルなパターンを使�
 
 ```jsx
 const addTodo = (text) => {
-  setStore(
-    'todos',
+  setTodos(
     produce((todos) => {
       todos.push({ id: ++todoId, text, completed: false });
-    }),
+    })
   );
 };
 const toggleTodo = (id) => {
-  setStore(
-    'todos',
-    todo => todo.id === id,
-    produce((todo) => (todo.completed = !todo.completed)),
+  setTodos(
+    (todo) => todo.id === id,
+    produce((todo) => (todo.completed = !todo.completed))
   );
 };
 ```

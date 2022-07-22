@@ -22,6 +22,8 @@ React の更新モデルを持っていなければ可能です。JSX は Svelte
 
 一方で、Vue 互換は現在のところ実装の予定はありませんが可能でしょう。
 
+一方、Solid を React で動作させることも可能です。[React Solid State](https://github.com/solidjs/react-solid-state)では、React の関数コンポーネント内で Solid の API にアクセスできるようになります。[reactjs-solidjs-bridge](https://github.com/Sawtaytoes/reactjs-solidjs-bridge) は Solid コンポーネント内で React コンポーネントをレンダリングしたり、その逆を行うことができ、アプリを徐々に移植する際に便利です。
+
 ### なぜテンプレートで `map` を使ってはいけないのですか？　また、`<For>` と `<Index>` の違いは何ですか？
 
 配列が静的なものであれば、map を使っても問題はないでしょう。しかし、Signal やリアクティブなプロパティをループする場合、`map` は非効率です。何らかの理由で配列が変更されると、map 全体が再実行され、すべてのノードが再作成されることになるからです。

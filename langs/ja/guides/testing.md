@@ -1,134 +1,54 @@
 # Solid のテスト
 
-Solid のコードを本番環境で使用するには、テストする必要があります。すべてを手動でテストしたくはないので、自動テストが必要です。Solid コードのテストは、すべてをセットアップし、テストに役立ついくつかのパターンを知っていれば簡単に行うことができます。
+Solid のコードを本番環境で使用するには、テストする必要があります。すべてを手動でテストしたくはないので、自動テストが必要です。このガイドでは、すべてのセットアップ方法と Solid コードのテストに役立ついくつかのパターンを説明します。
 
 ## テストのセットアップ
 
-テストをセットアップする前に、テストランナーを選択する必要があります。豊富な選択肢がありますが、ここでは両極端な 2 つの全く異なるプロジェクト、Jest と uvu に焦点を当てます。Jest は大きくて総合型、uvu は必要最低限のものだけをもたらします。もし他のテストランナーを使いたい場合でも、uvu のセットアップは他のほとんどのテストランナーでも動作するはずです。
+私たちは 2 つのテストランナーのサポートを提供しています:
+
+- jest - 多くの機能を持ち、非常によく知られています
+
+- uvu - 必要最低限のものだけをもたらします
+
+どちらも [solid-testing-library](https://github.com/solidjs/solid-testing-library) をベースにしており、[Testing Library](https://testing-library.com/) を Solid に統合しています。テスティングライブラリは軽量なブラウザを模倣し、テストからそれを操作するための API を提供します。
+
+Solid と Jest テスト用のスターターテンプレートが用意されています。これをベースにしてプロジェクトを作成するか、スクラッチのプロジェクトにスターターテンプレートをインストールし、その設定をプロジェクトにコピーすることをお勧めします。
+
+このテンプレートは、インストールに [degit](https://github.com/Rich-Harris/degit) ユーティリティを使用します。
 
 ### Jest を設定する
 
-残念ながら、統合されているとはいえ Jest は ESM や TypeScript をそのままではサポートせず、トランスフォーマーの設定が必要です。
+Jest 統合は、Solid をブラウザとして使用できるようにする [solid-jest/preset/browser](https://github.com/solidjs/solid-jest) Jest 設定プリセットをベースにしています。これは、Solid コードを変換するために babel を使用します。
 
-主な選択肢は solid-jest と ts-jest です。solid-jest は Solid コードの変換に babel を使用し、TypeScript が使われている場合はテスト時の型チェックを省略します。ts-jest は TypeScript コンパイラを使用し、テスト時の型チェックを行います。
+これは [jest-dom](https://github.com/testing-library/jest-dom) を使用して `expect` を拡張し、テストを書くのに役立つ多くのカスタム マッチャーを使用します。
 
-TypeScript を使用していない場合は solid-jest を使用し、そうでない場合はテストの実行中に型チェックを行いたいかどうかを選択します。
+#### Jest と TypeScript (`ts-jest`)
 
-#### solid-jest を使う
-
-必要な依存関係をインストールします:
-
-```sh
-> npm i --save-dev jest solid-jest # もしくは yarn add -D もしくは pnpm
+```bash
+$ npx degit solidjs/templates/ts-jest my-solid-project
+$ cd my-solid-project
+$ npm install # もしくは pnpm install もしくは yarn install
 ```
 
-TypeScript の場合は:
-
-```sh
-> npm i --save-dev jest solid-jest @types/jest # もしくは yarn add -D もしくは pnpm
-```
-
-次に `.babelrc` を定義していなければ定義する必要があります:
-
-```js
-{
-  "presets": [
-    "@babel/preset-env",
-    "babel-preset-solid",
-    // solid-jest で TS を使用する場合のみ
-    "@babel/preset-typescript"
-  ]
-}
-```
-
-そして `package.json` を以下のように修正します:
-
-```js
-{
-  "scripts": {
-    // ここに他のスクリプト
-    "test": "jest"
-  },
-  "jest": {
-    "preset": "solid-jest/preset/browser",
-    // setupFiles や他のコンフィグを挿入します
-  }
-}
-```
-
-#### ts-jest を使う
-
-ts-jest を使うには、まずインストールする必要があります:
-
-```sh
-> npm i --save-dev jest ts-jest @types/jest # もしくは yarn add -D もしくは pnpm
-```
-
-そして `package.json` で設定します:
-
-```js
-{ 
-  "scripts": {
-    // ここに他のスクリプト
-    "test": "jest"
-  },
-  "jest": {
-    "preset": "ts-jest",
-    "globals": {
-      "ts-jest": {
-        "tsconfig": "tsconfig.json",
-        "babelConfig": {
-          "presets": [
-            "babel-preset-solid",
-            "@babel/preset-env"
-          ]
-        }
-      }
-    },
-    // ブラウザモードでテストするために
-    // setupFiles と他の設定を挿入します:
-    "testEnvironment": "jsdom",
-    // 残念ながら、solid はここでブラウザモードを検出できないので、
-    // 正しいバージョンを手動で指定する必要があります:
-    "moduleNameMapper": {
-      "solid-js/web": "<rootDir>/node_modules/solid-js/web/dist/web.cjs",
-      "solid-js": "<rootDir>/node_modules/solid-js/dist/solid.cjs"
-    }
-    // Windows ユーザーは "/" を "\" に置き換えてください
-  }
-}
-```
-
-### TypeScript と Jest
-
-Jest はテスト機能をグローバルスコープに注入するので、TypeScript コンパイラを満たすために、型を tsconfig.json にロードする必要があります:
-
-```js
-{
-  // tsconfig.json の一部
-  "types": ["jest"]
-}
-```
-
-これには前述のように `@types/jest` をインストールする必要があります。
+このテンプレートはテスト中にタイプチェックを行わないことに注意してください。IDE や `package.json` にあるカスタム `tsc --noEmit` スクリプトを使用して、このようなチェックをトリガーできます。
 
 ### uvu を設定する
 
-まず、必要なパッケージをインストールする必要があります:
+また、`uvu` のスターターテンプレートも提供しています。
 
-```sh
-> npm i --save-dev uvu solid-register jsdom # もしくは yarn add -D もしくは pnpm
+このテンプレートには [solid-dom-testing](https://www.npmjs.com/package/solid-dom-testing) が含まれており、Testing Library で有用なアサーションを記述するのに役立ちます。
+
+#### Uvu と TypeScript (`ts-uvu`)
+
+```bash
+$ npx degit solidjs/templates/ts-uvu my-solid-project
+$ cd my-solid-project
+$ npm install # もしくは pnpm install もしくは yarn install
 ```
 
-次に `package.json` でテストスクリプトを設定します:
+#### uvu のカバレッジレポート
 
-```sh
-> npm set-script test "uvu -r solid-register"
-```
-
-追加の設定ファイルは `-r setup.ts` で追加でき、テストでないものは `-i not-a-test.test.ts` で無視できます。
-
-### カバレッジレポート
+> 残念ながら、[babelの制限](https://github.com/babel/babel/issues/4289)により、トランスパイルされた JSX のソースマップ出力はできません。その結果、コンポーネントのカバレッジはゼロとなります。JSX でないコードでは動作します。
 
 テストのコードカバレッジを確認したい場合、uvu のお気に入りのツールは c8 です。インストールと設定のために、以下を実行します:
 
@@ -139,11 +59,11 @@ Jest はテスト機能をグローバルスコープに注入するので、Typ
 
 これで `npm run test:coverage` を実行すると、テストのカバレッジが表示されるようになります。
 
-HTML 形式のカバレッジレポートが欲しい場合は、（訳注: 原文がここで終わっている）
+HTML 形式のカバレッジレポートが欲しい場合は、`c8` の代わりに `c8 -r html` を使って、html レポーターを有効にできます。
 
-### Watch モード
+#### Watch モード
 
-`uvu` と `tape` はどちらもすぐに使用できるウォッチモードはありませんが、 `chokidar-cli` を使用して同じことを行うことができます:
+`uvu` はすぐに使用できるウォッチモードはありませんが、 `chokidar-cli` を使用して同じことを行うことができます:
 
 ```sh
 > npm i --save-dev chokidar-cli # もしくは yarn add -D もしくは pnpm
@@ -152,61 +72,6 @@ HTML 形式のカバレッジレポートが欲しい場合は、（訳注: 原�
 ```
 
 これで `npm run test:watch` を実行すると、ファイルを変更するたびにテストが実行されるようになります。
-
-### solid-testing-library
-
-もしコンポーネントをテストしたいのであれば、`solid-testing-library` を必ずインストールしてください:
-
-```sh
-> npm i --save-dev solid-testing-library # もしくは yarn add -D もしくは pnpm
-```
-
-これにより、コンポーネントをレンダリングし、イベントを発生させ、ユーザーの視点から要素を選択できます。
-
-### @testing-library/jest-dom
-
-Jest を使用している場合、`solid-testing-library` は `@testing-library/jest-dom` と非常にうまく動作します:
-
-```sh
-> npm i --save-dev @testing-library/jest-dom # もしくは yarn add -D もしくは pnpm
-```
-
-そして、セットアップファイルで期待する拡張子をインポートします:
-
-```ts
-// test/jest-setup.ts
-import '@testing-library/jest-dom/extend-expect';
-```
-
-そして、package.json の以下の項目を使用して、Jest でロードします:
-
-```js
-{
-  "jest": {
-    // ここに他の設定
-    setupFiles: ["@testing-library/jest-dom/extend-expect", "regenerator-runtime"]
-  }
-}
-```
-
-また、`tsconfig.json` に型を含めることも忘れないでください:
-
-```js
-{
-  // tsconfig.json の一部
-  "types": ["jest", "@testing-library/jest-dom"]
-}
-```
-
-### solid-dom-testing
-
-uvu や tape などの他のテストランナーを使用している場合、 `solid-dom-testing` には同様のアサーションをサポートするヘルパーがいくつかあります:
-
-```sh
-> npm i --save-dev solid-dom-testing # もしくは yarn add -D もしくは pnpm
-```
-
-設定は不要で、必要に応じてテストでヘルパーをインポートして使用できます。
 
 ## テストのパターンとベストプラクティス
 
@@ -224,11 +89,13 @@ uvu や tape などの他のテストランナーを使用している場合、 
 import { createEffect } from "solid-js";
 import { createStore, Store, SetStoreFunction } from "solid-js/store";
 
-export function createLocalStore<T>(initState: T): [Store<T>, SetStoreFunction<T>] {
-	const [state, setState] = createStore(initState);
-	if (localStorage.todos) setState(JSON.parse(localStorage.todos));
-	createEffect(() => (localStorage.todos = JSON.stringify(state)));
-	return [state, setState];
+export function createLocalStore<T>(
+  initState: T
+): [Store<T>, SetStoreFunction<T>] {
+  const [state, setState] = createStore(initState);
+  if (localStorage.todos) setState(JSON.parse(localStorage.todos));
+  createEffect(() => (localStorage.todos = JSON.stringify(state)));
+  return [state, setState];
 }
 ```
 
@@ -241,49 +108,59 @@ import { createLocalStore } from "./main.tsx";
 import { createRoot, createEffect } from "solid-js";
 
 describe("createLocalStore", () => {
-  beforeEach(() => { 
+  beforeEach(() => {
     localStorage.removeItem("todos");
   });
 
   const initialState = {
     todos: [],
-    newTitle: ""
+    newTitle: "",
   };
 
-  test("既存の状態を localStorage から読み取る", () => createRoot(dispose => {
-    const savedState = { todos: [], newTitle: "saved" };
-    localStorage.setItem("todos", JSON.stringify(savedState));
-    const [state] = createLocalStore(initialState);
-    expect(state).toEqual(savedState);
-    dispose();
-  }));
-
-  test("新しい状態を localStorage に格納する", () => createRoot(dispose => {
-    const [state, setState] = createLocalStore(initialState);
-    setState("newTitle", "updated");
-    // Effect をキャッチするため、Effect を使う
-    return new Promise<void>((resolve) => createEffect(() => {
-      expect(JSON.parse(localStorage.todos || ""))
-        .toEqual({ todos: [], newTitle: "updated" });
+  test("既存の状態を localStorage から読み取る", () =>
+    createRoot((dispose) => {
+      const savedState = { todos: [], newTitle: "saved" };
+      localStorage.setItem("todos", JSON.stringify(savedState));
+      const [state] = createLocalStore(initialState);
+      expect(state).toEqual(savedState);
       dispose();
-      resolve();
     }));
-  }));
+
+  test("新しい状態を localStorage に格納する", () =>
+    createRoot((dispose) => {
+      const [state, setState] = createLocalStore(initialState);
+      setState("newTitle", "updated");
+      // Effect をキャッチするため、Effect を使う
+      return new Promise<void>((resolve) =>
+        createEffect(() => {
+          expect(JSON.parse(localStorage.todos || "")).toEqual({
+            todos: [],
+            newTitle: "updated",
+          });
+          dispose();
+          resolve();
+        })
+      );
+    }));
 
   test("状態を複数回更新する", async () => {
-    const {dispose, setState} = createRoot(dispose => {
+    const { dispose, setState } = createRoot((dispose) => {
       const [state, setState] = createLocalStore(initialState);
-      return {dispose, setState};
+      return { dispose, setState };
     });
     setState("newTitle", "first");
     // すべての Effect を解決するため 1 ティック待つ
     await new Promise((done) => setTimeout(done, 0));
-    expect(JSON.parse(localStorage.todos || ""))
-      .toEqual({ todos: [], newTitle: "first" });
+    expect(JSON.parse(localStorage.todos || "")).toEqual({
+      todos: [],
+      newTitle: "first",
+    });
     setState("newTitle", "second");
     await new Promise((done) => setTimeout(done, 0));
-    expect(JSON.parse(localStorage.todos || ""))
-      .toEqual({ todos: [], newTitle: "first" });
+    expect(JSON.parse(localStorage.todos || "")).toEqual({
+      todos: [],
+      newTitle: "first",
+    });
     dispose();
   });
 });
@@ -299,38 +176,42 @@ import { createEffect, createRoot } from "solid-js";
 
 const todoTest = suite("createLocalStore");
 
-todoTest.before.each(() => { 
+todoTest.before.each(() => {
   localStorage.removeItem("todos");
 });
 
 const initialState = {
   todos: [],
-  newTitle: ""
+  newTitle: "",
 };
 
-todoTest("既存の状態を localStorage から読み取る", () => 
-  createRoot(dispose => {
+todoTest("既存の状態を localStorage から読み取る", () =>
+  createRoot((dispose) => {
     const savedState = { todos: [], newTitle: "saved" };
     localStorage.setItem("todos", JSON.stringify(savedState));
     const [state] = createLocalStore(initialState);
     assert.equal(state, savedState);
     dispose();
-  }));
+  })
+);
 
 todoTest("新しい状態を localStorage に格納する", () =>
-  createRoot(dispose => {
+  createRoot((dispose) => {
     const [_, setState] = createLocalStore(initialState);
     setState("newTitle", "updated");
     // Effect をキャッチするため、Effect が必要
-    return new Promise<void>((resolve) => createEffect(() => {
-      assert.equal(
-        JSON.parse(localStorage.todos || ""),
-        { todos: [], newTitle: "updated" }
-      );
-      dispose();
-      resolve();
-    }));
-  }));
+    return new Promise<void>((resolve) =>
+      createEffect(() => {
+        assert.equal(JSON.parse(localStorage.todos || ""), {
+          todos: [],
+          newTitle: "updated",
+        });
+        dispose();
+        resolve();
+      })
+    );
+  })
+);
 
 todoTest.run();
 ```
@@ -351,7 +232,7 @@ import { fireEvent } from "solid-testing-library";
 
 describe("clickOutside", () => {
   const ref = document.createElement("div");
-  
+
   beforeAll(() => {
     document.body.appendChild(ref);
   });
@@ -360,31 +241,39 @@ describe("clickOutside", () => {
     document.body.removeChild(ref);
   });
 
-  test("外側のクリックでトリガーされる", () => createRoot((dispose) =>
-    new Promise<void>((resolve) => {
-      let clickedOutside = false;
-      clickOutside(ref, () => () => { clickedOutside = true; });
-      document.body.addEventListener("click", () => {
-        expect(clickedOutside).toBeTruthy();
-        dispose();
-        resolve();
-      });
-      fireEvent.click(document.body);
-    })
-  ));
+  test("外側のクリックでトリガーされる", () =>
+    createRoot(
+      (dispose) =>
+        new Promise<void>((resolve) => {
+          let clickedOutside = false;
+          clickOutside(ref, () => () => {
+            clickedOutside = true;
+          });
+          document.body.addEventListener("click", () => {
+            expect(clickedOutside).toBeTruthy();
+            dispose();
+            resolve();
+          });
+          fireEvent.click(document.body);
+        })
+    ));
 
-  test("内側のクリックではトリガーされない", () => createRoot((dispose) =>
-    new Promise<void>((resolve) => {
-      let clickedOutside = false;
-      clickOutside(ref, () => () => { clickedOutside = true; });
-      ref.addEventListener("click", () => {
-        expect(clickedOutside).toBeFalsy();
-        dispose();
-        resolve();
-      });
-      fireEvent.click(ref);
-    })
-  ));
+  test("内側のクリックではトリガーされない", () =>
+    createRoot(
+      (dispose) =>
+        new Promise<void>((resolve) => {
+          let clickedOutside = false;
+          clickOutside(ref, () => () => {
+            clickedOutside = true;
+          });
+          ref.addEventListener("click", () => {
+            expect(clickedOutside).toBeFalsy();
+            dispose();
+            resolve();
+          });
+          fireEvent.click(ref);
+        })
+    ));
 });
 ```
 
@@ -392,14 +281,14 @@ describe("clickOutside", () => {
 
 ```ts
 // click-outside.test.ts
-import clickOutside from 'click-outside.tsx';
-import { createRoot } from 'solid-js';
-import { fireEvent } from 'solid-testing-library';
+import clickOutside from "click-outside.tsx";
+import { createRoot } from "solid-js";
+import { fireEvent } from "solid-testing-library";
 
-const clickTest = suite('clickOutside');
+const clickTest = suite("clickOutside");
 
-const ref = document.createElement('div');
-  
+const ref = document.createElement("div");
+
 clickTest.before(() => {
   document.body.appendChild(ref);
 });
@@ -408,38 +297,48 @@ clickTest.after(() => {
   document.body.removeChild(ref);
 });
 
-clickTest('外側のクリックでトリガーされる', () => createRoot((dispose) =>
-  new Promise<void>((resolve) => {
-    let clickedOutside = false;
-    clickOutside(ref, () => () => { clickedOutside = true; });
-    document.body.addEventListener('click', () => {
-      assert.ok(clickedOutside);
-      dispose();
-      resolve();
-    });
-    fireEvent.click(document.body);
-  })
-));
+clickTest('外側のクリックでトリガーされる', () =>
+  createRoot(
+    (dispose) =>
+      new Promise<void>((resolve) => {
+        let clickedOutside = false;
+        clickOutside(ref, () => () => {
+          clickedOutside = true;
+        });
+        document.body.addEventListener("click", () => {
+          assert.ok(clickedOutside);
+          dispose();
+          resolve();
+        });
+        fireEvent.click(document.body);
+      })
+  )
+);
 
-clickTest('内側のクリックではトリガーされない', () => createRoot((dispose) =>
-  new Promise<void>((resolve) => {
-    let clickedOutside = false;
-    clickOutside(ref, () => () => { clickedOutside = true; });
-    ref.addEventListener('click', () => {
-      assert.is(clickedOutside, false);
-      dispose();
-      resolve();
-    });
-    fireEvent.click(ref);
-  })
-));
+clickTest('内側のクリックではトリガーされない', () =>
+  createRoot(
+    (dispose) =>
+      new Promise<void>((resolve) => {
+        let clickedOutside = false;
+        clickOutside(ref, () => () => {
+          clickedOutside = true;
+        });
+        ref.addEventListener("click", () => {
+          assert.is(clickedOutside, false);
+          dispose();
+          resolve();
+        });
+        fireEvent.click(ref);
+      })
+  )
+);
 
 clickTest.run();
 ```
 
 ### コンポーネントのテスト
 
-テストするための、とてもシンプルなクリックカウンターコンポーネントを見てみましょう:
+テストするための、シンプルなクリックカウンターコンポーネントを見てみましょう:
 
 ```ts
 // main.tsx
@@ -448,13 +347,15 @@ import { createSignal, Component } from "solid-js";
 export const Counter: Component = () => {
   const [count, setCount] = createSignal(0);
 
-  return <div role="button" onClick={() => setCount(c => c + 1)}>
-    Count: {count()}
-  </div>;
-}
+  return (
+    <div role="button" onClick={() => setCount((c) => c + 1)}>
+      Count: {count()}
+    </div>
+  );
+};
 ```
 
-まだインストールしていない場合は、必ず `solid-testing-library` をインストールする必要があります。最も重要なヘルパーは、何とかして DOM にコンポーネントをレンダリングする `render` と、実際のユーザーイベントに似た方法でイベントをディスパッチする `fireEvent` と、グローバルセレクターを提供する `screen` です。Jest を使用している場合は、 `@testing-library/jest-dom` もインストールし、有用なアサーションを持つようにセットアップする必要があります。それ以外の場合は、上述の通り `solid-dom-testing` をインストールします。
+ここでは、`solid-testing-library` を使用します。最も重要なヘルパーは、何とかして DOM にコンポーネントをレンダリングする `render` と、実際のユーザーイベントに似た方法でイベントをディスパッチする `fireEvent` と、グローバルセレクターを提供する `screen` です。また、`@testing-library/jest-dom` が提供する `expect` に追加された有用なアサーションも利用しています。
 
 #### Jest でのテスト
 
@@ -497,7 +398,6 @@ import { Counter } from "main";
 import { fireEvent, render, screen } from "solid-testing-library";
 import { isInDocument, hasTextContent } from "solid-dom-testing";
 
-
 const testCounter = suite("Counter");
 
 testCounter.after.each(cleanup);
@@ -515,10 +415,16 @@ testCounter("クリックで値が 1 増える", async () => {
   fireEvent.click(button);
   // イベントループが終了するのにひとつのプロミスを解決する必要があります
   await Promise.resolve();
-  assert.ok(hasTextContent(button, "Count: 1"), "not count 1 after first click");
+  assert.ok(
+    hasTextContent(button, "Count: 1"),
+    "not count 1 after first click"
+  );
   fireEvent.click(button);
   await Promise.resolve();
-  assert.ok(hasTextContent(button, "Count: 2"), "not count 2 after first click");
+  assert.ok(
+    hasTextContent(button, "Count: 2"),
+    "not count 2 after first click"
+  );
 });
 
 testCounter.run();

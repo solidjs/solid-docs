@@ -38,7 +38,7 @@ import { render } from "solid-js/web";
 render(() => <App />, document.getElementById("main"));
 ```
 
-> **重要** 第一引数は関数である必要があります。そうしないと、リアクティブシステムを適切に追跡し、スケジュールできません。この単純な不備により、Effects は実行されなくなります。
+> **重要** 第一引数は関数である必要があります。そうしないと、リアクティブシステムを適切に追跡し、スケジュールできません。関数ラッパーを省略すると、Effects は実行されなくなります。
 
 ## コンポーネント
 
@@ -238,8 +238,9 @@ const newProps = mergeProps(props);
 props = mergeProps(props, otherProps);
 
 // props を複数の props オブジェクトに分割
-const [local, others] = splitProps(props, ["className"])
-<div {...others} className={cx(local.className, theme.component)} />
+const [local, others] = splitProps(props, ["class"])
+<div {...others} class={cx(local.class, theme.component)} />
+theme.component)} />
 ```
 
 ## Children

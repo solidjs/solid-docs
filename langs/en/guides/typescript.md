@@ -512,7 +512,7 @@ Here are two workarounds for this issue:
 
    Note, however, that this form of `<Show>` forces the entirety of the 
    children to render
-   from scratch every time `name()` changes, instead of doing this just when `name()` changes from a falsey to a truthy value.
+   from scratch every time `name()` changes, instead of doing this just when `name()` changes from a falsy to a truthy value.
    This means that the children don't have the full benefits of fine-grained
    reactivity (re-using unchanged parts and updating just what changed).
 

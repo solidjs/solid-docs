@@ -137,4 +137,4 @@ SSR の設定には注意が必要です。[solid-ssr](https://github.com/solidj
 
 ## 静的サイト生成を始める
 
-[solid-ssr](https://github.com/solidjs/solid/blob/main/packages/solid-ssr) には、静的サイトや事前レンダリングされたサイトを生成するためのシンプルなユーティリティが同梱されています。詳しくは README をご覧ください。
+[solid-ssr](https://github.com/solidjs/solid/blob/main/packages/solid-ssr) には、静的サイトや事前レンダリングされたサイトを生成するためのユーティリティが同梱されています。詳しくは README をご覧ください。

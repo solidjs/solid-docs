@@ -1,10 +1,19 @@
 # はじめに
 
+**私たちは新しいドキュメントに取り組んでいます。** 新しい初心者向けチュートリアルは[こちら](https://docs.solidjs.com/tutorials/getting-started-with-solid/)チェックできます。また、[Discord](http://discord.com/invite/solidjs) で私たちの活動に参加してください！
+
+## Solid を見る
+
+Solid のコア コンセプトの概要を簡単に説明した動画をご覧ください:
+
+- [Solid in 100 seconds](https://youtu.be/hw3Bx5vxKl0)
+- [Solid reactivity in 10 minutes](https://youtu.be/J70HXl1KhWE)
+
 ## Solid を試す
 
 Solid を使い始める最も簡単な方法は、オンラインで試すことです。https://playground.solidjs.com の REPL は、アイデアを試すのに最適な方法です。また、いくつかの[サンプル](https://github.com/solidjs/solid/blob/main/documentation/resources/examples.md)を編集できる https://codesandbox.io/ もあります。
 
-また、ターミナルで以下のコマンドを実行して、シンプルな [Vite](https://vitejs.dev/) テンプレートを使用することもできます:
+また、ターミナルで以下のコマンドを実行して、 [Vite テンプレート](https://github.com/solidjs/templates) を使用することもできます:
 
 ```sh
 > npx degit solidjs/templates/js my-app
@@ -20,6 +29,32 @@ Solid を使い始める最も簡単な方法は、オンラインで試すこ�
 > cd my-app
 > npm i # or yarn or pnpm
 > npm run dev # or yarn or pnpm
+```
+
+もしくはプロジェクトに依存関係をインストールできます。Solid を JSX で使用する場合（推奨）、`solid-js` NPM ライブラリーと z[Solid JSX コンパイラー](https://github.com/ryansolid/dom-expressions/tree/main/packages/babel-plugin-jsx-dom-expressions) Babel プラグインをインストールする必要があります:
+
+
+
+
+```sh
+> npm install solid-js babel-preset-solid
+```
+
+そして、`babel-preset-solid` を `.babelrc` か、webpack や rollup の Babel の設定に追加してください:
+
+```json
+"presets": ["solid"]
+```
+
+TypeScript の場合、Solid の JSX を処理するために `tsconfig.json` を以下のように設定します（詳細は [TypeScript ガイド](https://www.solidjs.com/guides/typescript)を参照してください）:
+
+
+
+```json
+"compilerOptions": {
+  "jsx": "preserve",
+  "jsxImportSource": "solid-js",
+}
 ```
 
 ## Solid を学ぶ
@@ -40,7 +75,7 @@ function MyComponent(props) {
 
 コンポーネントは、それ自体がステートフルではなく、インスタンスを持たないという点で軽量です。代わりに、DOM 要素やリアクティブプリミティブのファクトリ関数として機能します。
 
-Solid のきめ細かいリアクティビティは、Signal、Memo、Effect の 3 つのシンプルなプリミティブで構築されています。これらが一緒になって、ビューを最新の状態に保つための自動追跡同期エンジンを形成します。リアクティブな計算は、同期的に実行されるシンプルな関数でラップされた式の形をしています。
+Solid のきめ細かいリアクティビティは、Signal、Memo、Effect の 3 つのコアプリミティブで構築されています。これらが一緒になって、ビューを最新の状態に保つための自動追跡同期エンジンを形成します。リアクティブな計算は、同期的に実行されるシンプルな関数でラップされた式の形をしています。
 
 ```js
 const [first, setFirst] = createSignal("JSON");
@@ -83,11 +118,11 @@ Solid はサーバー上での非同期レンダリングとストリームレ�
 
 詳細については、[サーバーガイド](/guides/server#サーバーサイドレンダリング)をご覧ください。
 
-## コンパイルなし？
+## ビルドなしの選択肢
 
-JSX が嫌い？　式をラップするのを手動で作業したり、パフォーマンスが低下したり、バンドルサイズが大きくなっても構わないですか？　代わりにタグ付きテンプレートリテラルや HyperScript を使って、コンパイルされない環境で Solid アプリを作成することもできます。
+プレーン HTML ファイルや https://codepen.io などの非コンパイル環境で Solid を使用する必要がある場合、Solid のコンパイル時に最適化された JSX 構文ではなく、プレーン JavaScript で [` html`` ` Tagged Template Literals](https://github.com/solidjs/solid/tree/main/packages/solid/html) または [HyperScript の `h()` 関数](https://github.com/solidjs/solid/tree/main/packages/solid/h)を使用できます。
 
-[Skypack](https://www.skypack.dev/) を使って、ブラウザから直接実行することもできます:
+[Skypack](https://www.skypack.dev/) を使って、ブラウザから直接実行することもできます。例えば:
 
 ```html
 <html>
@@ -105,6 +140,8 @@ JSX が嫌い？　式をラップするのを手動で作業したり、パフ�
           timer = setInterval(() => setCount(count() + 1), 1000);
         onCleanup(() => clearInterval(timer));
         return html`<div>${count}</div>`;
+        // もしくは
+        return h("div", {}, count);
       };
       render(App, document.body);
     </script>
@@ -112,4 +149,22 @@ JSX が嫌い？　式をラップするのを手動で作業したり、パフ�
 </html>
 ```
 
-これらを TypeScript で動作させるには、対応する DOM Expressions ライブラリが必要であることを覚えておいてください。タグ付きテンプレートリテラルは [Lit DOM Expressions](https://github.com/ryansolid/dom-expressions/tree/main/packages/lit-dom-expressions) で使用でき、HyperScript は [Hyper DOM Expressions](https://github.com/ryansolid/dom-expressions/tree/main/packages/hyper-dom-expressions) で使用できます。
+ビルドレス化の利点はトレードオフを伴います:
+
+- 式は常にゲッター関数でラップされる必要があり、そうしないとリアクティブになりません。
+  次のコードは `first` や `last` の値が変更されても更新されません。テンプレートが内部で作成するエフェクトの中で値にアクセスしないため、依存関係が追跡されないからです:
+  ```js
+  html` <h1>Hello ${first() + " " + last()}</h1> `;
+  // or
+  h("h1", {}, "Hello ", first() + " " + last());
+  ```
+  テンプレートはエフェクト内のゲッターから読み込まれ、依存関係が追跡されるため、`first` や `last` が変更されると、以下のように期待通りに更新されます:
+  ```js
+  html` <h1>Hello ${() => first() + " " + last()}</h1> `;
+  // or
+  h("h1", {}, "Hello ", () => first() + " " + last());
+  ```
+  Solid の JSX はコンパイル時の能力によりこの問題はなく、`<h1>Hello {first() + ' ' + last()}</h1>` のような式はリアクティブに動作します。
+- Solid JSX のようにビルド時の最適化が行われないため、各テンプレートが最初に実行されるときにランタイムでコンパイルされるため、アプリの起動速度がわずかに遅くなりますが、多くのユースケースでこのパフォーマンスの低下は気にならない程度になります。` html`` ` テンプレートタグを使用しても、JSX と同様に起動後の処理速度は変わりません。`h()` の呼び出しは、実行前にテンプレート全体を静的に解析できないため、常に進行速度が遅くなります。
+
+TypeScript でこれらを動作させるには、対応する DOM Expressions ライブラリが必要です。タグ付きテンプレートリテラルは [Lit DOM Expressions](https://github.com/ryansolid/dom-expressions/tree/main/packages/lit-dom-expressions) で、HyperScript は [Hyper DOM Expressions](https://github.com/ryansolid/dom-expressions/tree/main/packages/hyper-dom-expressions) で利用できます。

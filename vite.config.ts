@@ -124,6 +124,7 @@ export default defineConfig({
     solid({
       adapter,
       extensions: [".mdx", ".md"],
+      routesDir: "../content",
     }),
   ],
   optimizeDeps: {

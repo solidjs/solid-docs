@@ -69,27 +69,28 @@ Our site is build on [SolidStart](https://github.com/solidjs/solid-start). This 
 
 ### Folder structure
 
-The action happens in the `src` folder. Of note:
+We have two folders of note: **content** and **src**. **content** contains all of the pages and page-specific components. This includes the four content folders corresponding to our [four content types](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md#content-types):
+  - `content/tutorials`
+  - `content/how-to-guides`
+  - `content/concepts`
+  - `content/api-reference` (not being worked on currently, as we have the [existing API reference](https://www.solidjs.com/docs/latest/api))
 
-- `src/components`: General components, like the sidebar navigation, footer, and Asides.
-- `src/routes`: Content pages and components that are specific to them. Within are folders corresponding to our [four content types](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md#content-types):
-  - `src/routes/tutorials`
-  - `src/routes/concepts`
-  - `src/routes/how-to-guides`
-  - `src/routes/api-reference`
-- `src/NAV_SECTIONS.ts`: This file determines the two sidebar navigation sections, **Guides** and **Reference**. **Guides** contains Tutorials and How-To Guides, and **Reference** contains Concept pages and API reference.
 
-Every content page must have its own folder, even if it only has one page. For example, the Tracking concept page is one page, so it is found in an `index.md` file inside `routes/concepts/tracking`. The Getting Started with Solid tutorial has several pages, which are found inside `routes/tutorials/getting-started-with-solid`.
+In **src**, we have the SolidStart entry files, the root component, and the `md.tsx` component which maps markdown syntax to elements. Of note:
+  - `src/components`: General components, like the sidebar navigation, footer, and Asides.
+  - `src/NAV_SECTIONS.ts`: This file determines the two sidebar navigation sections, **Guides** and **Reference**. **Guides** contains Tutorials and How-To Guides, and **Reference** contains Concept pages and API reference.
 
-These folders will automatically generate routes; so, `routes/tutorials/getting-started-with-solid/installing-solid` will be shown at `https://docs.solidjs.com/tutorials/getting-started-with-solid/installing-solid`.
+Every content page must have its own folder, even if it only has one page. For example, the Tracking concept page is one page, so it is found in an `index.md` file inside `content/concepts/tracking`. The Getting Started with Solid tutorial has several pages, which are found inside `content/tutorials/getting-started-with-solid`.
 
-If a content page has its own custom components and code snippets, place these inside its content folder. See [the Getting Started with Solid folder](https://github.com/solidjs/solid-docs-next/tree/main/src/routes/tutorials/getting-started-with-solid) for an example.
+These folders will automatically generate routes; so, `content/tutorials/getting-started-with-solid/installing-solid` will be shown at `https://docs.solidjs.com/tutorials/getting-started-with-solid/installing-solid`.
 
-> **Warning** There is also `start` folder in `src/routes`; it is a heavy work-in-progress managed by the SolidStart team and does not follow these rules.
+If a content page has its own custom components and code snippets, place these inside its content folder. See [the Getting Started with Solid folder](https://github.com/solidjs/solid-docs-next/tree/main/src/content/tutorials/getting-started-with-solid) for an example.
+
+> **Warning** There is also `start` folder in `content/routes`; it is a heavy work-in-progress managed by the SolidStart team and does not yet follow our Writing guide.
 
 ### Adding New Content Pages
 
-1. Choose one of the four folders inside `src/routes/`, corresponding to your page's [content type](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md#content-types)
+1. Choose one of the four folders inside `content/`, corresponding to your page's [content type](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md#content-types)
 2. Create a new folder inside that folder. The new folder's name should be the kebab case of your page's title: e.g., `getting-started-with-solid`.
 3. Add `mdx` files for each subpage.
 

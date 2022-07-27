@@ -3,6 +3,7 @@ import { createEffect, createUniqueId, onMount, ParentProps } from "solid-js";
 import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import { Title } from "./components/Main";
+import { Title as MetaTitle } from "solid-meta";
 import { usePageState } from "./components/PageStateContext";
 
 function Anchor(props: ParentProps<{ id: string }>) {
@@ -25,6 +26,7 @@ export default {
         "heading mt-10 mb-6 -mx-.5 break-words text-5xl leading-tight"
       }
     >
+      <MetaTitle>{props.children}</MetaTitle>
       <Anchor id={props.id}>{props.children}</Anchor>
     </h1>
   ),

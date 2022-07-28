@@ -1,5 +1,5 @@
 import { useContext, JSX, JSXElement, For } from "solid-js";
-import { ConfigContext } from "~/components/ConfigContext";
+import { ConfigContext } from "~/components/context/ConfigContext";
 import IconJs from "~icons/logos/javascript";
 import IconTs from "~icons/logos/typescript-icon";
 import IconReact from "~icons/vscode-icons/file-type-reactjs";

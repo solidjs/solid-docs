@@ -9,8 +9,8 @@ import {
   Config,
   ConfigProvider,
   defaultConfig,
-} from "./components/ConfigContext";
-import { PageStateProvider } from "./components/PageStateContext";
+} from "./components/context/ConfigContext";
+import { PageStateProvider } from "./components/context/PageStateContext";
 
 import { MDXProvider } from "solid-mdx";
 import Nav from "./components/nav/Nav";

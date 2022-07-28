@@ -4,7 +4,7 @@ import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import { Title } from "./components/Main";
 import { Title as MetaTitle } from "solid-meta";
-import { usePageState } from "./components/PageStateContext";
+import { usePageState } from "./components/context/PageStateContext";
 
 function Anchor(props: ParentProps<{ id: string }>) {
   return (

@@ -4,7 +4,7 @@ import IconX from "~icons/heroicons-outline/x";
 import IconSun from "~icons/heroicons-outline/sun";
 import IconMoon from "~icons/heroicons-outline/moon";
 import { For, Setter, Show, useContext } from "solid-js";
-import { ConfigContext } from "../ConfigContext";
+import { ConfigContext } from "../context/ConfigContext";
 
 function ActiveLink(props) {
   const location = useLocation();

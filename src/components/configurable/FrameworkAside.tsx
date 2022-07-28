@@ -5,7 +5,11 @@ import {
   Show,
   useContext,
 } from "solid-js";
-import { ConfigContext, OtherFramework } from "./ConfigContext";
+import {
+  ConfigContext,
+  OtherFramework,
+  useConfig,
+} from "../context/ConfigContext";
 import IconAccessibility from "~icons/icomoon-free/accessibility";
 import IconReact from "~icons/mdi/react";
 import IconVue from "~icons/mdi/vuejs";
@@ -13,14 +17,14 @@ import IconAngular from "~icons/mdi/angular";
 import IconSvelte from "~icons/simple-icons/svelte";
 import IconBulb from "~icons/mdi/lightbulb";
 import IconBrain from "~icons/mdi/brain";
-import IconAlertDecagram from "~icons/mdi/alert-decagram"
+import IconAlertDecagram from "~icons/mdi/alert-decagram";
 import "./Aside.css";
-import { CollapsedIcon } from "./nav/NavSection";
+import { CollapsedIcon } from "../nav/NavSection";
 
 export const FrameworkAside = (
   props: PropsWithChildren<{ framework: OtherFramework }>
 ) => {
-  const [config] = useContext(ConfigContext);
+  const [config] = useConfig();
 
   return (
     <Aside
@@ -49,9 +53,9 @@ const asideDefinition: () => Record<
   AsideType,
   {
     title: string | null;
-    logo: JSX.Element,
-    bgColor?: string,
-    preferDarkText?: boolean
+    logo: JSX.Element;
+    bgColor?: string;
+    preferDarkText?: boolean;
   }
 > = () => ({
   react: {
@@ -78,8 +82,8 @@ const asideDefinition: () => Record<
   warning: {
     title: "Warning",
     logo: <IconAlertDecagram {...logoProps} />,
-    bgColor: '#eab308',
-    preferDarkText: true
+    bgColor: "#eab308",
+    preferDarkText: true,
   },
   advanced: { title: "Advanced concepts", logo: <IconBrain {...logoProps} /> },
   general: { title: null, logo: <IconBulb {...logoProps} /> },
@@ -91,14 +95,15 @@ interface IAsideProps {
   collapsible?: boolean;
   title?: string;
   bgColor?: string;
-  preferDarkText: boolean;
+  preferDarkText?: boolean;
 }
 
 export const Aside = (props: PropsWithChildren<IAsideProps>) => {
   const [showContent, setShowContent] = createSignal(!props.collapsible);
   const definition = asideDefinition()[props.type || "general"];
-  const bgColor = () => props.bgColor || definition.bgColor || false
-  const preferDark = () => props.preferDarkText || definition.preferDarkText || false
+  const bgColor = () => props.bgColor || definition.bgColor || false;
+  const preferDark = () =>
+    props.preferDarkText || definition.preferDarkText || false;
   const title = () => props.title || definition.title;
   const logo = () => definition.logo;
 
@@ -106,7 +111,10 @@ export const Aside = (props: PropsWithChildren<IAsideProps>) => {
     <Show when={props.show !== false}>
       <div
         aria-live="polite"
-        class={`flex aside p-5 rounded mt-10 mb-14${preferDark() ? ' text-black' : ' text-white'}${bgColor() ? '' : ' bg-solid-medium dark:bg-darkdefault'} gap-2`} style={`${bgColor() ? `background-color: ${bgColor()}` : ''}`}
+        class={`flex aside p-5 rounded mt-10 mb-14${
+          preferDark() ? " text-black" : " text-white"
+        }${bgColor() ? "" : " bg-solid-medium dark:bg-darkdefault"} gap-2`}
+        style={`${bgColor() ? `background-color: ${bgColor()}` : ""}`}
       >
         <div class="my-3">{logo()}</div>
         <div>

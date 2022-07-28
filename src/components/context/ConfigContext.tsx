@@ -4,6 +4,7 @@ import {
   createSignal,
   PropsWithChildren,
   Signal,
+  useContext,
 } from "solid-js";
 
 export type CodeFormat = "jsx" | "tsx";
@@ -56,3 +57,5 @@ export const ConfigProvider = (
     </ConfigContext.Provider>
   );
 };
+
+export const useConfig = () => useContext(ConfigContext);

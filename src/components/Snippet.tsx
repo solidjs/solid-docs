@@ -1,5 +1,5 @@
 import { PropsWithChildren, useContext } from "solid-js";
-import { CodeFormat, ConfigContext } from "./ConfigContext";
+import { CodeFormat, ConfigContext } from "./context/ConfigContext";
 
 const Container = (props: PropsWithChildren) => {
   const [config, setConfig] = useContext(ConfigContext);

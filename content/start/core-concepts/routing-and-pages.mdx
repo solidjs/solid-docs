@@ -2,7 +2,7 @@ import { Aside } from "~/components/FrameworkAside";
 
 <Title>Routing & pages</Title>
 
-Routing is the foundation of SolidStart. SolidStart uses the [Solid App Router](https://github.com/solidjs/solid-app-router) behind the scenes and enables _isomorphic routing_: the ability to write routes code once and have it work on both the server and client. In this section, you'll learn how to write basic routes, navigate between routes, and handle more complex/dynamic routing scenarios.
+Routing is the foundation of SolidStart. SolidStart uses the excellent [Solid Router](https://github.com/solidjs/solid-router) behind the scenes and enables _isomorphic routing_: the ability to write routes code once and have it work on both the server and client. In this section, you'll learn how to write basic routes, navigate between routes, and handle more complex/dynamic routing scenarios.
 
 ## Creating a route
 
@@ -14,7 +14,7 @@ Here are a few examples of files in our directory structure and how they would t
 - `/src/routes/admin/index.tsx` -> mysite.com/admin
 - `/src/routes/admin/edit-settings.tsx` -> mysite.com/admin/edit-settings
 
-Under the hood, SolidStart is able to traverse this directory structure, automatically collect all the routes, and populate the `<Routes />` component in the `src/root.tsx` file. This means that all you have to do is create a route in your directory structure and SolidStart takes care of everything else needed to make that route available to visit in your application!
+Under the hood, SolidStart is able to traverse this directory structure, automatically collect all the routes, and give you the `<FileRoutes />` component. You can use this component to specify your routes to the `<Routes />` component in `root.tsx`. This means that all you have to do is create a route in your directory structure and SolidStart takes care of everything else needed to make that route available to visit in your application!
 
 ### Route file structure
 
@@ -50,10 +50,67 @@ And this will render "Welcome to SolidStart, Jane!" In reality, `routeData` will
 
 <Aside type="advanced" title="How this looks without file system routing" collapsible>
 
-If you have used Solid App Router in a SolidJS app before, you may notice that the exported component and route data map closely to the properties of the `<Route />` component exported by `solid-app-router`. This is no coincidence! If we were to write these routes without file system-based routing, our handwritten routes would use the default-exported component and `routeData` function:
+If you have used Solid App Router in a Solid app before, you may notice that the exported component and route data map closely to the properties of the `<Route />` component exported by `@solidjs/router`. This is no coincidence! If we were to write these routes without file system-based routing, our handwritten routes could use the same files and use the default-exported component and `routeData` functions as arguments to their `<Route />` components. You can even begin to write your routes from right within `root.tsx` before you decide to use the file-system routing.
 
 ```tsx
-<Route component={Index} data={routeData} />
+// @refresh reload
+import { Suspense } from "solid-js";
+import {
+  Body,
+  ErrorBoundary,
+  FileRoutes,
+  Head,
+  Html,
+  Meta,
+  Routes,
+  Scripts,
+  Title,
+} from "solid-start";
+
+import { HttpStatusCode } from "solid-start/server";
+
+function NotFound() {
+  return (
+    <main>
+      <Title>Not Found</Title>
+      <HttpStatusCode code={404} />
+      <h1>Page Not Found</h1>
+    </main>
+  );
+}
+
+function Home() {
+  return (
+    <main>
+      <Title>Home</Title>
+      <h1>Home</h1>
+    </main>
+  );
+}
+
+export default function Root() {
+  return (
+    <Html lang="en">
+      <Head>
+        <Meta charset="utf-8" />
+        <Meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
+      <Body>
+        <Suspense>
+          <ErrorBoundary>
+            <a href="/">Home</a>
+            <a href="/about">About</a>
+            <Routes>
+              <Route path="/" component={Home} />
+              <Route path="*404" component={NotFound} />
+            </Routes>
+          </ErrorBoundary>
+        </Suspense>
+        <Scripts />
+      </Body>
+    </Html>
+  );
+}
 ```
 
 </Aside>
@@ -62,19 +119,28 @@ If you have used Solid App Router in a SolidJS app before, you may notice that t
 
 ## Navigating between routes
 
+While the user can enter your app from any URL that your app serves, once they are using your app, you can provide them a user experience that is designed. You need a way for the user to travel between your pages. As with any website, you can use `a` tags to add links between pages in your app. Nothing special! Lets look at an example,
+
+```tsx
+
+```
+
 - How to link between pages (`a` tags, `Link`, `NavLink`)
 
 ## Redirecting
 
-- Redirecting with `<Navigate />` (works on client and server)
+- The primary way of redirecting from a route to another is to use the `<Navigate />` component in the JSX. For example, if you want to redirect to the home page, you can use the following code.
+
+  - **Server**: When we get a request for this page, we will rend a [`308 (Redirect)`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/308) response with `Location` header set to the home page. The browser will then do its normal redirect routine. This also helps crawlers to understand that the page should be redirected.
+  - **Client**: When you navigate to this page from another page in the site, we will immediately navigate to the home page.
+
+```tsx filename="maths.ts"
+export default function InactivePage() {
+  return <Navigate to="/" />;
+}
+```
 
 ## Dynamic routes
-
-<Aside type="advanced" title="For users of solid-app-router">
-
-The file based route syntax dramatically differs from that of solid-app-router and some features are missing.
-
-</Aside>
 
 In some cases, it would be horribly inefficient to create each route manually. When you are dealing with dynamic content, it only makes sense to use dynamic routes!
 
@@ -82,12 +148,12 @@ In some cases, it would be horribly inefficient to create each route manually. W
 
 In solid-start, route parameters are defined in the file name. The most basic type of route parameter is enclosed in brackets, like `[id].tsx`. parameters acts as a placeholder for any string. There can be multiple parameters for a single file, but you should ensure there is a delimiter between those parameters.
 
-```
+```ts
 src/
 ├── routes/
-│   ├── @[username]/
-│   │   ├── index.tsx
-│   │   ├── [post].tsx
+│ ├── @[username]/
+│ │ ├── index.tsx
+│ │ ├── [post].tsx
 ```
 
 ### Catch-all routes

@@ -1,5 +1,11 @@
 import { Link } from "solid-app-router";
-import { createEffect, createUniqueId, onMount, ParentProps } from "solid-js";
+import {
+  createEffect,
+  createUniqueId,
+  onMount,
+  ParentProps,
+  Show,
+} from "solid-js";
 import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import { Title } from "./components/Main";
@@ -111,7 +117,16 @@ export default {
       </code>
     );
   },
-  pre: (props) => <pre {...props}>{props.children}</pre>,
+  pre: (props) => (
+    <>
+      {/* <Show when={props.filename?.length > 5}>
+        <span {...props} class="h-4 p-1">
+          {props.filename}
+        </span>
+      </Show> */}
+      <pre {...props}>{props.children}</pre>
+    </>
+  ),
   "data-lsp": (props) => {
     const id = createUniqueId();
     createEffect(() => {

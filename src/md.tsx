@@ -11,6 +11,7 @@ import "tippy.js/dist/tippy.css";
 import { Title } from "./components/Main";
 import { Title as MetaTitle } from "solid-meta";
 import { usePageState } from "./components/PageStateContext";
+import { mergeProps } from "solid-js";
 
 function Anchor(props: ParentProps<{ id: string }>) {
   return (
@@ -124,7 +125,22 @@ export default {
           {props.filename}
         </span>
       </Show> */}
-      <pre {...props}>{props.children}</pre>
+      <pre
+        {...mergeProps(props, {
+          get class() {
+            return (
+              props.className +
+              " " +
+              (props.bad ? "border-red-400 border-1" : "")
+            );
+          },
+          get className() {
+            return undefined;
+          },
+        })}
+      >
+        {props.children}
+      </pre>
     </>
   ),
   "data-lsp": (props) => {

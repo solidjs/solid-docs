@@ -5,11 +5,7 @@ import {
   Show,
   useContext,
 } from "solid-js";
-import {
-  ConfigContext,
-  OtherFramework,
-  useConfig,
-} from "../context/ConfigContext";
+import { ConfigContext, OtherFramework } from "../context/ConfigContext";
 import IconAccessibility from "~icons/icomoon-free/accessibility";
 import IconReact from "~icons/mdi/react";
 import IconVue from "~icons/mdi/vuejs";
@@ -24,7 +20,7 @@ import { CollapsedIcon } from "../nav/NavSection";
 export const FrameworkAside = (
   props: PropsWithChildren<{ framework: OtherFramework }>
 ) => {
-  const [config] = useConfig();
+  const [config] = useContext(ConfigContext);
 
   return (
     <Aside
@@ -95,7 +91,7 @@ interface IAsideProps {
   collapsible?: boolean;
   title?: string;
   bgColor?: string;
-  preferDarkText?: boolean;
+  preferDarkText: boolean;
 }
 
 export const Aside = (props: PropsWithChildren<IAsideProps>) => {

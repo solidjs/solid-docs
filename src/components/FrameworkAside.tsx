@@ -93,6 +93,7 @@ interface IAsideProps {
   title?: string;
   bgColor?: string;
   preferDarkText?: boolean;
+  class?: string;
 }
 
 export const Aside = (props: ParentProps<IAsideProps>) => {
@@ -110,7 +111,9 @@ export const Aside = (props: ParentProps<IAsideProps>) => {
         aria-live="polite"
         class={`flex aside p-5 rounded mt-10 mb-14${
           preferDark() ? " text-black" : " text-white"
-        }${bgColor() ? "" : " bg-solid-medium dark:bg-darkdefault"} gap-2`}
+        }${bgColor() ? "" : " bg-solid-medium dark:bg-darkdefault"} gap-2 ${
+          props.class ?? ""
+        }`}
         style={`${bgColor() ? `background-color: ${bgColor()}` : ""}`}
       >
         <div class="my-3">{logo()}</div>

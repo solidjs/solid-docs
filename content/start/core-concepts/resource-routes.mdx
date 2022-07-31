@@ -1,0 +1,134 @@
+# Resource Routes
+
+- Creating Resource Routes
+- Creating a POST endpoint
+- Creating a PUT endpoint
+- Creating a DELETE endpoint
+- Creating a PATCH endpoint
+- Creating a `users.json` endpoint
+
+# Resource Routes
+
+Resource Routes are not part of your application UI, but are still part of your application. They can send any kind of Response.
+
+Most routes in SolidStart are UI Routes, or routes that actually render a component. But routes don't always have to render components. There are a handful of cases where you want to use route as a general purpose endpoint to your website. Here are a few examples:
+
+- JSON API for a mobile app that reuses server-side code with the Remix UI
+- Dynamically generating PDFs
+- Dynamically generating social images for blog posts or other pages
+- Webhooks for other services like Stripe or GitHub
+- a CSS file that dynamically renders custom properties for a user's preferred theme
+
+## Creating Resource Routes
+
+If a route doesn't export a default component, it can export a `get` function instead and be used as a Resource Route. If the route is called called with `GET`, the `get` function is called and the response is returned. None of the parent `routeData` functions are called because those are needed for the UI, but this is not the UI. If called with `POST`, the route's `post` function is called.
+
+For example, consider a UI Route that renders a report, note the link:
+
+```tsx lines=[10-12] filename="app/routes/reports/$id.js"
+
+export default function Report() {
+  return (
+    <div>
+      <NavLink to="report.pdf" rel="external">
+        View as PDF
+      </Link>
+    </div>
+  );
+}
+```
+
+It's linking to a PDF version of the page. To make this work we can create a Resource Route below it. Notice that it has no component: that makes it a Resource Route.
+
+```tsx filename="app/routes/reports/$id/report.pdf.ts"
+import { ApiFetchEvent } from "solid-start/server";
+
+export async function get({ params }: ApiFetchEvent) {
+  const report = await getReport(params.id);
+  const pdf = await generateReportPDF(report);
+  return new Response(pdf, {
+    status: 200,
+    headers: {
+      "Content-Type": "application/pdf",
+    },
+  });
+}
+```
+
+When the user clicks the link from the UI route, they will navigate to the PDF.
+
+## Linking to Resource Routes
+
+<docs-error>It’s imperative that you use <code>rel=external</code> on any Links to Resource Routes</docs-error>
+
+There's a subtle detail to be aware of when linking to resource routes. You need to link to it with `<Link reloadDocument>` or a plain `<a href>`. If you link to it with a normal `<NavLink href="report.pdf">` without `rel="external"`, then the resource route will be treated as a UI route and SolidStart will try to do a client-side navigation to that page.
+
+## Handling different request methods
+
+We support all of the HTTP methods. You can export a function with the name of the HTTP method and we will route the relevant requests to that function. You can add just one or many of the methods you want to support. Any request that doesn't match the given methods will respond with a `405 Method Not Allowed` error.
+
+To handle `GET` requests export a `get` function:
+
+```ts
+import type { ApiEvent, json } from "solid-start/server";
+
+export const get = async ({ request }: ApiEvent) => {
+  // handle "GET" request
+
+  return json({ success: true }, 200);
+};
+```
+
+To handle `POST`, `PUT`, `PATCH` or `DELETE` requests export an appropriately named function function:
+
+```ts
+import type { ApiEvent } from "solid-start/server"; // or cloudflare/deno
+
+export const post = async ({ request }: ApiEvent) => {
+  switch (request.method) {
+    case "POST": {
+      /* handle "POST" */
+    }
+    case "PUT": {
+      /* handle "PUT" */
+    }
+    case "PATCH": {
+      /* handle "PATCH" */
+    }
+    case "DELETE": {
+      /* handle "DELETE" */
+    }
+  }
+};
+```
+
+## Webhooks
+
+Resource routes can be used to handle webhooks. For example, you can create a webhook that receives notifications from GitHub when a new commit is pushed to a repository:
+
+```ts
+import type { ActionFunction } from "@remix-run/node"; // or cloudflare/deno
+import { json } from "@remix-run/node"; // or cloudflare/deno
+import crypto from "crypto";
+
+export const action: ActionFunction = async ({ request }) => {
+  if (request.method !== "POST") {
+    return json({ message: "Method not allowed" }, 405);
+  }
+  const payload = await request.json();
+
+  /* Validate the webhook */
+  const signature = request.headers.get("X-Hub-Signature-256");
+  const generatedSignature = `sha256=${crypto
+    .createHmac("sha256", process.env.GITHUB_WEBHOOK_SECRET)
+    .update(JSON.stringify(payload))
+    .digest("hex")}`;
+  if (signature !== generatedSignature) {
+    return json({ message: "Signature mismatch" }, 401);
+  }
+
+  /* process the webhook (e.g. enqueue a background job) */
+
+  return json({ success: true }, 200);
+};
+```

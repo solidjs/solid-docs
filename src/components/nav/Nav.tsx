@@ -74,8 +74,9 @@ const START_SECTIONS = [
       { header: "CSS and styling", link: "/css-and-styling" },
       { header: "Static assets", link: "/static-assets" },
       { header: "Head & metadata", link: "/head-and-metadata" },
-      { header: "Data fetching", link: "/data-fetching" },
-      { header: "Actions", link: "/actions" },
+      { header: "Data Loading", link: "/data-loading" },
+      { header: "Actions & Data Writes", link: "/actions" },
+      { header: "Resource Routes", link: "/resource-routes" },
       { header: "State management", link: "/state-management" },
       { header: "Request lifecycle", link: "/request-lifecycle" },
       {

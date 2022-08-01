@@ -104,38 +104,38 @@ export const Aside = (props: PropsWithChildren<IAsideProps>) => {
   const logo = () => definition.logo;
 
   return (
-    <Show when={props.show !== false}>
-      <div
-        aria-live="polite"
-        class={`flex aside p-5 rounded mt-10 mb-14${
-          preferDark() ? " text-black" : " text-white"
-        }${bgColor() ? "" : " bg-solid-medium dark:bg-darkdefault"} gap-2`}
-        style={`${bgColor() ? `background-color: ${bgColor()}` : ""}`}
-      >
-        <div class="my-3">{logo()}</div>
-        <div>
-          <Show when={!!title() && !props.collapsible}>
-            <h3 class="text-xl mt-3">{title()}</h3>
-          </Show>
-          <Show when={!!title() && props.collapsible}>
-            <h3 class="text-xl mt-3">
-              <button
-                aria-label={`Show expanded ${title()} content`}
-                class="flex gap-3"
-                onClick={() => setShowContent(!showContent())}
-              >
-                {title()}
-                <CollapsedIcon
-                  class={`flex-0 transform ${
-                    showContent() ? "rotate-0" : "-rotate-90 -translate-y-px"
-                  }`}
-                />
-              </button>
-            </h3>
-          </Show>
-          <Show when={showContent()}>{props.children}</Show>
-        </div>
+    <div
+      aria-live="polite"
+      class={`${
+        !props.show ? "hidden" : ""
+      } flex aside p-5 rounded mt-10 mb-14${
+        preferDark() ? " text-black" : " text-white"
+      }${bgColor() ? "" : " bg-solid-medium dark:bg-darkdefault"} gap-2`}
+      style={`${bgColor() ? `background-color: ${bgColor()}` : ""}`}
+    >
+      <div class="my-3">{logo()}</div>
+      <div>
+        <Show when={!!title() && !props.collapsible}>
+          <h3 class="text-xl mt-3">{title()}</h3>
+        </Show>
+        <Show when={!!title() && props.collapsible}>
+          <h3 class="text-xl mt-3">
+            <button
+              aria-label={`Show expanded ${title()} content`}
+              class="flex gap-3"
+              onClick={() => setShowContent(!showContent())}
+            >
+              {title()}
+              <CollapsedIcon
+                class={`flex-0 transform ${
+                  showContent() ? "rotate-0" : "-rotate-90 -translate-y-px"
+                }`}
+              />
+            </button>
+          </h3>
+        </Show>
+        <Show when={showContent()}>{props.children}</Show>
       </div>
-    </Show>
+    </div>
   );
 };

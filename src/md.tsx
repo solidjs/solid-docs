@@ -1,6 +1,7 @@
 import { Link } from "@solidjs/router";
 import { createEffect, createUniqueId, onMount, ParentProps } from "solid-js";
 import tippy from "tippy.js";
+import { mergeProps } from "solid-js";
 import "tippy.js/dist/tippy.css";
 import { Title } from "./components/Main";
 import { Title as MetaTitle } from "@solidjs/meta";
@@ -32,10 +33,10 @@ export default {
   ssr: (props) => <>{props.children}</>,
   spa: (props) => <></>,
   h2: (props) => {
-    const { addSection } = usePageState();
-    onMount(() => {
-      addSection(props.children, props.id);
-    });
+    // const { addSection } = usePageState();
+    // onMount(() => {
+    //   addSection(props.children, props.id);
+    // });
     return (
       <h2
         {...props}

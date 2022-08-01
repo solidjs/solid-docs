@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "solid-app-router";
+import { NavLink, useLocation } from "@solidjs/router";
 import IconMenu from "~icons/heroicons-outline/menu";
 import IconX from "~icons/heroicons-outline/x";
 import IconSun from "~icons/heroicons-outline/sun";

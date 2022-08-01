@@ -1,17 +1,9 @@
-import { Link } from "solid-app-router";
-import {
-  createEffect,
-  createUniqueId,
-  onMount,
-  ParentProps,
-  Show,
-} from "solid-js";
+import { Link } from "@solidjs/router";
+import { createEffect, createUniqueId, onMount, ParentProps } from "solid-js";
 import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import { Title } from "./components/Main";
-import { Title as MetaTitle } from "solid-meta";
-import { usePageState } from "./components/PageStateContext";
-import { mergeProps } from "solid-js";
+import { Title as MetaTitle } from "@solidjs/meta";
 
 function Anchor(props: ParentProps<{ id: string }>) {
   return (

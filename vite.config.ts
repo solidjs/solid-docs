@@ -1,16 +1,12 @@
 import { defineConfig } from "vite";
-import solid from "solid-start";
+import solid from "solid-start/vite";
 import netlify from "solid-start-netlify";
 import node from "solid-start-node";
 import mdx from "@mdx-js/rollup";
 import WindiCSS from "vite-plugin-windicss";
 import rehypeRaw from "rehype-raw";
-// @ts-ignore
 import { nodeTypes } from "@mdx-js/mdx";
-import colors from "windicss/colors";
-// @ts-ignore
 import remarkShikiTwoslash from "remark-shiki-twoslash";
-import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
 import Icons from "unplugin-icons/vite";
 
@@ -20,21 +16,13 @@ export default defineConfig({
   plugins: [
     Icons({
       compiler: "solid",
-      /* options */
     }),
     {
       ...mdx({
         jsx: true,
         jsxImportSource: "solid-js",
         providerImportSource: "solid-mdx",
-        rehypePlugins: [
-          rehypeSlug,
-          // [
-          //   rehypeAutolinkHeadings,
-          //   { behaviour: "append", test: ["h1", "h2", "h3"] },
-          // ],
-          [rehypeRaw, { passThrough: nodeTypes }],
-        ],
+        rehypePlugins: [rehypeSlug, [rehypeRaw, { passThrough: nodeTypes }]],
         remarkPlugins: [
           [
             // @ts-ignore
@@ -123,6 +111,7 @@ export default defineConfig({
     }),
     solid({
       adapter,
+
       extensions: [".mdx", ".md"],
       routesDir: "../content",
     }),
@@ -130,7 +119,6 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ["solid-headless"],
   },
-  //@ts-ignore
   ssr: {
     noExternal: ["solid-headless", "solid-heroicons"],
   },

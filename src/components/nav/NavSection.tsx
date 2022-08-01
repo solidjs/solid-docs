@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "solid-app-router";
+import { NavLink, useLocation } from "@solidjs/router";
 
 import { usePageState } from "../PageStateContext";
 import {

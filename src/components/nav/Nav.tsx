@@ -1,4 +1,4 @@
-import { NavLink, Route, Routes, useLocation } from "solid-app-router";
+import { NavLink, Route, Routes, useLocation } from "@solidjs/router";
 import { NavHeader } from "./NavHeader";
 import { Collapsible, NavItem } from "./NavSection";
 // import { Accordion } from "solid-headless";

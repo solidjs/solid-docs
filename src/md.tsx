@@ -23,7 +23,7 @@ export default {
       {...props}
       class={
         boldClass +
-        "heading mt-10 mb-6 -mx-.5 break-words text-5xl leading-tight"
+        "heading mt-10 mb-6 -mx-.5 break-words text-5xl leading-tight mdx-heading"
       }
     >
       <MetaTitle>{props.children}</MetaTitle>
@@ -40,29 +40,35 @@ export default {
     return (
       <h2
         {...props}
-        class={boldClass + "heading text-3xl leading-10 mt-14 mb-6"}
+        class={boldClass + "heading text-3xl leading-10 mt-14 mb-6 mdx-heading"}
       >
         <Anchor id={props.id}>{props.children}</Anchor>
       </h2>
     );
   },
   h3: (props) => (
-    <h3 {...props} class={boldClass + "heading text-2xl leading-9 mt-14 mb-6"}>
+    <h3
+      {...props}
+      class={boldClass + "heading text-2xl leading-9 mt-14 mb-6 mdx-heading"}
+    >
       <Anchor id={props.id}>{props.children}</Anchor>
     </h3>
   ),
   h4: (props) => (
-    <h4 {...props} class="heading text-xl font-bold leading-9 mt-14 mb-4">
+    <h4
+      {...props}
+      class="heading text-xl font-bold leading-9 mt-14 mb-4 mdx-heading"
+    >
       <Anchor id={props.id}>{props.children}</Anchor>
     </h4>
   ),
   h5: (props) => (
-    <h5 {...props} class="text-xl leading-9 mt-14 mb-4 font-medium">
+    <h5 {...props} class="text-xl leading-9 mt-4 mb-4 font-medium mdx-heading">
       <Anchor id={props.id}>{props.children}</Anchor>
     </h5>
   ),
   h6: (props) => (
-    <h6 {...props} class="text-xl font-400">
+    <h6 {...props} class="text-xl font-400 mdx-heading">
       <Anchor id={props.id}>{props.children}</Anchor>
     </h6>
   ),

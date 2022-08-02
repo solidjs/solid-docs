@@ -25,19 +25,21 @@ export default defineConfig({
         rehypePlugins: [rehypeSlug, [rehypeRaw, { passThrough: nodeTypes }]],
         remarkPlugins: [
           [
-            // @ts-ignore
             remarkShikiTwoslash.default,
             {
               disableImplicitReactImport: true,
               includeJSDocInHover: true,
               // theme: "css-variables",
               themes: ["github-light", "github-dark"],
+              defaultOptions: {
+                lib: ["dom", "es2015"],
+              },
               defaultCompilerOptions: {
                 allowSyntheticDefaultImports: true,
                 esModuleInterop: true,
                 target: "ESNext",
-                lib: ["DOM", "ES2015"],
                 module: "ESNext",
+                lib: ["dom", "es2015"],
                 jsxImportSource: "solid-js",
                 jsx: "preserve",
                 types: ["vite/client"],

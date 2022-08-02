@@ -29,6 +29,8 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
         showMenu={showMenu()}
         setShowMenu={setShowMenu}
       />
+      <div id="docsearch" />
+
       <div
         classList={{
           hidden: !showMenu(),
@@ -108,8 +110,26 @@ const START_SECTIONS = [
       { header: "Error boundary", link: "/error-boundary" },
       { header: "Files", link: "/files" },
       { header: "Forms", link: "/forms" },
-      { header: "Head", link: "/head" },
-      { header: "Router", link: "/router" },
+      {
+        header: "Document",
+        link: "/document",
+        subsections: [
+          { header: "<Html />", link: "/Html" },
+          { header: "Head", link: "/Head" },
+          { header: "Body", link: "/Body" },
+          { header: "Title", link: "/Title" },
+          { header: "Meta", link: "/Meta" },
+          { header: "Link", link: "/Link" },
+          { header: "Script", link: "/Script" },
+          { header: "Style", link: "/Style" },
+          { header: "Stylesheet", link: "/Stylesheet" },
+        ],
+      },
+      {
+        header: "Router",
+        link: "/router",
+        subsections: [{ header: "useParams", link: "/useParams" }],
+      },
       { header: "Server", link: "/server" },
       { header: "Session", link: "/session" },
     ],
@@ -138,7 +158,7 @@ export function getStartSection(pathname: string) {
 
 function StartMenu() {
   return (
-    <ul class="m-5">
+    <ul class="m-5 nav">
       <For each={START_SECTIONS}>
         {(section) => (
           <li class="mb-6">
@@ -146,16 +166,38 @@ function StartMenu() {
             <ul>
               <For each={section.subsections}>
                 {(subsection) => (
-                  <li class="px-2 my-1 py-0">
-                    <NavLink
-                      style="font-size: 0.95rem"
-                      class="hover:underline"
-                      activeClass="underline"
-                      href={section.link + subsection.link}
-                    >
-                      {subsection.header}
-                    </NavLink>
-                  </li>
+                  <>
+                    <li class="px-2 my-1 py-0">
+                      <NavLink
+                        style="font-size: 0.95rem"
+                        class="hover:underline"
+                        activeClass="text-solid-default font-bold"
+                        href={section.link + subsection.link}
+                      >
+                        {subsection.header}
+                      </NavLink>
+                    </li>
+                    <Show when={subsection.subsections?.length}>
+                      <ul class="px-2">
+                        <For each={subsection.subsections}>
+                          {(item) => (
+                            <>
+                              <li class="pl-4 my-1 py-0">
+                                <NavLink
+                                  style="font-size: 0.85rem"
+                                  class="hover:underline"
+                                  activeClass="text-solid-default font-bold"
+                                  href={section.link + item.link}
+                                >
+                                  {item.header}
+                                </NavLink>
+                              </li>
+                            </>
+                          )}
+                        </For>
+                      </ul>
+                    </Show>
+                  </>
                 )}
               </For>
             </ul>

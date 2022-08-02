@@ -28,6 +28,7 @@ import { Main } from "./components/Main";
 import { HttpHeader, ServerContext } from "solid-start/server";
 import { isServer } from "solid-js/web";
 import { useLocation } from "solid-start";
+import { Stylesheet } from "@solidjs/meta";
 
 function useCookies() {
   const context = useContext(ServerContext);
@@ -71,6 +72,7 @@ export default function Root() {
           href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@200;300;400&display=swap"
           rel="stylesheet"
         />
+        <Stylesheet href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
         <HttpHeader name="x-robots-tag" value="nofollow" />
       </Head>
       <Body class="font-sans antialiased text-lg bg-white dark:bg-solid-darkbg text-black dark:text-white leading-base min-h-screen lg:flex lg:flex-row">
@@ -94,6 +96,16 @@ export default function Root() {
             </PageStateProvider>
           </ConfigProvider>
         </Suspense>
+        <script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+        <script>
+          {`docsearch({
+    appId: "VTVVKZ36GX",
+    apiKey: "f520312c8dccf1309453764ee2fed27e",
+    indexName: "solidjs",
+    container: "#docsearch",
+    debug: false 
+  });`}
+        </script>
         <Scripts />
       </Body>
     </Html>

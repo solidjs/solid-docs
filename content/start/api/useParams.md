@@ -1,18 +1,27 @@
-<title>useMatch</title>
+# useParams
 
-##### `useMatch` gives you a reactive object describing the URL the user is visiting
+##### `useParams` gives you an object containing the path params of the current route
 
 <div class="text-xl">
+
+```ts twoslash
+import { useParams } from "@solidjs/router";
+// ---cut---
+const params = useParams();
+```
 
 </div>
 
 - [Usage](#usage)
 
-  - [Reading the current URL (location) in a reactive context](#accessing-id-param-for-route-users-id)
+  - [Reading `id` param for route `/users/:id`](#accessing-id-param-for-route-users-id)
+  - [Reading both `id` and `project` params for route `/users/:id/projects/:project`](#accessing-id-param-for-route-users-id)
+  - [Fetching data based on the path params](#example)
+  - [Show helpful error message for catch-all/404 routes](#example)
 
 - [Reference](#reference)
 
-  - [`useMatch()`](#hello-world)
+  - [`useParams()`](#hello-world)
 
 - [Troublehooting](#troublehooting)
 
@@ -42,7 +51,8 @@ To access the `:id` part of the route, call `useParams()` inside a component. Th
 
 ```tsx twoslash {4-8}
 // @errors: 2571
-// @lib: dom,ES2015
+// @lib: ES2015,DOM
+
 import { useParams } from "@solidjs/router";
 
 function User() {
@@ -60,7 +70,8 @@ We could also have a `Route` with with multiple dynamic parts. For example, a ro
 
 ```tsx twoslash {6-8,14-18}
 // @errors: 2571
-// @lib: ES2015
+// @lib: ES2015,DOM
+import { JSX } from "solid-js";
 import { Router, Route, useParams } from "@solidjs/router";
 
 export function App() {
@@ -92,7 +103,8 @@ For example, if you have a route like `/users/:id`, then you can access the `id`
 
 ```tsx twoslash {2}
 // @errors: 2571
-// @lib: ES2015
+// @lib: ES2015,DOM
+
 import { useParams, Router, Route } from "@solidjs/router";
 import { createResource, JSX } from "solid-js";
 
@@ -109,8 +121,8 @@ function User() {
 Then, you can use the `id` param as the source for your resource. You can fetch data for the user with the matching `id`. For example, here we fetch and render the user's name in your component based on the `id` param.
 
 ```tsx twoslash {4-7}
+// @lib: ES2015,DOM
 // @errors: 2571
-// @lib: ES2015
 import { useParams, Router, Route } from "@solidjs/router";
 import { createResource, JSX } from "solid-js";
 
@@ -133,14 +145,26 @@ function User() {
 
 ## Reference
 
-### `useMatch()`
+### `useParams()`
 
-Call `useMatch()` inside a component to get the current URL (location).
+Call `useParams()` inside a component to get the current route params.
+
+```tsx twoslash
+import { useParams } from "@solidjs/router";
+
+function Component() {
+  const params = useParams();
+}
+```
 
 #### Returns
 
-A reactive object containing the attributes of the URL. The fields of the object are the names of the dynamic parts of the route path. For example,
+A reactive object containing the current route params. The fields of the object are the names of the dynamic parts of the route path. For example,
 
-- `pathname: string`: the pathname part of the URL, without the query string,
-- `search: string`: the query string part of the URL
-- `hash: string`
+- if route path is `/users/:id` and URL is `/users/123`,
+  - then `params` will be `{ id: 123 }`
+- if route path is `/users/:id/projects/:project` and URL is `/users/123/projects/hello-world`,
+  - then `params` will be `{ id: 123, project: "hello-world" }`
+- If route path is `/*missing` and URL is `/no/matching/route`
+  - then `params` will be `{ missing: "no/matching/route" }`
+  - Note: `missing` is not a `string[]` of path segments, but a single `string` containing the whole matched path.

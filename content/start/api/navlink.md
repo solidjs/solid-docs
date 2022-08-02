@@ -42,7 +42,7 @@ To access the `:id` part of the route, call `useParams()` inside a component. Th
 
 ```tsx twoslash {4-8}
 // @errors: 2571
-// @lib: dom,ES2015
+// @lib: ES2015
 import { useParams } from "@solidjs/router";
 
 function User() {

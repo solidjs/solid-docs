@@ -1,4 +1,4 @@
-<title>useNavigate</title>
+# useNavigate
 
 ##### `useNavigate` gives you an object containing the path params of the current route
 

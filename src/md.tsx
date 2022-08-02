@@ -14,15 +14,15 @@ function Anchor(props: ParentProps<{ id: string }>) {
   );
 }
 
-const boldClass = "font-bold text-solid-default dark:text-solid-darkdefault ";
+const headerBold = "font-bold text-solid-default dark:text-solid-darkdefault ";
 
 export default {
-  strong: (props) => <span class={boldClass}>{props.children}</span>,
+  strong: (props) => <span class="font-bold">{props.children}</span>,
   h1: (props) => (
     <h1
       {...props}
       class={
-        boldClass +
+        headerBold +
         "heading mt-10 mb-6 -mx-.5 break-words text-5xl leading-tight"
       }
     >
@@ -40,14 +40,14 @@ export default {
     return (
       <h2
         {...props}
-        class={boldClass + "heading text-3xl leading-10 mt-14 mb-6"}
+        class={headerBold + "heading text-3xl leading-10 mt-14 mb-6"}
       >
         <Anchor id={props.id}>{props.children}</Anchor>
       </h2>
     );
   },
   h3: (props) => (
-    <h3 {...props} class={boldClass + "heading text-2xl leading-9 mt-14 mb-6"}>
+    <h3 {...props} class={headerBold + "heading text-2xl leading-9 mt-14 mb-6"}>
       <Anchor id={props.id}>{props.children}</Anchor>
     </h3>
   ),

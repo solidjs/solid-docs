@@ -22,11 +22,15 @@ export function IfConfig<T extends keyof Config>(
   return (
     <Dynamic component={props.block ? "div" : "span"}>
       <Show
-        when={config()[props.check] === props.forValue}
+        when={config[props.check] === props.forValue}
         fallback={props.fallback}
       >
         {props.children}
       </Show>
     </Dynamic>
   );
+}
+
+export function IfTS(props: ParentProps<{fallback?: JSX.Element, block?: boolean}>) {
+  return <IfConfig check="typescript" forValue={true} {...props} />;
 }

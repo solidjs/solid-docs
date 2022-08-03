@@ -1,5 +1,5 @@
-import { useContext, JSX, JSXElement, For } from "solid-js";
-import { ConfigContext } from "~/components/context/ConfigContext";
+import {JSX, JSXElement, For, createEffect } from "solid-js";
+import { useConfig } from "~/components/context/ConfigContext";
 import IconJs from "~icons/logos/javascript";
 import IconTs from "~icons/logos/typescript-icon";
 import IconReact from "~icons/vscode-icons/file-type-reactjs";
@@ -8,29 +8,28 @@ import IconSvelte from "~icons/vscode-icons/file-type-svelte";
 import IconAngular from "~icons/vscode-icons/file-type-angular";
 
 export const Preferences = () => {
-  const [config, setConfig] = useContext(ConfigContext);
+  const [config, setConfig] = useConfig();
 
-  const configChange: JSX.EventHandler<HTMLInputElement, InputEvent> = (e) => {
-    setConfig((c) => ({ ...c, [e.currentTarget.name]: e.currentTarget.value }));
-  };
-
+  createEffect(() => {
+    console.log(config.typescript);
+  })
   return (
     <>
       <RadioGroup
         legend="Do you prefer JavaScript or TypeScript?"
-        name="codeFormat"
-        checked={config().codeFormat}
-        onChange={configChange}
+        name="typescript"
+        checked={config.typescript ? "typescript" : "javascript"}
+        onChange={(value) => setConfig("typescript", value === "typescript")}
         radios={[
-          { icon: <IconJs />, label: "JavaScript", value: "jsx" },
-          { icon: <IconTs />, label: "TypeScript", value: "tsx" },
+          { icon: <IconJs />, label: "JavaScript", value: "javascript" },
+          { icon: <IconTs />, label: "TypeScript", value: "typescript" },
         ]}
       />
       <RadioGroup
         legend="Are you coming from any of the following frameworks?"
         name="comingFrom"
-        checked={config().comingFrom}
-        onChange={configChange}
+        checked={config.comingFrom}
+        onChange={(value) => setConfig("comingFrom", value)}
         radios={[
           { icon: <IconReact />, label: "React", value: "react" },
           { icon: <IconVue />, label: "Vue", value: "vue" },
@@ -43,11 +42,11 @@ export const Preferences = () => {
   );
 };
 
-interface IRadioGroupProps<T extends string> {
+interface RadioGroupProps<T extends string> {
   legend: string;
   name: string;
   checked: T;
-  onChange: JSX.EventHandler<HTMLInputElement, InputEvent>;
+  onChange: (value: T) => void;
   radios: {
     value: T;
     label: string;
@@ -55,7 +54,7 @@ interface IRadioGroupProps<T extends string> {
   }[];
 }
 
-const RadioGroup = <T extends string>(props: IRadioGroupProps<T>) => {
+const RadioGroup = <T extends string>(props: RadioGroupProps<T>) => {
   return (
     <fieldset class="mt-10">
       <legend class="text-xl">{props.legend}</legend>
@@ -73,7 +72,7 @@ const RadioGroup = <T extends string>(props: IRadioGroupProps<T>) => {
               name={props.name}
               id={`${props.name}-${radio.value}`}
               value={radio.value}
-              onChange={props.onChange}
+              onChange={(e) => props.onChange(e.currentTarget.value as T)}
               checked={props.checked === radio.value}
             />
             <label

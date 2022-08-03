@@ -1,6 +1,6 @@
 import { createSignal, For, JSX, onMount, useContext } from "solid-js";
 import { Dynamic } from "solid-js/web";
-import { Config, ConfigContext } from "./context/ConfigContext";
+import { Config, useConfig } from "./context/ConfigContext";
 
 type File = {
   name: string;
@@ -8,24 +8,25 @@ type File = {
   default?: boolean;
 };
 
-interface ICodeTabsProps {
-  files: Record<Config["codeFormat"], File[]>;
+
+interface CodeTabsProps {
+  ts: File[],
+  js: File[]
 }
 
-export const CodeTabs = (props: ICodeTabsProps) => {
-  const [selected, setSelected] = createSignal(0);
-  const [config, setConfig] = useContext(ConfigContext);
+export const CodeTabs = (props: CodeTabsProps) => {
 
-  // Initial selected tab
-  onMount(() => {
-    const initialSelected = props.files[config().codeFormat].findIndex(
-      (el) => el.default
-    );
-    if (initialSelected !== -1) setSelected(initialSelected);
-  });
+  const [config, setConfig] = useConfig();
 
-  const selectedTabSet = () => props.files[config().codeFormat];
-  const selectedFile = () => selectedTabSet()[selected()];
+  const selectedTabSet = () => config.typescript ? props.ts : props.js;
+
+  const initialSelectedIndex = selectedTabSet().findIndex(
+    (el) => el.default
+  );
+
+  const [selectedIndex, setSelectedIndex] = createSignal(initialSelectedIndex === -1 ? 0 : initialSelectedIndex);
+  
+  const selectedFile = () => selectedTabSet()[selectedIndex()];
 
   return (
     <div class="my-10">
@@ -36,10 +37,10 @@ export const CodeTabs = (props: ICodeTabsProps) => {
               <button
                 aria-label={`Display the ${file.name} code`}
                 classList={{
-                  "border-b-2 border-blue-400": i() === selected(),
+                  "border-b-2 border-blue-400": i() === selectedIndex(),
                   "p-2": true,
                 }}
-                onClick={() => setSelected(i())}
+                onClick={() => setSelectedIndex(i())}
               >
                 {file.name}
               </button>
@@ -47,23 +48,23 @@ export const CodeTabs = (props: ICodeTabsProps) => {
           </For>
         </div>
         <div class="flex gap-1">
-          <For each={["jsx", "tsx"]}>
-            {(format: "jsx" | "tsx") => (
+          <For each={[false, true]}>
+            {(toTypescript: boolean) => (
               <button
                 aria-label={`Change code examples to ${
-                  format === "jsx" ? "JavaScript" : "TypeScript"
+                  !toTypescript ? "JavaScript" : "TypeScript"
                 }`}
                 classList={{
                   "py-2 px-3 rounded": true,
                   "font-bold": true,
                   "btn-typescript":
-                    config().codeFormat === format && format === "tsx",
+                    config.typescript === toTypescript && toTypescript,
                   "btn-javascript":
-                    config().codeFormat === format && format === "jsx",
+                    config.typescript === toTypescript && !toTypescript,
                 }}
-                onClick={() => setConfig((c) => ({ ...c, codeFormat: format }))}
+                onClick={() => setConfig("typescript", toTypescript)}
               >
-                {format === "jsx" ? "JS" : "TS"}
+                {toTypescript ? "TS" : "JS"}
               </button>
             )}
           </For>

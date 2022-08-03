@@ -1,11 +1,10 @@
 import {
   createSignal,
   JSX,
-  PropsWithChildren,
+  ParentProps,
   Show,
-  useContext,
 } from "solid-js";
-import { ConfigContext, OtherFramework } from "../context/ConfigContext";
+import { useConfig, OtherFramework } from "../context/ConfigContext";
 import IconAccessibility from "~icons/icomoon-free/accessibility";
 import IconReact from "~icons/mdi/react";
 import IconVue from "~icons/mdi/vuejs";
@@ -18,14 +17,14 @@ import "./Aside.css";
 import { CollapsedIcon } from "../nav/NavSection";
 
 export const FrameworkAside = (
-  props: PropsWithChildren<{ framework: OtherFramework }>
+  props: ParentProps<{ framework: OtherFramework }>
 ) => {
-  const [config] = useContext(ConfigContext);
+  const [config] = useConfig();
 
   return (
     <Aside
       type={props.framework}
-      show={config().comingFrom === props.framework}
+      show={config.comingFrom === props.framework}
     >
       {props.children}
     </Aside>
@@ -85,16 +84,16 @@ const asideDefinition: () => Record<
   general: { title: null, logo: <IconBulb {...logoProps} /> },
 });
 
-interface IAsideProps {
+interface AsideProps {
   show?: boolean;
   type: AsideType;
   collapsible?: boolean;
   title?: string;
   bgColor?: string;
-  preferDarkText: boolean;
+  preferDarkText?: boolean;
 }
 
-export const Aside = (props: PropsWithChildren<IAsideProps>) => {
+export const Aside = (props: ParentProps<AsideProps>) => {
   const [showContent, setShowContent] = createSignal(!props.collapsible);
   const definition = asideDefinition()[props.type || "general"];
   const bgColor = () => props.bgColor || definition.bgColor || false;

@@ -167,10 +167,8 @@ Automatic effect dependency tracking is made possible by `count` being a functio
 Now that we've gained some exposure to two of Solid's core primitives, signals and effects, it's time to add them into our components. Let's keep using our `count` example but, instead of logging the count, let's render it to the DOM:
 
 <CodeTabs
-  files={{
-    jsx: [{ name: "Counter.jsx", component: Counter1 }],
-    tsx: [{ name: "Counter.tsx", component: Counter1 }],
-  }}
+  js={[{ name: "Counter.jsx", component: Counter1 }
+]}ts={[{ name: "Counter.tsx", component: Counter1 }]}
 />
 
 <div>Current count: 0</div>
@@ -178,10 +176,8 @@ Now that we've gained some exposure to two of Solid's core primitives, signals a
 We see that, much like other variables, we can use signals inside our JSX code by including them inside curly braces. This component is not too interesting yet; so let's add the ability to increment our count. We can do this by adding a `<button>` element and giving it a _click handler_ using the `onClick` attribute. This click handler will increment our count by using the `setCount` function:
 
 <CodeTabs
-  files={{
-    jsx: [{ name: "Counter.jsx", component: Counter2 }],
-    tsx: [{ name: "Counter.tsx", component: Counter2 }],
-  }}
+  js={[{ name: "Counter.jsx", component: Counter2 }
+]}ts={[{ name: "Counter.tsx", component: Counter2 }]}
 />
 
 <BasicCounter />
@@ -203,35 +199,31 @@ We now have the tools necessary to make our Bookshelf application interactive. A
 - `Bookshelf`, our main application component that contains the other two
 
 <CodeTabs
-  files={{
-    jsx: [
+  js={[
       { name: "App.jsx", component: App2js },
       { name: "AddBook.jsx", component: AddBook1 },
       { name: "BookList.jsx", component: BookList1 },
-    ],
-    tsx: [
+    
+]}ts={[
       { name: "App.tsx", component: App2ts },
       { name: "AddBook.tsx", component: AddBook1 },
       { name: "BookList.tsx", component: BookList1 },
-    ],
-  }}
+    ]}
 />
 
 As a first step to adding interactivity, let's add a signal that keeps track of our book list. We'll call it `books` and it will live in the `BookList` component. Each book will have a `title` and an `author`.
 
 <CodeTabs
-  files={{
-    jsx: [
+  js={[
       { name: "App.jsx", component: App2js },
       { name: "AddBook.jsx", component: AddBook1 },
       { name: "BookList.jsx", component: BookList2js, default: true },
-    ],
-    tsx: [
+    
+]}ts={[
       { name: "App.tsx", component: App2ts },
       { name: "AddBook.tsx", component: AddBook1 },
       { name: "BookList.tsx", component: BookList2ts, default: true },
-    ],
-  }}
+    ]}
 />
 
 There are a couple of things to note here:
@@ -277,18 +269,16 @@ The above would be written as the following in Vue:
 Our `BookList` component now looks like this:
 
 <CodeTabs
-  files={{
-    jsx: [
+  js={[
       { name: "App.jsx", component: App2js },
       { name: "AddBook.jsx", component: AddBook1 },
       { name: "BookList.jsx", component: BookList3js, default: true },
-    ],
-    tsx: [
+    
+]}ts={[
       { name: "App.tsx", component: App2ts },
       { name: "AddBook.tsx", component: AddBook1 },
       { name: "BookList.tsx", component: BookList3ts, default: true },
-    ],
-  }}
+    ]}
 />
 ## Derived state
 
@@ -303,18 +293,16 @@ const totalBooks = () => books().length;
 Now, our `totalBooks` function is a signal of its own and will always be up-to-date with the length of our `books` array.
 
 <CodeTabs
-  files={{
-    jsx: [
+  js={[
       { name: "App.jsx", component: App2js },
       { name: "AddBook.jsx", component: AddBook1 },
       { name: "BookList.jsx", component: BookList4js, default: true },
-    ],
-    tsx: [
+    
+]}ts={[
       { name: "App.tsx", component: App2ts },
       { name: "AddBook.tsx", component: AddBook1 },
       { name: "BookList.tsx", component: BookList4ts, default: true },
-    ],
-  }}
+    ]}
 />
 
 <FrameworkAside framework="vue">
@@ -331,18 +319,16 @@ We know that parents can pass props to children, but how do _sibling_ components
 Let's start out by lifting our `books` signal up to `Bookshelf` and passing it back down to the `BookList` component. You can see the changes we have made in both the `App.tsx` and `BookList.tsx` files.
 
 <CodeTabs
-  files={{
-    jsx: [
+  js={[
       { name: "App.jsx", component: App3js },
       { name: "AddBook.jsx", component: AddBook1 },
       { name: "BookList.jsx", component: BookList5js },
-    ],
-    tsx: [
+    
+]}ts={[
       { name: "App.tsx", component: App3ts },
       { name: "AddBook.tsx", component: AddBook1 },
       { name: "BookList.tsx", component: BookList5ts },
-    ],
-  }}
+    ]}
 />
 
 Our array of books now lives in the `Bookshelf` component. We then pass `books()` to the `BookList` component. We can now access our books within the `BookList` component by using `props.books`.
@@ -354,18 +340,16 @@ Our array of books now lives in the `Bookshelf` component. We then pass `books()
 Now that we have lifted state, we can add some books to the list. Let's pass our setter to the `AddBook` component and call `setBooks` when we click the `Add Book` button. You can see these changes in the `App.tsx` and `AddBook.tsx` files:
 
 <CodeTabs
-  files={{
-    jsx: [
+  js={[
       { name: "App.jsx*", component: App4js },
       { name: "AddBook.jsx*", component: AddBook2js },
       { name: "BookList.jsx", component: BookList5js },
-    ],
-    tsx: [
+    
+]}ts={[
       { name: "App.tsx*", component: App4ts },
       { name: "AddBook.tsx*", component: AddBook2ts },
       { name: "BookList.tsx", component: BookList5ts },
-    ],
-  }}
+    ]}
 />
 
 Inside `AddBook`, we created a function called `addBook` that is used as the _click handler_ for our form's button. Since we're submitting a real HTML form, we use `event.preventDefault()` to prevent the default form behavior of executing a post request. Next, we call `props.setBooks`, but we don't quite know what to pass to our setter.
@@ -396,18 +380,16 @@ Now, we need to append the text from our form inputs to this list. To do so, we 
 Finally, we want to add the `newBook` to our books list and then clear the input field in case our user has more books to enter.
 
 <CodeTabs
-  files={{
-    jsx: [
+  js={[
       { name: "App.jsx", component: App4js },
       { name: "AddBook.jsx*", component: AddBook3js, default: true },
       { name: "BookList.jsx", component: BookList5js },
-    ],
-    tsx: [
+    
+]}ts={[
       { name: "App.tsx", component: App4ts },
       { name: "AddBook.tsx*", component: AddBook3ts, default: true },
       { name: "BookList.tsx", component: BookList5ts },
-    ],
-  }}
+    ]}
 />
 
 **Note:** We used the spread operator to create an new books array inside our books setter. This is a common pattern in Solid and helps to make sure we create a new array rather than update (or _mutate_) the existing signal array. By default, Solid uses referential equality checks when determining if a signal has updated.

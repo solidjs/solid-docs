@@ -1,10 +1,5 @@
-import {
-  createContext,
-  createEffect,
-  ParentProps,
-  useContext,
-} from "solid-js";
-import { createStore, SetStoreFunction} from "solid-js/store";
+import { createContext, createEffect, ParentProps, useContext } from "solid-js";
+import { createStore, SetStoreFunction } from "solid-js/store";
 
 export type OtherFramework = "react" | "vue" | "svelte" | "angular";
 
@@ -18,10 +13,8 @@ export type Config = {
   mode: ColorMode;
 };
 
-export const ConfigContext = createContext<[
-  config: Config,
-  setConfig: SetStoreFunction<Config>,
-]>();
+export const ConfigContext =
+  createContext<[config: Config, setConfig: SetStoreFunction<Config>]>();
 
 export const defaultConfig: Config = {
   typescript: false,
@@ -37,24 +30,30 @@ export const ConfigProvider = (
 ) => {
   const [config, setConfig] = createStore(props.initialConfig);
 
+
+
   createEffect(() => {
     // Save to cookie
     const serialized = JSON.stringify(config);
     document.cookie = `docs_config=${serialized}; SameSite=Lax; Secure; max-age=${MAX_AGE}; path=/`;
+
+
     // Toggle mode
+
     if (config.mode !== "none") {
       document.documentElement.classList.remove(
         config.mode === "light" ? "dark" : "light"
       );
       document.documentElement.classList.add(config.mode);
     } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      setConfig("mode", "dark");
       document.documentElement.classList.add("dark");
     } else {
+      setConfig("mode", "light");
       document.documentElement.classList.add("light");
     }
+
   });
-
-
 
   return (
     <ConfigContext.Provider value={[config, setConfig]}>

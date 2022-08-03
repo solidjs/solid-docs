@@ -2,11 +2,9 @@
 
 One question you will likely have when developing any sort of app is "how do I communicate new information to my server?". Solid's answer to this is _actions_. Actions give you an asynchronous function and elegant tools to help you easily manage and track submissions. They generally represent a `POST` request.
 
-## Actions
-
 Actions are isomorphic. This means that a submission can be handled on the server _or_ the client, which ever is optimal. They represent the server component of a [HTML form](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form), and even help you use HTML forms to submit data.
 
-### Creating actions
+## Creating actions
 
 Let's stop getting ahead of ourselves! First let's create an action!
 
@@ -23,7 +21,7 @@ export function MyComponent() {
 }
 ```
 
-This echo action will act as your backend, however you can substitute it for any API, provided you are ok with it running on the client. Typically, route actions are used with some sort of solution like fetch or graphql, and return either a `Response` such as a redirect (we are not returning anything quite yet!) or any promise. If you want to ensure the action only runs on the server for things like databases, you will want to use a different function explained below.
+This echo action will act as your backend, however you can substitute it for any API, provided you are ok with it running on the client. Typically, route actions are used with some sort of solution like fetch or graphql, and return either a `Response` such as a redirect (we are not returning anything quite yet!) or any value. If you want to ensure the action only runs on the server for things like databases, you will want to use a different function explained below.
 
 Naturally, this action won't do anything quite yet. We still need to call it somewhere! For now, let's call it manually from some component using the `submit` method.
 
@@ -62,18 +60,33 @@ export function MyComponent() {
 }
 ```
 
-While this method of using actions works, it leads the implementation details of how you trigger `action.submit` up to you. When handling explicit user input, it's better to use a form.
+While this method of using actions works, it leads the implementation details of how you trigger `action.submit` up to you. When handling explicit user input, it's better to use a form for a multitude of reasons.
 
 #### Responses
 
-### Using forms to submit data
+// Todo
+
+SolidStart provides a number of functions to make creating responses easy. They can be imported from `solid-start/server`
+
+##### redirect
+
+##### json
+
+##### eventStream
+
+##### ResponseError
+
+## Using forms to submit data
 
 We highly recommend using HTML forms as your method to submit data with actions. HTML forms can be used even before JavaScript loads, leading to instantly interactive applications. They have the added benefit of implicit accessibility, and can save you valuable time that would have otherwise been spent designing a UI library that will never have the aforementioned benefits.
 
-Forms become available when your action signature matches `(formData: FormData) => Response`. Writing forms using actions is trivial, simply use the `Form` method of your action instead of the normal `<form>` tag, and walk away with amazing, progressively enhanced forms!
+When forms are used to submit actions, the first argument is an instance of [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData. Writing forms using actions is trivial, simply use the `Form` method of your action instead of the normal `<form>` tag, and walk away with amazing, progressively enhanced forms!
+
+If you don't return a `Response` from your action, the user will stay on the same page and your resources will be retriggered. You can also return a `redirect` or `ResponseError`.
 
 ```tsx
 export function MyComponent() {
+  ...
   return (
     <action.Form>
       <label for="username">Username:</label>
@@ -86,25 +99,18 @@ export function MyComponent() {
 
 The only difference between `action.Form` and a normal form is that `action.Form` calls the action as it's submit handler automatically.
 
+## Retriggering resources
+
+## Errors
+
+## More Todo
+
 - `createAction`
 
   - retriggers route resources
-  - what does it give you:
-    - `action.submissions()` a signal to track the ongoing and failed submissions
   - Errors, each submission state has an error field that's populated if the submission errored, and a status field that's set to `error`
     - if you read the `submissionState.error` field in your code (JSX, or effects) then the error is considered user-handled and we don't trigger ErrorBoundaries.
     - if you don't use the error field, then we trigger the error boundary on an error because we assume its unexpected for you
-
-```tsx
-action.submitWithKey(args, key);
-
-action.submissions() = {
-  submission1: {
-    error: null | Error,
-  },
-  submission2: {},
-};
-```
 
 ## Server Actions
 

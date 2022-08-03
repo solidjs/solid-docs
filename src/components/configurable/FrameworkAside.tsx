@@ -106,7 +106,7 @@ export const Aside = (props: ParentProps<AsideProps>) => {
     <div
       aria-live="polite"
       class={`${
-        !props.show ? "hidden" : ""
+        props.show === false ? "hidden" : ""
       } flex aside p-5 rounded mt-10 mb-14${
         preferDark() ? " text-black" : " text-white"
       }${bgColor() ? "" : " bg-solid-medium dark:bg-darkdefault"} gap-2`}

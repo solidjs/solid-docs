@@ -4,31 +4,67 @@ One question you will likely have when developing any sort of app is "how do I c
 
 ## Actions
 
-Actions are isomorphic. This means that a submission can be handled on the server *or* the client, which ever is optimal. They represent the server component of a [HTML form](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form), and even help you use HTML forms to submit data.
+Actions are isomorphic. This means that a submission can be handled on the server _or_ the client, which ever is optimal. They represent the server component of a [HTML form](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form), and even help you use HTML forms to submit data.
 
 ### Creating actions
 
 Let's stop getting ahead of ourselves! First let's create an action!
 
-```tsx
+```tsx twoslash
+// @lib: ES2015
 import { createRouteAction } from "solid-start/data";
 
-const action = createRouteAction(async (data) => {
-  console.log(await (await fetch('https://postman-echo.com/post', {
-    body: data.message
-  })).text()
-})
+export function MyComponent() {
+  const action = createRouteAction(async (message: string) => {
+    // Imagine this is a call to fetch
+    await new Promise((resolve, reject) => setTimeout(resolve, 1000));
+    console.log(message);
+  });
+}
 ```
 
-Postman's JSON API will act as our backend, but you are free to do anything here, provided you are ok with it running on the client. Typically, route actions are used with some sort of solution like fetch or graphql, and return a `Response`, such as a redirect (we are not returning anything quite yet!). If you want to ensure the action only runs on the server for things like databases, you will want to use a different function explained below.
+This echo action will act as your backend, however you can substitute it for any API, provided you are ok with it running on the client. Typically, route actions are used with some sort of solution like fetch or graphql, and return either a `Response` such as a redirect (we are not returning anything quite yet!) or any promise. If you want to ensure the action only runs on the server for things like databases, you will want to use a different function explained below.
 
 Naturally, this action won't do anything quite yet. We still need to call it somewhere! For now, let's call it manually from some component using the `submit` method.
 
-```ts
-action.submit('Hello from solid!')
+```ts twoslash {3,8}
+// @lib: ES2015
+import { createRouteAction } from "solid-start/data";
+export function MyComponent() {
+  const action = createRouteAction(async (message: string) => {
+    // Imagine this is a call to fetch
+    await new Promise((resolve, reject) => setTimeout(resolve, 1000));
+    console.log(message);
+  });
+  action.submit("Hello from solid!");
+}
 ```
 
-### Responses
+You should see `Hello from solid!` back in the console!
+
+### Returning from actions
+
+In many cases, after submitting data the server sends some data back as well. Anything returned from your action function can be accessed using the reactive `action.value` property. The value of this property can change each time you submit your action.
+
+```tsx twoslash {2,4,7-9}
+// @lib: ES2015
+import { createRouteAction } from "solid-start/data";
+// ---cut---
+export function MyComponent() {
+  const action = createRouteAction(async (message: string) => {
+    await new Promise((resolve, reject) => setTimeout(resolve, 1000));
+    return message;
+  });
+
+  action.submit("Hello from solid!");
+  setTimeout(() => action.submit("This is a second submission!"), 1500);
+  return <p>{action.value}</p>;
+}
+```
+
+While this method of using actions works, it leads the implementation details of how you trigger `action.submit` up to you. When handling explicit user input, it's better to use a form.
+
+#### Responses
 
 ### Using forms to submit data
 
@@ -38,11 +74,13 @@ Forms become available when your action signature matches `(formData: FormData) 
 
 ```tsx
 export function MyComponent() {
-  return <action.Form>
-    <label for="username">Username:</label>
-    <input type="text" name="username" />
-    <input type="submit" value="submit" />
-  </action.Form>
+  return (
+    <action.Form>
+      <label for="username">Username:</label>
+      <input type="text" name="username" />
+      <input type="submit" value="submit" />
+    </action.Form>
+  );
 }
 ```
 
@@ -70,7 +108,7 @@ action.submissions() = {
 
 ## Server Actions
 
-It is preferable to 
+It is preferable to
 
 - `createServerAction`
   - if you want to run your action on the server only and access your database

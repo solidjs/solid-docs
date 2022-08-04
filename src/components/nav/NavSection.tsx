@@ -40,7 +40,7 @@ export function Collapsible(props: CollapsibleProps) {
   );
 }
 
-function SectionHeader(
+export function SectionHeader(
   props: ParentProps<{
     collapsed: boolean;
     panelId: string;

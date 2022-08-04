@@ -1,6 +1,6 @@
 import { NavLink, Route, Routes, useLocation } from "solid-app-router";
 import { NavHeader } from "./NavHeader";
-import { Collapsible, NavItem } from "./NavSection";
+import { Collapsible, NavItem, SectionHeader } from "./NavSection";
 // import { Accordion } from "solid-headless";
 import { createEffect, createSignal, For, on, Show } from "solid-js";
 import {
@@ -10,9 +10,11 @@ import {
   SECTION_LEAF_PAGE,
   SECTION_PAGE,
 } from "~/NAV_SECTIONS";
+import { Preferences } from "../Preferences";
 
 export default function Nav(props: { docsMode: "start" | "regular" }) {
   const [showMenu, setShowMenu] = createSignal(false);
+  const [showPreferences, setShowPreferences] = createSignal(false);
   const location = useLocation();
 
   createEffect((prev) => {
@@ -29,6 +31,19 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
         showMenu={showMenu()}
         setShowMenu={setShowMenu}
       />
+      <SectionHeader
+        collapsed={!showPreferences()}
+        panelId="prefs"
+        onClick={() => setShowPreferences((p) => !p)}
+      >
+       <span><span class="text-lg mr-2">⚙</span>️Preferences</span>
+      </SectionHeader>
+
+      <Show when={showPreferences()}>
+        <div class="px-5 text-sm">
+          <Preferences questionClass="font-bold" />
+        </div>
+      </Show>
       <div
         classList={{
           hidden: !showMenu(),

@@ -7,16 +7,13 @@ import IconVue from "~icons/vscode-icons/file-type-vue";
 import IconSvelte from "~icons/vscode-icons/file-type-svelte";
 import IconAngular from "~icons/vscode-icons/file-type-angular";
 
-export const Preferences = () => {
+export const Preferences = (props: {questionClass: string}) => {
   const [config, setConfig] = useConfig();
 
-  createEffect(() => {
-    console.log(config.typescript);
-  })
   return (
     <>
+      <legend class={props.questionClass}>Do you prefer JavaScript or TypeScript?</legend>
       <RadioGroup
-        legend="Do you prefer JavaScript or TypeScript?"
         name="typescript"
         checked={config.typescript ? "typescript" : "javascript"}
         onChange={(value) => setConfig("typescript", value === "typescript")}
@@ -25,8 +22,10 @@ export const Preferences = () => {
           { icon: <IconTs />, label: "TypeScript", value: "typescript" },
         ]}
       />
+      <legend class={props.questionClass}>
+        Are you coming from any of the following frameworks?
+      </legend>
       <RadioGroup
-        legend="Are you coming from any of the following frameworks?"
         name="comingFrom"
         checked={config.comingFrom}
         onChange={(value) => setConfig("comingFrom", value)}
@@ -35,7 +34,7 @@ export const Preferences = () => {
           { icon: <IconVue />, label: "Vue", value: "vue" },
           { icon: <IconSvelte />, label: "Svelte", value: "svelte" },
           { icon: <IconAngular />, label: "Angular", value: "angular" },
-          { icon: <></>, label: "None of the above", value: "none" },
+          { icon: <></>, label: "None", value: "none" },
         ]}
       />
     </>
@@ -43,7 +42,6 @@ export const Preferences = () => {
 };
 
 interface RadioGroupProps<T extends string> {
-  legend: string;
   name: string;
   checked: T;
   onChange: (value: T) => void;
@@ -56,17 +54,10 @@ interface RadioGroupProps<T extends string> {
 
 const RadioGroup = <T extends string>(props: RadioGroupProps<T>) => {
   return (
-    <fieldset class="mt-10">
-      <legend class="text-xl">{props.legend}</legend>
+    <fieldset class="flex my-2 gap-4 flex-wrap">
       <For each={props.radios}>
         {(radio) => (
-          <div
-            classList={{
-              "p-5 flex gap-2 text-2xl mt-5 align-start": true,
-              "rounded text-base dark:text-dark bg-highlight dark:bg-highlight-dark":
-                props.checked === radio.value,
-            }}
-          >
+          <div class="flex gap-2 items-center"> 
             <input
               type="radio"
               name={props.name}
@@ -76,7 +67,7 @@ const RadioGroup = <T extends string>(props: RadioGroupProps<T>) => {
               checked={props.checked === radio.value}
             />
             <label
-              class="flex gap-2 cursor-pointer"
+              class="flex gap-2 cursor-pointer -mb-1"
               for={`${props.name}-${radio.value}`}
             >
               {radio.icon}

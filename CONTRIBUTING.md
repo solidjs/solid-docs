@@ -69,7 +69,7 @@ Our site is build on [SolidStart](https://github.com/solidjs/solid-start). This 
 
 ### Folder structure
 
-We have two folders of note: **content** and **src**. **content** contains all of the pages and page-specific components. This includes the four content folders corresponding to our [four content types](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md#content-types):
+We have two folders of note: **content** and **src**. **content** contains all the pages and page-specific components. This includes the four content folders corresponding to our [four content types](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md#content-types):
   - `content/tutorials`
   - `content/how-to-guides`
   - `content/concepts`
@@ -86,7 +86,7 @@ These folders will automatically generate routes; so, `content/tutorials/getting
 
 If a content page has its own custom components and code snippets, place these inside its content folder. See [the Getting Started with Solid folder](https://github.com/solidjs/solid-docs-next/tree/main/src/content/tutorials/getting-started-with-solid) for an example.
 
-> **Warning** There is also `start` folder in `content/routes`; it is a heavy work-in-progress managed by the SolidStart team and does not yet follow our Writing guide.
+> **Warning** There is also `start` folder in `content/routes`, it is a heavy work-in-progress managed by the SolidStart team and does not yet follow our Writing guide.
 
 ### Adding New Content Pages
 

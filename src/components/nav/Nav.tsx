@@ -63,8 +63,8 @@ function TopMenu() {
     <aside class="w-full pt-4 lg:max-w-xs">
       <nav class="scrolling-touch scrolling-gpu" style="--bg-opacity:0.2;">
         <Routes>
-          <Route path="/reference/**/*" component={ReferenceNav} />
-          <Route path="/guides/**/*" component={GuidesNav} />
+          <Route path={["/concepts/**/*", "/api-reference/**/*"]} component={ReferenceNav} />
+          <Route path={["/tutorial/**/*", "/how-to-guides/**/*"]} component={GuidesNav} />
           <Route path="/**/*" component={GuidesNav} />
         </Routes>
       </nav>
@@ -241,11 +241,6 @@ function SectionsNavIterate(props: {
 }
 
 function SectionNav(props: { sections: SECTIONS }) {
-  // let = Object.keys(props.sections).find(
-  //   (k) =>
-  //     location.pathname.startsWith(props.sections[k].link)
-  // );
-
   const sectionNames = Object.keys(props.sections);
 
   return (
@@ -267,4 +262,3 @@ function SectionNav(props: { sections: SECTIONS }) {
   );
 }
 
-//dark:hover:bg-solid-darkLighterBg pointer-fine:hover:text-white pointer-fine:hover:bg-solid-medium dark:bg-solid-light text-white

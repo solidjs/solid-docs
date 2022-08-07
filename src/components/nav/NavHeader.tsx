@@ -1,10 +1,10 @@
-import { NavLink, useLocation } from "solid-app-router";
+import { NavLink, useLocation } from "@solidjs/router";
 import IconMenu from "~icons/heroicons-outline/menu";
 import IconX from "~icons/heroicons-outline/x";
 import IconSun from "~icons/heroicons-outline/sun";
 import IconMoon from "~icons/heroicons-outline/moon";
 import { For, Setter, Show, useContext } from "solid-js";
-import { ConfigContext } from "../ConfigContext";
+import { ConfigContext } from "../context/ConfigContext";
 
 function ActiveLink(props) {
   const location = useLocation();
@@ -23,8 +23,11 @@ function ActiveLink(props) {
 }
 
 const sections = [
-  { title: "Guides", href: "/guides" },
-  { title: "Reference", href: "/reference" },
+  {
+    title: "Guides",
+    href: "/tutorials/getting-started-with-solid/welcome",
+  },
+  { title: "Reference", href: "/concepts/tracking" },
 ];
 
 export const NavHeader = (props: {
@@ -54,14 +57,12 @@ export const NavHeader = (props: {
         <div class="flex gap-3">
           <button
             type="button"
-            aria-label={`Use ${
-              config().mode === "dark" ? "light" : "dark"
-            } mode`}
+            aria-label={`Use ${config.mode === "dark" ? "light" : "dark"} mode`}
             class="flex items-center justify-center w-10 h-10 transform -translate-y-1"
             onClick={() => {
               setConfig((c) => ({
                 ...c,
-                mode: config().mode === "dark" ? "light" : "dark",
+                mode: config.mode === "dark" ? "light" : "dark",
               }));
             }}
           >
@@ -70,7 +71,7 @@ export const NavHeader = (props: {
               path={config().mode === "dark" ? sun : moon}
             /> */}
             <Show
-              when={config().mode === "dark"}
+              when={config.mode === "dark"}
               fallback={<IconMoon class="w-full h-full"></IconMoon>}
             >
               <IconSun class="w-full h-full"></IconSun>

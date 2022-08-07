@@ -29,7 +29,7 @@ export function FinishedBookshelf(props: IBookshelfProps) {
         when={showForm()}
         fallback={
           <button
-            class="px-3 py-2 rounded bg-blue-200 text-black"
+            class="border-2 border-black px-2 py-1 rounded bg-blue-200"
             onClick={toggleForm}
           >
             Add a book
@@ -38,7 +38,7 @@ export function FinishedBookshelf(props: IBookshelfProps) {
       >
         <AddBook setBooks={setBooks} />
         <button
-          class="px-3 py-2 rounded bg-blue-200 text-black mt-4"
+          class="border-2 border-black px-2 py-1 rounded bg-blue-200 mt-4"
           onClick={toggleForm}
         >
           Finished adding books

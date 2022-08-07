@@ -1,6 +1,6 @@
-import { NavLink, useLocation } from "solid-app-router";
+import { NavLink, useLocation } from "@solidjs/router";
 
-import { usePageState } from "../PageStateContext";
+import { usePageState } from "../context/PageStateContext";
 import {
   For,
   Show,
@@ -40,7 +40,7 @@ export function Collapsible(props: CollapsibleProps) {
   );
 }
 
-function SectionHeader(
+export function SectionHeader(
   props: ParentProps<{
     collapsed: boolean;
     panelId: string;

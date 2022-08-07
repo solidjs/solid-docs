@@ -11,7 +11,7 @@ export function BasicCounter() {
     <div>
       Current count: {count()}
       <button
-        class="ml-2 bg-gray-200 text-black px-2 rounded"
+        class="ml-2 p-1 border-2 bg-gray-200  px-2 rounded"
         onClick={increment}
       >
         Increment

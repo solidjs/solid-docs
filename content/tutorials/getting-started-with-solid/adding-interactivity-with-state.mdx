@@ -1,7 +1,10 @@
 import { NextSection } from "~/components/NextSection";
 import Snippet from "~/components/Snippet";
 import { CodeTabs } from "~/components/Tabs";
-import { FrameworkAside, Aside } from "~/components/FrameworkAside";
+import {
+  FrameworkAside,
+  Aside,
+} from "~/components/configurable/Aside";
 import { BasicCounter } from "./components/BasicCounter";
 import { BasicBookshelf } from "./components/BasicBookshelf";
 import Counter1 from "./snippets/Counter1.mdx";
@@ -27,15 +30,15 @@ import App3ts from "./snippets/bookshelf/App3ts.mdx";
 import App4js from "./snippets/bookshelf/App4js.mdx";
 import App4ts from "./snippets/bookshelf/App4ts.mdx";
 
-<title>Adding Interactivity with State</title>
-
 # Adding Interactivity with State
 
-In the previous lesson, we learned how to architect a Solid application using components and JSX. We then built a Bookshelf application using our new knowledge, but it's not quite complete. In this lesson, we'll learn about some building blocks that help us _manage application state_. We will then apply this knowledge to our Bookshelf application to bring it to life.
+In the previous lesson, we learned how to architect a Solid application using components and JSX. We then built a Bookshelf application using our new knowledge, but it's not quite complete. In this lesson, we'll learn how to add _state_ to our app. We'll then apply this knowledge to our Bookshelf application to bring it to life.
 
 ## A note on primitives
 
-As we proceed through these tutorials, we'll start hearing about Solid _primitives_. Primitives are the building blocks of Solid applications. The first primitive that we'll be learning about is the _signal_.
+As we proceed through these tutorials, we'll start hearing about Solid _primitives_. 
+While components are the building blocks of _views_ in Solid apps, primitives are the building blocks of _interactivity_.
+The first primitive that we'll be learning about is the _signal_.
 
 ## Managing basic state with signals
 
@@ -87,14 +90,13 @@ In Vue, this code lives inside the `.value` [getter function](https://developer.
 
 </FrameworkAside>
 <FrameworkAside framework="angular">
-In Angular, this might just be a class property that you mutate. This is one of the biggest differences that Solid has from Angular.
+In Angular, this might just be a class property that you mutate. This is one of the biggest differences between Solid and Angular.
 While Solid relies on explicit property updates, Angular enables mutations of variables to trigger change detection.
 
 While this might seem like pure mental overhead, there are two main benefits of Solid's read/write separation:
 
 1. It doesn't require additional performance overhead for change detection
 2. It doesn't require any additional logic (like [`runOutsideAngular`](https://angular.io/api/core/NgZone#runOutsideAngular)) to avoid change detection
-
 </FrameworkAside>
 
 The second element, `setCount`, is a _setter_ function. If we want to increment our `count`, we can pass `count() + 1` to `setCount`:
@@ -158,18 +160,15 @@ Automatic effect dependency tracking is made possible by `count` being a functio
     - They can run outside of components.
     - They have a more consolidated API as a result of their decoupling from components.
     - They're "composable" (You can put an effect inside another effect)
-
 </FrameworkAside>
 
 ## Rendering with signals
 
-Now that we've gained some exposure to two of Solid's core primitives, signals and effects, it's time to add them into our components. Let's keep using our `count` example but, instead of logging the count, let's render it to the DOM:
+Before we get back to our bookshelf, let's see an example of how these _primitives_ can be used inside _components_.
 
 <CodeTabs
-  files={{
-    jsx: [{ name: "Counter.jsx", component: Counter1 }],
-    tsx: [{ name: "Counter.tsx", component: Counter1 }],
-  }}
+  js={[{ name: "Counter.jsx", component: Counter1 }]}
+  ts={[{ name: "Counter.tsx", component: Counter1 }]}
 />
 
 <div>Current count: 0</div>
@@ -177,21 +176,17 @@ Now that we've gained some exposure to two of Solid's core primitives, signals a
 We see that, much like other variables, we can use signals inside our JSX code by including them inside curly braces. This component is not too interesting yet; so let's add the ability to increment our count. We can do this by adding a `<button>` element and giving it a _click handler_ using the `onClick` attribute. This click handler will increment our count by using the `setCount` function:
 
 <CodeTabs
-  files={{
-    jsx: [{ name: "Counter.jsx", component: Counter2 }],
-    tsx: [{ name: "Counter.tsx", component: Counter2 }],
-  }}
+  js={[{ name: "Counter.jsx", component: Counter2 }]}
+  ts={[{ name: "Counter.tsx", component: Counter2 }]}
 />
 
 <BasicCounter />
 
-And now we have a functioning counter! Notably, our DOM updates whenever our `count` is incremented. Does this remind you of an effect? It should! In Solid, rendering is treated as an effect. A driving philosophy of Solid is that, by treating everything as a signal or an effect, we can better reason about our application.
+And now we have a functioning counter! Notably, our text updates whenever our `count` is incremented. Does this remind you of an effect? Whenever the signal changes, the code that controls that part of the DOM reruns, similar to how the code in our effect reran whenever `count` changed.
 
-<Aside title="Read more about state management (optional)" type="advanced" collapsible>
-
-Solid offers some other primitives to help with state management, but they're a bit too advanced for an introductory tutorial. If you would like to learn about topics like managing complex object state with _stores_ and sharing state between components with _context_, check out our [State Management guide (link tbd)](#).
-
-</Aside>
+Behind the scenes, Solid's compiler creates effects based on our JSX. It sees that we're using `count()` in a specific part of the DOM, and it creates an effect that updates just that part of the DOM when the signal reruns.
+ 
+A driving philosophy of Solid is that, by treating everything as a signal or an effect, we can better reason about our application.
 
 ## Revisting the bookshelf
 
@@ -202,35 +197,31 @@ We now have the tools necessary to make our Bookshelf application interactive. A
 - `Bookshelf`, our main application component that contains the other two
 
 <CodeTabs
-  files={{
-    jsx: [
+  js={[
       { name: "App.jsx", component: App2js },
       { name: "AddBook.jsx", component: AddBook1 },
       { name: "BookList.jsx", component: BookList1 },
-    ],
-    tsx: [
+    
+]}ts={[
       { name: "App.tsx", component: App2ts },
       { name: "AddBook.tsx", component: AddBook1 },
       { name: "BookList.tsx", component: BookList1 },
-    ],
-  }}
+    ]}
 />
 
 As a first step to adding interactivity, let's add a signal that keeps track of our book list. We'll call it `books` and it will live in the `BookList` component. Each book will have a `title` and an `author`.
 
 <CodeTabs
-  files={{
-    jsx: [
+  js={[
       { name: "App.jsx", component: App2js },
       { name: "AddBook.jsx", component: AddBook1 },
-      { name: "BookList.jsx", component: BookList2js, default: true },
-    ],
-    tsx: [
+      { name: "BookList*.jsx", component: BookList2js, default: true },
+    
+]}ts={[
       { name: "App.tsx", component: App2ts },
       { name: "AddBook.tsx", component: AddBook1 },
-      { name: "BookList.tsx", component: BookList2ts, default: true },
-    ],
-  }}
+      { name: "BookList*.tsx", component: BookList2ts, default: true },
+    ]}
 />
 
 There are a couple of things to note here:
@@ -261,37 +252,56 @@ Inside the `For` component, we use a _callback function_ that will be applied to
 </For>
 ```
 
-<FrameworkAside framework="vue">
+<FrameworkAside framework="react">
+In React, we'd use `array.map`:
+```jsx
+{books.map(book => <li key={book.title}>{book.title} ({book.author}</li>)}
+```
 
+If we used `array.map` here in Solid, _every element_ inside the book would have to rerender whenever the `books` signal changes.
+The `For` component checks the array when it changes, and only updates the necessary element. It's the same kind of checking that React's VDOM rendering system does for us when we use `.map`.
+
+Note that, unlike in React, we don't need to provide a `key` to the `For` component: it compares each element by reference.
+</FrameworkAside>
+
+<FrameworkAside framework="vue">
 The above would be written as the following in Vue:
 
 ```html
 <template v-for="book of books">
-  <li>{{book.title}} ({{book.author}})</li>
+  <li key="book.title">{{book.title}} ({{book.author}})</li>
 </template>
 ```
 
+Note that, unlike in Vue, we don't need to provide a `key` to the `For` component: it compares each element by reference.
+</FrameworkAside>
+
+<FrameworkAside framework="svelte">
+The above would be written as the following in Svelte:
+
+```svelte
+{#each books as book (book.title) }
+  <li>{book.title} ({book.author})</li>
+{#each}
+```
+
+Note that, unlike in Svelte, we don't need to provide a `key` to the `For` component: it compares each element by reference.
 </FrameworkAside>
 
 Our `BookList` component now looks like this:
 
 <CodeTabs
-  files={{
-    jsx: [
+  js={[
       { name: "App.jsx", component: App2js },
       { name: "AddBook.jsx", component: AddBook1 },
       { name: "BookList.jsx", component: BookList3js, default: true },
-    ],
-    tsx: [
+    
+]}ts={[
       { name: "App.tsx", component: App2ts },
       { name: "AddBook.tsx", component: AddBook1 },
       { name: "BookList.tsx", component: BookList3ts, default: true },
-    ],
-  }}
+    ]}
 />
-
-{/* TODO: Add mention of Angular's `trackBy` and add `<Aside>` advanced */}
-
 ## Derived state
 
 Solid makes it easy to track _derived state_. You can think of derived state as a computation based only on other information you're already tracking in state. In our Bookshelf application, an example of derived state would be the number of books on our list: it's the length of our `books` array at any point in time.
@@ -302,72 +312,99 @@ In Solid, all we have to do to compute derived state is to create a _derived sig
 const totalBooks = () => books().length;
 ```
 
-Now, our `totalBooks` function is a signal of its own and will always be up-to-date with the length of our `books` array.
+Now, whenever we call `totalBooks()`, Solid will register the underlying signal (`books`) as a dependency, so the computed value will always stay up-to-date.
 
 <CodeTabs
-  files={{
-    jsx: [
+  js={[
       { name: "App.jsx", component: App2js },
       { name: "AddBook.jsx", component: AddBook1 },
       { name: "BookList.jsx", component: BookList4js, default: true },
-    ],
-    tsx: [
+    
+]}ts={[
       { name: "App.tsx", component: App2ts },
       { name: "AddBook.tsx", component: AddBook1 },
       { name: "BookList.tsx", component: BookList4ts, default: true },
-    ],
-  }}
+    ]}
 />
 
 <FrameworkAside framework="vue">
-  This is equivalent to `const totalBooks = computed(() => books.length)` in
-  Vue.
+  In Vue, you might write:
+
+  ```
+    const totalBooks = computed(() => books.length)
+  ```.
+  This creates a spot in memory for the computed value, and that memory is continually updated as `books` changes.
+  So, if you used `{{totalBooks}}` twice in your template, `books.length` would only be called once.
+  Derived signals in Solid don't create a spot in memory; every time `totalBooks()` is called, it will rerun the code `books().length`.
+  Solid has another feature for this: `createMemo`, which will only rerun the computation when the dependency changes.
+
+```js
+import { createMemo } from "solid-js";
+
+const totalBooks = createMemo(() => books().length);
+```
+
+</FrameworkAside>
+
+<FrameworkAside framework="svelte">
+In Svelte, you might write:
+```svelte
+	$: totalBooks = books.length;
+```
+  This creates a spot in memory for the computed value, and that memory is continually updated as `books` changes. So, if you used `{totalBooks}` twice in your template, `books.length` would only be called once.
+  Derived signals in Solid don't create a spot in memory; every time `totalBooks()` is called, it will rerun the code `books().length`.
+  Solid has another feature for this: `createMemo`, which will only rerun the computation when the dependency changes.
+
+```js
+import { createMemo } from "solid-js";
+
+const totalBooks = createMemo(() => books().length);
+```
+
 </FrameworkAside>
 
 ## Lifting state up
 
 We want to add a book to the list using our `AddBook` component. There's one problem though: how do we make the `setBooks` setter available to the `AddBooks` component?
 
-We know that parents can pass props to children, but how do _sibling_ components pass props to each other? This is a common problem in Solid and the solution is generally to _lift state up_ to a common parent. In this case, our `books` signal can live in the `Bookshelf` component. Then, the `BookList` component can use the accessor (`books()`) and the `AddBook` component can use the setter (`setBooks`).
+We know that parents can pass props to children, but how do _sibling_ components pass props to each other? This is a common problem in Solid and the solution is generally to _lift state up_ to a common parent. In this case, our `books` signal can live in the `Bookshelf` component. Then, the `BookList` component can be passed the data from the getter.
 
-Let's start out by lifting our `books` signal up to `Bookshelf` and passing it back down to the `BookList` component. You can see the changes we have made in both the `App.tsx` and `BookList.tsx` files.
+Let's start out by lifting our `books` signal up to `Bookshelf` and passing its value back down to the `BookList` component. You can see the changes we have made in both the `App.tsx` and `BookList.tsx` files.
 
 <CodeTabs
-  files={{
-    jsx: [
+  js={[
       { name: "App.jsx", component: App3js },
       { name: "AddBook.jsx", component: AddBook1 },
       { name: "BookList.jsx", component: BookList5js },
-    ],
-    tsx: [
+    
+]}ts={[
       { name: "App.tsx", component: App3ts },
       { name: "AddBook.tsx", component: AddBook1 },
       { name: "BookList.tsx", component: BookList5ts },
-    ],
-  }}
+    ]}
 />
 
 Our array of books now lives in the `Bookshelf` component. We then pass `books()` to the `BookList` component. We can now access our books within the `BookList` component by using `props.books`.
 
-**Note:** You may have noticed that we called `books()` when we passed it to the `BookList` component&mdash;this is not a typo! In Solid, it's a best practice to call a signal accessor when you pass it to a component. In the background, Solid makes this a _reactive prop_ and reactivity will be tracked in the child component's JSX. (_Note: good place to link to a discussion/guide on props and reactivity_).
+<Aside type="note">
+ You may have noticed that we called `books()` when we passed it to the `BookList` component&mdash;this is not a typo! In Solid, it's a best practice to call a signal accessor when you pass it to a component. In the background, Solid makes this a _reactive prop_ and reactivity will be tracked in the child component's JSX. (_TODO: good place to link to a discussion/guide on props and reactivity_).
+</Aside>
 
 ## Adding books to the list
 
 Now that we have lifted state, we can add some books to the list. Let's pass our setter to the `AddBook` component and call `setBooks` when we click the `Add Book` button. You can see these changes in the `App.tsx` and `AddBook.tsx` files:
 
 <CodeTabs
-  files={{
-    jsx: [
+  js={[
       { name: "App.jsx*", component: App4js },
       { name: "AddBook.jsx*", component: AddBook2js },
       { name: "BookList.jsx", component: BookList5js },
-    ],
-    tsx: [
+    
+]}ts={[
       { name: "App.tsx*", component: App4ts },
       { name: "AddBook.tsx*", component: AddBook2ts },
       { name: "BookList.tsx", component: BookList5ts },
-    ],
-  }}
+    ]}
 />
 
 Inside `AddBook`, we created a function called `addBook` that is used as the _click handler_ for our form's button. Since we're submitting a real HTML form, we use `event.preventDefault()` to prevent the default form behavior of executing a post request. Next, we call `props.setBooks`, but we don't quite know what to pass to our setter.
@@ -398,18 +435,16 @@ Now, we need to append the text from our form inputs to this list. To do so, we 
 Finally, we want to add the `newBook` to our books list and then clear the input field in case our user has more books to enter.
 
 <CodeTabs
-  files={{
-    jsx: [
+  js={[
       { name: "App.jsx", component: App4js },
       { name: "AddBook.jsx*", component: AddBook3js, default: true },
       { name: "BookList.jsx", component: BookList5js },
-    ],
-    tsx: [
+    
+]}ts={[
       { name: "App.tsx", component: App4ts },
       { name: "AddBook.tsx*", component: AddBook3ts, default: true },
       { name: "BookList.tsx", component: BookList5ts },
-    ],
-  }}
+    ]}
 />
 
 **Note:** We used the spread operator to create an new books array inside our books setter. This is a common pattern in Solid and helps to make sure we create a new array rather than update (or _mutate_) the existing signal array. By default, Solid uses referential equality checks when determining if a signal has updated.

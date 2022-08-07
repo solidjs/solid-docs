@@ -1,4 +1,4 @@
-import { NavLink } from "solid-app-router";
+import { NavLink } from "@solidjs/router";
 import { ChevronIcon } from "./Logo";
 
 interface INextSectionProps {

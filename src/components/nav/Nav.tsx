@@ -31,7 +31,7 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
         showMenu={showMenu()}
         setShowMenu={setShowMenu}
       />
-      <div class="my-2">
+      <div class="my-2" classList={{"hidden": props.docsMode == "regular"}}>
         <div id="docsearch" />
       </div>
       <SectionHeader

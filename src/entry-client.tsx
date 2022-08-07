@@ -1,4 +1,3 @@
-import { hydrate, render } from "solid-js/web";
-import { StartClient } from "solid-start/entry-client";
+import { mount, StartClient } from "solid-start/entry-client";
 
-hydrate(() => <StartClient />, document);
+mount(() => <StartClient />, document);

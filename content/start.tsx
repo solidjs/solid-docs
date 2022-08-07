@@ -1,4 +1,4 @@
-import { Outlet } from "solid-app-router";
+import { Outlet } from "solid-start";
 
 export default () => {
   return <Outlet />;

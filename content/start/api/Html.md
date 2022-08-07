@@ -1,13 +1,15 @@
-<title>useSearchParams</title>
+# `<Html>`
 
-##### `useSearchParams` gives you an object containing the path params of the current route
+##### `useRouteData` gives you an object containing the path params of the current route
 
 <div class="text-xl">
 
-```ts twoslash
-import { useSearchParams } from "@solidjs/router";
+```tsx twoslash
+import { Html } from "solid-start";
 // ---cut---
-const params = useSearchParams();
+export default function Root() {
+  return <Html>...</Html>;
+}
 ```
 
 </div>
@@ -21,6 +23,6 @@ const params = useSearchParams();
 
 - [Reference](#reference)
 
-  - [`useSearchParams()`](#hello-world)
+  - [`useRouteData()`](#hello-world)
 
 - [Troublehooting](#troublehooting)

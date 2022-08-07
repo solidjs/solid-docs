@@ -1,4 +1,4 @@
-import { NavLink, Route, Routes, useLocation } from "solid-app-router";
+import { NavLink, Route, Routes, useLocation } from "@solidjs/router";
 import { NavHeader } from "./NavHeader";
 import { Collapsible, NavItem, SectionHeader } from "./NavSection";
 // import { Accordion } from "solid-headless";
@@ -31,12 +31,17 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
         showMenu={showMenu()}
         setShowMenu={setShowMenu}
       />
+      <div class="my-2">
+        <div id="docsearch" />
+      </div>
       <SectionHeader
         collapsed={!showPreferences()}
         panelId="prefs"
         onClick={() => setShowPreferences((p) => !p)}
       >
-       <span><span class="text-lg mr-2">⚙</span>️Preferences</span>
+        <span>
+          <span class="text-lg mr-2">⚙</span>️Preferences
+        </span>
       </SectionHeader>
 
       <Show when={showPreferences()}>
@@ -63,8 +68,14 @@ function TopMenu() {
     <aside class="w-full pt-4 lg:max-w-xs">
       <nav class="scrolling-touch scrolling-gpu" style="--bg-opacity:0.2;">
         <Routes>
-          <Route path={["/concepts/**/*", "/api-reference/**/*"]} component={ReferenceNav} />
-          <Route path={["/tutorial/**/*", "/how-to-guides/**/*"]} component={GuidesNav} />
+          <Route
+            path={["/concepts/**/*", "/api-reference/**/*"]}
+            component={ReferenceNav}
+          />
+          <Route
+            path={["/tutorial/**/*", "/how-to-guides/**/*"]}
+            component={GuidesNav}
+          />
           <Route path="/**/*" component={GuidesNav} />
         </Routes>
       </nav>
@@ -89,8 +100,9 @@ const START_SECTIONS = [
       { header: "CSS and styling", link: "/css-and-styling" },
       { header: "Static assets", link: "/static-assets" },
       { header: "Head & metadata", link: "/head-and-metadata" },
-      { header: "Data fetching", link: "/data-fetching" },
-      { header: "Actions", link: "/actions" },
+      { header: "Data Loading", link: "/data-loading" },
+      { header: "Actions & Data Writes", link: "/actions" },
+      { header: "Resource Routes", link: "/resource-routes" },
       { header: "State management", link: "/state-management" },
       { header: "Request lifecycle", link: "/request-lifecycle" },
       {
@@ -122,8 +134,26 @@ const START_SECTIONS = [
       { header: "Error boundary", link: "/error-boundary" },
       { header: "Files", link: "/files" },
       { header: "Forms", link: "/forms" },
-      { header: "Head", link: "/head" },
-      { header: "Router", link: "/router" },
+      {
+        header: "Document",
+        link: "/document",
+        subsections: [
+          { header: "<Html />", link: "/Html" },
+          { header: "Head", link: "/Head" },
+          { header: "Body", link: "/Body" },
+          { header: "Title", link: "/Title" },
+          { header: "Meta", link: "/Meta" },
+          { header: "Link", link: "/Link" },
+          { header: "Script", link: "/Script" },
+          { header: "Style", link: "/Style" },
+          { header: "Stylesheet", link: "/Stylesheet" },
+        ],
+      },
+      {
+        header: "Router",
+        link: "/router",
+        subsections: [{ header: "useParams", link: "/useParams" }],
+      },
       { header: "Server", link: "/server" },
       { header: "Session", link: "/session" },
     ],
@@ -152,7 +182,7 @@ export function getStartSection(pathname: string) {
 
 function StartMenu() {
   return (
-    <ul class="m-5">
+    <ul class="m-5 nav">
       <For each={START_SECTIONS}>
         {(section) => (
           <li class="mb-6">
@@ -160,16 +190,38 @@ function StartMenu() {
             <ul>
               <For each={section.subsections}>
                 {(subsection) => (
-                  <li class="px-2 my-1 py-0">
-                    <NavLink
-                      style="font-size: 0.95rem"
-                      class="hover:underline"
-                      activeClass="underline"
-                      href={section.link + subsection.link}
-                    >
-                      {subsection.header}
-                    </NavLink>
-                  </li>
+                  <>
+                    <li class="px-2 my-1 py-0">
+                      <NavLink
+                        style="font-size: 0.95rem"
+                        class="hover:underline"
+                        activeClass="text-solid-default font-bold"
+                        href={section.link + subsection.link}
+                      >
+                        {subsection.header}
+                      </NavLink>
+                    </li>
+                    <Show when={subsection.subsections?.length}>
+                      <ul class="px-2">
+                        <For each={subsection.subsections}>
+                          {(item) => (
+                            <>
+                              <li class="pl-4 my-1 py-0">
+                                <NavLink
+                                  style="font-size: 0.85rem"
+                                  class="hover:underline"
+                                  activeClass="text-solid-default font-bold"
+                                  href={section.link + item.link}
+                                >
+                                  {item.header}
+                                </NavLink>
+                              </li>
+                            </>
+                          )}
+                        </For>
+                      </ul>
+                    </Show>
+                  </>
                 )}
               </For>
             </ul>
@@ -261,4 +313,3 @@ function SectionNav(props: { sections: SECTIONS }) {
     </ul>
   );
 }
-

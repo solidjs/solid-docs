@@ -1,10 +1,11 @@
-import { Link } from "solid-app-router";
+import { Link } from "@solidjs/router";
 import { createEffect, createUniqueId, onMount, ParentProps } from "solid-js";
 import tippy from "tippy.js";
+import { mergeProps } from "solid-js";
 import "tippy.js/dist/tippy.css";
 import { Title } from "./components/Main";
-import { Title as MetaTitle } from "solid-meta";
-import { usePageState } from "./components/context/PageStateContext";
+import { Title as MetaTitle } from "@solidjs/meta";
+import { usePageState } from "~/components/context/PageStateContext";
 
 function Anchor(props: ParentProps<{ id: string }>) {
   return (
@@ -23,7 +24,7 @@ export default {
       {...props}
       class={
         headerBold +
-        "heading mt-10 mb-6 -mx-.5 break-words text-5xl leading-tight"
+        "heading mt-10 mb-6 -mx-.5 break-words text-5xl leading-tight mdx-heading"
       }
     >
       <MetaTitle>{props.children}</MetaTitle>
@@ -40,29 +41,37 @@ export default {
     return (
       <h2
         {...props}
-        class={headerBold + "heading text-3xl leading-10 mt-14 mb-6"}
+        class={
+          headerBold + "heading text-3xl leading-10 mt-14 mb-6 mdx-heading"
+        }
       >
         <Anchor id={props.id}>{props.children}</Anchor>
       </h2>
     );
   },
   h3: (props) => (
-    <h3 {...props} class={headerBold + "heading text-2xl leading-9 mt-14 mb-6"}>
+    <h3
+      {...props}
+      class={headerBold + "heading text-2xl leading-9 mt-14 mb-6 mdx-heading"}
+    >
       <Anchor id={props.id}>{props.children}</Anchor>
     </h3>
   ),
   h4: (props) => (
-    <h4 {...props} class="heading text-xl font-bold leading-9 mt-14 mb-4">
+    <h4
+      {...props}
+      class="heading text-xl font-bold leading-9 mt-14 mb-4 mdx-heading"
+    >
       <Anchor id={props.id}>{props.children}</Anchor>
     </h4>
   ),
   h5: (props) => (
-    <h5 {...props} class="text-xl leading-9 mt-14 mb-4 font-medium">
+    <h5 {...props} class="text-xl leading-9 mt-4 mb-4 font-medium mdx-heading">
       <Anchor id={props.id}>{props.children}</Anchor>
     </h5>
   ),
   h6: (props) => (
-    <h6 {...props} class="text-xl font-400">
+    <h6 {...props} class="text-xl font-400 mdx-heading">
       <Anchor id={props.id}>{props.children}</Anchor>
     </h6>
   ),
@@ -75,7 +84,7 @@ export default {
     return (
       <Link
         {...props}
-        class="text-link dark:text-link-dark break-normal border-b border-link border-opacity-0 hover:border-opacity-100 duration-100 ease-in transition leading-normal"
+        class="text-solid-default dark:text-link-dark break-normal border-b border-solid-default border-opacity-0 hover:border-opacity-100 duration-100 ease-in transition font-semibold leading-normal"
       >
         {props.children}
       </Link>
@@ -111,7 +120,31 @@ export default {
       </code>
     );
   },
-  pre: (props) => <pre {...props}>{props.children}</pre>,
+  pre: (props) => (
+    <>
+      {/* <Show when={props.filename?.length > 5}>
+        <span {...props} class="h-4 p-1">
+          {props.filename}
+        </span>
+      </Show> */}
+      <pre
+        {...mergeProps(props, {
+          get class() {
+            return (
+              props.className +
+              " " +
+              (props.bad ? "border-red-400 border-1" : "")
+            );
+          },
+          get className() {
+            return undefined;
+          },
+        })}
+      >
+        {props.children}
+      </pre>
+    </>
+  ),
   "data-lsp": (props) => {
     const id = createUniqueId();
     createEffect(() => {

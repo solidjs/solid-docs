@@ -1,6 +1,6 @@
 import { HelpButton } from "./HelpButton";
 import IconEdit from "~icons/heroicons-outline/pencil-alt";
-import { useLocation } from "solid-app-router";
+import { useLocation } from "@solidjs/router";
 
 export default function Footer() {
   const location = useLocation();

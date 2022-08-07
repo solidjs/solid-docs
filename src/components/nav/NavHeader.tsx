@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "solid-app-router";
+import { NavLink, useLocation } from "@solidjs/router";
 import IconMenu from "~icons/heroicons-outline/menu";
 import IconX from "~icons/heroicons-outline/x";
 import IconSun from "~icons/heroicons-outline/sun";
@@ -57,9 +57,7 @@ export const NavHeader = (props: {
         <div class="flex gap-3">
           <button
             type="button"
-            aria-label={`Use ${
-              config.mode === "dark" ? "light" : "dark"
-            } mode`}
+            aria-label={`Use ${config.mode === "dark" ? "light" : "dark"} mode`}
             class="flex items-center justify-center w-10 h-10 transform -translate-y-1"
             onClick={() => {
               setConfig((c) => ({

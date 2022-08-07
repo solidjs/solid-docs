@@ -1,24 +1,64 @@
 import { Aside } from "~/components/configurable/FrameworkAside";
 
-<Title>Routing & pages</Title>
+# Routing
 
-Routing is the foundation of SolidStart. SolidStart uses the [Solid App Router](https://github.com/solidjs/solid-app-router) behind the scenes and enables _isomorphic routing_: the ability to write routes code once and have it work on both the server and client. In this section, you'll learn how to write basic routes, navigate between routes, and handle more complex/dynamic routing scenarios.
+- [Creating pages](#creating-pages)
+- [Navigating between pages](#navigation-between-pages)
 
-## Creating a route
+  - [Using links](#using-links)
+  - [When the user clicks a button](#when-the-user-clicks-a-button)
+  - [Using `Navigate` redirects](#using-navigate-redirects)
+  - [Using redirects from server data functions](#using-redirects-from-server-data-functions)
+  - [Using redirects after actions](#using-redirects-after-actions)
+
+- [Using Nested Routing]()
+- [Using Dynamic Segments]()
+- [Using without file-system routing](#using-without-file-system-routing)
+- [Create Resource Routes]()
+
+---
+
+Routing is possibly the most important concept to understand in SolidStart. Everything starts with your routes: the compiler, the initial request, and almost every user interaction afterward. In this section, you'll learn how to write basic routes, navigate between routes, and handle more complex/dynamic routing scenarios.
+
+Here's some vocabulary this document will be using regularly. They may not all make sense to you at first, but as you read the document they are here for your reference.
+
+<Aside type="general" title="Glossary" bgColor="#f5e8e8" preferDarkText={true}>
+
+**Nested Routes** - The general idea of routes mapping to segments of the URL allowing the full URL to map to a hierarchy of route components and data dependencies that can be known before rendering.
+
+**URL** - The full path in the address bar of the user's web browser. A single URL can match multiple routes. It's common in other frameworks to use the words "route" and "url" interchangeably, but they are different things in Remix.
+
+**Route** or Route Module - A JavaScript module with conventional exports (`post`, `patch`, `routeData`, `default` component, etc.) that is coupled to one or many URL segments. Because a Route module maps to only a segment of the URL, multiple routes can be rendered at a single URL. The component hierarchy will map to the URL segment hierarchy.
+
+**Path** or Route Path - The segment of the URL an individual route maps to, defined by the conventional file name in the `app/routes` directory.
+
+**Parent Layout Route** or Parent Route - A route that renders its component as the layout above a set of child routes through `<Outlet>`.
+
+**Pathless Layout Route** or Pathless Route - A route that does not add segments to the URL but does add component layout hierarchy when its child routes match.
+
+**Child Route** - A route that renders inside of a parent route's `<Outlet>` when its path matches the URL.
+
+**Index Route** - A route that shares the same URL as the parent route but renders as the default child route inside of `<Outlet>`.
+
+**Dynamic Segment** - A segment of the route path that is parsed from the URL and its value provided to the app, like the ID of a record or slug for a post.
+
+**Splat** - A trailing wildcard on a route path that will match anything (including subsequent `/`) and provided to the app.
+
+**Outlet** - A component rendered inside of a parent route that shows where to render the matching child route
+
+</Aside>
+
+## Creating pages
 
 SolidStart uses file system-based routing. This means that the directory path of your route files will translate exactly to the route structure in your application.
 
 Here are a few examples of files in our directory structure and how they would translate to application routes:
 
-- `/src/routes/index.tsx` -> mysite.com
-- `/src/routes/admin/index.tsx` -> mysite.com/admin
-- `/src/routes/admin/edit-settings.tsx` -> mysite.com/admin/edit-settings
+- `/src/routes/index.tsx` ➜ `mysite.com`
+- `/src/routes/admin/index.tsx` ➜ `mysite.com/admin`
+- `/src/routes/admin/edit-settings.tsx` ➜ `mysite.com/admin/edit-settings`
 
-Under the hood, SolidStart is able to traverse this directory structure, automatically collect all the routes, and populate the `<Routes />` component in the `src/root.tsx` file. This means that all you have to do is create a route in your directory structure and SolidStart takes care of everything else needed to make that route available to visit in your application!
-
-### Route file structure
-
-For routing to work, each route file should export a default component. This component represents the content that will be rendered when users visit the route:
+We put all our routes in the same top-level directory, `src/routes`. This includes our Pages, but also our Resource Routes. For a route to be rendered as a page, it should export a default component. This component represents the content that will be rendered when users visit the route:
 
 ```tsx
 export default function Index() {
@@ -28,86 +68,79 @@ export default function Index() {
 
 In this example, visiting mysite.com/ will render a `<div>` with the text "Welcome to SolidStart!" inside it.
 
-### Using route data
+Under the hood, SolidStart is able to traverse your `routes` directory, automatically collect all the routes. You can then use the `<FileRoutes />` component in your app. The `<FileRoutes />` component only includes your page routes, and not your API routes. You can use this component to specify your router config to the `<Routes />` component in `root.tsx`.
 
-In many cases, we need to do more than just render some HTML&mdash;we need to also pass some data to our route. For this, we can export a named `routeData` function. In this example, we'll greet the user by name:
+This means that all you have to do is create a route in your directory structure and SolidStart takes care of everything else needed to make that route available to visit in your application!
 
-```tsx
-import { useRouteData } from "solid-js";
+And this will render "Welcome to SolidStart, Jane!"
 
-export function routeData() {
-  return { name: "Jane" };
-}
+## Navigating between pages
 
+While the user can enter your app from any URL that your app serves, once they are using your app, you can provide them a user experience that is designed. You need a way for the user to travel between your pages. As with any website, you can use `a` tags to add links between pages in your app. Nothing special! Lets look at an example,
+
+#### Using links
+
+The easiest way to add a link to another page in your app is to the use the anchor tag `<a>`. Just like you would do in a plain HTML document, you can add a `href` attribute to the `<a>` tag and we will navigate to that route in SPA style.
+
+```tsx {3}
 export default function Index() {
-  const data = useRouteData<ReturnType<typeof routeData>>();
-
-  return <div>Welcome to SolidStart, {data().name}!</div>;
+  return (
+    <div>
+      <a href="/about">About</a>
+    </div>
+  );
 }
 ```
 
-And this will render "Welcome to SolidStart, Jane!" In reality, `routeData` will be more complex: for example, it could be checking if a user is authenticated.
+If you use an `a` tag, you have to use the absolute path to the route you want to navigate to. You might find it easier to specify the path to a route relative to the current route. There are also cases where you might want to know if the `href` matches the current route for styling purposes. For these situations, we have the [NavLink][navlink] component rexported from `@solidjs/router`.
 
-<Aside type="advanced" title="How this looks without file system routing" collapsible>
+You can specify class names to add to the `<a>` tag when the current location matches the `href` of the anchor using the `activeClass` prop. Use the `inactive` prop to add a class name to the `<a>` tag if the current route does not match the `href` of the anchor.
 
-If you have used Solid App Router in a SolidJS app before, you may notice that the exported component and route data map closely to the properties of the `<Route />` component exported by `solid-app-router`. This is no coincidence! If we were to write these routes without file system-based routing, our handwritten routes would use the default-exported component and `routeData` function:
+```tsx {5-11,14,17}
+import { NavLink } from "solid-start"
 
-```tsx
-<Route component={Index} data={routeData} />
-```
+export default function UsersLayout() {
+  return (
+    <div>
+      <NavLink
+        href="./projects"
+        activeClass="active-link"
+        inactiveClass="inactive-link"
+      >
+        Projects
+      </Navlink>
 
-</Aside>
+      // renders this when the user is on /users/1/projects
+      <a href="/users/1/projects" class="active-link">Projects</a>
 
-## Nested route relationships
-
-## Navigating between routes
-
-- How to link between pages (`a` tags, `Link`, `NavLink`)
-
-## Redirecting
-
-- Redirecting with `<Navigate />` (works on client and server)
-
-## Dynamic routes
-
-<Aside type="advanced" title="For users of solid-app-router">
-
-The file based route syntax dramatically differs from that of solid-app-router and some features are missing.
-
-</Aside>
-
-In some cases, it would be horribly inefficient to create each route manually. When you are dealing with dynamic content, it only makes sense to use dynamic routes!
-
-### Route parameters
-
-In solid-start, route parameters are defined in the file name. The most basic type of route parameter is enclosed in brackets, like `[id].tsx`. parameters acts as a placeholder for any string. There can be multiple parameters for a single file, but you should ensure there is a delimiter between those parameters.
+      // and this when the user is on /users/1/tasks
+      <a href="/users/1/projects" class="inactive-link">Projects</a>
+    </div>
+  );
+}
 
 ```
-src/
-├── routes/
-│   ├── @[username]/
-│   │   ├── index.tsx
-│   │   ├── [post].tsx
-```
 
-### Catch-all routes
+#### When the user clicks a button
 
-For routes, any subpath invalidates that route (with the noatable exception of folders). This behavior is often what we want, but not always. `/sometimes/nesting/forever/and/ever/is/ok`. For this, solid-start offers catch-all routes.
+There are cases where the `link` tag is not right for your navigation needs. For example,
 
-Catch-all routes are defined like `[...id].tsx`. A common use of catch-all routes is a 404 page. You want the route to apply everywhere so you define the catch-all route at the root, and if nothing more specific matches, the 404 route will.
+- You want to navigate after the user clicks a button, and we do some logic.
+- You want to navigate after an async process completes
 
-### Accessing route parameters
+For these use cases we provide an imperative [`navigate`][usenavigate-navigate] function that can be access using the [`useNavigate`][usenavigate] helper
 
-Naturally, there is little use to dynamic routes if there is no way to provide dynamic content in response. To do so, you need to have a way to access the contents of each parameter.
+#### Redirecting
 
-Solid-app-router exports `useParams()`, a function that retrieves a reactive, store-like object that holds the route's parameters and their values.
+- The primary way of redirecting from a route to another is to use the `<Navigate />` component in the tsx. For example, if you want to redirect to the home page, you can use the following code.
 
-```tsx
-import { useParams } from "solid-app-router";
+  - **Server**: When we get a request for this page, we will rend a [`308 (Redirect)`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/308) response with `Location` header set to the home page. The browser will then do its normal redirect routine. This also helps crawlers to understand that the page should be redirected.
+  - **Client**: When you navigate to this page from another page in the site, we will immediately navigate to the home page.
 
-const params = useParams();
-
-return <p>username: {params.username}</p>;
+```tsx filename="maths.ts"
+export default function InactivePage() {
+  return <Navigate to="/" />;
+}
 ```
 
 - routeData, accessing parent route data
@@ -117,15 +150,337 @@ return <p>username: {params.username}</p>;
 - Nested routes (e.g., `auth.tsx` vs `auth/login.tsx`)
   - Talk about using route data function in parent route
 
-## Status codes, headers, and other parts of the response
+## Nested Routing
 
-HTTP responses from the server don't just include the HTML body! SolidStart handles status codes and headers automatically, but gives you a few different ways to change the default values for these if necessary. [**Note:** mechanism for handling this is WIP, update when ready]
+Nested Routing is the general idea of coupling segments of the URL to component hierarchy in the UI. We've found that in almost every case, segments of the URL determine:
 
-## Manually defining routes
+- The layouts to render on the page
+- The code split JavaScript bundles to load
+- The data dependencies of those layouts
 
-- Mixing file based routes and `solid-app-router` routes
-- Why you would want to do this
+Let's consider a UI to help us out. Hover or tap each button to see how each segment of the URL maps to three things: a component layout, a JavaScript bundle, and a piece of data.
 
-### Opting out of file system routing
+<iframe
+  src="/_docs/routing"
+  class="w-full aspect-[1/1] rounded-lg overflow-hidden"
+></iframe>
 
-- Opting out of file system-based routing
+As the user clicks between links in the sidebar, the sidebar persists while the main content changes. Likewise, as they click between the Sales page top nav (Overview, Subscriptions, Invoices, etc.) both the sidebar and the top nav persist while the secondary content changes, and so on down the layout hierarchy.
+
+In Remix, all of these "boxes" are a **Route**, defined by a **Route Module** in your app.
+
+### Defining Nested Routes
+
+The primary way to define a route is to create a new file in `app/routes/*`. The routes for the UI example above would look something like this:
+
+```
+src
+├── root.tsx
+└── routes
+    ├── accounts.tsx
+    ├── dashboard.tsx
+    ├── expenses.tsx
+    ├── index.tsx
+    ├── reports.tsx
+    ├── sales
+    │   ├── customers.tsx
+    │   ├── deposits.tsx
+    │   ├── index.tsx
+    │   ├── invoices
+    │   │   ├── [invoiceId].tsx
+    │   │   └── index.tsx
+    │   ├── invoices.tsx
+    │   └── subscriptions.tsx
+    └── sales.tsx
+```
+
+- `root.tsx` is the "root route" that serves as the layout for the entire application. Every route will render inside of its `<Outlet/>`.
+- Note that there are files that match the same name as a folder, this indicates a component layout hierarchy. For example, `sales.tsx` is the **parent route** for all of the **child routes** inside of `app/routes/sales/*`. When a route inside of the sales directory matches, it will render inside of the `sales.tsx` route's `<Outlet>`
+- The `index.tsx` routes will render inside of the parent `<Outlet>` when the url is only as deep as the parent's path (like `example.com/sales` instead of `example.com/sales/customers`)
+
+### Rendering Route Layout Hierarchies
+
+Let's consider the URL is `/sales/invoices/102000`. The following routes all match that URL:
+
+- `root.tsx`
+- `routes/sales.tsx`
+- `routes/sales/invoices.tsx`
+- `routes/sales/invoices/[invoiceId].tsx`
+
+When the user visits this page, we will render the components in this hierarchy:
+
+```tsx
+<Root>
+  <Sales>
+    <Invoices>
+      <InvoiceId />
+    </Invoices>
+  </Sales>
+</Root>
+```
+
+You'll note that the component hierarchy is perfectly mapped to the file system hierarchy in `routes`. By looking at the files, you can anticipate how they will render.
+
+```
+src
+├── root.tsx
+└── routes
+    ├── sales
+    │   ├── invoices
+    │   │   └── [invoiceId].tsx
+    │   └── invoices.tsx
+    └── sales.tsx
+```
+
+If the URL is `/accounts`, the UI hierarchy changes to this:
+
+```tsx
+<Root>
+  <Accounts />
+</Root>
+```
+
+It's partly your job to make this work. You need to render an `<Outlet/>` to continue the rendering of the route hierarchy from the parent routes. `root.tsx` renders the main layout, sidebar, and then a `Routes` with a set of child routes to continue rendering through:
+
+```tsx filename="src/root.tsx" {1-7}
+import { Routes, FileRoutes } from "solid-start";
+
+export default function Root() {
+  return (
+    <Html>
+      <Body>
+        <Sidebar />
+        <Routes>
+          <FileRoutes />
+        </Routes>
+      </Body>
+    </Html>
+  );
+}
+```
+
+Next up is the sales route, which also renders an outlet for its child routes (all of the routes inside of `src/routes/sales/*.tsx`).
+
+```tsx filename="app/routes/sales.tsx" {8}
+import { Outlet } from "solid-start";
+
+export default function Sales() {
+  return (
+    <div>
+      <h1>Sales</h1>
+      <SalesNav />
+      <Outlet />
+    </div>
+  );
+}
+```
+
+And so on down the route tree. This is a powerful abstraction that makes something previously complex very simple.
+
+### Index Routes
+
+Index routes are often difficult to understand at first. It's easiest to think of them as _the default child route_ for a parent route. When there is no child route to render, we render the index route.
+
+Consider the URL `example.com/sales`. If our app didn't have an index route at `app/routes/sales/index.tsx` the UI would look like this!
+
+<iframe
+  src="/_docs/routing-index"
+  class="w-full aspect-[4/3] rounded-lg overflow-hidden mb-4"
+></iframe>
+
+And index is the thing you render to fill in that empty space when none of the child routes match.
+
+<docs-error>Index Routes cannot have child routes</docs-error>
+
+Index routes are "leaf routes". They're the end of the line. If you think you need to add child routes to an index route, that usually means your layout code (like a shared nav) needs to move out of the index route and into the parent route. Put any global nav up into `src/root.tsx`. Everything inside of `src/routes/*` is already a child of `root.tsx`.
+
+### Pathless Layout Routes
+
+Sometimes you want to share a layout for a set of routes _but you don't want to add any segments to the URL_. You can do this with a **pathless layout route**. For cases where you want to create child routes with Index routes is also a case where you can use a pathless layout route.
+
+Consider we want to add some authentication routes, with a UI hierarchy like this:
+
+```tsx
+<Root>
+  <Auth>
+    <Login />
+  </Auth>
+</Root>
+```
+
+At first, you might think to just create an `auth` parent route and put the child routes inside to get the layout nesting:
+
+```
+app
+├── root.tsx
+└── routes
+    ├── auth
+    │   ├── login.tsx
+    │   ├── logout.tsx
+    │   └── signup.tsx
+    └── auth.tsx
+```
+
+We have the right UI hierarchy, but we probably don't actually want each of the URLs to be prefixed with `/auth` like `/auth/login`. We just want `/login`.
+
+You can remove the URL nesting, but keep the UI nesting, by adding two underscores to the route and folder name:
+
+```
+app
+├── root.tsx
+└── routes
+    ├── __auth
+    │   ├── login.tsx
+    │   ├── logout.tsx
+    │   └── signup.tsx
+    └── __auth.tsx
+```
+
+And that's it! When the URL matches `/login` the UI hierarchy will be same as before.
+
+## Dynamic Segments
+
+Surrounding part of a file name with `[]` will make that route path a **dynamic segment**. This means SolidStart will match any value in the URL for that segment and provide it to your app.
+
+For example, the `[invoiceId].tsx` route. When the url is `/sales/invoices/102000`, SolidStart will provide the string value `102000` to your routeData, and components by the same name as the filename segment:
+
+```tsx
+import { useParams } from "solid-start";
+
+export function routeData({ params }) {
+  const id = params.invoiceId;
+}
+
+export function post({ params }) {
+  const id = params.invoiceId;
+}
+
+export default function Invoice() {
+  const params = useParams();
+  const id = params.invoiceId;
+}
+```
+
+Route can have multiple params, and params can be folders as well.
+
+```
+app
+├── root.tsx
+└── routes
+    ├── projects
+    │   ├── [projectId]
+    │   │   └── [taskId].tsx
+    │   └── [projectId].tsx
+    └── projects.tsx
+```
+
+If the URL is `/projects/123/abc` then the params will be as follows:
+
+```tsx
+params.projectId; // "123"
+params.taskId; // "abc"
+```
+
+## Splats / Catch-all Routes
+
+Naming a file `[...all].tsx` will make that route path a **splat** or **catch-all route**. This means SolidStart will match any value in the URL for rest of the URL to the end. Unlike **dynamic segments**, a splat won't stop matching at the next `/`, it will capture everything.
+
+Consider the following routes:
+
+```
+src
+├── root.tsx
+└── routes
+    ├── files
+    │   ├── [...other].tsx
+    │   ├── mine.tsx
+    │   └── recent.tsx
+    └── files.tsx
+```
+
+When the URL is `example.com/files/images/work/flyer.jpg`. The splat param will capture the trailing segments of the URL and be available to your app on `params["other"]`
+
+```tsx
+export function routeData({ params }) {
+  params["other"]; // "images/work/flyer.jpg"
+}
+```
+
+You can add splats at any level of your route hierarchy. Any sibling routes will match first (like `/files/mine`).
+
+It's common to add a `routes/[...404].tsx` file to build custom 404 pages. Make sure to add the `<HttpStatusCode code={404} />` component to your 404 page so that we can set the correct status code.
+
+## Using without file-system routing
+
+If you have used Solid App Router in a Solid app before, you may notice that the exported component and route data map closely to the properties of the `<Route />` component exported by `@solidjs/router`. This is no coincidence! If we were to write these routes without file system-based routing, our handwritten routes could use the same files and use the default-exported component and `routeData` functions as arguments to their `<Route />` components. You can even begin to write your routes from right within `root.tsx` before you decide to use the file-system routing.
+
+```tsx
+// @refresh reload
+import { Suspense } from "solid-js";
+import {
+  Body,
+  ErrorBoundary,
+  FileRoutes,
+  Head,
+  Html,
+  Meta,
+  Routes,
+  Scripts,
+  Title,
+} from "solid-start";
+
+import { HttpStatusCode } from "solid-start/server";
+
+function NotFound() {
+  return (
+    <main>
+      <Title>Not Found</Title>
+      <HttpStatusCode code={404} />
+      <h1>Page Not Found</h1>
+    </main>
+  );
+}
+
+function Home() {
+  return (
+    <main>
+      <Title>Home</Title>
+      <h1>Home</h1>
+    </main>
+  );
+}
+
+export default function Root() {
+  return (
+    <Html lang="en">
+      <Head>
+        <Meta charset="utf-8" />
+        <Meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
+      <Body>
+        <Suspense>
+          <ErrorBoundary>
+            <a href="/">Home</a>
+            <a href="/about">About</a>
+            <Routes>
+              <Route path="/" component={Home} />
+              <Route path="*404" component={NotFound} />
+            </Routes>
+          </ErrorBoundary>
+        </Suspense>
+        <Scripts />
+      </Body>
+    </Html>
+  );
+}
+```
+
+## Conclusion
+
+Nested routes are an incredibly powerful abstraction. Layouts are shared automatically and each route is only concerned with its slice of the data on the page. Additionally, because of this convention, SolidStart is able to make a ton of optimizations, automatically turning what feels like a server side app from the developer's perspective into a turbocharged SPA for the user.
+
+Happy routing!
+
+[navlink]: /docs/navigation#navigation-links
+[usenavigate]: /start/api/useNavigate
+[usenavigate-navigate]: /start/api/useNavigate#navigate

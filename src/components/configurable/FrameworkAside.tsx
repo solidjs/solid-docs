@@ -1,9 +1,4 @@
-import {
-  createSignal,
-  JSX,
-  ParentProps,
-  Show,
-} from "solid-js";
+import { createSignal, JSX, ParentProps, Show } from "solid-js";
 import { useConfig, OtherFramework } from "../context/ConfigContext";
 import IconAccessibility from "~icons/icomoon-free/accessibility";
 import IconReact from "~icons/mdi/react";
@@ -24,7 +19,7 @@ export const FrameworkAside = (
   return (
     <Aside
       type={props.framework}
-      show={config.comingFrom === props.framework}
+      show={config().comingFrom === props.framework}
     >
       {props.children}
     </Aside>
@@ -91,6 +86,7 @@ interface AsideProps {
   title?: string;
   bgColor?: string;
   preferDarkText?: boolean;
+  class?: string;
 }
 
 export const Aside = (props: ParentProps<AsideProps>) => {
@@ -109,7 +105,9 @@ export const Aside = (props: ParentProps<AsideProps>) => {
         props.show === false ? "hidden" : ""
       } flex aside p-5 rounded mt-10 mb-14${
         preferDark() ? " text-black" : " text-white"
-      }${bgColor() ? "" : " bg-solid-medium dark:bg-darkdefault"} gap-2`}
+      }${bgColor() ? "" : " bg-solid-medium dark:bg-darkdefault"} gap-2 ${
+        props.class ?? ""
+      }`}
       style={`${bgColor() ? `background-color: ${bgColor()}` : ""}`}
     >
       <div class="my-3">{logo()}</div>

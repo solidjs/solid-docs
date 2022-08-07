@@ -1,4 +1,4 @@
-import { useIsRouting, useLocation } from "solid-app-router";
+import { useIsRouting, useLocation } from "@solidjs/router";
 import { Accessor, createEffect, useContext } from "solid-js";
 
 import {

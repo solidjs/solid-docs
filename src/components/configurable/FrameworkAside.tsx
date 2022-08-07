@@ -17,10 +17,7 @@ export const FrameworkAside = (
   const [config] = useConfig();
 
   return (
-    <Aside
-      type={props.framework}
-      show={config().comingFrom === props.framework}
-    >
+    <Aside type={props.framework} show={config.comingFrom === props.framework}>
       {props.children}
     </Aside>
   );

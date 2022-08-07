@@ -113,7 +113,7 @@ function AddBook(props: IAddBookProps) {
         />
       </div>
       <button
-        class="px-3 py-2 rounded bg-blue-200 text-black"
+        class="border-2 border-black px-2 py-1 rounded bg-blue-200"
         type="submit"
         onClick={addBook}
       >

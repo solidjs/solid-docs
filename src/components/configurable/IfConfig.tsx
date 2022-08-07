@@ -15,6 +15,7 @@ export function IfConfig<T extends keyof Config>(
     forValue: Config[T];
     fallback?: JSX.Element;
     block?: boolean;
+    code?: boolean
   }>
 ) {
   const [config] = useConfig();
@@ -23,9 +24,19 @@ export function IfConfig<T extends keyof Config>(
     <Dynamic component={props.block ? "div" : "span"}>
       <Show
         when={config[props.check] === props.forValue}
-        fallback={props.fallback}
+        fallback={
+          props.code ? (
+            <code class="inline text-code font-mono">{props.fallback}</code>
+          ) : (
+            props.fallback
+          )
+        }
       >
-        {props.children}
+        {props.code ? (
+          <code class="inline text-code font-mono">{props.children}</code>
+        ) : (
+          props.children
+        )}
       </Show>
     </Dynamic>
   );

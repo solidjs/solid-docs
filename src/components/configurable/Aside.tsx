@@ -7,6 +7,7 @@ import IconAngular from "~icons/mdi/angular";
 import IconSvelte from "~icons/simple-icons/svelte";
 import IconBulb from "~icons/mdi/lightbulb";
 import IconBrain from "~icons/mdi/brain";
+import IconPencil from "~icons/mdi/lead-pencil";
 import IconAlertDecagram from "~icons/mdi/alert-decagram";
 import "./Aside.css";
 import { CollapsedIcon } from "../nav/NavSection";
@@ -72,7 +73,8 @@ const asideDefinition: () => Record<
     bgColor: "#eab308",
     preferDarkText: true,
   },
-  advanced: { title: "Advanced concepts", logo: <IconBrain {...logoProps} /> },
+  advanced: { title: "Advanced", logo: <IconBrain {...logoProps} /> },
+  note: { title: "Note", logo: <IconPencil {...logoProps} /> },
   general: { title: null, logo: <IconBulb {...logoProps} /> },
 });
 
@@ -107,13 +109,13 @@ export const Aside = (props: ParentProps<AsideProps>) => {
       }`}
       style={`${bgColor() ? `background-color: ${bgColor()}` : ""}`}
     >
-      <div class="my-3">{logo()}</div>
+      <div class="my-1">{logo()}</div>
       <div>
         <Show when={!!title() && !props.collapsible}>
-          <h3 class="text-xl mt-3">{title()}</h3>
+          <h3 class="text-xl mt-1">{title()}</h3>
         </Show>
         <Show when={!!title() && props.collapsible}>
-          <h3 class="text-xl mt-3">
+          <h3 class="text-xl mt-1">
             <button
               aria-label={`Show expanded ${title()} content`}
               class="flex gap-3"

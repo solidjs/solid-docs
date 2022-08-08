@@ -1,4 +1,9 @@
 ```tsx
+type ResultItem = {
+  title: string,
+  author_name: string[]
+}
+
 export async function searchBooks(query: string) {
   if (query.trim() === "") return [];
 
@@ -6,7 +11,9 @@ export async function searchBooks(query: string) {
     `https://openlibrary.org/search.json?q=${encodeURI(query)}`
   );
   const results = await response.json();
-  return results.docs.slice(0, 10).map(({ title, author_name }) => ({
+  const documents = results.docs as ResultItem[];
+  console.log(documents);
+  return documents.slice(0, 10).map(({ title, author_name }) => ({
     title,
     author: author_name?.join(", "),
   }));

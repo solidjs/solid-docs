@@ -1,19 +1,62 @@
 import { FrameworkAside, Aside } from "~/components/configurable/Aside";
+import increment from "./increment.gif";
 
 <Title>Reactivity</Title>
 
-## Introduction to reactivity
+## Introduction
 
-Reactivity is a programming method that allows a developer to specify actions to take whenever data changes.
+Reactivity is the foundation of Solid. In this concept article, we will discuss the basics of reactivity and its implementation in Solid.
+
+Reactivity is a programming method that allows developers to automatically take actions when data changes. For example, if a user changes their name in a web application, it would be handy for that change to automatically be reflected in the user interface. With reactivity, this automatic behavior is possible.
+
+While it is not necessary to understand all of the concepts in this article to use Solid, an in-depth understanding of reactivity can be helpful to grow as a Solid developer.
 
 ## Solid's reactivity
 
-Solid has two _primitives_ that are critical to its reactive system: _signals_ and _effects_.
+Solid has two _primitives_ that are critical to its reactivity: _signals_ and _effects_. In the sections below, we will understand what signals and effects are and then implement our very own reactive system using them.
 
-A signal represents data in our application. Signals have two main parts
+<Aside type="advanced" title="Other reactive primitives">
 
-- an _accessor_, which is a function that allows you to access the current value of the signal
-- a _setter_, which is a function that allows you to set the current value of the signal
+While Solid has other reactive primitives (for example, stores), they are derived from signals and not necessary to learn to understand the basics of reactivity.
+
+</Aside>
+
+### Signals
+
+A signal can represent any data that we need to keep track of in our application. For example, a signal could be a username or the value of a counter that we can increment. Signals consist of two main parts:
+
+- An _accessor_, which is a function that allows you to access the current value of the signal.
+- A _setter_, which is a function that allows you to set the current value of the signal.
+
+When we create a signal using Solid's `createSignal` function, the accessor and setter are return as a _two-element tuple_. We typically use _array destructuring_ to assign the accessor and setter into variables with names of our choosing.
+
+```jsx
+import { createSignal } from "solid-js";
+
+const [count, setCount] = createSignal(0);
+
+count(); // Accesses the count value
+
+setCount(1); // Sets the count value to 1
+```
+
+In this example, `count` is the accessor and `setCount` is the setter.
+
+### Effects
+
+An effect represents the action we would like to take when the data in a signal changes. Solid provides a `createEffect` function that we can use. We pass a function to `createEffect` that will re-run whenever a signal inside that effect changes value. For example, the following effect will `console.log` the count whenever it updates:
+
+```jsx
+import { createSignal, createEffect } from "solid-js";
+
+const [count, setCount] = createSignal(0);
+
+createEffect(() => {
+  console.log(count());
+});
+```
+
+This effect will `console.log` the `count` whenever it changes.
 
 <FrameworkAside framework="react">
 
@@ -23,7 +66,7 @@ Notice that you don't have to specify a _dependency array_ for an effect in Soli
 
 ## Creating a reactive system
 
-One of the best ways to understand how reactivity works is to implement it ourselves. In this section, we will implement the same reactive pattern Solid uses: the _observer pattern_. In the observer pattern, data (signals) tracks their dependents (effects). When data changes, it triggers all of its dependents.
+One of the best ways to understand how reactivity works is to implement it ourselves. In this section, we will implement the same reactive pattern Solid uses: the _observer pattern_. In the observer pattern, data (signals) track their dependents (effects). When data changes, it triggers all of its dependents.
 
 Since we will be implementing the same pattern Solid uses, we can use the same primitive names: `createSignal` and `createEffect`:
 
@@ -64,6 +107,7 @@ We can now get the current value of our signal by calling the accessor and we ca
 
 The key to adding reactivity is the `createEffect` function. When we call `createEffect`, we should do the following:
 
+- Create a global `currentSubscriber` that can keep track of the function we pass to `createEffect`
 - Register the function we pass to `createEffect` as the current subscriber
 - When we access a signal, add the current listener to a list of subscribers
 - When we set the signal to a new value, run all subscribers
@@ -120,14 +164,43 @@ setInterval(() => {
 }, 1000);
 ```
 
-## Rendering as an effect
+<img
+  style="max-width: 30rem; margin-bottom: 3rem; border-radius: 5px;"
+  src={increment}
+  alt="Incrementing counter"
+/>
 
-- In Solid, rendering is an effect
-- This is hard to initially intuit because JSX is compiled
+We have just implemented the most basic form of Solid's reactivity system!
 
-## Asynchronous effects
+## Effect tracking is synchronous
+
+One observation we should note about our reactivity system is that it's synchronous. It registers the subscriber globally, runs the effect, and unregisters the subscriber.
+
+So what happens if our `createEffect` function looks like this?
+
+```jsx
+createEffect(() => {
+  setTimeout(() => {
+    console.log(count());
+  }, 1000);
+});
+```
+
+Our `createEffect` implementation doesn't wait around for this `setTimeout` callback to execute, so by the time we call our `count` accessor, there is no subscriber in the global scope. The `count` signal, therefore, will not register this callback as one of its subscribers!
+
+<Aside type="advanced" title="Handling asynchronous effects">
+
+Solid gives you some options for handling asynchronous effects. For example, you can use the `on` function **[TODO: add API link]** to manually specify effect dependencies.
+
+To learn more about Solid-specific tracking mechanisms, see the [Tracking Concept documentation](../tracking).
+
+</Aside>
 
 ## Learning more
 
-- Tracking concept
-- Ryan articles
+We hope you enjoyed this introduction to reactivity! If you would like to dive deeper, please check out the following resources:
+
+- Our [Tracking Concept](../tracking) article
+- [A Hands-on Introduction to Fine-Grained Reactivity](https://dev.to/ryansolid/a-hands-on-introduction-to-fine-grained-reactivity-3ndf)
+- [Building a Reactive Library from Scratch](https://dev.to/ryansolid/building-a-reactive-library-from-scratch-1i0p)
+- [SolidJS: Reactivity to Rendering](https://indepth.dev/posts/1289/solidjs-reactivity-to-rendering)

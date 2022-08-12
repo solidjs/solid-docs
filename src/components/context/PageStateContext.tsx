@@ -1,12 +1,7 @@
-import { useIsRouting, useLocation } from "@solidjs/router";
-import { Accessor, createEffect, useContext } from "solid-js";
+import { useLocation } from "@solidjs/router";
+import { createEffect, useContext } from "solid-js";
 
-import {
-  createContext,
-  createSignal,
-  PropsWithChildren,
-  Signal,
-} from "solid-js";
+import { createContext, ParentProps } from "solid-js";
 import { createStore } from "solid-js/store";
 
 type Section = {
@@ -21,7 +16,7 @@ type PageStateData = {
 
 export const PageStateContext = createContext<PageStateData>();
 
-export const PageStateProvider = (props: PropsWithChildren) => {
+export const PageStateProvider = (props: ParentProps) => {
   const [store, setStore] = createStore<{ sections: Section[]; path: string }>({
     sections: [],
     path: "",
@@ -32,7 +27,9 @@ export const PageStateProvider = (props: PropsWithChildren) => {
       return store.sections;
     },
     addSection(title, href) {
-      setStore("sections", (sections) => [...sections, { title, href }]);
+      setStore("sections", (sections) => [
+        ...new Set([...sections, { title, href }]),
+      ]);
     },
   };
 

@@ -27,7 +27,7 @@ const sections = [
     title: "Guides",
     href: "/tutorials/getting-started-with-solid/welcome",
   },
-  { title: "Reference", href: "/concepts/tracking" },
+  { title: "Reference", href: "/concepts/reactivity" },
 ];
 
 export const NavHeader = (props: {

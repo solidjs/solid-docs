@@ -1,0 +1,133 @@
+import { FrameworkAside, Aside } from "~/components/configurable/Aside";
+
+<Title>Reactivity</Title>
+
+## Introduction to reactivity
+
+Reactivity is a programming method that allows a developer to specify actions to take whenever data changes.
+
+## Solid's reactivity
+
+Solid has two _primitives_ that are critical to its reactive system: _signals_ and _effects_.
+
+A signal represents data in our application. Signals have two main parts
+
+- an _accessor_, which is a function that allows you to access the current value of the signal
+- a _setter_, which is a function that allows you to set the current value of the signal
+
+<FrameworkAside framework="react">
+
+Notice that you don't have to specify a _dependency array_ for an effect in Solid. This is a major difference between Solid and React&mdash;Solid will automatically _track_ dependencies whereas React will not. Therefore, React re-runs any effect when a component re-renders unless the developer explicitly specifies dependencies.
+
+</FrameworkAside>
+
+## Creating a reactive system
+
+One of the best ways to understand how reactivity works is to implement it ourselves. In this section, we will implement the same reactive pattern Solid uses: the _observer pattern_. In the observer pattern, data (signals) tracks their dependents (effects). When data changes, it triggers all of its dependents.
+
+Since we will be implementing the same pattern Solid uses, we can use the same primitive names: `createSignal` and `createEffect`:
+
+```jsx
+function createSignal() {}
+
+function createEffect() {}
+
+const [count, setCount] = createSignal(0);
+
+createEffect(() => {
+  console.log("The count is " + count());
+});
+```
+
+First, let's handle the basics of the `createSignal` function. It needs to:
+
+- initialize the `count` value to `0` (the argument provided to `createSignal`)
+- return a two-element _tuple_ consisting of an _accessor_ and a _setter_
+
+```jsx
+function createSignal(initialValue) {
+  let value = initialValue;
+
+  function accessor() {
+    return value;
+  }
+
+  function setter(newValue) {
+    value = newValue;
+  }
+
+  return [accessor, setter];
+}
+```
+
+We can now get the current value of our signal by calling the accessor and we can set the value by using the setter. This is great, but there is no reactivity yet.
+
+The key to adding reactivity is the `createEffect` function. When we call `createEffect`, we should do the following:
+
+- Register the function we pass to `createEffect` as the current subscriber
+- When we access a signal, add the current listener to a list of subscribers
+- When we set the signal to a new value, run all subscribers
+
+```jsx
+let currentSubscriber = null;
+
+function createSignal(initialValue) {
+  let value = initialValue;
+  // Maintain a list of a signal's own subscribers
+  const subscribers = new Set();
+
+  function accessor() {
+    // Add to subscriber list
+    if (currentSubscriber) {
+      subscribers.add(currentSubscriber);
+    }
+
+    return value;
+  }
+
+  function setter(newValue) {
+    value = newValue;
+    // Notify all subscribers of the value change
+    for (const subscriber of subscribers) {
+      subscriber();
+    }
+  }
+
+  return [accessor, setter];
+}
+
+function createEffect(fn) {
+  // Add function as subscriber in global scope
+  currentSubscriber = fn;
+  // Run function to trigger the accessor of any signals that are called
+  fn();
+  // Remove the function as the current subscriber
+  currentSubscriber = null;
+}
+```
+
+This is all the code needed to create a basic reactive system. We can demonstrate that it works by incrementing the `count` value every second and watching the console.
+
+```jsx
+const [count, setCount] = createSignal(0);
+
+createEffect(() => {
+  console.log("The count is " + count());
+});
+
+setInterval(() => {
+  setCount(count() + 1);
+}, 1000);
+```
+
+## Rendering as an effect
+
+- In Solid, rendering is an effect
+- This is hard to initially intuit because JSX is compiled
+
+## Asynchronous effects
+
+## Learning more
+
+- Tracking concept
+- Ryan articles

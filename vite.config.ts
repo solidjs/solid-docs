@@ -9,6 +9,7 @@ import { nodeTypes } from "@mdx-js/mdx";
 import remarkShikiTwoslash from "remark-shiki-twoslash";
 import rehypeSlug from "rehype-slug";
 import Icons from "unplugin-icons/vite";
+import colors from "windicss/colors";
 
 const adapter = process.env.GITHUB_ACTIONS ? node() : netlify();
 
@@ -92,19 +93,16 @@ export default defineConfig({
             },
             colors: {
               solid: {
-                default: "#2c4f7c",
-                darkbg: "#222222",
-                darkLighterBg: "#444444",
-                darkdefault: "#b8d7ff", //'#87b1e6',
-                darkgray: "#252525",
-                gray: "#414042",
-                mediumgray: "#9d9d9d",
-                lightgray: "#f3f5f7",
-                dark: "#07254A",
-                medium: "#446b9e",
-                light: "#4f88c6",
-                accent: "#0cdc73",
-                secondaccent: "#0dfc85",
+                dark: colors.slate["900"],
+                darkbg: colors.slate["800"],
+                darkborder: colors.slate["700"],
+                darkitem: colors.slate["500"],
+                light: "#FFFFFF",
+                lightbg: colors.slate["100"],
+                lightborder: colors.slate["200"],
+                lightitem: colors.slate["400"],
+                accent: "#2c4f7c",
+                accenlight: "#446b9e",
               },
             },
           },

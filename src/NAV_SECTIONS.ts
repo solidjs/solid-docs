@@ -21,13 +21,23 @@ export const REFERENCE_SECTIONS: SECTIONS = {
   concepts: {
     name: "Concepts",
     pages: [
-      { name: "Reactivity", link: "/concepts/reactivity" },
-      { name: "Tracking", link: "/concepts/tracking" },
+      {
+        name: "Reactivity",
+        pages: [
+          { name: "Reactivity Basics", link: "/concepts/reactivity" },
+          { name: "Tracking", link: "/concepts/tracking" },
+        ],
+      },
     ],
   },
   api: {
-    name: "API Reference",
-    pages: [{ name: "Coming Soon", link: "/api-reference" }],
+    name: "API",
+    pages: [
+      {
+        name: "API Reference",
+        pages: [{ name: "Coming Soon", link: "/api-reference" }],
+      },
+    ],
   },
 };
 

@@ -40,7 +40,7 @@ export const NavHeader = (props: {
   return (
     <nav
       aria-label="Docs header"
-      class="sticky top-0 mt-8 items-center w-full z-1 flex flex-col gap-4"
+      class="bg-white dark:bg-solid-darkbg sticky top-0 pt-8 items-center w-full z-1 flex flex-col gap-4"
     >
       <div class="flex items-center justify-between w-full">
         <NavLink
@@ -96,14 +96,14 @@ export const NavHeader = (props: {
             hidden: !props.showMenu,
             "lg:flex": true,
           }}
-          class="w-full flex border border-solid-lightborder dark:border-solid-darkborder rounded-md"
+          class="w-full flex border border-solid-lightborder dark:border-solid-darkitem rounded-md"
         >
           <For each={sections}>
             {({ title, href }) => (
               <ActiveLink
                 isActive={(loc) => loc.pathname.startsWith(href)}
                 activeClass="bg-solid-light dark:bg-solid-dark font-semibold"
-                class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkborder last:(rounded-r-md border-0)"
+                class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0)"
                 href={href}
               >
                 {title}

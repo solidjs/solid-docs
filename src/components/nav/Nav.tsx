@@ -1,5 +1,6 @@
 import { NavLink, Route, Routes, useLocation } from "@solidjs/router";
 import { NavHeader } from "./NavHeader";
+import { NavPreferences } from "./NavPreferences";
 import { Collapsible, NavItem, SectionHeader } from "./NavSection";
 // import { Accordion } from "solid-headless";
 import { createEffect, createSignal, For, on, Show } from "solid-js";
@@ -26,23 +27,25 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
 
   return (
     <div class="lg:max-h-screen lg:sticky lg:top-0 no-bg-scrollbar lg:max-w-xs w-full shadow lg:shadow-none z-50 overflow-y-auto flex flex-col gap-8">
-      <NavHeader
-        docsMode={props.docsMode}
-        showMenu={showMenu()}
-        setShowMenu={setShowMenu}
-      />
-      <div class="my-2" classList={{ hidden: props.docsMode == "regular" }}>
-        <div id="docsearch" />
+      <div class="flex flex-col gap-4">
+        <NavHeader
+          docsMode={props.docsMode}
+          showMenu={showMenu()}
+          setShowMenu={setShowMenu}
+        />
+        <div class="my-2" classList={{ hidden: props.docsMode == "regular" }}>
+          <div id="docsearch" />
+        </div>
+        <NavPreferences />
+
+        <SectionHeader
+          collapsed={!showPreferences()}
+          panelId="prefs"
+          onClick={() => setShowPreferences((p) => !p)}
+        >
+          <span>Preferences</span>
+        </SectionHeader>
       </div>
-      <SectionHeader
-        collapsed={!showPreferences()}
-        panelId="prefs"
-        onClick={() => setShowPreferences((p) => !p)}
-      >
-        <span>
-          <span class="text-lg mr-2">⚙</span>️Preferences
-        </span>
-      </SectionHeader>
 
       <Show when={showPreferences()}>
         <div class="px-5 text-sm">

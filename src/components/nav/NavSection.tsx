@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from "@solidjs/router";
+import IconChevron from "~icons/heroicons-outline/chevron-right";
 
 import { usePageState } from "../context/PageStateContext";
 import {
@@ -50,19 +51,13 @@ export function SectionHeader(
   return (
     <h3>
       <button
-        class="p-2 pr-2 w-full h-full text-solid-dark dark:text-white rounded-none lg:rounded-r-lg text-left relative flex items-center justify-between pl-5 text-base font-bold"
+        class="w-full text-solid-dark dark:text-solid-light text-left relative flex items-center justify-between py-2"
         onClick={props.onClick}
         aria-expanded={!props.collapsed}
         aria-controls={props.panelId}
       >
         {props.children}
-        <span class={`pr-1`}>
-          <CollapsedIcon
-            class={`flex-0 transform ${
-              props.collapsed ? "-rotate-90 -translate-y-px" : "rotate-0"
-            }`}
-          />
-        </span>
+        <IconChevron class="w-6 h-6 text-solid-lightaction dark:text-solid-darkaction" />
       </button>
     </h3>
   );
@@ -72,7 +67,7 @@ function SectionPanel(props: ParentProps<{ id: string }>) {
   return (
     <ul
       id={props.id}
-      class="opacity-100"
+      class="opacity-100 border-l border-solid-lightitem dark:border-solid-darkitem pl-4"
       style="list-none transition: opacity 250ms ease-in-out 0s; animation: 250ms ease-in-out 0s 1 normal none running nav-fadein;"
     >
       {props.children}
@@ -85,19 +80,15 @@ export function NavItem(props) {
     return props.href === useLocation().pathname;
   };
 
-  // createEffect ( () => {
-  //   console.log( {href: props.href, path: useLocation().pathname });
-  // });
-
   const { sections } = usePageState();
 
   return (
     <li class="">
       <NavLink
-        class="font-semibold text-base p-2 pl-5 w-full rounded-none lg:rounded-r-lg text-left relative flex items-center justify-between"
+        class="p-2 text-base w-full rounded text-left relative flex items-center justify-between"
         {...props}
         inactiveClass="hover:text-solid-light hover:dark:text-solid-darkdefault"
-        activeClass="text-white bg-solid-light dark:bg-solid-light border-blue-40 active"
+        activeClass="text-white bg-solid-accent dark:bg-solid-light border-blue-40 active"
         end={true}
       >
         {props.children}

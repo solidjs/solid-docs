@@ -207,7 +207,7 @@ function SectionNav(props: { sections: SECTIONS }) {
   const sectionNames = Object.keys(props.sections);
 
   return (
-    <ul class="list-none">
+    <ul class="flex flex-col gap-4">
       <For each={sectionNames}>
         {(name, i) => (
           <li>

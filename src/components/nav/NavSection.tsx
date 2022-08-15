@@ -67,7 +67,7 @@ function SectionPanel(props: ParentProps<{ id: string }>) {
   return (
     <ul
       id={props.id}
-      class="opacity-100 border-l border-solid-lightitem dark:border-solid-darkitem pl-4"
+      class="opacity-100 border-l border-solid-lightitem dark:border-solid-darkitem"
       style="list-none transition: opacity 250ms ease-in-out 0s; animation: 250ms ease-in-out 0s 1 normal none running nav-fadein;"
     >
       {props.children}
@@ -85,10 +85,10 @@ export function NavItem(props) {
   return (
     <li class="">
       <NavLink
-        class="p-2 text-base w-full rounded text-left relative flex items-center justify-between"
+        class="p-2 text-base w-full rounded-r text-left relative flex items-center justify-between"
         {...props}
-        inactiveClass="hover:text-solid-light hover:dark:text-solid-darkdefault"
-        activeClass="text-white bg-solid-accent dark:bg-solid-light border-blue-40 active"
+        inactiveClass="hover:bg-solid-lightitem hover:dark:bg-solid-darkitem"
+        activeClass="text-white font-semibold bg-solid-accent active"
         end={true}
       >
         {props.children}

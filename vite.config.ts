@@ -102,7 +102,7 @@ export default defineConfig({
                 lightitem: colors.slate["200"],
                 lightaction: colors.slate["400"],
                 accent: "#2c4f7c",
-                accenlight: "#446b9e",
+                accentlight: colors.blue["300"],
               },
             },
           },

@@ -24,7 +24,7 @@ export default {
       {...props}
       class={
         headerBold +
-        "heading mt-10 mb-6 -mx-.5 break-words text-5xl leading-tight mdx-heading"
+        "heading mt-10 mb-6 -mx-.5 break-words text-4xl leading-tight mdx-heading"
       }
     >
       <MetaTitle>{props.children}</MetaTitle>
@@ -42,7 +42,8 @@ export default {
       <h2
         {...props}
         class={
-          headerBold + "heading text-3xl leading-10 mt-14 mb-6 mdx-heading"
+          headerBold +
+          "heading text-2xl leading-10 mt-14 mb-6 mdx-heading text-solid-accent dark:text-solid-accentlight"
         }
       >
         <Anchor id={props.id}>{props.children}</Anchor>

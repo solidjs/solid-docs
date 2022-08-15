@@ -2,7 +2,6 @@ import { NavLink, Route, Routes, useLocation } from "@solidjs/router";
 import { NavHeader } from "./NavHeader";
 import { NavPreferences } from "./NavPreferences";
 import { Collapsible, NavItem, SectionHeader } from "./NavSection";
-// import { Accordion } from "solid-headless";
 import { createEffect, createSignal, For, on, Show } from "solid-js";
 import {
   GUIDES_SECTIONS,
@@ -11,11 +10,9 @@ import {
   SECTION_LEAF_PAGE,
   SECTION_PAGE,
 } from "~/NAV_SECTIONS";
-import { Preferences } from "../Preferences";
 
 export default function Nav(props: { docsMode: "start" | "regular" }) {
   const [showMenu, setShowMenu] = createSignal(false);
-  const [showPreferences, setShowPreferences] = createSignal(false);
   const location = useLocation();
 
   createEffect((prev) => {
@@ -37,21 +34,7 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
           <div id="docsearch" />
         </div>
         <NavPreferences />
-
-        <SectionHeader
-          collapsed={!showPreferences()}
-          panelId="prefs"
-          onClick={() => setShowPreferences((p) => !p)}
-        >
-          <span>Preferences</span>
-        </SectionHeader>
       </div>
-
-      <Show when={showPreferences()}>
-        <div class="px-5 text-sm">
-          <Preferences questionClass="font-bold" />
-        </div>
-      </Show>
       <div
         classList={{
           hidden: !showMenu(),
@@ -68,7 +51,7 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
 
 function TopMenu() {
   return (
-    <aside class="w-full pt-4 lg:max-w-xs">
+    <aside class="w-full lg:max-w-xs">
       <nav class="scrolling-touch scrolling-gpu" style="--bg-opacity:0.2;">
         <Routes>
           <Route
@@ -228,13 +211,10 @@ function SectionNav(props: { sections: SECTIONS }) {
       <For each={sectionNames}>
         {(name, i) => (
           <li>
-            <h2 class="pl-4 text-solid-dark dark:text-white font-bold text-xl">
+            <h2 class="text-solid-dark dark:text-white font-bold text-xl">
               {props.sections[name].name}
             </h2>
             <SectionsNavIterate pages={props.sections[name].pages} />
-            {i() !== sectionNames.length - 1 ? (
-              <hr class="w-full mb-2" />
-            ) : null}
           </li>
         )}
       </For>

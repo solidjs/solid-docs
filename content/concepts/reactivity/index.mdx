@@ -51,7 +51,9 @@ In this example, `count` is the accessor and `setCount` is the setter.
 
 ### Effects
 
-An effect represents the action we would like to take when the data in a signal changes. Solid provides a `createEffect` function that we can use. We pass a function to `createEffect` that will re-run whenever a signal inside that effect changes value. For example, the following effect will `console.log` the count whenever it updates:
+An effect represents the action we would like to take when the data in one or more signals change. Solid provides a `createEffect` function that itself takes in a function. Solid will run that function, and then rerun it whenever any signal inside that function changes value. 
+
+For example, the following effect will `console.log` the count whenever it updates:
 
 ```jsx
 import { createSignal, createEffect } from "solid-js";
@@ -73,9 +75,9 @@ Notice that you don't have to specify a _dependency array_ for an effect in Soli
 
 ## Creating a reactive system
 
-One of the best ways to understand how reactivity works is to implement it ourselves. In this section, we will implement the same reactive pattern Solid uses: the _observer pattern_. In the observer pattern, data (signals) track their dependents (effects). When data changes, it triggers all of its dependents.
+One of the best ways to understand how reactivity works is to implement it ourselves. In this section, we will implement the same reactive pattern Solid uses: the _observer pattern_. In the observer pattern, data (signals) maintain a list of their subscribers (effects). When its data changes, a signal triggers all of its subscribers.
 
-Since we will be implementing the same pattern Solid uses, we can use the same primitive names: `createSignal` and `createEffect`:
+Let's use the same names, `createSignal` and `createEffect`, for our implementation:
 
 ```jsx
 function createSignal() {}
@@ -92,13 +94,13 @@ createEffect(() => {
 First, let's handle the basics of the `createSignal` function. It needs to:
 
 - initialize the `count` value to `0` (the argument provided to `createSignal`)
-- return a two-element _tuple_ consisting of an _accessor_ and a _setter_
+- return a two-element array consisting of a _getter_ and a _setter_ function
 
 ```jsx
 function createSignal(initialValue) {
   let value = initialValue;
 
-  function accessor() {
+  function getter () {
     return value;
   }
 
@@ -106,11 +108,11 @@ function createSignal(initialValue) {
     value = newValue;
   }
 
-  return [accessor, setter];
+  return [getter, setter];
 }
 ```
 
-We can now get the current value of our signal by calling the accessor and we can set the value by using the setter. This is great, but there is no reactivity yet.
+We can now get the current value of our signal by calling the getter and we can set the value by using the setter. This is great, but there is no reactivity yet.
 
 The key to adding reactivity is the `createEffect` function. When we call `createEffect`, we should do the following:
 
@@ -193,7 +195,7 @@ createEffect(() => {
 });
 ```
 
-Our `createEffect` implementation doesn't wait around for this `setTimeout` callback to execute, so by the time we call our `count` accessor, there is no subscriber in the global scope. The `count` signal, therefore, will not register this callback as one of its subscribers!
+Our `createEffect` implementation doesn't wait around for this `setTimeout` callback to execute, so by the time we call our `count` getter, there is no subscriber in the global scope. The `count` signal won't register this callback as one of its subscribers.
 
 <Aside type="advanced" title="Handling asynchronous effects">
 

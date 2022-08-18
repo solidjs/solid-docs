@@ -9,23 +9,25 @@ Reactivity is the foundation for making a Solid app interactive. In this concept
 
 Reactivity is a programming pattern that lets you set up behavior that "reacts" to data changes automatically.
 
-For example, you might make a shopping cart with a label that displays the total cost of the items. With reactivity, you can tell that label to automatically update whenever an item gets added or removed. 
+For example, you might make a shopping cart with a label that displays the total cost of the items. With reactivity, you can tell that label to automatically update whenever an item gets added or removed.
 
 This way, you only have to manage the data (like adding an item to the cart). Once you wire up the UI elements (like the label) to the data, the UI updates (changing the label) are handled for you.
 
-To get started in Solid, you need a basic understanding of reactive signals and effects. In this article, we'll teach you how those work behind the scenes.  This deeper understanding of reactivity can help you optimize your code, debug issues, and build your own extensions to the reactive system.
+To get started in Solid, you need a basic understanding of reactive signals and effects. In this article, we'll teach you how those work behind the scenes. This deeper understanding of reactivity can help you optimize your code, debug issues, and build your own extensions to the reactive system.
 
 ## Reactive Primitives
 
 To use reactivity, you create _reactive primitives_. The most important primitives are _signals_ and _effects_. In the sections below, we'll explain what signals and effects are, and then implement a simple version of them ourselves.
 
 <Aside type="advanced" title="Other reactive primitives">
+
 Solid has other reactive primitive, but they are derived from signals and effects. For example:
 
 - _Stores_ are trees of signals
 - _Memos_ are signals that update like effects
 - _Resources_ are signals that update when data is fetched from a server
 - _Render effects_ are effects that initially run earlier
+
 </Aside>
 
 ### Signals
@@ -35,23 +37,23 @@ A signal represents a piece of data that can change. For example, a signal could
 - The _getter_, a function that lets you access the current value of the signal
 - The _setter_, a function that lets you set the current value of the signal.
 
-When we create a signal using Solid's `createSignal` function, the accessor and setter are return as a _two-element tuple_. We typically use _array destructuring_ to assign the accessor and setter into variables with names of our choosing.
+We create a signal using Solid's `createSignal` function. This returns the getter and and setter as a _two-element array_. We typically use _array destructuring_ to assign the getter and setter into variables with names of our choosing.
 
 ```jsx
 import { createSignal } from "solid-js";
 
-const [count, setCount] = createSignal(0);
+const [count, setCount] = createSignal(1);
 
-count(); // Accesses the count value
+console.log(count()); // prints "1"
 
-setCount(1); // Sets the count value to 1
+setCount(0); // Sets the count value to 0
 ```
 
-In this example, `count` is the accessor and `setCount` is the setter.
+In this example, count is the getter and setCount is the setter.
 
 ### Effects
 
-An effect represents the action we would like to take when the data in one or more signals change. Solid provides a `createEffect` function that itself takes in a function. Solid will run that function, and then rerun it whenever any signal inside that function changes value. 
+An effect represents the action we would like to take when the data in one or more signals change. Solid provides a `createEffect` function that itself takes in a function. Solid will run that function, and then rerun it whenever any signal inside that function changes value.
 
 For example, the following effect will `console.log` the count whenever it updates:
 
@@ -64,8 +66,6 @@ createEffect(() => {
   console.log(count());
 });
 ```
-
-This effect will `console.log` the `count` whenever it changes.
 
 <FrameworkAside framework="react">
 
@@ -100,7 +100,7 @@ First, let's handle the basics of the `createSignal` function. It needs to:
 function createSignal(initialValue) {
   let value = initialValue;
 
-  function getter () {
+  function getter() {
     return value;
   }
 
@@ -114,7 +114,17 @@ function createSignal(initialValue) {
 
 We can now get the current value of our signal by calling the getter and we can set the value by using the setter. This is great, but there is no reactivity yet.
 
-The key to adding reactivity is the `createEffect` function. When we call `createEffect`, we should do the following:
+Next, let's set up `createEffect`. We know it takes a function and runs it:
+
+```jsx
+function createEffect(fn) {
+  fn();
+}
+```
+
+The key to reactivity is establishing the relationship between `createSignal` and `createEffect`.
+
+To do this, we give each signal a subscriber list. When we give `createEffect` a function and run it, we want a way to tell any signals that are called along the way to add that function to their subscriber list. Our next steps:
 
 - Create a global `currentSubscriber` that can keep track of the function we pass to `createEffect`
 - Register the function we pass to `createEffect` as the current subscriber
@@ -129,7 +139,7 @@ function createSignal(initialValue) {
   // Maintain a list of a signal's own subscribers
   const subscribers = new Set();
 
-  function accessor() {
+  function getter() {
     // Add to subscriber list
     if (currentSubscriber) {
       subscribers.add(currentSubscriber);
@@ -146,7 +156,7 @@ function createSignal(initialValue) {
     }
   }
 
-  return [accessor, setter];
+  return [getter, setter];
 }
 
 function createEffect(fn) {

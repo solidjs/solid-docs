@@ -8,15 +8,17 @@ import IconSvelte from "~icons/vscode-icons/file-type-svelte";
 import IconAngular from "~icons/vscode-icons/file-type-angular";
 import IconNone from "~icons/heroicons-outline/ban";
 
-export const Preferences = () => {
+export const Preferences = (props) => {
   const [config, setConfig] = useConfig();
 
   return (
-    <div class="flex flex-col gap-4">
+    <div class={`flex flex-col gap-4 ${props.isForContent ? "max-w-2/3" : ""}`}>
       <div class="flex flex-col gap-2 w-full">
-        <legend class="text-sm">Do you prefer JavaScript or TypeScript?</legend>
+        <legend class={!props.isForContent ? "text-sm" : ""}>
+          Do you prefer JavaScript or TypeScript?
+        </legend>
         <RadioGroup
-          name="typescript"
+          name={`typescript${props.isForContent ? "-content" : ""}`}
           checked={config.typescript ? "typescript" : "javascript"}
           onChange={(value) => setConfig("typescript", value === "typescript")}
           radios={[
@@ -26,11 +28,11 @@ export const Preferences = () => {
         />
       </div>
       <div class="flex flex-col gap-2 w-full">
-        <legend class="text-sm">
+        <legend class={!props.isForContent ? "text-sm" : ""}>
           Are you coming from any of the following frameworks?
         </legend>
         <RadioGroup
-          name="comingFrom"
+          name={`comingFrom${props.isForContent ? "-content" : ""}`}
           checked={config.comingFrom}
           onChange={(value) => setConfig("comingFrom", value)}
           radios={[

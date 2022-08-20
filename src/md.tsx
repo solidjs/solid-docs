@@ -43,7 +43,7 @@ export default {
         {...props}
         class={
           headerBold +
-          "heading text-2xl leading-10 mt-14 mb-6 mdx-heading text-solid-accent dark:text-solid-accentlight"
+          "heading text-2xl leading-10 my-6 mdx-heading text-solid-accent dark:text-solid-accentlight"
         }
       >
         <Anchor id={props.id}>{props.children}</Anchor>

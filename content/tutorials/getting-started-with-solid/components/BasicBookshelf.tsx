@@ -1,9 +1,9 @@
 import { createSignal, For, JSX, Setter } from "solid-js";
 
-type Book = {
+interface Book {
   title: string;
   author: string;
-};
+}
 
 const initialBooks: Book[] = [
   { title: "Code Complete", author: "Steve McConnell" },

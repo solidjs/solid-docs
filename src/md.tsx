@@ -1,11 +1,14 @@
+import "tippy.js/dist/tippy.css";
+
+import { Title as MetaTitle } from "@solidjs/meta";
 import { Link } from "@solidjs/router";
 import { createEffect, createUniqueId, onMount, ParentProps } from "solid-js";
-import tippy from "tippy.js";
 import { mergeProps } from "solid-js";
-import "tippy.js/dist/tippy.css";
-import { Title } from "./components/Main";
-import { Title as MetaTitle } from "@solidjs/meta";
+import tippy from "tippy.js";
+
 import { usePageState } from "~/components/context/PageStateContext";
+
+import { Title } from "./components/Main";
 
 function Anchor(props: ParentProps<{ id: string }>) {
   return (
@@ -32,7 +35,7 @@ export default {
     </h1>
   ),
   ssr: (props) => <>{props.children}</>,
-  spa: (props) => <></>,
+  spa: () => <></>,
   h2: (props) => {
     const { addSection } = usePageState();
     onMount(() => {
@@ -107,7 +110,7 @@ export default {
   ),
   nav: (props) => <nav {...props}>{props.children}</nav>,
   Link,
-  TesterComponent: (props) => (
+  TesterComponent: () => (
     <p>
       Remove This Now!!! If you see this it means that markdown custom
       components does work

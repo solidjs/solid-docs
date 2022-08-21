@@ -7,7 +7,7 @@ export const Contributors = () => {
     const res = await fetch(
       "https://api.github.com/repos/solidjs/solid-docs-next/contributors"
     );
-    return shuffle(await res.json());
+    return shuffle((await res.json()) as GithubUser[]);
   });
 
   return (
@@ -36,7 +36,7 @@ export const Contributors = () => {
   );
 };
 
-function shuffle(array: any[]) {
+function shuffle<T>(array: T[]) {
   const copied = [...array];
   let currentIndex = copied.length,
     randomIndex;

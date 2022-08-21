@@ -1,18 +1,21 @@
-import {JSX, JSXElement, For, createEffect } from "solid-js";
+import { For, JSXElement } from "solid-js";
+
 import { useConfig } from "~/components/context/ConfigContext";
 import IconJs from "~icons/logos/javascript";
 import IconTs from "~icons/logos/typescript-icon";
-import IconReact from "~icons/vscode-icons/file-type-reactjs";
-import IconVue from "~icons/vscode-icons/file-type-vue";
-import IconSvelte from "~icons/vscode-icons/file-type-svelte";
 import IconAngular from "~icons/vscode-icons/file-type-angular";
+import IconReact from "~icons/vscode-icons/file-type-reactjs";
+import IconSvelte from "~icons/vscode-icons/file-type-svelte";
+import IconVue from "~icons/vscode-icons/file-type-vue";
 
-export const Preferences = (props: {questionClass: string}) => {
+export const Preferences = (props: { questionClass: string }) => {
   const [config, setConfig] = useConfig();
 
   return (
     <>
-      <legend class={props.questionClass}>Do you prefer JavaScript or TypeScript?</legend>
+      <legend class={props.questionClass}>
+        Do you prefer JavaScript or TypeScript?
+      </legend>
       <RadioGroup
         name="typescript"
         checked={config.typescript ? "typescript" : "javascript"}
@@ -57,7 +60,7 @@ const RadioGroup = <T extends string>(props: RadioGroupProps<T>) => {
     <fieldset class="flex my-2 gap-4 flex-wrap">
       <For each={props.radios}>
         {(radio) => (
-          <div class="flex gap-2 items-center"> 
+          <div class="flex gap-2 items-center">
             <input
               type="radio"
               name={props.name}

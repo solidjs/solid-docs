@@ -1,18 +1,17 @@
 import { useLocation } from "@solidjs/router";
 import { createEffect, useContext } from "solid-js";
-
 import { createContext, ParentProps } from "solid-js";
 import { createStore } from "solid-js/store";
 
-type Section = {
+interface Section {
   title: string;
   href: string;
-};
+}
 
-type PageStateData = {
+interface PageStateData {
   sections: () => readonly Section[];
   addSection: (title: string, href: string) => void;
-};
+}
 
 export const PageStateContext = createContext<PageStateData>();
 

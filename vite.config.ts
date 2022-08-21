@@ -1,14 +1,14 @@
-import { defineConfig } from "vite";
+import { nodeTypes } from "@mdx-js/mdx";
+import mdx from "@mdx-js/rollup";
+import rehypeRaw from "rehype-raw";
+import rehypeSlug from "rehype-slug";
+import remarkShikiTwoslash from "remark-shiki-twoslash";
 import solid from "solid-start/vite";
 import netlify from "solid-start-netlify";
 import node from "solid-start-node";
-import mdx from "@mdx-js/rollup";
-import WindiCSS from "vite-plugin-windicss";
-import rehypeRaw from "rehype-raw";
-import { nodeTypes } from "@mdx-js/mdx";
-import remarkShikiTwoslash from "remark-shiki-twoslash";
-import rehypeSlug from "rehype-slug";
 import Icons from "unplugin-icons/vite";
+import { defineConfig } from "vite";
+import WindiCSS from "vite-plugin-windicss";
 
 const adapter = process.env.GITHUB_ACTIONS ? node() : netlify();
 

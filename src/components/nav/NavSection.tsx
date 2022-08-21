@@ -1,14 +1,7 @@
 import { NavLink, useLocation } from "@solidjs/router";
+import { createSignal, createUniqueId, For, ParentProps, Show } from "solid-js";
 
 import { usePageState } from "../context/PageStateContext";
-import {
-  For,
-  Show,
-  createSignal,
-  ParentProps,
-  createUniqueId,
-  createEffect,
-} from "solid-js";
 
 export function CollapsedIcon(props) {
   return <div class={"duration-100 ease-in transition" + props.class}>▼</div>;
@@ -20,7 +13,7 @@ type CollapsibleProps = ParentProps<{
 }>;
 
 export function Collapsible(props: CollapsibleProps) {
-  const [collapsed, setCollapsed] = createSignal(props.startCollapsed || false);
+  const [collapsed, setCollapsed] = createSignal(props.startCollapsed ?? false);
 
   const id = createUniqueId();
 

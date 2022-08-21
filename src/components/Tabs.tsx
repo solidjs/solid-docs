@@ -1,31 +1,30 @@
-import { createSignal, For, JSX, onMount, useContext } from "solid-js";
+import { createSignal, For, JSX } from "solid-js";
 import { Dynamic } from "solid-js/web";
-import { Config, useConfig } from "./context/ConfigContext";
 
-type File = {
+import { useConfig } from "./context/ConfigContext";
+
+interface File {
   name: string;
   component: () => JSX.Element;
   default?: boolean;
-};
-
+}
 
 interface CodeTabsProps {
-  ts: File[],
-  js: File[]
+  ts: File[];
+  js: File[];
 }
 
 export const CodeTabs = (props: CodeTabsProps) => {
-
   const [config, setConfig] = useConfig();
 
-  const selectedTabSet = () => config.typescript ? props.ts : props.js;
+  const selectedTabSet = () => (config.typescript ? props.ts : props.js);
 
-  const initialSelectedIndex = selectedTabSet().findIndex(
-    (el) => el.default
+  const initialSelectedIndex = selectedTabSet().findIndex((el) => el.default);
+
+  const [selectedIndex, setSelectedIndex] = createSignal(
+    initialSelectedIndex === -1 ? 0 : initialSelectedIndex
   );
 
-  const [selectedIndex, setSelectedIndex] = createSignal(initialSelectedIndex === -1 ? 0 : initialSelectedIndex);
-  
   const selectedFile = () => selectedTabSet()[selectedIndex()];
 
   return (

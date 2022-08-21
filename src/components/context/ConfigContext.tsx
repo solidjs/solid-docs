@@ -7,11 +7,11 @@ export type ComingFrom = OtherFramework | "none";
 
 type ColorMode = "dark" | "light" | "none";
 
-export type Config = {
+export interface Config {
   typescript: boolean;
   comingFrom: ComingFrom;
   mode: ColorMode;
-};
+}
 
 export const ConfigContext =
   createContext<[config: Config, setConfig: SetStoreFunction<Config>]>();

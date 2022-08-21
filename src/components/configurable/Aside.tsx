@@ -1,15 +1,18 @@
+import "./Aside.css";
+
 import { createSignal, JSX, ParentProps, Show } from "solid-js";
-import { useConfig, OtherFramework } from "../context/ConfigContext";
+
 import IconAccessibility from "~icons/icomoon-free/accessibility";
-import IconReact from "~icons/mdi/react";
-import IconVue from "~icons/mdi/vuejs";
+import IconAlertDecagram from "~icons/mdi/alert-decagram";
 import IconAngular from "~icons/mdi/angular";
-import IconSvelte from "~icons/simple-icons/svelte";
-import IconBulb from "~icons/mdi/lightbulb";
 import IconBrain from "~icons/mdi/brain";
 import IconPencil from "~icons/mdi/lead-pencil";
-import IconAlertDecagram from "~icons/mdi/alert-decagram";
-import "./Aside.css";
+import IconBulb from "~icons/mdi/lightbulb";
+import IconReact from "~icons/mdi/react";
+import IconVue from "~icons/mdi/vuejs";
+import IconSvelte from "~icons/simple-icons/svelte";
+
+import { OtherFramework, useConfig } from "../context/ConfigContext";
 import { CollapsedIcon } from "../nav/NavSection";
 
 export const FrameworkAside = (
@@ -80,7 +83,7 @@ const asideDefinition: () => Record<
 
 interface AsideProps {
   show?: boolean;
-  type: AsideType;
+  type?: AsideType;
   collapsible?: boolean;
   title?: string;
   bgColor?: string;
@@ -90,11 +93,11 @@ interface AsideProps {
 
 export const Aside = (props: ParentProps<AsideProps>) => {
   const [showContent, setShowContent] = createSignal(!props.collapsible);
-  const definition = asideDefinition()[props.type || "general"];
-  const bgColor = () => props.bgColor || definition.bgColor || false;
+  const definition = asideDefinition()[props.type ?? "general"];
+  const bgColor = () => props.bgColor ?? definition.bgColor ?? false;
   const preferDark = () =>
-    props.preferDarkText || definition.preferDarkText || false;
-  const title = () => props.title || definition.title;
+    props.preferDarkText ?? definition.preferDarkText ?? false;
+  const title = () => props.title ?? definition.title;
   const logo = () => definition.logo;
 
   return (

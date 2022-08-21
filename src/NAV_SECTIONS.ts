@@ -1,21 +1,19 @@
-export type SECTION_LEAF_PAGE = {
+export interface SECTION_LEAF_PAGE {
   name: string;
   link: string;
-};
+}
 
-export type SECTION_PAGE = {
+export interface SECTION_PAGE {
   name: string;
-  pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>;
-};
+  pages: (SECTION_PAGE | SECTION_LEAF_PAGE)[];
+}
 
-export type SECTIONS = {
-  [key: string]: {
+export type SECTIONS = Record<string, {
     name: string;
     // If this exists, then when the user clicks on the name of the section, it will direct here
     link?: string;
-    pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>;
-  };
-};
+    pages: (SECTION_PAGE | SECTION_LEAF_PAGE)[];
+  }>;
 
 export const REFERENCE_SECTIONS: SECTIONS = {
   concepts: {

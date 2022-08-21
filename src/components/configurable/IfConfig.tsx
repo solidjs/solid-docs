@@ -1,12 +1,6 @@
-import {
-  Component,
-  createEffect,
-  JSX,
-  ParentProps,
-  Show,
-  useContext,
-} from "solid-js";
+import { JSX, ParentProps, Show } from "solid-js";
 import { Dynamic } from "solid-js/web";
+
 import { Config, useConfig } from "../context/ConfigContext";
 
 export function IfConfig<T extends keyof Config>(
@@ -15,7 +9,7 @@ export function IfConfig<T extends keyof Config>(
     forValue: Config[T];
     fallback?: JSX.Element;
     block?: boolean;
-    code?: boolean
+    code?: boolean;
   }>
 ) {
   const [config] = useConfig();
@@ -42,6 +36,8 @@ export function IfConfig<T extends keyof Config>(
   );
 }
 
-export function IfTS(props: ParentProps<{fallback?: JSX.Element, block?: boolean}>) {
+export function IfTS(
+  props: ParentProps<{ fallback?: JSX.Element; block?: boolean }>
+) {
   return <IfConfig check="typescript" forValue={true} {...props} />;
 }

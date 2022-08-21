@@ -1,17 +1,24 @@
 // @refresh reload
-import {
-  Routes,
-  Meta,
-  Link,
-  FileRoutes,
-  Scripts,
-  Html,
-  Head,
-  Body,
-} from "solid-start";
-import { parseCookie } from "solid-start/session";
 import "./code.css";
 import "virtual:windi.css";
+
+import { Stylesheet } from "@solidjs/meta";
+import { Suspense, useContext } from "solid-js";
+import { isServer } from "solid-js/web";
+import { MDXProvider } from "solid-mdx";
+import {
+  Body,
+  FileRoutes,
+  Head,
+  Html,
+  Link,
+  Meta,
+  Routes,
+  Scripts,
+} from "solid-start";
+import { useLocation } from "solid-start";
+import { HttpHeader, ServerContext } from "solid-start/server";
+import { parseCookie } from "solid-start/session";
 
 import {
   Config,
@@ -19,19 +26,14 @@ import {
   defaultConfig,
 } from "./components/context/ConfigContext";
 import { PageStateProvider } from "./components/context/PageStateContext";
-
-import { MDXProvider } from "solid-mdx";
+import { Main } from "./components/Main";
 import Nav from "./components/nav/Nav";
 import md from "./md";
-import { createRenderEffect, Suspense, useContext } from "solid-js";
-import { Main } from "./components/Main";
-import { HttpHeader, ServerContext } from "solid-start/server";
-import { isServer } from "solid-js/web";
-import { useLocation } from "solid-start";
-import { Stylesheet } from "@solidjs/meta";
 
 function useCookies() {
   const context = useContext(ServerContext);
+  // TODO: isServer is typed as true, not boolean, in solid-js/web. Is that right?
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   const cookies = isServer
     ? context.request.headers.get("Cookie")
     : document.cookie;
@@ -41,9 +43,7 @@ function useCookies() {
 
 function useCookieConfig(): Config {
   const cookies = useCookies();
-  return cookies?.["docs_config"]
-    ? JSON.parse(cookies["docs_config"])
-    : defaultConfig;
+  return cookies.docs_config ? JSON.parse(cookies.docs_config) : defaultConfig;
 }
 
 export default function Root() {

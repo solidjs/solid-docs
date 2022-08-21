@@ -1,6 +1,7 @@
+import { Title as MetaTitle } from "@solidjs/meta";
 import { NavLink, useLocation } from "@solidjs/router";
 import { Show } from "solid-js";
-import { Title as MetaTitle } from "@solidjs/meta";
+
 import Footer from "./footer/Footer";
 import { getStartSection } from "./nav/Nav";
 

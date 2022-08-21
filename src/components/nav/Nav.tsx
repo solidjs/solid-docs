@@ -1,16 +1,17 @@
 import { NavLink, Route, Routes, useLocation } from "@solidjs/router";
-import { NavHeader } from "./NavHeader";
-import { Collapsible, NavItem, SectionHeader } from "./NavSection";
-// import { Accordion } from "solid-headless";
-import { createEffect, createSignal, For, on, Show } from "solid-js";
+import { createEffect, createSignal, For, Show } from "solid-js";
+
 import {
   GUIDES_SECTIONS,
   REFERENCE_SECTIONS,
-  SECTIONS,
   SECTION_LEAF_PAGE,
   SECTION_PAGE,
+  SECTIONS,
 } from "~/NAV_SECTIONS";
+
 import { Preferences } from "../Preferences";
+import { NavHeader } from "./NavHeader";
+import { Collapsible, NavItem, SectionHeader } from "./NavSection";
 
 export default function Nav(props: { docsMode: "start" | "regular" }) {
   const [showMenu, setShowMenu] = createSignal(false);
@@ -166,7 +167,7 @@ function GuidesNav() {
 }
 
 function SectionsNavIterate(props: {
-  pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>;
+  pages: (SECTION_PAGE | SECTION_LEAF_PAGE)[];
 }) {
   const location = useLocation();
 
@@ -181,9 +182,9 @@ function SectionsNavIterate(props: {
   }
 
   //Wouldn't work if we actually went recursive (where the next level would have the possibility of not having any links)
-  const isCollapsed = (pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>) => {
+  const isCollapsed = (pages: (SECTION_PAGE | SECTION_LEAF_PAGE)[]) => {
     return !pages.some((page) => {
-      return isLeafPage(page) && location.pathname == page?.link;
+      return isLeafPage(page) && location.pathname == page.link;
     });
   };
 

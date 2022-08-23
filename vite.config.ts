@@ -91,6 +91,10 @@ export default defineConfig({
               lg: "1rem",
               code: "calc(1em - 20%)",
             },
+            backgroundImage: {
+              darkgradient:
+                "radial-gradient(87.08% 158.02% at 50% 12.92%, #262626 0%, #171717 100%)",
+            },
             colors: {
               solid: {
                 dark: colors.neutral["900"],
@@ -102,7 +106,7 @@ export default defineConfig({
                 lightitem: colors.neutral["200"],
                 lightaction: colors.neutral["400"],
                 accent: "#2c4f7c",
-                accentlight: "#A1BBDE",
+                accentlight: "#A1C5F5",
               },
             },
           },

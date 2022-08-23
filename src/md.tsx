@@ -9,7 +9,7 @@ import { usePageState } from "~/components/context/PageStateContext";
 
 function Anchor(props: ParentProps<{ id: string }>) {
   return (
-    <a class="hover:underline" href={`#${props.id}`}>
+    <a class="hover:underline decoration-solid-darkitem" href={`#${props.id}`}>
       {props.children}
     </a>
   );
@@ -85,7 +85,7 @@ export default {
     return (
       <Link
         {...props}
-        class="dark:text-link-dark break-normal border-b border-solid-default border-opacity-0 hover:border-opacity-100 duration-100 ease-in transition font-semibold leading-normal"
+        class="dark:text-link-dark break-normal underline decoration-solid-accentlight duration-100 ease-in transition font-semibold leading-normal"
       >
         {props.children}
       </Link>
@@ -97,7 +97,7 @@ export default {
     </li>
   ),
   ul: (props) => (
-    <ul {...props} class="list-disc pl-8 mb-2">
+    <ul {...props} class="list-disc marker:text-solid-accentlight marker:text-2xl pl-8 mb-2">
       {props.children}
     </ul>
   ),

@@ -1,17 +1,19 @@
 import { NavLink, useLocation } from "@solidjs/router";
-import { Show } from "solid-js";
+import { Show, For } from "solid-js";
 import { Title as MetaTitle } from "@solidjs/meta";
 import Footer from "./footer/Footer";
 import { getStartSection } from "./nav/Nav";
+import { usePageState } from "./context/PageStateContext";
 
 export function Main(props) {
   const location = useLocation();
 
   const nextStartSection = () => getStartSection(location.pathname);
+  const { sections } = usePageState();
 
   return (
-    <main class="flex-grow">
-      <article class="min-w-0 max-w-5xl">
+    <main class="flex-grow flex items-start justify-between">
+      <article class="min-w-0 max-w-4xl mx-auto">
         <div class="flex justify-start">
           <div class="flex w-full flex-col min-h-screen px-5 sm:px-12">
             <div
@@ -34,6 +36,20 @@ export function Main(props) {
           </div>
         </div>
       </article>
+      <div class="mt-10 ml-4">
+          <p class="text-2xl font-bold">
+            Summary
+          </p>
+          <ol class="pl-5 mt-2 list-decimal space-y-1">
+            <For each={sections()}>
+              {(item) => (
+                <li class="text-base py-2">
+                  <a href={"#" + item.href}>{item.title}</a>
+                </li>
+              )}
+            </For>
+          </ol>
+        </div>
     </main>
   );
 }

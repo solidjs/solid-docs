@@ -1,7 +1,6 @@
 import { NavLink, useLocation } from "@solidjs/router";
 import IconChevron from "~icons/heroicons-outline/chevron-right";
 
-import { usePageState } from "../context/PageStateContext";
 import {
   For,
   Show,
@@ -76,14 +75,8 @@ function SectionPanel(props: ParentProps<{ id: string }>) {
 }
 
 export function NavItem(props) {
-  const isActive = () => {
-    return props.href === useLocation().pathname;
-  };
-
-  const { sections } = usePageState();
-
   return (
-    <li class="">
+    <li>
       <NavLink
         class="p-2 text-base w-full rounded-r text-left relative flex items-center justify-between"
         {...props}
@@ -93,19 +86,6 @@ export function NavItem(props) {
       >
         {props.children}
       </NavLink>
-      <Show when={isActive()}>
-        <div class="ml-4">
-          <ol class="pl-5 mt-2 list-decimal space-y-1">
-            <For each={sections()}>
-              {(item) => (
-                <li class="text-base">
-                  <a href={"#" + item.href}>{item.title}</a>
-                </li>
-              )}
-            </For>
-          </ol>
-        </div>
-      </Show>
     </li>
   );
 }

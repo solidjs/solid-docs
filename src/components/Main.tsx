@@ -12,10 +12,10 @@ export function Main(props) {
   const { sections } = usePageState();
 
   return (
-    <main class="flex-grow flex items-start justify-between">
+    <main class="flex-grow flex flex-col md:flex-row items-start justify-between">
       <article class="min-w-0 max-w-4xl mx-auto">
         <div class="flex justify-start">
-          <div class="flex w-full flex-col min-h-screen px-5 sm:px-12">
+          <div class="flex w-full flex-col min-h-screen md:px-5 sm:px-12">
             <div
               ref={props.ref}
               class="w-full flex-grow ml-0 flex justify-center"

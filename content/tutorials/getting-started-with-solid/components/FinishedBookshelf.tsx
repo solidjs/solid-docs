@@ -2,7 +2,7 @@ import { createResource, createSignal, For, Setter, Show } from "solid-js";
 import Button from "~/components/Button";
 import InteractiveExample from "~/components/configurable/interactiveExample";
 import Dot from "~/components/Dot";
-import SearchInput from "~/components/searchInput";
+import SearchInput from "~/components/SearchInput";
 
 type Book = {
   title: string;

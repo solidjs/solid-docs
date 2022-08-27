@@ -21,7 +21,7 @@ export function BasicBookshelf(props: IBookshelfProps) {
 
   return (
     <InteractiveExample>
-      <h2 class="text-2xl mb-3">{props.name}'s Bozxczxczxczxzxczxczxczxcokshelf</h2>
+      <h2 class="text-2xl mb-3">{props.name}'s Bookshelf</h2>
       <BookList books={books()} />
       <AddBook setBooks={setBooks} />
     </InteractiveExample>

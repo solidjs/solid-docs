@@ -1,5 +1,5 @@
 import { NavLink } from "@solidjs/router";
-import { ChevronIcon } from "./Logo";
+import IconChevron from "~icons/heroicons-outline/chevron-right";
 
 interface INextSectionProps {
   title: string;
@@ -9,10 +9,14 @@ interface INextSectionProps {
 export const NextSection = (props: INextSectionProps) => (
   <div class="flex justify-end">
     <NavLink
-      class="my-10 inline-flex font-bold items-center border-2 border-transparent outline-none focus:ring-1 focus:ring-offset-2 focus:ring-link active:bg-link hover:text-solid-light hover:dark:text-solid-darkdefault active:ring-0 active:ring-offset-0 leading-normal bg-link dark:text-white hover:bg-opacity-80 text-base rounded-lg px-4 py-2"
+      class="my-10 flex items-center border dark:border-solid-darkitem rounded-lg p-4 justify-between group w-80"
       href={props.href}
     >
-      Next Section: {props.title} <ChevronIcon />
+      <div class="flex flex-col">
+        <span class="uppercase dark:text-neutral-500 text-xs font-semibold">Next</span>
+        {props.title}
+      </div>
+      <IconChevron class="w-6 h-6 text-solid-lightaction dark:text-solid-darkaction transform transition group-hover:translate-x-2"/>
     </NavLink>
   </div>
 );

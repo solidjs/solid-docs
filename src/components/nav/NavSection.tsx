@@ -1,13 +1,11 @@
-import { NavLink, useLocation } from "@solidjs/router";
+import { NavLink } from "@solidjs/router";
 import IconChevron from "~icons/heroicons-outline/chevron-right";
 
 import {
-  For,
   Show,
   createSignal,
   ParentProps,
   createUniqueId,
-  createEffect,
 } from "solid-js";
 
 export function CollapsedIcon(props) {
@@ -56,7 +54,7 @@ export function SectionHeader(
         aria-controls={props.panelId}
       >
         {props.children}
-        <IconChevron class="w-6 h-6 text-solid-lightaction dark:text-solid-darkaction" />
+        <IconChevron class={`transition w-6 h-6 text-solid-lightaction dark:text-solid-darkaction transform ${!props.collapsed ? "rotate-90" : ""}`} />
       </button>
     </h3>
   );

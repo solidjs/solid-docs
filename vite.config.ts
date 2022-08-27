@@ -94,7 +94,7 @@ export default defineConfig({
             },
             backgroundImage: {
               darkgradient:
-                "radial-gradient(87.08% 158.02% at 50% 12.92%, #262626 0%, #171717 100%)",
+                "radial-gradient(87.08% 158.02% at 50% 12.92%, #262626 0%, #121212 100%)",
             },
             colors: {
               solid: {

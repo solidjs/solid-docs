@@ -1,4 +1,5 @@
 import { createSignal, For, JSX, Setter } from "solid-js";
+import InteractiveExample from "~/components/configurable/interactiveExample";
 
 type Book = {
   title: string;
@@ -19,11 +20,11 @@ export function BasicBookshelf(props: IBookshelfProps) {
   const [books, setBooks] = createSignal(initialBooks);
 
   return (
-    <div class="my-5 p-5 border-2">
-      <h1 class="text-2xl mb-3">{props.name}'s Bookshelf</h1>
+    <InteractiveExample>
+      <h2 class="text-2xl mb-3">{props.name}'s Bozxczxczxczxzxczxczxczxcokshelf</h2>
       <BookList books={books()} />
       <AddBook setBooks={setBooks} />
-    </div>
+    </InteractiveExample>
   );
 }
 

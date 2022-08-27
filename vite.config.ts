@@ -86,7 +86,8 @@ export default defineConfig({
               lg: "0px 0.8px 2px rgba(0,0,0,0.032),0px 2.7px 6.7px rgba(0,0,0,0.048),0px 12px 30px rgba(0,0,0,0.08)",
             },
             fontSize: {
-              sm: "0.75rem",
+              xs: "0.75rem",
+              sm: "0.875rem",
               base: "0.9rem",
               lg: "1rem",
               code: "calc(1em - 20%)",
@@ -106,7 +107,7 @@ export default defineConfig({
                 lightitem: colors.neutral["200"],
                 lightaction: colors.neutral["400"],
                 accent: "#2c4f7c",
-                accentlight: "#A1C5F5",
+                accentlight: "#85C4FF",
               },
             },
           },

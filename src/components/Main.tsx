@@ -36,7 +36,7 @@ export function Main(props) {
           </div>
         </div>
       </article>
-      <div class="mt-10 ml-4">
+      <div class="mt-10 ml-4 max-w-xs">
           <p class="text-2xl font-bold">
             Summary
           </p>

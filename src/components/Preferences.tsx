@@ -1,4 +1,4 @@
-import { JSX, JSXElement, For, createEffect } from "solid-js";
+import { JSXElement, For } from "solid-js";
 import { useConfig } from "~/components/context/ConfigContext";
 import IconJs from "~icons/logos/javascript";
 import IconTs from "~icons/logos/typescript-icon";
@@ -12,9 +12,9 @@ export const Preferences = (props) => {
   const [config, setConfig] = useConfig();
 
   return (
-    <div class={`flex flex-col gap-4 ${props.isForContent ? "max-w-2/3" : ""}`}>
+    <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-2 w-full">
-        <legend class={!props.isForContent ? "text-sm" : ""}>
+        <legend class={props.isForContent ? "" : "text-sm"}>
           Do you prefer JavaScript or TypeScript?
         </legend>
         <RadioGroup
@@ -28,7 +28,7 @@ export const Preferences = (props) => {
         />
       </div>
       <div class="flex flex-col gap-2 w-full">
-        <legend class={!props.isForContent ? "text-sm" : ""}>
+        <legend class={props.isForContent ? "" : "text-sm"}>
           Are you coming from any of the following frameworks?
         </legend>
         <RadioGroup

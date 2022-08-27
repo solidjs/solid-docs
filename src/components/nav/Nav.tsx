@@ -23,7 +23,7 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
   });
 
   return (
-    <div class="lg:max-h-screen lg:sticky lg:top-0 no-bg-scrollbar lg:max-w-xs w-full shadow lg:shadow-none z-50 overflow-y-auto flex flex-col gap-8">
+    <div class="lg:max-h-screen lg:sticky lg:top-0 no-bg-scrollbar lg:max-w-sm w-full shadow lg:shadow-none z-50 overflow-y-auto flex flex-col gap-8">
       <div class="flex flex-col gap-4">
         <NavHeader
           docsMode={props.docsMode}
@@ -51,7 +51,7 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
 
 function TopMenu() {
   return (
-    <aside class="w-full lg:max-w-xs">
+    <aside class="w-full">
       <nav class="scrolling-touch scrolling-gpu" style="--bg-opacity:0.2;">
         <Routes>
           <Route

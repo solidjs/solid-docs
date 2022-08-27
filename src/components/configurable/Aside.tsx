@@ -110,7 +110,7 @@ export const Aside = (props: ParentProps<AsideProps>) => {
       <div>{logo()}</div>
       <div>
         <Show when={!!title() && !props.collapsible}>
-          <h3 class="font-semibold">{title()}</h3>
+          <h3 class="font-semibold mb-2">{title()}</h3>
         </Show>
         <Show when={!!title() && props.collapsible}>
           <h3 class="font-semibold">

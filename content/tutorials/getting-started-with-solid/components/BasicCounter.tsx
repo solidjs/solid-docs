@@ -1,4 +1,6 @@
 import { createSignal } from "solid-js";
+import Button from "~/components/Button";
+import InteractiveExample from "~/components/configurable/interactiveExample";
 
 export function BasicCounter() {
   const [count, setCount] = createSignal(0);
@@ -8,14 +10,16 @@ export function BasicCounter() {
   };
 
   return (
-    <div>
-      Current count: {count()}
-      <button
-        class="ml-2 p-1 border-2 bg-gray-200  px-2 rounded"
-        onClick={increment}
-      >
-        Increment
-      </button>
-    </div>
+    <InteractiveExample>
+      <div class="flex items-center gap-2">
+        Current count: {count()}
+        <Button
+          type="button"
+          onClick={increment}
+        >
+          Increment
+        </Button>
+      </div>
+    </InteractiveExample>
   );
 }

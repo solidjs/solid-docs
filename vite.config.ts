@@ -12,6 +12,7 @@ import Icons from "unplugin-icons/vite";
 import colors from "windicss/colors";
 
 const adapter = process.env.GITHUB_ACTIONS ? node() : netlify();
+const colorScheme = colors.neutral;
 
 export default defineConfig({
   plugins: [
@@ -93,19 +94,19 @@ export default defineConfig({
               code: "calc(1em - 20%)",
             },
             backgroundImage: {
-              darkgradient:
-                "radial-gradient(87.08% 158.02% at 50% 12.92%, #262626 0%, #121212 100%)",
+              darkgradient: `radial-gradient(87.08% 158.02% at 50% 12.92%, ${colorScheme["800"]} 0%, ${colorScheme["900"]} 100%)`,
+              lightgradient: `radial-gradient(87.08% 158.02% at 50% 12.92%, #FFFFFF 0%, ${colorScheme["100"]} 100%)`,
             },
             colors: {
               solid: {
-                dark: colors.neutral["900"],
-                darkbg: colors.neutral["800"],
-                darkitem: colors.neutral["700"],
-                darkaction: colors.neutral["500"],
+                dark: colorScheme["900"],
+                darkbg: colorScheme["800"],
+                darkitem: colorScheme["700"],
+                darkaction: colorScheme["500"],
                 light: "#FFFFFF",
-                lightbg: colors.neutral["100"],
-                lightitem: colors.neutral["200"],
-                lightaction: colors.neutral["400"],
+                lightbg: colorScheme["100"],
+                lightitem: colorScheme["200"],
+                lightaction: colorScheme["400"],
                 accent: "#2c4f7c",
                 accentlight: "#85C4FF",
               },

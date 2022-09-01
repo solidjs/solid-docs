@@ -27,7 +27,7 @@ export function FinishedBookshelf(props: IBookshelfProps) {
 
   return (
     <InteractiveExample>
-      <div class="bg-solid-darkbg border dark:border-solid-darkitem rounded-lg">
+      <div class="dark:bg-solid-darkbg border dark:border-solid-darkitem rounded-lg">
         <div class="p-4">
           <h2 class="text-2xl font-semibold mb-4">{props.name}'s Bookshelf</h2>
           <BookList books={books()} />
@@ -36,19 +36,13 @@ export function FinishedBookshelf(props: IBookshelfProps) {
           <Show
             when={showForm()}
             fallback={
-              <Button
-                type="button"
-                onClick={toggleForm}
-              >
+              <Button type="button" onClick={toggleForm}>
                 Add a book
               </Button>
             }
           >
             <AddBook setBooks={setBooks} />
-            <Button
-              type="button"
-              onClick={toggleForm}
-            >
+            <Button type="button" onClick={toggleForm}>
               Finished adding books
             </Button>
           </Show>
@@ -67,7 +61,9 @@ export function BookList(props: IBookListProps) {
 
   return (
     <>
-      <p class="font-semibold flex items-center gap-2">My books <Dot number={totalBooks()}/></p>
+      <p class="font-semibold flex items-center gap-2">
+        My books <Dot number={totalBooks()} />
+      </p>
       <ul class="list-disc ml-4 mt-2">
         <For each={props.books}>
           {(book) => {
@@ -108,12 +104,17 @@ function AddBook(props: IAddBookProps) {
 
   return (
     <>
-      <form>
-        <SearchInput label="search books" id="title" input={input()} onInput={(e) => {
-          setInput(e.currentTarget.value);
-        }}/>
-        <button
-          class="px-3 py-2 rounded bg-blue-200 text-black"
+      <form class="flex items-center gap-2">
+        <SearchInput
+          label="search books"
+          id="title"
+          input={input()}
+          onInput={(e) => {
+            setInput(e.currentTarget.value);
+          }}
+          small={true}
+        />
+        <Button
           type="submit"
           onClick={(e) => {
             e.preventDefault();
@@ -121,10 +122,13 @@ function AddBook(props: IAddBookProps) {
           }}
         >
           Search
-        </button>
+        </Button>
       </form>
-      <Show when={!data.loading} fallback={<>Searching...</>}>
-        <ul class="list-disc ml-5 my-4">
+      <Show
+        when={!data.loading}
+        fallback={<div class="py-2">Searching...</div>}
+      >
+        <ul class="list-disc ml-4 my-2">
           <For each={data()}>
             {(book) => (
               <li class="mb-1">

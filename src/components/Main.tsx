@@ -4,6 +4,7 @@ import { Title as MetaTitle } from "@solidjs/meta";
 import Footer from "./footer/Footer";
 import { getStartSection } from "./nav/Nav";
 import { usePageState } from "./context/PageStateContext";
+import Dot from "./Dot";
 
 export function Main(props) {
   const location = useLocation();
@@ -13,7 +14,7 @@ export function Main(props) {
 
   return (
     <main class="flex-grow flex flex-col md:flex-row items-start justify-between">
-      <article class="min-w-0 max-w-4xl mx-auto">
+      <article class="min-w-0 md:max-w-4xl lg:max-w-3xl mx-auto">
         <div class="flex justify-start">
           <div class="flex w-full flex-col min-h-screen md:px-5 sm:px-12">
             <div
@@ -36,20 +37,21 @@ export function Main(props) {
           </div>
         </div>
       </article>
-      <div class="pt-10 ml-4 max-w-xs sticky top-0">
-          <p class="text-2xl font-bold">
-            Summary
-          </p>
-          <ol class="pl-5 mt-2 list-decimal space-y-1">
-            <For each={sections()}>
-              {(item) => (
-                <li class="text-base py-2">
-                  <a href={"#" + item.href}>{item.title}</a>
-                </li>
-              )}
-            </For>
-          </ol>
-        </div>
+      <div class="pt-10 max-w-xs sticky top-0 pr-4">
+        <p class="text-2xl font-bold">Summary</p>
+        <ol class="mt-2 list-none space-y-1">
+          <For each={sections()}>
+            {(item, index) => (
+              <li class="text-base py-2 flex items-center gap-2 rounded hover:bg-solid-light hover:dark:bg-solid-darkbg px-2">
+                <Dot number={index()} />
+                <a class="font-semibold" href={"#" + item.href}>
+                  {item.title}
+                </a>
+              </li>
+            )}
+          </For>
+        </ol>
+      </div>
     </main>
   );
 }

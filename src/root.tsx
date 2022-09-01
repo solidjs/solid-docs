@@ -75,7 +75,7 @@ export default function Root() {
         <Stylesheet href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
         <HttpHeader name="x-robots-tag" value="nofollow" />
       </Head>
-      <Body class="px-4 pb-8 font-sans antialiased text-lg bg-white dark:bg-darkgradient bg-fixed text-black dark:text-white leading-base min-h-screen lg:flex lg:flex-row">
+      <Body class="px-4 pb-8 font-sans antialiased text-lg bg-lightgradient dark:(bg-darkgradient text-white) bg-fixed text-black leading-base min-h-screen lg:flex lg:flex-row">
         <Suspense>
           <ConfigProvider initialConfig={config}>
             <PageStateProvider>

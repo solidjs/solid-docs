@@ -9,13 +9,16 @@ import { usePageState } from "~/components/context/PageStateContext";
 
 function Anchor(props: ParentProps<{ id: string }>) {
   return (
-    <a class="hover:underline decoration-solid-darkitem" href={`#${props.id}`}>
+    <a
+      class="hover:underline text-solid-dark dark:text-solid-light decoration-solid-lightitem font-bold dark:decoration-solid-darkitem"
+      href={`#${props.id}`}
+    >
       {props.children}
     </a>
   );
 }
 
-const headerBold = "font-bold text-solid-default dark:text-solid-darkdefault ";
+const headerBold = "font-bold";
 
 export default {
   strong: (props) => <span class="font-bold">{props.children}</span>,
@@ -85,7 +88,7 @@ export default {
     return (
       <Link
         {...props}
-        class="dark:text-link-dark break-normal text-solid-accentlight duration-100 ease-in transition font-semibold leading-normal"
+        class="dark:text-solid-accentlight break-normal text-solid-accent duration-100 ease-in transition font-semibold leading-normal"
       >
         {props.children}
       </Link>
@@ -97,7 +100,10 @@ export default {
     </li>
   ),
   ul: (props) => (
-    <ul {...props} class="list-disc marker:text-solid-accentlight marker:text-2xl pl-8 mb-2">
+    <ul
+      {...props}
+      class="list-disc marker:text-solid-accent marker:dark:text-solid-accentlight marker:text-2xl pl-8 mb-2"
+    >
       {props.children}
     </ul>
   ),

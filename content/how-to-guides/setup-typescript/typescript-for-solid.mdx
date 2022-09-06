@@ -1,4 +1,6 @@
-<Title>Setup Typescript with Solid</Title>
+import { Aside } from "~/components/configurable/Aside";
+
+<Title>Typescript for Solid</Title>
 
 Solid is designed to be easy to use with TypeScript:
 its use of standard JSX makes code largely understood by TypeScript,
@@ -64,12 +66,21 @@ const [count, setCount] = createSignal<number>();
 
 The first `createSignal` has the return type `Signal<number>`, corresponding to
 the type we passed to it. This is a tuple of the getter and
-setter, which each have a [generic](https://www.typescriptlang.org/docs/handbook/2/generics.html) type:
+setter, which each have a
+[generic](https://www.typescriptlang.org/docs/handbook/2/generics.html) type:
 
 ```ts
 import type { Signal, Accessor, Setter } from "solid-js";
 type Signal<T> = [get: Accessor<T>, set: Setter<T>];
 ```
+
+<Aside>
+  TypeScript 3.8 added a new syntax for type-only imports and exports. `import
+  type` only imports declarations that will be used for type annotations and
+  declarations. They will be fully erased after compilation, and will not be
+  included in the emitted JavaScript. You can read more about them
+  [here](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-8.html)
+</Aside>
 
 In this case, the signal getter `count` has type
 `Accessor<number | undefined>`. `Accessor<T>` is a type definition
@@ -84,10 +95,12 @@ complicated type definition corresponding roughly to
 two possibilities for the passed argument: you can call `setCount` with
 either a `number` or a
 function taking the previous value (if there was one) and returning a `number`.
+Note that again, both the `number` and the `number` parameter for the function are optional,
+since the signal initial value was `undefined`.
 
-The actual `Setter` type is more complicated, to detect accidentally passing
-a function to the setter when you might have wanted to set the signal to that
-function value instead of calling the function to determine the new value.
+In reality the `Setter` type is more complicated than this
+since we need to differentiate between passing a setter function and passing a function as a value
+that we want the signal to be set to.
 If you're getting a TypeScript error "Argument ... is not assignable to
 parameter" when calling `setCount(value)`, then try wrapping the setter
 argument as in `setCount(() => value)` to make sure that `value` isn't called.
@@ -110,6 +123,7 @@ and `name` obtains type `Accessor<string>` (without `| undefined`).
 ### Context
 
 Similar to signals,
+{/* TODO: Change to link inside this docs site. */}
 [`createContext<T>`](https://www.solidjs.com/docs/latest/api#createcontext)
 is parameterized by the type `T` of the context value.
 We can provide this type explicitly:
@@ -378,7 +392,7 @@ onMount(() => {
   divRef.focus(); // correctly allowed
 });
 
-return <div ref={divRef!}>...</div>;
+return <div ref={divRef}>...</div>;
 ```
 
 Alternatively, because we know `onMount` gets called only after the `<div>`
@@ -565,7 +579,10 @@ you can type them in the `Directives` interface, like so:
 function model(element: HTMLInputElement, value: Accessor<Signal<string>>) {
   const [field, setField] = value();
   createRenderEffect(() => (element.value = field()));
-  element.addEventListener("input", (e) => setField(e.target.value));
+  element.addEventListener("input", (e) => {
+    const value = (e.target as HTMLInputElement).value;
+    setField(value);
+  });
 }
 
 declare module "solid-js" {

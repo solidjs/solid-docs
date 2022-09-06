@@ -93,6 +93,19 @@ export const GUIDES_SECTIONS: SECTIONS = {
           },
         ],
       },
+      {
+        name: "Setup TypeScript",
+        pages: [
+          {
+            name: "Welcome",
+            link: "/how-to-guides/setup-typescript/",
+          },
+          {
+            name: "Setup TypeScript with Solid",
+            link: "/how-to-guides/setup-typescript/setup-typescript-with-solid",
+          },
+        ],
+      },
     ],
   },
 };

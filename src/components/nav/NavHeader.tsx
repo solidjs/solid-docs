@@ -54,7 +54,7 @@ export const NavHeader = (props: {
           </span>
           <span>Docs</span>
         </NavLink>
-        <div class="flex gap-3">
+        <div class="flex items-center gap-3">
           <button
             type="button"
             aria-label={`Use ${config.mode === "dark" ? "light" : "dark"} mode`}
@@ -75,7 +75,7 @@ export const NavHeader = (props: {
           <button
             type="button"
             aria-label={`${props.showMenu ? "Hide" : "Show"} navigation menu`}
-            class="lg:hidden flex items-center justify-center w-10 h-10 transform -translate-y-1"
+            class="lg:hidden flex items-center justify-center w-8 h-8 transform"
             onClick={() => {
               props.setShowMenu((m) => !m);
             }}

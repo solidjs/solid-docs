@@ -14,13 +14,13 @@ interface IPrevNextSectionBaseProps extends IPrevNextSectionProps {
 
 const PrevNextSectionBase = (props: IPrevNextSectionBaseProps) => {
   return <NavLink
-  class="my-10 flex items-center border dark:border-solid-darkitem hover:dark:border-solid-darkaction transition rounded-lg p-4 justify-between group flex-1"
+  class="flex items-center border dark:border-solid-darkitem hover:dark:border-solid-darkaction transition rounded-lg p-4 justify-between group flex-1"
   href={props.href}
 >
   <Show
     when={props.type === "prev"}
   >
-    <IconChevron class="w-6 h-6 text-solid-lightaction dark:text-solid-darkaction transform transition group-hover:translate-x-2 rotate-180"/>
+    <IconChevron class="w-6 h-6 text-solid-lightaction dark:text-solid-darkaction transform transition group-hover:-translate-x-2 rotate-180"/>
   </Show>
 
   <div class="flex flex-col">
@@ -39,7 +39,7 @@ export const NextSection = (props: IPrevNextSectionProps) => <PrevNextSectionBas
 export const PrevSection = (props: IPrevNextSectionProps) => <PrevNextSectionBase type="prev" title={props.title} href={props.href}/>
 
 export const PrevNextSection = (props: {children: JSXElement}) => (
-  <div class="flex gap-4">
+  <div class="my-10 flex flex-col md:flex-row gap-4">
     {props.children}
   </div>
 );

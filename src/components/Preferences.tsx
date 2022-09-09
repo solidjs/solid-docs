@@ -18,7 +18,7 @@ export const Preferences = (props) => {
           Do you prefer JavaScript or TypeScript?
         </legend>
         <RadioGroup
-          name={`typescript${props.isForContent ? "-content" : ""}`}
+          name={`typescript-${props.id}`}
           checked={config.typescript ? "typescript" : "javascript"}
           onChange={(value) => setConfig("typescript", value === "typescript")}
           radios={[
@@ -32,7 +32,7 @@ export const Preferences = (props) => {
           Are you coming from any of the following frameworks?
         </legend>
         <RadioGroup
-          name={`comingFrom${props.isForContent ? "-content" : ""}`}
+          name={`comingFrom-${props.id}`}
           checked={config.comingFrom}
           onChange={(value) => setConfig("comingFrom", value)}
           radios={[

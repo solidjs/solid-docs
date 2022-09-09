@@ -30,20 +30,25 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
           showMenu={showMenu()}
           setShowMenu={setShowMenu}
         />
-        <div class="my-2" classList={{ hidden: props.docsMode == "regular" }}>
-          <div id="docsearch" />
-        </div>
-        <NavPreferences />
+      </div>
+      <div class="hidden md:block">
+        <NavPreferences id="desktop"/>
       </div>
       <div
         classList={{
           hidden: !showMenu(),
-          "lg:block": true,
+          "lg:block border-b md:border-none border-solid-lightitem dark:border-solid-darkitem pb-4": true,
         }}
       >
         <Show when={props.docsMode === "regular"} fallback={<StartMenu />}>
           <TopMenu />
         </Show>
+      </div>
+      <div class="my-2" classList={{ hidden: props.docsMode == "regular" }}>
+        <div id="docsearch" />
+      </div>
+      <div class="md:hidden">
+        <NavPreferences id="mobile"/>
       </div>
     </div>
   );

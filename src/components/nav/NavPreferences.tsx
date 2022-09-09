@@ -2,8 +2,9 @@ import { Preferences } from "../Preferences";
 import IconGear from "~icons/heroicons-solid/cog";
 import IconChevron from "~icons/heroicons-outline/chevron-right";
 import { createSignal, Show } from "solid-js";
+import { PropAliases } from "solid-js/web";
 
-export function NavPreferences() {
+export function NavPreferences(props) {
   const [collapsed, setCollapsed] = createSignal(false);
 
   return (
@@ -28,7 +29,7 @@ export function NavPreferences() {
       </button>
       <Show when={!collapsed()}>
         <div class="p-4 border-t border-solid-lightitem dark:border-solid-darkitem">
-          <Preferences />
+          <Preferences id={props.id} />
         </div>
       </Show>
     </div>

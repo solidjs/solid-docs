@@ -10,7 +10,7 @@ import IconNone from "~icons/heroicons-outline/ban";
 
 
 interface PreferencesProps {
-  id: number,
+  id: string,
   isForContent?: boolean
 }
 

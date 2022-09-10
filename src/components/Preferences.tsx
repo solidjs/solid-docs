@@ -8,7 +8,13 @@ import IconSvelte from "~icons/vscode-icons/file-type-svelte";
 import IconAngular from "~icons/vscode-icons/file-type-angular";
 import IconNone from "~icons/heroicons-outline/ban";
 
-export const Preferences = (props) => {
+
+interface PreferencesProps {
+  id: number,
+  isForContent?: boolean
+}
+
+export const Preferences = (props: PreferencesProps) => {
   const [config, setConfig] = useConfig();
 
   return (

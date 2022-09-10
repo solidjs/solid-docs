@@ -1,6 +1,13 @@
 import IconSearch from "~icons/heroicons-solid/search";
 
-export default function SearchInput(props) {
+interface SearchInputProps {
+  label: string,
+  small: boolean,
+  input: string,
+  onInput: () => void
+}
+
+export default function SearchInput(props: SearchInputProps) {
   return (
     <div class="relative flex-1">
       <label for="title" class="sr-only">

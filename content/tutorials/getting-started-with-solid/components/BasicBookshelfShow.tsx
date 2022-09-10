@@ -23,7 +23,7 @@ export function BasicBookshelfShow(props: IBookshelfProps) {
 
   return (
     <InteractiveExample>
-      <h1 class="text-2xl mb-3">{props.name}'s Bookshelf</h1>
+      <h2 class="text-2xl mb-3">{props.name}'s Bookshelf</h2>
       <BookList books={books()} />
       <Show
         when={showForm()}

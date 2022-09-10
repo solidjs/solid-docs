@@ -1,0 +1,53 @@
+import { IfDark } from "~/components/configurable/IfConfig";
+
+<Title>Comparison with React</Title>
+
+React has had a big influence on Solid. Its unidirectional flow and explicit segregation of read and write in its
+Hooks API informed Solid's API. More so than the objective of being just a "Render Library" rather than a framework.
+Solid has strong opinions on how to approach managing data in application development but doesn't seek to constrain
+its execution.
+
+However, as much as Solid aligns with React's design philosophy, it works fundamentally differently. This API similarity
+with a different execution model usually throws off React developers that expect certain React patterns to be transferable
+to Solid. This guide is here to help point out those differences and how to overcome them.
+
+## Components as render functions vs setup functions
+
+In a simplified explanation, React components work as a way to organize your code and handle view updates derive from state
+or props changes. This means that every time there's an update, React wil re-run the component with the latest state/props
+to reflect it in the view. Let's take a look at the following example
+
+```jsx
+import { useState } from "react";
+
+const App = () => {
+  const [count, setCount] = useState(0);
+
+  return (
+    <>
+      <p>Count is: {count}</p>
+      <button onClick={() => setCount((prevCoutn) => prevCount + 1)}>
+        Increase count by 1
+      </button>
+    </>
+  );
+};
+```
+
+Whenever we click our button, we will trigger a state update resulting in a re-run of our component
+
+<IfDark
+  fallback={
+    <img
+      src="/images/how-to-guides/comparison/react/react-simple-state-update-light.png"
+      alt="A screenshot of the file browser in Stackblitz, displaying all of the files in the template"
+    />
+  }
+>
+  <img
+    src="/images/how-to-guides/comparison/react/react-simple-state-update-dark.png"
+    alt="A screenshot of the file browser in Stackblitz, displaying all of the files in the template"
+  />
+</IfDark>
+
+### Conditional render and the use of `<Show />`

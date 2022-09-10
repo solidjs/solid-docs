@@ -81,6 +81,20 @@ export const GUIDES_SECTIONS: SECTIONS = {
     name: "How-To Guides",
     pages: [
       {
+        name: "Comparison",
+        pages: [
+          {
+            name: "Welcome",
+            link: "/how-to-guides/comparison/",
+          },
+          {
+            name: "React",
+            link: "/how-to-guides/comparison/react",
+          },
+        ],
+      },
+
+      {
         name: "Get Ready for Solid",
         pages: [
           {

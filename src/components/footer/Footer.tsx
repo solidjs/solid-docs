@@ -12,7 +12,7 @@ export default function Footer() {
     `https://github.com/solidjs/solid-docs-next/edit/main/content${pathname()}.mdx`;
 
   return (
-    <footer class="flex flex-col sm:flex-row justify-between pb-8 border-t-1 border-solid-lightitem dark:border-solid-darkitem pt-10">
+    <footer class="flex flex-col sm:flex-row justify-between pb-8 border-t-1 mt-8 border-solid-lightitem dark:border-solid-darkitem pt-10">
       <HelpButton />
 
       <a class="flex items-center gap-2 hover:underline" href={url()}>

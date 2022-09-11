@@ -88,7 +88,7 @@ export default {
     return (
       <Link
         {...props}
-        class="dark:text-solid-accentlight break-normal text-solid-accent duration-100 ease-in transition font-semibold leading-normal"
+        class="dark:text-solid-accentlight break-normal text-solid-accent duration-100 ease-in transition font-semibold leading-normal transition hover:underline"
       >
         {props.children}
       </Link>

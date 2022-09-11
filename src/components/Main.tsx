@@ -14,7 +14,7 @@ export function Main(props) {
       <div class="pt-4 md:pt-10 w-full lg:max-w-xs sticky top-0 md:hidden">
         <Summary/>
       </div>
-      <article class="min-w-0 md:max-w-4xl lg:max-w-3xl mx-auto">
+      <article class="min-w-0 w-full md:max-w-4xl lg:max-w-3xl mx-auto">
         <div class="flex justify-start">
           <div class="flex w-full flex-col min-h-screen md:px-5 sm:px-12">
             <div

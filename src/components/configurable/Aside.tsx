@@ -102,13 +102,13 @@ export const Aside = (props: ParentProps<AsideProps>) => {
       aria-live="polite"
       class={`${
         props.show === false ? "hidden" : ""
-      } flex aside p-4 rounded-lg my-4${
+      } w-full flex aside p-4 rounded-lg my-4${
         preferDark() ? " text-black" : " text-white"
       }${bgColor() ? "" : " bg-solid-accent"} gap-2 ${props.class ?? ""}`}
       style={`${bgColor() ? `background-color: ${bgColor()}` : ""}`}
     >
       <div>{logo()}</div>
-      <div>
+      <div class="w-full">
         <Show when={!!title() && !props.collapsible}>
           <h3 class="font-semibold mb-2">{title()}</h3>
         </Show>

@@ -47,7 +47,7 @@ export function BookList(props: IBookListProps) {
       <p class="font-semibold flex items-center gap-2">
         My books <Dot number={totalBooks()} />
       </p>
-      <ul class="list-disc ml-4 mt-2">
+      <ul class="list-disc pl-4 mt-2">
         <For each={props.books}>
           {(book) => {
             return (

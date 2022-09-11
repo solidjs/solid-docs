@@ -39,7 +39,7 @@ export const NextSection = (props: IPrevNextSectionProps) => <PrevNextSectionBas
 export const PrevSection = (props: IPrevNextSectionProps) => <PrevNextSectionBase type="prev" title={props.title} href={props.href}/>
 
 export const PrevNextSection = (props: {children: JSXElement}) => (
-  <div class="my-10 flex flex-col md:flex-row gap-4">
+  <div class="mt-10 flex flex-col md:flex-row gap-4">
     {props.children}
   </div>
 );

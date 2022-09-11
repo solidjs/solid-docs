@@ -3,9 +3,9 @@ import { usePageState } from "../context/PageStateContext";
 import Dot from "../Dot";
 import IconChevron from "~icons/heroicons-outline/chevron-right";
 
-export default function Summary() {
+export default function Summary(props: {collapsed?: boolean}) {
     const { sections } = usePageState();
-    const [collapsed, setCollapsed] = createSignal(false);
+    const [collapsed, setCollapsed] = createSignal(props.collapsed || false);
 
     return (
         <div class="py-2 px-4 border border-solidlightitem rounded-md md:(p-4 border-none bg-transparent) bg-solid-light z-50 dark:(bg-solid-dark md:bg-transparent border-solid-darkitem)">

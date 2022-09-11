@@ -12,7 +12,7 @@ export function Main(props) {
   return (
     <main class="flex flex-col md:flex-row items-start justify-between flex-grow">
       <div class="pt-4 md:pt-10 w-full lg:max-w-xs sticky top-0 md:hidden">
-        <Summary/>
+        <Summary collapsed={true}/>
       </div>
       <article class="min-w-0 w-full md:max-w-4xl lg:max-w-3xl mx-auto">
         <div class="flex justify-start">

@@ -13,9 +13,11 @@ to Solid. This guide is here to help point out those differences and how to over
 
 ## Components as render functions vs setup functions
 
+### React
+
 In a simplified explanation, React components work as a way to organize your code and handle view updates derive from state
 or props changes. This means that every time there's an update, React wil re-run the component with the latest state/props
-to reflect it in the view. Let's take a look at the following example
+to reflect it in the view. Let's take a look at the following example:
 
 ```jsx
 import { useState } from "react";
@@ -26,7 +28,7 @@ const App = () => {
   return (
     <>
       <p>Count is: {count}</p>
-      <button onClick={() => setCount((prevCoutn) => prevCount + 1)}>
+      <button onClick={() => setCount((prevCount) => prevCount + 1)}>
         Increase count by 1
       </button>
     </>
@@ -34,7 +36,7 @@ const App = () => {
 };
 ```
 
-Whenever we click our button, we will trigger a state update resulting in a re-run of our component
+Whenever we click our button, we will trigger a state update resulting in a re-run of our component.
 
 <IfDark
   fallback={
@@ -50,4 +52,73 @@ Whenever we click our button, we will trigger a state update resulting in a re-r
   />
 </IfDark>
 
+### Solid
+
+We can create extremely similar code with Solid, but the way it works under the hood will be different. Again, the component will be
+useful as a way to organize the code, but unlike React it won't re-run everytime there's a state or props update.
+
+Instead, the component will setup everything that needs to be tracked by Solid's reactive system and move out of the way once the code is being executed. This means that
+the **function component will run only once** as it won't handle state/props updates. Here's the same example written in Solid:
+
+```jsx
+import { createSignal } from "solid-js";
+
+const App = () => {
+  const [count, setCount] = createSignal(0);
+
+  return (
+    <>
+      <p>Count is: {count()}</p>
+      <button onClick={() => setCount((prevCount) => prevCount + 1)}>
+        Increase count by 1
+      </button>
+    </>
+  );
+};
+```
+
+When we click our button only granular updates will be executed by Solid's reactive system.
+
+<IfDark
+  fallback={
+    <img
+      src="/images/how-to-guides/comparison/react/solid-simple-state-update-light.png"
+      alt="A screenshot of the file browser in Stackblitz, displaying all of the files in the template"
+    />
+  }
+>
+  <img
+    src="/images/how-to-guides/comparison/react/solid-simple-state-update-dark.png"
+    alt="A screenshot of the file browser in Stackblitz, displaying all of the files in the template"
+  />
+</IfDark>
+
+This is what we mean in the title by _render functions_ vs _setup functions_. In React, rendering and its updates are tied to the component. In Solid however, components only
+exists in your code and run once to setup all the pieces needed for the reactive system to take place. You can think of components in Solid as _vanishing components_, they go
+away when the code is executed.
+
+This leads to discrepancies on how code works between the two frameworks, despite of their similarity when you write code. For one, we can move state out of the component
+and Solid's code will still work.
+
+```jsx
+import { createSignal } from "solid-js";
+
+const [count, setCount] = createSignal(0);
+
+const App = () => {
+  return (
+    <>
+      <p>Count is: {count()}</p>
+      <button onClick={() => setCount((prevCount) => prevCount + 1)}>
+        Increase count by 1
+      </button>
+    </>
+  );
+};
+```
+
 ### Conditional render and the use of `<Show />`
+
+```
+
+```

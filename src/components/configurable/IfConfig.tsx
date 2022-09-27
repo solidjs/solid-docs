@@ -45,3 +45,7 @@ export function IfConfig<T extends keyof Config>(
 export function IfTS(props: ParentProps<{fallback?: JSX.Element, block?: boolean}>) {
   return <IfConfig check="typescript" forValue={true} {...props} />;
 }
+
+export function IfDark(props: ParentProps<{ fallback?: JSX.Element }>) {
+  return <IfConfig check="mode" forValue="dark" {...props} />;
+}

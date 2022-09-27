@@ -91,6 +91,10 @@ export const GUIDES_SECTIONS: SECTIONS = {
             name: "JavaScript for Solid",
             link: "/how-to-guides/get-ready-for-solid/javascript-for-solid",
           },
+          {
+            name:"Thinking Solid",
+            link:"/how-to-guides/get-ready-for-solid/thinking-solid"
+          }
         ],
       },
       {

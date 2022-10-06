@@ -41,13 +41,13 @@ Whenever we click our button, we will trigger a state update resulting in a re-r
 <IfDark
   fallback={
     <img
-      src="/images/how-to-guides/comparison/react/react-simple-state-update-light.png"
+      src="/images/how-to-guides/comparison/react/react-simple-state-update-light.svg"
       alt="A screenshot of the file browser in Stackblitz, displaying all of the files in the template"
     />
   }
 >
   <img
-    src="/images/how-to-guides/comparison/react/react-simple-state-update-dark.png"
+    src="/images/how-to-guides/comparison/react/react-simple-state-update-dark.svg"
     alt="A screenshot of the file browser in Stackblitz, displaying all of the files in the template"
   />
 </IfDark>
@@ -82,13 +82,13 @@ When we click our button only granular updates will be executed by Solid's react
 <IfDark
   fallback={
     <img
-      src="/images/how-to-guides/comparison/react/solid-simple-state-update-light.png"
+      src="/images/how-to-guides/comparison/react/solid-simple-state-update-light.svg"
       alt="A screenshot of the file browser in Stackblitz, displaying all of the files in the template"
     />
   }
 >
   <img
-    src="/images/how-to-guides/comparison/react/solid-simple-state-update-dark.png"
+    src="/images/how-to-guides/comparison/react/solid-simple-state-update-dark.svg"
     alt="A screenshot of the file browser in Stackblitz, displaying all of the files in the template"
   />
 </IfDark>
@@ -117,8 +117,98 @@ const App = () => {
 };
 ```
 
-### Conditional render and the use of `<Show />`
+Again, this is possible because Solid's reactive system lives outside of components. If you want further reading on the topic, check out Ryan Carniato's (creator of Solid) article [Components are Pure Overhead](https://dev.to/this-is-learning/components-are-pure-overhead-hpm)
 
+## Early returns and the use of `<Show>`
+
+Since components in Solid are executed only once, the following React code **is not** transferable to Solid
+
+### React
+
+```jsx
+import { useState } from "react";
+
+const App = () => {
+  const [count, setCount] = useState(0);
+
+  if (count > 5) {
+    return <p>Count is too high!</p>;
+  }
+
+  return (
+    <>
+      <p>Count is: {count}</p>
+      <button onClick={() => setCount((prevCount) => prevCount + 1)}>
+        Increase count by 1
+      </button>
+    </>
+  );
+};
 ```
 
+In the example above, since React re-renders on every state change, our condition is evaluated every time we click the button.
+Once `count` is bigger than 5 our condition will be true, and React will render our `<p` element.
+
+### Solid
+
+We can write similar code, but once again, the execution model is different
+
+```jsx
+import { createSignal } from "solid-js";
+
+const App = () => {
+  const [count, setCount] = createSignal(0);
+
+  if (count() > 5) {
+    return <p>Count is too high!</p>;
+  }
+
+  return (
+    <>
+      <p>Count is: {count()}</p>
+      <button onClick={() => setCount((prevCount) => prevCount + 1)}>
+        Increase count by 1
+      </button>
+    </>
+  );
+};
 ```
+
+Here, since we initialize our count at 0 and the component only runs once, the condition will be evaluated, turn out to be false, and never be re-evaluated.
+You can click the button and get past 5, and you'll still see the counter and button.
+
+This is due to how Solid's granular reactivity works. Put in simple terms, React is opt-out rendering meaning that React will re-render everything if not
+tell otherwise (think `memo()`, `useMemo()`, `useCallback()`).
+
+On the other hand, Solid is opt-in rendering meaning it will not re-render anything that is not tracked by the reactive system. Solid thinks of rendering elements to
+the DOM as a side effect of state changes, so the way to "fix" our code is to check our condition inside our JSX to make the reactive system track it and derive
+the DOM output as a result of state change. Solid provides a built-in component to help us with that: `<Show>`
+
+```jsx
+import { createSignal, Show } from "solid-js";
+
+const App = () => {
+  const [count, setCount] = createSignal(0);
+
+  const fallback = (
+    <>
+      <p>Count is: {count()}</p>
+      <button onClick={() => setCount((prevCount) => prevCount + 1)}>
+        Increase count by 1
+      </button>
+    </>
+  );
+
+  return (
+    <Show when={count() > 5} fallback={fallback}>
+      <p>Count is too high!</p>
+    </Show>
+  );
+};
+```
+
+## Going through lists and the use of `<For>`
+
+Usually the way to iterate through lists in React is the following
+
+### React

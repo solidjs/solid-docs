@@ -93,6 +93,23 @@ export const GUIDES_SECTIONS: SECTIONS = {
           },
         ],
       },
+      {
+        name:'Styling In Solid',
+        pages:[
+          {
+            name:'Introduction',
+            link:'/how-to-guides/styling-in-solid/'
+          },
+          {
+            name:'CSS Modules & SASS',
+            link:'/how-to-guides/styling-in-solid/css-modules-and-sass' 
+          },
+          {
+            name:'CSS Frameworks',
+            link:'/how-to-guides/styling-in-solid/css-frameworks'
+          }
+        ]
+      }
     ],
   },
 };

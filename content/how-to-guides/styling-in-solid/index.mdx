@@ -1,0 +1,131 @@
+# Styling in Solid
+
+Styling Solid apps is as easy as styling HTML. You can style your Solid components using the [`class`](/how-to-guides/styling-in-solid/#classes) or [`style`](/how-to-guides/styling-in-solid/#inline-styles) attributes. Solid supports importing CSS files such as CSS, [CSS Modules](/how-to-guides/styling-in-solid/css-modules-and-sass), [Sass](/how-to-guides/styling-in-solid/css-modules-and-sass/#sass) and more. Solid also supports frameworks such as [Tailwind](TODO), [WindiCSS](TODO), [UnoCSS](TODO), and more.
+
+Note that in Solid, JSX expressions are syntactic sugar for HTML elements. So the expression `<div class="foo bar" style="color: red;">` works the way you expect. Solid also supports some advanced styling primitives such as [`classList`](TODO) and [`style` objects](TODO) which are described below.
+
+## Inline Styles
+
+The `style` attribute provides a way to imperatively style one and only one element and set CSS variables using runtime values. Both `style="color: red;"` (e.g. style strings) and `style={{ "color": "red" }}`> (e.g. style objects) are supported syntax for setting inline styles.
+
+Note that in Solid, style objects use the `kebab-case` syntax. This means `style={{ "background-color": "red" }}` works whereas `style={{ backgroundColor: red }}` doesn’t because Solid interpolates this as `style="backgroundColor: red;"`.
+
+Setting CSS variables works the same way: use `` style={`--color: ${myColor}`} `` or `style={{ "--color": myColor }}` depending on your preference.
+
+{/* // Note to self, may want to add a note on undefined versus initial for setting CSS variables */}
+
+```jsx
+// Inline styles using string syntax
+function ComponentStyledWithStyleString() {
+  const backgroundColor = "yellow"
+  const fontWeight = "bold"
+
+  return <>
+    <div style={`background-color: ${backgroundColor};`}>
+      <h1 style={`color: red; font-weight: ${fontWeight};`}>Hello World in red</h1>
+
+      <h1 style="color: rgb(0,255,0); padding: 20px;">Hello World in green</h1>
+
+      <h1 style="color: blue;">Hello World in blue</h1>
+    </>
+  </>
+}
+
+// Inline styles using object syntax
+function ComponentStyledWithStyleObject() {
+  const backgroundColor = "yellow"
+  const fontWeight = "bold"
+
+  return <>
+    <div style={{ "background-color": backgroundColor }}>
+      <h1 style={{ "color": "red", "font-weight": fontWeight }}>Hello World in red</h1>
+      
+      <h1 style={{ "color": "rgb(0, 255, 0)", "padding": "20px" }}>Hello World in green</h1>
+
+      <h1 style={{ "color": "blue" }}>Hello World in blue</h1>
+    </>
+  </>
+}
+```
+
+These components render equivalent HTML. Note that using inline styles as strings or objects is entirely up to you. Generally, strings are more concise and portable (can copy-paste between non-Solid environments) but objects are typed. Under the hood, style objects are of type [`JSX.CSSProperties`](TODO).
+
+Note that every CSS property can be used as inline styles, ranging from simple `background-color` all the way to complex `mask-mode`.
+
+## Classes
+
+The `class` attribute provides a way to declaratively style one or more elements. Both `class="foo"` (e.g. class name) and `classList={{ "foo": true }}` (e.g. class list) are supported syntax for setting classes.
+
+Generally, classes are preferred to inline styles because CSS is statically optimized and enables higher-order patterns such as composition and code reuse. But that doesn’t mean you should never use inline styles -- inline styles are useful for prototyping and setting CSS variables using runtime values. Don’t be afraid to use what works for you.
+
+Classes in Solid work the way you expect. Because Solid JSX is syntactic sugar for HTML elements, `<div class="center"><div class="card">` works the way you expect. But we haven’t defined `center` or `card`, so in a separate CSS file, let’s define `center` and `card` and import the CSS file into our component.
+
+```css
+/* classes.css */
+
+.center {
+  display: grid;
+  place-items: center;
+}
+.center .is-screen {
+  min-height: 100vh;
+}
+
+.card {
+  height: 160px;
+  aspect-ratio: 2;
+  border-radius: 16px;
+  background-color: white;
+  box-shadow: 0 0 0 4px hsl(0 0% 0% / 15%);
+}
+```
+
+```jsx
+//component.jsx
+
+import "./classes.css";
+
+function ComponentStyledWithClasses() {
+  return (
+    <>
+      <div class="center is-screen">
+        <div class="card">Hello, world!</div>
+      </div>
+    </>
+  );
+}
+```
+
+By importing `classes.css`, any elements that use `center`, `is-screen`, or `card` will be styled accordingly. This is because when we import `.css` files, these classes are globally scoped. For added control, you can use [CSS Modules](/how-to-guides/styling-in-solid/css-modules-and-sass) or [Sass](/how-to-guides/styling-in-solid/css-modules-and-sass/#sass).
+
+- To use CSS Modules, simply change the file extension to `./classes.module.css`
+- To use Sass, change the file extension to `./classes.scss` or `./classes.sass` (also run `npm i --save-dev sass`)
+
+For global CSS, we recommend importing CSS in `src/index.jsx` or `src/App.jsx`. For component CSS, we recommend you co-locate CSS files next to component files.
+
+For example:
+
+```
+src/
+  global.css
+  index.jsx (import global.css here)
+  components/
+    nav.css
+    Nav.jsx (import nav.css here)
+```
+
+Note that CSS files can be `TitleCase`, `camelCase`, or `kebab-case`. Naming as such is simply preference, just make sure to change import names to be case-sensitive.
+
+For added organization, you can create a folder per component, for example:
+
+```
+src/
+  index.tsx (imports global.css)
+  global.css
+  components/
+    nav/
+      index.tsx (imports ./index.css)
+      index.css
+```
+
+However, this leads to creating more folders with files nested within them. This can make searching for what you’re looking for more difficult. Use what works for you and your team and don’t be afraid to experiment.

@@ -109,6 +109,10 @@ export const GUIDES_SECTIONS: SECTIONS = {
             link: '/how-to-guides/styling-in-solid/sass'
           },
           {
+            name: 'LESS',
+            link: '/how-to-guides/styling-in-solid/less'
+          },
+          {
             name: 'Tailwind CSS',
             link: '/how-to-guides/styling-in-solid/tailwind-css'
           },

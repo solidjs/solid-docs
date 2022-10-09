@@ -94,20 +94,32 @@ export const GUIDES_SECTIONS: SECTIONS = {
         ],
       },
       {
-        name:'Styling In Solid',
-        pages:[
+        name: 'Styling In Solid',
+        pages: [
           {
-            name:'Introduction',
-            link:'/how-to-guides/styling-in-solid/'
+            name: 'Introduction',
+            link: '/how-to-guides/styling-in-solid'
           },
           {
-            name:'CSS Modules & SASS',
-            link:'/how-to-guides/styling-in-solid/css-modules-and-sass' 
+            name: 'CSS Modules',
+            link: '/how-to-guides/styling-in-solid/css-modules'
           },
           {
-            name:'CSS Frameworks',
-            link:'/how-to-guides/styling-in-solid/css-frameworks'
-          }
+            name: 'Sass',
+            link: '/how-to-guides/styling-in-solid/sass'
+          },
+          {
+            name: 'Tailwind CSS',
+            link: '/how-to-guides/styling-in-solid/tailwind-css'
+          },
+          {
+            name: 'UnoCSS',
+            link: '/how-to-guides/styling-in-solid/unocss'
+          },
+          {
+            name: 'WindiCSS',
+            link: '/how-to-guides/styling-in-solid/windicss'
+          },
         ]
       }
     ],

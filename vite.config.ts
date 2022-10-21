@@ -25,7 +25,7 @@ export default defineConfig({
         providerImportSource: "solid-mdx",
         rehypePlugins: [rehypeSlug, [rehypeRaw, { passThrough: nodeTypes }]],
         remarkPlugins: [
-          remarkGfm
+          remarkGfm,
           [
             remarkShikiTwoslash.default,
             {

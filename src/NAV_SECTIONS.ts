@@ -93,6 +93,15 @@ export const GUIDES_SECTIONS: SECTIONS = {
           },
         ],
       },
+      {
+        name:"Comparison",
+        pages:[
+          {
+            name:"Vue",
+            link:"/how-to-guides/comparison/vue"
+          }
+        ]
+      }
     ],
   },
 };

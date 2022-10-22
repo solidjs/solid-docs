@@ -146,7 +146,7 @@ export default {
     </>
   ),
   table: (props) => (
-    <table class="w-full <sm:portrait:text-xs my-6 rounded-1xl dark:bg-[rgba(17,24,39,1)] shadow-lg text-left overflow-hidden">
+    <table class="w-full max-w-full <sm:portrait:text-xs my-6 rounded-1xl dark:bg-[rgba(17,24,39,1)] shadow-lg text-left overflow-hidden">
       {props.children}
     </table>
   ),

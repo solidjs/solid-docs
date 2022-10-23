@@ -77,6 +77,18 @@ export const GUIDES_SECTIONS: SECTIONS = {
       },
     ],
   },
+  foundations:{
+    name:'Foundations',
+    pages:[
+      {
+        name:'Thinking Solid',
+        link:'/foundations/thinking-solid'
+        // pages:[
+        //   {name:'nd',link:'/foundations/thinking-solid'}
+        // ]
+      },
+    ]
+  },
   howTos: {
     name: "How-To Guides",
     pages: [
@@ -91,10 +103,6 @@ export const GUIDES_SECTIONS: SECTIONS = {
             name: "JavaScript for Solid",
             link: "/how-to-guides/get-ready-for-solid/javascript-for-solid",
           },
-          {
-            name:"Thinking Solid",
-            link:"/how-to-guides/get-ready-for-solid/thinking-solid"
-          }
         ],
       },
       {

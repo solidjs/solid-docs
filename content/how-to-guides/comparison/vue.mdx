@@ -153,7 +153,7 @@ export const storeUsingRef = ref(0);
 import { storeUsingRef } from "./store.js";
 
 //Note: to make use of ref() values in the script section you will have to use the .value property like so:
-const reactiveLocalValue = storeUsingRef();
+const reactiveLocalValue = storeUsingRef.value;
 //This will behave reactively
 </script>
 
@@ -168,7 +168,7 @@ const reactiveLocalValue = storeUsingRef();
 import { storeUsingRef } from "./store.js";
 
 //Note: to make use of ref() values in the script section you will have to use the .value property like so:
-const reactiveLocalValue = storeUsingRef();
+const reactiveLocalValue = storeUsingRef.value;
 //This will behave reactively
 </script>
 
@@ -317,7 +317,7 @@ In the code block above `Vue is awesome` is rendered if vueVotes is more than so
 
 ### Solid
 
-Solid has components similar to these that make conditional rendering very easy and look much cleaner. These components are namely `Show`, `Switch` and `Dynamic`. Let's take a look at how these can be used
+Solid has components similar to these that make conditional rendering very easy and look much cleaner. These components are namely `Show`, `Switch` and `Dynamic`. Let's take a look at how these can be used.
 
 ##### Show
 
@@ -353,7 +353,7 @@ In the above code if none of the `when` conditions are satisfied it will render 
 
 ##### Dynamic
 
-This can be used to render from data. It lets you pass either a string for a native element or a component function and it will render that with the rest of the provided props.
+This built in component can be used to render elements from a map of keys and components/elements. It takes in a prop called component and dynamically renders out which ever element or component it is passed. You can take advantage of this by passing in a component dynamically using a map and key. Here's a quick example to show you how it's used
 
 ```jsx
 import { render, Dynamic } from "solid-js/web";
@@ -389,7 +389,9 @@ function App() {
 }
 ```
 
-In the above code the component that is chosen to render depends on the drop down option chosen.
+In the above code the component that is chosen to render depends on the drop down option chosen which serves as a key to the map of components.
+
+Feel free to experiment with and use which ever built in component makes you comfortable.
 
 ## List Rendering
 
@@ -397,23 +399,37 @@ A lot of times developers find themselves using lists more often than not. In th
 
 ### Vue
 
-In Vue they make use of the `for` directive to render a list or array of items, like so:
+In Vue you make use of the `for` directive to render a list or array of items, like so:
 
 ```html
 <li v-for="item in items">{{ item.message }}</li>
 ```
 
-In the above code Vue renders as many `<li></li>` objects as there are items in the items array.
+In the above code Vue renders as many `<li></li>` elements as there are items in the items array.
 
 ### Solid
 
-In Solid the `<For>` component is the best way to loop over an array of objects. As the array changes, `<For>` updates or moves items in the DOM rather than recreating them. Let's look at an example
+In Solid the `<For>` component is the best way to loop over an array of objects. As the array changes, `<For>` updates or moves items in the DOM rather than recreating them. Let's look at an example using the `<For>` component
 
 ```html
-<For each={items()}>{(item, i) =>
-  <li>
-    {item.message}
-  </li>
-}</For>
+<For each="{items()}">
+  {(item, i) => (
+  <li>{item.message}</li>
+  ) }
+</For>
 ```
-There is one prop on the `<For>` component: each, where you pass the array to loop over.
+
+There is one prop in the `<For>` component called each, this is where you pass the array you wish to loop over.
+
+## Vue vs. Solid
+
+Here's a table differentiating hooks in Vue against hooks in Solid.
+
+| Vue(composition)    | Vue(options)           | Solid          |
+| ------------------- | ---------------------- | -------------- |
+| onMounted()         | mounted                | onMount()      |
+| onUnmounted()       | unmounted              | onCleanup()    |
+| ref(), shallowRef() | data                   | createSignal() |
+| reactive()          | data                   | createStore()  |
+| computed()          | computed               | createMemo()   |
+| watchEffect()       | this.$watch() or watch | createEffect() |

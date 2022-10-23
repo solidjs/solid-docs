@@ -84,7 +84,7 @@ export default {
     return (
       <Link
         {...props}
-        class="dark:text-link-dark break-normal border-b border-solid-default border-opacity-0 hover:border-opacity-100 duration-100 ease-in transition font-semibold leading-normal"
+        class="dark:text-link-dark break-normal border-b border-solid-default dark:border-solid-light hover:text-solid-default hover:dark:text-solid-light focus:text-solid-default focus:dark:text-solid-light duration-100 ease-in transition font-semibold leading-normal"
       >
         {props.children}
       </Link>
@@ -144,6 +144,19 @@ export default {
         {props.children}
       </pre>
     </>
+  ),
+  table: (props) => (
+    <table class="w-full max-w-full <sm:portrait:text-xs my-6 rounded-1xl dark:bg-[rgba(17,24,39,1)] shadow-lg text-left overflow-hidden">
+      {props.children}
+    </table>
+  ),
+  th: (props) => <th class="p-4 <sm:p-2">{props.children}</th>,
+  thead: (props) => (
+    <thead class="dark:border-blue-400 border-b-1">{props.children}</thead>
+  ),
+  td: (props) => <td class="p-4 <sm:p-2">{props.children}</td>,
+  tr: (props) => (
+    <tr class="dark:even-of-type:bg-[#23406e] light:even-of-type:bg-[#90C2E7]">{props.children}</tr>
   ),
   "data-lsp": (props) => {
     const id = createUniqueId();

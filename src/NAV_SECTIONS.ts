@@ -77,17 +77,18 @@ export const GUIDES_SECTIONS: SECTIONS = {
       },
     ],
   },
-  foundations:{
-    name:'Foundations',
-    pages:[
+  foundations: {
+    name: "Foundations",
+    pages: [
       {
-        name:'Thinking Solid',
-        link:'/foundations/thinking-solid'
-        // pages:[
-        //   {name:'nd',link:'/foundations/thinking-solid'}
-        // ]
+        name: "Thinking Solid",
+        link: "/foundations/thinking-solid",
       },
-    ]
+      {
+        name: "JavaScript for Solid",
+        link: "/foundations/javascript-for-solid",
+      },
+    ],
   },
   howTos: {
     name: "How-To Guides",
@@ -99,21 +100,17 @@ export const GUIDES_SECTIONS: SECTIONS = {
             name: "Welcome",
             link: "/how-to-guides/get-ready-for-solid/",
           },
-          {
-            name: "JavaScript for Solid",
-            link: "/how-to-guides/get-ready-for-solid/javascript-for-solid",
-          },
         ],
       },
       {
-        name:"Comparison",
-        pages:[
+        name: "Comparison",
+        pages: [
           {
-            name:"Vue",
-            link:"/how-to-guides/comparison/vue"
-          }
-        ]
-      }
+            name: "Vue",
+            link: "/how-to-guides/comparison/vue",
+          },
+        ],
+      },
     ],
   },
 };

@@ -10,6 +10,7 @@ import remarkShikiTwoslash from "remark-shiki-twoslash";
 import rehypeSlug from "rehype-slug";
 import Icons from "unplugin-icons/vite";
 import colors from "windicss/colors";
+import remarkGfm from "remark-gfm";
 
 const adapter = process.env.GITHUB_ACTIONS ? node() : netlify();
 const colorScheme = colors.neutral;
@@ -26,6 +27,7 @@ export default defineConfig({
         providerImportSource: "solid-mdx",
         rehypePlugins: [rehypeSlug, [rehypeRaw, { passThrough: nodeTypes }]],
         remarkPlugins: [
+          remarkGfm,
           [
             remarkShikiTwoslash.default,
             {

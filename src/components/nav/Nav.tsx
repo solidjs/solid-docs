@@ -31,6 +31,7 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
           setShowMenu={setShowMenu}
         />
       </div>
+      {/* <div id="docsearch"></div> */}
       <div class="hidden md:block">
         <NavPreferences id="desktop"/>
       </div>
@@ -44,9 +45,9 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
           <TopMenu />
         </Show>
       </div>
-      <div class="my-2" classList={{ hidden: props.docsMode == "regular" }}>
+      {/* <div class="my-2" classList={{ hidden: props.docsMode == "regular" }}>
         <div id="docsearch" />
-      </div>
+      </div> */}
       <div class="md:hidden">
         <NavPreferences id="mobile"/>
       </div>
@@ -105,7 +106,7 @@ function StartMenu() {
             <span class="font-bold mb-2 block">{section.header}</span>
             <ul>
               <For each={section.subsections}>
-                {(subsection) => (
+                {(subsection:any) => (
                   <>
                     <li class="px-2 my-1 py-0">
                       <NavLink
@@ -120,7 +121,7 @@ function StartMenu() {
                     <Show when={subsection.subsections?.length}>
                       <ul class="px-2">
                         <For each={subsection.subsections}>
-                          {(item) => (
+                          {(item:any) => (
                             <>
                               <li class="pl-4 my-1 py-0">
                                 <NavLink

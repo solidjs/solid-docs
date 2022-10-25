@@ -11,7 +11,7 @@ export function Main(props) {
   const nextStartSection = () => getStartSection(location.pathname);
   return (
     <main class="flex flex-col md:flex-row items-start justify-between flex-grow">
-      <div class="pt-4 md:pt-10 w-full lg:max-w-xs sticky top-0 md:hidden">
+      <div class="pt-4 md:pt-10 w-full lg:max-w-xs sticky z-50 top-0 md:hidden">
         <Summary collapsed={true}/>
       </div>
       <article class="min-w-0 w-full md:max-w-4xl lg:max-w-3xl mx-auto">
@@ -37,7 +37,7 @@ export function Main(props) {
           </div>
         </div>
       </article>
-      <div class="pt-4 md:pt-10 w-full lg:max-w-xs sticky top-0 hidden md:block">
+      <div class="pt-4 md:pt-10 w-full lg:max-w-xs sticky z-50 top-0 hidden md:block">
         <Summary/>
       </div>
     </main>

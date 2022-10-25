@@ -33,12 +33,13 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
       </div>
       {/* <div id="docsearch"></div> */}
       <div class="hidden md:block">
-        <NavPreferences id="desktop"/>
+        <NavPreferences id="desktop" />
       </div>
       <div
         classList={{
           hidden: !showMenu(),
-          "lg:block border-b md:border-none border-solid-lightitem dark:border-solid-darkitem pb-4": true,
+          "lg:block border-b md:border-none border-solid-lightitem dark:border-solid-darkitem pb-4":
+            true,
         }}
       >
         <Show when={props.docsMode === "regular"} fallback={<StartMenu />}>
@@ -49,7 +50,7 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
         <div id="docsearch" />
       </div> */}
       <div class="md:hidden">
-        <NavPreferences id="mobile"/>
+        <NavPreferences id="mobile" />
       </div>
     </div>
   );
@@ -218,13 +219,15 @@ function SectionNav(props: { sections: SECTIONS }) {
         {(name, i) => (
           <>
             <li>
-              <h2 class="pl-4 text-solid-dark dark:text-white font-bold text-xl">
+              <h2 class="pl-2 text-solid-dark dark:text-white font-bold text-xl">
                 {props.sections[name].name}
               </h2>
               <SectionsNavIterate pages={props.sections[name].pages} />
             </li>
             <Show when={i() !== sectionNames.length - 1}>
-              <hr class="w-full mb-2" />
+              <li>
+                <hr class="w-full mb-2" />
+              </li>
             </Show>
           </>
         )}

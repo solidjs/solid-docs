@@ -18,7 +18,7 @@ export function Collapsible(props: CollapsibleProps) {
   const id = createUniqueId();
 
   return (
-    <li value={props.header} class="mt-2">
+    <li value={props.header} class="m-2">
       <SectionHeader
         collapsed={collapsed()}
         onClick={() => setCollapsed((prev) => !prev)}

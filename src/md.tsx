@@ -9,13 +9,16 @@ import { usePageState } from "~/components/context/PageStateContext";
 
 function Anchor(props: ParentProps<{ id: string }>) {
   return (
-    <a class="hover:underline" href={`#${props.id}`}>
+    <a
+      class="hover:underline text-solid-dark dark:text-solid-light decoration-solid-lightitem font-bold dark:decoration-solid-darkitem"
+      href={`#${props.id}`}
+    >
       {props.children}
     </a>
   );
 }
 
-const headerBold = "font-bold text-solid-default dark:text-solid-darkdefault ";
+const headerBold = "font-bold";
 
 export default {
   strong: (props) => <span class="font-bold">{props.children}</span>,
@@ -24,7 +27,7 @@ export default {
       {...props}
       class={
         headerBold +
-        "heading mt-10 mb-6 -mx-.5 break-words text-5xl leading-tight mdx-heading"
+        "heading mt-10 mb-6 -mx-.5 break-words text-4xl leading-tight mdx-heading"
       }
     >
       <MetaTitle>{props.children}</MetaTitle>
@@ -42,7 +45,8 @@ export default {
       <h2
         {...props}
         class={
-          headerBold + "heading text-3xl leading-10 mt-14 mb-6 mdx-heading"
+          headerBold +
+          "heading text-2xl leading-10 my-6 mdx-heading text-solid-accent dark:text-solid-accentlight"
         }
       >
         <Anchor id={props.id}>{props.children}</Anchor>
@@ -84,7 +88,7 @@ export default {
     return (
       <Link
         {...props}
-        class="dark:text-link-dark break-normal border-b border-solid-default dark:border-solid-light hover:text-solid-default hover:dark:text-solid-light focus:text-solid-default focus:dark:text-solid-light duration-100 ease-in transition font-semibold leading-normal"
+        class="dark:text-solid-accentlight break-normal text-solid-accent duration-100 ease-in transition font-semibold leading-normal transition hover:underline"
       >
         {props.children}
       </Link>
@@ -96,7 +100,10 @@ export default {
     </li>
   ),
   ul: (props) => (
-    <ul {...props} class="list-disc pl-8 mb-2">
+    <ul
+      {...props}
+      class="list-disc marker:text-solid-accent marker:dark:text-solid-accentlight marker:text-2xl pl-8 mb-2"
+    >
       {props.children}
     </ul>
   ),

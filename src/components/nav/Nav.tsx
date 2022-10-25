@@ -1,8 +1,8 @@
 import { NavLink, Route, Routes, useLocation } from "@solidjs/router";
 import { NavHeader } from "./NavHeader";
-import { Collapsible, NavItem, SectionHeader } from "./NavSection";
-// import { Accordion } from "solid-headless";
-import { createEffect, createSignal, For, on, Show } from "solid-js";
+import { NavPreferences } from "./NavPreferences";
+import { Collapsible, NavItem } from "./NavSection";
+import { createEffect, createSignal, For, Show } from "solid-js";
 import {
   GUIDES_SECTIONS,
   REFERENCE_SECTIONS,
@@ -10,11 +10,9 @@ import {
   SECTION_LEAF_PAGE,
   SECTION_PAGE,
 } from "~/NAV_SECTIONS";
-import { Preferences } from "../Preferences";
 
 export default function Nav(props: { docsMode: "start" | "regular" }) {
   const [showMenu, setShowMenu] = createSignal(false);
-  const [showPreferences, setShowPreferences] = createSignal(false);
   const location = useLocation();
 
   createEffect((prev) => {
@@ -25,39 +23,32 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
   });
 
   return (
-    <div class="lg:max-h-screen lg:sticky lg:top-0 no-bg-scrollbar py-0 lg:max-w-xs w-full shadow lg:shadow-none z-50 overflow-y-auto">
-      <NavHeader
-        docsMode={props.docsMode}
-        showMenu={showMenu()}
-        setShowMenu={setShowMenu}
-      />
-      <div class="my-2" classList={{ hidden: props.docsMode == "regular" }}>
-        <div id="docsearch" />
+    <div class="lg:max-h-screen lg:sticky lg:top-0 no-bg-scrollbar lg:max-w-sm w-full shadow lg:shadow-none z-50 overflow-y-auto flex flex-col gap-8">
+      <div class="flex flex-col gap-4">
+        <NavHeader
+          docsMode={props.docsMode}
+          showMenu={showMenu()}
+          setShowMenu={setShowMenu}
+        />
       </div>
-      <SectionHeader
-        collapsed={!showPreferences()}
-        panelId="prefs"
-        onClick={() => setShowPreferences((p) => !p)}
-      >
-        <span>
-          <span class="text-lg mr-2">⚙</span>️Preferences
-        </span>
-      </SectionHeader>
-
-      <Show when={showPreferences()}>
-        <div class="px-5 text-sm">
-          <Preferences questionClass="font-bold" />
-        </div>
-      </Show>
+      <div class="hidden md:block">
+        <NavPreferences id="desktop"/>
+      </div>
       <div
         classList={{
           hidden: !showMenu(),
-          "lg:block": true,
+          "lg:block border-b md:border-none border-solid-lightitem dark:border-solid-darkitem pb-4": true,
         }}
       >
         <Show when={props.docsMode === "regular"} fallback={<StartMenu />}>
           <TopMenu />
         </Show>
+      </div>
+      <div class="my-2" classList={{ hidden: props.docsMode == "regular" }}>
+        <div id="docsearch" />
+      </div>
+      <div class="md:hidden">
+        <NavPreferences id="mobile"/>
       </div>
     </div>
   );
@@ -65,7 +56,7 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
 
 function TopMenu() {
   return (
-    <aside class="w-full pt-4 lg:max-w-xs">
+    <aside class="w-full">
       <nav class="scrolling-touch scrolling-gpu" style="--bg-opacity:0.2;">
         <Routes>
           <Route
@@ -221,17 +212,14 @@ function SectionNav(props: { sections: SECTIONS }) {
   const sectionNames = Object.keys(props.sections);
 
   return (
-    <ul class="list-none">
+    <ul class="flex flex-col gap-4">
       <For each={sectionNames}>
         {(name, i) => (
           <li>
-            <h2 class="pl-4 text-solid-dark dark:text-white font-bold text-xl">
+            <h2 class="text-solid-dark dark:text-white font-bold text-xl">
               {props.sections[name].name}
             </h2>
             <SectionsNavIterate pages={props.sections[name].pages} />
-            {i() !== sectionNames.length - 1 ? (
-              <hr class="w-full mb-2" />
-            ) : null}
           </li>
         )}
       </For>

@@ -1,4 +1,8 @@
-import { createResource, createSignal, For, JSX, Setter, Show } from "solid-js";
+import { createResource, createSignal, For, Setter, Show } from "solid-js";
+import Button from "~/components/Button";
+import InteractiveExample from "~/components/configurable/interactiveExample";
+import Dot from "~/components/Dot";
+import SearchInput from "~/components/SearchInput";
 
 type Book = {
   title: string;
@@ -22,29 +26,29 @@ export function FinishedBookshelf(props: IBookshelfProps) {
   const toggleForm = () => setShowForm(!showForm());
 
   return (
-    <div class="my-5 p-5 border-2">
-      <h1 class="text-2xl mb-3">{props.name}'s Bookshelf</h1>
-      <BookList books={books()} />
-      <Show
-        when={showForm()}
-        fallback={
-          <button
-            class="border-2 border-black px-2 py-1 rounded bg-blue-200"
-            onClick={toggleForm}
+    <InteractiveExample>
+      <div class="dark:bg-solid-darkbg border dark:border-solid-darkitem rounded-lg">
+        <div class="p-4">
+          <h2 class="text-2xl font-semibold mb-4">{props.name}'s Bookshelf</h2>
+          <BookList books={books()} />
+        </div>
+        <div class="border-t dark:border-solid-darkitem p-4">
+          <Show
+            when={showForm()}
+            fallback={
+              <Button type="button" onClick={toggleForm}>
+                Add a book
+              </Button>
+            }
           >
-            Add a book
-          </button>
-        }
-      >
-        <AddBook setBooks={setBooks} />
-        <button
-          class="border-2 border-black px-2 py-1 rounded bg-blue-200 mt-4"
-          onClick={toggleForm}
-        >
-          Finished adding books
-        </button>
-      </Show>
-    </div>
+            <AddBook setBooks={setBooks} />
+            <Button type="button" onClick={toggleForm}>
+              Finished adding books
+            </Button>
+          </Show>
+        </div>
+      </div>
+    </InteractiveExample>
   );
 }
 
@@ -53,18 +57,19 @@ interface IBookListProps {
 }
 
 export function BookList(props: IBookListProps) {
-  const totalBooks = () => props.books.length;
 
   return (
     <>
-      <h2 class="text-xl">My books ({totalBooks()})</h2>
-      <ul class="list-disc ml-5 mb-5">
+      <p class="font-semibold flex items-center gap-2">
+        My books <Dot number={props.books.length} />
+      </p>
+      <ul class="list-disc pl-4 mt-2">
         <For each={props.books}>
           {(book) => {
             return (
               <li>
                 {book.title}{" "}
-                <span style={{ "font-style": "italic" }}>({book.author})</span>
+                <span class="italic text-neutral-400">({book.author})</span>
               </li>
             );
           }}
@@ -98,20 +103,17 @@ function AddBook(props: IAddBookProps) {
 
   return (
     <>
-      <form>
-        <div>
-          <label for="title">Search books</label>
-          <input
-            class="ml-2 p-1 text-black border-1 border-black"
-            id="title"
-            value={input()}
-            onInput={(e) => {
-              setInput(e.currentTarget.value);
-            }}
-          />
-        </div>
-        <button
-          class="px-3 py-2 rounded bg-blue-200 text-black"
+      <form class="flex items-center gap-2">
+        <SearchInput
+          label="search books"
+          id="title"
+          input={input()}
+          onInput={(e) => {
+            setInput(e.currentTarget.value);
+          }}
+          small={true}
+        />
+        <Button
           type="submit"
           onClick={(e) => {
             e.preventDefault();
@@ -119,10 +121,13 @@ function AddBook(props: IAddBookProps) {
           }}
         >
           Search
-        </button>
+        </Button>
       </form>
-      <Show when={!data.loading} fallback={<>Searching...</>}>
-        <ul class="list-disc ml-5 my-4">
+      <Show
+        when={!data.loading}
+        fallback={<div class="py-2">Searching...</div>}
+      >
+        <ul class="list-disc ml-4 my-2">
           <For each={data()}>
             {(book) => (
               <li class="mb-1">

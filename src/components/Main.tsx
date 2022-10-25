@@ -3,17 +3,20 @@ import { Show } from "solid-js";
 import { Title as MetaTitle } from "@solidjs/meta";
 import Footer from "./footer/Footer";
 import { getStartSection } from "./nav/Nav";
+import Summary from "./nav/Summary";
 
 export function Main(props) {
   const location = useLocation();
 
   const nextStartSection = () => getStartSection(location.pathname);
-
   return (
-    <main class="flex-grow">
-      <article class="min-w-0 max-w-5xl">
+    <main class="flex flex-col md:flex-row items-start justify-between flex-grow">
+      <div class="pt-4 md:pt-10 w-full lg:max-w-xs sticky top-0 md:hidden">
+        <Summary collapsed={true}/>
+      </div>
+      <article class="min-w-0 w-full md:max-w-4xl lg:max-w-3xl mx-auto">
         <div class="flex justify-start">
-          <div class="flex w-full flex-col min-h-screen px-5 sm:px-12">
+          <div class="flex w-full flex-col min-h-screen md:px-5 sm:px-12">
             <div
               ref={props.ref}
               class="w-full flex-grow ml-0 flex justify-center"
@@ -34,6 +37,9 @@ export function Main(props) {
           </div>
         </div>
       </article>
+      <div class="pt-4 md:pt-10 w-full lg:max-w-xs sticky top-0 hidden md:block">
+        <Summary/>
+      </div>
     </main>
   );
 }

@@ -1,4 +1,6 @@
 import { createSignal, For, JSX, Setter } from "solid-js";
+import InteractiveExample from "~/components/configurable/interactiveExample";
+import Dot from "~/components/Dot";
 
 type Book = {
   title: string;
@@ -19,11 +21,17 @@ export function BasicBookshelf(props: IBookshelfProps) {
   const [books, setBooks] = createSignal(initialBooks);
 
   return (
-    <div class="my-5 p-5 border-2">
-      <h1 class="text-2xl mb-3">{props.name}'s Bookshelf</h1>
-      <BookList books={books()} />
-      <AddBook setBooks={setBooks} />
-    </div>
+    <InteractiveExample>
+      <div class="dark:bg-solid-darkbg border dark:border-solid-darkitem rounded-lg">
+        <div class="p-4">
+          <h2 class="text-2xl font-semibold mb-4">{props.name}'s Bookshelf</h2>
+          <BookList books={books()} />
+        </div>
+        <div class="border-t dark:border-solid-darkitem p-4">
+          <AddBook setBooks={setBooks} />
+        </div>
+      </div>
+    </InteractiveExample>
   );
 }
 
@@ -36,14 +44,16 @@ export function BookList(props: IBookListProps) {
 
   return (
     <>
-      <h2 class="text-xl">My books ({totalBooks()})</h2>
-      <ul class="list-disc ml-5 mb-5">
+      <p class="font-semibold flex items-center gap-2">
+        My books <Dot number={totalBooks()} />
+      </p>
+      <ul class="list-disc pl-4 mt-2">
         <For each={props.books}>
           {(book) => {
             return (
               <li>
                 {book.title}{" "}
-                <span style={{ "font-style": "italic" }}>({book.author})</span>
+                <span class="italic text-neutral-400">({book.author})</span>
               </li>
             );
           }}

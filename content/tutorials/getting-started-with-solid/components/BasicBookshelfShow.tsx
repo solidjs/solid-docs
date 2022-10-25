@@ -1,4 +1,5 @@
 import { createSignal, For, JSX, Setter, Show } from "solid-js";
+import InteractiveExample from "~/components/configurable/interactiveExample";
 
 type Book = {
   title: string;
@@ -21,8 +22,8 @@ export function BasicBookshelfShow(props: IBookshelfProps) {
   const toggleForm = () => setShowForm(!showForm());
 
   return (
-    <div class="my-5 p-5 border-2">
-      <h1 class="text-2xl mb-3">{props.name}'s Bookshelf</h1>
+    <InteractiveExample>
+      <h2 class="text-2xl mb-3">{props.name}'s Bookshelf</h2>
       <BookList books={books()} />
       <Show
         when={showForm()}
@@ -43,7 +44,7 @@ export function BasicBookshelfShow(props: IBookshelfProps) {
           Finished adding books
         </button>
       </Show>
-    </div>
+    </InteractiveExample>
   );
 }
 

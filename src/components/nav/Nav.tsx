@@ -33,12 +33,13 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
       </div>
       {/* <div id="docsearch"></div> */}
       <div class="hidden md:block">
-        <NavPreferences id="desktop"/>
+        <NavPreferences id="desktop" />
       </div>
       <div
         classList={{
           hidden: !showMenu(),
-          "lg:block border-b md:border-none border-solid-lightitem dark:border-solid-darkitem pb-4": true,
+          "lg:block border-b md:border-none border-solid-lightitem dark:border-solid-darkitem pb-4":
+            true,
         }}
       >
         <Show when={props.docsMode === "regular"} fallback={<StartMenu />}>
@@ -49,7 +50,7 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
         <div id="docsearch" />
       </div> */}
       <div class="md:hidden">
-        <NavPreferences id="mobile"/>
+        <NavPreferences id="mobile" />
       </div>
     </div>
   );
@@ -106,7 +107,7 @@ function StartMenu() {
             <span class="font-bold mb-2 block">{section.header}</span>
             <ul>
               <For each={section.subsections}>
-                {(subsection:any) => (
+                {(subsection: any) => (
                   <>
                     <li class="px-2 my-1 py-0">
                       <NavLink
@@ -121,7 +122,7 @@ function StartMenu() {
                     <Show when={subsection.subsections?.length}>
                       <ul class="px-2">
                         <For each={subsection.subsections}>
-                          {(item:any) => (
+                          {(item: any) => (
                             <>
                               <li class="pl-4 my-1 py-0">
                                 <NavLink
@@ -162,9 +163,9 @@ function SectionsNavIterate(props: {
 }) {
   const location = useLocation();
 
-  createEffect(() => {
-    console.log(location.pathname);
-  });
+  // createEffect(() => {
+  //   console.log(location.pathname);
+  // });
 
   function isLeafPage(
     page: SECTION_PAGE | SECTION_LEAF_PAGE
@@ -181,7 +182,7 @@ function SectionsNavIterate(props: {
 
   return (
     <For each={props.pages}>
-      {(subsection) => (
+      {(subsection: SECTION_LEAF_PAGE | SECTION_PAGE) => (
         <>
           <Show when={isLeafPage(subsection)}>
             <NavItem
@@ -216,12 +217,19 @@ function SectionNav(props: { sections: SECTIONS }) {
     <ul class="flex flex-col gap-4">
       <For each={sectionNames}>
         {(name, i) => (
-          <li>
-            <h2 class="text-solid-dark dark:text-white font-bold text-xl">
-              {props.sections[name].name}
-            </h2>
-            <SectionsNavIterate pages={props.sections[name].pages} />
-          </li>
+          <>
+            <li>
+              <h2 class="pl-2 text-solid-dark dark:text-white font-bold text-xl">
+                {props.sections[name].name}
+              </h2>
+              <SectionsNavIterate pages={props.sections[name].pages} />
+            </li>
+            <Show when={i() !== sectionNames.length - 1}>
+              <li>
+                <hr class="w-full mb-2" />
+              </li>
+            </Show>
+          </>
         )}
       </For>
     </ul>

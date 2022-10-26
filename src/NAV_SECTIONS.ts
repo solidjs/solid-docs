@@ -81,6 +81,10 @@ export const GUIDES_SECTIONS: SECTIONS = {
     name: "Foundations",
     pages: [
       {
+        name:"Why Solid?",
+        link:"/foundations/why-solid"
+      },
+      {
         name: "Thinking Solid",
         link: "/foundations/thinking-solid",
       },

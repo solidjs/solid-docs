@@ -2,17 +2,43 @@ import { NavLink, useLocation } from "@solidjs/router";
 import { Show } from "solid-js";
 import { Title as MetaTitle } from "@solidjs/meta";
 import Footer from "./footer/Footer";
-import { getStartSection } from "./nav/Nav";
+import { getNextPrevPages, getStartSection } from "./nav/Nav";
 import Summary from "./nav/Summary";
+import { NextSection, PrevNextSection, PrevSection } from "./NextSection";
+import { createStore } from "solid-js/store";
+import {
+  GUIDES_SECTIONS,
+  REFERENCE_SECTIONS,
+  SECTION_LEAF_PAGE,
+} from "~/NAV_SECTIONS";
 
 export function Main(props) {
   const location = useLocation();
+  const [pages, setPages] = createStore(() => {
+    let prevPage: SECTION_LEAF_PAGE, nextPage: SECTION_LEAF_PAGE;
 
-  const nextStartSection = () => getStartSection(location.pathname);
+    if (location.pathname.startsWith("/references")) {
+      [prevPage, nextPage] = getNextPrevPages(
+        location.pathname,
+        REFERENCE_SECTIONS
+      );
+    } else if (location.pathname.startsWith("/guides")) {
+      [prevPage, nextPage] = getNextPrevPages(
+        location.pathname,
+        GUIDES_SECTIONS
+      );
+    } else {
+      return null;
+    }
+    return { prevPage, nextPage };
+  });
+
+  // const nextStartSection = () => getStartSection(location.pathname);
+
   return (
     <main class="flex flex-col md:flex-row items-start justify-between flex-grow">
       <div class="pt-4 md:pt-10 w-full lg:max-w-xs sticky z-50 top-0 md:hidden">
-        <Summary collapsed={true}/>
+        <Summary collapsed={true} />
       </div>
       <article class="min-w-0 w-full md:max-w-4xl lg:max-w-3xl mx-auto">
         <div class="flex justify-start">
@@ -24,13 +50,29 @@ export function Main(props) {
               <div class="w-full">{props.children}</div>
             </div>
             <div>
-              <Show when={!!nextStartSection()}>
+              {/* <Show when={!!nextStartSection()}>
                 <NavLink
                   class="hover:underline block mt-20 mb-10 text-center"
                   href={nextStartSection().link}
                 >
                   Next up: {nextStartSection().title} &raquo;
                 </NavLink>
+              </Show> */}
+              <Show when={pages() !== null}>
+                <PrevNextSection>
+                  <Show when={pages().prevPage?.link}>
+                    <PrevSection
+                      title={pages().prevPage.name}
+                      href={pages().prevPage.link}
+                    />
+                  </Show>
+                  <Show when={pages().nextPage?.link}>
+                    <NextSection
+                      title={pages().nextPage.name}
+                      href={pages().nextPage.link}
+                    />
+                  </Show>
+                </PrevNextSection>
               </Show>
               <Footer />
             </div>
@@ -38,7 +80,7 @@ export function Main(props) {
         </div>
       </article>
       <div class="pt-4 md:pt-10 w-full lg:max-w-xs sticky z-50 top-0 hidden md:block">
-        <Summary/>
+        <Summary />
       </div>
     </main>
   );

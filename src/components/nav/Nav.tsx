@@ -62,11 +62,11 @@ function TopMenu() {
       <nav class="scrolling-touch scrolling-gpu" style="--bg-opacity:0.2;">
         <Routes>
           <Route
-            path={["/concepts/**/*", "/api-reference/**/*"]}
+            path={"/references/**/*"}
             component={ReferenceNav}
           />
           <Route
-            path={["/tutorial/**/*", "/how-to-guides/**/*"]}
+            path={"/guides/**/*"}
             component={GuidesNav}
           />
           <Route path="/**/*" component={GuidesNav} />
@@ -96,6 +96,44 @@ export function getStartSection(pathname: string) {
     return undefined;
   }
   return allStartSections[current + 1];
+}
+
+export function getNextPrevPages(pathname: string, sections:SECTIONS) {
+  const allGuidesSections = getAllSections(sections);
+  let nextPrevPages:SECTION_LEAF_PAGE[] = []
+
+  const currentPageIndex = allGuidesSections.findIndex(v => v.link.startsWith(pathname))
+  const nextPage = allGuidesSections[currentPageIndex+1]
+  const prevPage = allGuidesSections[currentPageIndex-1]
+
+  nextPrevPages.push(...[prevPage, nextPage])
+
+  return nextPrevPages;
+}
+
+function getAllSections(
+  sections: SECTIONS | (SECTION_PAGE | SECTION_LEAF_PAGE)[]
+):SECTION_LEAF_PAGE[] {
+  let allSections:SECTION_LEAF_PAGE[] = [];
+
+  for (const section in sections) {
+    const doesSectionContainPages = sections[section].pages !== undefined;
+    if (doesSectionContainPages) {
+      for (const page of sections[section].pages) {
+        const doesPageContainInnerPages =
+          (page as SECTION_PAGE).pages !== undefined;
+        if (doesPageContainInnerPages) {
+          allSections.push(...getAllSections((page as SECTION_PAGE).pages));
+        } else {
+          allSections.push(page);
+        }
+      }
+    } else {
+      allSections.push(sections[section]);
+    }
+  }
+
+  return allSections;
 }
 
 function StartMenu() {

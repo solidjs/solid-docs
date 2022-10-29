@@ -24,8 +24,11 @@ export const REFERENCE_SECTIONS: SECTIONS = {
       {
         name: "Reactivity",
         pages: [
-          { name: "Reactivity Basics", link: "/concepts/reactivity" },
-          { name: "Tracking", link: "/concepts/tracking" },
+          {
+            name: "Reactivity Basics",
+            link: "/references/concepts/reactivity",
+          },
+          { name: "Tracking", link: "/references/concepts/tracking" },
         ],
       },
     ],
@@ -35,7 +38,7 @@ export const REFERENCE_SECTIONS: SECTIONS = {
     pages: [
       {
         name: "API Reference",
-        pages: [{ name: "Coming Soon", link: "/api-reference" }],
+        pages: [{ name: "Coming Soon", link: "/references/api-reference" }],
       },
     ],
   },
@@ -51,27 +54,27 @@ export const GUIDES_SECTIONS: SECTIONS = {
         pages: [
           {
             name: "Welcome",
-            link: "/tutorials/getting-started-with-solid/welcome",
+            link: "/guides/tutorials/getting-started-with-solid/welcome",
           },
           {
             name: "Installing Solid",
-            link: "/tutorials/getting-started-with-solid/installing-solid",
+            link: "/guides/tutorials/getting-started-with-solid/installing-solid",
           },
           {
             name: "Building UI with Components",
-            link: "/tutorials/getting-started-with-solid/building-ui-with-components",
+            link: "/guides/tutorials/getting-started-with-solid/building-ui-with-components",
           },
           {
             name: "Adding Interactivity with State",
-            link: "/tutorials/getting-started-with-solid/adding-interactivity-with-state",
+            link: "/guides/tutorials/getting-started-with-solid/adding-interactivity-with-state",
           },
           {
             name: "Control Flow",
-            link: "/tutorials/getting-started-with-solid/control-flow",
+            link: "/guides/tutorials/getting-started-with-solid/control-flow",
           },
           {
             name: "Fetching Data",
-            link: "/tutorials/getting-started-with-solid/fetching-data",
+            link: "/guides/tutorials/getting-started-with-solid/fetching-data",
           },
         ],
       },
@@ -81,20 +84,20 @@ export const GUIDES_SECTIONS: SECTIONS = {
     name: "Foundations",
     pages: [
       {
-        name:"Why Solid?",
-        link:"/foundations/why-solid"
+        name: "Why Solid?",
+        link: "/guides/foundations/why-solid",
       },
       {
         name: "Thinking Solid",
-        link: "/foundations/thinking-solid",
+        link: "/guides/foundations/thinking-solid",
       },
       {
         name: "JavaScript for Solid",
-        link: "/foundations/javascript-for-solid",
+        link: "/guides/foundations/javascript-for-solid",
       },
     ],
   },
-  howTos: {
+  "how-to-guides": {
     name: "How-To Guides",
     pages: [
       {
@@ -102,7 +105,11 @@ export const GUIDES_SECTIONS: SECTIONS = {
         pages: [
           {
             name: "Welcome",
-            link: "/how-to-guides/get-ready-for-solid/",
+            link: "/guides/how-to-guides/get-ready-for-solid/",
+          },
+          {
+            name: "Installation & Setup",
+            link: "/guides/how-to-guides/get-ready-for-solid/installation-and-setup",
           },
         ],
       },
@@ -111,7 +118,7 @@ export const GUIDES_SECTIONS: SECTIONS = {
         pages: [
           {
             name: "Vue",
-            link: "/how-to-guides/comparison/vue",
+            link: "/guides/how-to-guides/comparison/vue",
           },
         ],
       },

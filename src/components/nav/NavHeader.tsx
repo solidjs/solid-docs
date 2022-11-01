@@ -25,9 +25,9 @@ function ActiveLink(props) {
 const sections = [
   {
     title: "Guides",
-    href: "/tutorials/getting-started-with-solid/welcome",
+    href: "/",
   },
-  { title: "Reference", href: "/concepts/reactivity" },
+  { title: "Reference", href: "/references/concepts" },
 ];
 
 export const NavHeader = (props: {
@@ -98,18 +98,27 @@ export const NavHeader = (props: {
           }}
           class="w-full flex border border-solid-lightborder dark:border-solid-darkitem rounded-md"
         >
-          <For each={sections}>
-            {({ title, href }) => (
-              <ActiveLink
-                isActive={(loc) => loc.pathname.startsWith(href)}
-                activeClass="bg-solid-light dark:bg-solid-dark font-semibold"
-                class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0)"
-                href={href}
-              >
-                {title}
-              </ActiveLink>
-            )}
-          </For>
+          <ActiveLink
+            isActive={(loc: Location) =>
+              loc.pathname.startsWith(sections[0].href) &&
+              !loc.pathname.includes(sections[1].href)
+            }
+            activeClass="bg-solid-light dark:bg-solid-dark font-semibold"
+            class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0)"
+            href={sections[0].href}
+          >
+            {sections[0].title}
+          </ActiveLink>
+          <ActiveLink
+            isActive={(loc: Location) =>
+              loc.pathname.startsWith(sections[1].href)
+            }
+            activeClass="bg-solid-light dark:bg-solid-dark font-semibold"
+            class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0)"
+            href={sections[1].href}
+          >
+            {sections[1].title}
+          </ActiveLink>
         </div>
       </Show>
     </nav>

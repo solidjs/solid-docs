@@ -10,8 +10,8 @@ export function NavPreferences(props: {id: string}) {
     <div class="border border-solid-lightitem bg-solid-light dark:bg-solid-dark dark:border-solid-darkitem rounded-lg">
       <button
         onClick={() => setCollapsed((prev) => !prev)}
-        aria-expanded={!collapsed()}
         aria-controls="preferences"
+        type="button"
         class="flex items-center justify-between p-4 w-full cursor-pointer"
       >
         <div class="flex items-center gap-2 font-semibold">
@@ -27,7 +27,7 @@ export function NavPreferences(props: {id: string}) {
         />
       </button>
       <Show when={!collapsed()}>
-        <div class="p-4 border-t border-solid-lightitem dark:border-solid-darkitem">
+        <div aria-label="preferences" class="p-4 border-t border-solid-lightitem dark:border-solid-darkitem">
           <Preferences id={props.id} />
         </div>
       </Show>

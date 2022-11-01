@@ -18,7 +18,7 @@ export function Collapsible(props: CollapsibleProps) {
   const id = createUniqueId();
 
   return (
-    <li value={props.header} class="mt-2">
+    <li value={props.header} class="m-2">
       <SectionHeader
         collapsed={collapsed()}
         onClick={() => setCollapsed((prev) => !prev)}
@@ -45,8 +45,8 @@ export function SectionHeader(
       <button
         class="w-full text-solid-dark dark:text-solid-light text-left relative flex items-center justify-between py-2"
         onClick={props.onClick}
-        aria-expanded={!props.collapsed}
-        aria-controls={props.panelId}
+        // aria-expanded={!props.collapsed}
+        // aria-controls={props.panelId}
       >
         {props.children}
         <IconChevron

@@ -31,24 +31,26 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
           setShowMenu={setShowMenu}
         />
       </div>
+      {/* <div id="docsearch"></div> */}
       <div class="hidden md:block">
-        <NavPreferences id="desktop"/>
+        <NavPreferences id="desktop" />
       </div>
       <div
         classList={{
           hidden: !showMenu(),
-          "lg:block border-b md:border-none border-solid-lightitem dark:border-solid-darkitem pb-4": true,
+          "lg:block border-b md:border-none border-solid-lightitem dark:border-solid-darkitem pb-4":
+            true,
         }}
       >
         <Show when={props.docsMode === "regular"} fallback={<StartMenu />}>
           <TopMenu />
         </Show>
       </div>
-      <div class="my-2" classList={{ hidden: props.docsMode == "regular" }}>
+      {/* <div class="my-2" classList={{ hidden: props.docsMode == "regular" }}>
         <div id="docsearch" />
-      </div>
+      </div> */}
       <div class="md:hidden">
-        <NavPreferences id="mobile"/>
+        <NavPreferences id="mobile" />
       </div>
     </div>
   );
@@ -60,11 +62,11 @@ function TopMenu() {
       <nav class="scrolling-touch scrolling-gpu" style="--bg-opacity:0.2;">
         <Routes>
           <Route
-            path={["/concepts/**/*", "/api-reference/**/*"]}
+            path={"/references/**/*"}
             component={ReferenceNav}
           />
           <Route
-            path={["/tutorial/**/*", "/how-to-guides/**/*"]}
+            path={"/guides/**/*"}
             component={GuidesNav}
           />
           <Route path="/**/*" component={GuidesNav} />
@@ -96,6 +98,44 @@ export function getStartSection(pathname: string) {
   return allStartSections[current + 1];
 }
 
+export function getNextPrevPages(pathname: string, sections:SECTIONS) {
+  const allGuidesSections = getAllSections(sections);
+  let nextPrevPages:SECTION_LEAF_PAGE[] = []
+
+  const currentPageIndex = allGuidesSections.findIndex(v => v.link.startsWith(pathname))
+  const nextPage = allGuidesSections[currentPageIndex+1]
+  const prevPage = allGuidesSections[currentPageIndex-1]
+
+  nextPrevPages.push(...[prevPage, nextPage])
+
+  return nextPrevPages;
+}
+
+function getAllSections(
+  sections: SECTIONS | (SECTION_PAGE | SECTION_LEAF_PAGE)[]
+):SECTION_LEAF_PAGE[] {
+  let allSections:SECTION_LEAF_PAGE[] = [];
+
+  for (const section in sections) {
+    const doesSectionContainPages = sections[section].pages !== undefined;
+    if (doesSectionContainPages) {
+      for (const page of sections[section].pages) {
+        const doesPageContainInnerPages =
+          (page as SECTION_PAGE).pages !== undefined;
+        if (doesPageContainInnerPages) {
+          allSections.push(...getAllSections((page as SECTION_PAGE).pages));
+        } else {
+          allSections.push(page);
+        }
+      }
+    } else {
+      allSections.push(sections[section]);
+    }
+  }
+
+  return allSections;
+}
+
 function StartMenu() {
   return (
     <ul class="m-5 nav">
@@ -105,7 +145,7 @@ function StartMenu() {
             <span class="font-bold mb-2 block">{section.header}</span>
             <ul>
               <For each={section.subsections}>
-                {(subsection) => (
+                {(subsection: any) => (
                   <>
                     <li class="px-2 my-1 py-0">
                       <NavLink
@@ -120,7 +160,7 @@ function StartMenu() {
                     <Show when={subsection.subsections?.length}>
                       <ul class="px-2">
                         <For each={subsection.subsections}>
-                          {(item) => (
+                          {(item: any) => (
                             <>
                               <li class="pl-4 my-1 py-0">
                                 <NavLink
@@ -161,9 +201,9 @@ function SectionsNavIterate(props: {
 }) {
   const location = useLocation();
 
-  createEffect(() => {
-    console.log(location.pathname);
-  });
+  // createEffect(() => {
+  //   console.log(location.pathname);
+  // });
 
   function isLeafPage(
     page: SECTION_PAGE | SECTION_LEAF_PAGE
@@ -180,7 +220,7 @@ function SectionsNavIterate(props: {
 
   return (
     <For each={props.pages}>
-      {(subsection) => (
+      {(subsection: SECTION_LEAF_PAGE | SECTION_PAGE) => (
         <>
           <Show when={isLeafPage(subsection)}>
             <NavItem
@@ -215,12 +255,19 @@ function SectionNav(props: { sections: SECTIONS }) {
     <ul class="flex flex-col gap-4">
       <For each={sectionNames}>
         {(name, i) => (
-          <li>
-            <h2 class="text-solid-dark dark:text-white font-bold text-xl">
-              {props.sections[name].name}
-            </h2>
-            <SectionsNavIterate pages={props.sections[name].pages} />
-          </li>
+          <>
+            <li>
+              <h2 class="pl-2 text-solid-dark dark:text-white font-bold text-xl">
+                {props.sections[name].name}
+              </h2>
+              <SectionsNavIterate pages={props.sections[name].pages} />
+            </li>
+            <Show when={i() !== sectionNames.length - 1}>
+              <li>
+                <hr class="w-full mb-2" />
+              </li>
+            </Show>
+          </>
         )}
       </For>
     </ul>

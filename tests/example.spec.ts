@@ -8,5 +8,5 @@ test("basic test", async ({ page }) => {
     axeOptions: {},
     detailedReport: true,
     detailedReportOptions: { html: true },
-  });
+  }, true);
 });

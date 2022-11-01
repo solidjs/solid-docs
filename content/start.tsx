@@ -1,5 +1,9 @@
-import { Outlet } from "solid-start";
+import { onMount } from "solid-js";
+import { Navigate, Outlet } from "solid-start";
 
 export default () => {
-  return <Outlet />;
+  onMount(()=>{
+    window.location.replace('https://start.solidjs.com/')
+  })
+  return <Outlet/>;
 };

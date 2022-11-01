@@ -9,8 +9,11 @@ import { nodeTypes } from "@mdx-js/mdx";
 import remarkShikiTwoslash from "remark-shiki-twoslash";
 import rehypeSlug from "rehype-slug";
 import Icons from "unplugin-icons/vite";
+import colors from "windicss/colors";
+import remarkGfm from "remark-gfm";
 
 const adapter = process.env.GITHUB_ACTIONS ? node() : netlify();
+const colorScheme = colors.neutral;
 
 export default defineConfig({
   plugins: [
@@ -24,6 +27,7 @@ export default defineConfig({
         providerImportSource: "solid-mdx",
         rehypePlugins: [rehypeSlug, [rehypeRaw, { passThrough: nodeTypes }]],
         remarkPlugins: [
+          remarkGfm,
           [
             remarkShikiTwoslash.default,
             {
@@ -85,26 +89,28 @@ export default defineConfig({
               lg: "0px 0.8px 2px rgba(0,0,0,0.032),0px 2.7px 6.7px rgba(0,0,0,0.048),0px 12px 30px rgba(0,0,0,0.08)",
             },
             fontSize: {
-              sm: "0.75rem",
+              xs: "0.75rem",
+              sm: "0.875rem",
               base: "0.9rem",
               lg: "1rem",
               code: "calc(1em - 20%)",
             },
+            backgroundImage: {
+              darkgradient: `radial-gradient(87.08% 158.02% at 50% 12.92%, ${colorScheme["800"]} 0%, ${colorScheme["900"]} 100%)`,
+              lightgradient: `radial-gradient(87.08% 158.02% at 50% 12.92%, #FFFFFF 0%, ${colorScheme["100"]} 100%)`,
+            },
             colors: {
               solid: {
-                default: "#2c4f7c",
-                darkbg: "#222222",
-                darkLighterBg: "#444444",
-                darkdefault: "#b8d7ff", //'#87b1e6',
-                darkgray: "#252525",
-                gray: "#414042",
-                mediumgray: "#9d9d9d",
-                lightgray: "#f3f5f7",
-                dark: "#07254A",
-                medium: "#446b9e",
-                light: "#4f88c6",
-                accent: "#0cdc73",
-                secondaccent: "#0dfc85",
+                dark: colorScheme["900"],
+                darkbg: colorScheme["800"],
+                darkitem: colorScheme["700"],
+                darkaction: colorScheme["500"],
+                light: "#FFFFFF",
+                lightbg: colorScheme["100"],
+                lightitem: colorScheme["200"],
+                lightaction: colorScheme["400"],
+                accent: "#2c4f7c",
+                accentlight: "#85C4FF",
               },
             },
           },

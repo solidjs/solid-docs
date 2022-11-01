@@ -9,13 +9,16 @@ import { usePageState } from "~/components/context/PageStateContext";
 
 function Anchor(props: ParentProps<{ id: string }>) {
   return (
-    <a class="hover:underline" href={`#${props.id}`}>
+    <a
+      class="hover:underline text-solid-dark dark:text-solid-light decoration-solid-lightitem font-bold dark:decoration-solid-darkitem"
+      href={`#${props.id}`}
+    >
       {props.children}
     </a>
   );
 }
 
-const headerBold = "font-bold text-solid-default dark:text-solid-darkdefault ";
+const headerBold = "font-bold";
 
 export default {
   strong: (props) => <span class="font-bold">{props.children}</span>,
@@ -24,7 +27,7 @@ export default {
       {...props}
       class={
         headerBold +
-        "heading mt-10 mb-6 -mx-.5 break-words text-5xl leading-tight mdx-heading"
+        "heading mt-10 mb-6 -mx-.5 break-words text-4xl leading-tight mdx-heading"
       }
     >
       <MetaTitle>{props.children}</MetaTitle>
@@ -42,7 +45,8 @@ export default {
       <h2
         {...props}
         class={
-          headerBold + "heading text-3xl leading-10 mt-14 mb-6 mdx-heading"
+          headerBold +
+          "heading text-2xl leading-10 my-6 mdx-heading text-solid-accent dark:text-solid-accentlight"
         }
       >
         <Anchor id={props.id}>{props.children}</Anchor>
@@ -84,7 +88,8 @@ export default {
     return (
       <Link
         {...props}
-        class="dark:text-link-dark break-normal border-b border-solid-default border-opacity-0 hover:border-opacity-100 duration-100 ease-in transition font-semibold leading-normal"
+        class="dark:text-solid-accentlight break-normal text-solid-accent duration-100 ease-in transition font-semibold leading-normal transition hover:underline"
+        target="_blank"
       >
         {props.children}
       </Link>
@@ -96,7 +101,10 @@ export default {
     </li>
   ),
   ul: (props) => (
-    <ul {...props} class="list-disc pl-8 mb-2">
+    <ul
+      {...props}
+      class="list-disc marker:text-solid-accent marker:dark:text-solid-accentlight marker:text-2xl pl-8 mb-2"
+    >
       {props.children}
     </ul>
   ),
@@ -144,6 +152,19 @@ export default {
         {props.children}
       </pre>
     </>
+  ),
+  table: (props) => (
+    <table class="w-full max-w-full <sm:portrait:text-xs my-6 rounded-1xl dark:bg-[rgba(17,24,39,1)] shadow-lg text-left overflow-hidden">
+      {props.children}
+    </table>
+  ),
+  th: (props) => <th class="p-4 <sm:p-2">{props.children}</th>,
+  thead: (props) => (
+    <thead class="dark:border-blue-400 border-b-1">{props.children}</thead>
+  ),
+  td: (props) => <td class="p-4 <sm:p-2">{props.children}</td>,
+  tr: (props) => (
+    <tr class="dark:even-of-type:bg-[#23406e] light:even-of-type:bg-[#90C2E7]">{props.children}</tr>
   ),
   "data-lsp": (props) => {
     const id = createUniqueId();

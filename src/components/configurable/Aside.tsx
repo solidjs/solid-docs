@@ -5,7 +5,7 @@ import IconReact from "~icons/mdi/react";
 import IconVue from "~icons/mdi/vuejs";
 import IconAngular from "~icons/mdi/angular";
 import IconSvelte from "~icons/simple-icons/svelte";
-import IconBulb from "~icons/mdi/lightbulb";
+import IconBulb from "~icons/heroicons-solid/light-bulb";
 import IconBrain from "~icons/mdi/brain";
 import IconPencil from "~icons/mdi/lead-pencil";
 import IconAlertDecagram from "~icons/mdi/alert-decagram";
@@ -102,20 +102,18 @@ export const Aside = (props: ParentProps<AsideProps>) => {
       aria-live="polite"
       class={`${
         props.show === false ? "hidden" : ""
-      } flex aside p-5 rounded mt-10 mb-14${
+      } w-full flex aside p-4 rounded-lg my-4${
         preferDark() ? " text-black" : " text-white"
-      }${bgColor() ? "" : " bg-solid-medium dark:bg-darkdefault"} gap-2 ${
-        props.class ?? ""
-      }`}
+      }${bgColor() ? "" : " bg-solid-accent"} gap-2 ${props.class ?? ""}`}
       style={`${bgColor() ? `background-color: ${bgColor()}` : ""}`}
     >
-      <div class="my-1">{logo()}</div>
-      <div>
+      <div>{logo()}</div>
+      <div class="w-full">
         <Show when={!!title() && !props.collapsible}>
-          <h3 class="text-xl mt-1">{title()}</h3>
+          <h3 class="font-semibold mb-2">{title()}</h3>
         </Show>
         <Show when={!!title() && props.collapsible}>
-          <h3 class="text-xl mt-1">
+          <h3 class="font-semibold">
             <button
               aria-label={`Show expanded ${title()} content`}
               class="flex gap-3"

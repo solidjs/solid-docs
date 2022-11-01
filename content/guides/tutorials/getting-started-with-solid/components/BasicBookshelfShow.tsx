@@ -1,4 +1,5 @@
-import { createSignal, For, JSX, Setter } from "solid-js";
+import { createSignal, For, JSX, Setter, Show } from "solid-js";
+import InteractiveExample from "~/components/configurable/interactiveExample";
 
 type Book = {
   title: string;
@@ -8,22 +9,42 @@ type Book = {
 const initialBooks: Book[] = [
   { title: "Code Complete", author: "Steve McConnell" },
   { title: "The Hobbit", author: "J.R.R. Tolkien" },
-  { title: "Living a Feminist Life", author: "Sarah Ahmed" },
 ];
 
 interface IBookshelfProps {
   name: string;
 }
 
-export function BasicBookshelf(props: IBookshelfProps) {
+export function BasicBookshelfShow(props: IBookshelfProps) {
   const [books, setBooks] = createSignal(initialBooks);
+  const [showForm, setShowForm] = createSignal(false);
+
+  const toggleForm = () => setShowForm(!showForm());
 
   return (
-    <div class="my-5 p-5 border-2">
-      <h1 class="text-2xl mb-3">{props.name}'s Bookshelf</h1>
+    <InteractiveExample>
+      <h2 class="text-2xl mb-3">{props.name}'s Bookshelf</h2>
       <BookList books={books()} />
-      <AddBook setBooks={setBooks} />
-    </div>
+      <Show
+        when={showForm()}
+        fallback={
+          <button
+            class="px-3 py-2 rounded bg-solid-accent hover:bg-solid-accent/90 text-white"
+            onClick={toggleForm}
+          >
+            Add a book
+          </button>
+        }
+      >
+        <AddBook setBooks={setBooks} />
+        <button
+          class="px-3 py-2 rounded bg-solid-accent hover:bg-solid-accent/90 text-white mt-4"
+          onClick={toggleForm}
+        >
+          Finished adding books
+        </button>
+      </Show>
+    </InteractiveExample>
   );
 }
 
@@ -93,7 +114,7 @@ function AddBook(props: IAddBookProps) {
         />
       </div>
       <button
-        class="border-2 border-black px-2 py-1  rounded bg-blue-200"
+        class="px-2 py-1 rounded bg-solid-accent hover:bg-solid-accent/90"
         type="submit"
         onClick={addBook}
       >

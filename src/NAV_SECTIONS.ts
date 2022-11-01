@@ -111,6 +111,10 @@ export const GUIDES_SECTIONS: SECTIONS = {
             name: "Installation & Setup",
             link: "/guides/how-to-guides/get-ready-for-solid/installation-and-setup",
           },
+          {
+            name: "Linting",
+            link: "/guides/how-to-guides/get-ready-for-solid/linting"
+          }
         ],
       },
       {

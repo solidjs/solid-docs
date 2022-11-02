@@ -1,0 +1,49 @@
+<Title>Sass</Title>
+
+Sass is a superset of CSS that makes authoring CSS easier. Sass integrates with Solid as an builtin Vite plugin.
+
+## Install Sass
+
+```sh
+npm i --save-dev sass
+pnpm i --dev sass   # using pnpm
+yarn add --dev sass # using yarn
+```
+
+## Convert Filename Extensions
+
+Once installed, we simply need to change `.css` filename extensions to `.scss` or `.sass`. `.scss` filenames are a strict superset of CSS. `.sass` filenames are an alternate syntax for authoring Sasss that is syntatically more relaxed. Generally, `.scss` is recommended but Vite supports both.
+
+To get started, simply convert `.css` filenames to `.scss` or `.sass` and import them:
+
+```diff
+// Card.scss
+.grid {
+  display: grid;
++  &.center { place-items: center; }
+}
+.screen { min-height: 100vh; }
+
+.card {
+  height: 160px;
+  aspect-ratio: 2;
+  border-radius: 16px;
+  background-color: white;
+  box-shadow: 0 0 0 4px hsl(0 0% 0% / 15%);
+}
+```
+
+```diff
+// Card.jsx
++ import "./card.scss"
+
+function Card() {
+  return (<>
+    <div class="grid grid-center screen">
+      <div class="card">Hello, world!</div>
+    </div>
+  </>);
+}
+```
+
+When we changed `.css` to `.scss` or `.sass`, Vite automatically recognized the these filenames and compiled Sass to CSS on demand. When building for production, all Sass files are converted to CSS and thus can be interpreted by the browser.

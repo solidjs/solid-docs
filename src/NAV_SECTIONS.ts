@@ -113,8 +113,41 @@ export const GUIDES_SECTIONS: SECTIONS = {
           },
           {
             name: "Linting",
-            link: "/guides/how-to-guides/get-ready-for-solid/linting"
-          }
+            link: "/guides/how-to-guides/get-ready-for-solid/linting",
+          },
+        ],
+      },
+      {
+        name: "Styling In Solid",
+        pages: [
+          {
+            name: "Introduction",
+            link: "/guides/how-to-guides/styling-in-solid",
+          },
+          {
+            name: "CSS Modules",
+            link: "/guides/how-to-guides/styling-in-solid/css-modules",
+          },
+          {
+            name: "Sass",
+            link: "/guides/how-to-guides/styling-in-solid/sass",
+          },
+          {
+            name: "Less",
+            link: "/guides/how-to-guides/styling-in-solid/less",
+          },
+          {
+            name: "Tailwind CSS",
+            link: "/guides/how-to-guides/styling-in-solid/tailwind-css",
+          },
+          {
+            name: "UnoCSS",
+            link: "/guides/how-to-guides/styling-in-solid/unocss",
+          },
+          {
+            name: "WindiCSS",
+            link: "/guides/how-to-guides/styling-in-solid/windicss",
+          },
         ],
       },
       {

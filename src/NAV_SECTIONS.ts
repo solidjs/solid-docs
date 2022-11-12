@@ -112,6 +112,10 @@ export const GUIDES_SECTIONS: SECTIONS = {
             link: "/guides/how-to-guides/get-ready-for-solid/installation-and-setup",
           },
           {
+            name: "Typescript",
+            link: "/guides/how-to-guides/get-ready-for-solid/typescript"
+          },
+          {
             name: "Linting",
             link: "/guides/how-to-guides/get-ready-for-solid/linting",
           },

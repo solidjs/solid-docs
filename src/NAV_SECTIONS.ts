@@ -95,6 +95,10 @@ export const GUIDES_SECTIONS: SECTIONS = {
         name: "JavaScript for Solid",
         link: "/guides/foundations/javascript-for-solid",
       },
+          {
+            name: "Typescript for Solid",
+            link: "/guides/foundations/typescript-for-solid"
+          },
     ],
   },
   "how-to-guides": {
@@ -110,10 +114,6 @@ export const GUIDES_SECTIONS: SECTIONS = {
           {
             name: "Installation & Setup",
             link: "/guides/how-to-guides/get-ready-for-solid/installation-and-setup",
-          },
-          {
-            name: "Typescript",
-            link: "/guides/how-to-guides/get-ready-for-solid/typescript"
           },
           {
             name: "Linting",

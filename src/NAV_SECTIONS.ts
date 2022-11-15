@@ -95,6 +95,10 @@ export const GUIDES_SECTIONS: SECTIONS = {
         name: "JavaScript for Solid",
         link: "/guides/foundations/javascript-for-solid",
       },
+          {
+            name: "Typescript for Solid",
+            link: "/guides/foundations/typescript-for-solid"
+          },
     ],
   },
   "how-to-guides": {

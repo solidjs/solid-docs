@@ -164,6 +164,10 @@ export const GUIDES_SECTIONS: SECTIONS = {
           {
             name: "Deploying To Vercel", 
             link: "/guides/how-to-guides/deployment/deploying-to-vercel"
+          },
+          {
+            name: "Deploying To Netlify",
+            link: "/guides/how-to-guides/deployment/deploying-to-netlify"
           }
         ]
       },

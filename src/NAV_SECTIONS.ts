@@ -155,6 +155,19 @@ export const GUIDES_SECTIONS: SECTIONS = {
         ],
       },
       {
+        name: "Deployment",
+        pages: [
+          {
+            name: "Introduction",
+            link: "/guides/how-to-guides/deployment/"
+          },
+          {
+            name: "Deploying To Vercel", 
+            link: "/guides/how-to-guides/deployment/deploying-to-vercel"
+          }
+        ]
+      },
+      {
         name: "Comparison",
         pages: [
           {

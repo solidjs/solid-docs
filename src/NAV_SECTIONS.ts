@@ -168,6 +168,14 @@ export const GUIDES_SECTIONS: SECTIONS = {
           {
             name: "Deploying To Netlify",
             link: "/guides/how-to-guides/deployment/deploying-to-netlify"
+          },
+          {
+            name: "Deploying To Firebase",
+            link: "/guides/how-to-guides/deployment/deploying-to-firebase"
+          },
+          {
+            name:"Deploying To Cloudflare",
+            link: "/guides/how-to-guides/deployment/deploying-to-cloudflare"
           }
         ]
       },

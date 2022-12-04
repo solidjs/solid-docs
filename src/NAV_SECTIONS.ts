@@ -176,6 +176,10 @@ export const GUIDES_SECTIONS: SECTIONS = {
           {
             name:"Deploying To Cloudflare",
             link: "/guides/how-to-guides/deployment/deploying-to-cloudflare"
+          },
+          {
+            name:"Deploying To Railway",
+            link: "/guides/how-to-guides/deployment/deploying-to-railway"
           }
         ]
       },

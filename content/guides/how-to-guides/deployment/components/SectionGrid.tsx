@@ -1,5 +1,5 @@
 import { GUIDES_SECTIONS } from "~/NAV_SECTIONS";
-import SectionsGrid from '~/components/sectionsGrid/'
+import SectionsGrid from '~/components/sectionsgrid/'
 
 const subSections = GUIDES_SECTIONS['how-to-guides'].pages.filter(v => v.name === "Deployment")[0]['pages'].filter(v => v.name !== "Introduction")
 

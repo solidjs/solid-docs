@@ -155,6 +155,35 @@ export const GUIDES_SECTIONS: SECTIONS = {
         ],
       },
       {
+        name: "Deployment",
+        pages: [
+          {
+            name: "Introduction",
+            link: "/guides/how-to-guides/deployment/"
+          },
+          {
+            name: "Deploying To Vercel", 
+            link: "/guides/how-to-guides/deployment/deploying-to-vercel"
+          },
+          {
+            name: "Deploying To Netlify",
+            link: "/guides/how-to-guides/deployment/deploying-to-netlify"
+          },
+          {
+            name: "Deploying To Firebase",
+            link: "/guides/how-to-guides/deployment/deploying-to-firebase"
+          },
+          {
+            name:"Deploying To Cloudflare",
+            link: "/guides/how-to-guides/deployment/deploying-to-cloudflare"
+          },
+          {
+            name:"Deploying To Railway",
+            link: "/guides/how-to-guides/deployment/deploying-to-railway"
+          }
+        ]
+      },
+      {
         name: "Comparison",
         pages: [
           {

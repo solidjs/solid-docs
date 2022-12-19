@@ -95,29 +95,15 @@ export const GUIDES_SECTIONS: SECTIONS = {
         name: "JavaScript for Solid",
         link: "/guides/foundations/javascript-for-solid",
       },
-          {
-            name: "Typescript for Solid",
-            link: "/guides/foundations/typescript-for-solid"
-          },
+      {
+        name: "Typescript for Solid",
+        link: "/guides/foundations/typescript-for-solid",
+      },
     ],
   },
   "how-to-guides": {
     name: "How-To Guides",
     pages: [
-      {
-        name: "Comparison",
-        pages: [
-          {
-            name: "Welcome",
-            link: "/how-to-guides/comparison/",
-          },
-          {
-            name: "React",
-            link: "/how-to-guides/comparison/react",
-          },
-        ],
-      },
-
       {
         name: "Get Ready for Solid",
         pages: [
@@ -173,33 +159,37 @@ export const GUIDES_SECTIONS: SECTIONS = {
         pages: [
           {
             name: "Introduction",
-            link: "/guides/how-to-guides/deployment/"
+            link: "/guides/how-to-guides/deployment/",
           },
           {
-            name: "Deploying To Vercel", 
-            link: "/guides/how-to-guides/deployment/deploying-to-vercel"
+            name: "Deploying To Vercel",
+            link: "/guides/how-to-guides/deployment/deploying-to-vercel",
           },
           {
             name: "Deploying To Netlify",
-            link: "/guides/how-to-guides/deployment/deploying-to-netlify"
+            link: "/guides/how-to-guides/deployment/deploying-to-netlify",
           },
           {
             name: "Deploying To Firebase",
-            link: "/guides/how-to-guides/deployment/deploying-to-firebase"
+            link: "/guides/how-to-guides/deployment/deploying-to-firebase",
           },
           {
-            name:"Deploying To Cloudflare",
-            link: "/guides/how-to-guides/deployment/deploying-to-cloudflare"
+            name: "Deploying To Cloudflare",
+            link: "/guides/how-to-guides/deployment/deploying-to-cloudflare",
           },
           {
-            name:"Deploying To Railway",
-            link: "/guides/how-to-guides/deployment/deploying-to-railway"
-          }
-        ]
+            name: "Deploying To Railway",
+            link: "/guides/how-to-guides/deployment/deploying-to-railway",
+          },
+        ],
       },
       {
         name: "Comparison",
         pages: [
+          {
+            name: "React",
+            link: "/guides/how-to-guides/comparison/react",
+          },
           {
             name: "Vue",
             link: "/guides/how-to-guides/comparison/vue",

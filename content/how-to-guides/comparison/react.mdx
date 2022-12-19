@@ -211,4 +211,165 @@ const App = () => {
 
 Usually the way to iterate through lists in React is the following
 
-### React
+```jsx
+import { useState } from "react";
+
+const App = () => {
+  const [todos] = useState([
+    { id: "1", name: "Learn Solid.js" },
+    { id: "2", name: "Learn Solid Start" },
+  ]);
+
+  return (
+    <>
+      <h1>TO-DO</h1>
+      <ul>
+        {todos.map((todo) => (
+          <li key={todo.id}>{todo.name}</li>
+        ))}
+      </ul>
+    </>
+  );
+};
+```
+
+While this will also work on Solid, the idiomatic way to render lists is by using `<For>` component
+
+```jsx
+import { createSignal, For } from "solid-js";
+
+const App = () => {
+  const [todos] = createSignal([
+    { id: "1", name: "Learn Solid.js" },
+    { id: "2", name: "Learn Solid Start" },
+  ]);
+
+  return (
+    <>
+      <h1>TO-DO</h1>
+      <ul>
+        <For each={todos()}>{(todo) => <li>{todo.name}</li>}</For>
+      </ul>
+    </>
+  );
+};
+```
+
+One benefit of the component is that rendered items are keyed by default, so we can forget about doing it ourselves.
+
+Keys by default, allow granular updates as Solid will only apply updates to specific items in the list rather than recreating the list on every update.
+
+## Props destructuring
+
+Prop destructuring is a common thing to do in React. If we were to click the "Add Todo" button on the code below, React would re-render the `<App>` component and all of its children, thus displaying the new value on the DOM.
+
+```jsx
+// This will update the DOM with the new todo
+import { useState } from "react";
+
+const Todos = ({ todos }) => {
+  return (
+    <ul>
+      {todos.map((todo) => (
+        <li key={todo.id}>{todo.name}</li>
+      ))}
+    </ul>
+  );
+};
+
+const App = () => {
+  const [todos, setTodos] = useState([
+    { id: "1", name: "Learn Solid.js" },
+    { id: "2", name: "Learn Solid Start" },
+  ]);
+  return (
+    <>
+      <h1>TO-DO</h1>
+      <Todos todos={todos} />
+      <button
+        onClick={() =>
+          setTodos((prev) => [...prev, { id: "3", name: "Learn Qwik" }])
+        }
+      >
+        Add Todo
+      </button>
+    </>
+  );
+};
+```
+
+Having similar code for Solid, and destructuring props on `<Todos>` component, will fail to update the DOM.
+
+```jsx
+// This won't update the DOM with the new todo
+import { createSignal, For } from "solid-js";
+
+const Todos = ({ todos }) => {
+  return (
+    <ul>
+      <For each={todos}>{(todo) => <li>{todo.name}</li>}</For>
+    </ul>
+  );
+};
+
+const App = () => {
+  const [todos, setTodos] = createSignal([
+    { id: "1", name: "Learn Solid.js" },
+    { id: "2", name: "Learn Solid Start" },
+  ]);
+
+  return (
+    <>
+      <h1>TO-DO</h1>
+      <Todos todos={todos()} />
+      <button
+        onClick={() =>
+          setTodos((prev) => [...prev, { id: "3", name: "Learn Qwik" }])
+        }
+      >
+        Add Todo
+      </button>
+    </>
+  );
+};
+```
+
+The reason for this, again, is that Solid has an opt-in reactive model. This means that anything that's not inside a tracking scope
+(Solid primitives and JSX) won't trigger an update.
+
+In our code above, by destructuring the props we are accessing them in an un-tracked scope. To "fix" this we would have to access our props in a tracked scope,
+in this case inside JSX
+
+```jsx
+// This will updated the DOM with the new todo
+import { createSignal, For } from "solid-js";
+
+const Todos = (props) => {
+  return (
+    <ul>
+      <For each={props.todos}>{(todo) => <li>{todo.name}</li>}</For>
+    </ul>
+  );
+};
+
+const App = () => {
+  const [todos, setTodos] = createSignal([
+    { id: "1", name: "Learn Solid.js" },
+    { id: "2", name: "Learn Solid Start" },
+  ]);
+
+  return (
+    <>
+      <h1>TO-DO</h1>
+      <Todos todos={todos()} />
+      <button
+        onClick={() =>
+          setTodos((prev) => [...prev, { id: "3", name: "Learn Qwik" }])
+        }
+      >
+        Add Todo
+      </button>
+    </>
+  );
+};
+```

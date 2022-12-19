@@ -15,11 +15,12 @@ export const Contributors = () => {
       <ErrorBoundary fallback={<>Error loading contributors!</>}>
         <Suspense fallback={<>Loading contributors...</>}>
           <Show when={!!contributors()}>
+            <div class="flex flex-wrap gap-3">
             <For each={contributors()}>
               {(contributor) => (
                 <a
                   href={contributor.html_url}
-                  class="hover:opacity-70 ease-in duration-200"
+                  class="hover:opacity-70 ease-in max-w-8 duration-200"
                 >
                   <img
                     alt={`GitHub user ${contributor.login}`}
@@ -28,7 +29,7 @@ export const Contributors = () => {
                   />
                 </a>
               )}
-            </For>
+            </For></div>
           </Show>
         </Suspense>
       </ErrorBoundary>

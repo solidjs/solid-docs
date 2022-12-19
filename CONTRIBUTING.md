@@ -70,21 +70,22 @@ Our site is build on [SolidStart](https://github.com/solidjs/solid-start). This 
 ### Folder structure
 
 We have two folders of note: **content** and **src**. **content** contains all of the pages and page-specific components. This includes the four content folders corresponding to our [four content types](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md#content-types):
-  - `content/tutorials`
-  - `content/how-to-guides`
-  - `content/concepts`
-  - `content/api-reference` (not being worked on currently, as we have the [existing API reference](https://www.solidjs.com/docs/latest/api))
+  - `content/guides/tutorials`
+  - `content/guides/how-to-guides`
+  - `content/guides/foundations`
+  - `content/references/concepts`
+  - `content/references/api-reference` (not being worked on currently, as we have the [existing API reference](https://www.solidjs.com/docs/latest/api))
 
 
 In **src**, we have the SolidStart entry files, the root component, and the `md.tsx` component which maps markdown syntax to elements. Of note:
   - `src/components`: General components, like the sidebar navigation, footer, and Asides.
   - `src/NAV_SECTIONS.ts`: This file determines the two sidebar navigation sections, **Guides** and **Reference**. **Guides** contains Tutorials and How-To Guides, and **Reference** contains Concept pages and API reference.
 
-Every content page must have its own folder, even if it only has one page. For example, the Tracking concept page is one page, so it is found in an `index.md` file inside `content/concepts/tracking`. The Getting Started with Solid tutorial has several pages, which are found inside `content/tutorials/getting-started-with-solid`.
+Every content page must have its own folder, even if it only has one page. For example, the Tracking concept page is one page, so it is found in an `index.md` file inside `content/references/concepts/tracking`. The Getting Started with Solid tutorial has several pages, which are found inside `content/guides/tutorials/getting-started-with-solid`.
 
-These folders will automatically generate routes; so, `content/tutorials/getting-started-with-solid/installing-solid` will be shown at `https://docs.solidjs.com/tutorials/getting-started-with-solid/installing-solid`.
+These folders will automatically generate routes; so, `content/guides/tutorials/getting-started-with-solid/installing-solid` will be shown at `https://docs.solidjs.com/guides/tutorials/getting-started-with-solid/installing-solid`.
 
-If a content page has its own custom components and code snippets, place these inside its content folder. See [the Getting Started with Solid folder](https://github.com/solidjs/solid-docs-next/tree/main/src/content/tutorials/getting-started-with-solid) for an example.
+If a content page has its own custom components and code snippets, place these inside its content folder. See [the Getting Started with Solid folder](https://github.com/solidjs/solid-docs-next/tree/main/src/content/guides/tutorials/getting-started-with-solid) for an example.
 
 > **Warning** There is also `start` folder in `content/routes`; it is a heavy work-in-progress managed by the SolidStart team and does not yet follow our Writing guide.
 

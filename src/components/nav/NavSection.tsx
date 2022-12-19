@@ -1,14 +1,7 @@
-import { NavLink, useLocation } from "@solidjs/router";
+import { NavLink } from "@solidjs/router";
+import IconChevron from "~icons/heroicons-outline/chevron-right";
 
-import { usePageState } from "../context/PageStateContext";
-import {
-  For,
-  Show,
-  createSignal,
-  ParentProps,
-  createUniqueId,
-  createEffect,
-} from "solid-js";
+import { Show, createSignal, ParentProps, createUniqueId } from "solid-js";
 
 export function CollapsedIcon(props) {
   return <div class={"duration-100 ease-in transition" + props.class}>▼</div>;
@@ -25,7 +18,7 @@ export function Collapsible(props: CollapsibleProps) {
   const id = createUniqueId();
 
   return (
-    <li value={props.header} class="mt-2">
+    <li value={props.header} class="m-2">
       <SectionHeader
         collapsed={collapsed()}
         onClick={() => setCollapsed((prev) => !prev)}
@@ -50,19 +43,17 @@ export function SectionHeader(
   return (
     <h3>
       <button
-        class="p-2 pr-2 w-full h-full text-solid-dark dark:text-white rounded-none lg:rounded-r-lg text-left relative flex items-center justify-between pl-5 text-base font-bold"
+        class="w-full text-solid-dark dark:text-solid-light text-left relative flex items-center justify-between py-2"
         onClick={props.onClick}
-        aria-expanded={!props.collapsed}
-        aria-controls={props.panelId}
+        // aria-expanded={!props.collapsed}
+        // aria-controls={props.panelId}
       >
         {props.children}
-        <span class={`pr-1`}>
-          <CollapsedIcon
-            class={`flex-0 transform ${
-              props.collapsed ? "-rotate-90 -translate-y-px" : "rotate-0"
-            }`}
-          />
-        </span>
+        <IconChevron
+          class={`transition w-6 h-6 text-solid-lightaction dark:text-solid-darkaction transform ${
+            !props.collapsed ? "rotate-90" : ""
+          }`}
+        />
       </button>
     </h3>
   );
@@ -72,7 +63,7 @@ function SectionPanel(props: ParentProps<{ id: string }>) {
   return (
     <ul
       id={props.id}
-      class="opacity-100"
+      class="opacity-100 md:border-l border-solid-lightitem dark:border-solid-darkitem"
       style="list-none transition: opacity 250ms ease-in-out 0s; animation: 250ms ease-in-out 0s 1 normal none running nav-fadein;"
     >
       {props.children}
@@ -81,40 +72,17 @@ function SectionPanel(props: ParentProps<{ id: string }>) {
 }
 
 export function NavItem(props) {
-  const isActive = () => {
-    return props.href === useLocation().pathname;
-  };
-
-  // createEffect ( () => {
-  //   console.log( {href: props.href, path: useLocation().pathname });
-  // });
-
-  const { sections } = usePageState();
-
   return (
-    <li class="">
+    <li>
       <NavLink
-        class="font-semibold text-base p-2 pl-5 w-full rounded-none lg:rounded-r-lg text-left relative flex items-center justify-between"
+        class="p-2 text-base w-full rounded-lg md:(rounded-r-xl rounded-l-none) text-left relative flex items-center justify-between transition"
         {...props}
-        inactiveClass="hover:text-solid-light hover:dark:text-solid-darkdefault"
-        activeClass="text-white bg-solid-light dark:bg-solid-light border-blue-40 active"
+        inactiveClass="hover:bg-solid-light hover:dark:bg-solid-darkbg"
+        activeClass="text-white font-semibold bg-solid-accent active"
         end={true}
       >
         {props.children}
       </NavLink>
-      <Show when={isActive()}>
-        <div class="ml-4">
-          <ol class="pl-5 mt-2 list-decimal space-y-1">
-            <For each={sections()}>
-              {(item) => (
-                <li class="text-base">
-                  <a href={"#" + item.href}>{item.title}</a>
-                </li>
-              )}
-            </For>
-          </ol>
-        </div>
-      </Show>
     </li>
   );
 }

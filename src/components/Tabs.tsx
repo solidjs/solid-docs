@@ -29,7 +29,7 @@ export const CodeTabs = (props: CodeTabsProps) => {
   const selectedFile = () => selectedTabSet()[selectedIndex()];
 
   return (
-    <div class="my-10">
+    <div class="my-10 w-full">
       <nav aria-label="Code example files" class="flex justify-between">
         <div>
           <For each={selectedTabSet()}>

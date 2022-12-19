@@ -12,7 +12,7 @@ function ActiveLink(props) {
     <a
       href={props.href}
       classList={{
-        [props.className]: true,
+        [props.class]: true,
         [props.activeClass]: props.isActive(location),
         [props.inactiveClass]: !props.isActive(location),
       }}
@@ -25,9 +25,9 @@ function ActiveLink(props) {
 const sections = [
   {
     title: "Guides",
-    href: "/tutorials/getting-started-with-solid/welcome",
+    href: "/",
   },
-  { title: "Reference", href: "/concepts/reactivity" },
+  { title: "Reference", href: "/references/concepts" },
 ];
 
 export const NavHeader = (props: {
@@ -40,9 +40,9 @@ export const NavHeader = (props: {
   return (
     <nav
       aria-label="Docs header"
-      class="bg-white dark:bg-solid-darkbg sticky top-0 items-center w-full px-5 pt-8 pb-4 z-1"
+      class="sticky top-0 pt-8 items-center w-full z-1 flex flex-col gap-4"
     >
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between w-full">
         <NavLink
           href={props.docsMode === "start" ? "/start" : "/"}
           end={true}
@@ -54,11 +54,10 @@ export const NavHeader = (props: {
           </span>
           <span>Docs</span>
         </NavLink>
-        <div class="flex gap-3">
+        <div class="flex items-center gap-3">
           <button
             type="button"
             aria-label={`Use ${config.mode === "dark" ? "light" : "dark"} mode`}
-            class="flex items-center justify-center w-10 h-10 transform -translate-y-1"
             onClick={() => {
               setConfig((c) => ({
                 ...c,
@@ -66,21 +65,17 @@ export const NavHeader = (props: {
               }));
             }}
           >
-            {/* <Icon
-              class="w-full h-full"
-              path={config().mode === "dark" ? sun : moon}
-            /> */}
             <Show
               when={config.mode === "dark"}
-              fallback={<IconMoon class="w-full h-full"></IconMoon>}
+              fallback={<IconMoon class="w-6 h-6"></IconMoon>}
             >
-              <IconSun class="w-full h-full"></IconSun>
+              <IconSun class="w-6 h-6"></IconSun>
             </Show>
           </button>
           <button
             type="button"
             aria-label={`${props.showMenu ? "Hide" : "Show"} navigation menu`}
-            class="lg:hidden flex items-center justify-center w-10 h-10 transform -translate-y-1"
+            class="lg:hidden flex items-center justify-center w-8 h-8 transform"
             onClick={() => {
               props.setShowMenu((m) => !m);
             }}
@@ -97,26 +92,33 @@ export const NavHeader = (props: {
 
       <Show when={props.docsMode === "regular"}>
         <div
-          class="px-0 pt-2 w-full 2xl:max-w-xs items-center self-center border-b-0 lg:border-b border-border dark:border-border-dark"
           classList={{
             hidden: !props.showMenu,
             "lg:flex": true,
           }}
+          class="w-full flex border border-solid-lightborder dark:border-solid-darkitem rounded-md"
         >
-          <div class="w-full grid grid-cols-2">
-            <For each={sections}>
-              {({ title, href }) => (
-                <ActiveLink
-                  isActive={(loc) => loc.pathname.startsWith(href)}
-                  activeClass="border-solid-default dark:border-solid-darkdefault font-bold"
-                  class="border-transparent inline-flex w-full items-center border-2 rounded justify-center text-base leading-9 px-3 py-0.5 hover:text-link dark:hover:text-link-dark whitespace-nowrap"
-                  href={href}
-                >
-                  {title}
-                </ActiveLink>
-              )}
-            </For>
-          </div>
+          <ActiveLink
+            isActive={(loc: Location) =>
+              loc.pathname.startsWith(sections[0].href) &&
+              !loc.pathname.includes(sections[1].href)
+            }
+            activeClass="bg-solid-light dark:bg-solid-dark font-semibold"
+            class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0)"
+            href={sections[0].href}
+          >
+            {sections[0].title}
+          </ActiveLink>
+          <ActiveLink
+            isActive={(loc: Location) =>
+              loc.pathname.startsWith(sections[1].href)
+            }
+            activeClass="bg-solid-light dark:bg-solid-dark font-semibold"
+            class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0)"
+            href={sections[1].href}
+          >
+            {sections[1].title}
+          </ActiveLink>
         </div>
       </Show>
     </nav>

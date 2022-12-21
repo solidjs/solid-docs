@@ -45,41 +45,6 @@ export const REFERENCE_SECTIONS: SECTIONS = {
 };
 
 export const GUIDES_SECTIONS: SECTIONS = {
-  tutorials: {
-    name: "Tutorials",
-    pages: [
-      {
-        name: "Getting Started with Solid",
-        // navigating to /guides/getting-started-with-solid takes you to /guides/getting-started-with-solid/welcome
-        pages: [
-          {
-            name: "Welcome",
-            link: "/guides/tutorials/getting-started-with-solid/welcome",
-          },
-          {
-            name: "Installing Solid",
-            link: "/guides/tutorials/getting-started-with-solid/installing-solid",
-          },
-          {
-            name: "Building UI with Components",
-            link: "/guides/tutorials/getting-started-with-solid/building-ui-with-components",
-          },
-          {
-            name: "Adding Interactivity with State",
-            link: "/guides/tutorials/getting-started-with-solid/adding-interactivity-with-state",
-          },
-          {
-            name: "Control Flow",
-            link: "/guides/tutorials/getting-started-with-solid/control-flow",
-          },
-          {
-            name: "Fetching Data",
-            link: "/guides/tutorials/getting-started-with-solid/fetching-data",
-          },
-        ],
-      },
-    ],
-  },
   foundations: {
     name: "Foundations",
     pages: [
@@ -197,5 +162,44 @@ export const GUIDES_SECTIONS: SECTIONS = {
         ],
       },
     ],
+  },
+  tutorials: {
+    name: "Tutorials",
+    pages: [
+      {
+        name: "Getting Started with Solid",
+        // navigating to /guides/getting-started-with-solid takes you to /guides/getting-started-with-solid/welcome
+        pages: [
+          {
+            name: "Welcome",
+            link: "/guides/tutorials/getting-started-with-solid/welcome",
+          },
+          {
+            name: "Installing Solid",
+            link: "/guides/tutorials/getting-started-with-solid/installing-solid",
+          },
+          {
+            name: "Building UI with Components",
+            link: "/guides/tutorials/getting-started-with-solid/building-ui-with-components",
+          },
+          {
+            name: "Adding Interactivity with State",
+            link: "/guides/tutorials/getting-started-with-solid/adding-interactivity-with-state",
+          },
+          {
+            name: "Control Flow",
+            link: "/guides/tutorials/getting-started-with-solid/control-flow",
+          },
+          {
+            name: "Fetching Data",
+            link: "/guides/tutorials/getting-started-with-solid/fetching-data",
+          },
+        ],
+      },
+    ],
+  },
+  "troubleshooting&faq": {
+    name: "Troubleshooting & FAQ",
+    pages: []
   },
 };

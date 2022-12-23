@@ -1,0 +1,156 @@
+<Title>Solid Primitives and Components</Title>
+
+This page will be explaining what you need to know to get started with using Solid.js primitives and making your own components. 
+
+## Solid Primitives
+
+First let's start with Solid.js primitves. What are primitives? Primitives are the simplest elements, functions or data types available in any programming language, framework or library. In Solid.js, primitives are the building blocks that will be responsible for governing reactivity within your Solid.js app. Here's a list of Solid.js primitives:
+
+* `createSignal`
+* `createEffect`
+* `createMemo`
+* `createRoot`
+* `createRenderEffect`
+* `createDeferred`
+* `createResource`
+* `createComputed`
+* `createContext`
+* `createMutable`
+* `createStore`
+
+**Note:** Solid primitives can be used in any scope, they are not required to be used within a component. Solid components do not own their state because they are just setup functions that have nothing to do with the reactivity system after set up.
+
+On this page, we will be focusing on the most used primitives, `createSignal`, `createMemo`, `createEffect`, `createRoot` and `createResource`. To have a more in depth understanding of all the primitives Solid.js has, check out the [concepts page](/references/concepts).
+
+## `createSignal`
+
+`createSignal` is the most used primitive in Solid.js. It is used to create a reactive state variable. It takes an optional initial value and returns a tuple with the getter function to get the current value and a setter function to set the value. The setter function is used to update the value of the state variable. 
+
+`createSignal` can be used to store almost any type of data type, including objects and arrays. However, in Solid it is advisable to use the `createStore` primitive to store objects and arrays. This is because `createStore` is optimized to handle cases of nested reactivity. More on this in the reference section.
+
+```js
+import { createSignal } from "solid-js";
+
+const [count, setCount] = createSignal(0);
+```
+
+`createSignal` doesn't need to be used within a component. It can be used anywhere in your app. Whether it's in a component, a function or even outside of a component or function. 
+
+```js
+import { createSignal } from "solid-js";
+
+const [count, setCount] = createSignal(0);
+
+function increment() {
+  setCount(count() + 1);
+}
+
+function decrement() {
+  setCount(count() - 1);
+}
+
+function Counter() {
+  return (
+    <div>
+      <button onClick={decrement}>-</button>
+      <span>{count()}</span>
+      <button onClick={increment}>+</button>
+    </div>
+  );
+}
+```
+
+In the example above we have a `count` state variable that is used to keep track of the current count. We have two functions, `increment` and `decrement` that are used to update the `count` state variable. We also have a component, `Counter` that uses the `count` state variable to display the current count.
+
+As you've noticed in the example above, we are using `createSignal` outside of a component. This is perfectly fine, it is even possible to import your signal from another file and have it still behave reactively. You can use `createSignal` anywhere in your app since in Solid components do not own their state.
+
+## `createMemo`
+
+`createMemo` is used to create a reactive state variable that is derived from other reactive state variables. It takes a function that returns the value of the state variable and returns a getter function to get the current value. 
+
+```js
+import { createSignal, createMemo } from "solid-js";
+
+const [count, setCount] = createSignal(0);
+
+const double = createMemo(() => count() * 2);
+```
+
+In the example above we have a `count` state variable that is used to keep track of the current count. We also have a `double` state variable that is derived from the `count` state variable. The `double` state variable is a memoized version of the `count` state variable. This means that the `double` state variable will only be recomputed when the `count` state variable changes.
+
+Here's a quick example of how you can make use of `createMemo` to create a memoized version of a function in a component.
+
+```js
+import { createMemo } from "solid-js";
+
+const [count, setCount] = createSignal(0);
+
+const double = createMemo(() => count() * 2);
+
+function Counter() {
+  return (
+    <div>
+      <button onClick={() => setCount(count() - 1)}>-</button>
+      <span>This is the base value : {count()}</span>
+      <span>This is the doubled value : {double()}</span>
+      <button onClick={() => setCount(count() + 1)}>+</button>
+    </div>
+  );
+}
+```
+
+In the example above we have a `count` state variable that is used to keep track of the current count. We also have a `double` state variable that is derived from the `count` state variable. The `double` state variable is a memoized version of the `count` state variable. This means that the `double` state variable will only be recomputed when the `count` state variable changes.
+
+Under the hood `createMemo` uses `createComputed` to create a computed value. More on the `createComputed` primitive in the reference section.
+
+## `createEffect`
+
+`createEffect` is used to create a reactive effect. It takes a function that will be executed whenever the reactive state variables used in the function change. 
+
+```js
+import { createSignal, createEffect } from "solid-js";
+
+const [count, setCount] = createSignal(0);
+
+createEffect(() => {
+  console.log("Count has been updated : "count());
+});
+
+function Counter() {
+  return (
+    <div>
+      <button onClick={() => setCount(count() - 1)}>-</button>
+      <span>{count()}</span>
+      <button onClick={() => setCount(count() + 1)}>+</button>
+    </div>
+  );
+}
+```
+
+Each time the state of `count` changes, the effect will be executed. This is useful for logging, making API calls, etc. Any side effect that you would like to run whenever the state of a reactive state variable changes can be done using `createEffect`.
+
+## `createRoot`
+
+Creates a new non-tracked owner scope that doesn't auto-dispose. This is useful for nested reactive scopes that you do not wish to release when the parent re-evaluates.
+
+```js
+import { createRoot, createSignal, createEffect } from "solid-js";
+
+const [count, setCount] = createSignal(0);
+
+createRoot(() => {
+  createEffect(() => {
+    console.log("Count has been updated : "count());
+  });
+});
+
+function Counter() {
+  return (
+    <div>
+      <button onClick={() => setCount(count() - 1)}>-</button>
+      <span>{count()}</span>
+      <button onClick={() => setCount(count() + 1)}>+</button>
+    </div>
+  );
+}
+```

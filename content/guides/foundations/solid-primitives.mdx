@@ -1,8 +1,8 @@
-import {Aside} from "~/components/configurable/Aside"
+import {Aside, FrameworkAside} from "~/components/configurable/Aside"
 
-<Title>Solid Primitives and Components</Title>
+<Title>Solid Primitives</Title>
 
-This page will be explaining what you need to know to get started with using Solid.js primitives and making use of Solid.js primitives inside and outside your components.
+In this page we will be explaining what you need to know to get started with using Solid.js primitives and making use of Solid.js primitives inside and outside your components.
 
 ## Solid Primitives
 
@@ -22,7 +22,7 @@ First let's start with Solid.js primitves. What are primitives? Primitives are t
 
 **Note:** Solid primitives can be used in any scope, they are not required to be used within a component. Solid components do not own their state because they are just setup functions that have nothing to do with the reactivity system after set up.
 
-On this page, we will be focusing on the most used primitives, `createSignal`, `createMemo`, `createEffect` and `createResource`. To have a more in depth understanding of all the primitives Solid.js has, check out the [concepts page](/references/concepts).
+We will be focusing on the most used primitives, `createSignal`, `createMemo`, `createEffect` and `createResource`. To have a more in depth understanding of all the primitives Solid.js has, check out the [concepts page](/references/concepts).
 
 ## `createSignal`
 
@@ -66,6 +66,18 @@ In the example above we have a `count` state variable that is used to keep track
 
 As you've noticed in the example above, we are using `createSignal` outside of a component. This is perfectly fine, it is even possible to import your signal from another file and have it still behave reactively. You can use `createSignal` anywhere in your app since in Solid components do not own their state. In this way solid has state management built in and there is no need for Redux or other state management libraries unless you would like to make use of features specific to them.
 
+<FrameworkAside framework="react">
+  The React counterpart to this is the <code>useState</code> hook. The <code>useState</code> hook is used to create a state variable that is local to a component. This means that the state variable will be destroyed when the component is unmounted. In Solid, components do not own their state. This means that the state variable will not be destroyed when the component is unmounted. This is because Solid components are just setup functions that have nothing to do with the reactivity system after set up.
+</FrameworkAside>
+
+<FrameworkAside framework="vue">
+  The Vue counterpart to this is the <code>ref</code> function. The <code>ref</code> function is used to create a state variable that is local to a component. This means that the state variable will be destroyed when the component is unmounted. In Solid, components do not own their state. This means that the state variable will not be destroyed when the component is unmounted. This is because Solid components are just setup functions that have nothing to do with the reactivity system after set up.
+</FrameworkAside>
+
+<FrameworkAside framework="svelte">
+  The Svelte counterpart to this is the <code>let</code> keyword. The <code>let</code> keyword is used to create a state variable that is local to a component. This means that the state variable will be destroyed when the component is unmounted. In Solid, components do not own their state. This means that the state variable will not be destroyed when the component is unmounted. This is because Solid components are just setup functions that have nothing to do with the reactivity system after set up.
+</FrameworkAside>
+
 ## `createMemo`
 
 `createMemo` is used to create a reactive state variable that is derived from other reactive state variables. It takes a function that returns the value of the state variable and returns a getter function to get the current value.
@@ -80,7 +92,7 @@ const double = createMemo(() => count() * 2);
 
 In the example above we have a `count` state variable that is used to keep track of the current count. We also have a `double` state variable that is derived from the `count` state variable. The `double` state variable is a memoized version of the `count` state variable. This means that the `double` state variable will only be recomputed when the `count` state variable changes.
 
-Here's a quick example of how you can make use of `createMemo` to create a memoized version of a function in a component.
+Here's a quick example of how you can make use of `createMemo` to create a memoized derived state and make use of it in a component.
 
 ```js
 import { createMemo } from "solid-js";
@@ -104,6 +116,14 @@ function Counter() {
 In the example above we have a `count` state variable that is used to keep track of the current count. We also have a `double` state variable that is derived from the `count` state variable. The `double` state variable is a memoized version of the `count` state variable. This means that the `double` state variable will only be recomputed when the `count` state variable changes.
 
 Under the hood `createMemo` uses `createComputed` to create a computed value. More on the `createComputed` primitive in the reference section.
+
+<FrameworkAside framework="react">
+  The React counterpart to this is the <code>useMemo</code> hook. The <code>useMemo</code> hook is used to create a memoized state variable that is derived from other state variables. This means that the memoized state variable will only be recomputed when one of the state variables it is derived from changes.
+</FrameworkAside>
+
+<FrameworkAside framework="vue">
+  The Vue counterpart to this is the <code>computed</code> function. The <code>computed</code> function is used to create a memoized state variable that is derived from other state variables. This means that the memoized state variable will only be recomputed when one of the state variables it is derived from changes.
+</FrameworkAside>
 
 ## `createEffect`
 
@@ -131,9 +151,21 @@ function Counter() {
 
 Each time the state of `count` changes, the effect will be executed. This is useful for logging, making API calls, etc. Any side effect that you would like to run whenever the state of a reactive state variable changes can be done using `createEffect`.
 
+<FrameworkAside framework="react">
+  The React counterpart to this is the <code>useEffect</code> hook. The <code>useEffect</code> hook is used to create a side effect that will be executed whenever the state of a state variable changes.
+</FrameworkAside>
+
+<FrameworkAside framework="vue">
+  The Vue counterpart to this is the <code>watch</code> function. The <code>watch</code> function is used to create a side effect that will be executed whenever the state of a state variable changes.
+</FrameworkAside>
+
+<FrameworkAside framework="svelte">
+  The Svelte counterpart to this is the <code>$:</code> syntax. The <code>$:</code> syntax is used to create a side effect that will be executed whenever the state of a state variable changes.
+</FrameworkAside>
+
 ## `createResource`
 
-`createResource` is a simple but very useful primitive that creates a signal that reflects the value of an asynchronous function. It takes in an asynchronous function, optional options and a source signal that will be used to fill in the arguments of the asynchronous function.
+`createResource` is a simple but very useful primitive that creates a signal that reflects the value of an asynchronous function. It takes in an asynchronous function, optional options and an optional source signal that will be used to fill in the argument of the asynchronous function.
 
 Here's a quick example of how you can use `createResource` to fetch data from an API.
 
@@ -166,13 +198,13 @@ function User({ id }) {
 }
 ```
 
-`createResource` returns some pretty cool stuff that you can use to display the state of the resource reactively, as you can see it has a `loading` property that is a boolean that is true when the resource is loading and false when it is not. It also has a `error` property that is an error object if there was an error while fetching the resource. `createResource` also has some options we can make use of to customize the behaviour here's a list of them and a short description on what they do.
+`createResource` returns some pretty cool stuff that you can use to display the state of the resource reactively, as you can see it has a `loading` property that is a boolean that is true when the resource is loading and false when it is not. It also has an `error` property that is an error object if there was an error while fetching the resource. `createResource` also has some options we can make use of to customize the behaviour here's a list of them and a short description on what they do.
 
 - `initialValue` : The initial value of the resource. This is useful if you want to display something while the resource is loading.
 - `name` : The name of the resource. This is useful for debugging.
 - `deferStream` : A boolean that determines whether you app should wait for the resource to finish before rendering to a stream. Note that this is only useful if you're making use of the `renderToStream` function.
 - `ssrLoadFrom` : This can be used to tell the resource if it should load it's initial data from the `initialValue` or from the server. This is useful if you have some server-side data that you would like to assign to this resource. This can be used by passing either `'initial'` or `'server'` to this option.
-- `storage` : This option serves as an imperative way for you to store the resource's data. This is useful if you would like to store the data in a cache or something like that. This option takes a function that returns a tuple with two functions, an Accessor and a Setter of types any. Here's an example of how you can use this option.
+- `storage` : This option serves as an declarative way for you to store the resource's data. This is useful if you would like to store the data in a cache or something like that. This option takes a function that returns a tuple with two functions, an Accessor and a Setter of types any. Here's an example of how you can use this option.
 
 ```tsx
 import { createResource } from "solid-js";
@@ -194,7 +226,7 @@ const [user] = createResource(id, fetcherFunc, {
 
 Once the resource's data is resolved in the above code it will be automatically stored in the `store` signal.
 
-If you are wondering what you could do if you wanted to use multiple signal values within one resource, you can do that by creating a derived state using the `createMemo` primitive. You might be wondering why am my making use of the `createMemo` primitive instead of just creating a normal derived state. Well that is because `createMemo` will help in keeping your derived state reactive, while on the other if you were to create a normal derived state once the state value is changed the derived state will not be updated. Here's what this might look like in action.
+If you want to use multiple signal values within a single resource, you can do so by creating a derived state with the `createMemo` primitive. You may be wondering why I'm using the `createMemo` primitive instead of just creating a standard derived state. That's because `createMemo` will aid in keeping your derived state reactive, whereas if you create a normal derived state, the derived state will not be updated if the state value changes. Here's how it might look in action.
 
 ```tsx
 import { createResource, createMemo } from "solid-js";
@@ -217,3 +249,7 @@ const [posts] = createResource(derivedState, fetcherFunc);
 ```
 
 This is just a simple way in which you can make use of more than one signal value within a resource.
+
+<Aside>
+  To know more about Solid primitives you can check out the <a href="#">solid deep dive section</a> 
+</Aside>

@@ -61,12 +61,12 @@ export const GUIDES_SECTIONS: SECTIONS = {
         link: "/guides/foundations/javascript-for-solid",
       },
       {
-        name: "Typescript for Solid",
-        link: "/guides/foundations/typescript-for-solid",
+        name: "Solid Primitives",
+        link: "/guides/foundations/solid-primitives",
       },
       {
-        name: "Solid Primitives and Components",
-        link: "/guides/foundations/solid-primitives-and-components",
+        name: "Typescript for Solid",
+        link: "/guides/foundations/typescript-for-solid",
       }
     ],
   },

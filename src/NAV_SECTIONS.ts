@@ -67,6 +67,10 @@ export const GUIDES_SECTIONS: SECTIONS = {
       {
         name: "Typescript for Solid",
         link: "/guides/foundations/typescript-for-solid",
+      },
+      {
+        name: "Understanding Components",
+        link: "/guides/foundations/understanding-components",
       }
     ],
   },

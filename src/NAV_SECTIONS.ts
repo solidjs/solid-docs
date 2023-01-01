@@ -120,6 +120,15 @@ export const GUIDES_SECTIONS: SECTIONS = {
         ],
       },
       {
+        name: "Testing in Solid",
+        pages: [
+          {
+            name: "Vitest",
+            link: "/guides/how-to-guides/testing-in-solid/vitest",
+          }
+        ]
+      },
+      {
         name: "Deployment",
         pages: [
           {

@@ -1,1 +1,115 @@
 <Title>Vitest</Title>
+
+## What is Vitest?
+
+Vitest is a really fast unit test framework built on top of [Vite](vitejs.dev/). It's quick to get started with, and it's easy to write tests for your components. Vitest isn't made primarily for testing frontend components but with the addition of some awesome packages we can make use of it in order to test our Solid.js components.
+
+#### Packages
+* [JSDOM](github.com/jsdom/jsdom)
+* [JestDOM](https://testing-library.com/docs/ecosystem-jest-dom/)
+* [Solid.js Testing Library](https://github.com/solidjs/solid-testing-library)
+* [Vitest](vitest.dev/)
+
+## Getting Started
+
+First let's get started with the installations. We'll need to install the packages listed above. 
+
+```bash
+npm i -D vitest jsdom @testing-library/jest-dom @solidjs/testing-library
+# or
+yarn add -D vitest jsdom @testing-library/jest-dom @solidjs/testing-library
+```
+
+#### Configuring Vitest
+
+Now that we've installed the necessary packages, we'll need to configure vitest to work with Solid.js. Let's create a `vitest.config.ts` file in the root of our project. 
+
+```ts
+/// <reference types="vitest" />
+/// <reference types="vite/client" />
+// 👆 do not forget to add the references above 
+
+import { defineConfig } from 'vite';
+import solidPlugin from 'vite-plugin-solid';
+
+export default defineConfig({
+  plugins: [solidPlugin()],
+  server: {
+    port: 3000,
+  },
+  build: {
+    target: 'esnext',
+  },
+  test:{
+    environment: 'jsdom',
+    globals: true,
+    transformMode: { web: [/\.[jt]sx?$/] },
+  }
+});
+```
+
+**Note:** Do not forget to add the `reference` types at the top of the file. If you do not add them, you will get a type error when you try to run your tests.
+
+Once we've created the config file, we'll need to add a script to our `package.json` file. 
+
+```diff
+{
+  "name": "solid-app-name",
+  "version": "0.0.0",
+  "description": "",
+  "scripts": {
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
++   "test": "vitest"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@solidjs/testing-library": "^0.5.1",
+    "@testing-library/jest-dom": "^5.16.5",
+    "jsdom": "^20.0.3",
+    "typescript": "^4.9.4",
+    "vite": "^4.0.3",
+    "vite-plugin-solid": "^2.5.0",
+    "vitest": "^0.26.2"
+  },
+  "dependencies": {
+    "solid-js": "^1.6.6"
+  }
+}
+
+```
+
+Now that we've added the script, we can run our tests by running `npm run test` or `yarn test`. However, there are no tests to run so we'll need to create some.
+
+## Creating Tests
+
+In Typescript/Javascript test files can be created with the `.test.ts` or `.spec.ts` extension. Tests are usually kept in their seperate folder in the root of the project, most developers like to name this folder `tests` or `__tests__`. However in some cases you may want to keep your tests in the same folder as the component you're testing. Explore the different styles and find what works best for you 🙂.
+
+#### Creating a Test File
+
+In Solid.js we recommend creating a `test` folder to house all your test files in. Let's create a `test` folder in the root of our project and create a `App.test.ts` file inside of it. 
+
+```bash
+mkdir test
+touch test/App.test.ts
+```
+
+Now that we've created the test file, let's add some tests. 
+
+```ts
+import { render } from '@solidjs/testing-library';
+import App from '../src/App';
+import { describe, expect, it } from 'vitest';
+import '@testing-library/jest-dom'; // 👈 this is imported in order to use the jest-dom matchers 
+
+describe('App', () => {
+  it('should render the app', () => {
+    const { getByText } = render(() => <App/>);
+    expect(getByText('Learn Solid')).toBeInTheDocument();
+  });
+});
+```
+
+The above test will test to see if the phrase `Learn Solid` is in the `App` component once it is rendered. If it is, the test will pass. If it isn't, the test will fail.

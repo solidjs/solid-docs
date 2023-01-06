@@ -416,6 +416,10 @@ export const GUIDES_SECTIONS: SECTIONS = {
             name: "Linting",
             link: "/guides/how-to-guides/get-ready-for-solid/linting",
           },
+          {
+            name: "Solid Best Practices",
+            link: "/guides/how-to-guides/get-ready-for-solid/solid-best-practices"
+          }
         ],
       },
       {

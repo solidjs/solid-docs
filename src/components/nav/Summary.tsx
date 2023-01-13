@@ -8,7 +8,7 @@ export default function Summary(props: {collapsed?: boolean}) {
     const [collapsed, setCollapsed] = createSignal(props.collapsed || false);
 
     return (
-        <div class="py-2 px-4 border border-solidlightitem rounded-md md:(p-4 border-none bg-transparent) bg-solid-light z-50 dark:(bg-solid-dark md:bg-transparent border-solid-darkitem)">
+        <div class="py-2 px-4 border border-solidlightitem rounded-md md:(p-4 max-h-[95vh] overflow-scroll border-none bg-transparent) max-h-[50vh] overflow-scroll bg-solid-light z-50 dark:(bg-solid-dark md:bg-transparent border-solid-darkitem)">
             <button
                 onClick={() => setCollapsed((prev) => !prev)}
                 aria-controls="preferences"
@@ -28,7 +28,7 @@ export default function Summary(props: {collapsed?: boolean}) {
                     {(item, index) => (
                     <li class="text-base py-2 flex items-center gap-2 rounded hover:bg-solid-light hover:dark:bg-solid-darkbg px-2">
                         <Dot number={index() + 1} />
-                        <a class="font-semibold" href={"#" + item.href}>
+                        <a class="font-semibold" onClick={() => setCollapsed(true)} href={"#" + item.href}>
                         {item.title}
                         </a>
                     </li>

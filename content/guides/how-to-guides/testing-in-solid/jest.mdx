@@ -1,4 +1,17 @@
-import { IfTS, IfConfig } from "~/components/configurable/IfConfig";
+import { IfTS } from "~/components/configurable/IfConfig";
+import { CodeTabs } from "~/components/Tabs";
+import JestCounterJS from "./snippets/jest-counter-js.mdx";
+import JestCounterTS from "./snippets/jest-counter-ts.mdx";
+import JestCounterTestJS from "./snippets/jest-counter-test-js.mdx";
+import JestCounterTestTS from "./snippets/jest-counter-test-ts.mdx";
+import JestLoremJS from "./snippets/jest-lorem-js.mdx";
+import JestLoremTS from "./snippets/jest-lorem-ts.mdx";
+import JestLoremTestJS from "./snippets/jest-lorem-test-js.mdx";
+import JestLoremTestTS from "./snippets/jest-lorem-test-ts.mdx";
+import JestClickOutsideJS from "./snippets/jest-clickoutside-js.mdx";
+import JestClickOutsideTS from "./snippets/jest-clickoutside-ts.mdx";
+import JestClickOutsideTestJS from "./snippets/jest-clickoutside-test-js.mdx";
+import JestClickOutsideTestTS from "./snippets/jest-clickoutside-test-ts.mdx";
 
 <Title>Jest</Title>
 
@@ -261,40 +274,17 @@ yarn add --dev @testing-library/user-events  # Using yarn
 
 Let us test our most basic example: the counter. Consider the following component that you may have seen in the playground:
 
-```ts
-import { createSignal } from "solid-js";
-
-export function Counter() {
-  const [count, setCount] = createSignal(1);
-  const increment = () => setCount(count() + 1);
-
-  return (
-    <button type="button" onClick={increment}>
-      {count()}
-    </button>
-  );
-}
-```
+<CodeTabs
+  js={[{ name: "counter.jsx", component: JestCounterJS }]}
+  ts={[{ name: "counter.tsx", component: JestCounterTS }]}
+/>
 
 We want to test if there is a button that counts up on click; in order to make sure that it is working more than one time, we will try it a second time, so this is what our test looks like:
 
-```tsx
-import { render } from "@solidjs/testing-library";
-import userEvent from "@testing-library/user-event"
-import { Counter } from "./counter";
-
-const user = userEvent.setup();
-
-test("counts on click", async () => {
-  const { result, getByRole } = render(() => <Counter />);
-  const button = getByRole("button");
-  expect(button).toHaveTextContent("1");
-  await user.click(button);
-  expect(button).toHaveTextContent("2");
-  await user.click(button);
-  expect(button).toHaveTextContent("3");
-});
-```
+<CodeTabs
+  js={[{ name: "counter.test.jsx", component: JestCounterTestJS }]}
+  ts={[{ name: "counter.test.tsx", component: JestCounterTestTS }]}
+/>
 
 In order to use `toHaveTextContent`, we need to have `@testing-library/jest-dom` installed correctly, otherwise, we need to replace that with
 
@@ -308,48 +298,37 @@ If we don't want to use `userEvent`, we can also use `fireEvent` from `@solidjs/
 
 ### Testing re-usable logic
 
-Re-usable logic, also known as hooks or primitives, can also be tested using `@solidjs/testing-library`, by using the `renderHook` function.
+Re-usable logic, also known as <a class="footnote" href="#fn-primitives" id="primitives" target="_self">hooks or primitives</a>, can also be tested using `@solidjs/testing-library`, by using the `renderHook` function.
 
-Let us consider a hook that gives us a "Lorem ipsum" text with a certain number of words:
+Let us consider a hook that gives us a "Lorem ipsum" text with a certain number of words. We want to test it with 3, 2 and 5 words to make sure it works (select lorem.test.<IfTS fallback="js">ts</IfTS>):
 
-```js
-const loremIpsumWords = "Lorem ipsum dolor sit amet, consectetur adipisici elit, sed eiusmod tempor incidunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquid ex ea commodi consequat. Quis aute iure reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint obcaecat cupiditat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.".split(/\s+/);
+<CodeTabs
+  js={[
+    { name: "lorem.js", component: JestLoremJS },
+    { name: "lorem.test.js", component: JestLoremTestJS }
+  ]}
+  ts={[
+    { name: "lorem.ts", component: JestLoremTS },
+    { name: "lorem.test.ts", component: JestLoremTestTS }
+  ]}
+/>
 
-export const createLorem = (words: Accessor<number> | number) => {
-  return createMemo(() => {
-    const output = [],
-      len = typeof words === "function" ? words() : words;
-    while (output.length <= len) {
-      output.push(...loremIpsumWords);
-    }
+### Testing custom directives
 
-    return output.slice(0, len).join(" ");
-  });
-};
-```
+Solid.js has the useful ability to not only make logic, but also DOM interactions re-usable, through so-called custom directives. Obviously, we want the same convenience testing those as we have with hooks, so our testing library comes with a `renderDirective` utility.
 
-We want to test it with 3, 2 and 5 words to make sure it works:
+The primitive we want to test is `onClickOutside`, which calls a function given in its argument, and we want to test it by clicking both inside and outside and check whether our function had been called:
 
-```ts
-import { createSignal } from "solid-js";
-import { renderHook } from "@solidjs/testing-library";
-import { createLorem } from "createLorem";
-
-test("it shows the right amount of words", () => {
-  const [words, setWords] = createSignal(3);
-  const { result } = renderHook(createLorem, [words]);
-  expect(result()).toBe("Lorem ipsum dolor");
-  setWords(2);
-  expect(result()).toBe("Lorem ipsum");
-  setWords(5);
-  expect(result()).toBe("Lorem ipsum dolor sit amet");
-});
-```
-
-### Testing directives
-
-TODO
-
+<CodeTabs
+  js={[
+    { name: "click-outside.js", component: JestClickOutsideJS },
+    { name: "click-outside.test.js", component: JestClickOutsideTestJS }
+  ]}
+  ts={[
+    { name: "click-outside.ts", component: JestClickOutsideTS },
+    { name: "click-outside.test.ts", component: JestClickOutsideTestTS }
+  ]}
+/>
 
 <hr/>
 <section role="doc-endnotes">
@@ -365,5 +344,6 @@ TODO
 <li id="fn-jsdom">While [jsdom](https://github.com/jsdom/jsdom) is the de-facto standard for a virtualized DOM environment, there are other contenders like [happy-dom](https://github.com/capricorn86/happy-dom) and [linkedom](https://github.com/WebReflection/linkedom), which both are less feature-rich, but faster. In order to minimize support requests due to lack of feature-support, they are purposefully left out; please only use them if you know what you are doing. <a href="#jsdom">back</a></li>
 <li id="fn-jest-cli">A command-line-interface or CLI is a program that runs inside a text terminal and can be controlled by optional parameters. Jest has a whole set of [CLI options](https://jestjs.io/docs/cli) that allow overwriting configuration and change the output or the behavior. <a href="#jest-cli">back</a></li>
 <li id="fn-testing-library">[Testing Library](https://testing-library.com/) provides a set of tools aimed at encouraging good testing practices and at the same time discourage code which is not accessible, since it will make it harder to test. <a href="#testing-library">back</a></li>
+<li id="fn-primitives">In many frameworks, hooks/primitives are named `use[Something]`. Solid.js uses `create` as a prefix for its reactive primitives instead to denote that these are only called once inside the component. <a href="#primitives">back</a></li>
 </ol>
 </section>

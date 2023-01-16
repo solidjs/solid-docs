@@ -29,11 +29,11 @@ yarn add --dev jest         # Using yarn
 
 ## Setup
 
-In order to test Solid.js code, you need to setup Jest. This can be done in the `"jest"` field of `package.json` or as a separate `jest.config.js` file. The latter allows having different setups, e.g. for testing both client-side and server-side code, and for programatically augment existing presets.
+To test Solid.js code with Jest, you need to set it up. The setup can be done in the `"jest"` field of `package.json` or as a separate `jest.config.js` file. The latter allows having different setups, for testing both client-side and server-side code, and for programmatically augment existing presets.
 
-At the time of writing, Jest only officially supports the <a class="footnote" id="cjs-module-format" href="#fn-cjs-module-format" target="_self">CJS module format</a> directly and uses a transformation pipeline in order to run other formats and transpiled JS. Since Solid.js uses transpiled code, we need to set it up.
+At the time of writing, Jest only officially supports the <a class="footnote" id="cjs-module-format" href="#fn-cjs-module-format" target="_self">CJS module format</a> directly and uses a transformation pipeline to run other formats and transpiled JS. Since Solid.js uses transpiled code, we need to set it up.
 
-Because Jest runs all imported code as CJS, we either need transform types that are not valid CJS or make Jest ignore them.
+Because Jest runs all imported code as CJS, we either need to transform files that are not valid CJS or make Jest ignore them.
 
 ### Solid.js code transformation
 
@@ -82,7 +82,7 @@ EOF
 
 ### Alternative 2: Using ts-jest to transform TypeScript
 
-This does not require `solid-jest`. Instead of solely using the babel-transform, we can use the TypeScript compiler to transform the tests. This means that the tests are staticly type-checked before running them. While this will reduce the speed of running tests, it may catch errors in the tests' code.
+This does not require `solid-jest`. Instead of solely using the babel-transform, we can use the TypeScript compiler to transform the tests. This means that the tests are statically type-checked before running them. While this will reduce the speed of running tests, it may catch errors in the tests' code.
 
 To use it, we first need to install it:
 
@@ -111,7 +111,7 @@ Then we need to configure Jest to use it in `package.json#jest` or `jest.config.
 }
 ```
 
-If we want to test the code as it would run in the browser, we also need to alias the solid-modules to the correct version, because ts-jest unfortunately cannot detect the browser mode. To do this, add the following to the previous configuration:
+If we want to test the code as it would run in the browser, we also need to alias the solid-modules to the correct version because ts-jest unfortunately cannot detect the browser mode. Add the following to the previous configuration:
 
 ```js
 {
@@ -124,9 +124,9 @@ If we want to test the code as it would run in the browser, we also need to alia
 
 </IfTS>
 
-### Ingoring certain files
+### Ignoring certain files
 
-As already mentioned, jest will treat anything imported (including CSS, images) as CJS. This may lead to errors. In order to make jest ignore them, create an empty file:
+As already mentioned, jest will treat anything imported (including CSS, images) as CJS. This may lead to errors. To make jest ignore them, create an empty file:
 
 ```bash
 touch .empty.js
@@ -156,7 +156,7 @@ There are several transformations for other file types available.
 * Web Worker: `jest-webworker`
 * more on [npmjs](https://www.npmjs.com/search?q=jest+transform)
 
-If your search for a matching transformation is without result, you can consider <a class="footnote" id="custom-transform" href="#fn-custom-transform" target="_self">writing your own transform</a>.
+If the search for a matching transformation is without result, the solution may be a <a class="footnote" id="custom-transform" href="#fn-custom-transform" target="_self">custom transform</a>.
 
 We can simply install their packages like before, just replace `[transform-module]` with the above module name:
 
@@ -166,7 +166,7 @@ pnpm i --dev [transform-module]       # Using pnpm
 yarn add --dev [transform-module]     # Using yarn
 ```
 
-The easiest way to use them is to augment the existing preset in a `jest.config.js` file. Otherwise we need to merge the contents of the preset and the additional transformations manually:
+The easiest way to use them is to augment the existing preset in a `jest.config.js` file. Otherwise, we need to merge the contents of the preset and the additional transformations manually:
 
 ```js
 // jest.config.js
@@ -189,7 +189,7 @@ In case we want to stick with the configuration in `package.json#jest`, we need 
 
 ## Environment
 
-Solid.js can run both in the browser and on the server. By default, Jest tests everything in a node-environment. In order to test browser code with Jest without an actual browser, you need a DOM environment. The <a class="footnote" id="jsdom" href="#fn-jsdom" target="_self">de-facto standard is `jsdom`</a>. To use it, we first need to install it together with the Jest environment:
+Solid.js can run both in the browser and on the server. By default, Jest tests everything in a node-environment. To test browser code with Jest without an actual browser, we need a DOM environment. The <a class="footnote" id="jsdom" href="#fn-jsdom" target="_self">de-facto standard is `jsdom`</a>. To use it, we first need to install it together with the Jest environment:
 
 ```bash
 npm install --save-dev jest-environment-jsdom
@@ -244,7 +244,7 @@ pnpm i --dev @solidjs/testing-library      # Using pnpm
 yarn add --dev @solidjs/testing-library    # Using yarn
 ```
 
-Testing-library also provides a small helpful extension for jest's built-in assertions called `@testing-library/jest-dom` that we can also install:
+Testing-library also provides a small, helpful extension for jest's built-in assertions called `@testing-library/jest-dom` that we can also install:
 
 ```bash
 npm install --save-dev @testing-library/jest-dom
@@ -252,7 +252,7 @@ pnpm i --dev @testing-library/jest-dom     # Using pnpm
 yarn add --dev @testing-library/jest-dom   # Using yarn
 ```
 
-Now we need to run it prior to our test so we can use the extended assertions. We could either include it manually in our tests, or more convenient, include it in the `setupFiles` of our jest configuration:
+Now we need to run it in advance of our test, so we can use the extended assertions. We could either include it manually in our tests, or more convenient, include it in the `setupFiles` of our jest configuration:
 
 ```js
 {
@@ -262,7 +262,7 @@ Now we need to run it prior to our test so we can use the extended assertions. W
 }
 ```
 
-There is another useful addition from Testing Library for testing user events: `@testing-library/user-events`. It tries to replicate the actual events that will typically happen in a user situation, i.e. they will focus input fields before typing into them. If we want to test complex interactivity, we should install it, too.
+There is another useful addition from Testing Library for testing user events: `@testing-library/user-events`. It tries to replicate the actual events that will typically happen in a user situation, for example, they will focus input fields before typing into them. If we want to test complex interactivity, we should install it, too.
 
 ```bash
 npm install --save-dev @testing-library/user-events
@@ -279,14 +279,14 @@ Let us test our most basic example: the counter. Consider the following componen
   ts={[{ name: "counter.tsx", component: JestCounterTS }]}
 />
 
-We want to test if there is a button that counts up on click; in order to make sure that it is working more than one time, we will try it a second time, so this is what our test looks like:
+We want to test if there is a button that counts up on click; to make sure that it is working more than one time, we will try it a second time, so this is what our test looks like:
 
 <CodeTabs
   js={[{ name: "counter.test.jsx", component: JestCounterTestJS }]}
   ts={[{ name: "counter.test.tsx", component: JestCounterTestTS }]}
 />
 
-In order to use `toHaveTextContent`, we need to have `@testing-library/jest-dom` installed correctly, otherwise, we need to replace that with
+To use `toHaveTextContent`, we need to have `@testing-library/jest-dom` installed; otherwise, we need to replace that with
 
 ```ts
 expect(button).toHaveProperty("textContent", "1");
@@ -294,7 +294,7 @@ expect(button).toHaveProperty("textContent", "1");
 
 which is a bit less legible and if it fails, the error message will be slightly less helpful.
 
-If we don't want to use `userEvent`, we can also use `fireEvent` from `@solidjs/testing-library`, which is synchronous, but be aware that these events are less like actual user events and may in some cases yield different results depending on the context.
+If we want not to use `userEvent`, we can also use `fireEvent` from `@solidjs/testing-library`, which is synchronous, but be aware that these events are less like actual user events and may in some cases yield different results depending on the context.
 
 ### Testing re-usable logic
 
@@ -317,7 +317,7 @@ Let us consider a hook that gives us a "Lorem ipsum" text with a certain number 
 
 Solid.js has the useful ability to not only make logic, but also DOM interactions re-usable, through so-called custom directives. Obviously, we want the same convenience testing those as we have with hooks, so our testing library comes with a `renderDirective` utility.
 
-The primitive we want to test is `onClickOutside`, which calls a function given in its argument, and we want to test it by clicking both inside and outside and check whether our function had been called:
+The primitive we want to test is `onClickOutside`, which calls a function given in its argument, and we need to test it by clicking both inside and outside and check whether our function had been called:
 
 <CodeTabs
   js={[
@@ -336,14 +336,14 @@ The primitive we want to test is `onClickOutside`, which calls a function given 
 
 <ol>
 <li id="fn-cjs-module-format">Originally, JS libraries exposed their functionality as global declarations to be synchronously loaded within a script tag. To be more flexible, projects like [require.js](https://requirejs.org/) introduced module formats like [AMD](https://github.com/amdjs/amdjs-api/blob/master/AMD.md) (Asynchronous Module Definition) that allowed asynchronous loading into scoped variables. [Node.js](https://nodejs.org/) started supporting only the [CJS](https://en.wikipedia.org/wiki/CommonJS) (Common JS) format. This is slowly being superseded by the newer [ESM](https://tc39.es/ecma262/#sec-modules) (ECMAScript Modules) format. <a href="#cjs-module-format">back</a></li>
-<li id="fn-jest-preset">Jest allows to augment the configuration by a predefined set of configuration, a so-called [preset](https://jestjs.io/docs/configuration#preset-string). <a href="#jest-preset">back</a></li>
+<li id="fn-jest-preset">Jest allows augmenting the configuration by a predefined set of configuration, a so-called [preset](https://jestjs.io/docs/configuration#preset-string). <a href="#jest-preset">back</a></li>
 <IfTS>
-<li id="fn-babel">[Babel](https://babeljs.io/) is a veratile utility to convert one kind of JS code into another one. It is currently the de-facto standard to convert Solid.js JSX into JS. <a href="#babel">back</a></li>
+<li id="fn-babel">[Babel](https://babeljs.io/) is a versatile utility to convert one kind of JS code into another one. It is currently the de-facto standard to convert Solid.js JSX into JS. <a href="#babel">back</a></li>
 </IfTS>
-<li id="fn-custom-transform">The [API definition](https://jestjs.io/docs/code-transformation#writing-custom-transformers) might initially seem daunting, but a transform is merely an object with either a `process` method that receives the source, the path and an optional options object and returns an object containing a code property with the result or a `processAsync` method that returns the same in a `Promise`. <a href="#custom-transform">back</a></li>
-<li id="fn-jsdom">While [jsdom](https://github.com/jsdom/jsdom) is the de-facto standard for a virtualized DOM environment, there are other contenders like [happy-dom](https://github.com/capricorn86/happy-dom) and [linkedom](https://github.com/WebReflection/linkedom), which both are less feature-rich, but faster. In order to minimize support requests due to lack of feature-support, they are purposefully left out; please only use them if you know what you are doing. <a href="#jsdom">back</a></li>
+<li id="fn-custom-transform">The [API definition](https://jestjs.io/docs/code-transformation#writing-custom-transformers) might initially seem daunting, but a transform is merely an object with either a `process` method that receives the source, the path, and an optional options object and returns an object containing a code property with the result or a `processAsync` method that returns the same in a `Promise`. <a href="#custom-transform">back</a></li>
+<li id="fn-jsdom">While [jsdom](https://github.com/jsdom/jsdom) is the de-facto standard for a virtualized DOM environment, there are other contenders like [happy-dom](https://github.com/capricorn86/happy-dom) and [linkedom](https://github.com/WebReflection/linkedom), which both are less feature-rich, but faster. To minimize support requests due to lack of feature-support, they are purposefully left out; please only use them if you know what you are doing. <a href="#jsdom">back</a></li>
 <li id="fn-jest-cli">A command-line-interface or CLI is a program that runs inside a text terminal and can be controlled by optional parameters. Jest has a whole set of [CLI options](https://jestjs.io/docs/cli) that allow overwriting configuration and change the output or the behavior. <a href="#jest-cli">back</a></li>
-<li id="fn-testing-library">[Testing Library](https://testing-library.com/) provides a set of tools aimed at encouraging good testing practices and at the same time discourage code which is not accessible, since it will make it harder to test. <a href="#testing-library">back</a></li>
-<li id="fn-primitives">In many frameworks, hooks/primitives are named `use[Something]`. Solid.js uses `create` as a prefix for its reactive primitives instead to denote that these are only called once inside the component. <a href="#primitives">back</a></li>
+<li id="fn-testing-library">[Testing Library](https://testing-library.com/) provides a set of tools aimed at encouraging good testing practices and at the same time discourage code which is not adhering to accessibility standards, since it will make it harder to test. <a href="#testing-library">back</a></li>
+<li id="fn-primitives">In many frameworks, hooks/primitives are named `use[Something]`. Solid.js uses `create` as a prefix for its reactive primitives to denote that these are only called once inside the component. <a href="#primitives">back</a></li>
 </ol>
 </section>

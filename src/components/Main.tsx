@@ -79,7 +79,7 @@ export function Main(props) {
           </div>
         </div>
       </article>
-      <div class="pt-4 md:pt-10 w-full lg:max-w-xs sticky z-50 top-0 hidden md:block">
+      <div class="pt-4 md:pt-10 max-w-[30vw] w-full lg:max-w-xs sticky z-50 top-0 hidden md:block">
         <Summary />
       </div>
     </main>

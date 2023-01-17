@@ -2,6 +2,7 @@ import { For, Show, createSignal } from "solid-js"
 import { usePageState } from "../context/PageStateContext";
 import Dot from "../Dot";
 import IconChevron from "~icons/heroicons-outline/chevron-right";
+import { useRouteData } from "solid-start";
 
 export default function Summary(props: {collapsed?: boolean}) {
     const { sections } = usePageState();
@@ -22,8 +23,18 @@ export default function Summary(props: {collapsed?: boolean}) {
                     }`}
                 />
             </button>
+            <For each={sections()}>
+                {(item, index) => (
+                <li class="text-base py-2 hidden md:flex items-center gap-2 rounded hover:bg-solid-light hover:dark:bg-solid-darkbg px-2">
+                    <Dot number={index() + 1} />
+                    <a class="font-semibold" onClick={() => setCollapsed(true)} href={"#" + item.href}>
+                    {item.title}
+                    </a>
+                </li>
+                )}
+            </For>
             <Show when={!collapsed()}>
-                <ol class="mt-2 list-none space-y-1">
+                <ol class="mt-2 md:hidden list-none space-y-1">
                 <For each={sections()}>
                     {(item, index) => (
                     <li class="text-base py-2 flex items-center gap-2 rounded hover:bg-solid-light hover:dark:bg-solid-darkbg px-2">

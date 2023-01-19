@@ -1,6 +1,22 @@
 import { createSignal } from "solid-js";
 import { isServer } from "solid-js/web";
 
+let Repl;
+let createTabList;
+let compiler;
+let formatter;
+
+if (!isServer) {
+  Repl = await import("solid-repl").then((mod) => mod.Repl);
+  createTabList = await import("solid-repl").then((mod) => mod.createTabList);
+  compiler = await import("solid-repl/lib/compiler?worker").then(
+    (mod) => new mod.default()
+  );
+  formatter = await import("solid-repl/lib/formatter?worker").then(
+    (mod) => new mod.default()
+  );
+}
+
 const stub = Promise.resolve({ default: function () {} as any });
 const editorWorker = isServer
   ? stub
@@ -11,12 +27,6 @@ const tsWorker = isServer
 const cssWorker = isServer
   ? stub
   : import("monaco-editor/esm/vs/language/css/css.worker?worker");
-const formatterWorker = isServer
-  ? stub
-  : import("solid-repl/lib/formatter?worker");
-const compilerWorker = isServer
-  ? stub
-  : import("solid-repl/lib/compiler?worker");
 
 if (!isServer)
   (window as any).MonacoEnvironment = {
@@ -32,15 +42,6 @@ if (!isServer)
       }
     },
   };
-
-const srepl = isServer ? undefined : import("solid-repl");
-
-const Repl = isServer ? () => {} : (await srepl).Repl;
-const createTabList = isServer
-  ? () => [() => {}, () => {}]
-  : (await srepl).createTabList;
-const formatter = new (await formatterWorker).default();
-const compiler = new (await compilerWorker).default();
 
 import "solid-repl/lib/bundle.css";
 
@@ -82,6 +83,7 @@ export const MyRepl = () => {
       setCurrent={setCurrent}
       setTabs={setTabs}
       compiler={compiler}
+      // I wasn't able to test if the formatter worked because I think it cannot be triggered since save command is captured by the webpage
       formatter={formatter}
     />
   );

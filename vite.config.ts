@@ -126,7 +126,7 @@ export default defineConfig({
   ],
 
   optimizeDeps: {
-    exclude: ["solid-headless"],
+    exclude: ["solid-headless", "solid-repl"],
   },
   ssr: {
     noExternal: ["solid-headless", "solid-heroicons", "solid-repl"],

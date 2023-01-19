@@ -105,7 +105,7 @@ function Counter() {
 
 We don't have access to the DOM until our component function is done, so if it called `useContext` we wouldn't be able to use the DOM to find the provider.
 
-Futhermore, the way JSX and Solid executes, children get called before the parent.
+Furthermore, the way JSX and Solid executes, children get called before the parent.
 
 ```jsx
 function App() {

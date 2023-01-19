@@ -1,7 +1,15 @@
 // @refresh reload
-import { Links, Meta, Routes, Scripts } from "solid-start/root";
-import cookie from "cookie";
-
+import {
+  Routes,
+  Meta,
+  Link,
+  FileRoutes,
+  Scripts,
+  Html,
+  Head,
+  Body,
+} from "solid-start";
+import { parseCookie } from "solid-start/session";
 import "./code.css";
 import "virtual:windi.css";
 
@@ -9,39 +17,26 @@ import {
   Config,
   ConfigProvider,
   defaultConfig,
-} from "./components/ConfigContext";
-import { PageStateProvider } from "./components/PageStateContext";
+} from "./components/context/ConfigContext";
+import { PageStateProvider } from "./components/context/PageStateContext";
 
 import { MDXProvider } from "solid-mdx";
 import Nav from "./components/nav/Nav";
 import md from "./md";
 import { createRenderEffect, Suspense, useContext } from "solid-js";
 import { Main } from "./components/Main";
-import { StartContext } from "solid-start/server";
+import { HttpHeader, ServerContext } from "solid-start/server";
 import { isServer } from "solid-js/web";
-import { useLocation } from "solid-app-router";
-
-function PageHeaders(props: { headers: Object }) {
-  const ctx = useContext(StartContext);
-
-  createRenderEffect(() => {
-    if (isServer) {
-      Object.entries(props.headers).forEach(([key, value]) => {
-        ctx.responseHeaders.set(key, value);
-      });
-    }
-  });
-
-  return null;
-}
+import { useLocation } from "solid-start";
+import { Stylesheet } from "@solidjs/meta";
 
 function useCookies() {
-  const context = useContext(StartContext);
+  const context = useContext(ServerContext);
   const cookies = isServer
     ? context.request.headers.get("Cookie")
     : document.cookie;
 
-  return cookie.parse(cookies ?? "");
+  return parseCookie(cookies ?? "");
 }
 
 function useCookieConfig(): Config {
@@ -61,27 +56,26 @@ export default function Root() {
   let mainRef;
 
   return (
-    <html lang="en" class={"h-full " + config.mode}>
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
+    <Html lang="en" class={"h-full " + config.mode}>
+      <Head>
+        <Meta charset="utf-8" />
+        <Meta name="viewport" content="width=device-width, initial-scale=1" />
+        <Link rel="preconnect" href="https://fonts.googleapis.com" />
+        <Link
           rel="preconnect"
           href="https://fonts.gstatic.com"
           crossOrigin=""
         />
-        <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="stylesheet" href="/main.css" />
-        <link
+        <Link rel="shortcut icon" href="/favicon.ico" />
+        <Link rel="stylesheet" href="/main.css" />
+        <Link
           href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@200;300;400&display=swap"
           rel="stylesheet"
         />
-        <Meta />
-        <Links />
-        <PageHeaders headers={{ "x-robots-tag": "nofollow" }} />
-      </head>
-      <body class="font-sans antialiased text-lg bg-white dark:bg-solid-darkbg text-black dark:text-white leading-base min-h-screen lg:flex lg:flex-row">
+        <Stylesheet href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+        <HttpHeader name="x-robots-tag" value="nofollow" />
+      </Head>
+      <Body class="px-4 pb-8 font-sans antialiased text-lg bg-lightgradient dark:(bg-darkgradient text-white) bg-fixed text-black leading-base min-h-screen lg:flex lg:flex-row leading-7">
         <Suspense>
           <ConfigProvider initialConfig={config}>
             <PageStateProvider>
@@ -94,14 +88,26 @@ export default function Root() {
                 </button>
                 <Nav docsMode={docsMode()} />
                 <Main ref={mainRef}>
-                  <Routes />
+                  <Routes>
+                    <FileRoutes />
+                  </Routes>
                 </Main>
               </MDXProvider>
             </PageStateProvider>
           </ConfigProvider>
         </Suspense>
+        <script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+        <script>
+          {`docsearch({
+    appId: "VTVVKZ36GX",
+    apiKey: "f520312c8dccf1309453764ee2fed27e",
+    indexName: "solidjs",
+    container: "#docsearch",
+    debug: false 
+  });`}
+        </script>
         <Scripts />
-      </body>
-    </html>
+      </Body>
+    </Html>
   );
 }

@@ -1,0 +1,84 @@
+import { Aside } from "~/components/configurable/Aside";
+
+<Title>Deploying To Cloudflare</Title>
+
+Here we're going to use [Cloudflare Pages](https://pages.cloudflare.com/) to deploy our Solid.js project.
+
+Cloudflare Pages is a JAMstack platform for frontend developers to collaborate and deploy their websites. For clarification JAMstack stands for Javascript, APIs and Markup. 
+
+For more information on what you can do with Cloudflare Pages, visit their [website](https://pages.cloudflare.com/).
+
+## Connecting Cloudflare with Your Online Git Repository
+
+With Cloudflare Pages you can make use of GitHubs continuous integration feature. When you connect your GitHub repository to Cloudflare, it's able to watch for pushes and merges to whichever branch you have specified to build from and re-build your project based on any changes made.
+
+Here's a quick step by step guide to get your Solid.js online repo up and running on Cloudflare Pages
+
+**Note:** We will be making use of GitHub as an example. However, Cloudflare allows you to connect your GitLab repos as well.
+
+**Step 1:** Log into or sign up for [Cloudflare](https://dash.cloudflare.com/login) using your email address. The log in screen should look something like this.
+
+<img src="/images/how-to-guides/deployment/cloudflare-login.png" />
+
+**Step 2:** Once you're logged in or signed up, navigate to `Pages` using the left navigation bar, after that add a new project to your Cloudflare Pages dashboard by clicking the `Create a project` button and selecting `Connect to Git`.
+
+Once you've done that you should be navigated to a screen that looks similar to this.
+
+<img src="/images/how-to-guides/deployment/cloudflare-dashboard.png" />
+
+**Step 3:** Connect your GitHub. In this step you can choose to install Cloudflare Pages into all your repositories or you could select which repositories to install Cloudflare Pages into. It's up to you, feel free to choose whichever option best suits your workflow 🙂.
+
+Once you've connected your GitHub, you should see a page like this
+
+<img src="/images/how-to-guides/deployment/cloudflare-after-connection.png" />
+
+**Step 4:** Once you've connected and chosen your repository, now all that's left is to setup how the project is built. If you clicked the `Begin setup` button you should see the following screen.
+
+<img src="/images/how-to-guides/deployment/cloudflare-setup.png" />
+
+The project name will correspond with the repo name. Make sure that the `Build command` field contains what you make use of in order to build your project, which should be the default `npm run build`. The `Build output directory` field should have the value of `dist`.
+
+<Aside>
+  Note: Make sure to add the environment variable of <code>NODE_VERSION</code> with
+  the value of whichever version of Node.js you are making use of on your
+  machine. If you fail to do this your build will fail as Cloudflare Pages makes use of a Node.js version older than v13 which does not properly support Vite, the bundler for Solid.js projects.
+</Aside>
+
+Hit `Save and Deploy` when you're done.
+
+**Final Step:** Once you're done with all that just wait a few minutes and voila your Solid.js project should be deployed on Cloudflare Pages with a URL similar to this `project_name.pages.dev`.
+
+
+## Using The Wrangler CLI 
+
+Wrangler is a command-line tool used for building Cloudflare workers. Here are some steps you can follow to deploy your Solid.js project on Cloudflare using Wrangler
+
+**Step 1:** Install Wrangler CLI
+
+```bash
+npm i -g wrangler 
+# or
+pnpm i -g wrangler 
+# or 
+yarn global add wrangler 
+```
+
+**Step 2:** Log into wrangler using cloudflare 
+
+```bash
+wrangler login 
+```
+
+**Step 3:** Build the project and deploy using wrangler
+
+```bash
+npm run build
+
+npx wrangler pages publish dist
+```
+
+Once you're done you should see a link printed in the terminal, however most times that link does not work. You will have to go into your cloudflare pages dashboard and get the deployed link from there. It's usually in the format `project-name.pages.dev`. 
+
+<Aside> 
+  Feel free to visit the <Link href="https://cloudflare.com" target="_blank">Cloudflare</Link> or <Link target="_blank" href="https://developers.cloudflare.com/workers/wrangler/get-started/">Wrangler</Link> website for more information or just to find out the cool things they could help you do.
+</Aside>

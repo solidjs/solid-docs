@@ -42,7 +42,7 @@ Instead, we wish to deliberately _teach_: create resources that are designed to 
   1. Have someone in mind when you write
   </summary>
 
-We're writing for people, and different people come to the docs at different levels of experience and expectations. This doesn't mean that every piece of writing should serve every learning need - see our different [Content Types](#content-types). But it does mean that you can teach more effectively if you have an idea of who you're teaching and what works for them.
+We're writing for people, and different people come to the docs at different levels of experience and expectations. This doesn't mean that every piece of writing should serve every learning need - see our different [Content Types](#content-types). But it does mean that you can teach more effectively if you have an idea of whom you're teaching and what works for them.
 
 This can be difficult when you don't have a real person in mind (though we're very interested in establishing user testing for docs!). Before you write, establish what the reader knows beforehand and where you want them to end up. Make those expectations (and any prerequisites) clear to the reader.
 
@@ -178,7 +178,7 @@ The W3C provides [standards for readability](https://www.w3.org/WAI/WCAG21/quick
 
 To keep reading level low:
 
-- Where possible, avoid using compound sentences with many clauses. A period provides a natural stopping point for the reader to comprehend a point. Take avantage of this and split larger ideas into smaller sentences.
+- When possible, avoid using compound sentences with many clauses. A period provides a natural stopping point for the reader to comprehend a point. Take advantage of this and split larger ideas into smaller sentences.
 - Use simple English words. If you can think of a shorter word that expresses the same idea as a longer word, use the shorter word.
 - Keep paragraphs short and focused. Each paragraph should have a specific goal and only include information that meets it. Break paragraphs often and don't be afraid to use bullet points. (If you come from a programming background, you can think about this like the [Single Responsibility Principle](https://en.wikipedia.org/wiki/Single-responsibility_principle) but for paragraphs.)
 
@@ -209,6 +209,12 @@ Word choice can present an understanding barrier, but it can also be excluding. 
 Google's [inclusive language](https://developers.google.com/style/inclusive-documentation) guide provides an overview and examples for writing inclusive documentation.
 
 ## Terminology
+
+### American English
+
+We're using Standard American English spellings.
+
+### Solid Terms
 
 This is a list of Solid-specific words and what they mean. In the second column, we put:
 

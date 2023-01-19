@@ -1,0 +1,191 @@
+import { PrevSection, NextSection, PrevNextSection } from "~/components/NextSection";
+import { FrameworkAside } from "~/components/configurable/Aside";
+import { CodeTabs } from "~/components/Tabs";
+import { BasicBookshelfShow } from "./components/BasicBookshelfShow";
+import Dashboardjs from "./snippets/Dashboardjs.mdx";
+import Dashboardts from "./snippets/Dashboardts.mdx";
+import App4js from "./snippets/bookshelf/App4js.mdx";
+import App4ts from "./snippets/bookshelf/App4ts.mdx";
+import App5js from "./snippets/bookshelf/App5js.mdx";
+import App5ts from "./snippets/bookshelf/App5ts.mdx";
+import AddBook3js from "./snippets/bookshelf/AddBook3js.mdx";
+import AddBook3ts from "./snippets/bookshelf/AddBook3ts.mdx";
+import BookList5js from "./snippets/bookshelf/BookList5js.mdx";
+import BookList5ts from "./snippets/bookshelf/BookList5ts.mdx";
+
+<title>Conditional UI Display</title>
+
+# Conditional User Interface Display
+
+In dynamic front-end applications, we typically want to show different user interfaces when the application is in different states. An example of this is displaying a welcome message to either a guest or an authenticated user.
+
+For a guest, we might want to display a generic welcome message alongside a sign-in form:
+
+```tsx
+<div>Welcome to the application. Please sign in to continue.</div>
+<SignInForm />
+```
+
+For an authenticated user, we might want to greet them by their name and provide them with their custom dashboard:
+
+```tsx
+<div>Welcome back, Jessica!</div>
+<Dashboard />
+```
+
+## Conditionally showing content
+
+In Solid, we can use the `<Show />` component to conditionally show content. The `<Show />` component takes a `when` prop and an optional `fallback` prop.
+
+- When the `when` prop is `true`, the JSX inside `<Show />` is displayed
+- When the `when` prop is `false`, the JSX inside `fallback` is displayed (if provided)
+
+The following example shows how we would use the `<Show />` component to conditionally display a sign-in or dashboard page:
+
+<CodeTabs
+  js={[{ name: "Home.jsx", component: Dashboardjs }]}
+  ts={[{ name: "Home.tsx", component: Dashboardts }]}
+/>
+
+When `props.isLoggedIn` is `true`, we welcome the user back and show the `<Dashboard />`. When `props.isLoggedIn` is `false`, we display the `fallback` content, which is our generic greeting message and the `<SignInForm />`.
+
+<FrameworkAside framework="react">
+In React, it's a common pattern to handle control flow by returning early from a component function. For example, you might have done the following to accomplish our conditional authentication display:
+
+```jsx
+function Home(props) {
+  if (props.isLoggedIn) {
+    return (
+      <>
+        <div>Welcome back, {props.firstName}!</div>
+        <Dashboard />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div>Welcome to the application. Please sign in to continue.</div>
+      <SignInForm />
+    </>
+  );
+}
+```
+
+However, **this won't work in Solid!**
+
+In the [Building UI with Components](../building-ui-with-components) section of this tutorial, we noted that component functions _run only once_ in Solid. This means the JSX returned from that initial function return is the only JSX that will ever be returned from the function.
+
+In Solid, if we want to conditionally display JSX in a component, we need that condition to reside within the returned JSX. While this takes some adjustment when coming from React, we have found that the fine-grained control afforded by Solid's reactive system is worth the trade-off.
+
+</FrameworkAside>
+<FrameworkAside framework="angular">
+Instead of `Show`, Angular might use `ngIf`. Similarly,  instead of `fallback`, `ngIf` would use the `else` clause alongside
+an `ng-template`.
+
+```html
+<ng-container *ngIf="isLoggedin; else notLoggedIn">
+  <div>Welcome back, {{firstName}}!</div>
+  <dashboard></dashboard>
+</ng-container>
+<ng-template #notLoggedIn>
+  <div>Welcome to the application. Please sign in to continue.</div>
+  <sign-in-form></sign-in-form>
+</ng-template>
+```
+
+</FrameworkAside>
+<FrameworkAside framework="vue">
+
+The above would be written as the following in Vue:
+
+```html
+<template v-if="isLoggedIn">
+  <div>Welcome to the application. Please sign in to continue.</div>
+  <SignInForm />
+</template>
+<template v-else>
+  <div>Welcome back, {{firstName}}!</div>
+  <Dashboard />
+</template>
+```
+
+</FrameworkAside>
+
+## Iterating over data with `<For />`
+
+User interfaces often require us to display lists of data. These lists can typically be of any length, and therefore we can't just hardcode each element. Instead, Solid gives us the `<For />` component. If you have been coding along with the Bookshelf app example, you'll notice we already had to use this component.
+
+The `<For />` component takes the array you want to loop over in the `each` prop:
+
+```jsx
+const books = ["Book 1", "Book 2"];
+
+<For each={books}>...</For>;
+```
+
+Inside the `<For />` component, you use a _callback function_ to loop over the items. In this case, we create a new list item `<li>` for each book in our `books` array:
+
+```jsx
+const books = ["Book 1", "Book 2"];
+
+<For each={books}>
+  {(book) => {
+    return <li>{book}</li>;
+  }}
+</For>;
+```
+
+<FrameworkAside framework="react">
+
+In React, you iterate over arrays in JSX using the array `map` method:
+
+```jsx
+<>
+  {books.map((book) => {
+    return <li key={book}>{book}</li>;
+  })}
+</>
+```
+
+While this would work in Solid, it's not optimal. You can think of `<For />` as an optimized version of `map`. When using `<For /> `, Solid is able to intelligently determine which array elements to update. This is why we don't have to use a `key` like we would in React.
+
+</FrameworkAside>
+
+## Revisiting the bookshelf
+
+In the [Adding Interactivity with State](../adding-interactivity-with-state) section of this tutorial, we found ourselves already needing the `<For />` component. This allowed us to iterate over any number of books in on our bookshelf:
+
+<CodeTabs
+  js={[
+    { name: "App.jsx", component: App4js },
+    { name: "AddBook.jsx", component: AddBook3js },
+    { name: "BookList.jsx", component: BookList5js, default: true },
+  ]}
+  ts={[
+    { name: "App.tsx", component: App4ts },
+    { name: "AddBook.tsx", component: AddBook3ts },
+    { name: "BookList.tsx", component: BookList5ts, default: true },
+  ]}
+/>
+
+Let's now use the `<Show />` component. We will only show our `AddBook` form if the user wants to add a book.
+
+We will create a boolean signal in the `Bookshelf` component that tracks whether or not the form is open and add buttons to open and close the form. We will use the `<Show />` component to conditionally display the form.
+
+<CodeTabs
+  js={[
+    { name: "App.jsx*", component: App5js },
+    { name: "AddBook.jsx", component: AddBook3js },
+    { name: "BookList.jsx", component: BookList5js },
+  ]}
+  ts={[
+    { name: "App.tsx*", component: App5ts },
+    { name: "AddBook.tsx", component: AddBook3ts },
+    { name: "BookList.tsx", component: BookList5ts },
+  ]}
+/>
+
+When `showForm()` is `true`, the app displays the `<AddBook />` form and a button that allows us to hide the form again. When `showForm()` is `false`, the `fallback` component is displayed&mdash;a button to show the `<AddBook />` form.
+
+<BasicBookshelfShow name="Solid" />

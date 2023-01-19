@@ -1,8 +1,15 @@
-import { NavLink, Route, Routes, useLocation } from "solid-app-router";
+import { NavLink, Route, Routes, useLocation } from "@solidjs/router";
 import { NavHeader } from "./NavHeader";
-import { NavGroup, NavItem } from "./NavSection";
-import { Accordion } from "solid-headless";
-import { createEffect, createSignal, For, on, Show } from "solid-js";
+import { NavPreferences } from "./NavPreferences";
+import { Collapsible, NavItem } from "./NavSection";
+import { createEffect, createSignal, For, Show } from "solid-js";
+import {
+  GUIDES_SECTIONS,
+  REFERENCE_SECTIONS,
+  SECTIONS,
+  SECTION_LEAF_PAGE,
+  SECTION_PAGE,
+} from "~/NAV_SECTIONS";
 
 export default function Nav(props: { docsMode: "start" | "regular" }) {
   const [showMenu, setShowMenu] = createSignal(false);
@@ -16,21 +23,34 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
   });
 
   return (
-    <div class="lg:max-h-screen lg:sticky lg:top-0 no-bg-scrollbar py-0 lg:max-w-xs w-full shadow lg:shadow-none z-50 overflow-y-scroll">
-      <NavHeader
-        docsMode={props.docsMode}
-        showMenu={showMenu()}
-        setShowMenu={setShowMenu}
-      />
+    <div class="lg:max-h-screen lg:sticky lg:top-0 no-bg-scrollbar lg:max-w-sm w-full shadow lg:shadow-none z-50 overflow-y-auto flex flex-col gap-8">
+      <div class="flex flex-col gap-4">
+        <NavHeader
+          docsMode={props.docsMode}
+          showMenu={showMenu()}
+          setShowMenu={setShowMenu}
+        />
+      </div>
+      {/* <div id="docsearch"></div> */}
+      <div class="hidden md:block">
+        <NavPreferences id="desktop" />
+      </div>
       <div
         classList={{
           hidden: !showMenu(),
-          "lg:block": true,
+          "lg:block border-b md:border-none border-solid-lightitem dark:border-solid-darkitem pb-4":
+            true,
         }}
       >
         <Show when={props.docsMode === "regular"} fallback={<StartMenu />}>
           <TopMenu />
         </Show>
+      </div>
+      {/* <div class="my-2" classList={{ hidden: props.docsMode == "regular" }}>
+        <div id="docsearch" />
+      </div> */}
+      <div class="md:hidden">
+        <NavPreferences id="mobile" />
       </div>
     </div>
   );
@@ -38,15 +58,17 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
 
 function TopMenu() {
   return (
-    <aside class="w-full pt-4 lg:max-w-xs">
-      <nav
-        role="navigation"
-        class="scrolling-touch scrolling-gpu"
-        style="--bg-opacity:0.2;"
-      >
+    <aside class="w-full">
+      <nav class="scrolling-touch scrolling-gpu" style="--bg-opacity:0.2;">
         <Routes>
-          <Route path="/reference/**/*" component={ReferenceNav} />
-          <Route path="/guides/**/*" component={GuidesNav} />
+          <Route
+            path={"/references/**/*"}
+            component={ReferenceNav}
+          />
+          <Route
+            path={"/guides/**/*"}
+            component={GuidesNav}
+          />
           <Route path="/**/*" component={GuidesNav} />
         </Routes>
       </nav>
@@ -54,121 +76,7 @@ function TopMenu() {
   );
 }
 
-const HomeSections = {
-  // Foundations: {
-  //   header: "Foundations",
-  //   link: "/guides/foundations",
-  //   inSubsections: (p) => p.startsWith("/api/files"),
-  // },
-  // Forms: {
-  //   header: "Forms",
-  //   link: "/api/forms",
-  //   inSubsections: (p) => p.startsWith("/api/forms"),
-  // },
-  // "Server Functions": {
-  //   header: "Server Functions",
-  //   link: "/api/server",
-  //   inSubsections: (p) => p.startsWith("/api/server"),
-  // },
-  // Router: {
-  //   header: "Router",
-  //   link: "/api/router",
-  //   inSubsections: (p) => p.startsWith("/api/router"),
-  // },
-  // Session: {
-  //   header: "Session",
-  //   link: "/api/session",
-  //   inSubsections: (p) => p.startsWith("/api/session"),
-  // },
-};
-
-const START_SECTIONS = [
-  {
-    header: "Getting started",
-    link: "/start/getting-started",
-    subsections: [
-      { header: "What is SolidStart?", link: "/what-is-solidstart" },
-      { header: "Project setup", link: "/project-setup" },
-    ],
-  },
-  {
-    header: "Core concepts",
-    link: "/start/core-concepts",
-    subsections: [
-      { header: "Routing & pages", link: "/routing-and-pages" },
-      { header: "CSS and styling", link: "/css-and-styling" },
-      { header: "Static assets", link: "/static-assets" },
-      { header: "Head & metadata", link: "/head-and-metadata" },
-      { header: "Data fetching", link: "/data-fetching" },
-      { header: "Actions", link: "/actions" },
-      { header: "State management", link: "/state-management" },
-      { header: "Request lifecycle", link: "/request-lifecycle" },
-      {
-        header: "Environments & deployment",
-        link: "/environments-and-deployment",
-      },
-    ],
-  },
-  {
-    header: "Advanced concepts",
-    link: "/start/advanced",
-    subsections: [
-      { header: "Streaming", link: "/streaming" },
-      { header: "Caching", link: "/caching" },
-      { header: "API routes", link: "/api-routes" },
-      { header: "Usage with databases", link: "/databases" },
-      { header: "Middleware", link: "/middleware" },
-      { header: "Authentication", link: "/authentication" },
-      { header: "Testing", link: "/testing" },
-      { header: "Internationalization", link: "/i18n" },
-      { header: "Static site generation", link: "/ssg" },
-      { header: "SEO", link: "/seo" },
-    ],
-  },
-  {
-    header: "API",
-    link: "/start/api",
-    subsections: [
-      { header: "Error boundary", link: "/error-boundary" },
-      { header: "Files", link: "/files" },
-      { header: "Forms", link: "/forms" },
-      { header: "Head", link: "/head" },
-      { header: "Router", link: "/router" },
-      { header: "Server", link: "/server" },
-      { header: "Session", link: "/session" },
-    ],
-  },
-];
-
-function StartMenu() {
-  return (
-    <ul class="m-5">
-      <For each={START_SECTIONS}>
-        {(section) => (
-          <li class="mb-6">
-            <span class="font-bold mb-2 block">{section.header}</span>
-            <ul>
-              <For each={section.subsections}>
-                {(subsection) => (
-                  <li class="px-2 my-1 py-0">
-                    <NavLink
-                      style="font-size: 0.95rem"
-                      class="hover:underline"
-                      activeClass="underline"
-                      href={section.link + subsection.link}
-                    >
-                      {subsection.header}
-                    </NavLink>
-                  </li>
-                )}
-              </For>
-            </ul>
-          </li>
-        )}
-      </For>
-    </ul>
-  );
-}
+const START_SECTIONS = [];
 
 const allStartSections: Record<"title" | "link", string>[] = [];
 for (const section of START_SECTIONS) {
@@ -190,111 +98,178 @@ export function getStartSection(pathname: string) {
   return allStartSections[current + 1];
 }
 
-const REFERENCE_SECTIONS = {
-  Concepts: {
-    header: "Concepts",
-    link: "/reference/tracking",
-    inSubsections: (p) => p.startsWith("/reference"),
-    subsections: {
-      Tracking: {
-        header: "Tracking",
-        link: "/reference/tracking",
-      },
-    },
-  },
-};
-const GUIDES_SECTIONS = {
-  GettingStartedWithSolid: {
-    header: "Getting Started With Solid",
-    link: "/guides/getting-started/welcome",
-    inSubsections: (p) => p.startsWith("/guides/getting-started-with-solid"),
-    subsections: {
-      Welcome: {
-        header: "Welcome",
-        link: "/guides/getting-started-with-solid/welcome",
-      },
-      "Installing Solid": {
-        header: "Installing Solid",
-        link: "/guides/getting-started-with-solid/installing-solid",
-      },
-      "Building UI with Components": {
-        header: "Building UI with Components",
-        link: "/guides/getting-started-with-solid/building-ui-with-components",
-      },
-      "Adding Interactivity with State": {
-        header: "Adding Interactivity with State",
-        link: "/guides/getting-started-with-solid/adding-interactivity-with-state",
-      },
-      "Control Flow": {
-        header: "Control Flow",
-        link: "/guides/getting-started-with-solid/control-flow",
-      },
-      "Fetching Data": {
-        header: "Fetching Data",
-        link: "/guides/getting-started-with-solid/fetching-data",
-      },
-    },
-  },
-  Foundations: {
-    header: "Foundations",
-    link: "/guides/foundations/why-solid",
-    subsections: {
-      "Why Solid?": {
-        header: "Why Solid?",
-        link: "/guides/foundations/why-solid",
-      },
-      "JavaScript for Solid": {
-        header: "JavaScript for Solid",
-        link: "/guides/foundations/javascript-for-solid",
-      },
-    },
-    inSubsections: (p) => p.startsWith("/guides/foundations"),
-  },
-};
+export function getNextPrevPages(pathname: string, sections:SECTIONS) {
+  const allGuidesSections = getAllSections(sections);
+  let nextPrevPages:SECTION_LEAF_PAGE[] = []
+
+  const currentPageIndex = allGuidesSections.findIndex(v => v.link.startsWith(pathname))
+  const nextPage = allGuidesSections[currentPageIndex+1]
+  const prevPage = allGuidesSections[currentPageIndex-1]
+
+  nextPrevPages.push(...[prevPage, nextPage])
+
+  return nextPrevPages;
+}
+
+function getAllSections(
+  sections: SECTIONS | (SECTION_PAGE | SECTION_LEAF_PAGE)[]
+):SECTION_LEAF_PAGE[] {
+  let allSections:SECTION_LEAF_PAGE[] = [];
+
+  for (const section in sections) {
+    const doesSectionContainPages = sections[section].pages !== undefined;
+    if (doesSectionContainPages) {
+      for (const page of sections[section].pages) {
+        const doesPageContainInnerPages =
+          (page as SECTION_PAGE).pages !== undefined;
+        if (doesPageContainInnerPages) {
+          allSections.push(...getAllSections((page as SECTION_PAGE).pages));
+        } else {
+          allSections.push(page);
+        }
+      }
+    } else {
+      allSections.push(sections[section]);
+    }
+  }
+
+  return allSections;
+}
+
+function StartMenu() {
+  return (
+    <ul class="m-5 nav">
+      <For each={START_SECTIONS}>
+        {(section) => (
+          <li class="mb-6">
+            <span class="font-bold mb-2 block">{section.header}</span>
+            <ul>
+              <For each={section.subsections}>
+                {(subsection: any) => (
+                  <>
+                    <li class="px-2 my-1 py-0">
+                      <NavLink
+                        style="font-size: 0.95rem"
+                        class="hover:underline"
+                        activeClass="text-solid-default font-bold"
+                        href={section.link + subsection.link}
+                      >
+                        {subsection.header}
+                      </NavLink>
+                    </li>
+                    <Show when={subsection.subsections?.length}>
+                      <ul class="px-2">
+                        <For each={subsection.subsections}>
+                          {(item: any) => (
+                            <>
+                              <li class="pl-4 my-1 py-0">
+                                <NavLink
+                                  style="font-size: 0.85rem"
+                                  class="hover:underline"
+                                  activeClass="text-solid-default font-bold"
+                                  href={section.link + item.link}
+                                >
+                                  {item.header}
+                                </NavLink>
+                              </li>
+                            </>
+                          )}
+                        </For>
+                      </ul>
+                    </Show>
+                  </>
+                )}
+              </For>
+            </ul>
+          </li>
+        )}
+      </For>
+    </ul>
+  );
+}
 
 function ReferenceNav() {
   return <SectionNav sections={REFERENCE_SECTIONS} />;
-}
-
-function SectionNav(props) {
-  const location = useLocation();
-  let section = Object.keys(props.sections).find(
-    (k) =>
-      location.pathname.startsWith(props.sections[k].link) ||
-      props.sections[k].inSubsections(location.pathname)
-  );
-
-  return (
-    <Accordion
-      as="ul"
-      toggleable
-      defaultValue={section ? props.sections[section].header : undefined}
-    >
-      <For each={Object.keys(props.sections)}>
-        {(header) => (
-          <NavGroup
-            href={props.sections[header].link}
-            header={props.sections[header].header}
-          >
-            <For each={Object.keys(props.sections[header].subsections ?? {})}>
-              {(subsection, i) => (
-                <NavItem
-                  href={props.sections[header].subsections[subsection].link}
-                  title={props.sections[header].subsections[subsection].header}
-                >
-                  {props.sections[header].subsections[subsection].header}
-                </NavItem>
-              )}
-            </For>
-          </NavGroup>
-        )}
-      </For>
-    </Accordion>
-  );
 }
 
 function GuidesNav() {
   return <SectionNav sections={GUIDES_SECTIONS} />;
 }
 
-//dark:hover:bg-solid-darkLighterBg pointer-fine:hover:text-white pointer-fine:hover:bg-solid-medium dark:bg-solid-light text-white
+function SectionsNavIterate(props: {
+  pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>;
+}) {
+  const location = useLocation();
+
+  // createEffect(() => {
+  //   console.log(location.pathname);
+  // });
+
+  function isLeafPage(
+    page: SECTION_PAGE | SECTION_LEAF_PAGE
+  ): page is SECTION_LEAF_PAGE {
+    return "link" in page;
+  }
+
+  //Wouldn't work if we actually went recursive (where the next level would have the possibility of not having any links)
+  const isCollapsed = (pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>) => {
+    return !pages.some((page) => {
+      return isLeafPage(page) && location.pathname == page?.link;
+    });
+  };
+
+  return (
+    <For each={props.pages}>
+      {(subsection: SECTION_LEAF_PAGE | SECTION_PAGE) => (
+        <>
+          <Show when={isLeafPage(subsection)}>
+            <NavItem
+              href={(subsection as SECTION_LEAF_PAGE).link}
+              title={subsection.name}
+            >
+              {subsection.name}
+            </NavItem>
+          </Show>
+          <Show when={(subsection as SECTION_PAGE).pages}>
+            <ul>
+              <Collapsible
+                header={subsection.name}
+                startCollapsed={isCollapsed((subsection as SECTION_PAGE).pages)}
+              >
+                <SectionsNavIterate
+                  pages={(subsection as SECTION_PAGE).pages}
+                />
+              </Collapsible>
+            </ul>
+          </Show>
+        </>
+      )}
+    </For>
+  );
+}
+
+function SectionNav(props: { sections: SECTIONS }) {
+  const sectionNames = Object.keys(props.sections);
+
+  return (
+    <ul class="flex flex-col gap-4">
+      <For each={sectionNames}>
+        {(name, i) => (
+          <>
+            <li>
+              <h2 class="pl-2 text-solid-dark dark:text-white font-bold text-xl">
+                {props.sections[name].name}
+              </h2>
+              <SectionsNavIterate pages={props.sections[name].pages} />
+            </li>
+            <Show when={i() !== sectionNames.length - 1}>
+              <li>
+                <hr class="w-full mb-2" />
+              </li>
+            </Show>
+          </>
+        )}
+      </For>
+    </ul>
+  );
+}

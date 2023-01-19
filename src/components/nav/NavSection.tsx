@@ -1,92 +1,88 @@
-import {
-  AccordionHeader,
-  AccordionItem,
-  AccordionPanel,
-  useHeadlessSelectOptionChild,
-} from "solid-headless";
+import { NavLink } from "@solidjs/router";
+import IconChevron from "~icons/heroicons-outline/chevron-right";
 
-import { NavLink, useLocation } from "solid-app-router";
-
-import { usePageState } from "../PageStateContext";
-import { For, Show } from "solid-js";
+import { Show, createSignal, ParentProps, createUniqueId } from "solid-js";
 
 export function CollapsedIcon(props) {
   return <div class={"duration-100 ease-in transition" + props.class}>▼</div>;
 }
 
-export function NavGroup(props) {
-  return (
-    <AccordionItem value={props.header} class="mt-2" as="li">
-      <SectionHeader href={props.href}>{props.header}</SectionHeader>
-      <SectionPanel>{props.children}</SectionPanel>
-    </AccordionItem>
-  );
-}
+type CollapsibleProps = ParentProps<{
+  startCollapsed?: boolean;
+  header: string;
+}>;
 
-function SectionHeader(props) {
-  let child = useHeadlessSelectOptionChild();
+export function Collapsible(props: CollapsibleProps) {
+  const [collapsed, setCollapsed] = createSignal(props.startCollapsed || false);
+
+  const id = createUniqueId();
+
   return (
-    <AccordionHeader>
-      <a
-        class="p-2 pr-2 w-full h-full text-solid-dark dark:text-white rounded-none lg:rounded-r-lg text-left relative flex items-center justify-between pl-5 text-base font-bold"
-        onClick={() => child.select()}
-        href="javascript:"
+    <li value={props.header} class="m-2">
+      <SectionHeader
+        collapsed={collapsed()}
+        onClick={() => setCollapsed((prev) => !prev)}
+        panelId={id}
       >
-        <>
-          {props.children}
-          <span class={`pr-1`}>
-            <CollapsedIcon
-              class={`flex-0 transform ${
-                child.isSelected() ? "rotate-0" : "-rotate-90 -translate-y-px"
-              }`}
-            />
-          </span>
-        </>
-      </a>
-    </AccordionHeader>
+        {props.header}
+      </SectionHeader>
+      <Show when={!collapsed()}>
+        <SectionPanel id={id}>{props.children}</SectionPanel>
+      </Show>
+    </li>
   );
 }
 
-function SectionPanel(props) {
+export function SectionHeader(
+  props: ParentProps<{
+    collapsed: boolean;
+    panelId: string;
+    onClick: () => void;
+  }>
+) {
   return (
-    <AccordionPanel
-      as="ul"
-      class="opacity-100"
-      style="transition: opacity 250ms ease-in-out 0s; animation: 250ms ease-in-out 0s 1 normal none running nav-fadein;"
+    <h3>
+      <button
+        class="w-full text-solid-dark dark:text-solid-light text-left relative flex items-center justify-between py-2"
+        onClick={props.onClick}
+        // aria-expanded={!props.collapsed}
+        // aria-controls={props.panelId}
+      >
+        {props.children}
+        <IconChevron
+          class={`transition w-6 h-6 text-solid-lightaction dark:text-solid-darkaction transform ${
+            !props.collapsed ? "rotate-90" : ""
+          }`}
+        />
+      </button>
+    </h3>
+  );
+}
+
+function SectionPanel(props: ParentProps<{ id: string }>) {
+  return (
+    <ul
+      id={props.id}
+      class="opacity-100 md:border-l border-solid-lightitem dark:border-solid-darkitem"
+      style="list-none transition: opacity 250ms ease-in-out 0s; animation: 250ms ease-in-out 0s 1 normal none running nav-fadein;"
     >
       {props.children}
-    </AccordionPanel>
+    </ul>
   );
 }
 
 export function NavItem(props) {
-  const isActive = () => props.href === useLocation().pathname;
-
-  const { sections } = usePageState();
-
   return (
-    <li class="">
+    <li>
       <NavLink
-        class="font-semibold text-base p-2 pl-5 w-full rounded-none lg:rounded-r-lg text-left relative flex items-center justify-between"
+        class="p-2 text-base w-full rounded-lg md:(rounded-r-xl rounded-l-none) text-left relative flex items-center justify-between transition"
         {...props}
-        inactiveClass="hover:text-solid-light hover:dark:text-solid-darkdefault"
-        activeClass="text-white bg-solid-light dark:bg-solid-light border-blue-40 active"
+        inactiveClass="hover:bg-solid-light hover:dark:bg-solid-darkbg"
+        activeClass="text-white font-semibold bg-solid-accent active"
+        end={true}
       >
         {props.children}
       </NavLink>
-      <Show when={isActive()}>
-        <div class="ml-4">
-          <ol class="pl-5 mt-2 list-decimal space-y-1">
-            <For each={sections()}>
-              {(item) => (
-                <li class="text-base">
-                  <a href={"#" + item.href}>{item.title}</a>
-                </li>
-              )}
-            </For>
-          </ol>
-        </div>
-      </Show>
     </li>
   );
 }

@@ -2,7 +2,7 @@
 
 ![Tests](https://github.com/solidjs/solid-docs-next/actions/workflows/playwright.yml/badge.svg)
 
-This is the working repository for our new docs effort. The infrastructure is built on [SolidStart](https://github.com/solidjs/solid-start) and the content structure and goals are inspired by [Diataxis](https://diataxis.fr/) and the [React Beta Docs.](https://diataxis.fr/)
+This is the working repository for our new docs effort. The infrastructure is built on [SolidStart](https://github.com/solidjs/solid-start) and the content structure and goals are inspired by [Diataxis](https://diataxis.fr/) and the [React Beta Docs.](https://beta.reactjs.org/)
 
 ## Running the Site
 
@@ -17,7 +17,7 @@ npm run dev
 
 ## Contributing
 
-(Contributing guide and writing guide in progress!)
+We're looking for new contributors! Please check out our [Contributing Guide](https://github.com/solidjs/solid-docs-next/blob/main/CONTRIBUTING.md) to get started. If you're interested in writing and editing content, please read our [Writing Guide](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md).
 
 ## The Solid Docs Manifesto
 
@@ -27,6 +27,6 @@ npm run dev
 
 3. <h4>Documentation is inclusive and collaborative.</h4> We prioritize inclusion because good design is inclusive. Everyone should be able to understand the docs, and everyone should feel that the docs are written <em>by</em> people like them <em>for</em> people like them. This includes people of different perspectives, backgrounds, and levels of tech expertise.
 
-4. <h4>Documentation is accessible.</h4> Learning Solid should be possible for anyone. At their best, docs break down barriers and create new opportunities. To do that, we must accomodate all learners. Beyond accessible text, docs include code examples, videos, and drawings, so we can support different needs and learning styles.
+4. <h4>Documentation is accessible.</h4> Learning Solid should be possible for anyone. At their best, docs break down barriers and create new opportunities. To do that, we must accommodate all learners. Beyond accessible text, docs include code examples, videos, and drawings, so we can support different needs and learning styles.
 
 5. <h4>Documentation is fun.</h4> Learning a new skill feels amazing. Let’s make it fun to teach, too! We’re a community of volunteers, and that community matters: we care about our users, and we care about each other.

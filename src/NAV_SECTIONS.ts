@@ -342,19 +342,19 @@ export const REFERENCE_SECTIONS: SECTIONS = {
               },
               {
                 name: "on:* and oncapture:*",
-                link: "/references/api-reference/special-jsx-attributes/on:_-and-oncapture:_",
+                link: "/references/api-reference/special-jsx-attributes/on_-and-oncapture_",
               },
               {
                 name: "use:*",
-                link: "/references/api-reference/special-jsx-attributes/use:_",
+                link: "/references/api-reference/special-jsx-attributes/use_",
               },
               {
                 name: "prop:*",
-                link: "/references/api-reference/special-jsx-attributes/prop:_",
+                link: "/references/api-reference/special-jsx-attributes/prop_",
               },
               {
                 name: "attr:*",
-                link: "/references/api-reference/special-jsx-attributes/attr:_",
+                link: "/references/api-reference/special-jsx-attributes/attr_",
               },
               {
                 name: "/*@once*/",

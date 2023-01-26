@@ -1,1 +1,40 @@
 <Title>{"<For>"}</Title>
+
+The `<For>` component is used to render a list of items. It is similar to the `.map()` function in JavaScript.
+
+```ts
+function For<T, U extends JSX.Element>(props: {
+  each: readonly T[];
+  fallback?: JSX.Element;
+  children: (item: T, index: () => number) => U;
+}): () => U[];
+```
+
+A referentially keyed loop with efficient updating of only changed items. The callback takes the current item as the first argument:
+
+```jsx
+<For each={state.list} fallback={<div>Loading...</div>}>
+  {(item) => <div>{item}</div>}
+</For>
+```
+
+The `each` prop can also be a function that returns a list. This is useful for creating a loop that depends on a state value:
+
+```jsx
+<For each={stateSignal()}>
+  {(item) => <div>{item}</div>}
+</For>
+```
+
+The optional second argument is an index signal:
+
+```jsx
+<For each={state.list} fallback={<div>Loading...</div>}>
+  {(item, index) => (
+    <div>
+      #{index()} {item}
+    </div>
+  )}
+</For>
+```
+

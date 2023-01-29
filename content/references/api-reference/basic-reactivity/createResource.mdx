@@ -1,1 +1,175 @@
 <Title>createResource</Title>
+
+This creates a signal that returns the result of an async request.
+
+```ts
+type ResourceReturn<T> = [
+  {
+    (): T | undefined;
+    state: "unresolved" | "pending" | "ready" | "refreshing" | "errored";
+    loading: boolean;
+    error: any;
+    latest: T | undefined;
+  },
+  {
+    mutate: (v: T | undefined) => T | undefined;
+    refetch: (info: unknown) => Promise<T> | T;
+  }
+];
+
+export type ResourceOptions<T, S = unknown> = {
+  initialValue?: T;
+  name?: string;
+  deferStream?: boolean;
+  ssrLoadFrom?: "initial" | "server";
+  storage?: (
+    init: T | undefined
+  ) => [Accessor<T | undefined>, Setter<T | undefined>];
+  onHydrated?: (k: S | undefined, info: { value: T | undefined }) => void;
+};
+
+function createResource<T, U = true>(
+  fetcher: (
+    k: U,
+    info: { value: T | undefined; refetching: boolean | unknown }
+  ) => T | Promise<T>,
+  options?: ResourceOptions<T, U>
+): ResourceReturn<T>;
+
+function createResource<T, U>(
+  source: U | false | null | (() => U | false | null),
+  fetcher: (
+    k: U,
+    info: { value: T | undefined; refetching: boolean | unknown }
+  ) => T | Promise<T>,
+  options?: ResourceOptions<T, U>
+): ResourceReturn<T>;
+```
+
+createResource takes an asynchronous fetcher function and returns a signal that is updated with the resulting data when the fetcher completes.
+
+There are two ways to use createResource: you can pass the fetcher function as the sole argument, or you can additionally pass a source signal as the first argument. The source signal will retrigger the fetcher whenever it changes, and its value will be passed to the fetcher.
+
+```ts
+const [data, { mutate, refetch }] = createResource(fetchData);
+```
+
+```ts
+const [data, { mutate, refetch }] = createResource(source, fetchData);
+```
+
+In these snippets, the fetcher is the function `fetchData`, and `data()` is undefined until `fetchData` finishes resolving. In the first case, `fetchData` will be called immediately. In the second, `fetchData` will be called as soon as `sourceSignal` has any value other than false, null, or undefined. It will be called again whenever the value of `sourceSignal` changes, and that value will always be passed to `fetchData` as its first argument.
+
+You can call `mutate` to directly update the `data` signal (it works like any other signal setter). You can also call refetch to rerun the fetcher directly, and pass an optional argument to provide additional info to the fetcher e.g `refetch(info)`.
+
+`data` works like a normal signal getter: use `data()` to read the last returned value of `fetchData`. But it also has extra reactive properties: `data.loading` tells you if the fetcher has been called but not returned, and `data.error` tells you if the request has errored out; if so, it contains the error thrown by the fetcher. (Note: if you anticipate errors, you may want to wrap `createResource` in an [ErrorBoundary](/references/api-reference/control-flow/ErrorBoundary).)
+
+As of **v1.4.0**, `data.latest` will return the last returned value and won't trigger [Suspense](/references/api-reference/control-flow/Suspense) and [transitions](#TODO); if no value has been returned yet, `data.latest` acts the same as `data()`. This can be useful if you want to show the out-of-date data while the new data is loading.
+
+`loading`, `error`, and `latest` are reactive getters and can be tracked.
+
+## The Fetcher
+
+The `fetcher` is the async function that you provide to `createResource` to actually fetch the data. It is passed two arguments: the value of the source signal (if provided), and an info object with two properties: `value` and `refetching`. The `value` property tells you the previously fetched value. The `refetching` property is true if the `fetcher` was triggered using the refetch function and false otherwise. If the `refetch` function was called with an argument (`refetch(info)`), refetching is set to that argument.
+
+```ts
+async function fetchData(source, { value, refetching }) {
+  // Fetch the data and return a value.
+  //`source` tells you the current value of the source signal;
+  //`value` tells you the last returned value of the fetcher;
+  //`refetching` is true when the fetcher is triggered by calling `refetch()`,
+  // or equal to the optional data passed: `refetch(info)`
+}
+
+const [data, { mutate, refetch }] = createResource(getQuery, fetchData);
+
+// read value
+data();
+
+// check if loading
+data.loading;
+
+// check if errored
+data.error;
+
+// directly set value without creating promise
+mutate(optimisticValue);
+
+// refetch the last request explicitly
+refetch();
+```
+
+## Version 1.4.0 and Later
+
+#### v1.4.0
+
+If you're using `renderToStream`, you can tell Solid to wait for a resource before flushing the stream using the `deferStream` option:
+
+```ts
+// fetches a user and streams content as soon as possible
+const [user] = createResource(() => params.id, fetchUser);
+
+// fetches a user but only streams content after this resource has loaded
+const [user] = createResource(() => params.id, fetchUser, {
+  deferStream: true,
+});
+```
+
+#### v1.5.0
+
+1. We've added a new state field which covers a more detailed view of the Resource state beyond `loading` and `error`. You can now check whether a Resource is `unresolved`, `pending`, `ready`, `refreshing`, or `error`.
+
+| State        | Value resolved | Loading | Has error |
+| ------------ | -------------- | ------- | --------- |
+| `unresolved` | No             | No      | No        |
+| `pending`    | No             | Yes     | No        |
+| `ready`      | Yes            | No      | No        |
+| `refreshing` | Yes            | Yes     | No        |
+| `error`      | No             | No      | Yes       |
+
+2. When server rendering resources especially when fetching when embedding Solid in other system that fetch before render, you might want to initiate the resource with this prefetched value instead of fetching again and having the resource serialize it in it's own state. You can use the new `ssrLoadFrom` option for this. Instead of using the default `server` value, you can pass `initial` and the resource will use `initialValue` as if it were the result of the first fetch for both SSR and hydration.
+
+```ts
+const [data, { mutate, refetch }] = createResource(() => params.id, fetchUser, {
+  initialValue: preloadedData,
+  ssrLoadFrom: "initial",
+});
+```
+
+3. Resources can be set with custom defined storage with the same signature as a Signal by using the storage option. For example using a custom reconciling store could be done this way:
+
+```ts
+function createDeepSignal<T>(value: T): Signal<T> {
+  const [store, setStore] = createStore({
+    value,
+  });
+  return [
+    () => store.value,
+    (v: T) => {
+      const unwrapped = unwrap(store.value);
+      typeof v === "function" && (v = v(unwrapped));
+      setStore("value", reconcile(v));
+      return store.value;
+    },
+  ] as Signal<T>;
+}
+
+const [resource] = createResource(fetcher, {
+  storage: createDeepSignal,
+});
+```
+
+## Options
+
+The `createResource` function takes an optional third argument, an options object. The options are:
+
+| Name         | Type                    | Default        | Description                                                                                                                                                   |
+| ------------ | ----------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| name         | `string`                | `undefined`    | A name for the resource. This is used for debugging purposes.                                                                                                 |
+| deferStream  | `boolean`               | `false`        | If true, Solid will wait for the resource to resolve before flushing the stream.                                                                              |
+| initialValue | `any`                   | `undefined`    | The initial value of the resource.                                                                                                                            |
+| onHydrated   | `function`              | `undefined`    | A callback that is called when the resource is hydrated.                                                                                                      |
+| ssrLoadFrom  | `"server" \| "initial"` | `"server"`     | The source of the initial value for SSR. If set to `"initial"`, the resource will use the `initialValue` option instead of the value returned by the fetcher. |
+| storage      | `function`              | `createSignal` | A function that returns a signal. This can be used to create a custom storage for the resource.                                                               |
+
+

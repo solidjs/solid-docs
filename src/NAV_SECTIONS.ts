@@ -18,6 +18,15 @@ export type SECTIONS = {
 };
 
 export const REFERENCE_SECTIONS: SECTIONS = {
+  references: {
+    name: "Welcome",
+    pages: [
+      {
+        name: "Introduction",
+        link: "/references",
+      },
+    ]
+  },
   concepts: {
     name: "Concepts",
     pages: [

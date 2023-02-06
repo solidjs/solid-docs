@@ -1,1 +1,42 @@
 <Title>createContext</Title>
+
+```ts
+interface Context<T> {
+  id: symbol;
+  Provider: (props: { value: T; children: any }) => any;
+  defaultValue: T;
+}
+
+function createContext<T>(defaultValue?: T): Context<T | undefined>;
+```
+
+Context provides a form of dependency injection in Solid. It is used to save from needing to pass data as props through intermediate components.
+
+This function creates a new context object that can be used with [useContext](/references/api-reference/component-apis/useContext) and provides the Provider control flow. Default Context is used when no Provider is found above in the hierarchy.
+
+```tsx
+export const CounterContext = createContext([{ count: 0 }, {}]);
+
+export function CounterProvider(props) {
+  const [state, setState] = createStore({ count: props.count || 0 });
+  const counter = [
+    state,
+    {
+      increment() {
+        setState("count", (c) => c + 1);
+      },
+      decrement() {
+        setState("count", (c) => c - 1);
+      },
+    },
+  ];
+
+  return (
+    <CounterContext.Provider value={counter}>
+      {props.children}
+    </CounterContext.Provider>
+  );
+}
+```
+
+The value passed to provider is passed to `useContext` as is. That means wrapping as a reactive expression will not work. You should pass in Signals and Stores directly instead of accessing them in the JSX.

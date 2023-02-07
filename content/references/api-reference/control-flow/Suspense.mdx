@@ -17,6 +17,87 @@ Here's an example of a `Suspense` component that shows a loading spinner while t
 </Suspense>
 ```
 
+## Understanding the purpose of <Suspense> in Solid:
+
+To understand the purpose of suspense, let's consider the following code snippets. These snippets will have some drawbacks which we will solve by using suspense. We will also see how it is possible to use suspense yet not reap its benefits.
+
+Our example use case is to display a user profile. A naive snippet would look like this:
+
+```javascript
+const MyComponentWithOptionalChaining = () => {
+	const [profile] = createResource(async () => { /* fetcher code here */ })
+	return (
+		<>
+			<div>{profile()?.name}</div>
+			<div>{profile()?.email}</div>
+		</>
+	)
+}
+```
+
+In this code, `profile()` starts as `undefined`, and when the fetcher code finishes, resolves to an object with `name` and `email` properties. Although the resource has not resolved yet, the two `div`s are already created and attached to the DOM, albeit with empty text nodes. Once the resource resolves, the `div`s are updated with the appropriate data.
+
+The downside of this approach is that the user is shown an empty component - let's see if we can do better than that in this next snippet:
+
+```javascript
+const MyComponentWithShow = () => {
+	const [profile] = createResource(async () => { /* fetcher code here */ })
+	return (
+	  <Show when={profile()} fallback={<div>fetching user data</div>}>
+			<div>{profile().name}</div>
+			<div>{profile().email}</div>
+		</Show>
+	)
+}
+```
+
+In this snippet, we first show a fallback when the resource hasn't resolved yet, and then switch to showing the profile data once it has. This results in a better user experience.
+
+On the other hand, there is a slight downside to this approach. In our first example (using optional chaining), the divs were created immediately, and once the resource resolves all that is needed to be done is to fill in the text of the `div`s. But in our second example (using `<Show>`), the `div`s are only created once the resource has resolved, which means there is more work that needs to be done after the resource has resolved before the data can be shown to the user (of course, in this toy example the amount of DOM work is relatively trivial).
+
+We can have the best of both world worlds by using `<Suspense>`:
+
+```javascript
+const MyComponentWithSuspense = () => {
+	const [profile] = createResource(async () => { /* fetcher code here */ })
+	return (
+	  <Suspense fallback={<div>fetching user data</div>}>
+			<div>{profile()?.name}</div>
+			<div>{profile()?.email}</div>
+		</Suspense>
+	)
+}
+```
+
+In this case, the `div`s are created immediately, but instead of being attached to the document body, the fallback is shown. Once the resource resolves, the text in the `div`s is updated, and then they are attached to the DOM (and the fallback removed).
+
+It is important to note that *execution of the component does not pause* when using suspense. Instead, when a resource is read under a suspense boundary, it ensures that the nodes are not attached to the DOM until after the resource has resolved. Suspense allows us to have the best of both worlds: do as much work as we can *before* the resource resolves, and also show a fallback until then.
+
+With this in mind, we can understand that there isn't much gained from suspense in the following code:
+
+```javascript
+const MyComponentWithSuspenseAndShow = () => {
+	const [profile] = createResource(async () => { /* fetcher code here */ })
+	return (
+	  <Suspense fallback={<div>fetching user data</div>}>
+	    <Show when={profile()}>
+				<div>{profile().name}</div>
+				<div>{profile().email}</div>
+			</Show>
+		</Suspense>
+	)
+}
+```
+
+In this code, we don't create *any* DOM nodes inside `<Suspense>` before the resource resolves, so it is pretty much the same as the second example where we only used `<Show>`.
+
+<Aside type="note">
+  Suspense is triggered by reading a resource inside the `<Suspense>` boundary.
+  Components wrapped with suspense still run fully, just as they would without suspense.
+  However, code wrapped in `onMount` and `createEffect` only run once after the resource resolves.
+</Aside>
+
+
 ## Props
 
 | Name       | Type          | Description                                                      |

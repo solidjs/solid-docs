@@ -2,7 +2,7 @@ import { NavLink, Route, Routes, useLocation } from "@solidjs/router";
 import { NavHeader } from "./NavHeader";
 import { NavPreferences } from "./NavPreferences";
 import { Collapsible, NavItem } from "./NavSection";
-import { createEffect, createSignal, For, Show } from "solid-js";
+import { createDeferred, createEffect, createSignal, For, Show, useTransition } from "solid-js";
 import {
   GUIDES_SECTIONS,
   REFERENCE_SECTIONS,

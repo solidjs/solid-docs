@@ -37,7 +37,7 @@ export const REFERENCE_SECTIONS: SECTIONS = {
             name: "Reactivity Basics",
             link: "/references/concepts/reactivity",
           },
-          { name: "Tracking", link: "/references/concepts/tracking" },
+          { name: "Tracking", link: "/references/concepts/reactivity/tracking" },
         ],
       },
       {

@@ -40,3 +40,34 @@ export function CounterProvider(props) {
 ```
 
 The value passed to provider is passed to `useContext` as is. That means wrapping as a reactive expression will not work. You should pass in Signals and Stores directly instead of accessing them in the JSX.
+
+## Common issues with `createContext` and `useContext`
+
+`useContext` is designed to to return the value most recently (in the component hierarchy) passed to the provider context.
+However, when there is no provider registered in the component tree above `useContext`, then `useContext()` will return `undefined`,
+or the value initially passed to the `createContext()` call. This will also happen if `useContext` is called inside an event callback.
+
+Because of this, if an initial value was not passed to `createContext`, the TS type signature of `useContext` will indicate that
+the value returned might be `undefined`. This can be quite annoying when you want to use the context inside a component,
+and particulary when destructuring the context. Additionally, if you use `useContext` and it returns `undefined` (which is often,
+but not always, the result of a bug), the error message thrown at runtime can be confusing.
+
+There are two approaches to prevent these issues. One approach, which generally works well, is to wrap all uses of `useContext`
+in a function that will explicitly throw a helpful error if the context is `undefined`. This also serves to narrow the type returned,
+so TS doesn't complain. As an example:
+
+```ts
+function useCounterContext() {
+    const context = useContext(CounterContext);
+    if (!context) {
+        throw new Error("useCounterContext: cannot find a CounterContext")
+    }
+    return context;
+}
+```
+
+A different approach (used in the example in the previous section) is provide a default value to `createContext()`. In that case,
+`useContext()` will always return a value, and therefore TS will not complain either. The pitfall with this approach is that if
+you _unintentionally_ use `useContext` outside of a provider, it may not be immediately apparent, because the context is still
+providing a valid value. Therefore, if you expect to always use `useContext` within a provider, it is best to use the error based
+approach described above.

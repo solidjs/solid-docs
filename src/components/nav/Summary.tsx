@@ -9,7 +9,7 @@ export default function Summary(props: {collapsed?: boolean}) {
     const [collapsed, setCollapsed] = createSignal(props.collapsed || false);
 
     return (
-        <div class="py-2 px-4 border border-solidlightitem rounded-md md:(p-4 max-h-[95vh] overflow-scroll border-none bg-transparent) max-h-[50vh] overflow-scroll bg-solid-light z-50 dark:(bg-solid-dark md:bg-transparent border-solid-darkitem)">
+        <div class="py-2 px-4 border border-solidlightitem rounded-md md:(p-4 max-h-[95vh] overflow-auto border-none bg-transparent) max-h-[50vh] bg-solid-light z-50 dark:(bg-solid-dark md:bg-transparent border-solid-darkitem)">
             <button
                 onClick={() => setCollapsed((prev) => !prev)}
                 aria-controls="preferences"

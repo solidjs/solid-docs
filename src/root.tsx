@@ -11,6 +11,7 @@ import {
 } from "solid-start";
 import { parseCookie } from "solid-start/session";
 import "./code.css";
+import "./scrollbar.css"
 import "virtual:windi.css";
 
 import {

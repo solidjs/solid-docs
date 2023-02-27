@@ -4,7 +4,7 @@ import IconChevron from "~icons/heroicons-outline/chevron-right";
 import { createSignal, Show } from "solid-js";
 
 export function NavPreferences(props: {id: string}) {
-  const [collapsed, setCollapsed] = createSignal(false);
+  const [collapsed, setCollapsed] = createSignal(true);
 
   return (
     <div class="border border-solid-lightitem bg-solid-light dark:bg-solid-dark dark:border-solid-darkitem rounded-lg">

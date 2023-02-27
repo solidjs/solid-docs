@@ -24,7 +24,7 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
 
   return (
     <div class="lg:max-h-screen lg:sticky lg:top-0 no-bg-scrollbar lg:min-w-[200px] lg:max-w-sm w-full shadow lg:shadow-none z-50 overflow-y-auto flex flex-col gap-8">
-      <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-4 lg:pr-3">
         <NavHeader
           docsMode={props.docsMode}
           showMenu={showMenu()}
@@ -32,7 +32,7 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
         />
       </div>
       {/* <div id="docsearch"></div> */}
-      <div class="hidden md:block">
+      <div class="hidden md:block lg:pr-3">
         <NavPreferences id="desktop" />
       </div>
       <div

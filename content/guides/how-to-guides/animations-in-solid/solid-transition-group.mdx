@@ -1,1 +1,100 @@
+import { Aside } from "~/components/configurable/Aside";
+
 <Title>Solid Transition Group</Title>
+
+Solid Transiton Group is an animation library made to help you create smooth transitions between states. That means it makes it easier to animate elements in and out of the DOM.
+
+## Installation
+
+```bash
+npm install solid-transition-group
+```
+
+OR
+
+```bash
+yarn add solid-transition-group
+```
+
+## Transition
+
+`<Transition>` is a wrapper component that serves transition effects to a single child component. The `<Transition>` only applies the transition behavior to the wrapped content inside; it doesn't render an extra DOM element, or show up in the inspected component hierarchy.
+
+```jsx
+// simple CSS animation
+<Transition name="slide-fade">{show() && <div>Hello</div>}</Transition>
+
+// JS Animation
+<Transition
+  onEnter={(el, done) => {
+    const a = el.animate([{ opacity: 0 }, { opacity: 1 }], {
+      duration: 600
+    });
+    a.finished.then(done);
+  }}
+  onExit={(el, done) => {
+    const a = el.animate([{ opacity: 1 }, { opacity: 0 }], {
+      duration: 600
+    });
+    a.finished.then(done);
+  }}
+>
+  {show() && <div>Hello</div>}
+</Transition>
+```
+
+#### Props
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| name | string | | The name of the transition used to generate transition CSS class names. For example the name fade will auto expand to fade-enter, fade-enter-active, fade-exit, fade-exit-active. |
+| appear | boolean | false | Whether to apply the transition on the initial render of the component. |
+| mode | `'in-out' | 'out-in'` | `'simultaneous'` | The transition mode that controls the timing sequence of the leaving/entering transitions. |
+| enterActiveClass | string | | The CSS class name to apply to the element during the enter transition. |
+| enterClass | string | | The CSS class name to apply to the element before the enter transition. |
+| enterToClass | string | | The CSS class name to apply to the element after the enter transition. |
+| exitActiveClass | string | | The CSS class name to apply to the element during the exit transition. |
+| exitClass | string | | The CSS class name to apply to the element before the exit transition. |
+| exitToClass | string | | The CSS class name to apply to the element after the exit transition. |
+
+#### Events
+
+| Name          | Type                                      | Description                                                               |
+| ------------- | ----------------------------------------- | ------------------------------------------------------------------------- |
+| onEnter       | `(el:Element, done: () => void) => void`  | Callback function that will be called when the enter transition starts.   |
+| onBeforeEnter | `(el:Element) => void`                    | Callback function that will be called before the enter transition starts. |
+| onAfterEnter  | `(el:Element) => void`                    | Callback function that will be called after the enter transition starts.  |
+| onExit        | `(el:Element, done: () => void ) => void` | Callback function that will be called when the exit transition starts.    |
+| onBeforeExit  | `(el:Element) => void`                    | Callback function that will be called before the exit transition starts.  |
+| onAfterExit   | `(el:Element) => void`                    | Callback function that will be called after the exit transition starts.   |
+
+## TransitionGroup
+
+`<TransitionGroup>` is a wrapper component that serves transition effects to multiple child components. The `<TransitionGroup>` only applies the transition behavior to the wrapped content inside; it doesn't render an extra DOM element, or show up in the inspected component hierarchy.
+
+`<TransitionGroup>` supports moving transitions via CSS transform. When a child's position on screen has changed after an update, it will get applied a moving CSS class (auto generated from the name attribute or configured with the move-class attribute). If the CSS transform property is "transition-able" when the moving class is applied, the element will be smoothly animated to its destination using the FLIP technique.
+
+```jsx
+<ul>
+  <TransitionGroup name="slide">
+    <For each={state.items}>{(item) => <li>{item.text}</li>}</For>
+  </TransitionGroup>
+</ul>
+```
+
+The above code will slide each item into view when it is added to the list or when the list is reordered.
+
+#### Props
+
+The only difference between `<TransitionGroup>` and `<Transition>` is that `<TransitionGroup>` has an additional `'moveClass'` prop that overwrites the CSS class applied during the moving transition.
+
+#### Events
+
+`<TransitionGroup>` also supports the same events as `<Transition>`.
+
+<Aside>
+  For more information on Solid Transition Group please visit the <a href="https://github.com/solidjs/solid-transition-group"> GitHub Repo</a>.
+
+For more information on the FLIP technique please visit <a href="https://aerotwist.com/blog/flip-your-animations/">Aerotwist</a>.
+
+</Aside>

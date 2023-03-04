@@ -1,21 +1,26 @@
 import { NavLink } from "@solidjs/router";
 import IconChevron from "~icons/heroicons-outline/chevron-right";
 
-import { Show, createSignal, ParentProps, createUniqueId } from "solid-js";
+import { Show, createSignal, ParentProps, createUniqueId, createEffect } from "solid-js";
 
 export function CollapsedIcon(props) {
   return <div class={"duration-100 ease-in transition" + props.class}>▼</div>;
 }
 
 type CollapsibleProps = ParentProps<{
-  startCollapsed?: boolean;
+  startCollapsed?: () => boolean;
   header: string;
 }>;
 
 export function Collapsible(props: CollapsibleProps) {
-  const [collapsed, setCollapsed] = createSignal(props.startCollapsed || false);
+  const [collapsed, setCollapsed] = createSignal(props.startCollapsed() || false);
 
   const id = createUniqueId();
+
+  createEffect(() => {
+    const isCollapsed = props.startCollapsed()
+    setCollapsed(isCollapsed)
+  })
 
   return (
     <li value={props.header} class="m-2">

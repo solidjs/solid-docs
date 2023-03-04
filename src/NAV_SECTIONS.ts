@@ -50,10 +50,10 @@ export const REFERENCE_SECTIONS: SECTIONS = {
             name: "Context",
             link: "/references/concepts/state-management/context",
           },
-          {
-            name: "Store",
-            link: "/references/concepts/state-management/store",
-          },
+          // {
+          //   name: "Store",
+          //   link: "/references/concepts/state-management/store",
+          // },
         ],
       },
       {

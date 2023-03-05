@@ -43,19 +43,19 @@ export const REFERENCE_SECTIONS: SECTIONS = {
           },
         ],
       },
-      {
-        name: "State Management",
-        pages: [
-          {
-            name: "Context",
-            link: "/references/concepts/state-management/context",
-          },
+      // {
+      //   name: "State Management",
+      //   pages: [
+      //     {
+      //       name: "Context",
+      //       link: "/references/concepts/state-management/context",
+      //     },
           // {
           //   name: "Store",
           //   link: "/references/concepts/state-management/store",
           // },
-        ],
-      },
+      //   ],
+      // },
       {
         name: "Server Side Rendering (SSR)",
         pages: [

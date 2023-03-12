@@ -34,7 +34,7 @@ export const REFERENCE_SECTIONS: SECTIONS = {
         name: "Reactivity",
         pages: [
           {
-            name: "Reactivity Basics",
+            name: "What is Reactivity",
             link: "/references/concepts/reactivity",
           },
           {
@@ -87,7 +87,7 @@ export const REFERENCE_SECTIONS: SECTIONS = {
     name: "API",
     pages: [
       {
-        name: "Basic Reactivity",
+        name: "Reactivity Functions",
         pages: [
           {
             name: "createSignal",

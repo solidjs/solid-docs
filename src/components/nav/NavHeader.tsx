@@ -103,17 +103,18 @@ export const NavHeader = (props: {
               loc.pathname.startsWith(sections[0].href) &&
               !loc.pathname.includes(sections[1].href)
             }
-            activeClass="bg-solid-light dark:bg-solid-dark font-semibold"
+            activeClass="text-white font-semibold bg-solid-accent active"
             class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0)"
             href={sections[0].href}
           >
             {sections[0].title}
           </ActiveLink>
+
           <ActiveLink
             isActive={(loc: Location) =>
               loc.pathname.startsWith(sections[1].href)
             }
-            activeClass="bg-solid-light dark:bg-solid-dark font-semibold"
+            activeClass="text-white font-semibold bg-solid-accent active"
             class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0)"
             href={sections[1].href}
           >

@@ -6,6 +6,7 @@ export type SECTION_LEAF_PAGE = {
 export type SECTION_PAGE = {
   name: string;
   pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>;
+  link?: string;
 };
 
 export type SECTIONS = {

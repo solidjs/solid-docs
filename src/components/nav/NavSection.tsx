@@ -80,7 +80,7 @@ export function NavItem(props) {
   return (
     <li class="">
       <NavLink
-        class="p-2 pb-1.75 text-base w-full rounded-lg md:(rounded-lg) text-left relative flex items-center justify-between transition cursor-pointer"
+        class="p-2 pb-1.75 text-base w-full rounded-lg md:(rounded-lg rounded-l-none) text-left relative flex items-center justify-between transition cursor-pointer"
         {...props}
         inactiveClass="hover:bg-solid-light hover:dark:bg-solid-dark"
         activeClass="text-white font-semibold bg-solid-accent active"

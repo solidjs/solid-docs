@@ -23,7 +23,7 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
   });
 
   return (
-    <div class="lg:max-h-screen lg:sticky lg:top-0 no-bg-scrollbar lg:min-w-[200px] lg:max-w-sm w-full z-50 overflow-y-auto flex flex-col gap-8 pr-4">
+    <div class="lg:max-h-screen lg:sticky lg:top-0 no-bg-scrollbar lg:min-w-[200px] lg:max-w-sm w-full z-50 overflow-y-auto flex flex-col gap-8 lg:pr-4">
       <div class="flex flex-col gap-4">
         <NavHeader
           docsMode={props.docsMode}

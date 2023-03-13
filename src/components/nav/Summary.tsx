@@ -4,6 +4,10 @@ import Dot from "../Dot";
 import IconChevron from "~icons/heroicons-outline/chevron-right";
 import { useRouteData } from "solid-start";
 
+function SectionTitle(props: { title: string | Element }) {
+    return props.title instanceof HTMLElement ? props.title.innerText : props.title
+}
+
 export default function Summary(props: {collapsed?: boolean}) {
     const { sections } = usePageState();
     const [collapsed, setCollapsed] = createSignal(props.collapsed || false);
@@ -28,7 +32,7 @@ export default function Summary(props: {collapsed?: boolean}) {
                 <li class="text-base py-2 hidden md:flex items-center gap-2 rounded hover:bg-solid-light hover:dark:bg-solid-darkbg px-2">
                     <Dot number={index() + 1} />
                     <a class="font-semibold" onClick={() => setCollapsed(true)} href={"#" + item.href}>
-                    {item.title}
+                    {Array.isArray(item.title) ? <For each={item.title}>{(title) => <SectionTitle title={title} />}</For> : <SectionTitle title={item.title} />}
                     </a>
                 </li>
                 )}
@@ -40,7 +44,7 @@ export default function Summary(props: {collapsed?: boolean}) {
                     <li class="text-base py-2 flex items-center gap-2 rounded hover:bg-solid-light hover:dark:bg-solid-darkbg px-2">
                         <Dot number={index() + 1} />
                         <a class="font-semibold" onClick={() => setCollapsed(true)} href={"#" + item.href}>
-                        {item.title}
+                        {Array.isArray(item.title) ? <For each={item.title}>{(title) => <SectionTitle title={title} />}</For> : <SectionTitle title={item.title} />}
                         </a>
                     </li>
                     )}

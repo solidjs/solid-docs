@@ -4,8 +4,10 @@ import { createEffect, useContext } from "solid-js";
 import { createContext, ParentProps } from "solid-js";
 import { createStore } from "solid-js/store";
 
+type SectionTitle = string | Element
+
 type Section = {
-  title: string;
+  title: SectionTitle | SectionTitle[];
   href: string;
 };
 

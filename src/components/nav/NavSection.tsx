@@ -78,9 +78,9 @@ function SectionPanel(props: ParentProps<{ id: string }>) {
 
 export function NavItem(props) {
   return (
-    <li>
+    <li class="">
       <NavLink
-        class="p-2 text-base w-full rounded-lg md:(rounded-lg) text-left relative flex items-center justify-between transition cursor-pointer"
+        class="p-2 pb-1.5 text-base w-full rounded-lg md:(rounded-lg) text-left relative flex items-center justify-between transition cursor-pointer"
         {...props}
         inactiveClass="hover:bg-solid-light hover:dark:bg-solid-dark"
         activeClass="text-white font-semibold bg-solid-accent active"

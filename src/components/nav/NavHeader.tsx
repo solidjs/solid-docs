@@ -1,9 +1,9 @@
 import { NavLink, useLocation } from "@solidjs/router";
-import IconMenu from "~icons/heroicons-outline/menu";
-import IconX from "~icons/heroicons-outline/x";
-import IconSun from "~icons/heroicons-outline/sun";
-import IconMoon from "~icons/heroicons-outline/moon";
 import { For, Setter, Show, useContext } from "solid-js";
+import IconMenu from "~icons/heroicons-outline/menu";
+import IconMoon from "~icons/heroicons-outline/moon";
+import IconSun from "~icons/heroicons-outline/sun";
+import IconX from "~icons/heroicons-outline/x";
 import { ConfigContext } from "../context/ConfigContext";
 
 function ActiveLink(props) {

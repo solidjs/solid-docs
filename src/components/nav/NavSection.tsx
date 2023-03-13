@@ -1,7 +1,7 @@
 import { NavLink } from "@solidjs/router";
 import IconChevron from "~icons/heroicons-outline/chevron-right";
 
-import { Show, createSignal, ParentProps, createUniqueId, createEffect } from "solid-js";
+import { ParentProps, Show, createEffect, createSignal, createUniqueId } from "solid-js";
 
 export function CollapsedIcon(props) {
   return <div class={"duration-100 ease-in transition" + props.class}>▼</div>;
@@ -80,9 +80,9 @@ export function NavItem(props) {
   return (
     <li>
       <NavLink
-        class="p-2 text-base w-full rounded-lg md:(rounded-r-xl rounded-l-none) text-left relative flex items-center justify-between transition cursor-pointer"
+        class="p-2 text-base w-full rounded-lg md:(rounded-lg) text-left relative flex items-center justify-between transition cursor-pointer"
         {...props}
-        inactiveClass="hover:bg-solid-light hover:dark:bg-solid-darkbg"
+        inactiveClass="hover:bg-solid-light hover:dark:bg-solid-dark"
         activeClass="text-white font-semibold bg-solid-accent active"
         end={true}
       >

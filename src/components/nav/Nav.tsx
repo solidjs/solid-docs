@@ -1,8 +1,5 @@
 import { NavLink, Route, Routes, useLocation } from "@solidjs/router";
-import { NavHeader } from "./NavHeader";
-import { NavPreferences } from "./NavPreferences";
-import { Collapsible, NavItem } from "./NavSection";
-import { createDeferred, createEffect, createMemo, createSignal, For, Show, useTransition } from "solid-js";
+import { For, Show, createDeferred, createEffect, createMemo, createSignal, useTransition } from "solid-js";
 import {
   GUIDES_SECTIONS,
   REFERENCE_SECTIONS,
@@ -10,6 +7,9 @@ import {
   SECTION_LEAF_PAGE,
   SECTION_PAGE,
 } from "~/NAV_SECTIONS";
+import { NavHeader } from "./NavHeader";
+import { NavPreferences } from "./NavPreferences";
+import { Collapsible, NavItem } from "./NavSection";
 
 export default function Nav(props: { docsMode: "start" | "regular" }) {
   const [showMenu, setShowMenu] = createSignal(false);
@@ -23,7 +23,7 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
   });
 
   return (
-    <div class="lg:max-h-screen lg:sticky lg:top-0 no-bg-scrollbar lg:min-w-[200px] lg:max-w-sm w-full shadow lg:shadow-none z-50 overflow-y-auto flex flex-col gap-8">
+    <div class="lg:max-h-screen lg:sticky lg:top-0 no-bg-scrollbar lg:min-w-[200px] lg:max-w-sm w-full shadow lg:shadow-none z-50 overflow-y-auto flex flex-col gap-8 pr-4">
       <div class="flex flex-col gap-4">
         <NavHeader
           docsMode={props.docsMode}

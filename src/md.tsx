@@ -6,6 +6,8 @@ import "tippy.js/dist/tippy.css";
 import { Title } from "./components/Main";
 import { Title as MetaTitle } from "@solidjs/meta";
 import { usePageState } from "~/components/context/PageStateContext";
+import { BiSolidCopy } from "solid-icons/bi";
+import CopyButton from "./components/CopyButton";
 
 function Anchor(props: ParentProps<{ id: string }>) {
   return (
@@ -127,31 +129,37 @@ export default {
       </code>
     );
   },
-  pre: (props) => (
-    <>
-      {/* <Show when={props.filename?.length > 5}>
+  pre: (props) => {
+    let ref: HTMLPreElement;
+
+    return (
+      <>
+        {/* <Show when={props.filename?.length > 5}>
         <span {...props} class="h-4 p-1">
           {props.filename}
         </span>
       </Show> */}
-      <pre
-        {...mergeProps(props, {
-          get class() {
-            return (
-              props.className +
-              " " +
-              (props.bad ? "border-red-400 border-1" : "")
-            );
-          },
-          get className() {
-            return undefined;
-          },
-        })}
-      >
-        {props.children}
-      </pre>
-    </>
-  ),
+        <pre
+          {...mergeProps(props, {
+            get class() {
+              return (
+                props.className +
+                " " +
+                (props.bad ? "border-red-400 border-1" : "")
+              );
+            },
+            get className() {
+              return undefined;
+            },
+          })}
+          ref={ref}
+        >
+          <CopyButton parentRef={ref}/>
+          {props.children}
+        </pre>
+      </>
+    );
+  },
   table: (props) => (
     <table class="w-full max-w-full <sm:portrait:text-xs my-6 rounded-1xl dark:bg-[rgba(17,24,39,1)] shadow-lg text-left overflow-hidden">
       {props.children}
@@ -163,7 +171,9 @@ export default {
   ),
   td: (props) => <td class="p-4 <sm:p-2">{props.children}</td>,
   tr: (props) => (
-    <tr class="dark:even-of-type:bg-[#23406e] light:even-of-type:bg-[#90C2E7]">{props.children}</tr>
+    <tr class="dark:even-of-type:bg-[#23406e] light:even-of-type:bg-[#90C2E7]">
+      {props.children}
+    </tr>
   ),
   "data-lsp": (props) => {
     const id = createUniqueId();

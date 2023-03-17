@@ -19,7 +19,20 @@ function Anchor(props: ParentProps<{ id: string }>) {
 }
 
 const headerBold = "font-bold";
-
+function getSectionString(children: any): string {
+  if (typeof children == "string") {
+    return children as string;
+  }
+  if (children instanceof Element) {
+    return children.innerHTML;
+  }
+  if (Array.isArray(children)) {
+    let str = "";
+    children.forEach((item) => (str += getSectionString(item)));
+    return str;
+  }
+  return "";
+}
 export default {
   strong: (props) => <span class="font-bold">{props.children}</span>,
   h1: (props) => (
@@ -39,7 +52,7 @@ export default {
   h2: (props) => {
     const { addSection } = usePageState();
     onMount(() => {
-      addSection(props.children, props.id);
+      addSection(getSectionString(props.children), props.id);
     });
     return (
       <h2
@@ -163,7 +176,9 @@ export default {
   ),
   td: (props) => <td class="p-4 <sm:p-2">{props.children}</td>,
   tr: (props) => (
-    <tr class="dark:even-of-type:bg-[#23406e] light:even-of-type:bg-[#90C2E7]">{props.children}</tr>
+    <tr class="dark:even-of-type:bg-[#23406e] light:even-of-type:bg-[#90C2E7]">
+      {props.children}
+    </tr>
   ),
   "data-lsp": (props) => {
     const id = createUniqueId();

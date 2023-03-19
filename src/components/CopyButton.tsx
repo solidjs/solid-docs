@@ -15,7 +15,7 @@ function CopyButton(props: Props) {
   }
 
   return (
-    <button onclick={copyToClipboard} class="absolute top-4 right-4">
+    <button onclick={copyToClipboard} class="absolute top-4 right-4 opacity-70">
       <Show when={copied()} fallback={<BiSolidCopy size={24} />}>
         Copied!
       </Show>

@@ -1,1 +1,130 @@
+import {Aside} from '~/components/configurable/Aside'
+
 <Title>Solid Best Practices</Title>
+
+In this section we'll be touching on a few best practices to follow when structuring and building your Solid.js apps. 
+
+## Follow proper naming conventions
+
+In Solid it's imperative that you make use of the proper naming conventions not just when creating components but in everything else as well.
+
+Component naming is especially important as if your component it wrongly named the JSX compiler will see it as a normal JSX tag and not a custom component. Component names should be in PascalCase, starting with a capital letter, and be concise yet descriptive of their purpose. This helps the compiler from differentiating between JSX tags and components.
+
+Here's a quick example of proper compnent naming conventions in Solid:
+
+```jsx
+function MyComponent() {
+  return <h1>This is a Solid component</h1>
+};
+
+function OtherComponent() {
+  return (
+    <div>
+      <h1>Below is a component</h1>
+      <MyComponent/>
+    </div>
+  )
+};
+```
+
+Variable and function names should be in camelCase, starting with a lowercase letter, and use descriptive words that accurately reflect their use. Using proper naming conventions helps make code more readable and understandable, making it easier for other developers to collaborate and maintain the codebase. It also helps to avoid naming collisions and improve the code's overall consistency, which is especially important in large codebases. By following proper naming conventions in Solid.js, developers can create high-quality, maintainable code that is easy to understand and modify.
+
+## Avoid prop destructuring
+
+Prop destructuring is not recommended in Solid unlike other Javascript frameworks. In Solid prop destructuring breaks the reactivity of the value being passed as it is being accessed in an unreactive scope. This means that the value being passed will not be updated whenever the proxy value changes.
+
+Here's the proper usage of props in Solid:
+
+```tsx
+function MyComponent(props:{randomProp: string}) {
+  return <h1>{props.randomProp}</h1>
+}
+```
+
+Check out the best practice below for more examples and a way to bypass the untracking of your destructured props.
+
+## Pass Accessors instead of values
+
+This continues from the above section about avoiding prop destructuring. We suggest passing [Accessors](#TODO) instead of values in case one or more devs destructure a components props by mistake.
+
+For example this code will not update the `isTrue` memo:
+
+```tsx
+import {createSignal, createMemo} from 'solid-js'
+
+function Parent() {
+  const [value, setValue] = createSignal(false)  
+
+  return (
+    <>
+      <button onclick={() => setValue(prev => !prev)}>
+        Button is {value().toString()}
+      </button>
+      <MyComponent value={value()}/>
+    </>
+  )
+}
+
+interface Props {
+  value: boolean
+}
+
+function MyComponent({value}:Props) {
+  const isTrue = createMemo(() => {
+    return value ? 'is true' : 'is false'
+  })
+
+  return <h1>{isTrue()}</h1>
+}
+```
+
+In the code above the value returned by the `isTrue` memo will not be updated because the `value` prop is accessed through destructuring instead of being accessed within the `createMemo` callback which is a reactive scope.
+
+However this can be fixed by changing the type of `value` from `boolean` to `Accessor<boolean>` and passing the Accessor.
+
+```tsx
+import {createSignal, createMemo, Accessor} from 'solid-js'
+
+function Parent() {
+  const [value, setValue] = createSignal(false)  
+
+  return (
+    <>
+      <button onclick={() => setValue(prev => !prev)}>
+        Button is {value().toString()}
+      </button>
+      <MyComponent value={value}/> // 👈 the removal of the parenthesis 
+    </>
+  )
+}
+
+interface Props {
+  value: Accessor<boolean> // 👈 the use of Accessor<boolean> instead of boolean
+}
+
+function MyComponent({value}:Props) {
+  const isTrue = createMemo(() => {
+    return value() ? 'is true' : 'is false' // getting the current state of the value prop
+  })
+
+  return <h1>{isTrue()}</h1>
+}
+```
+
+The above code will work as the previous one was expected to work. However, always remember that it is inadvisable to destructure props in Solid
+
+<Aside>
+  For more information on Accessors and Solids reactivity system check out this API page on [createSignal](/references/api-reference/basic-reactivity/createSignal), and concept article on [reactivity basics](/references/concepts/reactivity) respectively.
+</Aside>
+
+## Signals vs Stores
+
+## Make use of component APIs
+
+## Use a Solid.js linter
+
+We recommend using a linter and a plugin specifically configured for Solid when building Solid apps, because it helps in catching those Solid specific errors and implementing the appropriate code style. 
+
+The linter we would recommend using would be ESLint alongside the [Solid ESLint Plugin](https://github.com/solidjs-community/eslint-plugin-solid), this plugin is especially helpful for catching Solid reactivity gotchas and bad practices.
+
+## Use `createUniqueId` when needed

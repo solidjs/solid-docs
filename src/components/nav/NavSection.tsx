@@ -13,7 +13,7 @@ type CollapsibleProps = ParentProps<{
 }>;
 
 export function Collapsible(props: CollapsibleProps) {
-  const [collapsed, setCollapsed] = createSignal(props.startCollapsed() || false);
+  const [collapsed, setCollapsed] = createSignal(false);
 
   const id = createUniqueId();
 

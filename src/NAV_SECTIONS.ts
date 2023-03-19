@@ -73,7 +73,7 @@ export const REFERENCE_SECTIONS: SECTIONS = {
             link: "/references/concepts/ssr/streaming",
           },
           {
-            name: "Server-Side Generation (SSG)",
+            name: "Static Site Generation (SSG)",
             link: "/references/concepts/ssr/ssg",
           },
           {

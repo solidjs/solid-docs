@@ -133,7 +133,7 @@ export default {
     let ref: HTMLPreElement;
 
     return (
-      <>
+      <div class="relative">
         {/* <Show when={props.filename?.length > 5}>
         <span {...props} class="h-4 p-1">
           {props.filename}
@@ -154,10 +154,10 @@ export default {
           })}
           ref={ref}
         >
-          <CopyButton parentRef={ref}/>
           {props.children}
         </pre>
-      </>
+        <CopyButton parentRef={ref} />
+      </div>
     );
   },
   table: (props) => (

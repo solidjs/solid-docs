@@ -24,7 +24,9 @@ function getSectionString(children: any): string {
     return children as string;
   }
   if (children instanceof Element) {
-    return children.innerHTML;
+    const e = document.createElement("textarea");
+    e.innerHTML = children.innerHTML;
+    return e.childNodes.length === 0 ? "" : e.childNodes[0].nodeValue;
   }
   if (Array.isArray(children)) {
     let str = "";

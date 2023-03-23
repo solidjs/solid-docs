@@ -1,7 +1,7 @@
-import { PropsWithChildren, useContext } from "solid-js";
-import { CodeFormat, ConfigContext } from "./context/ConfigContext";
+import { JSXElement, useContext } from "solid-js";
+import { ConfigContext } from "./context/ConfigContext";
 
-const Container = (props: PropsWithChildren) => {
+const Container = (props: {children:JSXElement}) => {
   const [config, setConfig] = useContext(ConfigContext);
 
   return (
@@ -37,7 +37,7 @@ const Container = (props: PropsWithChildren) => {
   );
 };
 
-const Code = (props: PropsWithChildren<{ language: CodeFormat }>) => {
+const Code = (props: { language: string, children: JSXElement }) => {
   const [config] = useContext(ConfigContext);
   return (
     <div

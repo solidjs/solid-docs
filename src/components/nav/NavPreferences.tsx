@@ -1,7 +1,7 @@
-import { Preferences } from "../Preferences";
-import IconGear from "~icons/heroicons-solid/cog";
-import IconChevron from "~icons/heroicons-outline/chevron-right";
 import { createSignal, Show } from "solid-js";
+import IconChevron from "~icons/heroicons-outline/chevron-right";
+import IconGear from "~icons/heroicons-solid/cog";
+import { Preferences } from "../Preferences";
 
 export function NavPreferences(props: {id: string}) {
   const [collapsed, setCollapsed] = createSignal(false);

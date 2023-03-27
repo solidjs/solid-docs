@@ -27,12 +27,6 @@ export const PageStateProvider = (props: ParentProps) => {
       return store.sections;
     },
     addSection(title, href) {
-      // replace html entities with their actual characters
-      const entities = [["&amp;", "&"], ["&lt;", "<"], ["&gt;", ">"], ["&quot;", '"'], ["&#39;", "'"]];
-      for (let i = 0; i < entities.length; i++) {
-        title = title.replace(new RegExp(entities[i][0], "g"), entities[i][1]);
-      }
-      
       setStore("sections", (sections) => [
         ...new Set([...sections, { title, href }]),
       ]);

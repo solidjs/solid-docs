@@ -88,7 +88,7 @@ export const REFERENCE_SECTIONS: SECTIONS = {
     name: "API",
     pages: [
       {
-        name: "Reactivity Functions",
+        name: "Basic Reactivity",
         pages: [
           {
             name: "createSignal",

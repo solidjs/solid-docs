@@ -119,7 +119,42 @@ The above code will work as the previous one was expected to work. However, alwa
 
 ## Signals vs Stores
 
-## Make use of component APIs
+In Solid Signals and Stores are 2 ways in which you can define reactive values. Signals are good for data types such as booleans, numbers and strings. Stores on the other hand are more suited for nested data types such as objects and arrays. 
+
+Stores are recommended for nested data structures because of the fine grained reactivity that they offer. When a value in a store is updated or deleted only that value and other values that related to it are updated and the rest of the object is left untouched. While signals on the other hand do not have the same level of fine grained reactivity when dealing with objects and arrays. That's why it is recommended to use basic data types in Signals and when deaing with complex data types it is recommended to use Stores.
+
+Stores allow for targeted updates, this is possible thanks to the Store's path syntax. Here's what that looks like:
+
+```jsx
+const todoId = 0;
+const [todos, setTodos] = createStore([]);
+
+const addTodo = (text) => {
+  setTodos([...todos, { id: ++todoId, text, completed: false }]);
+};
+
+const toggleTodo = (id) => {
+  setTodos(
+    (todo) => todo.id === id, // we're targeting the specific todo to toggle
+    "completed", // we're targeting the value to be modified
+    (completed) => !completed // finally toggling the boolean value
+  );
+};
+```
+
+<Aside>
+  For more information on Stores and Signals checkout their reference pages: [Stores](/references/api-reference/stores/using-stores) and [Signals](/references/api-reference/basic-reactivity/createsignal) respectively.
+</Aside>
+
+## Make use of in-built components
+
+Solid offers a number of in-built components that make it easy to implement lists and conditional rendering in JSX. It's recommended to use these component APIs instead of arbitrary javascript in your JSX. This ensures that your code stays properly reactive and doesn't behave unexpectedly or produce unwanted outcomes.
+
+Here's a list of some of the in-built components Solid offers:
+
+- [`<For>`](/references/api-reference/control-flow/for) : This component offers a way to reactively render a list of items. It is similar to using `{array.map(() => <ListComponent/>)}` in JSX, however it is more efficient when handling updates by only updating changed elements.
+- [`<Show>`](/references/api-reference/control-flow/show) : This component offers a way to conditionally render part of the view when the `when` condition is truthy. It is similar to the ternary operator `when ? <MyComponent/> : <Fallback/>`, however it's much cleaner and easier to understand.
+- [`<Suspense>`](/references/api-reference/control-flow/suspense) : This component offers a way to show a fallback component while the asynchronous resources in its children are loading. Once the asynchronous resources are done the fallback component will be removed and the child component will be displayed.
 
 ## Use a Solid.js linter
 
@@ -128,3 +163,5 @@ We recommend using a linter and a plugin specifically configured for Solid when 
 The linter we would recommend using would be ESLint alongside the [Solid ESLint Plugin](https://github.com/solidjs-community/eslint-plugin-solid), this plugin is especially helpful for catching Solid reactivity gotchas and bad practices.
 
 ## Use `createUniqueId` when needed
+
+Solid exposes a function that allows you to create a unique ID that can be used as a key for any of your components. In some cases it is recommended to use this when assigning keys to your components instead of using indexes or fetched variables that could possibly have the same value.

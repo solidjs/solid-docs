@@ -7,8 +7,8 @@ function Show<T>(props: {
   when: T | undefined | null | false;
   keyed: boolean;
   fallback?: JSX.Element;
-  children: JSX.Element | ((item: T) => JSX.Element);
-}): () => JSX.Element;
+  children: JSX.Element | ((item: () => T) => JSX.Element) | ((item: T) => JSX.Element);
+}): JSX.Element;
 ```
 
 Here's an example of using the Show control flow:
@@ -16,6 +16,14 @@ Here's an example of using the Show control flow:
 ```tsx
 <Show when={state.count > 0} fallback={<div>Loading...</div>}>
   <div>My Content</div>
+</Show>
+```
+
+Show can also be used with a callback that returns a null asserted accessor. Remember to only use this accessor when the condition is true or it will throw.
+
+```tsx
+<Show when={state.user} fallback={<div>Loading...</div>}>
+  {(user) => <div>{user().firstName}</div>}
 </Show>
 ```
 

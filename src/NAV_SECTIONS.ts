@@ -120,7 +120,7 @@ export const REFERENCE_SECTIONS: SECTIONS = {
             link: "/references/api-reference/lifecycles/onCleanup",
           },
           {
-            name: "onError",
+            name: "onError (Deprecated)",
             link: "/references/api-reference/lifecycles/onError",
           },
         ],
@@ -183,6 +183,10 @@ export const REFERENCE_SECTIONS: SECTIONS = {
           {
             name: "indexArray",
             link: "/references/api-reference/reactive-utilities/indexArray",
+          },
+          {
+            name: "catchError",
+            link: "/references/api-reference/reactive-utilities/catchError",
           },
         ],
       },

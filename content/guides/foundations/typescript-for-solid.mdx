@@ -356,6 +356,7 @@ This is because `currentTarget` is the element that the
 event handler was attached to, so has a known type, whereas `target` is
 whatever the user interacted with that caused the event to bubble to or get
 captured by the event handler, which can be any DOM element.
+One exception is Input and Focus Events when attached directly to `input` elements will have HTMLInputElement as a `target`.
 
 ## The ref Attribute
 
@@ -480,19 +481,14 @@ Here are two workarounds for this issue:
 
    ```tsx
    return (
-     <Show when={name()}>{(n) => <>Hello {n.replace(/\s+/g, "\xa0")}!</>}</Show>
+     <Show when={name()}>{(n) => <>Hello {n().replace(/\s+/g, "\xa0")}!</>}</Show>
    );
    ```
 
    In this case, the typing of the `Show` component is clever enough to tell
    TypeScript that `n` is truthy, so it can't be `undefined` (or `null` or
    `false`).
-
-   Note, however, that this form of `<Show>` forces the entirety of the
-   children to render
-   from scratch every time `name()` changes, instead of doing this just when `name()` changes from a falsey to a truthy value.
-   This means that the children don't have the full benefits of fine-grained
-   reactivity (re-using unchanged parts and updating just what changed).
+   Remember this null asserted form will throw if accessed when the condition is no longer true.
 
 ## Special JSX Attributes and Directives
 

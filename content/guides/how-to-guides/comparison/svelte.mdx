@@ -1,1 +1,129 @@
 <Title>Comparison with Svelte</Title>
+
+Svelte pioneered the precompiled disappearing framework that Solid also employs to a certain degree. Both libraries are truly reactive and can produce really small execution code bundles although Svelte is the winner here for small demos. Solid requires a bit more explicitness in its declarations, relying less on implicit analysis from the compiler, but that is part of what gives Solid superior performance. Solid also keeps more in the runtime which scales better in larger apps. Solid's RealWorld demo implementation is 25% smaller than Svelte's.
+
+Both libraries aim to help their developers write less code but approach it completely differently. Svelte 3 focuses on the optimization of the ease of dealing with localized change focusing on plain object interaction and two-way binding. In contrast Solid focuses on the data flow by deliberately embracing CQRS and immutable interface. With functional template composition, in many cases, Solid allows developers to write even less code than Svelte although Svelte's template syntax is definitely terser.
+
+## Template Components vs Function Components
+
+In terms of frontend frameworks components serve as a way to split the UI into different reusable pieces of code, most applications and sites nowadays are mostly just trees of nested components.
+
+### Svelte
+
+In Svelte setting up components is done by using Templates like so:
+
+```svelte
+<script lang="ts">
+let count: number = 0
+</script>
+
+<button on:click={() => count++}>Count was pressed {count} times</button>
+```
+
+If you are unfamiliar with it, every svelte template file has HTML that is written directly in the top level of the file and Javascript or Typescript is used in the `<script></script>` tag. There is a third tag used for styling called the `<style></style>` tag as well.
+
+### Solid
+
+Solid on the other hand makes use of one kind of component, the function component.
+
+```tsx
+import { Component, createSignal } from "solid-js";
+
+const App = () => {
+  const [count, setCount] = createSignal(0);
+  return (
+    <div>
+      <button onClick={() => setCount((previousValue) => previousValue + 1)}>
+        You clicked me {count()} times
+      </button>
+    </div>
+  );
+};
+
+export default App;
+```
+
+This is what a function component looks like. Notice the major difference between this and the template syntax used by Svelte. The syntax to declare and mutate for stateful variables is also quite different, more on this later.
+
+## Reactivity and Statefulness
+
+### Declaring And Updating Reactive Values
+
+#### Svelte
+
+When using svelte inside the script tag every value declared with the `let` keyword is reactive automatically.
+There is no special syntax to access the reactive value just use it like a regular variable.
+That means any side effects including UI updates will be run whenever you assign a new value to the variable.
+
+```svelte
+<script lang="ts">
+// count is reactive
+let count: number = 0
+
+// accessing
+console.log(count)
+
+// any side effects that depend on count will rerun
+count += 1
+</script>
+```
+
+In SolidJS we can use `createSignal` to create a reactive value.
+The `createSignal` function returns a tuple where the first value is an accessor for the reactive value and the second value is a setter for the reactive value.
+
+#### Solid
+
+```typescript
+const [count, setCount] = createSignal<number>(0);
+
+// accessing
+console.log(count());
+
+// any side effects that depend on count will rerun
+setCount((count) => count++);
+```
+
+### Registering Effects
+
+### Svelte
+
+In svelte any reactive values you use in the template automatically create a side effect which invalidates the template on any changes.
+
+You can register custom side effects with the `$: ` syntax.
+
+```svelte
+<script lang="ts">
+let count: number = 0
+
+$: console.log(count)
+</script>
+
+<button on:click={() => count++}>Count was pressed {count} times</button>
+```
+
+Every time you press the button, the count will be updated, and the template will be invalidated and the console.log will also run with the new count value.
+
+### Solid
+
+In SolidJS any signal you access in JSX automatically create a side effect which updates the DOM whenever the signal is update.
+
+In Solid, you can register custom side effects with the `createEffect` function.
+
+```tsx
+import { Component, createSignal, createEffect } from "solid-js";
+
+const App: Component = () => {
+  const [count, setCount] = createSignal(0);
+  createEffect(() => console.log(count()));
+
+  return (
+    <div>
+      <button onClick={() => setCount((count) => count + 1)}>
+        You clicked me {count()} times
+      </button>
+    </div>
+  );
+};
+
+export default App;
+```

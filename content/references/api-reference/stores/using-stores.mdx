@@ -91,15 +91,39 @@ const [state, setState] = createStore({
 Note that modifying an array inside a store will not trigger computations that subscribe to the array directly. For example: 
 
 ```ts
+// After Solid 1.4.0
 createEffect(() => {
-  console.log(state.todos);
+  // This will not get triggered because we've subscribed to the array itself.
+  console.log(todos); 
 });
+setTodos(todos.length, { id: 3 });
 
-//This will not trigger the effect:
+
+// Prior to Solid 1.4.0
+createEffect(() => {
+  // This will not get triggered because we've subscribed to the array itself.
+  console.log(state.todos); 
+});
 setState(todos, state.todos.length, { id: 3 });
+```
+However, subscribing to any signals that change inside the array will trigger those computations.
+```ts
+// After Solid 1.4.0
+createEffect(() => {
+  // This will be triggered because we've subscribed to the actual signals in the array.
+  console.log([...todos]); 
+  console.log(todos[2]) // Or we can subscribe only to a specific one.
+});
+setTodos(todos.length, { id: 3 });
 
-//This will trigger the effect, because the array reference changes:
-setState("todos", (prev) => [...prev, { id: 3 }]);
+
+// Prior to Solid 1.4.0
+createEffect(() => {
+  // This will be triggered because we've subscribed to the actual signals in the array.
+  console.log([...state.todos]); 
+  console.log(state.todos[2]) // Or we can subscribe only to a specific one.
+});
+setState(todos, state.todos.length, { id: 3 });
 ```
 
 ## Updating Stores

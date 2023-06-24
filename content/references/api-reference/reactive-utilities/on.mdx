@@ -1,3 +1,6 @@
+import { Aside } from "~/components/configurable/Aside";
+
+
 <Title>on</Title>
 
 ```ts
@@ -29,7 +32,28 @@ createEffect(on(a, (v) => console.log(v), { defer: true }));
 setA("new"); // now it runs
 ```
 
-Please note that on stores and mutable, adding or removing a property from the parent object will trigger an effect. See [createMutable](/references/api-reference/stores/store-utilities/#createMutable)
+## Using `on` with stores
+
+<Aside>
+  Please note that on stores and mutable, adding or removing a property from the parent object will 
+  trigger an effect. See <a href="/references/api-reference/stores/store-utilities/#createMutable">createMutable</a>
+</Aside>
+
+```ts
+const [state, setState] = createStore({ a: 1, b: 2 });
+
+// this will not work
+createEffect(on(state.a, (v) => console.log(v)));
+
+setState({ a: 3 }) // logs nothing
+
+
+// instead, use an arrow function 
+createEffect(on(() => state.a, (v) => console.log(v)));
+
+setState({ a: 4 }) // logs 4
+```
+
 
 ## Arguments and Options
 

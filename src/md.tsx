@@ -148,31 +148,25 @@ export default {
     let ref: HTMLPreElement;
 
     return (
-      <div class="relative">
-        {/* <Show when={props.filename?.length > 5}>
-        <span {...props} class="h-4 p-1">
-          {props.filename}
-        </span>
-      </Show> */}
-        <pre
-          {...mergeProps(props, {
-            get class() {
-              return (
-                props.className +
-                " " +
-                (props.bad ? "border-red-400 border-1" : "")
-              );
-            },
-            get className() {
-              return undefined;
-            },
-          })}
-          ref={ref}
-        >
-          {props.children}
-        </pre>
+      <pre
+        {...mergeProps(props, {
+          get class() {
+            return (
+              "relative " +
+              props.className +
+              " " +
+              (props.bad ? "border-red-400 border-1" : "")
+            );
+          },
+          get className() {
+            return undefined;
+          },
+        })}
+        ref={ref}
+      >
+        {props.children}
         <CopyButton parentRef={ref} />
-      </div>
+      </pre>
     );
   },
   table: (props) => (

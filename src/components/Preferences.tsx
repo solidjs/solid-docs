@@ -8,10 +8,9 @@ import IconSvelte from "~icons/vscode-icons/file-type-svelte";
 import IconAngular from "~icons/vscode-icons/file-type-angular";
 import IconNone from "~icons/heroicons-outline/ban";
 
-
 interface PreferencesProps {
-  id: string,
-  isForContent?: boolean
+  id: string;
+  isForContent?: boolean;
 }
 
 export const Preferences = (props: PreferencesProps) => {
@@ -95,7 +94,7 @@ interface RadioButtonProps<T extends string> {
 
 const RadioButton = <T extends string>(props: RadioButtonProps<T>) => {
   return (
-    <div class="border border-solid-lightitem dark:border-solid-darkitem peer-checked:(bg-solid-light border-solid-accent) dark:peer-checked:bg-solid-dark text-sm rounded flex items-center gap-2 p-2 peer-focus-visible:outline peer-focus-visible:outline-offset-2 peer-focus-visible:outline-blue-600">
+    <div class="border border-solid-lightitem dark:border-solid-darkitem peer-checked:(bg-solid-light border-solid-accent) dark:peer-checked:(bg-solid-dark border-2) text-sm rounded flex items-center gap-2 p-2 peer-focus-visible:outline peer-focus-visible:outline-offset-2 peer-focus-visible:outline-blue-600">
       {props.icon}
       {props.label}
     </div>

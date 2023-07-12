@@ -40,7 +40,7 @@ Instead, we wish to deliberately _teach_: create resources that are designed to 
 <details>
   <summary>
   1. Have someone in mind when you write
-  </summary>
+  </>
 
 We're writing for people, and different people come to the docs at different levels of experience and expectations. This doesn't mean that every piece of writing should serve every learning need - see our different [Content Types](#content-types). But it does mean that you can teach more effectively if you have an idea of whom you're teaching and what works for them.
 

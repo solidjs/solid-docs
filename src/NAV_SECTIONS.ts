@@ -513,7 +513,7 @@ export const GUIDES_SECTIONS: SECTIONS = {
             link: "/guides/how-to-guides/deployment/deploying-to-firebase",
           },
           {
-            name: "Deploying To Flightcontrol",
+            name: "Deploying to AWS via Flightcontrol",
             link: "/guides/how-to-guides/deployment/deploying-to-flightcontrol",
           },
           {

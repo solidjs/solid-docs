@@ -102,13 +102,23 @@ refetch();
 It's also possible to pass multiple signals as the source, by constructing a derived signal:
 
 ```ts
-const [dataSignal, setDataSignal] = createSignal();
-const [moreData, setMoreData] = createSignal();
+const [dataSignal, setDataSignal] = createSignal(1);
+const [moreData, setMoreData] = createSignal("string_data");
 const [data] = createResource(
-  () => [dataSignal(), moreData()],
+  () => [dataSignal(), moreData()] as const,
   ([dataVal, moreDataVal]) => {
     // Reruns when either signal updates
   }
+);
+```
+
+Note the `as const`. This is necessary for typescript to correctly infer the types of the fetcher's arguments: `dataVal`, and `moreDataVal`.
+Alternatively, these can be explicitly typed when passed to the fetcher:
+
+```ts
+const [data] = createResource(
+  () => [dataSignal(), moreData()] as const,
+  ([dataVal, moreDataVal]) => fetcher(dataVal as number, moreDataVal as string)
 );
 ```
 

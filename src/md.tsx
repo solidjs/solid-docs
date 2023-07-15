@@ -152,10 +152,7 @@ export default {
         {...mergeProps(props, {
           get class() {
             return (
-              "relative " +
-              props.className +
-              " " +
-              (props.bad ? "border-red-400 border-1" : "")
+              props.className + (props.bad ? " border-red-400 border-1" : "")
             );
           },
           get className() {
@@ -164,7 +161,7 @@ export default {
         })}
         ref={ref}
       >
-        {props.children}
+        <div class="overflow-x-auto">{props.children}</div>
         <CopyButton parentRef={ref} />
       </pre>
     );

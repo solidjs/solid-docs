@@ -1,7 +1,7 @@
 import { NavLink, Route, Routes, useLocation } from "@solidjs/router";
 import { For, Show, createDeferred, createEffect, createMemo, createSignal, useTransition } from "solid-js";
 import {
-  GUIDES_SECTIONS,
+  LEARN_SECTIONS,
   REFERENCE_SECTIONS,
   SECTIONS,
   SECTION_LEAF_PAGE,
@@ -66,10 +66,10 @@ function TopMenu() {
             component={ReferenceNav}
           />
           <Route
-            path={"/guides/**/*"}
-            component={GuidesNav}
+            path={"/learan/**/*"}
+            component={LearnNav}
           />
-          <Route path="/**/*" component={GuidesNav} />
+          <Route path="/**/*" component={LearnNav} />
         </Routes>
       </nav>
     </aside>
@@ -99,12 +99,12 @@ export function getStartSection(pathname: string) {
 }
 
 export function getNextPrevPages(pathname: string, sections:SECTIONS) {
-  const allGuidesSections = getAllSections(sections);
+  const allLearnSections = getAllSections(sections);
   let nextPrevPages:SECTION_LEAF_PAGE[] = []
 
-  const currentPageIndex = allGuidesSections.findIndex(v => v.link.startsWith(pathname))
-  const nextPage = allGuidesSections[currentPageIndex+1]
-  const prevPage = allGuidesSections[currentPageIndex-1]
+  const currentPageIndex = allLearnSections.findIndex(v => v.link.startsWith(pathname))
+  const nextPage = allLearnSections[currentPageIndex+1]
+  const prevPage = allLearnSections[currentPageIndex-1]
 
   nextPrevPages.push(...[prevPage, nextPage])
 
@@ -192,8 +192,8 @@ function ReferenceNav() {
   return <SectionNav sections={REFERENCE_SECTIONS} />;
 }
 
-function GuidesNav() {
-  return <SectionNav sections={GUIDES_SECTIONS} />;
+function LearnNav() {
+  return <SectionNav sections={LEARN_SECTIONS} />;
 }
 
 function SectionsNavIterate(props: {

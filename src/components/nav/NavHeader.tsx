@@ -24,10 +24,10 @@ function ActiveLink(props) {
 
 const sections = [
   {
-    title: "Guides",
+    title: "Learn",
     href: "/",
   },
-  { title: "API Reference", href: "/references" },
+  { title: "Reference", href: "/references" },
 ];
 
 export const NavHeader = (props: {

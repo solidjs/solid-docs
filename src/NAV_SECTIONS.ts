@@ -376,259 +376,134 @@ export const REFERENCE_SECTIONS: SECTIONS = {
   },
 };
 
-export const GUIDES_SECTIONS: SECTIONS = {
-  foundations: {
-    name: "Foundations",
+export const LEARN_SECTIONS: SECTIONS = {
+  introduction: {
+    name: "Introduction",
     pages: [
       {
-        name: "Why Solid?",
-        link: "/guides/foundations/why-solid",
+        name: "Overview",
+        link: "/learn/introduction/overview",
       },
       {
-        name: "Thinking Solid",
-        link: "/guides/foundations/thinking-solid",
+        name: "Core Principles",
+        link: "/learn/introduction/core-principles",
       },
       {
-        name: "JavaScript for Solid",
-        link: "/guides/foundations/javascript-for-solid",
+        name: "Getting Started",
+        link: "/learn/introduction/getting-started",
       },
       {
-        name: "Solid Primitives",
-        link: "/guides/foundations/solid-primitives",
+        name: "Installation & Setup",
+        link: "/learn/introduction/installation-and-setup",
       },
       {
-        name: "Typescript for Solid",
-        link: "/guides/foundations/typescript-for-solid",
-      },
-      {
-        name: "Understanding Components",
-        link: "/guides/foundations/understanding-components",
-      },
+        name: "FAQ",
+        link: "/learn/introduction/faq",
+      }
     ],
   },
-  "how-to-guides": {
-    name: "How-To Guides",
+  essentials: {
+    name: "Essentials",
     pages: [
       {
-        name: "Get Ready for Solid",
-        pages: [
-          {
-            name: "Welcome",
-            link: "/guides/how-to-guides/get-ready-for-solid/",
-          },
-          {
-            name: "Installation & Setup",
-            link: "/guides/how-to-guides/get-ready-for-solid/installation-and-setup",
-          },
-          {
-            name: "Linting",
-            link: "/guides/how-to-guides/get-ready-for-solid/linting",
-          },
-          {
-            name: "Solid Best Practices",
-            link: "/guides/how-to-guides/get-ready-for-solid/solid-best-practices",
-          },
-        ],
+        name: "Understanding JSX Syntax",
+        link: "/learn/essentials/understanding-jsx-syntax",
       },
       {
-        name: "Styling In Solid",
-        pages: [
-          {
-            name: "Introduction",
-            link: "/guides/how-to-guides/styling-in-solid",
-          },
-          {
-            name: "CSS Modules",
-            link: "/guides/how-to-guides/styling-in-solid/css-modules",
-          },
-          {
-            name: "Sass",
-            link: "/guides/how-to-guides/styling-in-solid/sass",
-          },
-          {
-            name: "Less",
-            link: "/guides/how-to-guides/styling-in-solid/less",
-          },
-          {
-            name: "Tailwind CSS",
-            link: "/guides/how-to-guides/styling-in-solid/tailwind-css",
-          },
-          {
-            name: "UnoCSS",
-            link: "/guides/how-to-guides/styling-in-solid/unocss",
-          },
-          {
-            name: "WindiCSS",
-            link: "/guides/how-to-guides/styling-in-solid/windicss",
-          },
-        ],
+        name: "Intro to Reactivity",
+        link: "/learn/essentials/intro-to-reactivity",
       },
       {
-        name: "Accessibility in Solid",
-        pages: [
-          {
-            name: "Introduction",
-            link: "/guides/how-to-guides/accessibility-in-solid",
-          },
-          {
-            name: "Best Practices",
-            link: "/guides/how-to-guides/accessibility-in-solid/best-practices",
-          },
-          {
-            name: "Solid Aria",
-            link: "/guides/how-to-guides/accessibility-in-solid/solid-aria",
-          },
-        ],
+        name: "Components & Props",
+        link: "/learn/essentials/components-and-props",
       },
       {
-        name: "Routing in Solid",
-        pages: [
-          {
-            name: "Solid Router",
-            link: "/guides/how-to-guides/routing-in-solid/solid-router",
-          },
-        ],
+        name: "Bindings",
+        link: "/learn/essentials/bindings",
       },
       {
-        name: "Deployment",
-        pages: [
-          {
-            name: "Introduction",
-            link: "/guides/how-to-guides/deployment/",
-          },
-          {
-            name: "Deploying To Vercel",
-            link: "/guides/how-to-guides/deployment/deploying-to-vercel",
-          },
-          {
-            name: "Deploying To Netlify",
-            link: "/guides/how-to-guides/deployment/deploying-to-netlify",
-          },
-          {
-            name: "Deploying To Firebase",
-            link: "/guides/how-to-guides/deployment/deploying-to-firebase",
-          },
-          {
-            name: "Deploying To Cloudflare",
-            link: "/guides/how-to-guides/deployment/deploying-to-cloudflare",
-          },
-          {
-            name: "Deploying To Railway",
-            link: "/guides/how-to-guides/deployment/deploying-to-railway",
-          },
-        ],
+        name: "Signals",
+        link: "/learn/essentials/signals",
       },
       {
-        name: "Animations in Solid",
-        pages: [
-          {
-            name: "MotionOne for Solid",
-            link: "/guides/how-to-guides/animations-in-solid/motionone-for-solid",
-          },
-          {
-            name: "Solid Transition Group",
-            link: "/guides/how-to-guides/animations-in-solid/solid-transition-group",
-          },
-        ],
+        name: "Managing Side Effects",
+        link: "/learn/essentials/managing-side-effects",
       },
       {
-        name: "Testing in Solid",
-        pages: [
-          {
-            name: "Vitest",
-            link: "/guides/how-to-guides/testing-in-solid/vitest",
-          },
-          {
-            name: "Jest",
-            link: "/guides/how-to-guides/testing-in-solid/jest",
-          },
-          {
-            name: "Uvu",
-            link: "/guides/how-to-guides/testing-in-solid/uvu",
-          },
-        ],
+        name: "Computed Values",
+        link: "/learn/essentials/computed-values",
       },
       {
-        name: "Comparison",
-        pages: [
-          {
-            name: "React",
-            link: "/guides/how-to-guides/comparison/react",
-          },
-          {
-            name: "Vue",
-            link: "/guides/how-to-guides/comparison/vue",
-          },
-          {
-            name: "Preact",
-            link: "/guides/how-to-guides/comparison/preact",
-          },
-          {
-            name: "Svelte",
-            link: "/guides/how-to-guides/comparison/svelte",
-          },
-          {
-            name: "Angular",
-            link: "/guides/how-to-guides/comparison/angular",
-          },
-          {
-            name: "Qwik",
-            link: "/guides/how-to-guides/comparison/qwik",
-          },
-          {
-            name: "Marko",
-            link: "/guides/how-to-guides/comparison/marko",
-          },
-        ],
+        name: "Conditional Rendering",
+        link: "/learn/essentials/conditional-rendering",
       },
+      {
+        name: "List Rendering",
+        link: "/learn/essentials/list-rendering",
+      },
+      {
+        name: "Event Handling",
+        link: "/learn/essentials/event-handling",
+      }
     ],
   },
   tutorials: {
     name: "Tutorials",
     pages: [
       {
-        name: "Getting Started with Solid",
-        // navigating to /guides/getting-started-with-solid takes you to /guides/getting-started-with-solid/welcome
-        pages: [
-          {
-            name: "Welcome",
-            link: "/guides/tutorials/getting-started-with-solid/welcome",
-          },
-          {
-            name: "Installing Solid",
-            link: "/guides/tutorials/getting-started-with-solid/installing-solid",
-          },
-          {
-            name: "Building UI with Components",
-            link: "/guides/tutorials/getting-started-with-solid/building-ui-with-components",
-          },
-          {
-            name: "Adding Interactivity with State",
-            link: "/guides/tutorials/getting-started-with-solid/adding-interactivity-with-state",
-          },
-          {
-            name: "Control Flow",
-            link: "/guides/tutorials/getting-started-with-solid/control-flow",
-          },
-          {
-            name: "Fetching Data",
-            link: "/guides/tutorials/getting-started-with-solid/fetching-data",
-          },
-        ],
+        name: "Beginner Tutorial",
+        link: "/learn/tutorials/beginner-tutorial",
       },
     ],
   },
-  "troubleshooting&faq": {
-    name: "Troubleshooting & FAQ",
+  guides: {
+    name: "Guides",
     pages: [
       {
-        name: "Frequently Encountered Errors (FEE)",
-        link: "/guides/troubleshooting-and-faq/frequently-encountered-errors",
+        name: "Styling your Components",
+        link: "/learn/guides/styling-your-components",
       },
       {
-        name: "Frequently Asked Questions (FAQ)",
-        link: "/guides/troubleshooting-and-faq/faq",
+        name: "Routing & Navigation",
+        link: "/learn/guides/routing-and-navigation",
       },
-    ],
+      {
+        name: "Fetching Data",
+        link: "/learn/guides/fetching-data",
+      },
+      {
+        name: "State Management",
+        link: "/learn/guides/state-management",
+      },
+      {
+        name: "Deploying your App",
+        link: "/learn/guides/deploying-your-app",
+      },
+      {
+        name: "TypeScript for Solid",
+        link: "/learn/guides/typescript-for-solid",
+      },
+      {
+        name: "Testing",
+        link: "/learn/guides/testing",
+      }
+    ]
   },
+  additonalResources: {
+    name: "Additional Resources",
+    pages: [
+      {
+        name: "Ecosystem",
+        link: "/learn/additional-resources/ecosystem",
+      },
+      {
+        name: "Contribution Guide",
+        link: "#",
+      },
+      {
+        name: "Community & Support",
+        link: "/learn/additional-resources/community-and-support",
+      }
+    ]
+  }
 };

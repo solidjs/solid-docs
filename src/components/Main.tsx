@@ -7,7 +7,7 @@ import Summary from "./nav/Summary";
 import { NextSection, PrevNextSection, PrevSection } from "./NextSection";
 import { createStore } from "solid-js/store";
 import {
-  GUIDES_SECTIONS,
+  LEARN_SECTIONS,
   REFERENCE_SECTIONS,
   SECTION_LEAF_PAGE,
 } from "~/NAV_SECTIONS";
@@ -25,7 +25,7 @@ export function Main(props) {
     } else if (location.pathname.startsWith("/guides")) {
       [prevPage, nextPage] = getNextPrevPages(
         location.pathname,
-        GUIDES_SECTIONS
+        LEARN_SECTIONS
       );
     } else {
       return null;

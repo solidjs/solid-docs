@@ -1,5 +1,5 @@
-# The docs effort continues [here!](https://github.com/solidjs/solid-docs-next-next)
-
+# SolidJS Docs
+Our docs are currently in the process of being rewritten. If you would like to contribute, please look [here](https://github.com/solidjs/solid-docs-next/issues)!
 
 ## Running the Site
 

@@ -3,7 +3,7 @@ import IconChevron from "~icons/heroicons-outline/chevron-right";
 import IconGear from "~icons/heroicons-solid/cog";
 import { Preferences } from "../Preferences";
 
-export function NavPreferences(props: {id: string}) {
+export function NavPreferences(props: { id: string }) {
   const [collapsed, setCollapsed] = createSignal(false);
 
   return (
@@ -21,13 +21,16 @@ export function NavPreferences(props: {id: string}) {
           Preferences
         </div>
         <IconChevron
-          class={`w-6 h-6 text-solid-lightaction dark:text-solid-darkaction transform transition ${
+          class={`w-6 h-6 text-solid-lightitem dark:text-solid-darkitem transform transition ${
             !collapsed() ? "rotate-90" : ""
           }`}
         />
       </button>
       <Show when={!collapsed()}>
-        <div aria-label="preferences" class="p-4 border-t border-solid-lightitem dark:border-solid-darkitem">
+        <div
+          aria-label="preferences"
+          class="p-4 border-t border-solid-lightitem dark:border-solid-darkitem"
+        >
           <Preferences id={props.id} />
         </div>
       </Show>

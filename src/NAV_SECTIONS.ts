@@ -51,10 +51,10 @@ export const REFERENCE_SECTIONS: SECTIONS = {
       //       name: "Context",
       //       link: "/references/concepts/state-management/context",
       //     },
-          // {
-          //   name: "Store",
-          //   link: "/references/concepts/state-management/store",
-          // },
+      // {
+      //   name: "Store",
+      //   link: "/references/concepts/state-management/store",
+      // },
       //   ],
       // },
       {
@@ -399,7 +399,7 @@ export const LEARN_SECTIONS: SECTIONS = {
       {
         name: "FAQ",
         link: "/learn/introduction/faq",
-      }
+      },
     ],
   },
   essentials: {
@@ -444,7 +444,7 @@ export const LEARN_SECTIONS: SECTIONS = {
       {
         name: "Event Handling",
         link: "/learn/essentials/event-handling",
-      }
+      },
     ],
   },
   tutorials: {
@@ -486,8 +486,8 @@ export const LEARN_SECTIONS: SECTIONS = {
       {
         name: "Testing",
         link: "/learn/guides/testing",
-      }
-    ]
+      },
+    ],
   },
   additonalResources: {
     name: "Additional Resources",
@@ -503,7 +503,7 @@ export const LEARN_SECTIONS: SECTIONS = {
       {
         name: "Community & Support",
         link: "/learn/additional-resources/community-and-support",
-      }
-    ]
-  }
+      },
+    ],
+  },
 };

@@ -1,7 +1,13 @@
 import { NavLink } from "@solidjs/router";
 import IconChevron from "~icons/heroicons-outline/chevron-right";
 
-import { ParentProps, Show, createEffect, createSignal, createUniqueId } from "solid-js";
+import {
+  ParentProps,
+  Show,
+  createEffect,
+  createSignal,
+  createUniqueId,
+} from "solid-js";
 
 export function CollapsedIcon(props) {
   return <div class={"duration-100 ease-in transition" + props.class}>▼</div>;
@@ -13,14 +19,16 @@ type CollapsibleProps = ParentProps<{
 }>;
 
 export function Collapsible(props: CollapsibleProps) {
-  const [collapsed, setCollapsed] = createSignal(props.startCollapsed() || false);
+  const [collapsed, setCollapsed] = createSignal(
+    props.startCollapsed() || false
+  );
 
   const id = createUniqueId();
 
   createEffect(() => {
-    const isCollapsed = props.startCollapsed()
-    setCollapsed(isCollapsed)
-  })
+    const isCollapsed = props.startCollapsed();
+    setCollapsed(isCollapsed);
+  });
 
   return (
     <li value={props.header} class="m-2">
@@ -68,7 +76,7 @@ function SectionPanel(props: ParentProps<{ id: string }>) {
   return (
     <ul
       id={props.id}
-      class="opacity-100 md:border-l border-solid-lightitem dark:border-solid-darkitem"
+      class="opacity-100 md:border-l border-solid-darkitem dark:border-solid-lightitem"
       style="list-none transition: opacity 250ms ease-in-out 0s; animation: 250ms ease-in-out 0s 1 normal none running nav-fadein;"
     >
       {props.children}
@@ -78,12 +86,12 @@ function SectionPanel(props: ParentProps<{ id: string }>) {
 
 export function NavItem(props) {
   return (
-    <li class="">
+    <li>
       <NavLink
-        class="p-2 pb-1.75 text-base w-full rounded-lg md:(rounded-lg rounded-l-none) text-left relative flex items-center justify-between transition cursor-pointer"
+        class="p-2 pb-1.75 text-base w-full text-left relative flex items-center justify-between transition cursor-pointer"
         {...props}
-        inactiveClass="hover:bg-solid-light hover:dark:bg-solid-dark"
-        activeClass="text-white font-semibold bg-solid-accent active"
+        inactiveClass="hover:bg-solid-lightaction hover:dark:bg-solid-darkaction"
+        activeClass="text-black dark:text-white font-semibold bg-solid-lightitem dark:bg-solid-darkitem active"
         end={true}
       >
         {props.children}

@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "@solidjs/router";
-import { For, Setter, Show, useContext } from "solid-js";
+import { Setter, Show, useContext } from "solid-js";
 import IconMenu from "~icons/heroicons-outline/menu";
 import IconMoon from "~icons/heroicons-outline/moon";
 import IconSun from "~icons/heroicons-outline/sun";
@@ -103,7 +103,7 @@ export const NavHeader = (props: {
               loc.pathname.startsWith(sections[0].href) &&
               !loc.pathname.includes(sections[1].href)
             }
-            activeClass="text-white font-semibold bg-solid-accent active"
+            activeClass="text-white font-semibold bg-solid-accentlight dark:bg-solid-accent active"
             class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0)"
             href={sections[0].href}
           >
@@ -114,7 +114,7 @@ export const NavHeader = (props: {
             isActive={(loc: Location) =>
               loc.pathname.startsWith(sections[1].href)
             }
-            activeClass="text-white font-semibold bg-solid-accent active"
+            activeClass="text-white font-semibold bg-solid-accentlight dark:bg-solid-accent active"
             class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0)"
             href={sections[1].href}
           >

@@ -94,7 +94,7 @@ interface RadioButtonProps<T extends string> {
 
 const RadioButton = <T extends string>(props: RadioButtonProps<T>) => {
   return (
-    <div class="border border-solid-lightitem dark:border-solid-darkitem peer-checked:(bg-solid-light border-solid-accent) dark:peer-checked:(bg-solid-dark border-2) text-sm rounded flex items-center gap-2 p-2 peer-focus-visible:outline peer-focus-visible:outline-offset-2 peer-focus-visible:outline-blue-600">
+    <div class="border border-solid-lightitem dark:border-solid-darkitem peer-checked:(bg-solid-lightitem border-solid-darkitem) dark:peer-checked:(bg-solid-darkitem border-2) text-sm rounded flex items-center gap-2 p-2 peer-focus-visible:outline peer-focus-visible:outline-offset-2 peer-focus-visible:outline-blue-600 hover:bg-solid-lightaction hover:dark:bg-solid-darkaction">
       {props.icon}
       {props.label}
     </div>

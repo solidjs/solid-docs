@@ -1,7 +1,15 @@
 import { NavLink, Route, Routes, useLocation } from "@solidjs/router";
-import { For, Show, createDeferred, createEffect, createMemo, createSignal, useTransition } from "solid-js";
 import {
-  GUIDES_SECTIONS,
+  For,
+  Show,
+  createDeferred,
+  createEffect,
+  createMemo,
+  createSignal,
+  useTransition,
+} from "solid-js";
+import {
+  LEARN_SECTIONS,
   REFERENCE_SECTIONS,
   SECTIONS,
   SECTION_LEAF_PAGE,
@@ -38,7 +46,7 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
       <div
         classList={{
           hidden: !showMenu(),
-          "lg:block border-b md:border-none border-solid-lightitem dark:border-solid-darkitem pb-4":
+          "lg:block border-b md:border-none border-solid-e dark:border-solid-darkitem pb-4":
             true,
         }}
       >
@@ -61,15 +69,9 @@ function TopMenu() {
     <aside class="w-full">
       <nav class="scrolling-touch scrolling-gpu" style="--bg-opacity:0.2;">
         <Routes>
-          <Route
-            path={"/references/**/*"}
-            component={ReferenceNav}
-          />
-          <Route
-            path={"/guides/**/*"}
-            component={GuidesNav}
-          />
-          <Route path="/**/*" component={GuidesNav} />
+          <Route path={"/references/**/*"} component={ReferenceNav} />
+          <Route path={"/learn/**/*"} component={LearnNav} />
+          <Route path="/**/*" component={LearnNav} />
         </Routes>
       </nav>
     </aside>
@@ -98,23 +100,25 @@ export function getStartSection(pathname: string) {
   return allStartSections[current + 1];
 }
 
-export function getNextPrevPages(pathname: string, sections:SECTIONS) {
-  const allGuidesSections = getAllSections(sections);
-  let nextPrevPages:SECTION_LEAF_PAGE[] = []
+export function getNextPrevPages(pathname: string, sections: SECTIONS) {
+  const allLearnSections = getAllSections(sections);
+  let nextPrevPages: SECTION_LEAF_PAGE[] = [];
 
-  const currentPageIndex = allGuidesSections.findIndex(v => v.link.startsWith(pathname))
-  const nextPage = allGuidesSections[currentPageIndex+1]
-  const prevPage = allGuidesSections[currentPageIndex-1]
+  const currentPageIndex = allLearnSections.findIndex((v) =>
+    v.link.startsWith(pathname)
+  );
+  const nextPage = allLearnSections[currentPageIndex + 1];
+  const prevPage = allLearnSections[currentPageIndex - 1];
 
-  nextPrevPages.push(...[prevPage, nextPage])
+  nextPrevPages.push(...[prevPage, nextPage]);
 
   return nextPrevPages;
 }
 
 function getAllSections(
   sections: SECTIONS | (SECTION_PAGE | SECTION_LEAF_PAGE)[]
-):SECTION_LEAF_PAGE[] {
-  let allSections:SECTION_LEAF_PAGE[] = [];
+): SECTION_LEAF_PAGE[] {
+  let allSections: SECTION_LEAF_PAGE[] = [];
 
   for (const section in sections) {
     const doesSectionContainPages = sections[section].pages !== undefined;
@@ -141,7 +145,7 @@ function StartMenu() {
     <ul class="m-5 nav">
       <For each={START_SECTIONS}>
         {(section) => (
-          <li class="mb-6">
+          <li class="my-5">
             <span class="font-bold mb-2 block">{section.header}</span>
             <ul>
               <For each={section.subsections}>
@@ -192,8 +196,8 @@ function ReferenceNav() {
   return <SectionNav sections={REFERENCE_SECTIONS} />;
 }
 
-function GuidesNav() {
-  return <SectionNav sections={GUIDES_SECTIONS} />;
+function LearnNav() {
+  return <SectionNav sections={LEARN_SECTIONS} />;
 }
 
 function SectionsNavIterate(props: {
@@ -207,7 +211,10 @@ function SectionsNavIterate(props: {
     return "link" in page;
   }
 
-  const isCollapsed = (pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>, pathname:string) => {
+  const isCollapsed = (
+    pages: Array<SECTION_PAGE | SECTION_LEAF_PAGE>,
+    pathname: string
+  ) => {
     return !pages.some((page) => {
       return isLeafPage(page) && pathname == page?.link;
     });
@@ -229,7 +236,12 @@ function SectionsNavIterate(props: {
             <ul>
               <Collapsible
                 header={subsection.name}
-                startCollapsed={() => isCollapsed((subsection as SECTION_PAGE).pages, location.pathname)}
+                startCollapsed={() =>
+                  isCollapsed(
+                    (subsection as SECTION_PAGE).pages,
+                    location.pathname
+                  )
+                }
               >
                 <SectionsNavIterate
                   pages={(subsection as SECTION_PAGE).pages}
@@ -247,19 +259,19 @@ function SectionNav(props: { sections: SECTIONS }) {
   const sectionNames = Object.keys(props.sections);
 
   return (
-    <ul class="flex flex-col gap-4">
+    <ul class="flex flex-col">
       <For each={sectionNames}>
         {(name, i) => (
           <>
             <li>
-              <h2 class="pl-2 text-solid-dark dark:text-white font-bold text-xl">
+              <h2 class="pl-2 text-solid-dark dark:text-white font-semibold text-xl my-3">
                 {props.sections[name].name}
               </h2>
               <SectionsNavIterate pages={props.sections[name].pages} />
             </li>
             <Show when={i() !== sectionNames.length - 1}>
               <li>
-                <hr class="w-full mb-2" />
+                <hr class="w-full my-3" />
               </li>
             </Show>
           </>

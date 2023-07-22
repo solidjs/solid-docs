@@ -1,29 +1,51 @@
-# The docs effort continues [here!](https://github.com/solidjs/solid-docs-next-next)
+<a target="_blank" href="https://app.eraser.io/workspace/TI993IjPMNE1EnZlpKh5" id="edit-in-eraser-github-link"><img alt="Edit in Eraser" src="https://firebasestorage.googleapis.com/v0/b/second-petal-295822.appspot.com/o/images%2Fgithub%2FOpen%20in%20Eraser.svg?alt=media&amp;token=968381c8-a7e7-472a-8ed6-4a6626da5501"></a>
+# Solid Docs
+Welcome to Solid's documentation!
 
+This is the repo for [﻿docs.solidjs.com](https://docs.solidjs.com/). This repo contains all the source code that we use to build our docs.
 
-## Running the Site
+[![Open in Gitpod]([﻿https://gitpod.io/button/open-in-gitpod.svg](https://gitpod.io/button/open-in-gitpod.svg) )]([﻿https://gitpod.io/#https://github.com/solidjs/solid-docs-next](https://gitpod.io/#https://github.com/solidjs/solid-docs-next))
 
-Our [Stackblitz](https://stackblitz.com/fork/github/solidjs/solid-docs-next/) or [Gitpod](https://gitpod.io/#https://github.com/solidjs/solid-docs-next) links are the quickest way to set up a development environment, which lets you browse and edit the project files and run the resulting site locally.
+[!Open in CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)]([﻿https://codesandbox.io/p/github/solidjs/solid-docs-next/](https://codesandbox.io/p/github/solidjs/solid-docs-next/))
 
-We use **npm** as our a package manager. If you [clone this project](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) locally, [install npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm), then run these commands to start the project:
+[![Open in StackBlitz]([﻿https://developer.stackblitz.com/img/open_in_stackblitz.svg ](https://developer.stackblitz.com/img/open_in_stackblitz.svg))]([﻿https://stackblitz.com/github/solidjs/solid-docs-next/](https://stackblitz.com/github/solidjs/solid-docs-next))
 
-```shell
-npm install
-npm run dev
-```
+## What is Solid?
+Solid is a JavaScript framework used for building high-performance user-interfaces. Using a reactive approach and component-based architecture, we want to empower developers in creating efficient and scalable web applications.
+
+## Thank you for being here!
+You can help make our docs better for the community! Your feedback is welcomed. In addition, any editing, translating, designing, and developing skills are welcomed. We are grateful to welcome you into our community! If you want to see how you can contribute, check out our [﻿How You Can Help](https://#how-you-can-help) section.
+
+## Chat with us
+You can learn more about Solid, get support, and meet other devs and contributors in our[﻿Discord community](https://discord.com/invite/solidjs).
+
+## How you can help
+### Raise an issue
+If you notice something is missing, confusing, or is wrong in our documentation, see if it has [﻿already been mentioned ](https://github.com/solidjs/solid-docs-next/issues)and, if not [﻿create an issue](https://github.com/solidjs/solid-docs-next/issues/new/choose) to bring it to our attention! 
+
+### Share an idea
+Do you think something could be better? Have an idea you feel could make the docs better?
+
+Discussion threads are where you can offer feedback on things that might not be problems that need addressing, but are ideas to be explored.
+
+Join us in the [﻿Discussions section](https://github.com/solidjs/solid-docs-next/discussions/landing) where we can brainstorm these ideas, ask questions, and share goals!
+
+### Suggest a fix or contribution
+Have you found a typo, broken link, or another item with an obvious quick fix?
+
+If you can see what the problem is, and you know how to fix it, you can make a PR (pull request) with the change and contribute to the docs repo yourself.
+
+If you're looking to make a larger contribution, please see our [﻿CONTRIBUTING.md](https://github.com/solidjs/solid-docs-next/blob/main/CONTRIBUTING.md) first!
+
+## Running the Site Locally
+At the moment, we recommend running the site locally through either [﻿CodeSandbox](https://codesandbox.io/p/github/solidjs/solid-docs-next/), [﻿Gitpod](https://gitpod.io/#https://github.com/solidjs/solid-docs-next), or [﻿StackBlitz](https://stackblitz.com/github/solidjs/solid-docs-next). These are the quickest and easiest way to browse and edit the project files and run the site locally.
+
+> **Note**: To run this project through your own IDE at this time, you will need to run _Node v16.19.0._ This may require using a [﻿Node Version Manager](https://www.digitalocean.com/community/tutorials/nodejs-node-version-manager)﻿. 
 
 ## Contributing
+We're always looking for new contributors! Please check out our [﻿Contributing Guide](https://github.com/solidjs/solid-docs-next/blob/main/CONTRIBUTING.md) to get started. If you're interested in writing and editing content, please read our [﻿Writing Guide](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md).
 
-We're looking for new contributors! Please check out our [Contributing Guide](https://github.com/solidjs/solid-docs-next/blob/main/CONTRIBUTING.md) to get started. If you're interested in writing and editing content, please read our [Writing Guide](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md).
 
-## The Solid Docs Manifesto
 
-1. <h4>Documentation is a product.</h4> A product has users, and product teams design, engineer, and maintain solutions that serve them. We’re not writing text that describes Solid, we’re using everything at our disposal to teach Solid and empower our users throughout their learning process.
 
-2. <h4>Documentation is <em>the product</em>.</h4> Solid's user experience depends on the docs. Solid is not an independent project from its docs, and docs are a core concern for the Solid team. We care about the entire onboarding and learning experience, from your first time installing the library to your first dive into Solid's source code.
-
-3. <h4>Documentation is inclusive and collaborative.</h4> We prioritize inclusion because good design is inclusive. Everyone should be able to understand the docs, and everyone should feel that the docs are written <em>by</em> people like them <em>for</em> people like them. This includes people of different perspectives, backgrounds, and levels of tech expertise.
-
-4. <h4>Documentation is accessible.</h4> Learning Solid should be possible for anyone. At their best, docs break down barriers and create new opportunities. To do that, we must accommodate all learners. Beyond accessible text, docs include code examples, videos, and drawings, so we can support different needs and learning styles.
-
-5. <h4>Documentation is fun.</h4> Learning a new skill feels amazing. Let’s make it fun to teach, too! We’re a community of volunteers, and that community matters: we care about our users, and we care about each other.
+<!--- Eraser file: https://app.eraser.io/workspace/TI993IjPMNE1EnZlpKh5 --->

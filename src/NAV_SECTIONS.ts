@@ -24,7 +24,7 @@ export const REFERENCE_SECTIONS: SECTIONS = {
     pages: [
       {
         name: "Introduction",
-        link: "/references",
+        link: "/reference",
       },
     ],
   },
@@ -92,19 +92,19 @@ export const REFERENCE_SECTIONS: SECTIONS = {
         pages: [
           {
             name: "createSignal",
-            link: "/references/api-reference/basic-reactivity/createSignal",
+            link: "/reference/createSignal",
           },
           {
             name: "createEffect",
-            link: "/references/api-reference/basic-reactivity/createEffect",
+            link: "/reference/createEffect",
           },
           {
             name: "createMemo",
-            link: "/references/api-reference/basic-reactivity/createMemo",
+            link: "/reference/createMemo",
           },
           {
             name: "createResource",
-            link: "/references/api-reference/basic-reactivity/createResource",
+            link: "/reference/createResource",
           },
         ],
       },
@@ -113,15 +113,15 @@ export const REFERENCE_SECTIONS: SECTIONS = {
         pages: [
           {
             name: "onMount",
-            link: "/references/api-reference/lifecycles/onMount",
+            link: "/reference/onMount",
           },
           {
             name: "onCleanup",
-            link: "/references/api-reference/lifecycles/onCleanup",
+            link: "/reference/onCleanup",
           },
           {
             name: "onError",
-            link: "/references/api-reference/lifecycles/onError",
+            link: "/reference/onError",
           },
         ],
       },
@@ -130,59 +130,59 @@ export const REFERENCE_SECTIONS: SECTIONS = {
         pages: [
           {
             name: "untrack",
-            link: "/references/api-reference/reactive-utilities/untrack",
+            link: "/reference/untrack",
           },
           {
             name: "batch",
-            link: "/references/api-reference/reactive-utilities/batch",
+            link: "/reference/batch",
           },
           {
             name: "on",
-            link: "/references/api-reference/reactive-utilities/on",
+            link: "/reference/on",
           },
           {
             name: "createRoot",
-            link: "/references/api-reference/reactive-utilities/createRoot",
+            link: "/reference/createRoot",
           },
           {
             name: "getOwner",
-            link: "/references/api-reference/reactive-utilities/getOwner",
+            link: "/reference/getOwner",
           },
           {
             name: "runWithOwner",
-            link: "/references/api-reference/reactive-utilities/runWithOwner",
+            link: "/reference/runWithOwner",
           },
           {
             name: "mergeProps",
-            link: "/references/api-reference/reactive-utilities/mergeProps",
+            link: "/reference/mergeProps",
           },
           {
             name: "splitProps",
-            link: "/references/api-reference/reactive-utilities/splitProps",
+            link: "/reference/splitProps",
           },
           {
             name: "useTransition",
-            link: "/references/api-reference/reactive-utilities/useTransition",
+            link: "/reference/useTransition",
           },
           {
             name: "startTransition",
-            link: "/references/api-reference/reactive-utilities/regularstartTransition",
+            link: "/reference/regularstartTransition",
           },
           {
             name: "observable",
-            link: "/references/api-reference/reactive-utilities/observable",
+            link: "/reference/observable",
           },
           {
             name: "from",
-            link: "/references/api-reference/reactive-utilities/from",
+            link: "/reference/from",
           },
           {
             name: "mapArray",
-            link: "/references/api-reference/reactive-utilities/mapArray",
+            link: "/reference/mapArray",
           },
           {
             name: "indexArray",
-            link: "/references/api-reference/reactive-utilities/indexArray",
+            link: "/reference/indexArray",
           },
         ],
       },
@@ -191,11 +191,11 @@ export const REFERENCE_SECTIONS: SECTIONS = {
         pages: [
           {
             name: "Using Stores",
-            link: "/references/api-reference/stores/using-stores",
+            link: "/reference/using-stores",
           },
           {
             name: "Store Utilities",
-            link: "/references/api-reference/stores/store-utilities",
+            link: "/reference/store-utilities",
           },
         ],
       },
@@ -204,23 +204,23 @@ export const REFERENCE_SECTIONS: SECTIONS = {
         pages: [
           {
             name: "createContext",
-            link: "/references/api-reference/component-apis/createContext",
+            link: "/reference/createContext",
           },
           {
             name: "useContext",
-            link: "/references/api-reference/component-apis/useContext",
+            link: "/reference/useContext",
           },
           {
             name: "children",
-            link: "/references/api-reference/component-apis/children",
+            link: "/reference/children",
           },
           {
             name: "lazy",
-            link: "/references/api-reference/component-apis/lazy",
+            link: "/reference/lazy",
           },
           {
             name: "createUniqueId",
-            link: "/references/api-reference/component-apis/createUniqueId",
+            link: "/reference/createUniqueId",
           },
         ],
       },
@@ -229,23 +229,23 @@ export const REFERENCE_SECTIONS: SECTIONS = {
         pages: [
           {
             name: "createDeferred",
-            link: "/references/api-reference/secondary-primitives/createDeferred",
+            link: "/reference/createDeferred",
           },
           {
             name: "createComputed",
-            link: "/references/api-reference/secondary-primitives/createComputed",
+            link: "/reference/createComputed",
           },
           {
             name: "createRenderEffect",
-            link: "/references/api-reference/secondary-primitives/createRenderEffect",
+            link: "/reference/createRenderEffect",
           },
           {
             name: "createReaction",
-            link: "/references/api-reference/secondary-primitives/createReaction",
+            link: "/reference/createReaction",
           },
           {
             name: "createSelector",
-            link: "/references/api-reference/secondary-primitives/createSelector",
+            link: "/reference/createSelector",
           },
         ],
       },
@@ -254,35 +254,35 @@ export const REFERENCE_SECTIONS: SECTIONS = {
         pages: [
           {
             name: "render",
-            link: "/references/api-reference/rendering/render",
+            link: "/reference/render",
           },
           {
             name: "hydrate",
-            link: "/references/api-reference/rendering/hydrate",
+            link: "/reference/hydrate",
           },
           {
             name: "renderToString",
-            link: "/references/api-reference/rendering/renderToString",
+            link: "/reference/renderToString",
           },
           {
             name: "renderToStringAsync",
-            link: "/references/api-reference/rendering/renderToStringAsync",
+            link: "/reference/renderToStringAsync",
           },
           {
             name: "renderToStream",
-            link: "/references/api-reference/rendering/renderToStream",
+            link: "/reference/renderToStream",
           },
           {
             name: "isServer",
-            link: "/references/api-reference/rendering/isServer",
+            link: "/reference/isServer",
           },
           {
             name: "DEV",
-            link: "/references/api-reference/rendering/DEV",
+            link: "/reference/DEV",
           },
           {
             name: "HydrationScript",
-            link: "/references/api-reference/rendering/HydrationScript",
+            link: "/reference/HydrationScript",
           },
         ],
       },
@@ -291,39 +291,39 @@ export const REFERENCE_SECTIONS: SECTIONS = {
         pages: [
           {
             name: "<For>",
-            link: "/references/api-reference/control-flow/For",
+            link: "/reference/For",
           },
           {
             name: "<Show>",
-            link: "/references/api-reference/control-flow/Show",
+            link: "/reference/Show",
           },
           {
             name: "<Switch> and <Match>",
-            link: "/references/api-reference/control-flow/Switch-and-Match",
+            link: "/reference/Switch-and-Match",
           },
           {
             name: "<Index>",
-            link: "/references/api-reference/control-flow/Index",
+            link: "/reference/Index",
           },
           {
             name: "<ErrorBoundary>",
-            link: "/references/api-reference/control-flow/ErrorBoundary",
+            link: "/reference/ErrorBoundary",
           },
           {
             name: "<Suspense>",
-            link: "/references/api-reference/control-flow/Suspense",
+            link: "/reference/Suspense",
           },
           {
             name: "<SuspenseList>",
-            link: "/references/api-reference/control-flow/SuspenseList",
+            link: "/reference/SuspenseList",
           },
           {
             name: "<Dynamic>",
-            link: "/references/api-reference/control-flow/Dynamic",
+            link: "/reference/Dynamic",
           },
           {
             name: "<Portal>",
-            link: "/references/api-reference/control-flow/Portal",
+            link: "/reference/Portal",
           },
         ],
       },
@@ -332,43 +332,43 @@ export const REFERENCE_SECTIONS: SECTIONS = {
         pages: [
           {
             name: "ref",
-            link: "/references/api-reference/special-jsx-attributes/ref",
+            link: "/reference/ref",
           },
           {
             name: "classList",
-            link: "/references/api-reference/special-jsx-attributes/classList",
+            link: "/reference/classList",
           },
           {
             name: "style",
-            link: "/references/api-reference/special-jsx-attributes/style",
+            link: "/reference/style",
           },
           {
             name: "innerHTML/textContent",
-            link: "/references/api-reference/special-jsx-attributes/innerHTML-or-textContent",
+            link: "/reference/innerHTML-or-textContent",
           },
           {
             name: "on*",
-            link: "/references/api-reference/special-jsx-attributes/on_",
+            link: "/reference/on_",
           },
           {
             name: "on:* and oncapture:*",
-            link: "/references/api-reference/special-jsx-attributes/on_-and-oncapture_",
+            link: "/reference/on_-and-oncapture_",
           },
           {
             name: "use:*",
-            link: "/references/api-reference/special-jsx-attributes/use_",
+            link: "/reference/use_",
           },
           {
             name: "prop:*",
-            link: "/references/api-reference/special-jsx-attributes/prop_",
+            link: "/reference/prop_",
           },
           {
             name: "attr:*",
-            link: "/references/api-reference/special-jsx-attributes/attr_",
+            link: "/reference/attr_",
           },
           {
             name: "/*@once*/",
-            link: "/references/api-reference/special-jsx-attributes/once",
+            link: "/reference/once",
           },
         ],
       },
@@ -382,23 +382,19 @@ export const LEARN_SECTIONS: SECTIONS = {
     pages: [
       {
         name: "Overview",
-        link: "/learn/introduction/overview",
-      },
-      {
-        name: "Core Principles",
-        link: "/learn/introduction/core-principles",
+        link: "/",
       },
       {
         name: "Getting Started",
-        link: "/learn/introduction/getting-started",
+        link: "/getting-started",
       },
       {
         name: "Installation & Setup",
-        link: "/learn/introduction/installation-and-setup",
+        link: "/installation-and-setup",
       },
       {
         name: "FAQ",
-        link: "/learn/introduction/faq",
+        link: "/faq",
       },
     ],
   },
@@ -407,43 +403,43 @@ export const LEARN_SECTIONS: SECTIONS = {
     pages: [
       {
         name: "Understanding JSX Syntax",
-        link: "/learn/essentials/understanding-jsx-syntax",
+        link: "/essentials/understanding-jsx-syntax",
       },
       {
         name: "Intro to Reactivity",
-        link: "/learn/essentials/intro-to-reactivity",
+        link: "/essentials/intro-to-reactivity",
       },
       {
         name: "Components & Props",
-        link: "/learn/essentials/components-and-props",
+        link: "/essentials/components-and-props",
       },
       {
         name: "Bindings",
-        link: "/learn/essentials/bindings",
+        link: "/essentials/bindings",
       },
       {
         name: "Signals",
-        link: "/learn/essentials/signals",
+        link: "/essentials/signals",
       },
       {
         name: "Managing Side Effects",
-        link: "/learn/essentials/managing-side-effects",
+        link: "/essentials/managing-side-effects",
       },
       {
         name: "Computed Values",
-        link: "/learn/essentials/computed-values",
+        link: "/essentials/computed-values",
       },
       {
         name: "Conditional Rendering",
-        link: "/learn/essentials/conditional-rendering",
+        link: "/essentials/conditional-rendering",
       },
       {
         name: "List Rendering",
-        link: "/learn/essentials/list-rendering",
+        link: "/essentials/list-rendering",
       },
       {
         name: "Event Handling",
-        link: "/learn/essentials/event-handling",
+        link: "/essentials/event-handling",
       },
     ],
   },
@@ -452,7 +448,7 @@ export const LEARN_SECTIONS: SECTIONS = {
     pages: [
       {
         name: "Beginner Tutorial",
-        link: "/learn/tutorials/beginner-tutorial",
+        link: "/tutorials/beginner-tutorial",
       },
     ],
   },
@@ -461,31 +457,31 @@ export const LEARN_SECTIONS: SECTIONS = {
     pages: [
       {
         name: "Styling your Components",
-        link: "/learn/guides/styling-your-components",
+        link: "/guides/styling-your-components",
       },
       {
         name: "Routing & Navigation",
-        link: "/learn/guides/routing-and-navigation",
+        link: "/guides/routing-and-navigation",
       },
       {
         name: "Fetching Data",
-        link: "/learn/guides/fetching-data",
+        link: "/guides/fetching-data",
       },
       {
         name: "State Management",
-        link: "/learn/guides/state-management",
+        link: "/guides/state-management",
       },
       {
         name: "Deploying your App",
-        link: "/learn/guides/deploying-your-app",
+        link: "/guides/deploying-your-app",
       },
       {
         name: "TypeScript for Solid",
-        link: "/learn/guides/typescript-for-solid",
+        link: "/guides/typescript-for-solid",
       },
       {
         name: "Testing",
-        link: "/learn/guides/testing",
+        link: "/guides/testing",
       },
     ],
   },
@@ -494,7 +490,7 @@ export const LEARN_SECTIONS: SECTIONS = {
     pages: [
       {
         name: "Ecosystem",
-        link: "/learn/additional-resources/ecosystem",
+        link: "/ecosystem",
       },
       {
         name: "Contribution Guide",
@@ -502,7 +498,7 @@ export const LEARN_SECTIONS: SECTIONS = {
       },
       {
         name: "Community & Support",
-        link: "/learn/additional-resources/community-and-support",
+        link: "/community-and-support",
       },
     ],
   },

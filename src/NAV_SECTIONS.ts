@@ -36,11 +36,11 @@ export const REFERENCE_SECTIONS: SECTIONS = {
         pages: [
           {
             name: "What is Reactivity",
-            link: "/references/concepts/reactivity",
+            link: "/concepts/reactivity",
           },
           {
             name: "Tracking",
-            link: "/references/concepts/reactivity/tracking",
+            link: "/concepts/reactivity/tracking",
           },
         ],
       },
@@ -49,11 +49,11 @@ export const REFERENCE_SECTIONS: SECTIONS = {
       //   pages: [
       //     {
       //       name: "Context",
-      //       link: "/references/concepts/state-management/context",
+      //       link: "/concepts/state-management/context",
       //     },
       // {
       //   name: "Store",
-      //   link: "/references/concepts/state-management/store",
+      //   link: "/concepts/state-management/store",
       // },
       //   ],
       // },
@@ -62,23 +62,23 @@ export const REFERENCE_SECTIONS: SECTIONS = {
         pages: [
           {
             name: "Simple/Client-fetching SSR",
-            link: "/references/concepts/ssr/simple-client-fetching-ssr",
+            link: "/concepts/ssr/simple-client-fetching-ssr",
           },
           {
             name: "Async SSR",
-            link: "/references/concepts/ssr/async-ssr",
+            link: "/concepts/ssr/async-ssr",
           },
           {
             name: "Streaming",
-            link: "/references/concepts/ssr/streaming",
+            link: "/concepts/ssr/streaming",
           },
           {
             name: "Static Site Generation (SSG)",
-            link: "/references/concepts/ssr/ssg",
+            link: "/concepts/ssr/ssg",
           },
           {
             name: "Hydration",
-            link: "/references/concepts/ssr/hydration",
+            link: "/concepts/ssr/hydration",
           },
         ],
       },

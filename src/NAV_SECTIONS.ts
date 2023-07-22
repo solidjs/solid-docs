@@ -382,7 +382,7 @@ export const LEARN_SECTIONS: SECTIONS = {
     pages: [
       {
         name: "Overview",
-        link: "/learn/introduction/overview",
+        link: "/",
       },
       {
         name: "Core Principles",

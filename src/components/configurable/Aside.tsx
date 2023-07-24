@@ -103,8 +103,8 @@ export const Aside = (props: ParentProps<AsideProps>) => {
       class={`${
         props.show === false ? "hidden" : ""
       } w-full flex aside p-4 rounded-lg my-4${
-        preferDark() ? " text-black" : " text-white"
-      }${bgColor() ? "" : " bg-solid-accent"} gap-2 ${props.class ?? ""}`}
+        preferDark() ? " text-light" : " text-dark"
+      }${bgColor() ? "" : " bg-solid-lightitem dark:bg-solid-darkitem"} gap-2 ${props.class ?? ""}`}
       style={`${bgColor() ? `background-color: ${bgColor()}` : ""}`}
     >
       <div>{logo()}</div>

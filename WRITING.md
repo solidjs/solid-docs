@@ -125,3 +125,26 @@ When it comes to the topic of the inclusion and inclusive language, empathy is c
 Once again, constantly ask yourself throughout your writing process: Who is this document for?
 
 For more on what inclusive language looks like, [Google once again has a great breakdown](https://developers.google.com/style/inclusive-documentation).
+
+### Solid Terms
+
+This is a list of Solid-specific words and what they mean. In the second column, we put:
+
+- terms that mean the same thing but shouldn't be used for the sake of consistency.
+- terms that mean something different and are easy to confuse with the term at hand
+
+These are technical terms; use them with the default assumption that the reader doesn't know what they mean.
+
+| Terms to Use                      | Terms Not to Use                                                   | Definition                                                                                                                                                                |
+| --------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Solid                             | SolidJS (unless outside the community/internal writings)       | A JavaScript framework made up of a library (providing primitives and UI utilities) and a compiler (allowing you to write in JSX). Its differentiating feature is its reactivity system. 
+| scope                             | _not to be confused with:_ root, effect (specific kinds of scopes) | a body of a function (a chunk of code)                                                                                                                                    |
+| tracking scope                    | tracking context, reactive context, reactive scope, reactive root  | a scope that, when run, Solid automatically tracks all read signals                                                                                                       |
+| computation, reactive computation | _not to be confused with_: computed                                | a scope that automatically reruns when its dependencies change (it doesn't necessarily _have_ dependencies)                                                               |
+| ownership, owns                   |                                                                    | a one-to-many relationship between computations. If a computation "owns" one or more other computations, all its owned computations are cleaned up when it is cleaned up. |
+| root                              |                                                                    | a computation that has no owner. created by `createRoot`                                                                                                                  |
+| reactivity                        |                                                                    | a system for writing expressions or behaviors that depend on certain values and execute when those values change.                                                         |
+| reactive value                    | signal (don't use to describe a general reactive value)            | a value that can be tracked (includes signals, memos, properties of `props` and stores)                                                                                   |
+| primitive                         | hook                                                               | a function that serves as a building block of reactivity or behavior. usually begins with `create` or `use`                                                               |
+| core primitive                    | API function                                                       | a primitive provided by the Solid core library. This typically provides reactive behaviors but not necessarily ( `createContext` does not)                                |
+| custom primitive                  | hook                                                               | a primitive created outside of the Solid core library; i.e., a function that provides a composable piece of functionality.                                                |

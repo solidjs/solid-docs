@@ -96,8 +96,8 @@ export default defineConfig({
               code: "calc(1em - 20%)",
             },
             backgroundImage: {
-              darkgradient: `radial-gradient(87.08% 158.02% at 50% 12.92%, ${colorScheme["800"]} 0%, ${colorScheme["900"]} 100%)`,
-              lightgradient: `radial-gradient(87.08% 158.02% at 50% 12.92%, #FFFFFF 0%, ${colorScheme["100"]} 100%)`,
+              darkgradient: `linear-gradient(180deg, #162537 0%, #070c12 100%)`,
+              lightgradient: `linear-gradient(180deg, #f2f5fa 0%, #e1eaf4 100%)`,
             },
             colors: {
               solid: {
@@ -105,10 +105,12 @@ export default defineConfig({
                 darkbg: "#18293c",
                 darkitem: "#243e5a",
                 darkaction: "#406e9f",
+                darklink: "#528bc6",
                 light: "#FFFFFF",
                 lightbg: "#eef3f9",
                 lightitem: "#96b9dd",
                 lightaction: "#cbdcee",
+                lightlink: "#3971ad",
                 accent: "#2c4f7c",
                 accentlight: "#446b9e",
               },

@@ -96,7 +96,7 @@ export const NavHeader = (props: {
             hidden: !props.showMenu,
             "lg:flex": true,
           }}
-          class="w-full flex border border-solid-lightborder dark:border-solid-darkitem rounded-md"
+          class="w-full flex border border-solid-lightborder dark:border-solid-darkitem rounded-md bg-solid-light dark:bg-solid-dark"
         >
           <ActiveLink
             isActive={(loc: Location) =>
@@ -104,7 +104,7 @@ export const NavHeader = (props: {
               !loc.pathname.includes(sections[1].href)
             }
             activeClass="text-white font-semibold bg-solid-accentlight dark:bg-solid-accent active"
-            class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0)"
+            class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0) hover:bg-solid-lightaction dark:hover:bg-solid-darkaction"
             href={sections[0].href}
           >
             {sections[0].title}
@@ -115,7 +115,7 @@ export const NavHeader = (props: {
               loc.pathname.startsWith(sections[1].href)
             }
             activeClass="text-white font-semibold bg-solid-accentlight dark:bg-solid-accent active"
-            class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0)"
+            class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0) hover:bg-solid-lightaction dark:hover:bg-solid-darkaction"
             href={sections[1].href}
           >
             {sections[1].title}

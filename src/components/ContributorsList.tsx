@@ -2,7 +2,7 @@ import { createResource, ErrorBoundary, For, Show, Suspense } from "solid-js";
 
 type GithubUser = Record<"avatar_url" | "html_url" | "login", string>;
 
-export const Contributors = () => {
+export const ContributorsList = () => {
   const [contributors] = createResource<GithubUser[]>(async () => {
     const res = await fetch(
       "https://api.github.com/repos/solidjs/solid-docs-next/contributors"

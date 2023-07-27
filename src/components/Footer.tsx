@@ -2,19 +2,7 @@ import IconEdit from "~icons/heroicons-outline/pencil-alt";
 import { useLocation } from "@solidjs/router";
 import IconDiscord from "~icons/ic/baseline-discord";
 
-export const HelpButton = () => {
-  return (
-    <a
-      class="flex items-center gap-2 hover:underline"
-      href="https://discord.com/invite/solidjs"
-    >
-      <IconDiscord /> Need help? Don't hesitate to ask us on Discord!
-    </a>
-  );
-};
-
-
-export default function Footer() {
+const Footer = () => {
   const location = useLocation();
 
   const pathname = () =>
@@ -25,7 +13,12 @@ export default function Footer() {
 
   return (
     <footer class="flex flex-col sm:flex-row justify-between pb-8 border-t-1 mt-8 border-solid-lightitem dark:border-solid-darkitem pt-10">
-      <HelpButton />
+      <a
+      class="flex items-center gap-2 hover:underline"
+      href="https://discord.com/invite/solidjs"
+    >
+      <IconDiscord /> Need help? Don't hesitate to ask us on Discord!
+    </a>
 
       <a class="flex items-center gap-2 hover:underline" href={url()}>
         <IconEdit/> Edit this page
@@ -33,3 +26,5 @@ export default function Footer() {
     </footer>
   );
 }
+
+export default Footer;

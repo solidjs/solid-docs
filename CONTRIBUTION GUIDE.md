@@ -1,0 +1,113 @@
+<p><a target="_blank" href="https://app.eraser.io/workspace/gaSPJ57F9yMBbDNDmgt5" id="edit-in-eraser-github-link"><img alt="Edit in Eraser" src="https://firebasestorage.googleapis.com/v0/b/second-petal-295822.appspot.com/o/images%2Fgithub%2FOpen%20in%20Eraser.svg?alt=media&amp;token=968381c8-a7e7-472a-8ed6-4a6626da5501"></a></p>
+
+Thank you for helping us make this project great and being a part of the Solid community!
+
+We welcome contributions from anyone, regardless of your skill level of the size of the contribution. We are happy to help with guidance on PRs, technical writing, and turning features into realities.
+
+>  **New to contributing?**
+Take a look at [﻿this GitHub guide](https://docs.github.com/en/get-started/quickstart/hello-world) to learn how to use Git and GitHub to contribute to open-source. 
+
+If you're new to Solid, we ask that you check out our [﻿Writing Guide](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md).
+
+## Types of contributions
+There are many ways to contribute to the Solid's documentation!
+
+The Solid Docs website is built on Solid! Maintaining it requires not only written content but also maintaining the Solid code, addressing a11y, CSS, UI, and UX concerns. We also aim to make our documentation available in several languages, so we need help translating the entire site.
+
+You can help out by getting involved by leaving review comments on [﻿PRs](https://github.com/solidjs/solid-docs-next/pulls)﻿ and adding ideas in existing GitHub [﻿issues ](https://github.com/solidjs/solid-docs-next/issues)and [﻿discussions](https://github.com/solidjs/solid-docs-next/discussions).
+
+Every PR, especially translation PRs, will need reviewers. Reviewing PRs and leaving comments, suggestions, or even saying "looks good!" can be a great way to get started on contributing alongside our Docs team, and to learn more about Solid.
+
+We encourage you to:
+
+- File an issue﻿
+- Start a discussion
+- Make a PR
+- Look at our existing issues
+- Review existing PRs
+## File an issue
+Issues are a great way to keep track of tasks, enhancements, and bugs for our projects. They're typically the first step to making a change. 
+
+After an issue has been considered by the community, we often reach out to community members to encourage them to submit PRs based on existing issues. 
+
+Larger contributions to the docs are encouraged after participating in Issues and Discussions, as unsolicited material may not fit into our existing plans.
+
+> While you're more than welcomed to mention a bug you've encountered on our ﻿Discord, we ask that you also report it as an issue!﻿
+
+### Writing an issue
+Helpful issues generally include:
+
+- Clear, descriptive titles
+- Links to relevant pages/files
+- Explanations as to why (or _for whom_) this is a problem
+- _Option_: proposed solutions
+### Examples of helpful new issues
+- An explanation is confusing (with an explanation as to why)
+- a code example is wrong (with or without a proposed fix)
+- accessibility (a11y) issues discovered
+- missing content
+- request for an example on how to implement a specific feature (e.g. responsive nav bar).
+### Issue labels
+We use labels as a way to organize and categorize our issues. Here are some common labels that you will see:
+
+- `a11y` - related to anything accessibility.
+- `bug` - when something isn't working.
+- `good first issue` - a good place to start for newcomers
+- `help wanted` - when we are looking for assistance on an issue
+- `i18n`  - anything to do with internationalization and translation
+## Start a discussion
+Discussion are a place within this repository where we can have open-ended conversations. It's the perfect place for Q&A, sharing ideas, community engagement, and connecting with other members.
+
+Feel free to start a [﻿new discussion](https://github.com/solidjs/solid-docs-next/discussions) on any topic related to our docs!
+
+### Examples of helpful discussions
+- Is a page in the right section of the docs?
+- Notice the colors are too bold? Too muted?
+- Is the site navigation clear and helpful?
+- Any suggestions of content that you think could be helpful adding
+## Make a PR (Pull Request)
+>  If you've never submitted a pull request on GitHub before, check out [﻿this overview](https://opensource.guide/how-to-contribute/#opening-a-pull-request). 
+
+PRs are the heart of collaboration on GitHub. When you open a pull request, you are putting forward your suggested changes, inviting us to review it, and requesting for these changes to be merged into our main branch.
+
+Here's how to effectively contribute via a PR:
+
+- **Understand the Scope**: Before creating a PR, ensure it addresses an existing issue. Remember to link your PR to the issue it solves for easy tracking and understanding.
+- **Singular Focus**: Each PR should address a single issue or enhancement. Want to propose a larger change? Reach out to us on [﻿Discord ](http://discord.com/invite/solidjs)and let's discuss the best way forward!
+- **Drafts for Early Feedback**: If you're seeking early feedback but aren't quite finished with your changes, consider creating a draft PR. Simply prefix your PR title with `**[Draft]**`. This way, you can get input on your work-in-progress.
+- **Quality over Quantity**: Strive for the quality of your contribution rather than the quantity. A well-thought-out, cleanly coded, and thoroughly tested PR is much more valuable than a hastily done large one.
+Contributing via PRs not only enhances the project, but also allows you to be a part of the active community, sharing ideas, learning, and growing with the project. 
+
+>  Existing PRs and Issues need reviewing, triaging, and feedback, too! You can make valuable contributions by commenting, suggesting, testing, researching, brainstorming and generally helping in all areas! 
+
+### Writing a PR
+> Need help making a PR? [﻿Join us on Discord](http://discord.com/invite/solidjs), we'll be more than happy to help you out!
+
+Contributions to the documentation site are made by editing the docs repository. You can do this directly on GitHub.com or by creating a copy of the repository locally, making your changes there, and contributing back to our repository.
+
+// TODO: Edit this page via GitHub
+
+// TODO: Contribute via online editor
+
+// TODO: Contribute PR via local development
+
+// TODO: Open a PR
+
+### Examples of helpful PRs
+- PRs addressing an existing fix
+- unsolicited PRs addressing typos, broken links, and other minor problems
+## Helpful information
+### Forks
+// TODO: how to create, maintain
+
+## Next Steps:
+- Read the docs
+- Fork the docs
+- Raise an issue
+- Discuss the docs
+// TODO: link above to proper areas
+
+
+
+
+<!--- Eraser file: https://app.eraser.io/workspace/gaSPJ57F9yMBbDNDmgt5 --->

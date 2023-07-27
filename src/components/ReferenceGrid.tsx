@@ -1,5 +1,5 @@
 import { REFERENCE_SECTIONS, SECTION_PAGE } from "~/NAV_SECTIONS";
-import MainSectionsGrid from "~/components/sectionsgrid/";
+import MainSectionsGrid from "./ComponentGrid";
 
 const conceptsSubsections = REFERENCE_SECTIONS["concepts"].pages;
 const apiSubsections = REFERENCE_SECTIONS["api"].pages;

@@ -1,9 +1,9 @@
-import { Navigate } from "solid-start";
+import { Navigate } from "solid-start"
 
 export default function () {
-  return (
-    <>
-      <Navigate href="./welcome"></Navigate>
-    </>
-  );
+	return (
+		<>
+			<Navigate href="./welcome" />
+		</>
+	)
 }

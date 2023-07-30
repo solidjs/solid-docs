@@ -2,7 +2,7 @@ import { JSXElement } from "solid-js"
 
 export default function Button(props: {
   type: "submit" | "button";
-  onClick?: (e: any) => void;
+  onClick?: (e: unknown) => void;
   children: JSXElement;
 }) {
 	return (

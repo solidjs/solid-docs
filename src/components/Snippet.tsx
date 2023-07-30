@@ -9,7 +9,7 @@ const Container = (props: {children:JSXElement}) => {
 			<div class="flex justify-end gap-x-2">
 				<button
 					class={
-						config().codeFormat === "jsx"
+						config.codeFormat === "jsx"
 							? "border-bottom-2 border-yellow-400"
 							: "ease-in duration-300 border-bottom-2 border-transparent hover:border-yellow-300"
 					}
@@ -21,7 +21,7 @@ const Container = (props: {children:JSXElement}) => {
 				</button>
 				<button
 					class={
-						config().codeFormat === "tsx"
+						config.codeFormat === "tsx"
 							? "border-bottom-2 border-blue-500"
 							: "ease-in duration-300 border-bottom-2 border-transparent hover:border-blue-500"
 					}
@@ -42,7 +42,7 @@ const Code = (props: { language: string, children: JSXElement }) => {
 	return (
 		<div
 			style={{
-				display: config().codeFormat === props.language ? "block" : "none",
+				display: config.codeFormat === props.language ? "block" : "none",
 			}}
 		>
 			{props.children}

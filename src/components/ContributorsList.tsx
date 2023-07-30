@@ -37,7 +37,7 @@ export const ContributorsList = () => {
 	)
 }
 
-function shuffle(array: any[]) {
+function shuffle<T>(array: T[]) {
 	const copied = [...array]
 	let currentIndex = copied.length,
 		randomIndex

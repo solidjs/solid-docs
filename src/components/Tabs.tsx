@@ -1,6 +1,6 @@
-import { createSignal, For, JSX, onMount, useContext } from "solid-js"
+import { createSignal, For, JSX } from "solid-js"
 import { Dynamic } from "solid-js/web"
-import { Config, useConfig } from "./context/ConfigContext"
+import { useConfig } from "./context/ConfigContext"
 
 type File = {
   name: string;

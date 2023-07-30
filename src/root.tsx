@@ -24,11 +24,10 @@ import { PageStateProvider } from "./components/context/PageStateContext"
 import { MDXProvider } from "solid-mdx"
 import Nav from "./components/nav/Nav"
 import md from "./md"
-import { createRenderEffect, Suspense, useContext } from "solid-js"
+import { Suspense, useContext } from "solid-js"
 import { Main } from "./components/Main"
 import { HttpHeader, ServerContext } from "solid-start/server"
 import { isServer } from "solid-js/web"
-import { useLocation } from "solid-start"
 import { Stylesheet } from "@solidjs/meta"
 
 function useCookies() {
@@ -49,11 +48,6 @@ function useCookieConfig(): Config {
 
 export default function Root() {
 	const config = useCookieConfig()
-	const location = useLocation()
-
-	const docsMode = () =>
-		/\/start/i.test(location.pathname) ? "start" : "regular"
-
 	let mainRef
 
 	return (
@@ -87,7 +81,7 @@ export default function Root() {
 								>
                   Skip to content
 								</button>
-								<Nav docsMode={docsMode()} />
+								<Nav/>
 								<Main ref={mainRef}>
 									<Routes>
 										<FileRoutes />

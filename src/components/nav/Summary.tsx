@@ -1,7 +1,6 @@
 import { For, Show, createSignal } from "solid-js"
 import { usePageState } from "../context/PageStateContext"
 import IconChevron from "~icons/heroicons-outline/chevron-right"
-import { useRouteData } from "solid-start"
 
 export default function Summary(props: { collapsed?: boolean }) {
 	const { sections } = usePageState()
@@ -23,7 +22,7 @@ export default function Summary(props: { collapsed?: boolean }) {
 				/>
 			</button>
 			<For each={sections()}>
-				{(item, index) => (
+				{(item) => (
 					<li class="text-base py-2 hidden md:flex items-center gap-2 hover:bg-solid-lightaction hover:dark:bg-solid-darkaction px-4 border-solid-darkitem dark:border-solid-lightitem border-l-2">
 						<a
 							class="font-semibold"
@@ -38,7 +37,7 @@ export default function Summary(props: { collapsed?: boolean }) {
 			<Show when={!collapsed()}>
 				<ol class="mt-2 md:hidden list-none space-y-1">
 					<For each={sections()}>
-						{(item, index) => (
+						{(item) => (
 							<li class="text-base py-2 flex items-center gap-2 hover:bg-solid-lightaction hover:dark:bg-solid-darkaction pl-4 pr-2">
 								<a
 									class="font-semibold"

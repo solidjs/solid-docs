@@ -31,9 +31,8 @@ const sections = [
 ]
 
 export const NavHeader = (props: {
-  docsMode: "start" | "regular";
-  showMenu: boolean;
-  setShowMenu: Setter<boolean>;
+	showMenu: boolean
+	setShowMenu: Setter<boolean>
 }) => {
 	const [config, setConfig] = useContext(ConfigContext)
 
@@ -44,14 +43,12 @@ export const NavHeader = (props: {
 		>
 			<div class="flex items-center justify-between w-full">
 				<NavLink
-					href={props.docsMode === "start" ? "/start" : "/"}
+					href="/"
 					end={true}
 					class="inline-flex space-x-1 text-xl font-normal items-center text-primary dark:text-primary-dark py-1 mr-0"
 				>
 					<Logo class="w-8 h-8 -mt-2 text-link dark:text-link-dark" />
-					<span class="font-bold">
-            Solid{props.docsMode === "start" ? "Start " : " "}
-					</span>
+					<span class="font-bold">Solid</span>
 					<span>Docs</span>
 				</NavLink>
 				<div class="flex items-center gap-3">
@@ -90,38 +87,36 @@ export const NavHeader = (props: {
 				</div>
 			</div>
 
-			<Show when={props.docsMode === "regular"}>
-				<div
-					classList={{
-						hidden: !props.showMenu,
-						"lg:flex": true,
-					}}
-					class="w-full flex border border-solid-lightborder dark:border-solid-darkitem rounded-md bg-solid-light dark:bg-solid-dark"
+			<div
+				classList={{
+					hidden: !props.showMenu,
+					"lg:flex": true,
+				}}
+				class="w-full flex border border-solid-lightborder dark:border-solid-darkitem rounded-md bg-solid-light dark:bg-solid-dark"
+			>
+				<ActiveLink
+					isActive={(loc: Location) =>
+						loc.pathname.startsWith(sections[0].href) &&
+						!loc.pathname.includes(sections[1].href)
+					}
+					activeClass="text-white font-semibold bg-solid-accentlight dark:bg-solid-accent active"
+					class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0) hover:bg-solid-lightaction dark:hover:bg-solid-darkaction"
+					href={sections[0].href}
 				>
-					<ActiveLink
-						isActive={(loc: Location) =>
-							loc.pathname.startsWith(sections[0].href) &&
-              !loc.pathname.includes(sections[1].href)
-						}
-						activeClass="text-white font-semibold bg-solid-accentlight dark:bg-solid-accent active"
-						class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0) hover:bg-solid-lightaction dark:hover:bg-solid-darkaction"
-						href={sections[0].href}
-					>
-						{sections[0].title}
-					</ActiveLink>
+					{sections[0].title}
+				</ActiveLink>
 
-					<ActiveLink
-						isActive={(loc: Location) =>
-							loc.pathname.startsWith(sections[1].href)
-						}
-						activeClass="text-white font-semibold bg-solid-accentlight dark:bg-solid-accent active"
-						class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0) hover:bg-solid-lightaction dark:hover:bg-solid-darkaction"
-						href={sections[1].href}
-					>
-						{sections[1].title}
-					</ActiveLink>
-				</div>
-			</Show>
+				<ActiveLink
+					isActive={(loc: Location) =>
+						loc.pathname.startsWith(sections[1].href)
+					}
+					activeClass="text-white font-semibold bg-solid-accentlight dark:bg-solid-accent active"
+					class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0) hover:bg-solid-lightaction dark:hover:bg-solid-darkaction"
+					href={sections[1].href}
+				>
+					{sections[1].title}
+				</ActiveLink>
+			</div>
 		</nav>
 	)
 }

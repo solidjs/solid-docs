@@ -11,6 +11,7 @@ export type Config = {
   typescript: boolean;
   comingFrom: ComingFrom;
   mode: ColorMode;
+	codeFormat?: "jsx" | "tsx"
 };
 
 export const ConfigContext =
@@ -30,16 +31,12 @@ export const ConfigProvider = (
 ) => {
 	const [config, setConfig] = createStore(props.initialConfig)
 
-
-
 	createEffect(() => {
 		// Save to cookie
 		const serialized = JSON.stringify(config)
 		document.cookie = `docs_config=${serialized}; SameSite=Lax; Secure; max-age=${MAX_AGE}; path=/`
 
-
 		// Toggle mode
-
 		if (config.mode !== "none") {
 			document.documentElement.classList.remove(
 				config.mode === "light" ? "dark" : "light"

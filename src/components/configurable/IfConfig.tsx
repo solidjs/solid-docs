@@ -1,10 +1,7 @@
 import {
-	Component,
-	createEffect,
 	JSX,
 	ParentProps,
 	Show,
-	useContext,
 } from "solid-js"
 import { Dynamic } from "solid-js/web"
 import { Config, useConfig } from "../context/ConfigContext"

@@ -1,0 +1,122 @@
+import { Aside } from "~/components/configurable/Aside";
+
+## Migrating from JavaScript to TypeScript
+
+1. Install TypeScript.
+
+```bash
+npm install --save-dev typescript
+```
+        
+2. Run `npx tsc --init` to generate a `tsconfig.json` file.
+        
+3. Update the contents of your `tsconfig.json` to match Solid's configuration:
+
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "types": ["vite/client"],
+    "noEmit": true,
+    "isolatedModules": true
+  }
+}
+```
+
+4. Create a TypeScript or `.tsx` file to test the setup.
+
+```typescript
+import { Component } from "solid-js";
+
+function MyTsComponent(): Component {
+  return (
+    <div>
+      <h1>This is a TypeScript component</h1>
+    </div>
+  );
+}
+
+export default MyTsComponent;
+```
+
+To use in an existing JavaScript component, import the TypeScript component:
+
+```javascript
+import MyTsComponent from "./MyTsComponent";
+
+function MyJsComponent() {
+  return (
+    <>
+      {/* ... */}
+      <MyTsComponent />
+    </>
+  );
+}
+```
+    
+<Aside>
+**Note:** If you wish to change the entry point file from `index.jsx` to `index.tsx`, you need to modify the `src` attribute in `<script>` to look like the following:
+
+```htmlembedded
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- ... -->
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script src="/src/index.tsx" type="module"></script>
+  </body>
+</html>
+```
+</Aside>
+
+## Setting up environment variables
+
+Solid is built on top of [Vite](https://vitejs.dev/), which offers a convenient way to handle environment variables. The following steps will show how to set up environment varaibles in a Solid project:
+
+1. In the root directory of the project, create a file called `.env`. 
+This file will store environment variables in the `key = value` format.
+
+<Aside>
+**Note:** To prevent accidental exposure of environment variables to the client, only variables prefixed with `VITE_` will be exposed.
+
+For example:
+```
+VITE_SECRET_KEY = 123hello
+DB_PASSWORD = foobar
+```
+
+Only the `VITE_SECRET_KEY` will be exposed to client source code, while `DB_PASSWORD` will not, as shown below.
+
+```js
+console.log(import.meta.env.VITE_SECRET_KEY) // 123hello
+console.log(import.meta.env.DB_PASSWORD) // undefined
+```
+</Aside>
+
+
+    
+2. In your Solid code, you can access environment variables using `import.meta.env`. 
+Vite will automatically inject the environment variables into your application.
+
+```javascript
+function MyComponent() {
+  return (
+    <div>
+      <h2>Component with environment variable used {import.meta.env.VITE_VARIABLE_NAME}</h2>
+    </div>
+  )
+}
+export default MyComponent;
+```
+
+For more information on environment variables in Vite and enabling TypeScript intellisense for environment variables, please refer to the [Vite Documentation](https://vitejs.dev/guide/env-and-mode.html#env-files).

@@ -97,6 +97,43 @@ export const Aside = (props: ParentProps<AsideProps>) => {
 	const title = () => props.title || definition.title
 	const logo = () => definition.logo
 
+  return (
+    <div
+      aria-live="polite"
+      class={`${
+        props.show === false ? "hidden" : ""
+      } w-full flex aside p-4 rounded-lg my-4${
+        preferDark() ? " text-light" : " text-dark"
+      }${bgColor() ? "" : " bg-solid-lightitem dark:bg-solid-darkitem"} gap-2 ${props.class ?? ""}`}
+      style={`${bgColor() ? `background-color: ${bgColor()}` : ""}`}
+    >
+      <div>{logo()}</div>
+      <div class="w-full">
+        <Show when={!!title() && !props.collapsible}>
+          <h3 class="font-semibold mb-2">{title()}</h3>
+        </Show>
+        <Show when={!!title() && props.collapsible}>
+          <h3 class="font-semibold">
+            <button
+              aria-label={`Show expanded ${title()} content`}
+              class="flex gap-3"
+              onClick={() => setShowContent(!showContent())}
+            >
+              {title()}
+              <CollapsedIcon
+                class={`flex-0 transform ${
+                  showContent() ? "rotate-0" : "-rotate-90 -translate-y-px"
+                }`}
+              />
+            </button>
+          </h3>
+        </Show>
+        <Show when={showContent()}>{props.children}</Show>
+      </div>
+    </div>
+  );
+};
+
 	return (
 		<div
 			aria-live="polite"

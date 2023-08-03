@@ -377,6 +377,133 @@ export const REFERENCE_SECTIONS: SECTIONS = {
 }
 
 export const LEARN_SECTIONS: SECTIONS = {
+  introduction: {
+    name: "Introduction",
+    pages: [
+      {
+        name: "Overview",
+        link: "/",
+      },
+      {
+        name: "Quick Start Guide",
+        link: "/quick-start",
+      },
+      {
+        name: "Installation & Setup",
+        link: "/installation-and-setup",
+      },
+      {
+        name: "FAQ",
+        link: "/faq",
+      },
+    ],
+  },
+  essentials: {
+    name: "Essentials",
+    pages: [
+      {
+        name: "Understanding JSX Syntax",
+        link: "/essentials/understanding-jsx-syntax",
+      },
+      {
+        name: "Intro to Reactivity",
+        link: "/essentials/intro-to-reactivity",
+      },
+      {
+        name: "Components & Props",
+        link: "/essentials/components-and-props",
+      },
+      {
+        name: "Bindings",
+        link: "/essentials/bindings",
+      },
+      {
+        name: "Signals",
+        link: "/essentials/signals",
+      },
+      {
+        name: "Managing Side Effects",
+        link: "/essentials/managing-side-effects",
+      },
+      {
+        name: "Computed Values",
+        link: "/essentials/computed-values",
+      },
+      {
+        name: "Conditional Rendering",
+        link: "/essentials/conditional-rendering",
+      },
+      {
+        name: "List Rendering",
+        link: "/essentials/list-rendering",
+      },
+      {
+        name: "Event Handling",
+        link: "/essentials/event-handling",
+      },
+    ],
+  },
+  tutorials: {
+    name: "Tutorials",
+    pages: [
+      {
+        name: "Beginner Tutorial",
+        link: "/tutorials/beginner-tutorial",
+      },
+    ],
+  },
+  guides: {
+    name: "Guides",
+    pages: [
+      {
+        name: "Styling your Components",
+        link: "/guides/styling-your-components",
+      },
+      {
+        name: "Routing & Navigation",
+        link: "/guides/routing-and-navigation",
+      },
+      {
+        name: "Fetching Data",
+        link: "/guides/fetching-data",
+      },
+      {
+        name: "State Management",
+        link: "/guides/state-management",
+      },
+      {
+        name: "Deploying your App",
+        link: "/guides/deploying-your-app",
+      },
+      {
+        name: "TypeScript for Solid",
+        link: "/guides/typescript-for-solid",
+      },
+      {
+        name: "Testing",
+        link: "/guides/testing",
+      },
+    ],
+  },
+  additonalResources: {
+    name: "Additional Resources",
+    pages: [
+      {
+        name: "Ecosystem",
+        link: "/ecosystem",
+      },
+      {
+        name: "Contribution Guide",
+        link: "#",
+      },
+      {
+        name: "Community & Support",
+        link: "/community-and-support",
+      },
+    ],
+  },
+};
+=======
 	introduction: {
 		name: "Introduction",
 		pages: [

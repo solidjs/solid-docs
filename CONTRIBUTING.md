@@ -1,4 +1,4 @@
-<p><a target="_blank" href="https://app.eraser.io/workspace/gaSPJ57F9yMBbDNDmgt5" id="edit-in-eraser-github-link"><img alt="Edit in Eraser" src="https://firebasestorage.googleapis.com/v0/b/second-petal-295822.appspot.com/o/images%2Fgithub%2FOpen%20in%20Eraser.svg?alt=media&amp;token=968381c8-a7e7-472a-8ed6-4a6626da5501"></a></p>
+# CONTRIBUTION GUIDE
 
 Thank you for helping us make this project great and being a part of the Solid community!
 
@@ -85,29 +85,64 @@ Contributing via PRs not only enhances the project, but also allows you to be a 
 
 Contributions to the documentation site are made by editing the docs repository. You can do this directly on GitHub.com or by creating a copy of the repository locally, making your changes there, and contributing back to our repository.
 
-// TODO: Edit this page via GitHub
-
-// TODO: Contribute via online editor
-
-// TODO: Contribute PR via local development
-
-// TODO: Open a PR
-
-### Examples of helpful PRs
+#### Examples of helpful PRs
 - PRs addressing an existing fix
 - unsolicited PRs addressing typos, broken links, and other minor problems
+
+### Edit this page via GitHub
+Every page on [﻿docs.solidjs.com ](https://docs.solidjs.com/)﻿has an **Edit this page** link at the bottom. You can click on that button to edit the source code for that page in **GitHub**.
+
+After you make your changes, click **Commit changes**. This will automatically create a [﻿fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/about-forks)﻿ of the docs in your GitHub account with the changes.
+
+Once you have committed your edits within your fork, follow the prompts to create a **pull request** and submit your changes for review.
+
+Every pull request needs to be reviewed by our contributors and approved by a maintainer.
+
+### Open a PR
+Once you have made your changes using your preferred method, you're ready to create a 'pull request'.
+
+This will let the Solid docs team know you have some changes you would like to propose. At this point, we can give you feedback and possibly request changes.
+
+[﻿Read more about making a pull request in GitHub's docs.](https://docs.github.com/en/get-started/quickstart/contributing-to-projects#making-a-pull-request)﻿
+
+Please include a clear title. The description will have some pre-filled questions that we would like you to answer.
+
+Every pull request generates a preview of the site, including your proposed changes, using **Netlify** for anyone to see.
+
+Use the **Deploy Preview** link in your pull request to review and share your changes.
+
+The docs site will be automatically updated whenever pull requests are merged.
+
 ## Helpful information
 ### Forks
-// TODO: how to create, maintain
+On GitHub, you will need a 'fork' of this repository to work on. This is your own copy of the code base where you can make changes. [﻿You can read more about folks in GitHub's documentation.](https://guides.github.com/activities/forking/)﻿
+
+Not sure how to get started with GitHub, forks, pull requests, or want a refresher? You can watch this video series: [﻿How to Contribute to an Open Source Project on GitHub](https://egghead.io/courses/how-to-contribute-to-an-open-source-project-on-github).
+
+#### Creating a fork
+To create your copy, click the `Fork` button at the top right of any page in this repository.
+
+#### Maintaining a fork
+When you first create your fork, it will be an exact copy of this repository. Over time, our docs will change as they are updated, but your fork won’t automatically stay up-to-date. Here are some ways to keep your fork in sync with this repo:
+
+##### Update through GitHub UI
+1. Navigate to your fork on GitHub
+2. Click `Sync fork` and then `Update branch` 
+
+##### Update from your command line
+In the terminal on your computer:
+
+1. Make sure you're on the main branch and then run `git checkout main` 
+2. Fetch and merge the updates: `git pull upstream main` 
+3. Push the updates back to your fork on GitHub: `git push origin main` 
+
+##### Using the GitHub app
+1. Go to the [﻿"pull" GitHub app page](https://github.com/apps/pull)﻿
+2. Click `Install` 
+3. Follow the instructions to select 
 
 ## Next Steps:
-- Read the docs
-- Fork the docs
-- Raise an issue
-- Discuss the docs
-// TODO: link above to proper areas
-
-
-
-
-<!--- Eraser file: https://app.eraser.io/workspace/gaSPJ57F9yMBbDNDmgt5 --->
+- [﻿Read the docs](https://docs.solidjs.com)﻿
+- [﻿Fork the docs](https://github.com/solidjs/solid-docs-next/fork)﻿
+- [﻿Raise an issue](https://github.com/solidjs/solid-docs-next/issues/new)﻿
+- [﻿Discuss the docs](http://discord.com/invite/solidjs)﻿

@@ -3,14 +3,14 @@ import { CodeTabs } from "~/components/Tabs";
 
 # Quick Start Guide
 
-## Solid Browser Playgrounds
+## Solid playgrounds
 
 Experience Solid in your browser with our interactive playground throug visiting [interactive playground](https://playground.solidjs.com/).
 
 Additionally, we offer some Stackblitz starters, which provide a convenient web-based development environment. 
 You can explore the [JavaScript](https://stackblitz.com/github/solidjs/templates/tree/master/js) version or opt for our [Typescript](https://stackblitz.com/github/solidjs/templates/tree/master/ts) one.
 
-## Creating a Solid Application
+## Creating a Solid application
 
 <Aside>
     **Prerequisites:**
@@ -42,9 +42,7 @@ cd my-app
 Using npm:
 ```bash
 npm install
-```
-Alternatively, you can use yarn or pnpm:
-```bash
+#or
 yarn install
 # or
 pnpm install
@@ -100,7 +98,45 @@ npm run dev
 This will start the development server. 
 Now, open your browser and navigate to `localhost:3000` to see your application running.
 
-### Explore more templates
+#### Explore more templates
 
 Solid offers a variety of Vite templates to streamline your development process. 
 These resources are available on [GitHub](https://github.com/solidjs/templates).
+
+## Setting up environment variables
+
+Solid is built on top of [Vite](https://vitejs.dev/), which offers a convenient way to handle environment variables. The following steps will show how to set up environment varaibles in a Solid project:
+
+1. In the root directory of the project, create a file called `.env`. 
+This file will store environment variables in the `key = value` format.
+
+<Aside>
+**Note:** To prevent accidental exposure of environment variables to the client, only variables prefixed with `VITE_` will be exposed.
+
+For example:
+```
+VITE_SECRET_KEY = 123hello
+DB_PASSWORD = foobar
+```
+
+Only the `VITE_SECRET_KEY` will be exposed to client source code, while `DB_PASSWORD` will not, as shown below.
+
+```js
+console.log(import.meta.env.VITE_SECRET_KEY) // 123hello
+console.log(import.meta.env.DB_PASSWORD) // undefined
+```
+</Aside>
+    
+2. In your Solid code, you can access environment variables using `import.meta.env`. 
+Vite will automatically inject the environment variables into your application.
+```javascript
+function MyComponent() {
+  return (
+    <div>
+      <h2>Component with environment variable used {import.meta.env.VITE_VARIABLE_NAME}</h2>
+    </div>
+  )
+}
+export default MyComponent;
+```
+For more information on environment variables in Vite and enabling TypeScript intellisense for environment variables, please refer to the [Vite Documentation](https://vitejs.dev/guide/env-and-mode.html#env-files).

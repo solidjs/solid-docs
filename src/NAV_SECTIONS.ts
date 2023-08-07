@@ -389,10 +389,6 @@ export const LEARN_SECTIONS: SECTIONS = {
         link: "/quick-start",
       },
       {
-        name: "Installation & Setup",
-        link: "/installation-and-setup",
-      },
-      {
         name: "FAQ",
         link: "/faq",
       },

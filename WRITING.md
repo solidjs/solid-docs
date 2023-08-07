@@ -26,20 +26,19 @@ But beyond just your written content, there are several other things to consider
 
 #### Tables
 
-Though not used all that often, tables are an important tool for several reasons.
-The most important one is that they break up the text and offer clear information that the reader can glance through quickly.
-No one wants to dig through word salad to find term definitions or data.
+Though not used all that often, tables are an important tool for several reasons:
+- They break up text.
+- They offer clear information to the reader.
+- They are easy to look through and understand.
 
 Solid uses Markdown for tables, so here's how to make one.
-Start with a vertical line, also called a pipe: `|`.
-Insert your first heading, end with another pipe, then write the next heading and end it with a pipe, and so on until you have your column headings.
-
-One the line under the first column heading, insert at least three dashes: `---`.
-This will create the separation between the heading and the content that follows below it.
-Repeat this for all of your headings.
-Note that three dashes is the minimum, but you can insert more if you want to make the table more legible in your editor.
-
-The create the cells, start each new line with a pipe, then insert the content and surround it in spaces, end the cell with a pipe, and keep going until your row is done.
+1. Start with a vertical line, also called a pipe: `|`.
+2. Insert your first heading and end with another pipe.
+3. Write the next heading and end it with a pipe. Repeat until you have your column headings.
+4. One the line under the first column heading, insert at least three dashes: `---`.
+5. Repeat this for all of your headings.
+6. To create the cells, start a new line with a pipe, then insert the content and surround it in spaces, end the cell with a pipe.
+7. To complete the row, create a new cell on the same line.
 
 See below for an example of what this would look like in raw Markdown.
 
@@ -55,17 +54,16 @@ See below for an example of what this would look like in raw Markdown.
 #### Asides
 
 Asides serve as callout boxes in Solid's documentation.
-They represent a section of the document that is related to the content surrounding the aside; they are contextual.
+They represent a section of the document that is related to the content surrounding the aside, but not directly relevant to the page.
 They work well with explaining how Solid differs from other popular frameworks, referring to other points in the documentation, or serving as a tangential note.
 We ask that you use them sparingly.
 
-To use an aside, you must first import the correct component.
-To do so, use the following command in your terminal.
-(Remember to be in the cloned Solid repo directory.)
+1. To use an aside, you must first import the correct component.
+2. Use the following command in your terminal. (Remember to be in the cloned Solid repo directory.)
 
 `import { Aside } from ~/components/configurable/Aside`
 
-Once you have the Aside component imported, simply follow the below example for how to add one to your document.
+3. Once you have the Aside component imported, simply follow the below example for how to add one to your document.
 
 ```
 <Aside>
@@ -75,8 +73,8 @@ content here
 
 ### Code examples
 
-Solid's documentation contains example code, such as you've seen here in this guide.
-We use Markdown for creating inline code and code blocks.
+Solid's documentation contains example code, like you've seen here in this guide.
+Markdown lets you create inline code and code blocks.
 
 If you want to call out a single command or a file path, surround the text with single back ticks: `.
 
@@ -96,20 +94,21 @@ Here's an example in raw Markdown:
 npm install
 ``````
 
-Code examples are vital to providing users with quick tips on how to use Solid's features, so be sure to keep the differences between inline code and code blocks in mind.
+Code examples are vital to providing users with quick tips on how to use Solid.
+Knowing when to use inline code versus code blocks can further the understanding of the readers and users alike.
 
 ### Images
 
-Good documentation takes advantage of images, such as screenshots and graphics, to elaborate on the written content.
-The important distinction is that images should not introduce or explain something.
-They are an accessory to the writing, not the main content itself.
+Good documentation takes advantage of images, such as screenshots and graphics, to expand upon the written content.
+Images should not introduce or explain something new.
+They are used in addition to the writing, such as increasing a reader's understanding, communicating ideas, emphasizing points, or providing a comparison.
 
 To maintain some consistency, we would prefer that you stick to the PNG format so that the images scale well at all screen sizes and resolutions.
 Please avoid using GIFs if at all possible because they interfere with accessibility.
 
 Finally, we strongly request that you use alt text with your images.
 This is very important for our accessibility initiatives.
-We use the HTML format for alt text.
+If you are adding an image to a page, you can do that using HTML syntax.
 
 Here's an example of how to do that:
 
@@ -121,7 +120,7 @@ Here's an example of how to do that:
 
 Now that we've laid out how we'd like your contribution to look, we'd like to take a moment to discuss how we'd like to see it organized.
 
-Please note that, for making commenting on GitHub easier, **each sentence gets its own line**.
+Please note that, for editing purposes, **each sentence gets its own line**.
 Paragraphs should have two lines between them.
 
 ### Headings
@@ -138,7 +137,8 @@ Here's an example of a Heading 1 (H1) and a Heading 2 (H2) in raw Markdown.
 ## Introduction
 ```
 
-We primarily uses Headings 1 through 3, though they go up to 6.
+We primarily uses Headings 1 through 3.
+However, headings can go up to 6.
 Note we rarely use Headings 5 and 6.
 
 Below is a quick breakdown on the different headings.
@@ -147,7 +147,7 @@ Below is a quick breakdown on the different headings.
 H1: Title
 H2: Main sections
 H3: Subsections
-H4: Minute details you would like to call out
+H4: Small details you would like to call out
 H5/H6: Advanced concepts
 ```
 
@@ -156,9 +156,11 @@ H5/H6: Advanced concepts
 You will come across two types of lists in your contributions, ordered and unordered.
 Here's a breakdown on when to use each one.
 
-Ordered: This is for step-based, how-to content. You need an ordered list when the order or hierarchy is imporant.
+Ordered: This is for step-based, how-to content.
+You need an ordered list when the order or hierarchy is imporant.
 
-Unordered: Unordered lists help break up content with non-hierarchical items. You will likely use them when writing exceptions and emphasizing important ideas.
+Unordered: Unordered lists help break up content with non-hierarchical items.
+You will likely use them when writing exceptions and emphasizing important ideas.
 
 In addition to these two types, you might need to use a nested list.
 This is for when a listed item has a sub-part to it that is relevant to its content.
@@ -173,8 +175,10 @@ These notes might link out to another part of the documentation or a piece of re
 We would prefer you to keep page linking in mind while you're working on your contribution.
 The following two points are what you should pay attention to:
 
-1. Interlink when you refer to a topic that has its own published document. This makes it possible for the user to easily seek additional information.
-2. Be descriptive with the linked text. Do not use "click here" or any variation therein, as this is not a best practice for accessibility.
+1. Interlink when you refer to a topic that has its own page.
+This makes it possible for the user to easily seek additional information.
+2. Be descriptive with the linked text.
+Do not use "click here" or any variation therein, as this is not a best practice for accessibility.
 
 Links are written in Markdown.
 Here's an example of what that looks like:
@@ -192,14 +196,12 @@ As important as all of that is, the core part of your documents is the writing i
 ### Approachable
 
 Modern documentation has shifted toward a less formal tone to great effect.
-Good documents these days center on providing a friendly and approachable tone.
-Solid would like to adopt this.
+Like modern documents, Solid aims to provide a friendly and approachable tone.
 Of course, your contributions should still maintain a technical focus to provide the reader with the information that they're looking for.
 We encourage you to pay attention to how [Google](https://developers.google.com/style/tone) defines a friendly tone.
 
 > In your documents, aim for a voice and tone that's conversational, friendly, and respectful without being overly colloquial or frivolous; a voice that's casual and natural and approachable, not pedantic or pushy. Try to sound like a knowledgeable friend who understands what the developer wants to do.
 
-Most readers want to feel a connection to the writing and oftentimes to the writer(s) themselves.
 The old way of writing documentation — the dry, formal, and very rigid method — created a divide between the reader and writer.
 We don't want that here.
 We want our users to enjoy reading Solid's docs so that they retain the information they came here for.
@@ -219,7 +221,7 @@ Please keep in mind, do not write like you are present with the user.
 - Don't: We're going to visit Solid's homepage.
 ```
 
-When writing steps in a how-to section, you should use an simplistic imperative tone. This means the sentence starts with a verb.
+When writing steps in a how-to section, please start sentences with a verb.
 
 ```
 - Do: Download npm.
@@ -229,23 +231,23 @@ When writing steps in a how-to section, you should use an simplistic imperative 
 ### Accessible
 
 Accessibility has taken a front seat in most aspects of technology in recent years, including documentation.
-Solid should be accessible to anyone who wishes to use it, meaning that your writing has to meet some basic standards in this regard. 
+Solid should be accessible to anyone who wishes to use it, meaning that your writing has to meet some basic standards. 
 
-Some of accessibility comes down to visual style, as we discussed.
+Some accessibility comes down to visual style, as we discussed.
 However, it goes hand-in-hand with inclusiveness (which we'll get to next), so there is some overlap between the two.
 For now, we ask that you understand that Solid wants to ensure that everyone can read our documentation.
 What does that look like?
 
-The first step towards accessibility is ensuring that you use proper English grammar in your contributions.
+The first step towards accessibility is using proper English grammar.
 This is especially helpful for those users who utilize screen readers.
-Another way you can help the visually impaired is by keeping your paragraphs reasonably short.
+Another way you can help the users of assistive technology is by keeping your paragraphs reasonably short.
 A good rule of thumb is no more than four sentences, or four to five lines of text.
 
 Shorter paragraphs help readers of all abilities, since walls of text can discourage in-depth reading and understanding.
 You can once again practice empathy here.
 What would you like to read?
 
-As we discussed in the Organization section, ensuring a strong layout is key to accessible documentation.
+As discussed in the Organization section, ensuring a strong layout is key to accessible documentation.
 We encourage you to remember that your contributions should be organized logically.
 Headings that give a strong indicator of the section's topic, as well as descriptive hyperlinks, go a very long way in helping our readers navigate our docs.
 
@@ -253,7 +255,7 @@ Headings that give a strong indicator of the section's topic, as well as descrip
 
 Great documentation strives to be as inclusive for as many people as possible.
 That includes those from different backgrounds, such as varying countries and languages.
-As Solid grows, so will its audience, and therefore we should work hard to ensure that our readers feel included in our docs.
+As Solid grows, so will its audience, and therefore we should work hard to ensure that everyone feels included while reading our docs.
 
 What does inclusive language look like?
 
@@ -265,7 +267,7 @@ In cases where jargon is necessary, be sure the document contains at least one b
 For example, if you want to use an acronym, spell it out first with the acronym in parentheses after.
 From then on, you can use the acronym in that document.
 
-Plain and simple English also entails avoiding contractions, as these are not always easily understood by those for whom English is not the first language.
+Plain and simple English also means avoiding contractions, as these are not always easily understood by those for whom English is not the first language.
 We should also avoid idioms wherever possible; remember, not everyone will understand what they mean.
 
 Secondly, inclusive language means remaining as gender-neutral as possible.
@@ -275,7 +277,7 @@ Doing so makes it fairly simple to avoid gendered words.
 Use your own common sense to determine which word to use, but if you slip up, an editor should catch it.
 
 Writing inclusively also entails avoiding ableist language.
-That usually comes about in turns of phrase or certain idioms.
+That usually comes about in certain turns of phrase.
 Alternatives to ableist words will go a long way to ensuring our documentation meets the needs of more people.
 
 Similarly, we should not use divisive terms to get our point across.
@@ -289,7 +291,7 @@ Solid has a large North American audience, but our readers are not exclusive to 
 Please keep this in mind before you use a certain term or phrase.
 
 When it comes to the topic of inclusion and inclusive language, empathy is critical.
-Once again, constantly ask yourself throughout your writing process: Who is this document for?
+Once again, ask yourself throughout your writing process: Who is this document for?
 
 For more on what inclusive language looks like, [Google once again has a great breakdown](https://developers.google.com/style/inclusive-documentation).
 

@@ -402,8 +402,8 @@ export const LEARN_SECTIONS: SECTIONS = {
     name: "Essentials",
     pages: [
       {
-        name: "Understanding JSX Syntax",
-        link: "/essentials/understanding-jsx-syntax",
+        name: "Understanding JSX",
+        link: "/essentials/understanding-jsx",
       },
       {
         name: "Intro to Reactivity",

@@ -268,7 +268,7 @@ For example, if you want to use an acronym, spell it out first with the acronym 
 From then on, you can use the acronym in that document.
 
 Plain and simple English also means avoiding contractions, as these are not always easily understood by those for whom English is not the first language.
-We should also avoid idioms wherever possible; remember, not everyone will understand what they mean.
+We should also avoid using expressions or figures of speech wherever possible; remember, not everyone will understand what they mean.
 
 Secondly, inclusive language means remaining as gender-neutral as possible.
 Instead of defaulting to one gender, use a gender-neutral word instead.

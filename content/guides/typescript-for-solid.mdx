@@ -172,7 +172,7 @@ const [name, setName] = createSignal("");
 ```
 
 In this example, TypeScript understands the types as `number` and `string`.
-This means that `count` and `name` directly receive the types `AAccessor<number>` and `Accessor<string>`, respectively, without the `| undefined` tag.
+This means that `count` and `name` directly receive the types `Accessor<number>` and `Accessor<string>`, respectively, without the `| undefined` tag.
 
 ### Context
 
@@ -450,9 +450,16 @@ While this may be a quick option, incorrectly asserting can lead to runtime erro
 Solid offers a callback form for the [`<Show>`](/reference/show) component, where the truthy value of the `when` prop gets passed in:
 
 ```typescript
-return (
-  <Show when={name()}>{(n) => <>Hello {n.replace(/\s+/g, "\xa0")}!</>}</Show>
-);
+const [data, setData] = createSignal<User | Admin>() // T: Signal<User | Admin | undefined>
+
+return(
+    <Show when={() => {
+      const v = data()
+      return v && v.type === "user" && v // T: User | undefined
+    })}>
+      {user => <User user={user()} />}
+    </Show>
+  )
 ```
 
 This method leverages the type information embedded in the [`<Show>`](/reference/show) component.
@@ -490,6 +497,33 @@ declare module "solid-js" {
 // Usage
 <div on:Name={(event) => console.log("name is", event.detail.name)} />;
 ```
+
+<Aside>
+**Note**: By default, using native events like `mousemove` with the `on` prefix (e.g., <div on:mousemove={e => {}} />) will result in a TypeScript error. 
+This is because they are not included in the custom event typings for Solid.
+To solve this, extend the `CustomEvents` and `CustomCaptureEvents` interfaces to include events from the `HTMLElementEventMap`:
+
+To include all native events:
+
+```typescript
+declare module "solid-js" {
+  namespace JSX {
+    interface CustomEvents extends HTMLElementEventMap {}
+    interface CustomCaptureEvents extends HTMLElementEventMap {}
+  }
+}
+```
+
+To include specific native events, you can pick certain events (e.g. `mousemove` and `pointermove`):
+
+```typescript
+declare module "solid-js" {
+  namespace JSX {
+    interface CustomEvents extends Pick<HTMLElementEventMap, "mousemove" | "pointermove"> {}
+  }
+}
+```
+</Aside>
 
 #### Forcing properties and custom attributes 
 

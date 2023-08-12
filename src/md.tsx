@@ -43,7 +43,7 @@ export default {
 			{...props}
 			class={
 				headerBold +
-        "heading mt-10 mb-6 -mx-.5 break-words text-4xl leading-tight mdx-heading"
+				"heading mt-10 mb-6 -mx-.5 break-words text-4xl leading-tight mdx-heading"
 			}
 		>
 			<MetaTitle>{props.children}</MetaTitle>
@@ -62,7 +62,7 @@ export default {
 				{...props}
 				class={
 					headerBold +
-          "heading text-2xl leading-10 my-6 mdx-heading text-solid-accent dark:text-solid-accentlight"
+					"heading text-2xl leading-10 my-6 mdx-heading text-solid-accent dark:text-solid-accentlight"
 				}
 			>
 				<Anchor id={props.id}>{props.children}</Anchor>
@@ -132,8 +132,8 @@ export default {
 	Link,
 	TesterComponent: () => (
 		<p>
-      Remove This Now!!! If you see this it means that markdown custom
-      components does work
+			Remove This Now!!! If you see this it means that markdown custom
+			components does work
 		</p>
 	),
 	code: (props) => {
@@ -158,19 +158,19 @@ export default {
 						get class() {
 							return (
 								props.className +
-                " " +
-                (props.bad ? "border-red-400 border-1" : "")
+								" relative " +
+								(props.bad ? "border-red-400 border-1" : "")
 							)
 						},
-						get className() {
-							return undefined
-						},
+						// get className() {
+						// 	return undefined
+						// },
 					})}
 					ref={ref}
 				>
+					<CopyButton parentRef={ref} />
 					{props.children}
 				</pre>
-				<CopyButton parentRef={ref} />
 			</div>
 		)
 	},

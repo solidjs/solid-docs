@@ -1,0 +1,339 @@
+# Components & Props
+
+Components act as the foundational units for Solid applications. 
+These modular code snippets allow for reusability and, when combined, facilitate the development of intricate applications.
+
+Solid is a framework that uses JSX. Its components are often designed through functions that yield a JSX element:
+
+```typescript
+function MyComponent() {
+  return <div>Hello World</div>;
+}
+```
+These components can be then integrated into other components or the primary application component:
+
+```typescript
+function App() {
+  return (
+    <div>
+      <MyComponent />
+    </div>
+  );
+}
+```
+## Component trees
+A component tree illustrates the hierarchical structure of components within an application. 
+At the apex of the tree resides the primary application component. 
+Components can have none, one, or multiple child components nested within them. 
+In essence, a component's children are the components it renders.
+
+A simple component tree, can be visualized as:
+
+```json
+App // primary application component
+└── MyComponent // child component
+```
+
+However, as applications scale, their component trees can become intricate and extensive. 
+An expansive application's tree may resemble the following:
+
+```json
+App
+├── Header
+├── Sidebar
+├── Content
+│   ├── Post
+│   │   ├── PostHeader
+│   │   ├── PostContent
+│   │   └── PostFooter
+│   ├── Post
+│   │   ├── PostHeader
+│   │   ├── PostContent
+│   │   └── PostFooter
+│   └── Post
+│       ├── ...
+└── Footer
+```
+
+The nesting capabilities of components underscore the potency since they provide a means to segment applications into finer, more controllable sections.
+
+## Component structure
+
+Solid's approach to components is tied to its unique take on [reactivity](/essentials/intro-to-reactivity). 
+A Solid component is created through functions that yield JSX elements. 
+Once these functions have been initially executed, their lifecycle concludes. 
+What this means is that the function is not reiterated when there's an change in the application's state. 
+
+These functions can be aptly named [setup functions](#setup-functions), which are different from the **render functions** found in other frameworks. 
+Solid's setup functions are executed just once, preparing everything to be observed by its reactive system. 
+This distinction is subtle, yet fundamental for Solid's approach to component structure and reactivity.
+
+### Setup functions
+
+At the core of every Solid component is its setup function. 
+This component function is executed once, during its initialization phase. 
+This is why it's often referred to as a "setup" function. 
+During this phase, the component sets up its reactive dependencies, event listeners, and other necessary configurations.
+
+```typescript
+function MyComponent() {
+  const [count, setCount] = createSignal(0);
+  
+  console.log(count());
+  return (
+    <div>
+      <p>Count: {count()}</p>
+      <button onClick={() => setCount(count() + 1)}>Increment</button>
+    </div>
+  );
+}
+```
+
+In this example, when `MyComponent` is used  (i.e., when it's rendered into the DOM for the first time), the function body is executed. 
+This includes the creation of the `count` signal and the `console.log(count())` statement.
+Once these lines are run, they will not be executed again for the life of this component instance, meaning the log statement will show only *once* in the console.
+
+The `return` statement provides JSX, which describes the structure and behavior of the component. 
+The actual rendering part (what's inside the `return`), however, is reactive. 
+So, while the setup logic (like the `console.log`) is executed once, the rendered JSX can update in response to state changes without re-running the entire function.
+
+In essence, Solid splits the concerns:
+
+1. The component function body sets up state and side-effects.
+2. The returned JSX where reactivity happens, updating the DOM as state changes, without re-executing the setup logic.
+
+This separation ensures efficient updates while preserving the logic and behavior set during the initial phase.
+
+### Conditional rendering
+
+Solid allows for conditional rendering within components, allowing different parts of a component to be displayed based on state or other criteria. 
+Given that the primary component function does not get re-invoked with changes of state, conditional statements must be directly placed within the function body. 
+This design ensures that conditional paths are clear and immediately understood.
+
+```typescript
+function MyComponent() {
+  const [count, setCount] = createSignal(0);
+  return (
+    <div>
+      {count() > 5 ? 
+        <div>Count limit reached</div> :
+        <>
+          <p>Count: {count()}</p>
+          <button onClick={() => setCount(count() + 1)}>Increment</button>
+        </>
+      }
+    </div>
+  );
+}
+```
+
+In this example, the component will display `"Count limit reached"` when `count` exceeds 5.
+Otherwise, it will display the current count with an increment button. 
+However, if the conditional was placed above the return statement, the component _would not_ show `"Count limit reached"`.
+This is because the component itself is not reactive and is only used once when the state of `count`  is above 5.
+
+Furthermore, Solid provides built-in control-flow components like [`<Show>`](/reference/show) , which can be employed for a more declarative conditional rendering experience:
+
+```typescript
+function MyComponent() {
+  const [count, setCount] = createSignal(0);
+  return (
+    <div>
+      <Show when={count() > 5} fallback={
+        <>
+          <p>Count: {count()}</p>
+          <button onClick={() => setCount(count() + 1)}>Increment</button>
+        </>
+      }>
+        <div>Count limit reached</div>
+      </Show>
+    </div>
+  );
+}
+```
+
+For more details on Solid's control flow components, refer to the [Control Flow page](/essentials/control-flow).
+
+## Importing and exporting
+
+To be modular and reusable across different parts of an application or project, components need to be exported from one module and imported into another. 
+This makes sure that components can be shared and used where needed.
+
+### Exporting components
+
+After a component has been defined, you can [export](https://developer.mozilla.org/en-US/docs/web/javascript/reference/statements/export) it to make it available for use in other parts of your application.
+
+**Named export:**
+
+```typescript
+// MyComponent.ts
+function MyComponent() {
+  return <div>Hello World</div>;
+}
+
+export { MyComponent };
+```
+
+**Default export:**
+
+```typescript
+// MyComponent.ts
+export default function MyComponent() {
+  return <div>Hello World</div>;
+}
+```
+
+### Importing Components
+
+Once a component has been exported, they can be [imported](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import) into other files or components.
+
+**Named import:**
+
+```typescript
+// App.ts
+import { MyComponent } from './MyComponent';
+
+function App() {
+  return (
+    <div>
+      <MyComponent />
+    </div>
+  );
+}
+```
+
+**Default import:**
+
+```typescript
+// App.ts
+import MyComponent from './MyComponent';
+
+function App() {
+  return (
+    <div>
+      <MyComponent />
+    </div>
+  );
+}
+```
+
+### Importing Solid and its utilities
+
+For a component to have reactivity and the other features provided by Solid, you will often need to import necessary functions and utilities.
+
+```typescript
+import { createSignal, Show } from 'solid-js';
+```
+
+## Component props
+
+Props are a way through which data is passed from one component to another. 
+In Solid, props are used to pass data from a parent component to a child component, similar to how function arguments work. 
+
+```typescript
+function App() {
+  // Passing a prop "name" with the value "Ryan Carniato" to MyComponent
+  return (
+    <div>
+      <MyComponent name="Ryan Carniato" />
+    </div>
+  );
+}
+
+function MyComponent(props) {
+  // Accessing the "name" prop within MyComponent
+  return <div>Hello {props.name}</div>;
+}
+```
+
+### `mergeProps`
+
+In Solid, [`mergeProps`](/reference/mergeProps) is a utility function designed to merge multiple potentially reactive objects together. 
+Its behavior is similar to `[Object.assign](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign)` but with a key distinction: it retains the reactivity of the properties being merged.
+This ensures that when individual properties within the merged object change, their reactivity is not lost.
+
+A common use case for `mergeProps` is when you want to provide default props:
+
+```typescript
+import { mergeProps } from 'solid-js';
+
+function MyComponent(props) {
+  // Using mergeProps to set default values for props
+  const finalProps = mergeProps({ defaultName: "Ryan Carniato" }, props);
+  
+  return <div>Hello {finalProps.defaultName}</div>;
+}
+
+// Usage: <MyComponent defaultName="Ryan Carniato" />
+```
+
+In the example above, if no `defaultName` prop is provided when using `<MyComponent />`, it will default to `"Ryan Carniato"` because of `mergeProps`. 
+If a value is provided, it will be used instead, all while retaining the reactivity of the `defaultName` prop.
+
+### Destructuring props
+
+Props objects are readonly and have reactive properties.
+For this reason, when you destructure them you will lose reactivity if it is not done with a tracking scope, or if the reactive dependencies are not being tracked.
+
+```typescript
+function MyComponent(props) {
+  const name = props.name // ❌: breaks reactivity and will not update when the prop value changes
+  const [name, setName] = createSignal(props.name) // ✓: createSignal is a Solid primitive that track prop value changes
+}
+```
+
+In general, accessing properties on the props object outside of Solid's primitives or JSX can lose reactivity. 
+
+#### `splitProps`
+
+Solid provides the [`splitProps`](/reference/splitprops) utility for when destructuring is necessary. 
+This function is designed to help split a single props object into multiple sets of props, retaining the reactivity of the individual properties.
+
+The function allows you to define one or more arrays of keys that you wish to extract into separate props objects.
+It will return an array of props objects related to each set of keys, plus an additional props object containing any remaining keys. 
+Crucially, all the returned props objects will preserve their reactivity.
+
+This can be especially useful when you want to use certain props in the current component while passing others to child components:
+
+```typescript
+import { splitProps } from 'solid-js';
+
+function ParentComponent(props) {
+  // Splitting props into two groups: 'name' and 'age'
+  const [greetingProps, personalInfoProps, restProps] = splitProps(props, ['name'], ['age']);
+  
+  // Using greetingProps and personalInfoProps in the current component
+  return (
+    <div>
+      <Greeting {...greetingProps} />
+      <PersonalInfo {...personalInfoProps} />
+      {/* restProps can be passed down or used as needed */}
+    </div>
+  );
+}
+```
+### Passing props to children
+
+Solid's approach to performance revolves around ensuring components are lean and efficient. 
+In essence, Solid components can be visualized as mere function calls. 
+
+One of Solid's core strategies is using the compiler to wrap potentially reactive expressions within object [getters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get). 
+This allows these props to be evaluated [lazily](https://developer.mozilla.org/en-US/docs/Web/Performance/Lazy_loading), delaying their execution until their actual use.
+
+This approach promotes reactivity without the need for unnecessary [wrappers](https://developer.mozilla.org/en-US/docs/Glossary/Wrapper) or [synchronization](https://developer.mozilla.org/en-US/docs/Glossary/Synchronous). However, it has certain implications for handling child components. Due to this lazy evaluation, direct access to props can result in the repeated creation of child components or elements, which is preferable to sidestep.
+
+In most cases, you'd simply use props within JSX, and everything will work.
+However, Solid provides a [`children`](/reference/children) helper to make sure you can safely use child components without accidentally creating them multiple times.
+
+```typescript
+import { children } from 'solid-js';
+
+function ColoredList(props) {
+  const safeChildren = children(() => props.children);
+
+  return <>{safeChildren()}</>;
+}
+```
+
+In this example, the `children` helper ensures you always get the right child components without anything unwanted happening. 
+

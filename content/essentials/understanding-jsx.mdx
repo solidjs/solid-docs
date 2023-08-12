@@ -2,22 +2,17 @@ import { Aside } from "~/components/configurable/Aside";
 
 # Understanding JSX
 
-[﻿JSX](https://facebook.github.io/jsx/), or JavaScript XML, is a syntax extension for JavaScript. 
+JSX is a syntax extension for JavaScript. 
 It allows you to write HTML-like code inside your JavaScript file which keeps your rendering logic and content in the same place. 
 This provides a concise and readable way to create and represent components.
 
 ## How Solid uses JSX
+
 Solid was designed to align closely with HTML standards. 
 It offers a distinct advantage: copy/paste solutions from resources like Stack Overflow, and direct usage of templates from design tools.
 
 What sets Solid's apart is the ability to return JSX. 
-This JSX can then be imported into other components, promoting reusability, modularity, and ease of maintenance throughout your application.
-
-Additionally, Solid's [reactive](/essentials/intro-to-reactivity) system introduces [fine-grained reactivity](/advanced/understanding-fine-grained-reactivity) with JSX.
-This ensures that only the necessary portions of the DOM are updated when changes occur in the underlying state, optimizing efficiency and overall performance.
-
-### Integrating JavaScript expressions
-In JSX, you can dynamically embed JavaScript directly into your markup using curly braces `{ }`.
+This adds dynamic expressions that allow you to reference variables and functions within your HTML by using the `{ }` syntax:
 
 ```jsx
 const animal = { breed: "cat", name: "Midnight" };
@@ -26,7 +21,12 @@ const element = <p>I have a {animal.breed} named {animal.name}!</p>;
 
 This allows for the injection of dynamic content into the rendered output based on the application's state or logic.
 
-### Structuring elements
+Additionally, Solid's [reactive](/essentials/intro-to-reactivity) system introduces [fine-grained reactivity](/advanced/understanding-fine-grained-reactivity) with JSX.
+This ensures that only the necessary portions of the [DOM](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Introduction) are updated when changes occur in the underlying state, optimizing efficiency and overall performance.
+
+## Using JSX in Solid
+
+### 1. Return a single root element
 
 Unlike HTML, where you can have disconnected tags at the top level, JSX requires that a component's render method returns a single root element.
 
@@ -41,29 +41,89 @@ Note: If you are looking to return multiple elements without adding an extra nod
 ```
 </Aside>
 
+<Aside type="advanced">
+  Under the hood, JSX is transformed into plain JavaScript objects:
+
+    ```javascript
+
+      "parentTag": { 
+        "tag": "div", 
+        "children": [{ 
+          "tag": "h1", 
+          "content": "Title." 
+        }, { 
+          "tag": "p", 
+          "content": "Some text." 
+          }] 
+        }
+    ```
+
+  With this in mind, you can not return two objects from a function without wrapping them into an array, hence wrapping them in a tag or Fragment.
+
+</Aside>
+
 With its structured approach, JSX maintains the familiar nested, tree-like structure found in HTML. 
 Consequently, parent-child relationships between elements are intuitive and easy to understand.
 
-To learn more about building components using JSX in Solid, visit the [components & props](/essentials/components-and-props) page.
+### 2. Close all tags
 
-### Properties vs. attributes
-
-Although similar, there's a distinction between HTML attributes and JSX properties, often referred to as props.
-
-HTML attributes are values set directly on HTML elements. 
-They provide supplementary information about the element and initialize its properties. 
-These attributes are often translated into properties on DOM objects once the browser parses the HTML.
-
-In contrast, JSX props are a mechanism for passing data and configurations to components. 
-Props facilitate dynamic data transfer and assignment of functionalities within your Solid application.
-
-For how to use props effectively in Solid, explore the [components & props](/essentials/components-and-props) page.
-
-### Self-closing tags
 Self-closing tags are a must in JSX. 
 Unlike in HTML, where elements like `<input>`, `<img>`, or `<br>` don't require explicit closure, JSX requires consistent self-closing tags. 
 This ensures uniformity and helps avoid potential rendering issues.
 
-## Next steps
+### 3.  Properties vs. attributes
 
-Dive into the [components & props](/essentials/components-and-props) section to explore how to leverage JSX.
+At first glance, HTML attributes and JSX props may seem simlar, but they serve different purposes and behave differently.
+Both offer ways to specify configurations or pass information, but they serve different purposes and behave differently in their respective realms: HTML for standard web content and JSX for Solid's component logic.
+
+#### HTML Attributes
+
+[HTML attributes](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes) are values set directly on HTML elements. 
+They supply additional information about an element, guiding its initial behavior and state. 
+These attributes are often translated into properties on DOM objects once the browser parses the HTML.
+
+In JSX files, you'll use HTML attributes much the same way you would in regular HTML, with a few key differences due to the blend of HTML and JavaScript:
+
+* Event listeners such as `onClick` are in camelCase.
+* You can dynamically specify a value, you can replace the `"` and `"` with `{` and `}`.
+
+```jsx
+<button class="myClass" onClick={handleClick}> Click me!</button>
+```
+
+<Aside>
+  **Note**: If you wish to pass objects in JSX, such as when you are doing inline styling, you will have to use double curly braces `{{ }}`.
+
+  ```jsx
+  <button style={{
+    color: 'red',
+    font-size: '2rem',
+  }}>
+    Click me!
+  </button>
+  ```
+</Aside>
+
+### JSX Properties (props)
+
+JSX properties, commonly known as "props", enable the passing of data and configurations to components in your application.
+They are the bridge between the component and the data it requires, providing seamless data flow and dynamic interaction.
+
+#### Core Concepts
+
+* **Static vs. dynamic attributes**: 
+In Solid's JSX, static attributes are integrated directly into the HTML template that is cloned. 
+Dynamic attributes, however, are not hard-coded into the template, instead relying on state and other reactive data sources. 
+This allows for content or styling of an element to change in response to interactions or other changes in the application's data.
+
+* **Dynamic data transfer**: 
+Props play a pivotal role when using dynamic data within your application. 
+They empower components to react in real-time to data changes, resulting in a responsive application.
+
+<Aside>
+  Expressions, whether fixed or dynamic, get applied in the order defined within the JSX. 
+  This sequence works for a wide range of DOM elements.
+  However, be cautious with elements like input types with `type='range'` - the order matters and can influence the element's behavior.
+</Aside>
+
+For how to use props effectively in Solid, explore the [components & props](/essentials/components-and-props) page.

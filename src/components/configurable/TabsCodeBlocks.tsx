@@ -1,5 +1,34 @@
 import { For, ParentComponent, Show, createSignal, onMount } from "solid-js"
 
+/**
+ *  This is a code blocks component that can be used to divide code blocks into seperate tabs. Here's an example of how to use it in JSX and mdx:
+ * @example
+ * //jsx
+ * <TabsCodeBlocks>
+ * 	<div id="npm">
+ * 		<pre>
+ * 			<code>npm install</code>
+ * 		</pre>
+ * 	</div>
+ * 	...
+ * </TabsCodeBlocks>
+ *
+ * @example
+ * //jsx
+ * <TabsCodeBlocks>
+ * 	<div id="npm">
+ * 		\```bash
+ * 			npm install
+ * 		\```
+ * 	</div>
+ * 	<div id="yarn">
+ * 		\```bash
+ * 			yarn install
+ * 		\```
+ * 	</div>
+ * 	...
+ * </TabsCodeBlocks>
+ */
 const TabsCodeBlocks: ParentComponent = (props) => {
 	const [tabs, setTabs] = createSignal<[]>()
 	const [selectedTab, setSelectedTab] = createSignal<string>()

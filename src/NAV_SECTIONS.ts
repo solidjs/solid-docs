@@ -490,7 +490,7 @@ export const LEARN_SECTIONS: SECTIONS = {
       },
       {
         name: "Contribution Guide",
-        link: "#",
+        link: "https://github.com/solidjs/solid-docs-next/blob/main/CONTRIBUTING.md",
       },
       {
         name: "Community & Support",

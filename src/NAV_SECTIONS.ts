@@ -352,15 +352,15 @@ export const REFERENCE_SECTIONS: SECTIONS = {
 					},
 					{
 						name: "on:* and oncapture:*",
-						link: "/reference/on_-and-oncapture_",
+						link: "/reference/on-and-oncapture",
 					},
 					{
 						name: "use:*",
-						link: "/reference/use_",
+						link: "/reference/use",
 					},
 					{
 						name: "prop:*",
-						link: "/reference/prop_",
+						link: "/reference/prop",
 					},
 					{
 						name: "attr:*",

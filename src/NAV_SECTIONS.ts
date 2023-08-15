@@ -410,8 +410,8 @@ export const LEARN_SECTIONS: SECTIONS = {
         link: "/essentials/components-and-props",
       },
       {
-        name: "Bindings",
-        link: "/essentials/bindings",
+        name: "Class & Style Bindings",
+        link: "/essentials/class-style-bindings",
       },
       {
         name: "Signals",
@@ -433,10 +433,14 @@ export const LEARN_SECTIONS: SECTIONS = {
         name: "List Rendering",
         link: "/essentials/list-rendering",
       },
-      {
+	  {
         name: "Event Handling",
         link: "/essentials/event-handling",
       },
+	  {
+		name: "Refs",
+		link: "/essentials/refs",
+	  }
     ],
   },
   tutorials: {

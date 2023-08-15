@@ -1,0 +1,105 @@
+# Refs
+
+Refs, or references, allow you to have direct access to DOM element. 
+
+To create a `ref` in Solid, you can get a reference to an element through assigning it to avariable: 
+
+```jsx
+const myDiv = <div>My Element</div>;
+```
+
+For a more idiomatic way, Solid provides the `ref` attribute. Refs in Solid are assignments, like above, that occur at creation time before elements are attached to the document DOM.
+To use this, you simply need to declare a variable and use it as a ref attribute:
+
+```tsx
+let myDiv;
+
+<div ref={myDiv}>My Element</div>
+
+```
+
+This lets you access its properties and methods directly, allowing for manipulatinos such as animations and event handling.
+
+## Callbacks
+
+Refs can also take the form of a callback function.
+This method can be convenient for encapsulating logic, especially when there is no need to wait until the elements are attached:
+
+```tsx
+let myDiv;
+
+<div ref={(el) => myDiv = el}>My Element</div>
+```
+
+Callback refs provide a more flexible way to set refs and can be beneficial in various scenarious, such as when you need to attach event listeners to the DOM elements immediately after creation.
+
+## Forwarding refs
+
+Forwarding refs provide a way to expose one of the inner elements' references to a parent component.
+By doing this, the parent component can directly access and interact the inner elements.
+
+When a component receives a `ref` attribute from its parent, it will come as `props.ref` in a callback form, regardless of whether the parent passed it as a simple assignment or a callback.
+
+The component can then "forward" this ref to a desired internal element by assigning the `props.ref` directly to the `ref` attribute of that element.
+
+Imagine there is a `Canvas` component, and from its parent, you want to directly manipulate the `canvas` element inside this Canvas component.
+
+1. Canvas component
+
+```tsx
+function Canvas(props) {
+  return (
+    <div className="canvas-container">
+      <canvas ref={props.ref} />
+    </div>
+  );
+}
+```
+
+2. Parent component
+```tsx
+import { Canvas } from './Canvas.jsx';
+
+function ParentComponent() {
+  let canvasRef;
+
+  const animateCanvas = () => {
+    // Manipulate the canvas using canvasRef...
+  };
+
+  return (
+    <div>
+      <Canvas ref={canvasRef} />
+      <button onClick={animateCanvas}>Animate Canvas</button>
+    </div>
+  );
+}
+```
+
+In the `Canvas` component, we're directly assigning the incoming `props.ref` to the `ref` attribute of the internal canvas element. 
+This forwards the reference to the parent component (`ParentComponent`), allowing it to have direct access to the `canvas` element.
+
+## Directives
+
+Directives allow the attachment of reusable behaviours to DOM elements.
+The [`use:`](/reference/use) prefix is used to denote these custom directives.
+Unlike props or attributes, directives operate at a lower level through providing fine-grained control over the elements they are attached to.
+
+A directive is essential a function with a specific signature:
+
+```typescript
+function directive(element: Element, accessor: () => any): void;
+```
+
+* `element`: This is the DOM element that the directive is being applied to.
+* `accessor`: A function that gives access to the value(s) passed to the directive.
+
+The directive functions are invoked at render time but are called before the element is added to the DOM.
+Due to this order, elements are fully primed with their attributes, properties, or event listeners therefore minimizing unexpected behaviours or premature interactions.
+
+Within directives, you're able to perform a variety of tasks, including:
+* creating [signals](/essentials/signals)
+* initiating [effects](/essentials/managing-side-effects)
+* registering [cleanup tasks](/essentials/managing-side-effects#clean-up)
+* adding [event listeners](#event-listeners)
+* and more.

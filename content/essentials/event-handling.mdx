@@ -1,0 +1,74 @@
+# Event handlers
+
+Events handlers play an important role in capturing user interactions and executing the relevant logic based on those interactions.
+
+In Solid, event handlers are prefixed with `on`, to help distinguish them from other properties and attributes in your components.
+They can be written as either `onClick` and `onclick`, catering to different coding styles or project conventions.
+
+```tsx
+<button onClick={handleClick}>Click me</button>
+```
+
+<Aside>
+  **Note**: 
+  Events remain static and are _not_ reactive.
+  This is to avoid the costly process of continuously attaching and detaching listeners.
+  Given that event handlers are invoked like regular functions upon each event trigger, there's no inherent need for them to be reactive.
+  <br />
+  If necessary, you can streamline your handlers accordingly:
+
+    ```tsx
+    <div onClick={() => props.handleClick?.()} />
+    ```
+
+</Aside>
+
+## Event delegation
+
+Rather than attaching event listeners to every individual element, Solid uses event delegation. 
+This technique consolidaates event listening at a higher level, allowing events to be captured effectively. 
+Supported events such as `click`, `mouseover`, and `keydown` are just a few examples that follow this, to view the full list see the [reference section](#delegated-events).
+
+**Note**: If you need to support other casings or want to avoid the event delegation, you can use [on:](/reference/on-and-oncapture) to match event handlers that follows the colon.
+
+## Binding events
+
+Solid binds data to event handlers without incurring the usual overhead of JavaScript's [`bind`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_objects/Function/bind) method or additional closures. 
+To achieve this you will have to pass an array to the event handler. Notably, the **second item** of the array will be supplied as the handler's **first argument**.
+
+```jsx
+const handler = (data, event) => {
+   console.log('Data:', data, 'Event:', event);
+}
+
+<button onClick={[handler, 'Hello!']}>Click Me</button>
+```
+
+In this example, the string `'Hello!'` (the second item in the array) is passed as the data parameter (the first argument of the handler function) when the button is clicked.
+
+## Reference
+
+### Delegated Events
+
+* [`beforeinput`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/beforeinput_event)
+* [`click`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/click)
+* [`dblclick`](https://developer.mozilla.org/en-US/docs/Web/API/Element/dblclick_event)
+* [`contextmenu`](https://developer.mozilla.org/en-US/docs/Web/API/Element/contextmenu_event)
+* [`focusin`](https://developer.mozilla.org/en-US/docs/Web/API/Element/focusin_event)
+* [`focusout`](https://developer.mozilla.org/en-US/docs/Web/API/Element/focusout_event)
+* [`input`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/input_event)
+* [`keydown`](https://developer.mozilla.org/en-US/docs/Web/API/Element/keydown_event)
+* [`keyup`](https://developer.mozilla.org/en-US/docs/Web/API/Element/keyup_event)
+* [`mousedown`](https://developer.mozilla.org/en-US/docs/Web/API/Element/mousedown_event)
+* [`mousemove`](https://developer.mozilla.org/en-US/docs/Web/API/Element/mousemove_event)
+* [`mouseout`](https://developer.mozilla.org/en-US/docs/Web/API/Element/mouseout_event)
+* [`mouseover`](https://developer.mozilla.org/en-US/docs/Web/API/Element/mouseover_event)
+* [`mouseup`](https://developer.mozilla.org/en-US/docs/Web/API/Element/mouseup_event)
+* [`pointerdown`](https://developer.mozilla.org/en-US/docs/Web/API/Element/pointerdown_event)
+* [`pointermove`](https://developer.mozilla.org/en-US/docs/Web/API/Element/pointermove_event)
+* [`pointerout`](https://developer.mozilla.org/en-US/docs/Web/API/Element/pointerout_event)
+* [`pointerover`](https://developer.mozilla.org/en-US/docs/Web/API/Element/pointerover_event)
+* [`pointerup`](https://developer.mozilla.org/en-US/docs/Web/API/Element/pointerup_event)
+* [`touchend`](https://developer.mozilla.org/en-US/docs/Web/API/Element/touchend_event)
+* [`touchmove`](https://developer.mozilla.org/en-US/docs/Web/API/Element/touchmove_event)
+* [`touchstart`](https://developer.mozilla.org/en-US/docs/Web/API/Element/touchstart_event)

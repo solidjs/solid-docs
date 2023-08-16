@@ -193,9 +193,9 @@ Much like what was seen the [default values](#default-values) in signals, you ca
 const dataContext = createContext({ count: 0, name: "" });
 ```
 
-Here, TypeScript determines that `dataContext` is `Context<count: number, name: string>` -- equivalent to `Context<Data>` without the `| undefined`. 
+By providing a default value, TypeScript determines that `dataContext` is `Context<{ count: number, name: string }>` -- equivalent to `Context<Data>` without the `| undefined`. 
 
-A common approach is forming a [factory function](https://www.typescriptlang.org/docs/handbook/decorators.html#decorator-factories) to generate a context's value. By using TypeScripts [`ReturnType`](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#return-type-annotations), the return type of this function can be used to type this context:
+A common approach is forming a factory function to generate a context's value. By using TypeScripts [`ReturnType`](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#return-type-annotations), the return type of this function can be used to type this context:
 
 ```typescript
 export const makeCountNameContext = (initialCount = 0, initialName = "") => {
@@ -222,7 +222,7 @@ export const CountNameContext = createContext<CountNameContextType>();
 
 To retrieve the context, using `useCountNameContext` which has aa type signature of `() => CountNameContextType | undefined`.
 
-In scenarios where you may wish to avoid `undefined` as a possible type, you can asser that the context will always be present:
+In scenarios where you may wish to avoid `undefined` as a possible type, you can assert that the context will always be present:
 
 ```typescript
 export const useCountNameContext = () => useContext(CountNameContext)!;
@@ -234,7 +234,7 @@ export const useCountNameContext = () => useContext(CountNameContext)!;
 
 #### The basics
 
-By default, components in Solid use the generic `Component<P>` type, where `P` represents the prop's type that is typically an object.
+By default, components in Solid use the generic `Component<P>` type, where `P` represents the props' type that is an object.
 
 ```typescript
 import type { JSX, Component } from "solid-js";
@@ -553,7 +553,10 @@ declare module "solid-js" {
 Custom directives can be applied using the [`use:___`]() attribute.
 
 ```typescript
-function model(element: HTMLInputElement, value: Accessor<Signal<string>>) {
+function model(
+  element: Element, // directives can be used on any HTML and SVG element
+  value: Accessor<Signal<string>> // second param will always be an accessor in case value being reactive
+) {
   const [field, setField] = value();
   createRenderEffect(() => (element.value = field()));
   element.addEventListener("input", (e) => {

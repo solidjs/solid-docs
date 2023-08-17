@@ -104,7 +104,8 @@ In this example, when `MyComponent` is used  (i.e., when it's rendered into the 
 This includes the creation of the `count` signal and the `console.log(count())` statement.
 Once these lines are run, they will not be executed again for the life of this component instance, meaning the log statement will show only *once* in the console.
 
-The `return` statement provides JSX, which describes the structure and behavior of the component. 
+The `return` statement provides JSX. 
+For instance, something like `let x = <>{props.x}</> `is reactive while a simple `return props.x` is not.
 The actual rendering part (what's inside the `return`), however, is reactive. 
 So, while the setup logic (like the `console.log`) is executed once, the JSX can update in response to state changes without re-running the entire function.
 
@@ -294,7 +295,7 @@ When destructuring props directly, you run the risk of breaking this reactivity,
 ```typescript
 function MyComponent(props) {
   const name = props.name // ❌: breaks reactivity and will not update when the prop value changes
-  const [name, setName] = createSignal(props.name) // ✓: createSignal is a Solid primitive that track prop value changes
+  const name = () => props.name// ✓: by wrapping `props.name` into a function, `name()` always retrieves its current value
 }
 ```
 

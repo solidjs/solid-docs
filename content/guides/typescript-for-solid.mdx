@@ -7,9 +7,8 @@ import { Aside } from "~/components/configurable/Aside";
 [TypeScript](https://www.typescriptlang.org/) is a superset of JavaScript that enhances code reliability and predictability through the introduction of [static types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html). 
 While JavaScript code can be directly used in TypeScript, the added type annotations in TypeScript provide clearer code structure and documentation, making it more accessible for developers.
 
-Solid's design is naturally aligned with TypeScript.
-By leveraging standard JSX, we facilitates seamless TypeScript interpretation. 
-Moreover, Solid's comprehensive built-in types for the API heighten accuracy. 
+By leveraging standard JSX, Solid facilitates seamless TypeScript interpretation. 
+Moreover, with Solid's built-in types for the API heighten accuracy. 
 
 For developers eager to get started, we offer TypeScript templates our [GitHub](https://github.com/solidjs/templates/). 
 
@@ -298,7 +297,7 @@ const CustomCounter: ParentComponent = (props) => {
 
 In this example, `props` is inferred to be of the type `{children?: JSX.Element }`, streamlining the process of defining components that can accept children.
 
-##### Special component types
+#### Special component types
 
 Solid offers subtypes for components dealing uniquely with children:
 
@@ -551,8 +550,10 @@ declare module "solid-js" {
 #### Custom directives
 
 Custom directives can be applied using the [`use:___`]() attribute.
+These directives typically accept two arguments: the element or component they are applied to, and the value passed to them as a JSX attribute.
+The conventional `Directives` interface only facilitates checking the value, i.e., the second argument. 
 
-```typescript
+```tsx
 function model(
   element: Element, // directives can be used on any HTML and SVG element
   value: Accessor<Signal<string>> // second param will always be an accessor in case value being reactive
@@ -578,6 +579,51 @@ let [name, setName] = createSignal("");
 <input type="text" use:model={[name, setName]} />;
 ```
 
+In using `DirectiveFunctions`, there's the ability to check both arguments (if present) by detailing the entire function type:
+
+```tsx
+function model(element: HTMLInputElement, value: Accessor<Signal<string>>) {
+  const [field, setField] = value();
+  createRenderEffect(() => (element.value = field()));
+  element.addEventListener("input", (e) => setField(e.target.value));
+}
+
+function log(element: DOMElement) {
+  console.log(element);
+}
+
+let num = 0;
+function count() {
+  num++;
+}
+
+function foo(comp: number, ...args: string[]) {
+}
+
+declare module "solid-js" {
+  namespace JSX {
+    interface DirectiveFunctions {
+      model: typeof model;
+      log: typeof log;
+      count: typeof count;
+      foo: typeof foo;
+    }
+  }
+}
+```
+
+Although the `Directives` interface can be employed to check the value passed as a JSX aattribute, using `DirectiveFunctions` provides enhanced type-checking capabilities, ensuring both the element/component and value align with the exepcted types.
+
+```tsx
+{/* This is correct */}
+<input use:model={createSignal('')} />
+
+{/* These are incorrect */}
+<input use:model />
+<input use:model={7} />
+<div use:model={createSignal('')} />
+```
+
 ##### Addressing import issues with directives
 
 When using directives imported from another file/module, TypeScript may eliminate the import if it mistakenly perceives it as a type. 
@@ -585,5 +631,13 @@ When using directives imported from another file/module, TypeScript may eliminat
 * Set the `onlyRemoveTypeImports: true` option in `babel-preset-typescript`. 
 If using `vite-plugin-solid`, this can be configured with `solidPlugin({ typescript: { onlyRemoveTypeImports: true } })` in `vite.config.ts`. 
 However, this approach mandates judicious use of `export type` and `import type`.
-* Including a statement like `false && d;` in the importing module ensures TypeScript retains the directive's import. 
+* Including a statement in the importing module ensures TypeScript retains the directive's import, as seen below.
 [Tree-shaking](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking) tools will typically exclude this code from the final bundle.
+
+```tsx
+import { directive } from "./directives.js"
+
+directive // prevents TypeScript's tree-shaking
+
+<div use:directive />
+```

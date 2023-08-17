@@ -31,7 +31,8 @@ Doing this clutters the component logic, making the code less readable and harde
 
 ## Classes
 
-Through the `class` attribute, you can style elements using CSS. The `class` attribute offers self-documentation and performance advantages over `style`.
+Through the `class` attribute, you can style elements using CSS.
+The `class` attribute offers self-documentation and performance advantages over `style`.
 
 For a structured approach, pair CSS files with their respective component files. 
 Importing these files will globally scopes them.
@@ -44,20 +45,7 @@ function Card() {
 }
 ```
 
-In scenarios where you might want to conditionally set classes, Solid offers the built-in [`classList`](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList) JSX attribute. 
-This attribute takes an object where the key represents the class name(s) and the value is a boolean expression. 
-When the value is true, the class is applied; when false, it is removed.
-
-```tsx
-  const [current, setCurrent] = createSignal("foo");
-
-    <button
-     class={current() === 'foo' ? 'selected' : ''}
-     onClick={() => setCurrent('foo')}
-    >foo</button>
-```
-
-## Dynamic styling
+### Dynamic styling
 
 Dynamic styling allows interfaces to adapt and respond to various factors, such as user interaction or device preferences. 
 
@@ -86,5 +74,35 @@ function ThemedButton({ theme }) {
   );
 }
 ```
+
+### `classList`
+
+In scenarios where you may want to conditionally set classes, Solid offers the built-in [`classList`](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList) JSX attribute. 
+This attribute takes an object where the key represents the class name(s) and the value is a boolean expression. 
+When the value is `true`, the class is applied; when `false`, it is removed.
+
+When handling multiple conditional classes, `classList` is often more efficient. 
+This is because `classList` selectively toggles only the classes that require alteration, while `class` will be re-evaluated each time.
+For a single conditional class, using `class` might be simpler. 
+However, as the number of conditional classes increases, `classList` offers a more readable and declarative approach.
+
+```tsx
+  const [current, setCurrent] = createSignal("foo");
+
+    <button
+     classList={current() === 'foo' ? 'selected' : ''}
+     onClick={() => setCurrent('foo')}
+    >foo</button>
+```
+
+<Aside>
+**Caution**: While it is possible, mixing `class` and `classList` can introduce unexpected errors.
+If both are reactive, unexpected behaviors can occur: when the `class` value changes, Solid will set the entire `class` attribute, meaning any toggles in `classList` will be overwritten.
+<br />
+The main 'safe' situation, is when `class` is set to a static string (or nothing) and `classList` is reactive.
+Alternatively, `class` could be set to a static computed value (e.g. `class={baseClass()}`), but then it must be put before any `classList` attributes.
+<br />
+Additionally, since `classList` is a pseudo-attribute, it doesn't work in prop spreads like <div {...props} /> or in `<Dynamic>`.
+</Aside>
 
 To dive deeper into how to style your Solid components, see our [detailed guide](guides/styling-your-components).

@@ -315,10 +315,10 @@ export default User;
 
 You can make use of the `params` object to access the dynamic route parameters. In the example above we accessed the `id` parameter. You can make use of the parameters even in primitives like `createResource` and `createSignal`:
 
-Here's an example of what this might look like in a `createResource` primitive:
+Here's an example of what this might look like in a `createResource` primitive and the `Suspense` component:
 
 ```jsx
-import { createResource, createSignal } from "solid-js";
+import { createResource, createSignal, Suspense } from "solid-js";
 import { useParams } from "@solidjs/router";
 
 // 👇 This is an asynchronous function that fetches a user from the jsonplaceholder API
@@ -332,17 +332,13 @@ const User = () => {
   const [data] = createResource(params.id,fetchUser) // 👈 Pass the dynamic route parameter to the createResource primitive
 
   return (
-    <div>
-      {data.loading ? ( // 👈 Use the loading property to show a loading indicator
-        <p>Loading...</p>
-      ) : (
-        <div>
-          <p>Name: {data().name}</p> {/* 👈 Access the data returned from the fetchUser function */}
-          <p>Email: {data().email}</p>
-          <p>Phone: {data().phone}</p>
-        </div>
-      )}
-    </div>
+    <Suspense fallback={<p>Loading...</p>}>
+      <div>
+        <p>Name: {data().name}</p> {/* 👈 Access the data returned from the fetchUser function */}
+        <p>Email: {data().email}</p>
+        <p>Phone: {data().phone}</p>
+      </div>
+    </Suspense>
   );
 };
 

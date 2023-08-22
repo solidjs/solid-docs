@@ -1,0 +1,169 @@
+import { Aside } from "~/components/configurable/Aside";
+
+# Intro to Reactivity
+
+**Note**: While this guide is useful for understanding reactive systems, it does use some Solid-specific terminology.
+
+Reactivity, at its core, provides the groundwork to power interactivity in dynamic applications. 
+This programming paradigm is when systems automatically respond to changes in data or state, ensuring that the application's interface stays consistent with its underlying data. With Solid, reactivity is the basis of its design. 
+
+## Importance of reactivity
+
+1. **Automatic UI updates**: Reactivity ensures that as data changes, the user interface is automatically updated to reflect those changes.
+
+2. **Simplified code**: By removing the need for manual DOM updates or UI refreshes, reactivity reduces the need for manual interventions. 
+This synchronizes the state and the UI, leading to more straightforward and maintainable code.
+
+3. **Consistent user experience**: With the UI always being in sync with the underlying data, users get a consistent and expected response to their actions.
+
+4. **Scalability**: As applications grow, managing state and UI can become complex. Reactivity abstracts this complexity, ensuring that even large-scale applications remain manageable.
+
+## Reactive principles
+
+When delving into the world of reactivity, you'll encounter a few foundational principles:
+
+### Signals
+
+Signals serve as foundational elements in reactive systems, playing a pivotal role in data management and system responsiveness.
+
+A signal can be visualized as a container for data. 
+It not only holds the data, but also provides mechanisms for accessing and modifying its value, a **getter **and a **setter**. 
+This dual capability makes signals both readable and mutable, making them integral to the dynamic nature of reactive systems.
+
+#### Getter
+
+The getter is the mechanism responsible for accessing the current value of the signal. 
+When various components or parts of an application need to "read" or retrieve the data stored in a signal, they use the getter. 
+This provides data that is consistent and reliably accessible throughout the system.
+
+#### Setter
+
+On the other hand, the setter is the tool that permits the changing of the signal's value. 
+Any change to the value within a signal, made possible by the setter, can instigate reactive updates in other connected parts of the system. 
+This ensures that the system remains responsive and up-to-date with the latest data changes.
+
+### Effects
+
+Effects can be thought of as automated responder. 
+They are closely tied to signals and are set into motion whenever there's a change in the signals they observe. 
+Their primary role is to ensure that any modifications in signals are appropriately reflected throughout the system, maintaining its reactivity.
+
+The nature of effects revolves around two functionalities:
+
+- **Observation**: At the heart of every effect is its ability to continuously monitor or "observe" signals. 
+This keeps effects primed to detect changes in the signals they are tied to.
+- **Activation**: Upon recognizing a change in an observed signal, the effect will promptly execute its predefined routine. 
+This can involve tasks like updating the UI, triggering a process, or initiating external functions. 
+Through this activation, effects ensure that the system's reactivity is both immediate and relevant.
+
+## Building a reactive system
+
+Reactive systems are designed around the principle of data-driven reactivity. This is when signals and their dependents, effects, maintain a relationship. This relationship ensures a seamless propagation of data changes throughout the system, guaranteeing its responsiveness and real-time updates.
+
+### 1. Initialization
+
+The start of a reactive system begins with the setup of signals. During this phase, signals are initialized with their respective starting values. These initialized signals serve as the primary data sources that the rest of the system will rely on.
+
+### 2. Subscription
+
+Once signals are established, the next step involves the effects indicating their dependencies. 
+In this phase, effects "subscribe" to specific signals, marking their interest and establishing a link. 
+This subscription keeps the effects aware of any changes to the signals they are tied to.
+
+### 3. Notification
+
+During the notification phase, any alteration in a signal's value sets off a chain reaction. 
+The altered signal proactively notifies all its subscribed effects about the modification. 
+Upon receiving this notification, these effects then update or activate as necessary to keep the system's state current and synchronized with the latest data changes.
+
+## Synchronous vs. asynchronous
+
+Reactivity in systems can manifest primarily in two ways: synchronous and asynchronous. 
+The choice between these often depend on the requirements of the system and the nature of the tasks involved.
+
+### Synchronous reactivity
+Synchronous reactivity operates in a direct and linear fashion. 
+When a signal changes, its corresponding effects are immediately updated in a sequential manner. 
+This form of reactivity provides a direct correlation between a signal's change and the system's response, guaranteeing that the system remains consistently aligned with the most recent data.
+
+### Asynchronous reactivity
+Asynchronous reactivity introduces a layer of flexibility and adaptability. 
+Unlike it synchronous counterpart, the updates to the effects are not instantaneous. 
+Instead, they may be delayed or might wait for the completion of an external event or task. 
+This approach is particularly useful in scenarios where immediate updates are not feasible or when the system needs to accommodate external processes before reflecting changes, such as waiting for an API response.
+
+## Efficient data management
+
+### Memo
+
+Memo, short for memoization, is a technique that is used in reactive systems to enhance performance. 
+
+In the context of reactivity, memos become valuable with their ability to selectively recalculate based on changes in specific signals. 
+This means that a computed value or function can intelligently determine when to recalculate based on the signals it depends on. 
+
+#### Caching
+
+This approach involves the caching of results obtained from resource-intensive function calls. 
+Instead of recalculating the output each time a function is invoked, the cached result is returned when the same inputs are encountered again. 
+
+By remembering the last computed value and the conditions (or signal values) under which it was computed, the system can avoid unnecessary recalculations.
+
+#### Dependency tracking
+
+An essential aspect of effective memoization in a reactive system is accurate dependency tracking.  
+This involves keeping track of the signals upon which a computed value relies. 
+This way, the system can identify when the cached value needs to be invalidated and recomputed. 
+
+This fine-grained dependency tracking ensures that the system's reactivity remains reliable and accurate.
+
+### Store
+
+Stores are important as they provide a structured and centralized approach to state management. 
+
+A store in reactive programming is essentially a container for state. 
+Unlike dealing with individual signals, stores offer a more organized way to manage state, especially in complex applications.
+
+#### State management
+
+At their core, stores serve as containers for state. 
+They facilitate centralized management of state by offering methods to update, reset, or manipulate it. 
+This not only improves the predictability of state transitions but simplifies the process of interacting with and modifying state.
+
+When the state within a store changes, it triggers a cascade of reactive updates throughout the system. 
+Components or functions that are subscribed to a store are promptly notified of these changes, where they are able to then respond accordingly. 
+This keeps the user interface and other system components synchronized with the underlying data.
+
+#### Scalability
+
+As applications grow in complexity, managing individual signals can become challenging. 
+Stores provide a scalable solution by allowing related state to be grouped together. 
+
+## Tracking
+
+At its core, tracking is about registering subscriptions. 
+When a signal changes, all subscribed effects are re-run. 
+This enables the automatic propagation of changes throughout an application's components.
+
+Some key points to understand about tracking:
+
+- Tracking subscriptions occur when a signal, or store value, is accessed within an effect. 
+In other words, when you read the value of a signal inside an effect, that effect becomes subscribed to that signal.
+
+- Whenever an effect is created and accesses a signal, it establishes a subscription to that signal. 
+This means that the effect will be re-executed whenever the signal changes.
+
+- Tracking is scoped to effects. 
+If you access a signal outside the context of an effect, no tracking or subscription will occur. 
+This is because there is no effect subscribed to that signal.
+
+- The tracking concept extends to reactive props and store values, as well. 
+When you access a reactive value within an effect, it triggers tracking and subscription just like within signals.
+
+Within tracking, there are some key behaviours and tradeoffs that have to be considered:
+
+1. All reactivity is tracked rom function calls directly, or hidden in the getter and triggered by the property's access. 
+This means that where you access properties on reactive objects is important.
+
+2. Components and callbacks from control flows are not tracking scopes and are only executed **once**. 
+This means that destructuring or doing logic at the top-level of your components will **not re-execute**. 
+These signals, stores, and props must be accessed from within their reactive primitives, or within the JSX, for it to be re-evaluted when the code changes.

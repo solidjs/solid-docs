@@ -1,3 +1,5 @@
+import { Aside } from "~/components/configurable/Aside";
+
 # Refs
 
 Refs, or references, allow you to have direct access to DOM element. 
@@ -10,9 +12,11 @@ There are two ways to get a reference to a DOM element in Solid:
 const myDiv = <div>My Element</div>;
 ```
 
-For a more idiomatic way, Solid provides the `ref` attribute. 
+<Aside>
+For a more idiomatic way, Solid provides the `ref` attribute.
 Refs in Solid are assignments that occur at creation time before elements are attached to the document DOM.
-To use this, you simply need to declare a variable and use it as a ref attribute:
+This lets you access its properties and methods directly, allowing for manipulatinos such as animations and event handling.
+To use `ref`, you simply need to declare a variable and use it as a ref attribute:
 
 ```tsx
 let myDiv;
@@ -21,7 +25,14 @@ let myDiv;
 
 ```
 
-This lets you access its properties and methods directly, allowing for manipulatinos such as animations and event handling.
+In TypeScript, you must use a definitive assignment assertion. 
+This signals to TypeScript that `myDiv` will definitely be assigned, even if TypeScript can not confirm it.
+This is particularly useful in Solid since the framework takes care of assigning the variable when the component is rendered.
+
+```tsx
+  let myDiv!: HTMLDivElement;
+```
+</Aside>
 
 ## Callbacks
 
@@ -88,7 +99,11 @@ Directives allow the attachment of reusable behaviours to DOM elements.
 The [`use:`](/reference/use) prefix is used to denote these custom directives.
 Unlike props or attributes, directives operate at a lower level through providing fine-grained control over the elements they are attached to.
 
-A directive is essential a function with a specific signature:
+Directives are like callback refs but they enable two extra features:
+* Having multiple directives on an element.
+* Passing in reactive data to the callback.
+
+A directive is essentially a function with a specific signature:
 
 ```typescript
 function directive(element: Element, accessor: () => any): void;
@@ -106,3 +121,5 @@ Within directives, you're able to perform a variety of tasks, including:
 * registering [cleanup tasks](/essentials/managing-side-effects#clean-up)
 * adding [event listeners](#event-listeners)
 * and more.
+
+To learn more about directives and how they work with TypeScript, refer to our [TypeScript for Solid guide](/guides/typescript).

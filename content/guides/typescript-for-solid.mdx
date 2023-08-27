@@ -158,12 +158,15 @@ The signal setter, `setCount`, is of type `Setter<number>`.
 This complex type roughly resembles `(value? : number | ((prev?: number) => number)) => number`, accommodating both a direct number or a function which takes a potential pervious value that results in a number.
 Since the signal's start is undefined, both the direct number and the function's number parameter are optional.
 
-Typescript errors can present with parameter assignments, such as `setcount(value)`. 
-To make sure `value` isn't mistaken for a function, you can use `setCount(() => value)`. 
+When a signal is designed to store functions, its setter function won't directly accept new functions as values.
+This is because the setter can't determine whether the function should be executed to get the actual value. 
+In these situations, you should use the callback form of the setter: `setSignal(() => value)`.
+
 
 #### Default values
 
-Defining default values when invoking `createSignal` can sidestep explicit type specification and removes the potential `| undefined` type:
+By providing default values when you call `createSignal`, you can avoid the need for explicit type specification and eliminate the possibility of the `| undefined` type. 
+This leverages type inference to determine the type automatically:
 
 ```typescript
 const [count, setCount] = createSignal(0);
@@ -177,11 +180,13 @@ This means that `count` and `name` directly receive the types `Accessor<number>`
 
 Just as signals utilize `createSignal<T>`, context uses `createContext<T>`, which is parameterized by the type `T` of the context's value:
 
-```typescript
+```tsx
 type Data = { count: number; name: string };
-const dataContext = createContext<Data>();
 ```
 
+When you invoke `useContext(dataContext)`, it returns the type contained within the context. 
+For example, if the context is of type `Context<Data | undefined>`, then using `useContext` with it will naturally yield a result of type `Data | undefined`. 
+The `| undefined` part signifies that the context might not be defined in the component's ancestor hierarchy.
 `dataContext` is understood as `Context<Data | undefined>`. 
 Invoking `useContext(dataContext)` mirrors this type, returning `Data | undefined`.
 The `| undefined` arises when context is not defined in the component's ancestors, which leads `useContext` to yield `undefined`.
@@ -196,7 +201,7 @@ By providing a default value, TypeScript determines that `dataContext` is `Conte
 
 A common approach is forming a factory function to generate a context's value. By using TypeScripts [`ReturnType`](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#return-type-annotations), the return type of this function can be used to type this context:
 
-```typescript
+```tsx
 export const makeCountNameContext = (initialCount = 0, initialName = "") => {
   const [count, setCount] = createSignal(initialCount);
   const [name, setName] = createSignal(initialName);
@@ -212,7 +217,7 @@ export const CountNameContext = createContext<CountNameContextType>();
 
 `CountNameContextType` corresponds to the result of `makeCountNameContext`:
 
-```typescript
+```tsx
 [
   {readonly count: Accessor<number>, readonly name: Accessor<string>},
   {readonly setCount: Setter<number>, readonly setName: Setter<string>}
@@ -223,7 +228,7 @@ To retrieve the context, using `useCountNameContext` which has aa type signature
 
 In scenarios where you may wish to avoid `undefined` as a possible type, you can assert that the context will always be present:
 
-```typescript
+```tsx
 export const useCountNameContext = () => useContext(CountNameContext)!;
 ```
 
@@ -235,26 +240,28 @@ export const useCountNameContext = () => useContext(CountNameContext)!;
 
 By default, components in Solid use the generic `Component<P>` type, where `P` represents the props' type that is an object.
 
-```typescript
-import type { JSX, Component } from "solid-js";
+```tsx
+import type { Component } from "solid-js";
 
-type Component<P = {}> = (props: P) => JSX.Element;
+const MyComponent: Component<MyProps> = (props) => {
+    ...
+}
 ```
 
 A `JSX.Element` denotes anything renderable by Solid, which could be a DOM node, array of JSX elements, or functions yielding `JSX.Element`.
 
 For a simple example, here's a counter:
 
-```typescript
+```tsx
 const Counter: Component = () => {
   const [count, setCount] = createSignal(0);
-  return <button onClick={() => setCount((c) => c + 1)}>{count()}</button>;
+  return <button onClick={() => setCount(c => c + 1)}>{count()}</button>;
 };
 ```
 
 Trying to pass unneccessary props or children will result in type errors:
 
-```typescript
+```tsx
 <Counter />;  // ✔️
 <Counter initial={5} />;  // ❌: No 'initial' prop defined
 <Counter>hi</Counter>;  // ❌: Children aren't expected
@@ -264,7 +271,7 @@ Trying to pass unneccessary props or children will result in type errors:
 
 For components that require the use of props, they can be typed using [generics](https://www.typescriptlang.org/docs/handbook/2/generics.html#handbook-content):
 
-```typescript
+```tsx
 const InitCounter: Component<{ initial: number }> = (props) => {
   const [count, setCount] = createSignal(props.initial);
   return <button onClick={() => setCount((c) => c + 1)}>{count()}</button>;
@@ -279,10 +286,8 @@ Often, components may need to accept child elements.
 For this, Solid provides `ParentComponent` that includes `children?` as an optional prop.
 If defining a component with the `function` keyword, `ParentProps` can be used as a helper for the props:
 
-```typescript
-import { JSX, ParentComponent, ParentProps } from "solid-js";
-
-type ParentProps<P = {}> = P & { children?: JSX.Element };
+```tsx
+import { ParentComponent } from "solid-js";
 
 const CustomCounter: ParentComponent = (props) => {
   const [count, setCount] = createSignal(0);
@@ -301,17 +306,47 @@ In this example, `props` is inferred to be of the type `{children?: JSX.Element 
 
 Solid offers subtypes for components dealing uniquely with children:
 
-* **VoidComponent:** when a component should not accept children.
-* **FlowComponent:** designed for components like [`<Show>`](/reference/Show) or [`<For>`](/reference/For), typically requiring children and, occasionally, specific children types.
+##### Components without the `Component` types
 
-These types make sure that the children are present and fit the required type, maintaining consistent component behaviour.
+Using the `Component` types is a matter of preference over a strict requirement.
+Any function that takes props and returns a JSX.Element qualifies as a valid component.
+
+```tsx 
+// arrow function 
+const MyComponent = (props: MyProps): JSX.Element => { ... }
+
+// function declaration 
+function MyComponent(props: MyProps): JSX.Element { ... }
+
+// component which takes no props 
+function MyComponent(): JSX.Element { ... }
+```
+
+It is worth noting that if you want to create a generic component, the `Component` types will **not** be applicable. 
+Instead, you will need to define your generics explicitly:
+
+```tsx
+// For arrow functions, the syntax <T> by itself is invalid in TSX because it could be confused with JSX.
+const MyGenericComponent = <T extends unknown>(props: MyProps<T>): JSX.Element => { /* ... */ }
+
+// Using a function declaration for a generic component
+function MyGenericComponent<T>(props: MyProps<T>): JSX.Element { /* ... */ }
+
+```
+
+<Aside>
+Each `Component` type has a corresponding `Props` type that defines the shape of its properties. 
+These `Props` types also accept the same generic types as their associated `Component` types.
+</Aside>
 
 ### Event handling
 
 #### Basics
 
-The `JSX.EventHandler<T, E>` type allows you to define event handlers for a specific DOM element type `T` and event type `E.` 
-This provides the event handler function with events of the right type and makes sure it interacts correctly with elements of the expected type.
+In Solid, the type for event handlers is specified as `JSX.EventHandler<TElement, TEvent>`.
+Here, `TElement` refers to the type of the element the event is linked to, and `TEvent` indicates the type of the event itself. 
+You can opt to use this type in your code as an alternative to `(event: TEvent) => void`. 
+Doing this will ensure that `currentTarget` and `target` are accurately typed within the event object and also allow you to avoid using inline event handlers.
 
 ```typescript
 import type { JSX } from "solid-js";
@@ -330,7 +365,7 @@ const onInput: JSX.EventHandler<HTMLInputElement, InputEvent> = (event) => {
 When you define an event handler inline with a JSX attribute, Solid automatically types the handler for you.
 This means you get the type inference and checking without any additional work:
 
-```typescript
+```tsx
 <input
     onInput={(event) => {
         console.log("Input changed to", event.currentTarget.value);
@@ -426,8 +461,16 @@ Consider a situation where you want to show a name only when it's defined using 
 
 ```typescript
 const [name, setName] = createSignal<string>();
-return <Show when={name()}>Hello {name().replace(/\s+/g, "\xa0")}!</Show>;
+return (
+  <Show when={(() => {
+      const v = data()
+      return v && v.type === "user" && v // T: User | undefined
+    })()}>
+  )
 ```
+
+Accessing the callback may throw an error if the `when` prop is nullish or false at the time of access.
+Usually this is not the case, however in `onCleanup` or asynchronous contexts it can be.
 
 TypeScript may not like this.
 While you can understand that the second call to `name()` happens only if the first is truthy, TypeScript cannot. 
@@ -446,7 +489,8 @@ While this may be a quick option, incorrectly asserting can lead to runtime erro
 
 2. **Callback form of Show**
 
-Solid offers a callback form for the [`<Show>`](/reference/show) component, where the truthy value of the `when` prop gets passed in:
+Solid provides a callback form for its [`<Show>`](/reference/show) component. 
+In this form, the value that makes the when prop true is passed into the component:
 
 ```typescript
 const [data, setData] = createSignal<User | Admin>() // T: Signal<User | Admin | undefined>
@@ -461,9 +505,28 @@ return(
   )
 ```
 
-This method leverages the type information embedded in the [`<Show>`](/reference/show) component.
-TypeScript can infer that since `n` comes from a truthy `name()`, it can't be `undefined` or other falsy values.
-However, accessing this null asserted form incorrectly may thrown an error if the condition is not satisfied.
+This approach takes advantage of the type information embedded in the [`<Show>`](/reference/show) component. 
+By temporarily storing the value `v`, you can use type narrowing to specify its type more accurately before returning it.
+
+You do have to be cautious, however, since accessing the callback may throw an error if the when prop is nullish or false at the time of access. 
+This is usually not an issue, but in asynchronous contexts or during [`onCleanup`](/reference/oncleanup), it may occur.
+
+<Aside>
+If you find the above method a bit shorthand, there's a more explicit alternative. 
+Solid's [`<Show>`](/reference/show) component actually performs memoization, so you don't necessarily need a memo for this:
+
+```tsx
+const user = createMemo(() => {
+  const v = data()
+  return v && v.type === "user" && v // Type: User | undefined
+})
+
+<Show when={user()}>
+  {user => <User user={user()} />}
+</Show>
+```
+While this approach is more explicit, it's worth noting that the primary example for the callback form should ideally not use this technique for the sake of clarity
+</Aside>
 
 ## Advanced JSX attributes and directives
 
@@ -472,7 +535,7 @@ However, accessing this null asserted form incorrectly may thrown an error if th
 For custom events in Solid, the [`on:___`]() and [`oncapture:___`]() attributes can be utilized. 
 To type these events, you'll need to extend Solid's JSX namespace.
 
-```typescript
+```tsx
 class NameEvent extends CustomEvent {
   type: "Name";
   detail: { name: string };
@@ -597,7 +660,8 @@ function count() {
   num++;
 }
 
-function foo(comp: number, ...args: string[]) {
+function foo(comp: SomeExpectedType, ...args: string[]) {
+  // function body
 }
 
 declare module "solid-js" {
@@ -612,7 +676,7 @@ declare module "solid-js" {
 }
 ```
 
-Although the `Directives` interface can be employed to check the value passed as a JSX aattribute, using `DirectiveFunctions` provides enhanced type-checking capabilities, ensuring both the element/component and value align with the exepcted types.
+Although the `Directives` interface can be employed to restrict the value passed to the directive as a JSX attribute, using `DirectiveFunctions` ensures both the element and value align with the expected types.
 
 ```tsx
 {/* This is correct */}

@@ -142,7 +142,7 @@ Using `createSignal<T>`, you can define the signal's type as `T`.
 const [count, setCount] = createSignal<number>();
 ```
 
-Here, `createSignal` has the return type `Signal<number>`, corresponding to the type passed into it.
+Here, `createSignal` has the return type `Signal<number | undefined>`, corresponding to the type passed into it, and `undefined` as it was uninitialized. 
 This resolves to a getter-setter [tuple](https://www.typescriptlang.org/docs/handbook/2/objects.html#tuple-types), both of which are generically typed:
 
 ```typescript
@@ -150,11 +150,14 @@ import type { Signal, Accessor, Setter } from "solid-js";
 type Signal<T> = [get: Accessor<T>, set: Setter<T>];
 ```
 
-In this instance, the signal getter, `count`, assumes a type `Accessor<number | undefined>`. 
-This denotes Solid's type `Accessor<T>`, mapping to `() => number | undefined`. 
-The `| undefined` is attributed to the lack of efault value in `createSignal`, leading to the signal's initial undefined state.
+In this case, the `count` signal getter has the type `Accessor<number | undefined>`. 
+In Solid, `Accessor<T>` is equivalent to `() => T`. 
+Here, it means `count` is a function that returns either a `number` or `undefined`.
 
-The signal setter, `setCount`, is of type `Setter<number>`. 
+The reason `undefined` is included in the type is because the signal was not initialized. 
+Therefore, its initial state can be `undefined`.
+
+The signal setter, `setCount`, is of type `Setter<number | undefined>`. 
 This complex type roughly resembles `(value? : number | ((prev?: number) => number)) => number`, accommodating both a direct number or a function which takes a potential pervious value that results in a number.
 Since the signal's start is undefined, both the direct number and the function's number parameter are optional.
 
@@ -362,7 +365,7 @@ const onInput: JSX.EventHandler<HTMLInputElement, InputEvent> = (event) => {
 
 #### Inline handlers
 
-When you define an event handler inline with a JSX attribute, Solid automatically types the handler for you.
+When you define an event handler inline with a JSX attribute, the handler is automatically typed for you.
 This means you get the type inference and checking without any additional work:
 
 ```tsx
@@ -378,9 +381,10 @@ This means you get the type inference and checking without any additional work:
 In the context of event delegation, the difference between `currentTarget` and `target` is important:
 
 * `currentTarget`: Represents the DOM element that the event handler is attached to.
-* `target`: Any DOM element within the heirarchy of `currentTarget` that has initiated the event.
+* `target`: Any DOM element within the hierarchy of `currentTarget` that has initiated the event.
 
-While `currentTarget` will always be of type `T` as defined by `JSX.EventHandler<T, E>`, the `target` type can be more general, such as ny DOM element. However, when it comes to specific events such as `Input` and `Focus` events directly attached to input elements, `target` must be typed as `HTMLInputElement`.
+While `currentTarget` will always be of type `T` as defined by `JSX.EventHandler<T, E>`, the `target` type can be more general, such as ny DOM element. 
+However, when it comes to specific events such as `Input` and `Focus` events directly attached to input elements, `target` will be typed as `HTMLInputElement`.
 
 ### `ref` attribute
 
@@ -496,12 +500,10 @@ In this form, the value that makes the when prop true is passed into the compone
 const [data, setData] = createSignal<User | Admin>() // T: Signal<User | Admin | undefined>
 
 return(
-    <Show when={() => {
+    <Show when={(() => {
       const v = data()
       return v && v.type === "user" && v // T: User | undefined
-    })}>
-      {user => <User user={user()} />}
-    </Show>
+    })()}>
   )
 ```
 

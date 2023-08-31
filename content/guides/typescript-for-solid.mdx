@@ -16,7 +16,8 @@ For developers eager to get started, we offer TypeScript templates on [GitHub](h
 
 When integrating TypeScript with the Solid JSX compiler, there are crucial settings to make for a seamless interaction:
 
-1. `"jsx": "preserve"` in the `tsconfig.json` retains the original JSX form. Solid's JSX transformation is incompatible with TypeScript's JSX transformation.
+1. `"jsx": "preserve"` in the `tsconfig.json` retains the original JSX form. 
+Solid's JSX transformation is incompatible with TypeScript's JSX transformation.
 2. `"jsxImportSource": "solid-js"` designates SolidJS as the source of JSX types.
 
 For a basic setup, your `tsconfig.json` should resemble:
@@ -615,8 +616,12 @@ declare module "solid-js" {
 #### Custom directives
 
 Custom directives can be applied using the [`use:___`]() attribute.
-These directives typically accept two arguments: the element or component they are applied to, and the value passed to them as a JSX attribute.
-The conventional `Directives` interface only facilitates checking the value, i.e., the second argument. 
+These directives typically accept two arguments: the target element or component, and the value passed to them by the JSX attribute.
+While the conventional `Directives` interface focuses on type-checking the value, which is the second argument, there are additional considerations:
+
+* A single accessor is always received, limiting the ability to pass in multiple arguments. 
+The closest appropximation is to use syntax such as `<div use:foo={["string", "array"]} />`.
+* The behaviour of TypeScript's type checking for module augmentation allows `DirectiveFunctions` to potentially accept functions that do not strictlly meet the type requirements.
 
 ```tsx
 function model(
@@ -644,7 +649,7 @@ let [name, setName] = createSignal("");
 <input type="text" use:model={[name, setName]} />;
 ```
 
-In using `DirectiveFunctions`, there's the ability to check both arguments (if present) by detailing the entire function type:
+In using `DirectiveFunctions`, there's the ability to check both arguments (if present) by detailing the entire function type
 
 ```tsx
 function model(element: HTMLInputElement, value: Accessor<Signal<string>>) {

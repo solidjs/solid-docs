@@ -159,8 +159,8 @@ The reason `undefined` is included in the type is because the signal was not ini
 Therefore, its initial state can be `undefined`.
 
 The signal setter, `setCount`, is of type `Setter<number | undefined>`. 
-This complex type roughly resembles `(value? : number | ((prev?: number) => number)) => number`, accommodating both a direct number or a function which takes a potential pervious value that results in a number.
-Since the signal's start is undefined, both the direct number and the function's number parameter are optional.
+This complex type roughly resembles `(value? : number | ((prev: number | undefined) => number | undefined)) => number | undefined`, accommodating both a direct number or a function which takes a potential previous value that results in a number.
+Since the signal contains `undefined`, its setter can be invoked with no parameters to set the signal's value to `undefined`.
 
 When a signal is designed to store functions, its setter function won't directly accept new functions as values.
 This is because the setter can't determine whether the function should be executed to get the actual value. 
@@ -190,20 +190,23 @@ type Data = { count: number; name: string };
 
 When you invoke `useContext(dataContext)`, it returns the type contained within the context. 
 For example, if the context is of type `Context<Data | undefined>`, then using `useContext` with it will naturally yield a result of type `Data | undefined`. 
-The `| undefined` part signifies that the context might not be defined in the component's ancestor hierarchy.
-`dataContext` is understood as `Context<Data | undefined>`. 
-Invoking `useContext(dataContext)` mirrors this type, returning `Data | undefined`.
-The `| undefined` arises when context is not defined in the component's ancestors, which leads `useContext` to yield `undefined`.
+The `| undefined` part signifies that the context may not be defined in the component's ancestor hierarchy.
 
-Much like what was seen the [default values](#default-values) in signals, you can avoid the `| undefined` in the type through explicity type definitions to avoid redudancy:
+`dataContext` will be understood as `Context<Data | undefined>`. 
+Invoking `useContext(dataContext)` mirrors this type, returning `Data | undefined`.
+The `| undefined` arises since it cannot be determined if the context's value will be used in a where it has been assigned. 
+
+Much like what was seen with [default values](#default-values) in signals, `| undefined` can be avoided in the type by giving a default value that will be returned if no value is assigned by a context provider.
 
 ```typescript
 const dataContext = createContext({ count: 0, name: "" });
 ```
 
-By providing a default value, TypeScript determines that `dataContext` is `Context<{ count: number, name: string }>` -- equivalent to `Context<Data>` without the `| undefined`. 
+By providing a default value, TypeScript determines that `dataContext` is `Context<{ count: number, name: string }>`.
+This is equivalent to `Context<Data>` but without `| undefined`. 
 
-A common approach is forming a factory function to generate a context's value. By using TypeScripts [`ReturnType`](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#return-type-annotations), the return type of this function can be used to type this context:
+A common approach to this is forming a factory function to generate a context's value. 
+By using TypeScript's [`ReturnType`](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#return-type-annotations), the return type of this function can be used to type this context:
 
 ```tsx
 export const makeCountNameContext = (initialCount = 0, initialName = "") => {
@@ -219,7 +222,7 @@ type CountNameContextType = ReturnType<typeof makeCountNameContext>;
 export const CountNameContext = createContext<CountNameContextType>();
 ```
 
-`CountNameContextType` corresponds to the result of `makeCountNameContext`:
+`CountNameContextType` will correspond to the result of `makeCountNameContext`:
 
 ```tsx
 [
@@ -228,15 +231,22 @@ export const CountNameContext = createContext<CountNameContextType>();
 ]
 ```
 
-To retrieve the context, using `useCountNameContext` which has aa type signature of `() => CountNameContextType | undefined`.
+To retrieve the context use `useCountNameContext`, which has a type signature of `() => CountNameContextType | undefined`.
 
-In scenarios where you may wish to avoid `undefined` as a possible type, you can assert that the context will always be present:
+In scenarios where you may wish to avoid `undefined` as a possible type, you can assert that the context will always be present
+Additionally, throwing a readable error may be preferable to non-null asserting:
 
 ```tsx
-export const useCountNameContext = () => useContext(CountNameContext)!;
+export const useCountNameContext = () => {
+  const countName = useContext(CountNameContext);
+  if (!countName) {
+    throw new Error("useCountNameContext should be called inside its ContextProvider");
+  }
+  return countName;
+}
 ```
 
-**Note:** A more secure route is to supply a default value to `createContext` to make sure that context is perpetually defined.
+**Note:** While supplying a default value to `createContext` can make the context perpetually defined, this approach may not always be advisable. Depending on the use case, it could lead to silent failures, which may be less preferable.
 
 ### Components
 

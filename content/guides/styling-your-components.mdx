@@ -137,10 +137,6 @@ function Component() {
 
 By changing the file extension of the imported styles to `.less`, Vite will recognize it as a LESS file and compile it to CSS on demand.
 
-## CSS-in-JS
-
-//add content
-
 ## CSS modules
 
 CSS Modules are CSS files where class names, animations, and media queries are scoped locally by default. 
@@ -220,11 +216,129 @@ function Component() {
 }
 ```
 
- If your styles have dashes in their names, use bracket notation:
+**Note:** If your styles have dashes in their names, use bracket notation:
 
 ```jsx
 const className = styles["foo-with-dash"];
 ```
+
+## CSS-in-JS
+
+CSS-in-JS is a modern approach to styling components.
+Within the [Solid ecosystem](/ecosystem), there have been various libraries and solutions available for working with CSS-in-JS, including but not limited to:
+
+* [Solid Styled Components](https://github.com/solidjs/solid-styled-components)
+* [Solid Styled JSX](https://github.com/solidjs/solid-styled-jsx)
+
+CSS-in-JS libraries often come with their own set of APIs and methods for defining, updating, and applying styles dynamically.
+Many also offer features like theming, media queries, and server-side rendering support right out of the box.
+
+**Note:** Before choosing a CSS-in-JS library, it is recommended to check its compatability with Solid.
+
+### Macaron
+
+[Macaron](https://macaron.js.org/) is compile-time CSS-in-JS library that offers type safety. 
+
+#### Installation
+
+1. Install and setup the Macaron plugin for your bundler:
+
+```bash
+# npm
+npm install @macaron-css/core @macaron-css/solid
+
+# yarn
+yarn add @macaron-css/core @macaron-css/solid
+```
+
+2. Within your `vite.config.js` folder, add the macaron plugin prior to other plugins:
+
+```js
+import { macaronVitePlugin } from '@macaron-css/vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [
+    macaronVitePlugin(),
+    // other plugins
+  ],
+});
+```
+
+#### Usage
+
+1. Import `styled` from `@macaron-css/solid` and create a styled component:
+
+```jsx
+// button.tsx
+import { styled } from '@macaron-css/solid';
+
+const Button = styled('button', {});
+```
+
+2. Add styles that will be applied to the components by default:
+
+```jsx
+import { styled } from '@macaron-css/solid';
+
+const Button = styled('button', {
+  base: {
+    backgroundColor: 'red',
+    borderRadius: '10px',
+  },
+});
+```
+Variants can be added using the `variants` key:
+
+```jsx
+mport { styled } from '@macaron-css/solid';
+
+const Button = styled('button', {
+    base: {
+      backgroundColor: 'red',
+      borderRadius: '10px',
+    },
+    variants: {
+      color: {
+        violet: {
+          backgroundColor: 'violet',
+        },
+        gray: {
+          backgroundColor: 'gray',
+        },
+      }
+    }
+  });
+```
+
+Additionally, the `defaultVariants` feature is set to `variants` by default. This can be overrided at the time of usage:
+
+```jsx
+mport { styled } from '@macaron-css/solid';
+
+const Button = styled('button', {
+    base: {
+      backgroundColor: 'red',
+      borderRadius: '10px',
+    },
+    variants: {
+      color: {
+        violet: {
+          backgroundColor: 'violet',
+        },
+        gray: {
+          backgroundColor: 'gray',
+        },
+      }
+    },
+    defaultVariants: {
+      color: 'blue'
+    },
+  });
+```
+
+These components can be used like any other Solid component, with type-safe props derived from your variants. 
+For more information on how to use macaron, visit their [documentation](https://macaron.js.org/docs/installation).
 
 ## CSS frameworks
 
@@ -235,7 +349,7 @@ CSS frameworks provide pre-styled components and utility classes to speed up dev
 [Tailwind CSS](https://tailwindcss.com/) is an on-demand utility CSS library that integrates seamlessly with Solid as a built-in PostCSS plugin.
 
 #### Installation
-To get started with Tailwind CSS in your Solid app:
+1. Install Tailwind CSS as a development dependency:
 
 ```bash
 npm i --save-dev tailwindcss postcss autoprefixer
@@ -252,10 +366,7 @@ yarn add --dev tailwindcss postcss autoprefixer
 
 npx tailwindcss init -p
 ```
-**Configuration**
-
-Tailwind CSS is configuration-driven. 
-After initializing, a `tailwind.config.js` file will be created at the root of your project directory:
+2. Since TailwindCSS is configuration-driven, after initializing, a `tailwind.config.js` file will be created at the root of your project directory:
 
 ```js
 /** @type {import('tailwindcss').Config} */

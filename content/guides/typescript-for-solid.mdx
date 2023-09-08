@@ -151,20 +151,22 @@ import type { Signal, Accessor, Setter } from "solid-js";
 type Signal<T> = [get: Accessor<T>, set: Setter<T>];
 ```
 
-In this case, the `count` signal getter has the type `Accessor<number | undefined>`. 
-In Solid, `Accessor<T>` is equivalent to `() => T`. 
-Here, it means `count` is a function that returns either a `number` or `undefined`.
+In Solid, a signal's getter, like `count`, is essentially a function that returns a specific type. 
+In this case, the type is `Accessor<number | undefined>`, which translates to a function `() => number | undefined`. 
+Since the signal was not initialized, its initial state is `undefined`, therefore `undefined` is included in its type.
 
-The reason `undefined` is included in the type is because the signal was not initialized. 
-Therefore, its initial state can be `undefined`.
+The corresponding setter, `setCount`, has a more complex type: `Setter<number | undefined>`. 
+This type can be roughly understood as a function that takes either a direct number or another function as its argument. 
+This function argument, in turn, can take the previous value of the signal and return a new value. 
+Both the input and output can be either a number or `undefined`. 
+Notably, invoking `setCount` without any parameters will set the signal's value to `undefined`.
 
-The signal setter, `setCount`, is of type `Setter<number | undefined>`. 
-This complex type roughly resembles `(value? : number | ((prev: number | undefined) => number | undefined)) => number | undefined`, accommodating both a direct number or a function which takes a potential previous value that results in a number.
-Since the signal contains `undefined`, its setter can be invoked with no parameters to set the signal's value to `undefined`.
+When using the function form of the setter, a single argument is provided, which can be ignored if desired.
+Additionally, the return type of the setter will align with the type of value passed into it, echoing the behavior expected from a typical assignment operation.
 
-When a signal is designed to store functions, its setter function won't directly accept new functions as values.
-This is because the setter can't determine whether the function should be executed to get the actual value. 
-In these situations, you should use the callback form of the setter: `setSignal(() => value)`.
+If a signal is intended to store functions, the setter won't directly accept new functions as values. 
+This is because it can not distinguish whether the function should be executed to yield the actual value or stored as is. 
+In these situations, using the callback form of the setter is recommended: `setSignal(() => value)`.
 
 
 #### Default values

@@ -14,10 +14,10 @@ For developers eager to get started, we offer TypeScript templates on [GitHub](h
 
 ## Configuring TypeScript
 
-When integrating TypeScript with the Solid JSX compiler, there are crucial settings to make for a seamless interaction:
+When integrating TypeScript with the Solid JSX compiler, there are some settings to make for a seamless interaction:
 
 1. `"jsx": "preserve"` in the `tsconfig.json` retains the original JSX form. 
-Solid's JSX transformation is incompatible with TypeScript's JSX transformation.
+This is because Solid's JSX transformation is incompatible with TypeScript's JSX transformation.
 2. `"jsxImportSource": "solid-js"` designates SolidJS as the source of JSX types.
 
 For a basic setup, your `tsconfig.json` should resemble:
@@ -32,8 +32,8 @@ For a basic setup, your `tsconfig.json` should resemble:
 ```
 
 For projects with diverse JSX sources, such as a blend of React and Solid, some flexibility does exist. 
-While it's possible to set a default `jsxImportSource` in `tsconfig.json` which corresponds with the majority of your files, TypeScript also allows file-level overrides. 
-Utilizing specific pragmas within `.tsx` files facilitates this:
+While it's possible to set a default `jsxImportSource` in the `tsconfig.json`, which will correspond with the majority of your files, TypeScript also allows file-level overrides. 
+Using specific pragmas within `.tsx` files facilitates this:
 
 ```javascript
 /** @jsxImportSource solid-js */
@@ -45,11 +45,11 @@ or, if using React:
 ```
 
 Opting for the React JSX pragma means having React and its associated dependencies fully integrated into the project.
-Furthermore, it makes sure the project's architecture is primed for React JSX file handling is vital.
+Additionally, it makes sure the project's architecture is primed for React JSX file handling is vital.
 
 ## Migrating from JavaScript to TypeScript
 
-Transitioning from JavaScript to TypeScript in a Solid project offers the benefits of static typing. Here are some of the key steps and considerations you should bear in mind during the migration:
+Transitioning from JavaScript to TypeScript in a Solid project offers the benefits of static typing. To migrate to Typescript:
 
 1. Install TypeScript into your project.
 
@@ -59,7 +59,7 @@ npm install --save-dev typescript
 
 2. Run `npx tsc --init` to generate a `tsconfig.json` file.
 
-3. Update the contents of your `tsconfig.json` to match Solid's configuration:
+3. Update the contents of the `tsconfig.json` to match Solid's configuration:
 
 ```json
 {
@@ -95,7 +95,7 @@ function MyTsComponent(): JSX.Element {
 export default MyTsComponent;
 ```
 
-To use in an existing JavaScript component, import the TypeScript component:
+If using an existing JavaScript component, import the TypeScript component:
 
 ```javascript
 import MyTsComponent from "./MyTsComponent";
@@ -113,7 +113,7 @@ function MyJsComponent() {
 <Aside>
 **Note:** If you wish to change the entry point file from `index.jsx` to `index.tsx`, you need to modify the `src` attribute in `<script>` to look like the following:
 
-```htmlembedded
+```html
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -133,17 +133,17 @@ function MyJsComponent() {
 Solid is written in TypeScript, meaning everything is typed out of the box.
 
 The [API Documentation](/references) details the types of all the API calls. 
-In addition, there are several helpful type definitions to make it easier when you need to specify explicit types.
+In addition, there are several helpful type definitions to make it easier for specifying explicit types.
 
 ### Signals
 
-Using `createSignal<T>`, you can define the signal's type as `T`. 
+Using `createSignal<T>`, a signal's type can be defined as `T`. 
 
-```typescript
+```ts
 const [count, setCount] = createSignal<number>();
 ```
 
-Here, `createSignal` has the return type `Signal<number | undefined>`, corresponding to the type passed into it, and `undefined` as it was uninitialized. 
+Here, `createSignal` has the return type `Signal<number | undefined>`, which corresponds to the type passed into it, and `undefined` as it was uninitialized. 
 This resolves to a getter-setter [tuple](https://www.typescriptlang.org/docs/handbook/2/objects.html#tuple-types), both of which are generically typed:
 
 ```typescript
@@ -155,23 +155,31 @@ In Solid, a signal's getter, like `count`, is essentially a function that return
 In this case, the type is `Accessor<number | undefined>`, which translates to a function `() => number | undefined`. 
 Since the signal was not initialized, its initial state is `undefined`, therefore `undefined` is included in its type.
 
-The corresponding setter, `setCount`, has a more complex type: `Setter<number | undefined>`. 
-This type can be roughly understood as a function that takes either a direct number or another function as its argument. 
-This function argument, in turn, can take the previous value of the signal and return a new value. 
-Both the input and output can be either a number or `undefined`. 
-Notably, invoking `setCount` without any parameters will set the signal's value to `undefined`.
+The corresponding setter, `setCount`, has a more complex type: 
+
+```ts
+Setter<number | undefined>. 
+```
+
+Essentially, this type means that the function can accept either a direct number or another function as its input.
+If provided with a function, that function can take the signal's previous value as its parameter and return a new value. 
+Both the initial and resulting values can be a number or `undefined`. Importantly, calling `setCount` without any arguments will reset the signal's value to `undefined`.
 
 When using the function form of the setter, a single argument is provided, which can be ignored if desired.
 Additionally, the return type of the setter will align with the type of value passed into it, echoing the behavior expected from a typical assignment operation.
 
 If a signal is intended to store functions, the setter won't directly accept new functions as values. 
 This is because it can not distinguish whether the function should be executed to yield the actual value or stored as is. 
-In these situations, using the callback form of the setter is recommended: `setSignal(() => value)`.
+In these situations, using the callback form of the setter is recommended: 
+
+```ts
+setSignal(() => value)
+```
 
 
 #### Default values
 
-By providing default values when you call `createSignal`, you can avoid the need for explicit type specification and eliminate the possibility of the `| undefined` type. 
+By providing default values when `createSignal` is callled, the need for explicit type specification is avoided and the possibility of the `| undefined` type is eliminated. 
 This leverages type inference to determine the type automatically:
 
 ```typescript
@@ -184,21 +192,21 @@ This means that `count` and `name` directly receive the types `Accessor<number>`
 
 ### Context
 
-Just as signals utilize `createSignal<T>`, context uses `createContext<T>`, which is parameterized by the type `T` of the context's value:
+Just as signals use `createSignal<T>`, context uses `createContext<T>`, which is parameterized by the type `T` of the context's value:
 
 ```tsx
 type Data = { count: number; name: string };
 ```
 
-When you invoke `useContext(dataContext)`, it returns the type contained within the context. 
-For example, if the context is of type `Context<Data | undefined>`, then using `useContext` with it will naturally yield a result of type `Data | undefined`. 
-The `| undefined` part signifies that the context may not be defined in the component's ancestor hierarchy.
+When invoking `useContext(dataContext)`, the type contained within the context is returned. 
+For example, if the context is `Context<Data | undefined>`, then with using `useContext` a result of type `Data | undefined` will naturally be yielded. 
+The `| undefined` signifies that the context may not be defined in the component's ancestor hierarchy.
 
 `dataContext` will be understood as `Context<Data | undefined>`. 
 Invoking `useContext(dataContext)` mirrors this type, returning `Data | undefined`.
 The `| undefined` arises since it cannot be determined if the context's value will be used in a where it has been assigned. 
 
-Much like what was seen with [default values](#default-values) in signals, `| undefined` can be avoided in the type by giving a default value that will be returned if no value is assigned by a context provider.
+Much like [default values](#default-values) in signals, `| undefined` can be avoided in the type by giving a default value that will be returned if no value is assigned by a context provider:
 
 ```typescript
 const dataContext = createContext({ count: 0, name: "" });
@@ -233,9 +241,9 @@ export const CountNameContext = createContext<CountNameContextType>();
 ]
 ```
 
-To retrieve the context use `useCountNameContext`, which has a type signature of `() => CountNameContextType | undefined`.
+To retrieve the context, use `useCountNameContext` which has a type signature of `() => CountNameContextType | undefined`.
 
-In scenarios where you may wish to avoid `undefined` as a possible type, you can assert that the context will always be present
+In scenarios where `undefined` needs to be avoided as a possible type, assert that the context will always be present.
 Additionally, throwing a readable error may be preferable to non-null asserting:
 
 ```tsx
@@ -248,7 +256,8 @@ export const useCountNameContext = () => {
 }
 ```
 
-**Note:** While supplying a default value to `createContext` can make the context perpetually defined, this approach may not always be advisable. Depending on the use case, it could lead to silent failures, which may be less preferable.
+**Note:** While supplying a default value to `createContext` can make the context perpetually defined, this approach may not always be advisable. 
+Depending on the use case, it could lead to silent failures, which may be less preferable.
 
 ### Components
 
@@ -266,18 +275,16 @@ const MyComponent: Component<MyProps> = (props) => {
 
 A `JSX.Element` denotes anything renderable by Solid, which could be a DOM node, array of JSX elements, or functions yielding `JSX.Element`.
 
-For a simple example, here's a counter:
+Trying to pass unneccessary props or children will result in type errors:
 
 ```tsx
+// in counter.tsx
 const Counter: Component = () => {
   const [count, setCount] = createSignal(0);
   return <button onClick={() => setCount(c => c + 1)}>{count()}</button>;
 };
-```
 
-Trying to pass unneccessary props or children will result in type errors:
-
-```tsx
+// in app.tsx
 <Counter />;  // ✔️
 <Counter initial={5} />;  // ❌: No 'initial' prop defined
 <Counter>hi</Counter>;  // ❌: Children aren't expected
@@ -325,7 +332,7 @@ Solid offers subtypes for components dealing uniquely with children:
 ##### Components without the `Component` types
 
 Using the `Component` types is a matter of preference over a strict requirement.
-Any function that takes props and returns a JSX.Element qualifies as a valid component.
+Any function that takes props and returns a JSX.Element qualifies as a valid component:
 
 ```tsx 
 // arrow function 
@@ -338,8 +345,8 @@ function MyComponent(props: MyProps): JSX.Element { ... }
 function MyComponent(): JSX.Element { ... }
 ```
 
-It is worth noting that if you want to create a generic component, the `Component` types will **not** be applicable. 
-Instead, you will need to define your generics explicitly:
+It is worth noting that if a generic component is created, the `Component` types will **not** be applicable. 
+Instead, the generics will have to be typed explicitly:
 
 ```tsx
 // For arrow functions, the syntax <T> by itself is invalid in TSX because it could be confused with JSX.
@@ -360,26 +367,25 @@ These `Props` types also accept the same generic types as their associated `Comp
 #### Basics
 
 In Solid, the type for event handlers is specified as `JSX.EventHandler<TElement, TEvent>`.
-Here, `TElement` refers to the type of the element the event is linked to, and `TEvent` indicates the type of the event itself. 
-You can opt to use this type in your code as an alternative to `(event: TEvent) => void`. 
-Doing this will ensure that `currentTarget` and `target` are accurately typed within the event object and also allow you to avoid using inline event handlers.
+Here, `TElement` refers to the type of the element the event is linked to. 
+`TEvent` will indicate the type of the event itself which can serve as an alternative to `(event: TEvent) => void` in the code.
+This approach guarantees accurate typing for `currentTarget` and `target` within the event object while also eliminating the need for inline event handlers.
 
 ```typescript
 import type { JSX } from "solid-js";
 
-// Here's how to define an event handler using the `EventHandler` type:
+// Defining an event handler using the `EventHandler` type:
 const onInput: JSX.EventHandler<HTMLInputElement, InputEvent> = (event) => {
     console.log("Input changed to", event.currentTarget.value);
 };
 
-// You can then attach this handler to an input element:
+// Then attach handler to an input element:
 <input onInput={onInput} />;
 ```
 
 #### Inline handlers
 
-When you define an event handler inline with a JSX attribute, the handler is automatically typed for you.
-This means you get the type inference and checking without any additional work:
+Defining an event handler inline within a JSX attribute automatically provides type inference and checking, eliminating the need for additional typing efforts:
 
 ```tsx
 <input
@@ -396,16 +402,17 @@ In the context of event delegation, the difference between `currentTarget` and `
 * `currentTarget`: Represents the DOM element that the event handler is attached to.
 * `target`: Any DOM element within the hierarchy of `currentTarget` that has initiated the event.
 
-While `currentTarget` will always be of type `T` as defined by `JSX.EventHandler<T, E>`, the `target` type can be more general, such as ny DOM element. 
-However, when it comes to specific events such as `Input` and `Focus` events directly attached to input elements, `target` will be typed as `HTMLInputElement`.
+In the type signature `JSX.EventHandler<T, E>`, `currentTarget` will consistently have the type `T`. 
+However, the type of target could be more generic, potentially any DOM element. 
+For specific events like `Input` and `Focus` that are directly associated with input elements, the target will have the type `HTMLInputElement`.
 
 ### `ref` attribute
 
 #### Basics
 
-In a non-TypeScript setting, when you utilize the `ref` attribute, Solid assigns the associated DOM element to the variable once rendered:
+In an environment without TypeScript, using the `ref` attribute in Solid ensures that the corresponding DOM element is assigned to the variable after it is rendered.:
 
-```javascript
+```js
 let divRef;
 console.log(divRef); // Outputs: undefined
 onMount(() => {
@@ -414,11 +421,11 @@ onMount(() => {
 return <div ref={divRef} />;
 ```
 
-With TypeScript, however, especially under strict `null` checks, typing such variables can be a challenge.
+In a TypeScript environment, particularly with strict `null` checks enabled, typing these variables can be a challenge.
 
-A safe TypeScript pattern is to accept that `divRef` can be `undefined` initially, and then enforce checks when accessing it:
+A safe approach in TypeScript is to acknowledge that `divRef` may initially be `undefined` and to implement checks when accessing it:
 
-```typescript
+```ts
 let divRef: HTMLDivElement | undefined;
 // This would be flagged as an error during compilation
 divRef.focus(); 
@@ -429,7 +436,7 @@ onMount(() => {
 return <div ref={divRef}>...</div>;
 ```
 
-In the context of the [`onMount`](/reference/onMount) function, since it's executed post-render, a non-`null` assertion (!) can be used:
+Within the scope of the `onMount` function, which runs after rendering, a non-`null` assertion (indicated by the exclamation mark `!`) can be used:
 
 ```typescript
 onMount(() => {
@@ -437,7 +444,7 @@ onMount(() => {
 });
 ```
 
-An alternative pattern is to avoid `null` at the assignment level, and then use a definite assignment assertion in the `ref` attribute:
+Another approach is to bypass `null` during the assignment phase and then apply a definite assignment assertion within the `ref` attribute:
 
 ```typescript
 let divRef: HTMLDivElement;
@@ -449,19 +456,21 @@ onMount(() => {
 return <div ref={divRef!}>...</div>;
 ```
 
-Here, the `divRef!` in the `ref` attribute informs TypeScript that `divRef` will be assigned after this point, aligning more with Solid's behavior.
+In this case, using `divRef!` within the `ref` attribute signals to TypeScript that `divRef` will receive an assignment after this stage, which is more in line with how Solid works.
 
 <Aside>
-  **Caution**: Although TypeScript flags erroneous use of `ref`s before they're defined in the JSX block, it doesn't currently flag undefined variables within certain nested functions in Solid. 
-  Thus, extra care is needed when using `ref`s within functions like [`createMemo`](/reference/createMemo), [`createRenderEffect`](/reference/createRenderEffect), and [`createComputed`](/reference/createComputed).
+  **Caution**: 
+  While TypeScript does catch incorrect usage of refs that occur before their JSX block definition, it currently does not identify undefined variables within certain nested functions in Solid. 
+  Therefore, additional care is needed when using `ref`s in functions such as [`createMemo`](/reference/createMemo), [`createRenderEffect`](/reference/createRenderEffect), and [`createComputed`](/reference/createComputed).
 </Aside>
 
-Lastly, there's a less-safe pattern where the definite assignment assertion is declared right when the variable is initialized.
-This technique bypasses TypeScript's assignment checks for that specific variable, providing a quick workaround at the cost of potential runtime errors.
+Finally, a riskier approach involves using the definite assignment assertion right at the point of variable initialization. 
+While this method bypasses TypeScript's assignment checks for that particular variable, it offers a quick but less secure workaround that could lead to runtime errors.
 
 ```typescript
 let divRef!: HTMLDivElement;
-// This will be permitted but will throw an error at runtime
+
+// Permitted but will throw an error at runtime:
 divRef.focus();
 onMount(() => {
   divRef.focus(); 
@@ -471,7 +480,7 @@ return <div ref={divRef}>...</div>;
 
 ## Control flow based narrowing
 
-Control flow based narrowing refers to narrowing the type of a value through control flow. 
+Control flow-based narrowing involves refining the type of a value by using control flow statements.
 
 Consider the following:
 
@@ -499,7 +508,7 @@ return (
 
 ```
 
-In this instance, using optional chaining is a good solution:
+In this case, using optional chaining serves as an good alternative:
 
 ```tsx
 return <div>{user()?.name}</div>;
@@ -515,7 +524,7 @@ return (
 );
 ```
 
-This is similar to using the keyed option, but instead provides an accessor so the children are not recreated whenever `when` changes.
+This approach is simillar using the keyed option, but offers an accessor to prevent the recreation of children each time the `when` value changes.
 
 ```tsx
 return (
@@ -527,8 +536,8 @@ return (
 );
 ```
 
-This may not always be possible. 
-For example, when a `UserPanel` component strictly accepts a `User`:
+However, this might not always be possible. 
+For instance, when a `UserPanel` component exclusively requires a `User` object:
 
 ```tsx
 return (
@@ -538,25 +547,6 @@ return (
     </Show>
   </div>
 );
-```
-
-This is similar to using the keyed option, but an accessor is provided so that the children are not recreated whenever `when` changes.
-
-```tsx
-return (
-  <div>
-    <Show keyed when={user()}>
-      {nonNullishUser => nonNullishUser.name}
-    </Show>
-  </div>
-);
-```
-
-Sometimes, this may not be possible. For instance, with a `UserPanel` component that strictly accepts a `User`:
-
-```tsx
-return <UserPanel user={user()} />;
-//                        ^ Type 'undefined' is not assignable to type 'User'.
 ```
 
 In refactoring `UserPanel` to accept `undefined`, this minimizes the changes required when `user` goes from `undefined` to `User`.
@@ -571,7 +561,7 @@ return (
 );
 ```
 
-Casting can also be a valid solution so long as the assumption is valid:
+Casting can also be a solution so long as the assumption is valid:
 
 ```tsx
 return <div>{user() && (user() as User).name}</div>
@@ -611,8 +601,8 @@ The following alternative also works when using `Show`:
 
 ### Custom event handlers
 
-For custom events in Solid, the [`on:___`]() and [`oncapture:___`]() attributes can be utilized. 
-To type these events, you'll need to extend Solid's JSX namespace.
+To handle custom events in Solid, the attributes `on:___` and `oncapture:___` can be used. 
+Typing these events requires an extension of Solid's JSX namespace.
 
 ```tsx
 class NameEvent extends CustomEvent {
@@ -640,13 +630,14 @@ declare module "solid-js" {
 ```
 
 <Aside>
-**Note**: By default, using native events like `mousemove` with the `on` prefix (e.g., <div on:mousemove={e => {}} />) will result in a TypeScript error. 
-This is because they are not included in the custom event typings for Solid.
-To solve this, extend the `CustomEvents` and `CustomCaptureEvents` interfaces to include events from the `HTMLElementEventMap`:
+**Note**: 
+By default, using native events like `mousemove` with the `on` prefix — for example, `<div on:mousemove={e => {}} />` —  will trigger a TypeScript error. 
+This occurs because these native events are not part of Solid's custom event type definitions.
+To solve this, `CustomEvents` and `CustomCaptureEvents` interfaces can be extended to include events from the `HTMLElementEventMap`:
 
 To include all native events:
 
-```typescript
+```ts
 declare module "solid-js" {
   namespace JSX {
     interface CustomEvents extends HTMLElementEventMap {}
@@ -655,9 +646,9 @@ declare module "solid-js" {
 }
 ```
 
-To include specific native events, you can pick certain events (e.g. `mousemove` and `pointermove`):
+To include specific native events, certain events can chosen (e.g. `mousemove` and `pointermove`):
 
-```typescript
+```ts
 declare module "solid-js" {
   namespace JSX {
     interface CustomEvents extends Pick<HTMLElementEventMap, "mousemove" | "pointermove"> {}
@@ -668,9 +659,10 @@ declare module "solid-js" {
 
 #### Forcing properties and custom attributes 
 
-Solid's [`prop:___`]() allows forcing properties, while [`attr:___`]() permits custom attributes. 
+In Solid, the [`prop:___`]() directive allows explicit property setting, which is useful for retaining the original data types like objects or arrays.
+[`attr:___`]() directive allows custom attributes, on the other hand, is effective for handling string-based HTML attributes.
 
-```typescript
+```ts
 declare module "solid-js" {
   namespace JSX {
     interface ExplicitProperties {
@@ -691,15 +683,14 @@ declare module "solid-js" {
 
 #### Custom directives
 
-Custom directives can be applied using the [`use:___`]() attribute.
-These directives typically accept two arguments: the target element, and the value passed to them by the JSX attribute.
-The conventional `Directives` interface directly types the types that can be passed to the directive (i.e. the type of `value` in `<div use:foo={value} />`).
-The newer `DirectiveFunctions` interface accepts the type of a function instead, from which it will derive the valid types of element(s) and values. 
+In Solid, custom directives can be applied using the the `use:___` attribute, which usually accept a target element and a JSX attribute value. 
+The traditional `Directives` interface types these values directly (i.e. the type of `value` in `<div use:foo={value} />`).
+However, the newer `DirectiveFunctions` interface takes a function type and derives the valid types for elements and values from it.
 
 There are additional considerations:
-* A single accessor is always passed to the directive function, so to accept multiple arguments, use `<div use:foo={[a, b]} />`, and accept an accessor to a tuple.
-* This applies even when using a boolean directive (`<div use:foo />`), or when passing a static value to a directive (`<div use:foo={false} />`).
-* `DirectiveFunctions` can accept functions that do not strictly meet the type requirements, in which case they will be ignored. 
+* The directive function always receives a single accessor. For multiple arguments, the syntax `<div use:foo={[a, b]} />` can be used, and an accessor to a tuple should be accepted.
+* The same principle holds for boolean directives, as seen in `<div use:foo />`, and for directives with static values, like `<div use:foo={false} />`.
+* `DirectiveFunctions` can accept functions that do not strictly meet the type requirements; such cases will be ignored. 
 
 ```tsx
 function model(
@@ -727,7 +718,7 @@ let [name, setName] = createSignal("");
 <input type="text" use:model={[name, setName]} />;
 ```
 
-In using `DirectiveFunctions`, there's the ability to check both arguments (if present) by detailing the entire function type
+In using `DirectiveFunctions`, there's the ability to check both arguments (if present) by detailing the entire function type:
 
 ```tsx
 function model(element: HTMLInputElement, value: Accessor<Signal<string>>) {
@@ -761,7 +752,7 @@ declare module "solid-js" {
 }
 ```
 
-Although the `Directives` interface can be used to restrict the value passed to the directive as a JSX attribute, using `DirectiveFunctions` ensures both the element and value align with the expected types, as demonstrated below.
+While the `Directives` interface can limit the value type passed via JSX attribute to the directive, the `DirectiveFunctions` interface ensures that both element and value align with the expected types, as shown below:
 
 ```tsx
 {/* This is correct */}
@@ -775,13 +766,16 @@ Although the `Directives` interface can be used to restrict the value passed to 
 
 ##### Addressing import issues with directives
 
-When using directives imported from another file/module, TypeScript may eliminate the import if it mistakenly perceives it as a type. 
+If directives are imported from a separate file or module, TypeScript might mistakenly remove the import thinking it is a type.
 
-* Set the `onlyRemoveTypeImports: true` option in `babel-preset-typescript`. 
-If using `vite-plugin-solid`, this can be configured with `solidPlugin({ typescript: { onlyRemoveTypeImports: true } })` in `vite.config.ts`. 
-However, this approach mandates judicious use of `export type` and `import type`.
-* Including a statement in the importing module ensures TypeScript retains the directive's import, as seen below.
-[Tree-shaking](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking) tools will typically exclude this code from the final bundle.
+To prevent this:
+
+* Configure `onlyRemoveTypeImports: true` in `babel-preset-typescript`.
+* When using `vite-plugin-solid`, set `solidPlugin({ typescript: { onlyRemoveTypeImports: true } })` in `vite.config.ts`.
+
+Careful management of export type and import type is required.
+Including a statement in the importing module ensures TypeScript keeps the directive's import.
+[Tree-shaking](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking) tools usually omit this code from the final bundle.
 
 ```tsx
 import { directive } from "./directives.js"

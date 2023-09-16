@@ -469,79 +469,143 @@ onMount(() => {
 return <div ref={divRef}>...</div>;
 ```
 
-## Control flow narrowing
+## Control flow based narrowing
 
-When using control flow components in Solid, such as [`<Show>`](/reference/show), it's common to conditionally display content based on the presence of certain data.
-This, however, can introduce some type-checking challenges, especially when attempting to manipulate the daata within these components.
+Control flow based narrowing refers to narrowing the type of a value through control flow. 
 
-Consider a situation where you want to show a name only when it's defined using a Solid signal:
-
-```typescript
-const [name, setName] = createSignal<string>();
-return (
-  <Show when={(() => {
-      const v = data()
-      return v && v.type === "user" && v // T: User | undefined
-    })()}>
-  )
-```
-
-Accessing the callback may throw an error if the `when` prop is nullish or false at the time of access.
-Usually this is not the case, however in `onCleanup` or asynchronous contexts it can be.
-
-TypeScript may not like this.
-While you can understand that the second call to `name()` happens only if the first is truthy, TypeScript cannot. 
-It may flag an error indicating that `name()` could potentially be `undefined` when `.replace()` is called.
-
-There are a few ways to tackle this:
-
-1. **Non-Null Assertion**
-Use TypeScript's [non-null assertion operator (!).](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#non-null-assertion-operator-postfix-) 
-This operator tells TypeScript you're confident the value isn't `null` or `undefined`:
-
-```typescript
-return <Show when={name()}>Hello {name()!.replace(/\s+/g, "\xa0")}!</Show>;
-```
-While this may be a quick option, incorrectly asserting can lead to runtime errors if the value does turn out to be `null` or `undefined`.
-
-2. **Callback form of Show**
-
-Solid provides a callback form for its [`<Show>`](/reference/show) component. 
-In this form, the value that makes the when prop true is passed into the component:
-
-```typescript
-const [data, setData] = createSignal<User | Admin>() // T: Signal<User | Admin | undefined>
-
-return(
-    <Show when={(() => {
-      const v = data()
-      return v && v.type === "user" && v // T: User | undefined
-    })()}>
-  )
-```
-
-This approach takes advantage of the type information embedded in the [`<Show>`](/reference/show) component. 
-By temporarily storing the value `v`, you can use type narrowing to specify its type more accurately before returning it.
-
-You do have to be cautious, however, since accessing the callback may throw an error if the when prop is nullish or false at the time of access. 
-This is usually not an issue, but in asynchronous contexts or during [`onCleanup`](/reference/oncleanup), it may occur.
-
-<Aside>
-If you find the above method a bit shorthand, there's a more explicit alternative. 
-Solid's [`<Show>`](/reference/show) component actually performs memoization, so you don't necessarily need a memo for this:
+Consider the following:
 
 ```tsx
-const user = createMemo(() => {
-  const v = data()
-  return v && v.type === "user" && v // Type: User | undefined
-})
+const user: User | undefined = maybeUser();
+return <div>{user && user.name}</div>;
+```
 
-<Show when={user()}>
-  {user => <User user={user()} />}
+In Solid, however, Accessors cannot be narrowed in a similar way:
+
+```tsx
+const [user, setUser] = createSignal<User>();
+return <div>{user() && user().name}</div>;
+//                    ^ Object may be 'undefined'.
+
+// Using `<Show>`:
+
+return (
+  <div>
+    <Show when={user()}>
+      {user().name /* Object is possibly 'undefined' */}
+    </Show>
+  </div>
+);
+
+```
+
+In this instance, using optional chaining is a good solution:
+
+```tsx
+return <div>{user()?.name}</div>;
+
+// Using `<Show>`:
+
+return (
+  <div>
+    <Show when={user()}>
+      {nonNullishUser => nonNullishUser().name}
+    </Show>
+  </div>
+);
+```
+
+This is similar to using the keyed option, but instead provides an accessor so the children are not recreated whenever `when` changes.
+
+```tsx
+return (
+  <div>
+    <Show keyed when={user()}>
+      {nonNullishUser => nonNullishUser.name}
+    </Show>
+  </div>
+);
+```
+
+This may not always be possible. 
+For example, when a `UserPanel` component strictly accepts a `User`:
+
+```tsx
+return (
+  <div>
+    <Show keyed when={user()}>
+      {nonNullishUser => nonNullishUser.name}
+    </Show>
+  </div>
+);
+```
+
+This is similar to using the keyed option, but an accessor is provided so that the children are not recreated whenever `when` changes.
+
+```tsx
+return (
+  <div>
+    <Show keyed when={user()}>
+      {nonNullishUser => nonNullishUser.name}
+    </Show>
+  </div>
+);
+```
+
+Sometimes, this may not be possible. For instance, with a `UserPanel` component that strictly accepts a `User`:
+
+```tsx
+return <UserPanel user={user()} />;
+//                        ^ Type 'undefined' is not assignable to type 'User'.
+```
+
+In refactoring `UserPanel` to accept `undefined`, this minimizes the changes required when `user` goes from `undefined` to `User`.
+
+Otherwise, using Show's callback form works:
+
+```tsx
+return (
+  <Show when={user()}>
+    {nonNullishUser => <UserPanel user={nonNullishUser()} />}
+  </Show>
+);
+```
+
+Casting can also be a valid solution so long as the assumption is valid:
+
+```tsx
+return <div>{user() && (user() as User).name}</div>
+```
+
+It's worth noting that runtime type errors may arise from doing this. 
+This may happen when passing a type-cast value to a component, which discards information that may be nullish followed by accessing it asynchronously, such as in an event handler or timeout, or in `onCleanup`.
+
+`<Show>` only excludes `null`, `undefined`, and `false` from `when` when using the callback form. 
+If the types in a union need to be differentiated, a memo or computed signal can work as an alternative solution:
+
+```tsx
+type User = Admin | OtherUser;
+const admin = createMemo(() => {
+  const u = user();
+  return u && u.type === "admin" ? u : undefined;
+});
+return (
+  <Show when={admin()}>
+    {a => <AdminPanel user={a()} />}
+  </Show>
+);
+```
+
+The following alternative also works when using `Show`:
+
+```tsx
+<Show when={(() => {
+  const u = user();
+  return u && u.type === "admin" ? u : undefined;
+})()}>
+  {admin => <AdminPanel user={admin()} />}
 </Show>
 ```
-While this approach is more explicit, it's worth noting that the primary example for the callback form should ideally not use this technique for the sake of clarity
-</Aside>
 
 ## Advanced JSX attributes and directives
 
@@ -628,12 +692,14 @@ declare module "solid-js" {
 #### Custom directives
 
 Custom directives can be applied using the [`use:___`]() attribute.
-These directives typically accept two arguments: the target element or component, and the value passed to them by the JSX attribute.
-While the conventional `Directives` interface focuses on type-checking the value, which is the second argument, there are additional considerations:
+These directives typically accept two arguments: the target element, and the value passed to them by the JSX attribute.
+The conventional `Directives` interface directly types the types that can be passed to the directive (i.e. the type of `value` in `<div use:foo={value} />`).
+The newer `DirectiveFunctions` interface accepts the type of a function instead, from which it will derive the valid types of element(s) and values. 
 
-* A single accessor is always received, limiting the ability to pass in multiple arguments. 
-The closest appropximation is to use syntax such as `<div use:foo={["string", "array"]} />`.
-* The behaviour of TypeScript's type checking for module augmentation allows `DirectiveFunctions` to potentially accept functions that do not strictlly meet the type requirements.
+There are additional considerations:
+* A single accessor is always passed to the directive function, so to accept multiple arguments, use `<div use:foo={[a, b]} />`, and accept an accessor to a tuple.
+* This applies even when using a boolean directive (`<div use:foo />`), or when passing a static value to a directive (`<div use:foo={false} />`).
+* `DirectiveFunctions` can accept functions that do not strictly meet the type requirements, in which case they will be ignored. 
 
 ```tsx
 function model(
@@ -695,13 +761,13 @@ declare module "solid-js" {
 }
 ```
 
-Although the `Directives` interface can be employed to restrict the value passed to the directive as a JSX attribute, using `DirectiveFunctions` ensures both the element and value align with the expected types.
+Although the `Directives` interface can be used to restrict the value passed to the directive as a JSX attribute, using `DirectiveFunctions` ensures both the element and value align with the expected types, as demonstrated below.
 
 ```tsx
 {/* This is correct */}
 <input use:model={createSignal('')} />
 
-{/* These are incorrect */}
+{/* These will result in a type error */}
 <input use:model />
 <input use:model={7} />
 <div use:model={createSignal('')} />

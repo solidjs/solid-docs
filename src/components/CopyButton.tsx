@@ -6,7 +6,7 @@ interface Props {
 }
 
 function CopyButton(props: Props) {
-  const [copied, setCopied] = createSignal(false);
+  const [getCopied, setCopied] = createSignal(false);
 
   function copyToClipboard() {
     navigator.clipboard.writeText(props.parentRef.innerText);
@@ -16,7 +16,7 @@ function CopyButton(props: Props) {
 
   return (
     <button onclick={copyToClipboard} class="absolute top-4 right-4 opacity-70">
-      <Show when={copied()} fallback={<BiSolidCopy size={24} />}>
+      <Show when={getCopied()} fallback={<BiSolidCopy size={24} />}>
         Copied!
       </Show>
     </button>

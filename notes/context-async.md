@@ -38,9 +38,9 @@ Wrap the provider so that the end user doesn't have to deal with the `.Provider`
 
 ```jsx
 export function CounterProvider(props) {
-  const [count, setCount] = createSignal(props.count || 0),
+  const [getCount, setCount] = createSignal(props.count || 0),
     store = [
-      count,
+      getCount,
       {
         increment() {
           setCount((c) => c + 1);
@@ -87,16 +87,16 @@ The problem with that approach for Solid is due to how our initial render works.
 
 ```jsx
 function Counter() {
-  const [count, setCount] = createSignal(0);
+  const [getCount, setCount] = createSignal(0);
 
-  const increment = () => setCount(count() + 1);
+  const increment = () => setCount(getCount() + 1);
 
   return (() => {
     const _el$ = _tmpl$.cloneNode(true);
 
     _el$.$$click = increment;
 
-    insert(_el$, count);
+    insert(_el$, getCount);
 
     return _el$;
   })();
@@ -129,7 +129,7 @@ return (
     <button type="button" onClick={increment}>
       Click
     </button>
-    {count() % 2 ? count() : ""}
+    {getCount() % 2 ? getCount() : ""}
   </>
 );
 ```
@@ -146,15 +146,15 @@ return [
   })(),
   memo(
     (() => {
-      const _c$ = memo(() => count() % 2, true);
+      const _c$ = memo(() => getCount() % 2, true);
 
-      return () => (_c$() ? count() : "");
+      return () => (_c$() ? getCount() : "");
     })()
   ),
 ];
 ```
 
-(Ryan starts saying that this is a bad example, but the point is that) There's a subscription to `count` inside that outer memo. The signal outlives the memo, so if you didn't have a cleanup step, you'd be adding more and more subscriptions to `count` each time the memo runs.
+(Ryan starts saying that this is a bad example, but the point is that) There's a subscription to `getCount` inside that outer memo. The signal outlives the memo, so if you didn't have a cleanup step, you'd be adding more and more subscriptions to `getCount` each time the memo runs.
 
 That's one half of why we have createRoot: it handles this cleanup for us. The other reason is because it helps us schedule effects, so they run after render. It's the reason why refs work in `onMount` or `createEffect`. We do all of the pure computation work, then do the rendering, then run the effects, synchronously. So we need to control execution, and createRoot lets us execute effects after render.
 

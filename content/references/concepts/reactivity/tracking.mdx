@@ -18,26 +18,26 @@ This doesn't just apply to signals created with `createSignal` - props and store
 
 ```jsx
 function Counter() {
-  const [count, setCount] = createSignal(0);
-  const increment = () => setCount(count() + 1);
+  const [getCount, setCount] = createSignal(0);
+  const increment = () => setCount(getCount() + 1);
 
-  /* When count() is called, the "count" signal is tracked as a subscription of this effect,
+  /* When getCount() is called, the "count" signal is tracked as a subscription of this effect,
     so this code reruns when (and only when) count changes */
   createEffect(() => {
-    console.log("My effect says " + count());
+    console.log("My effect says " + getCount());
   })
 
-  /* This code isn't in a "tracking scope", so count()
+  /* This code isn't in a "tracking scope", so getCount()
      doesn't do anything special and this code never reruns */
-  console.log(count());
+  console.log(getCount());
 
   return (
     /*
       JSX is a tracking scope (it uses effects behind the scenes), so this code
-      registers count as a subscription when count() is called
+      registers getCount as a subscription when getCount() is called
     */
     <button type="button" onClick={increment}>
-      {count()}
+      {getCount()}
     </button>
   );
 }
@@ -49,19 +49,19 @@ Let's look at some examples where we can apply **the tracking rule of thumb** to
 
 ### Derived State
 
-In this example, the paragraph won't update when `count` changes, because `count` was accessed outside of a tracking scope.
+In this example, the paragraph won't update when `getCount` changes, because `getCount` was accessed outside of a tracking scope.
 
 ```jsx
 function Counter() {
-  const [count, setCount] = createSignal(0);
-  const increment = () => setCount(count() + 1);
+  const [getCount, setCount] = createSignal(0);
+  const increment = () => setCount(getCount() + 1);
 
-  const doubleCount = count() * 2;
+  const doubleCount = getCount() * 2;
   return (
     <>
       <p>Twice my count: {doubleCount}</p>
       <button type="button" onClick={increment}>
-        {count()}
+        {getCount()}
       </button>
     </>
   );
@@ -69,19 +69,19 @@ function Counter() {
 ```
 
 The solution is to turn `doubleCount` into a _function_. That way, when `doubleCount` is used
-in the JSX, `count()` will be called and a subscription will be registered.
+in the JSX, `getCount()` will be called and a subscription will be registered.
 
 ```jsx
 function Counter() {
-  const [count, setCount] = createSignal(0);
-  const increment = () => setCount(count() + 1);
+  const [getCount, setCount] = createSignal(0);
+  const increment = () => setCount(getCount() + 1);
 
-  const doubleCount = () => count() * 2;
+  const doubleCount = () => getCount() * 2;
   return (
     <>
       <p>Twice my count: {doubleCount()}</p>
       <button type="button" onClick={increment}>
-        {count()}
+        {getCount()}
       </button>
     </>
   );
@@ -100,14 +100,14 @@ function DoubleCountView(props) {
 }
 
 function Counter() {
-  const [count, setCount] = createSignal(0);
-  const increment = () => setCount(count() + 1);
+  const [getCount, setCount] = createSignal(0);
+  const increment = () => setCount(getCount() + 1);
 
   return (
     <>
-      <DoubleCountView value={count()} />
+      <DoubleCountView value={getCount()} />
       <button type="button" onClick={increment}>
-        {count()}
+        {getCount()}
       </button>
     </>
   );

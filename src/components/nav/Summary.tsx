@@ -6,7 +6,7 @@ import { useRouteData } from "solid-start";
 
 export default function Summary(props: {collapsed?: boolean}) {
     const { sections } = usePageState();
-    const [collapsed, setCollapsed] = createSignal(props.collapsed || false);
+    const [getCollapsed, setCollapsed] = createSignal(props.collapsed || false);
 
     return (
         <div class="py-2 px-4 border border-solidlightitem rounded-md md:(p-4 max-h-[95vh] overflow-auto border-none bg-transparent) max-h-[50vh] bg-solid-light z-50 dark:(bg-solid-dark md:bg-transparent border-solid-darkitem)">
@@ -19,7 +19,7 @@ export default function Summary(props: {collapsed?: boolean}) {
                 Summary
                 <IconChevron
                     class={`md:hidden w-6 h-6 text-solid-lightaction dark:text-solid-darkaction transform transition ${
-                    !collapsed() ? "rotate-90" : ""
+                    !getCollapsed() ? "rotate-90" : ""
                     }`}
                 />
             </button>
@@ -33,7 +33,7 @@ export default function Summary(props: {collapsed?: boolean}) {
                 </li>
                 )}
             </For>
-            <Show when={!collapsed()}>
+            <Show when={!getCollapsed()}>
                 <ol class="mt-2 md:hidden list-none space-y-1">
                 <For each={sections()}>
                     {(item, index) => (

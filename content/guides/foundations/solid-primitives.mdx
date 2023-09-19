@@ -33,7 +33,7 @@ We will be focusing on the most used primitives, `createSignal`, `createMemo`, `
 ```js
 import { createSignal } from "solid-js";
 
-const [count, setCount] = createSignal(0);
+const [getCount, setCount] = createSignal(0);
 ```
 
 `createSignal` doesn't need to be used within a component. It can be used anywhere in your app. Whether it's in a component, a function or even outside of a component or function.
@@ -41,28 +41,28 @@ const [count, setCount] = createSignal(0);
 ```js
 import { createSignal } from "solid-js";
 
-const [count, setCount] = createSignal(0);
+const [getCount, setCount] = createSignal(0);
 
 function increment() {
-  setCount(count() + 1);
+  setCount(getCount() + 1);
 }
 
 function decrement() {
-  setCount(count() - 1);
+  setCount(getCount() - 1);
 }
 
 function Counter() {
   return (
     <div>
       <button onClick={decrement}>-</button>
-      <span>{count()}</span>
+      <span>{getCount()}</span>
       <button onClick={increment}>+</button>
     </div>
   );
 }
 ```
 
-In the example above we have a `count` state variable that is used to keep track of the current count. We have two functions, `increment` and `decrement` that are used to update the `count` state variable. We also have a component, `Counter` that uses the `count` state variable to display the current count.
+In the example above we have a `getCount` function that is used to keep track of the current count. We have two functions, `increment` and `decrement` that are used to update the `count` state variable. We also have a component, `Counter` that uses the `getCount` function to display the current count.
 
 As you've noticed in the example above, we are using `createSignal` outside of a component. This is perfectly fine, it is even possible to import your signal from another file and have it still behave reactively. You can use `createSignal` anywhere in your app since in Solid components do not own their state. In this way solid has state management built in and there is no need for Redux or other state management libraries unless you would like to make use of features specific to them.
 
@@ -103,35 +103,35 @@ As you've noticed in the example above, we are using `createSignal` outside of a
 ```js
 import { createSignal, createMemo } from "solid-js";
 
-const [count, setCount] = createSignal(0);
+const [getCount, setCount] = createSignal(0);
 
-const double = createMemo(() => count() * 2);
+const double = createMemo(() => getCount() * 2);
 ```
 
-In the example above we have a `count` state variable that is used to keep track of the current count. We also have a `double` state variable that is derived from the `count` state variable. The `double` state variable is a memoized version of the `count` state variable. This means that the `double` state variable will only be recomputed when the `count` state variable changes.
+In the example above we have a `getCount` function that is used to keep track of the current count. We also have a `double` state variable that is derived from the `count` state variable. The `double` state variable is a memoized version of the `count` state variable. This means that the `double` state variable will only be recomputed when the `count` state variable changes.
 
 Here's a quick example of how you can make use of `createMemo` to create a memoized derived state and make use of it in a component.
 
 ```js
 import { createMemo } from "solid-js";
 
-const [count, setCount] = createSignal(0);
+const [getCount, setCount] = createSignal(0);
 
-const double = createMemo(() => count() * 2);
+const double = createMemo(() => getCount() * 2);
 
 function Counter() {
   return (
     <div>
-      <button onClick={() => setCount(count() - 1)}>-</button>
-      <span>This is the base value : {count()}</span>
+      <button onClick={() => setCount(getCount() - 1)}>-</button>
+      <span>This is the base value : {getCount()}</span>
       <span>This is the doubled value : {double()}</span>
-      <button onClick={() => setCount(count() + 1)}>+</button>
+      <button onClick={() => setCount(getCount() + 1)}>+</button>
     </div>
   );
 }
 ```
 
-In the example above we have a `count` state variable that is used to keep track of the current count. We also have a `double` state variable that is derived from the `count` state variable. The `double` state variable is a memoized version of the `count` state variable. This means that the `double` state variable will only be recomputed when the `count` state variable changes.
+In the example above we have a `getCount` function that is used to keep track of the current count. We also have a `double` state variable that is derived from the `count` state variable. The `double` state variable is a memoized version of the `count` state variable. This means that the `double` state variable will only be recomputed when the `count` state variable changes.
 
 Under the hood `createMemo` uses `createComputed` to create a computed value. More on the `createComputed` primitive in the reference section.
 
@@ -158,18 +158,18 @@ Under the hood `createMemo` uses `createComputed` to create a computed value. Mo
 ```js
 import { createSignal, createEffect } from "solid-js";
 
-const [count, setCount] = createSignal(0);
+const [getCount, setCount] = createSignal(0);
 
 createEffect(() => {
-  console.log("Count has been updated:", count());
+  console.log("Count has been updated:", getCount());
 });
 
 function Counter() {
   return (
     <div>
-      <button onClick={() => setCount(count() - 1)}>-</button>
-      <span>{count()}</span>
-      <button onClick={() => setCount(count() + 1)}>+</button>
+      <button onClick={() => setCount(getCount() - 1)}>-</button>
+      <span>{getCount()}</span>
+      <button onClick={() => setCount(getCount() + 1)}>+</button>
     </div>
   );
 }
@@ -212,8 +212,6 @@ async function fetchUser(id) {
 }
 
 function User({ id }) {
-  const [id, setId] = createSignal(1);
-
   const [user] = createResource(id, fetchUser);
 
   return (
@@ -248,11 +246,8 @@ async function fetcherFunc(id: number) {
   return await response.json();
 }
 
-const [id, setId] = createSignal<number>(1);
-const [data, setData] = createSignal<any>({});
-
 const [user] = createResource(id, fetcherFunc, {
-  storage: (init: any) => [data, setData],
+  storage: (init: any) => [getData, setData],
 });
 ```
 
@@ -271,11 +266,11 @@ async function fetcherFunc(info: { id: number; name: string }) {
   return await response.json();
 }
 
-const [id, setId] = createSignal<number>(1);
-const [name, setName] = createSignal<string>("");
+const [getId, setId] = createSignal<number>(1);
+const [getName, setName] = createSignal<string>("");
 
 // the derived state made using createMemo
-const derivedState = createMemo(() => ({ id: id(), name: name() }));
+const derivedState = createMemo(() => ({ id: getId(), name: getName() }));
 
 const [posts] = createResource(derivedState, fetcherFunc);
 ```

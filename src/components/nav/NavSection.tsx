@@ -13,7 +13,7 @@ type CollapsibleProps = ParentProps<{
 }>;
 
 export function Collapsible(props: CollapsibleProps) {
-  const [collapsed, setCollapsed] = createSignal(props.startCollapsed() || false);
+  const [getCollapsed, setCollapsed] = createSignal(props.startCollapsed() || false);
 
   const id = createUniqueId();
 
@@ -25,13 +25,13 @@ export function Collapsible(props: CollapsibleProps) {
   return (
     <li value={props.header} class="m-2">
       <SectionHeader
-        collapsed={collapsed()}
+        collapsed={getCollapsed()}
         onClick={() => setCollapsed((prev) => !prev)}
         panelId={id}
       >
         {props.header}
       </SectionHeader>
-      <Show when={!collapsed()}>
+      <Show when={!getCollapsed()}>
         <SectionPanel id={id}>{props.children}</SectionPanel>
       </Show>
     </li>

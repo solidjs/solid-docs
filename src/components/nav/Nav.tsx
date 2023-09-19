@@ -12,7 +12,7 @@ import { NavPreferences } from "./NavPreferences";
 import { Collapsible, NavItem } from "./NavSection";
 
 export default function Nav(props: { docsMode: "start" | "regular" }) {
-  const [showMenu, setShowMenu] = createSignal(false);
+  const [getShowMenu, setShowMenu] = createSignal(false);
   const location = useLocation();
 
   createEffect((prev) => {
@@ -27,7 +27,7 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
       <div class="flex flex-col gap-4">
         <NavHeader
           docsMode={props.docsMode}
-          showMenu={showMenu()}
+          showMenu={getShowMenu()}
           setShowMenu={setShowMenu}
         />
       </div>
@@ -37,7 +37,7 @@ export default function Nav(props: { docsMode: "start" | "regular" }) {
       </div>
       <div
         classList={{
-          hidden: !showMenu(),
+          hidden: !getShowMenu(),
           "lg:block border-b md:border-none border-solid-lightitem dark:border-solid-darkitem pb-4":
             true,
         }}

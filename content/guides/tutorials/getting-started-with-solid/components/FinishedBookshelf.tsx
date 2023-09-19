@@ -20,21 +20,21 @@ interface IBookshelfProps {
 }
 
 export function FinishedBookshelf(props: IBookshelfProps) {
-  const [books, setBooks] = createSignal(initialBooks);
-  const [showForm, setShowForm] = createSignal(false);
+  const [getBooks, setBooks] = createSignal(initialBooks);
+  const [getShowForm, setShowForm] = createSignal(false);
 
-  const toggleForm = () => setShowForm(!showForm());
+  const toggleForm = () => setShowForm(!getShowForm());
 
   return (
     <InteractiveExample>
       <div class="dark:bg-solid-darkbg border dark:border-solid-darkitem rounded-lg">
         <div class="p-4">
           <h2 class="text-2xl font-semibold mb-4">{props.name}'s Bookshelf</h2>
-          <BookList books={books()} />
+          <BookList books={getBooks()} />
         </div>
         <div class="border-t dark:border-solid-darkitem p-4">
           <Show
-            when={showForm()}
+            when={getShowForm()}
             fallback={
               <Button type="button" onClick={toggleForm}>
                 Add a book
@@ -96,10 +96,10 @@ async function searchBooks(query: string) {
 }
 
 function AddBook(props: IAddBookProps) {
-  const [input, setInput] = createSignal("");
-  const [query, setQuery] = createSignal("");
+  const [getInput, setInput] = createSignal("");
+  const [getQuery, setQuery] = createSignal("");
 
-  const [data] = createResource<Book[], string>(query, searchBooks);
+  const [data] = createResource<Book[], string>(getQuery, searchBooks);
 
   return (
     <>
@@ -107,7 +107,7 @@ function AddBook(props: IAddBookProps) {
         <SearchInput
           label="search books"
           id="title"
-          input={input()}
+          input={getInput()}
           onInput={(e) => {
             setInput(e.currentTarget.value);
           }}
@@ -117,7 +117,7 @@ function AddBook(props: IAddBookProps) {
           type="submit"
           onClick={(e) => {
             e.preventDefault();
-            setQuery(input());
+            setQuery(getInput());
           }}
         >
           Search

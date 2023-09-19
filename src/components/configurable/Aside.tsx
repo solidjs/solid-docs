@@ -89,7 +89,7 @@ interface AsideProps {
 }
 
 export const Aside = (props: ParentProps<AsideProps>) => {
-  const [showContent, setShowContent] = createSignal(!props.collapsible);
+  const [getShowContent, setShowContent] = createSignal(!props.collapsible);
   const definition = asideDefinition()[props.type || "general"];
   const bgColor = () => props.bgColor || definition.bgColor || false;
   const preferDark = () =>
@@ -117,18 +117,18 @@ export const Aside = (props: ParentProps<AsideProps>) => {
             <button
               aria-label={`Show expanded ${title()} content`}
               class="flex gap-3"
-              onClick={() => setShowContent(!showContent())}
+              onClick={() => setShowContent(!getShowContent())}
             >
               {title()}
               <CollapsedIcon
                 class={`flex-0 transform ${
-                  showContent() ? "rotate-0" : "-rotate-90 -translate-y-px"
+                  getShowContent() ? "rotate-0" : "-rotate-90 -translate-y-px"
                 }`}
               />
             </button>
           </h3>
         </Show>
-        <Show when={showContent()}>{props.children}</Show>
+        <Show when={getShowContent()}>{props.children}</Show>
       </div>
     </div>
   );

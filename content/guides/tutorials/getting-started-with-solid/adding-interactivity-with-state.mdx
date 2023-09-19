@@ -47,21 +47,21 @@ In Solid, the most basic way to manage state in our application is to use a _sig
 ```tsx
 import { createSignal } from "solid-js";
 
-const [count, setCount] = createSignal(0);
+const [getCount, setCount] = createSignal(0);
 ```
 
-There's a lot going on here: first, we call `createSignal` with the initial value of state. In this case, our `count` is going to start at `0`. The `createSignal` function returns a two-element array and we use JavaScript _destructuring assignment_ to unpack this array. In this case, we assign the first element to a variable called `count` and the second element to a variable called `setCount`.
+There's a lot going on here: first, we call `createSignal` with the initial value of state. In this case, our `count` is going to start at `0`. The `createSignal` function returns a two-element array and we use JavaScript _destructuring assignment_ to unpack this array. In this case, we assign the first element to a variable called `getCount` and the second element to a variable called `setCount`.
 
-The first element, `count`, is an _accessor_ function (also referred to as a _getter_) that returns the current value of state.
+The first element, `getCount`, is an _accessor_ function (also referred to as a _getter_) that returns the current value of state.
 
 It's important to note that this is a _function that gets the current value_, rather than the value itself. Along the way, this function call tells Solid to take note that we've accessed the signal here.
 
 ```tsx
 import { createSignal } from "solid-js";
 
-const [count, setCount] = createSignal(0);
+const [getCount, setCount] = createSignal(0);
 
-console.log(count()); // 0
+console.log(getCount()); // 0
 ```
 
 <FrameworkAside framework="svelte">
@@ -99,16 +99,16 @@ While this might seem like pure mental overhead, there are two main benefits of 
 2. It doesn't require any additional logic (like [`runOutsideAngular`](https://angular.io/api/core/NgZone#runOutsideAngular)) to avoid change detection
 </FrameworkAside>
 
-The second element, `setCount`, is a _setter_ function. If we want to increment our `count`, we can pass `count() + 1` to `setCount`:
+The second element, `setCount`, is a _setter_ function. If we want to increment our `count`, we can pass `getCount() + 1` to `setCount`:
 
 ```tsx
 import { createSignal } from "solid-js";
 
-const [count, setCount] = createSignal(0);
+const [getCount, setCount] = createSignal(0);
 
-setCount(count() + 1);
+setCount(getCount() + 1);
 
-console.log(count()); // 1
+console.log(getCount()); // 1
 ```
 
 Note that, in order to see our `count` value's new value, we added our `console.log` statement after we used `setCount`.
@@ -122,20 +122,20 @@ The ability to react to signal changes underpins Solid's reactive system. The mo
 ```tsx
 import { createSignal, createEffect } from "solid-js";
 
-const [count, setCount] = createSignal(0);
+const [getCount, setCount] = createSignal(0);
 
 createEffect(() => {
-  console.log(count());
+  console.log(getCount());
 });
 
-setCount(count() + 1);
+setCount(getCount() + 1);
 ```
 
 To use `createEffect`, we pass it a function. When any signals used in that function update, the function will rerun.
 
 In this example, our effect depends on `count` and therefore the effect runs whenever `count` changes. Accordingly, we log `1` to the console just like before.
 
-Automatic effect dependency tracking is made possible by `count` being a function. When the `count` function is called inside an effect, that effect is registered as a listener for the signal. This is why it's so important that our signals are functions!
+Automatic effect dependency tracking is made possible by `getCount` being a function. When the `getCount` function is called inside an effect, that effect is registered as a listener for the signal. This is why it's so important that our signals are functions!
 
 <FrameworkAside framework="svelte">
   This is equivalent to `$: console.log(count)` in Svelte.
@@ -184,7 +184,7 @@ We see that, much like other variables, we can use signals inside our JSX code b
 
 And now we have a functioning counter! Notably, our text updates whenever our `count` is incremented. Does this remind you of an effect? Whenever the signal changes, the code that controls that part of the DOM reruns, similar to how the code in our effect reran whenever `count` changed.
 
-Behind the scenes, Solid's compiler creates effects based on our JSX. It sees that we're using `count()` in a specific part of the DOM, and it creates an effect that updates just that part of the DOM when the signal reruns.
+Behind the scenes, Solid's compiler creates effects based on our JSX. It sees that we're using `getCount()` in a specific part of the DOM, and it creates an effect that updates just that part of the DOM when the signal reruns.
  
 A driving philosophy of Solid is that, by treating everything as a signal or an effect, we can better reason about our application.
 

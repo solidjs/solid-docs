@@ -7,10 +7,10 @@ function createEffect<T>(fn: (v: T) => T, value?: T): void;
 Effects are a general way to make arbitrary code ("side effects") run whenever dependencies change, e.g., to modify the DOM manually. `createEffect` creates a new computation that runs the given function in a tracking scope, thus automatically tracking its dependencies, and automatically reruns the function whenever the dependencies update. For example:
 
 ```ts
-const [a, setA] = createSignal(initialValue);
+const [getA, setA] = createSignal(initialValue);
 
 // effect that depends on signal `a`
-createEffect(() => doSideEffect(a()));
+createEffect(() => doSideEffect(getA()));
 ```
 
 The effect will run whenever `a` changes value.
@@ -20,12 +20,12 @@ The effect will also run once, immediately after it is created, to initialize th
 The effect callback can return a value, which will be passed as the `prev` argument to the next invocation of the effect. This is useful for memoizing values that are expensive to compute. For example:
 
 ```ts
-const [a, setA] = createSignal(initialValue);
+const [getA, setA] = createSignal(initialValue);
 
 // effect that depends on signal `a`
 createEffect((prevA) => {
   // do something with `a` and `prevA`
-  const sum = a() + b();
+  const sum = getA() + b();
   if (sum !== prevA) console.log("sum changed to", sum);
   return sum;
 }, 0);
@@ -38,10 +38,10 @@ The first execution of the effect function is not immediate; it's scheduled to r
 
 ```ts
 // assume this code is in a component function, so is part of a rendering phase
-const [count, setCount] = createSignal(0);
+const [getCount, setCount] = createSignal(0);
 
 // this effect prints count at the beginning and when it changes
-createEffect(() => console.log("count =", count()));
+createEffect(() => console.log("count =", getCount()));
 // effect won't run yet
 console.log("hello");
 setCount(1); // effect still won't run yet

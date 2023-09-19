@@ -16,17 +16,17 @@ interface IBookshelfProps {
 }
 
 export function BasicBookshelfShow(props: IBookshelfProps) {
-  const [books, setBooks] = createSignal(initialBooks);
-  const [showForm, setShowForm] = createSignal(false);
+  const [getBooks, setBooks] = createSignal(initialBooks);
+  const [getShowForm, setShowForm] = createSignal(false);
 
-  const toggleForm = () => setShowForm(!showForm());
+  const toggleForm = () => setShowForm(!getShowForm());
 
   return (
     <InteractiveExample>
       <h2 class="text-2xl mb-3">{props.name}'s Bookshelf</h2>
-      <BookList books={books()} />
+      <BookList books={getBooks()} />
       <Show
-        when={showForm()}
+        when={getShowForm()}
         fallback={
           <button
             class="px-3 py-2 rounded bg-solid-accent hover:bg-solid-accent/90 text-white"
@@ -81,11 +81,11 @@ interface IAddBookProps {
 const emptyBook: Book = { title: "", author: "" };
 
 function AddBook(props: IAddBookProps) {
-  const [newBook, setNewBook] = createSignal(emptyBook);
+  const [getNewBook, setNewBook] = createSignal(emptyBook);
 
   const addBook: JSX.EventHandler<HTMLButtonElement, MouseEvent> = (event) => {
     event.preventDefault();
-    props.setBooks((books) => [...books, newBook()]);
+    props.setBooks((books) => [...books, getNewBook()]);
     setNewBook(emptyBook);
   };
 
@@ -96,9 +96,9 @@ function AddBook(props: IAddBookProps) {
         <input
           id="title"
           class="ml-2 p-1 text-black border-1 border-black"
-          value={newBook().title}
+          value={getNewBook().title}
           onInput={(e) => {
-            setNewBook({ ...newBook(), title: e.currentTarget.value });
+            setNewBook({ ...getNewBook(), title: e.currentTarget.value });
           }}
         />
       </div>
@@ -107,9 +107,9 @@ function AddBook(props: IAddBookProps) {
         <input
           id="author"
           class="ml-2 p-1 text-black border-1 border-black"
-          value={newBook().author}
+          value={getNewBook().author}
           onInput={(e) => {
-            setNewBook({ ...newBook(), author: e.currentTarget.value });
+            setNewBook({ ...getNewBook(), author: e.currentTarget.value });
           }}
         />
       </div>

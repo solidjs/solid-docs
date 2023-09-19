@@ -69,7 +69,7 @@ Here, we explore the resulting types when using a few core primitives.
 signal. For example:
 
 ```ts
-const [count, setCount] = createSignal<number>();
+const [getCount, setCount] = createSignal<number>();
 ```
 
 The above `createSignal` has the return type `Signal<number>`, corresponding to
@@ -90,7 +90,7 @@ type Signal<T> = [get: Accessor<T>, set: Setter<T>];
   [here](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-8.html)
 </Aside>
 
-In this case, the signal getter `count` has type
+In this case, the signal getter `getCount` has type
 `Accessor<number | undefined>`. `Accessor<T>` is a type definition
 provided by Solid, in this case equivalent to `() => number | undefined`.
 The `| undefined` gets added in this example because we did not provide a
@@ -120,13 +120,13 @@ We can avoid having to explicitly provide the type of the signal when calling
 a default value to `createSignal`:
 
 ```ts
-const [count, setCount] = createSignal(0);
-const [name, setName] = createSignal("");
+const [getCount, setCount] = createSignal(0);
+const [getName, setName] = createSignal("");
 ```
 
 In this case, TypeScript infers that the signal types are `number` and `string`
-respectively. Thus, for example, `count` obtains type `Accessor<number>`
-and `name` obtains type `Accessor<string>` (without `| undefined`).
+respectively. Thus, for example, `getCount` obtains type `Accessor<number>`
+and `getName` obtains type `Accessor<string>` (without `| undefined`).
 
 ### Context
 
@@ -167,10 +167,10 @@ type helper, and use that to type the context:
 
 ```ts
 export const makeCountNameContext = (initialCount = 0, initialName = "") => {
-  const [count, setCount] = createSignal(initialCount);
-  const [name, setName] = createSignal(initialName);
+  const [getCount, setCount] = createSignal(initialCount);
+  const [getName, setName] = createSignal(initialName);
   return [
-    { count, name },
+    { getCount, getName },
     { setCount, setName },
   ] as const;
   // `as const` forces tuple type inference
@@ -185,7 +185,7 @@ In this example, `CountNameContextType` corresponds to the return value of
 
 ```ts
 [
-  {readonly count: Accessor<number>, readonly name: Accessor<string>},
+  {readonly getCount: Accessor<number>, readonly getName: Accessor<string>},
   {readonly setCount: Setter<number>, readonly setName: Setter<string>}
 ]
 ```
@@ -220,15 +220,15 @@ Here are some examples:
 
 ```tsx
 const Counter: Component = () => {
-  const [count, setCount] = createSignal(0);
-  return <button onClick={() => setCount((c) => c + 1)}>{count()}</button>;
+  const [getCount, setCount] = createSignal(0);
+  return <button onClick={() => setCount((c) => c + 1)}>{getCount()}</button>;
 };
 <Counter />; // good
 <Counter initial={5} />; // type error: no initial prop
 <Counter>hi</Counter>; // type error: no children prop
 const InitCounter: Component<{ initial: number }> = (props) => {
-  const [count, setCount] = createSignal(props.initial);
-  return <button onClick={() => setCount((c) => c + 1)}>{count()}</button>;
+  const [getCount, setCount] = createSignal(props.initial);
+  return <button onClick={() => setCount((c) => c + 1)}>{getCount()}</button>;
 };
 <InitCounter initial={5} />; // good
 ```
@@ -247,10 +247,10 @@ type ParentComponent<P = {}> = Component<ParentProps<P>>;
 //const CustomCounter: Component<{children?: JSX.Element}> = ...
 //function CustomCounter(props: ParentProps): JSX.Element { ...
 const CustomCounter: ParentComponent = (props) => {
-  const [count, setCount] = createSignal(0);
+  const [getCount, setCount] = createSignal(0);
   return (
     <button onClick={() => setCount((c) => c + 1)}>
-      {count()}
+      {getCount()}
       {props.children}
     </button>
   );
@@ -259,10 +259,10 @@ const CustomCounter: ParentComponent = (props) => {
 //const CustomInitCounter: Component<{initial: number, children?: JSX.Element}> = ...
 //function CustomInitCounter(props: ParentProps<{initial: number}>): JSX.Element { ...
 const CustomInitCounter: ParentComponent<{ initial: number }> = (props) => {
-  const [count, setCount] = createSignal(props.initial);
+  const [getCount, setCount] = createSignal(props.initial);
   return (
     <button onClick={() => setCount((c) => c + 1)}>
-      {count()}
+      {getCount()}
       {props.children}
     </button>
   );
@@ -457,23 +457,23 @@ A common pattern is to use
 to display data only when that data is defined:
 
 ```tsx
-const [name, setName] = createSignal<string>();
-return <Show when={name()}>Hello {name().replace(/\s+/g, "\xa0")}!</Show>;
+const [getName, setName] = createSignal<string>();
+return <Show when={getName()}>Hello {getName().replace(/\s+/g, "\xa0")}!</Show>;
 ```
 
-In this case, TypeScript can't determine that the two calls to `name()` will
+In this case, TypeScript can't determine that the two calls to `getName()` will
 return the same value, and that the second call will happen only if the first
-call returned a truthy value. Thus it will complain that `name()` might be
+call returned a truthy value. Thus it will complain that `getName()` might be
 `undefined` when trying to call `.replace()`.
 
 Here are two workarounds for this issue:
 
-1. You can manually assert that `name()` will be non-null in the second call
+1. You can manually assert that `getName()` will be non-null in the second call
    using TypeScript's
    [non-null assertion operator `!`](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#non-null-assertion-operator-postfix-):
 
    ```tsx
-   return <Show when={name()}>Hello {name()!.replace(/\s+/g, "\xa0")}!</Show>;
+   return <Show when={getName()}>Hello {getName()!.replace(/\s+/g, "\xa0")}!</Show>;
    ```
 
 2. You can use the callback form of `<Show>`, which passes in the value of the
@@ -481,7 +481,7 @@ Here are two workarounds for this issue:
 
    ```tsx
    return (
-     <Show when={name()}>{(n) => <>Hello {n().replace(/\s+/g, "\xa0")}!</>}</Show>
+     <Show when={getName()}>{(n) => <>Hello {n().replace(/\s+/g, "\xa0")}!</>}</Show>
    );
    ```
 
@@ -572,8 +572,8 @@ declare module "solid-js" {
     }
   }
 }
-let [name, setName] = createSignal("");
-<input type="text" use:model={[name, setName]} />;
+let [getName, setName] = createSignal("");
+<input type="text" use:model={[getName, setName]} />;
 ```
 
 If you're importing a directive `d` from another file/module, and `d` is used only

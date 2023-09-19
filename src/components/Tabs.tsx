@@ -24,9 +24,9 @@ export const CodeTabs = (props: CodeTabsProps) => {
     (el) => el.default
   );
 
-  const [selectedIndex, setSelectedIndex] = createSignal(initialSelectedIndex === -1 ? 0 : initialSelectedIndex);
+  const [getSelectedIndex, setSelectedIndex] = createSignal(initialSelectedIndex === -1 ? 0 : initialSelectedIndex);
   
-  const selectedFile = () => selectedTabSet()[selectedIndex()];
+  const selectedFile = () => selectedTabSet()[getSelectedIndex()];
 
   return (
     <div class="my-10 w-full">
@@ -37,7 +37,7 @@ export const CodeTabs = (props: CodeTabsProps) => {
               <button
                 aria-label={`Display the ${file.name} code`}
                 classList={{
-                  "border-b-2 border-blue-400": i() === selectedIndex(),
+                  "border-b-2 border-blue-400": i() === getSelectedIndex(),
                   "p-2": true,
                 }}
                 onClick={() => setSelectedIndex(i())}

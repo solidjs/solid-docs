@@ -4,7 +4,7 @@ import IconGear from "~icons/heroicons-solid/cog";
 import { Preferences } from "../Preferences";
 
 export function NavPreferences(props: {id: string}) {
-  const [collapsed, setCollapsed] = createSignal(false);
+  const [getCollapsed, setCollapsed] = createSignal(false);
 
   return (
     <div class="border border-solid-lightitem bg-solid-light dark:bg-solid-dark dark:border-solid-darkitem rounded-lg">
@@ -22,11 +22,11 @@ export function NavPreferences(props: {id: string}) {
         </div>
         <IconChevron
           class={`w-6 h-6 text-solid-lightaction dark:text-solid-darkaction transform transition ${
-            !collapsed() ? "rotate-90" : ""
+            !getCollapsed() ? "rotate-90" : ""
           }`}
         />
       </button>
-      <Show when={!collapsed()}>
+      <Show when={!getCollapsed()}>
         <div aria-label="preferences" class="p-4 border-t border-solid-lightitem dark:border-solid-darkitem">
           <Preferences id={props.id} />
         </div>

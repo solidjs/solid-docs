@@ -36,11 +36,11 @@ Solid on the other hand makes use of only one kind of component, the function co
 import { createSignal } from "solid-js";
 
 const App = () => {
-  const [count, setCount] = createSignal(0);
+  const [getCount, setCount] = createSignal(0);
   return (
     <div>
       <button onclick={() => setCount((previousValue) => previousValue + 1)}>
-        You clicked me {count} times
+        You clicked me {getCount()} times
       </button>
     </div>
   );
@@ -84,9 +84,9 @@ function someFunc() {
 }
 
 // Solid
-const [count, setCount] = createSignal(0);
+const [getCount, setCount] = createSignal(0);
 function someFunc() {
-  console.log(count()); // accessing
+  console.log(getCount()); // accessing
   setCount((prev) => prev + 1); // setting
 }
 ```
@@ -247,18 +247,18 @@ You can also make use of the `createSignal()` primitive, like so:
 //store.js
 import { createSignal } from "solid-js";
 
-export const [storeUsingSignal, setStoreUsingSignal] = createSignal(0);
+export const [getStoreUsingSignal, setStoreUsingSignal] = createSignal(0);
 ```
 
 ```jsx
 // Component A.jsx
-import { setStoreUsingSignal, storeUsingSignal } from "./store";
+import { getStoreUsingSignal, setStoreUsingSignal } from "./store";
 
 const ComponentA = () => {
-  const reactiveLocalValue = storeUsingSignal;
+  const reactiveLocalValue = getStoreUsingSignal;
   // This 👆 will behave reactively
 
-  const unreactiveLocalValue = storeUsingSignal();
+  const unreactiveLocalValue = getStoreUsingSignal();
   // This 👆 will not behave reactively
 
   return (
@@ -275,18 +275,18 @@ export default ComponentA;
 
 ```jsx
 // Component B.jsx
-import { storeUsingSignal } from "./store";
+import { getStoreUsingSignal } from "./store";
 
 const ComponentB = () => {
-  const reactiveLocalValue = storeUsingSignal;
+  const reactiveLocalValue = getStoreUsingSignal;
   // This 👆 will behave reactively
 
-  const unreactiveLocalValue = storeUsingSignal();
+  const unreactiveLocalValue = getStoreUsingSignal();
   // This 👆 will not behave reactively
 
   return (
     <div>
-      <h2>From B: {storeUsingSignal()}</h2>
+      <h2>From B: {getStoreUsingSignal()}</h2>
       <h2>From B: {reactiveLocalValue()}</h2>
     </div>
   );
@@ -372,12 +372,12 @@ const options = {
 };
 
 function App() {
-  const [selected, setSelected] = createSignal("red");
+  const [getSelected, setSelected] = createSignal("red");
 
   return (
     <>
       <select
-        value={selected()}
+        value={getSelected()}
         onInput={(e) => setSelected(e.currentTarget.value)}
       >
         {Object.keys(options).map((color) => (
@@ -385,7 +385,7 @@ function App() {
         ))}
       </select>
       {/* the Dynamic component 👇*/}
-      <Dynamic component={options[selected()]} />
+      <Dynamic component={options[getSelected()]} />
     </>
   );
 }

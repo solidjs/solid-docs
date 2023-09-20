@@ -165,7 +165,7 @@ Essentially, this type means that the function can accept either a direct number
 If provided with a function, that function can take the signal's previous value as its parameter and return a new value. 
 Both the initial and resulting values can be a number or `undefined`. Importantly, calling `setCount` without any arguments will reset the signal's value to `undefined`.
 
-When using the function form of the setter, a single argument is provided, which can be ignored if desired.
+When using the function form of the setter, the signal's current value will always be passed to the callback as the sole argument.
 Additionally, the return type of the setter will align with the type of value passed into it, echoing the behavior expected from a typical assignment operation.
 
 If a signal is intended to store functions, the setter won't directly accept new functions as values. 
@@ -179,7 +179,7 @@ setSignal(() => value)
 
 #### Default values
 
-By providing default values when `createSignal` is callled, the need for explicit type specification is avoided and the possibility of the `| undefined` type is eliminated. 
+By providing default values when `createSignal` is called, the need for explicit type specification is avoided and the possibility of the `| undefined` type is eliminated. 
 This leverages type inference to determine the type automatically:
 
 ```typescript
@@ -329,6 +329,11 @@ In this example, `props` is inferred to be of the type `{children?: JSX.Element 
 
 Solid offers subtypes for components dealing uniquely with children:
 
+* **VoidComponent:** when a component should not accept children.
+* **FlowComponent:** designed for components like [`<Show>`](/reference/Show) or [`<For>`](/reference/For), typically requiring children and, occasionally, specific children types.
+
+These types make sure that the children fit the required type, maintaining consistent component behaviour.
+
 ##### Components without the `Component` types
 
 Using the `Component` types is a matter of preference over a strict requirement.
@@ -340,12 +345,12 @@ const MyComponent = (props: MyProps): JSX.Element => { ... }
 
 // function declaration 
 function MyComponent(props: MyProps): JSX.Element { ... }
-
+It is worth noting that the `Component` types **cannot be used to create generic components**.
 // component which takes no props 
 function MyComponent(): JSX.Element { ... }
 ```
 
-It is worth noting that if a generic component is created, the `Component` types will **not** be applicable. 
+It is worth noting that the `Component` types **cannot be used to create generic components**.
 Instead, the generics will have to be typed explicitly:
 
 ```tsx
@@ -470,12 +475,12 @@ While this method bypasses TypeScript's assignment checks for that particular va
 ```typescript
 let divRef!: HTMLDivElement;
 
-// Permitted but will throw an error at runtime:
-divRef.focus();
+// Permitted by TypeScript but will throw an error at runtime:
+// divRef.focus();
+
 onMount(() => {
   divRef.focus(); 
 });
-return <div ref={divRef}>...</div>;
 ```
 
 ## Control flow based narrowing
@@ -536,20 +541,15 @@ return (
 );
 ```
 
-However, this might not always be possible. 
+Note that optional chaining may not always be possible. 
 For instance, when a `UserPanel` component exclusively requires a `User` object:
 
 ```tsx
-return (
-  <div>
-    <Show keyed when={user()}>
-      {nonNullishUser => nonNullishUser.name}
-    </Show>
-  </div>
-);
+return <UserPanel user={user()} />;
+//                        ^ Type 'undefined' is not assignable to type 'User'.
 ```
 
-In refactoring `UserPanel` to accept `undefined`, this minimizes the changes required when `user` goes from `undefined` to `User`.
+If possible, consider refactoring `UserPanel` to accept `undefined`, this minimizes the changes required when `user` goes from `undefined` to `User`.
 
 Otherwise, using Show's callback form works:
 

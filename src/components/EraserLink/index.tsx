@@ -1,5 +1,5 @@
 import { Link } from "@solidjs/router"
-import { ParentProps } from "solid-js"
+import { ParentProps, createSignal } from "solid-js"
 import "./eraserlink.css"
 
 const ERASER_TRACKING_PARAMS = ""
@@ -44,6 +44,8 @@ const EraserLink = ({
 		? `${workspaceUrl}?${elementParams}&${ERASER_TRACKING_PARAMS}`
 		: `${workspaceUrl}?${ERASER_TRACKING_PARAMS}`
 
+	const [isLoaded, setIsLoaded] = createSignal(false)
+
 	// if there are no children or this was a right click-copy as markdown embed.
 	if (
 		children === undefined ||
@@ -54,18 +56,18 @@ const EraserLink = ({
 			: `${workspaceUrl}/preview`
 
 		return (
-			<div class="relative">
-				<Link href={linkUrl} class="relative inline-block">
-					<img src={imageUrl} alt={""} />
-					<div class="eraserLinkContainer">
+			<Link href={linkUrl} class="relative inline-block">
+				<img src={imageUrl} alt={""} onLoad={() => setIsLoaded(true)} />
+				{isLoaded() ? (
+					<span class="eraserLinkContainer">
 						<img
 							src="https://firebasestorage.googleapis.com/v0/b/second-petal-295822.appspot.com/o/images%2Fgithub%2FOpen%20in%20Eraser.svg?alt=media&token=968381c8-a7e7-472a-8ed6-4a6626da5501"
 							class="max-w-none"
 							alt="Open in Eraser"
 						/>
-					</div>
-				</Link>
-			</div>
+					</span>
+				) : null}
+			</Link>
 		)
 	}
 	return (

@@ -44,7 +44,14 @@ const EraserLink = ({
 		: `${workspaceUrl}?${ERASER_TRACKING_PARAMS}`
 
 	if (children !== undefined) {
-		return <Link href={linkUrl}>{children}</Link>
+		return (
+			<Link
+				href={linkUrl}
+				class="dark:text-solid-darklink break-normal text-solid-lightlink duration-100 ease-in transition font-semibold leading-normal transition hover:underline"
+			>
+				{children}
+			</Link>
+		)
 	}
 
 	const imageUrl = elementParams

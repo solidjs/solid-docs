@@ -49,7 +49,6 @@ const EraserLink = ({
 		children === undefined ||
 		(Array.isArray(children) && children[0] === "View on Eraser")
 	) {
-		console.log("hi", children)
 		const imageUrl = elementParams
 			? `${workspaceUrl}/preview?${elementParams}&type=embed`
 			: `${workspaceUrl}/preview`

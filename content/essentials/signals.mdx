@@ -1,0 +1,105 @@
+import { Aside } from "~/components/configurable/Aside";
+
+# Signals
+
+At the heart of a Solid's reactivity system are signals, acting as the building blocks for tracking, updating, and responding to changes in data. 
+When the information in a signal changes, the parts of your application that dependent on that signal are automatically adjusted to represent it.
+
+Signals eliminate the need to re-execute the entire component function, focusing instead on updating only the altered aspects of the component. 
+Furthermore, this adaptability of signals extends beyond component functions, allowing them to be used in other contexts and scenarios within the application. 
+
+## Creating a signal
+
+To create a signal, import the `createSignal`  primitive from Solid at the top of the file:
+
+```jsx
+import { createSignal } form "solid-js";
+```
+Upon its call, this function yields a pair of values: the first is a **getter **function, which is responsible for _accessing _the current value of the signal, and the second is a **setter **function, designed to _update _the signal's value:
+
+```jsx
+const [count, setCount] = createSignal(0);
+```
+
+In this example, `count` is the getter and `setCount`  is the setter function.
+
+<Aside>
+
+The syntax using `[` and `]` is called [array destructuring](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment). 
+This lets you extract values from the array. 
+Specifically, in the context of `createSignal` , there are two items being returned: the getter (first), and the setter (second).
+
+</Aside>
+
+Signals allow you to manage a variety of data types, including both objects and arrays. 
+This feature, combined with the fact Solid components do not own state, allows you to bring Signals in from anywhere in your application, removing the need for additional third-party state management libraries.
+
+## Accessing values
+
+To retrieve the value of a signal, you need to call the getter function:
+
+```jsx
+console.log(count()) // output: 0
+```
+
+When a signal is called within a [tracking scope](/essentials/intro-to-reactivity#tracking), it forms a dependency between the signal and the wrapping function. 
+In this context, if the value of the signal changes, it notifies its dependencies of this change. 
+As a result, anything that is subscribed to this signal by accessing it within a tracking scope, will be re-evaluated or re-run. 
+This ensures that anything dependent on this signal will always be in sync with the state represented by these signals.
+
+<Aside>
+
+A tracking scope is typically created by [`createEffect`](/reference/createEffect)  or [`createMemo`](/reference/createMemo), other Solid primitives. 
+Both functions subscribe to the signals accessed within them, establishing a dependency relationship.
+
+When a signal within this scope changes its value, these dependencies are identified, and the functions or computations relying on them are triggered to update.
+
+</Aside>
+
+## Updating values
+
+To update a signal's value, you just need to invoke the setter function returned by `createSignal`:
+
+```jsx
+setCount(count()+1)
+
+console.log(count()) // output: 1
+```
+
+When the setter is called, the value of the signal is automatically updated, triggering the required updates in the functions that are tracking that signal.
+
+## Reacting to changes
+
+A distinct feature of signals is their ability to keep a list of their dependents. 
+[Effects](/essentials/effects) and [memos](/essentials/memos) subscribe to signals, inherently becoming _dependent _on them.
+This ensures a streamlined updating process across all the dependent functions whenever the signal's value changes.
+
+```jsx
+function DependentCounter() {
+  const [count, setCount] = createSignal(0);
+  
+  // logs initial value of count
+  console.log(count()) // result: 0
+  
+  // creates a reactive value `double` that is always twice the value of `count`
+  const double = createMemo(() => count() * 2);
+  
+  return (
+    <div>
+      <p>Count: {count()}</p>
+      <p>Double: {double()}</p>
+      <button onClick={() => setCount(count() + 1)}>Increment</button>
+    </div>
+  );
+}
+
+export default DependentCounter;
+```
+In this example, `createSignal` initializes a reactive state variable `count` and sets its initial value to `0` .
+
+In the intialization code surrounding the `createSignal`, including the `console.log` statement, is executed only _once_, when the component is initially rendered.
+This means that the initial value of `count`, which is `0`, will be logged to the console only once, regardless of subsequent changes to `count`.
+
+On the other hand, `double` is initialized using `createMemo`, another Solid primitive, that creates a reactive computed value based on `count` signal.
+Unlike the `console.log` statement, the `createMemo` function ensures that `double`  tracks the changes in `count`. 
+This means that whenever `count`  is updated, `double`  automatically recalculates and the component will re-render to display the updated value.

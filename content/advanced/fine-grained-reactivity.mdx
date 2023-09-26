@@ -16,14 +16,14 @@ Because of this, adoption of a fine-grained reactive system minimizes the unnece
 In Solid's reactivity system, there are two key elements: signals and observers. These core elements serve as the foundation for more specialized reactive features:
 
 * Stores are [proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) that, under the hood, create, read, and write signals.
-* Memos act as specialized effects that return a signal.
-update based on the behavior of effects, ideal for computational optimization.
+* Memos resemble effects but are distinct in that they return a signal and optimize computations through caching. 
+They update based on the behavior of effects, ideal for computational optimization.
 * Resources, building on the concept of memos, convert the asynchronicity of network requests into synchronicity, where the results are embedded within a signal.
 * Render effects are a tailored type of effect that initiates immediately, specifically designed for managing the rendering process.
 
 ### Understanding signals
 
-Signals are like mutable variables, that point to one thing now and another thing in the future. 
+Signals are like mutable variables, that can point to one value now and another in the future. 
 They are made up of two primary functions:
 
 * The **getter**, which allows you to read the current value of the signal.
@@ -48,7 +48,7 @@ Here, `count` serves as the getter, and `setCount` functions as the setter.
 
 ### Effects
 
-Effects are operations triggered by changes in one or more of the signals they depend on.
+Effects are functions that are triggered when the signals they depend on point to a different value.
 To create effects in Solid, there is the `createEffect` function.
 
 ```js=
@@ -61,7 +61,7 @@ createEffect(() => {
 });
 ```
 
-The effect takes a function that is re-invoked whenever any of the signals it relies on, such as `count`, undergoes a change.
+The effect takes a function that is re-invoked whenever any of the signals it relies on changes, such as `count`.
 
 ## Building a reactive system
 
@@ -126,7 +126,7 @@ The core functionality emerges when linking `createSignal` and `createEffect`.
 
 ### Linking signals and effects
 
-In order to introduce reactivity, you need the following steps:
+The way reactivity works is:
 1. Maintain a reference to the current subscriber function.
 2. Register this function during effect creation.
 3. Add the function to a subscriber list when accessing a signal.
@@ -149,7 +149,7 @@ function createSignal(initialValue) {
   }
   
   function setter(newValue) {
-    if (value === newValue) return;
+    if (value === newValue) return; // if the new value is not different, do not notify dependent effects and memos
     value = newValue;
     for (const subscriber of subscribers) {
       subscriber();
@@ -160,10 +160,10 @@ function createSignal(initialValue) {
 }
 
 function createEffect(fn) {
-  const initialSubscriber = currentSubscriber;
+  const previousSubscriber = currentSubscriber;
   currentSubscriber = fn;
   fn();
-  currentSubscriber = initialSubscriber;
+  currentSubscriber = previousSubscriber;
 }
 ```
 
@@ -242,7 +242,7 @@ createEffect(() => {
 });
 ```
 
-Here, the `createEffect` function initiates a `setTimeout`, which delays the call. 
+Here, the `createEffect` function initiates a `setTimeout`, which delays the console log. 
 Because the system is synchronous, it doesn't wait for this operation to complete. 
 By the time the `count` getter is invoked within the `setTimeout`, the global scope no longer has a registered subscriber.
 As a result, this `count` signal won't add the callback as a subscriber, leading to potential issues in tracking changes to count.
@@ -253,7 +253,7 @@ While the basic reactivity system is synchronous, frameworks like Solid offer mo
 For example, Solid provides the `on` function, which allows for manually specifying dependencies for an effect. 
 This is particularly useful for ensuring that asynchronous operations are correctly tied into the reactive system. 
 
-In addition to the `on` function, Solid introduces the concept of resources for managing asynchronous operations. 
+Solid also introduces the concept of resources for managing asynchronous operations. 
 Resources are specialized reactive primitives that convert the asynchronicity of operations like network requests into synchronicity, embedding the results within a signal. 
 This allows the system to track asynchronous operations and their state, ensuring that the UI updates correctly when the asynchronous operation completes or its state changes.
 

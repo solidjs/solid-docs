@@ -38,9 +38,6 @@ The tool that permits the changing of the signal's value.
 Any change to the value within a signal, made possible by the setter function, can create reactive updates in other connected parts of the system.
 This ensures that the system remains responsive and up-to-date with the latest data changes.
 
-
-These aspects make them important to the dynamic nature of reactive systems.
-
 ### Effects
 
 Effects and other listeners (such as memos) can be thought of as automated responders.
@@ -62,7 +59,7 @@ This process involves keeping track of the specific signals that an effect relie
 By doing this, the system can determine when the effect needs to be re-triggered or updated based on changes in its dependent signals. 
 
 This tracking is important when maintaining a fine-grained reactive system.
-This level of precision in tracking dependencies helps in prevent unnecessary recalculations and executions, contributing to a more reliable reactive system.
+This level of precision in tracking dependencies helps in prevent unnecessary re-executions, contributing to a more reliable reactive system.
 
 ## Building a reactive system
 
@@ -99,7 +96,7 @@ When a signal changes, its corresponding effects are immediately updated in a se
 This form of reactivity provides a direct correlation between a signal's change and the system's response, guaranteeing that the system remains consistently aligned with the most recent data.
 
 ### Asynchronous reactivity
-Asynchronous reactivity can be improve performance in some cases. 
+Asynchronous reactivity can improve performance in some cases. 
 Unlike its synchronous counterpart, updates to effects are not instantaneous. 
 Instead, they may be delayed or could wait for the completion of an external event or task.
 
@@ -129,7 +126,7 @@ Unlike dealing with individual signals, stores offer a more organized way to man
 #### State management
 
 At their core, stores serve as containers for state, facilitating centralized state management by providing methods for updates and manipulations.
-This improves state transitions by streamlining the process of interacting with and altering state.
+This makes changing state easier by simplifying interactions and modifications.
 
 When the state within a store changes, it triggers a cascade of reactive updates throughout the system. 
 Components or functions that are subscribed to a store are promptly notified of these changes, where they are able to then respond accordingly. 
@@ -143,19 +140,19 @@ Stores provide a simple solution that allows related states to be grouped togeth
 ## Tracking
 
 At its core, tracking si fundamentally about managing subscriptions in a reactive system.
-When a signal undergoes a change, all the effects *and* memos subscribed to it are automatically re-run; this ensures the propogation of changes throughout the application's components.
+When a signal undergoes a change, all the effects *and* memos subscribed to it are re-run, if needed; this ensures the propogation of changes throughout the application's components.
 
 ### Key concepts
 
 * Subscriptions are initaited when a signal, or a store value, are accessed.
 This interaction leads to the accessor subscribing to the signal, establishing a dynamic connection.
-Every interaction between the signal and its accessor reinforces this subscription, guaranteeing that the associated effects are re-executed when the signal changes.
+Every interaction between the signal and its accessor guarantees that the associated effects are re-executed when the signal changes.
 * Both memos *and* effects have the ability to subscribe to signals.
-However, interactions with a signal outside of these won't initiate tracking, due to the absence of a subscriber, thus limiting the scope of reactivity.
+However, interactions with a signal outside of these won't initiate tracking, due to the absence of a subscriber (a memo or effect), thus limiting the scope of reactivity.
 * The reactive system is built on the interplay between elements that can change (signals) and those that can be updated (effects and memos).
 The principles of tracking are not limited to these elements, however, but also extend to reactive props and store values.
-* Entities like store values and reactive props are inherently depdendent on signals.
-A "signal" stands as the only entity that operates autonomously and is reliably dependable.
+* Store values and reactive props inherently depend on signals. 
+A signal, however, is unique since it operates independently and is reliable; it can be viewed as a standalone element in the reactivity graph.
 
 
 Using Solid:
@@ -175,7 +172,8 @@ function Counter() {
   return (
     <button type="button" onClick={increment}>
       {count()} 
-      {/* JSX is a tracking scope because it uses effects behind the scenes. Because of this, the code will register `count()` as a subscription when it is called. */}
+      {/* JSX is a tracking scope because it wraps expressions in effects behind the scenes. 
+      Because of this, the code will register `count()` as a subscription when it is called. */}
     </button>
   );
 }

@@ -418,8 +418,8 @@ export const LEARN_SECTIONS: SECTIONS = {
         link: "/essentials/signals",
       },
       {
-        name: "Managing Side Effects",
-        link: "/essentials/managing-side-effects",
+        name: "Effects",
+        link: "/essentials/effects",
       },
       {
         name: "Computed Values",

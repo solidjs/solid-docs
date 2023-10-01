@@ -1,0 +1,213 @@
+# List Rendering
+
+List rendering allows you to generate multiple DOM elements from a collection of data, such as an array or object, where each element corresponds to an item in the collection. 
+When dealing with dynamic data, Solid offers two ways to render lists: the `<For>` and `<Index>` components.
+Both of these components faciliate looping over data collections to generate DOM elements, however, they both cater to different scenarios.
+
+## `<For>`
+
+The `<For>` component serves as a more conventional way to iterate over arrays or objects in Solid.
+This component manages DOM items by updating or relocating them as the underlying data it loops over changes.
+This capability removes the need for a complete re-render of the DOM elements, which optimizes rendering performance.
+
+To access `<For>` , you can import it directly from Solid:
+
+```
+import { For } from "solid-js";
+```
+
+The sole property that `<For>` has is `each` , through which you can specify the data collection to loop over:
+
+```jsx
+<For each={data()}>
+  {(item, index) => 
+    // rendering logic for each element
+  }
+</For>
+```
+
+Between the `<For>` tags, the component requires a callback function which will dictate how each item in the data collection should be rendered.
+This structure of rendering function resembles the callback used within JavaScript's [`map`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) method, providing a familiar pattern to follow.
+The function receives two arguments:
+* `item`: represents the current item in the data collection that is being rendered over.
+* `index`: the current item's index within the collection.
+
+Within the rendering function, you create and return JSX elements that will represent each item in the DOM.
+It is also possible to access properties of the current `item` to dynamically set attributes or content of the JSX elements.
+The `index` can be used for various purposes, such as controlling styling, setting unique keys, or any other case that requires the position of an item within the collection.
+Additionally, [conditional rendering](/essentials/conditional-rendering) can be used to show how or whether certain elements are rendered based on conditions related to the `item` or `index`.
+
+```jsx
+<For each={data()}>
+  {(item, index) => 
+    <li classList={{ even: index % 2 === 0, odd: index % 2 !== 0 }}>
+      {item.name}
+    </li>
+  }
+</For>
+```
+
+In this example, the [`classList`](/essentials/class-style-bindings#classList) directive is used to conditionally apply the `even` and `odd` classes to the `li` elements based on the current index.
+
+Furthermore, within the `<For>` component, other functions can be used to compute values, manage side effects, or handle events.
+There's also the ability to nest other looping components within the original `<For>` component, or to employ array methods to manage nested data structures or create more complex layouts:
+
+```jsx
+function App() {
+  const categories = [
+    {
+      name: 'Fruits',
+      items: [{ name: 'Apple', selected: false }, { name: 'Banana', selected: false }]
+    },
+    {
+      name: 'Vegetables',
+      items: [{ name: 'Carrot', selected: false }, { name: 'Potato', selected: false }]
+    }
+    // ... more categories
+  ];
+
+  const toggleSelection = () => {
+    // function logic to toggle item selection
+  };
+
+  return (
+    <ul>
+      <For each={categories}>
+        {(category, categoryIndex) => (
+          <li>
+            {category.name}
+            <ul>
+              <For each={category.items}>
+                {(item, itemIndex) => (
+                  <li
+                    classList={{ selected: item.selected }}
+                    onClick={() => toggleSelection()}
+                  >
+                    {item.name} - {item.selected ? 'Selected' : 'Not Selected'}
+                  </li>
+                )}
+              </For>
+            </ul>
+          </li>
+        )}
+      </For>
+    </ul>
+  );
+}
+```
+
+Through this nested looping structure, the arrangement of `<For>` components provides a way to efficiently render hierarchical data. In this example, a list of categories each containing a list of items is organized and rendered in a clear and structured format.
+
+## `Index`
+
+The `<Index>` component is designed to optimize list rendering in Solid, particularly when working with *primitives*.
+This component provides a way to manage the rendering of lists, ensuring fewer re-renders compared to the `<For>` component under *certain conditions*.
+`<Index>` becomes beneficial when the order and length of the list remain *stable*, but the content may change frequently.
+
+To use `<Index>`, import it directly from Solid:
+
+```jsx
+import { Index } from "solid-js";
+```
+
+Similar to the `<For>` component, `<Index>` accepts a single property named each, which is where you pass the array or object you want to loop over. 
+In the rendering function, JSX elements will represent each item in the DOM, and the `item` and `index` arguments can dynamically set attributes or content of the JSX elements:
+
+```jsx
+<Index each={data()}>
+  {(item, index) => 
+    <li classList={{ even: index % 2 === 0, odd: index % 2 !== 0 }}>
+      {item.name}
+    </li>
+  }
+</Index>
+```
+
+### `<Index>` vs `<For>`
+
+`<Index>` distinguishes itself from the `<For>` component, in that causes *fewer* re-renders. 
+It is concerned primarily with the **index** of the elements in the array, thus allowing the *content* at each index to change without a re-render.
+
+In `<For>`, however, when an array undergoes a change, such as an element shifting position, it will manage this by simply **moving** the corresponding DOM node and **updating** the index.
+This causes a re-render of the entire list, which could impact performance, especially in cases of large or frequently updated lists.
+
+In cases where **primitives** or **nested arrays** are used, it's recommended to use `<Index>` to mitigate any unnecessary renders. 
+Using `<Index>` will ensure that only the content at the *altered* index is updated, providing a more efficient approach to managing dynamic lists.
+
+Consider this revised version of the example in the `<For>` section:
+
+```jsx
+function App() {
+  const categories = [
+    {
+      name: 'Fruits',
+      items: [{ name: 'Apple', selected: false }, { name: 'Banana', selected: false }]
+    },
+    {
+      name: 'Vegetables',
+      items: [{ name: 'Carrot', selected: false }, { name: 'Potato', selected: false }]
+    }
+    // ... more categories
+  ];
+
+  const toggleSelection = () => {
+    // function logic to toggle item selection
+  };
+
+  return (
+    <ul>
+      <For each={categories}>
+        {(category, categoryIndex) => (
+          <li>
+            {category.name}
+            <ul>
+              <Index each={category.items}>
+                {(item, itemIndex) => (
+                  <li
+                    classList={{ selected: item.selected }}
+                    onClick={() => toggleSelection()}
+                  >
+                    {item.name} - {item.selected ? 'Selected' : 'Not Selected'}
+                  </li>
+                )}
+              </Index>
+            </ul>
+          </li>
+        )}
+      </For>
+    </ul>
+  );
+}
+```
+
+Replacing the nested `<For>` loop with an `<Index>` will improve rendering performance, particularly when the items in each category being updated frequently.
+Unlike `<For>`, `<Index>` does not trigger a re-render of the entire list when an item's list content changes, such as when it gets selected, provided the length of the list remains unchanged.
+This results in the content content at the specified index being updated to the `selected` class, while the rest of the list remains unchanged.
+
+Another example of when *not* to use `<For>` is when you are working with a list of input elements:
+
+```jsx
+import { createSignal, Index } from "solid-js";
+
+function InputForm() {
+  const [inputs, setInputs] = createSignal(["", "", ""]); // Array of strings representing input values
+
+  return (
+    <form>
+      <Index each={inputs()} fallback={<p>Loading...</p>}>
+        {(input, index) => (
+          <input 
+            type="text" 
+            value={input()} 
+            onInput={(e) => setInputs([...inputs().slice(0, index), e.target.value, ...inputs().slice(index + 1)])}
+          />
+        )}
+      </Index>
+    </form>
+  );
+}
+```
+
+In this case, despite the frequent changes to the input values, using `<Index>` would prevent unnecessary re-renders of the entire list of inputs. 
+In contrast, with the `<For>` component, which would potentially result in the recreation of the input elements when they change.
+

@@ -288,74 +288,11 @@ By moving the state to the `App` component, a single source of truth for the `co
 This creates shared access and manipulation across the `Counter` and `DisplayCounts` components. 
 This pattern significantly improves maintainability and predictability in state management across the component hierarchy.
 
-## Complex state management
+## Ready to dive deeper?
 
-As applications grow in size and complexity, managing state in a structured and efficient manner becomes important. 
-Solid uses [stores](/essentials/stores) to assist with this. 
-Stores provide a way to consolidate state variables, or signals, and their associated logic into a unified, manageable structure. 
-Below is a revision of the example that was in the derived state, restructured to leverage a store for managing the complex state:
+With a grasp on the basic principles of state management, you might wonder how these concepts might apply to larger, more complex applications.
 
-```jsx
-import { createSignal, createEffect, createMemo } from "solid-js";
-import { createStore } from "solid-js/store";
+In more intricate systems, basic state management might not work due to scalability, performance, maintainability, or other concerns.
+This is where [stores](/essentials/stores) come into play, offering more options tailored to meet the demands of more complex applications.
 
-function App() {
-  const [state, setState] = createStore({
-    count: 0,
-    doubleCount: 0,
-    squaredCount: 0,
-  });
-
-  const increment = () => {
-    setState("count", state.count + 1);
-  };
-
-
-  const squaredCount = createMemo(() => state.count * state.count);
-  
-  createEffect(() => {
-    setState("doubleCount", state.count * 2);
-    setState("squaredCount", squaredCount());
-  });
-
-  return (
-    <>
-      <Counter state={state} setState={setState} increment={increment} />
-      <DisplayCounts state={state} />
-    </>
-  );
-}
-
-function Counter(props) {
-  return (
-    <button onClick={props.increment}>Increment</button>
-  );
-}
-
-function DisplayCounts(props) {
-  return (
-    <div>
-      <div>Current count: {props.state.count}</div>
-      <div>Doubled count: {props.state.doubleCount}</div>
-      <div>Squared count: {props.state.squaredCount}</div>
-    </div>
-  );
-}
-```
-
-This refactored setup does the following:
-
-- **Store Creation**: The `createStore`  function from Solid's store module is utilized to create a store containing the `count` , `doubleCount` , and `squaredCount`  signals.
-- **State Modification**: The `increment`  function is defined to update the `count`  state variable. 
-Additionally, derived state and effect are used to update`doubleCount`  and `squaredCount`  whenever `count`  changes.
-- **State Rendering**: The `Counter`  and `DisplayCounts`  components receive  necessary props to render and manipulate state.
-Stores facilitate organized and efficient management of complex state, as demonstrated. By encapsulating multiple state variables and their associated logic within a single store, it promotes more maintainable and predictable state management structure, especially as the application scales.
-
-## Key takeaways
-- Solid's reactive primitives like `createSignal` , `createEffect` , and `createMemo`  are foundational to its state management approach, enabling fine-grained reactivity and efficient updates to the DOM.
-- Solid ensures minimal re-rendering, optimizing performance by updating only the necessary parts of the DOM as the state changes.
-- Solid's `createMemo`  primitive provides a way to manage derived state, allowing the creation of state values that are computed from other state values and stay in sync with their dependencies.
-- Lifting state up is a common pattern is well-supported in Solid, facilitating shared state management across components by moving state to a common ancestor component.
-- As applications grow in size and complexity, Solid's `createStore`  function facilitates the structured management of complex state scenarios by consolidating multiple state variables and their associated logic into a unified, manageable structure.
-
-
+If you are ready to learn about complex state management, navigate to the (complex state management page)[/guides/complex-state-management].

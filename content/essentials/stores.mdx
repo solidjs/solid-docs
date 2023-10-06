@@ -1,0 +1,94 @@
+import {Aside} from "~/components/configurable/Aside"
+
+# Stores
+
+Similar to [signals](/essentials/signals), Stores in Solid are a way to store state. 
+Where signals hold a single piece of state, however, stores are capable of holding many. 
+This means that
+
+Solid's stores are dynamic containers that play an important role in state management.
+By centralizing data in a store, it provides a way to synchronize and share state across different components, keeping a cohesive data flow in applications.
+
+* simlar to signals === a way to store state
+signal is one value
+store is collection
+
+## Understanding stores
+
+### What is a store?
+
+A store, in Solid's context, is a reactive container tailored for state management.
+It allows the storage and updating of a range of data structures, from simple values to complex objects and arrays. 
+
+One of the features of stores is the use of JavaScript's [proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) mechanism, which allows them to encapsulate other objects and produce a reactive tree of data.
+This means that, when working with stores, they can be navigated through a network of reactive signals, each representing a property.
+
+// image for signal vs store 
+    - signal vs tree of store
+
+Stores do two primary things:
+1. **Reactivity**: By making each property its own signal, Solid can track and react to specific property changes without unnecessary re-renders.
+This is done since signals are created lazily, meaning only when properties have been accessed within tracking scopes are they created. 
+2. **Nested data structures**: The proxy-based system ensures even nested data structures, like objects within objects, remain reactive.
+
+### Components of a store
+
+A store can be broken down into two core components:
+* **State**: This component holds the actual data within the store. 
+It can encompass various data types, from basic values like numbers and strings to more complex structures such as arrays or objects.
+* **Setters**: Setters are functions specifically designed for updating the state in a controlled manner. 
+By using setters, any changes to a store's state will be deliberate *and* reactive.
+
+## Using stores
+
+### Creating a store
+
+Solid's `createStore` function provides the entry point to set up a store. 
+Housed within the `solid-js/store` package, it takes an initial state as its argument and returns de-structured array with a read-only state proxy and a setter function:
+
+```jsx
+import { createStore } from "solid-js/store";
+
+// Initialize store
+const [state, setState] = createStore({ todos: [], numberOfTasks: 0 });
+```
+
+### Accessing values
+
+Store properties can be accessed directly from the reactive state by using the state proxy to directly reference any property:
+
+```jsx
+console.log(state.tasks) // Outputs: 0
+```
+
+### Modifying store values
+
+In Solid, updating values within a store is best accomplished using a setter provided by the `createStore` initialization.
+This setter allows for the modification of a specific key and its associated value, following the format `setStore(key, newValue)`:
+
+```jsx
+setState("tasks", [
+    { id: 1, task: "Learn Solid", completed: false },
+    { id: 2, task: "Tune into Ryan Carniato's live stream", completed: false },
+    "numberOfTasks", 2
+])
+
+// JS EXAMPLES
+
+{
+    todos: [
+        { id: 1, task: "Learn Solid", completed: false },
+        { id: 2, task: "Tune into Ryan Carniato's live stream", completed: false },
+    ],
+     "numberOfTasks", 2
+}
+```
+
+<Aside>
+    Separating read and write capabilities to a store presents a valuable debugging advantage.
+    It facilitates the tracking and control of which components can access or change store values.
+</Aside>
+
+#### Using functions to modify values
+
+

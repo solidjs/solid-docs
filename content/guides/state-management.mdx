@@ -1,6 +1,8 @@
 # State Management
 
-State management refers to the way data is handled and manipulated or the information that drives the behavior and presentation of a web application. Solid facilitates state management through the use of reactive primitives rather than being encapsulated within the components themselves. This facilitates a more flexible and organized approach to managing state in applications.
+State management refers to the way data is handled and manipulated or the information that drives the behavior and presentation of a web application. 
+Solid facilitates state management through the use of reactive primitives rather than being encapsulated within the components themselves. 
+This facilitates a more flexible and organized approach to managing state in applications.
 
 Let’s delve into state management concepts using a simple counter:
 
@@ -22,25 +24,34 @@ function Counter() {
   );
 }
 ```
-1. **State (**`**count**` **)**: The state is the _data _that our application or component relies on. In this example, `count`  is the state which represents the current value of the counter. It's a source that our application reads to determine how to present itself.
-2. **View (**`**<div>{count()}</div>**` **)**: The view is the _representation_ of the state to the user. It's what gets rendered on the page. In this scenario, the view is the part of the component that displays the current count to the user.
-3. **Actions (**`**increment**` **)**: Actions are the functions or methods that _modify _the state based on user interactions or other events. In our example, `increment`  is an action that updates the state `count`  whenever it's invoked by a button click.
+
+1. **State (**`**count**` **)**: The state is the _data _that our application or component relies on. 
+In this example, `count`  is the state which represents the current value of the counter. 
+It's a source that our application reads to determine how to present itself.
+
+2. **View (**`**<div>{count()}</div>**` **)**: The view is the _representation_ of the state to the user. 
+It's what gets rendered on the page. 
+In this scenario, the view is the part of the component that displays the current count to the user.
+
+3. **Actions (**`**increment**` **)**: Actions are the functions or methods that *modify* the state based on user interactions or other events. 
+In our example, `increment`  is an action that updates the state `count`  whenever it's invoked by a button click.
 This structure creates a "one-way data flow", where actions modify the state, which in turn updates the view, ensuring a consistent and predictable behavior of the application.
 
 ## Managing basic state
-State forms the core layer upon which components rely on to decide what data to render. In Solid, managing basic state can be done through the use of the `createSignal` function. Consider the following in the `Counter` component we initially started with:
+
+State forms the core layer upon which components rely on to decide what data to render. 
+In Solid, managing basic state can be done through the use of the `createSignal` function. Consider the following in the `Counter` component we initially started with:
 
 ```jsx
 import { createSignal } from "solid-js";
 
 const [count, setCount] = createSignal(0);
 ```
+
 Here, the `createSignal` function is called with an initial value of `0`, initializing the state for `count`. 
 
 <Aside>
-
-To explore signals more, you can visit the [signals page].
-
+To explore signals more, you can visit the [signals page](/essentials/signals).
 </Aside>
 
 Accessing the current value of `count` is done through `count()`:
@@ -48,16 +59,22 @@ Accessing the current value of `count` is done through `count()`:
 ```bash
 console.log(count()); // 0
 ```
+
 When it comes to updating `count`, the `setCount` function comes in. This function allows you to modify the state of `count`:
 
 ```jsx
 setCount(count() + 1);
 console.log(count()); // 1
 ```
-Solid provides a simplistic way of managing state through the use of signals. The `setCount` function modifies the state, while `count()` allows you to access the updated state value whenever needed. The interaction of these two functions form the basis for managing basic state in solid.
+
+Solid provides a simplistic way of managing state through the use of signals. 
+The `setCount` function modifies the state, while `count()` allows you to access the updated state value whenever needed. 
+The interaction of these two functions form the basis for managing basic state in solid.
 
 ## Rendering state in the UI
-The ultimate goal of managing state is to achieve a dynamic user interface that accurately reflects data changes. The reactive nature of Solid ensures that the UI updates automatically in response to mirror any state changes.
+
+The ultimate goal of managing state is to achieve a dynamic user interface that accurately reflects data changes. 
+The reactive nature of Solid ensures that the UI updates automatically in response to mirror any state changes.
 
 Revisiting the `Counter` component presented earlier, rendering the current state of `count `is done within the return body using JSX:
 
@@ -69,7 +86,9 @@ return (
   </>
 );
 ```
-The important thing to note here is the JSX expression `{count()}` , which is nestled within the return body of the `Counter` component. This expression will render the state of `count` within the DOM.
+
+The important thing to note here is the JSX expression `{count()}` , which is nestled within the return body of the `Counter` component. 
+This expression will render the state of `count` within the DOM.
 
 When the state of `count` changes, for instance, when the `Increment` button is clicked leading to the call of the `increment` function, the JSX expression `{count()}` will re-render the relevant portion of the DOM where it is used:
 
@@ -80,18 +99,22 @@ When the state of `count` changes, for instance, when the `Increment` button is 
 // After clicking Increment button once
 // Current count: 1
 ```
-The expression `{count()}` represents the use of the getter function for `count` , which retrieves the current state value. By using the getter function within the JSX expression, Solid is able to precisely track the dependency on `count` , providing only the segment of the DOM where `count` is rendered with an update on its change. This leaves other parts of the DOM, such as where the button resides, unaffected.
 
-Unnecessary re-rendering can be a performance bottleneck in web applications, leading to slow user interfaces. Solid's fine-grained reactivity system specifically addresses this concern by only updating the portions of the DOM directly associated with a state change, rather than re-rendering entire components or larger DOM segments. 
+The expression `{count()}` represents the use of the getter function for `count` , which retrieves the current state value. 
+By using the getter function within the JSX expression, Solid is able to precisely track the dependency on `count` , providing only the segment of the DOM where `count` is rendered with an update on its change. 
+This leaves other parts of the DOM, such as where the button resides, unaffected.
+
+Unnecessary re-rendering can be a performance bottleneck in web applications, leading to slow user interfaces. 
+Solid's fine-grained reactivity system specifically addresses this concern by only updating the portions of the DOM directly associated with a state change, rather than re-rendering entire components or larger DOM segments. 
 
 <Aside>
-
 To learn more about a fine-grained reactive system, you can follow our [advanced guide] on the topic.
-
 </Aside>
 
 ## Reacting to changes
-Reacting to state changes in state is an important part of Solid's reactive system. The responsiveness in state changes keeps the UI in sync with the underlying data. Consider this other version of the `Counter` component:
+
+Reacting to state changes in state is an important part of Solid's reactive system. 
+The responsiveness in state changes keeps the UI in sync with the underlying data. Consider this other version of the `Counter` component:
 
 ```jsx
 import { createSignal, createEffect } from "solid-js";
@@ -117,12 +140,14 @@ function Counter() {
   );
 }
 ```
+
 In this revised `Counter` component:
 
 1. A new state named `doubleCount`  is introduced and initialized using `createSignal` .
 2. The `createEffect`  function is employed to keep `doubleCount`  updated to be twice the value of `count`  whenever `count`  changes.
 3. The updated `doubleCount`  state is then rendered to the UI, displaying the doubled count value to the user.
-```
+
+```html
 // Initial render
 // Current count: 0
 // Doubled count: 0
@@ -131,10 +156,16 @@ In this revised `Counter` component:
 // Current count: 1
 // Doubled count: 2
 ```
-The `createEffect` function is important when reacting to state changes.  It establishes a function to execute side-effects in response to state alterations. A side-effect, in this context, refers to operations or updates that affect state outside of the local environment, such as modifying a global variable or updating the DOM, which are triggered by changes in state.
+
+The `createEffect` function is important when reacting to state changes.  
+It establishes a function to execute side-effects in response to state alterations. 
+A side-effect, in this context, refers to operations or updates that affect state outside of the local environment, such as modifying a global variable or updating the DOM, which are triggered by changes in state.
 
 ## Derived state
-Derived state refers to state values that are computed or derived from other state values within an application. This concept allows for the creation of state values that automatically update in response to changes in their dependencies. In Solid, derived state can be managed using the reactive primitive `createMemo` . Consider this updated version of the `Counter` component:
+
+Derived state refers to state values that are computed or derived from other state values within an application. 
+This concept allows for the creation of state values that automatically update in response to changes in their dependencies. 
+In Solid, derived state can be managed using the reactive primitive `createMemo` . Consider this updated version of the `Counter` component:
 
 ```jsx
 import { createSignal, createEffect, createMemo } from "solid-js";
@@ -176,11 +207,13 @@ function DisplayCounts(props) {
   );
 }
 ```
+
 In this `Counter` component: 
 
 1. A derived state named `squaredCount`  is introduced, utilizing `createMemo`  to compute the square of the `count`  value.
 2. The `squaredCount`  derived state is then rendered alongside the original `count`  state in the UI, showcasing the derived state value to the user.
-```
+
+```html
 // Initial render
 // Current count: 0
 // Doubled count: 0
@@ -191,12 +224,18 @@ In this `Counter` component:
 // Doubled count: 6
 // Squared count: 9
 ```
-Using `createMemo` allows you to define derived state that stays in sync with changes to the `count` state. This primitive is beneficial in managing computed properties from other state values, ensuring that they update with changes to the source state. It is useful for optimizing performance through memoization, creating reactive data flow, and handling data transformations.
+
+Using `createMemo` allows you to define derived state that stays in sync with changes to the `count` state. 
+This primitive is beneficial in managing computed properties from other state values, ensuring that they update with changes to the source state. 
+It is useful for optimizing performance through memoization, creating reactive data flow, and handling data transformations.
 
 ## Lifting state
-Lifting state up is a common pattern used that involves moving state to a common ancestor component so that it can be shared among various components. It is a technique that helps keep the [component tree](/guides/components-and-props#component-trees) in sync, and facilitates better state management.
 
-Let's extend our previous `Counter` component example to include a sibling component that also needs access to the `count` state. To achieve this, we'll lift the `count` state up to a common ancestor component:
+Lifting state up is a common pattern used that involves moving state to a common ancestor component so that it can be shared among various components. 
+It is a technique that helps keep the [component tree](/guides/components-and-props#component-trees) in sync, and facilitates better state management.
+
+Let's extend our previous `Counter` component example to include a sibling component that also needs access to the `count` state. 
+To achieve this, you can lift the `count` state up to a common ancestor component:
 
 ```jsx
 import { createSignal, createEffect, createMemo } from "solid-js";
@@ -238,15 +277,23 @@ function DisplayCounts(props) {
   );
 }
 ```
+
 In this setup:
 
 1. The `count`, `doubleCount`, and `squaredCount` states are lifted to the `App` component, serving as the common ancestor for both `Counter` and `DisplayCounts` components.
 2. The relevant state and state-setting functions are passed down to the `Counter` and `DisplayCounts` components as props.
 3. The `Counter` component encompasses a button to increment the `count` state, while the `DisplayCounts` component renders the `doubleCount` and `squaredCount` values to the UI.
-By moving the state to the `App` component, a single source of truth for the `count`, `doubleCount`, and `squaredCount` states is established. This creates shared access and manipulation across the `Counter` and `DisplayCounts` components. This pattern significantly improves maintainability and predictability in state management across the component hierarchy.
+
+By moving the state to the `App` component, a single source of truth for the `count`, `doubleCount`, and `squaredCount` states is established. 
+This creates shared access and manipulation across the `Counter` and `DisplayCounts` components. 
+This pattern significantly improves maintainability and predictability in state management across the component hierarchy.
 
 ## Complex state management
-As applications grow in size and complexity, managing state in a structured and efficient manner becomes important. Solid uses [stores] to assist with this. Stores provide a way to consolidate state variables, or signals, and their associated logic into a unified, manageable structure. Below is a revision of the example that was in the derived state, restructured to leverage a store for managing the complex state:
+
+As applications grow in size and complexity, managing state in a structured and efficient manner becomes important. 
+Solid uses [stores](/essentials/stores) to assist with this. 
+Stores provide a way to consolidate state variables, or signals, and their associated logic into a unified, manageable structure. 
+Below is a revision of the example that was in the derived state, restructured to leverage a store for managing the complex state:
 
 ```jsx
 import { createSignal, createEffect, createMemo } from "solid-js";
@@ -295,10 +342,12 @@ function DisplayCounts(props) {
   );
 }
 ```
+
 This refactored setup does the following:
 
 - **Store Creation**: The `createStore`  function from Solid's store module is utilized to create a store containing the `count` , `doubleCount` , and `squaredCount`  signals.
-- **State Modification**: The `increment`  function is defined to update the `count`  state variable. Additionally, derived state and effect are used to update`doubleCount`  and `squaredCount`  whenever `count`  changes.
+- **State Modification**: The `increment`  function is defined to update the `count`  state variable. 
+Additionally, derived state and effect are used to update`doubleCount`  and `squaredCount`  whenever `count`  changes.
 - **State Rendering**: The `Counter`  and `DisplayCounts`  components receive  necessary props to render and manipulate state.
 Stores facilitate organized and efficient management of complex state, as demonstrated. By encapsulating multiple state variables and their associated logic within a single store, it promotes more maintainable and predictable state management structure, especially as the application scales.
 

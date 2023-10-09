@@ -1,0 +1,333 @@
+import { Aside } from "~/components/configurable/Aside"
+
+# Complex State Management
+
+As applications grow and start to involve many components, more intricate user interactions, and possibly communication with backend services, you may find that staying organized with more [basic state management methods](/guides/state-management) in Solid can get difficult to maintain.
+
+Consider this example:
+
+```jsx
+import { For, createSignal, Show, createMemo } from 'solid-js';
+
+const App = () => {
+  const [tasks, setTasks] = createSignal([]);
+  const [numberOfTasks, setNumberOfTasks] = createSignal(tasks.length);
+  let input;
+
+  const addTask = (text) => {
+    setTasks([...tasks(), { id: tasks().length, text, completed: false }]);
+    setNumberOfTasks(numberOfTasks() + 1);
+  };
+  const toggleTask = (id) => {
+    setTasks(
+      tasks().map((task) =>
+        task.id !== id ? task : { ...task, completed: !task.completed }
+      )
+    );
+  };
+
+  const removeTask = (id) => {
+    setTasks(tasks().filter((task) => task.id !== id));
+    setNumberOfTasks(numberOfTasks() - 1);
+  };
+
+
+  const completedTasks = createMemo(() => {
+    let count = 0;
+    for (let task of tasks()) {
+      if (task.completed === true) count++
+    }
+    return count;
+  })
+
+  return (
+    <>
+      <h1>My list</h1>
+      <span>You have {numberOfTasks()} task(s) today!</span>
+      <div>
+        <input ref={input} />
+        <button
+          onClick={(e) => {
+            if (!input.value.trim()) return;
+            addTask(input.value);
+            input.value = '';
+          }}
+        >
+          Add Task
+        </button>
+      </div>
+      <For each={tasks()}>
+        {(task) => {
+          const { id, text } = task;
+          console.log(`Creating ${text}`);
+          return (
+            <div>
+              <input
+                type="checkbox"
+                checked={task.completed}
+                onChange={[toggleTask, id]}
+              />
+              <span
+                style={{
+                  'text-decoration': task.completed ? 'line-through' : 'none',
+                }}
+              >
+                {text}
+              </span>
+              <button onClick={() => removeTask(id)}>x</button>
+            </div>
+          );
+        }}
+      </For>
+      <Show when={completedTasks() !== 0}>
+        <span>You have completed {completedTasks()} task(s) today!</span>
+      </Show>
+    </>
+  );
+};
+
+export default App;
+```
+
+This illustrates handling a list of tasks where their count is maintained and the amount of completed tasks is updated based on the user's interactions.
+There are several challenges to managing state in this way:
+
+* There is increased verbosity with multiple `createSignal` calls for `tasks`, `numberOfTasks`, as well as a `createMemo` function for `completedTasks`.
+Additionally, each state update, requires manual updates to other related states which risks the states getting out of sync.
+
+* While Solid is optimized, this components design leads to frequent recalculations, like updating `completedTasks` with every toggle action.
+These recalculations can negatively impact performance.
+In addition, the dependence on the component's logic on the current state for determining `numberOfTasks` and `completedTasks` can complicate code understanding.
+
+As an application like this scales, this way of managing state becomes even more complex.
+Any addition of other dependent state variables would require updates across the *entire* component which would likely introduce more errors.
+This will likely make it more difficult to separate specific functionalities into distinct, reusable components without transferring a substantial portion of state management logic, as well.
+
+## Introducing stores
+
+Solid's answer to this is [**stores**](/essentials/stores).
+Stores simplify state management through creating a centralized location for logic, which will reduce code redundancy.
+Stores use immutable patterns to make it easier to manage reactivity and flow of data, which make them a better candidate for more complex state management scenarios.
+
+Through recreating this list using Stores, you will see how stores can improve the readability and management of your code.
+
+## Creating a store
+
+Similar to signals, stores are a way to store state.
+However, while signals are able to hold only a single value, stores are collection of signals.
+To create a store and reduce the amount of signals that were used in the original example, you can do the following:
+
+```jsx
+import { createStore } from "solid-js/store"
+
+const App = () => {
+  const [state, setState] = createStore({
+          tasks: [],
+          numberOfTasks: 0,
+          completedTasks: 0,
+      });
+
+}
+
+export default App;
+```
+
+In using a store, there is no longer a need for managing separate signals for `tasks`, `numberOfTasks`, and `completedTasks`.
+
+## Accessing values
+
+Properties within a store are accessible through a read-only proxy, `state`, which is the first value returned by the `createStore` function.
+This method ensures that your component consistently reflects the current value of the store's properties:
+
+```jsx
+  import { createStore } from "solid-js/store"
+
+const App = () => {
+  const [state, setState] = createStore({
+          tasks: [],
+          numberOfTasks: 0,
+          completedTasks: 0,
+      });
+  return (
+    <>
+      <h1>My Task List for Today</h1>
+      <span>You have {state.numberOfTasks} task(s) for today!</span>
+    </>
+  )
+}
+
+export default App;
+```
+
+## Updating stores
+
+When you want to modify a store in Solid, you use the `setState` function.
+This setter is provided by the second value returned by `createStore`.
+Its purpose is to provide a means for reactively updating the store, which then ensures that any component or computations dependent on that store will update whenever the store's state alters.
+
+To illustrate how to modify a store, consider the updated component: 
+
+```jsx
+import { For, createEffect, Show } from 'solid-js';
+import { createStore } from 'solid-js/store';
+
+const App = () => {
+  let input; // lets you target the input value
+  const [state, setState] = createStore({
+    tasks: [],
+    numberOfTasks: 0,
+    completedTasks: 0,
+  });
+
+  const addTask = (text) => {
+    setState('tasks', state.tasks.length,
+      { id: state.tasks.length, text, completed: false });
+  };
+
+  const toggleTask = (id) => {
+    const currentCompletedStatus = state.tasks[id].completed;
+    setState(
+      `tasks`,
+      (task) => task.id === id,
+      `completed`,
+      !currentCompletedStatus
+    );
+    if (currentCompletedStatus) {
+      setState('completedTasks', state.completedTasks - 1);
+    } else {
+      setState('completedTasks', state.completedTasks + 1);
+    }
+    console.log(state.tasks);
+  };
+
+   createEffect(() => {
+    setState('numberOfTasks', state.tasks.length);
+  });
+
+  return (
+    <>
+      <div>
+        <h1>My Task List for Today</h1>
+        <span>You have {state.numberOfTasks} task(s) for today!</span>
+      </div>
+      <input ref={input} />
+      <button
+        onClick={(e) => {
+          if (!input.value.trim()) return;
+          addTask(input.value);
+          input.value = '';
+        }}
+      >
+        Add Task
+      </button>
+      <For each={state.tasks}>
+        {(task) => {
+          const { id, text } = task;
+          return (
+            <div>
+              <input
+                type="checkbox"
+                checked={task.completed}
+                onChange={() => toggleTask(task.id)}
+              />
+              <span>{text}</span>
+            </div>
+          );
+        }}
+      </For>
+      <Show when={state.completedTasks !== 0}>
+        <span>You have completed {state.completedTasks} task(s)!</span>
+      </Show>
+    </>
+  );
+};
+
+export default App;
+```
+
+### Adding to an array
+
+To add an element to an array, in this case the new task, this can be achieved through targeting the next index of the array through `state.tasks.length`. 
+By pinpointing the `tasks` key in combination with the upcoming position, the new task is appended to the end of the array end.
+
+### Reactivity in stores
+
+While stores provide a reactive way to manage state, the signals that they rely on are created lazily.
+What this means, is that these signals are only tracked when accessed through a reactive scope.
+For example, setting the `numberOfTasks` property directly under `createStore`, such as `setState("numberOfTasks", state.tasks.length)`, will **not** reactively update `numberOfTasks`.
+
+Rather to`numberOfTasks` property continuously updated, it will have to be accessed in a tracking scope, such as within a `createEffect`. 
+Through `createEffect`, `numberOfTasks` will remain reflective of its current state.
+
+### Navigating and modifying nested properties
+
+One important feature of the setter functions in stores is their path syntax. 
+It allows you to identify the state's keys as the initial arguments and provide the new value for the identified key as the last one. 
+If you have worked with JavaScript, this might remind you of how you assign a value in an object: `object[key] = newValue`.
+For stores, however, the setter would require the following: `setStore("key", value)`.
+In the example above, the `addTask` function appends onto the `tasks` array by: `setState("tasks", state.tasks.length, { id: state.tasks.length, text, completed: false })`, showcasing this path syntax.
+
+<Aside>
+  **Note**: Solid's `setState` offers flexibility with filtering properties. 
+  This is shown in the `toggleTask` function to find the correct task's `id`.
+  
+  While this is one way to filter, other methods for such as [`filter`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter), [`find`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find), and [`startsWith`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith), can offer other ways to target specific items or keys.
+</Aside>
+
+#### Mutating state with `produce`
+
+Even with the many capabilities of the `setState` method, there are instances where another approach could be more desireable.
+In situations where you may want to work with the writeable proxy version of your store, Solid has introduced the `produce` method.
+
+`produce` facilitates working with immutable data structures in a more mutuable-fashion. 
+It provides a way to perform mutations as if working with regular JavaScript objects but, upon completion, produces a *new state* with all the changes applied in an **immutable** manner.
+
+For instance, updating `addTask` and `toggleTask` to integrate the `produce` method would look like the following:
+
+```jsx
+const addTask = (text) => {
+    setState(
+      'tasks',
+      produce((task) => {
+        task.push({ id: state.tasks.length, text, completed: false });
+      })
+    );
+  };
+
+  const toggleTask = (id) => {
+    setState(
+      'tasks',
+      (tasks) => tasks.id === id,
+      produce((task) => {
+        task.completed = !task.completed;
+      })
+    );
+  };
+```
+
+Some advantages to using `produce`:
+*  Handling deeply nested state objects or arrays with `produce` eliminates the verbosity often associated with just `setState`.
+* `produce` ensures that the original state is untouched, reducing the risk of unexpected mutations and the bugs they can introduce.
+* It only generates a new object when there's a change, streamlining updates and improving performance.
+* In more complex applications, `produce` offers a more structured and consistent approach to state updates, making the codebase easier to manage and debug.
+
+<Aside>
+  Another benefit to working with `produce` is that it offers a way to modify a store without having to make multiple `setStore` calls.
+
+  ```jsx
+    // without produce
+    batch(() => {
+      setState(0, 'text', "I'm updated text")
+      setState(0, 'completed', true)
+    })
+
+    // with produce
+    setState(0,
+    produce((task) => {
+      task.text = "I'm updated text",
+      task.completed = true
+    }))
+  ```
+</Aside>
+
+To learn more about stores and the utilities it provides, visit the the [store's information page](/essentials/stores).

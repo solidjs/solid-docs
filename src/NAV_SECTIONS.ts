@@ -471,6 +471,10 @@ export const LEARN_SECTIONS: SECTIONS = {
         name: "State Management",
         link: "/guides/state-management",
       },
+	  {
+		name: "Complex State Management",
+		link: "/guides/complex-state-management",
+	  },
       {
         name: "Deploying your App",
         link: "/guides/deploying-your-app",

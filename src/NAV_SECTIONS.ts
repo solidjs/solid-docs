@@ -437,6 +437,10 @@ export const LEARN_SECTIONS: SECTIONS = {
         name: "Event Handling",
         link: "/essentials/event-handling",
       },
+	  {
+		name: "Stores",
+		link: "/essentials/stores",
+	  }
     ],
   },
   tutorials: {

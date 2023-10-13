@@ -7,6 +7,7 @@ import { Title } from "./components/Main"
 import { Title as MetaTitle } from "@solidjs/meta"
 import { usePageState } from "~/components/context/PageStateContext"
 import CopyButton from "./components/CopyButton"
+import EraserLink, { getEraserLinkData } from "./components/EraserLink"
 
 function Anchor(props: ParentProps<{ id: string }>) {
 	return (
@@ -16,6 +17,21 @@ function Anchor(props: ParentProps<{ id: string }>) {
 		>
 			{props.children}
 		</a>
+	)
+}
+
+function EraserLinkOrNormalLink(props: ParentProps<{ href: string }>) {
+	const eraserLinkData = getEraserLinkData(props.href)
+	if (eraserLinkData) {
+		return <EraserLink linkData={eraserLinkData}>{props.children}</EraserLink>
+	}
+	return (
+		<Link
+			{...props}
+			class="dark:text-solid-darklink break-normal text-solid-lightlink duration-100 ease-in transition font-semibold leading-normal transition hover:underline"
+		>
+			{props.children}
+		</Link>
 	)
 }
 
@@ -43,7 +59,7 @@ export default {
 			{...props}
 			class={
 				headerBold +
-        "heading mt-10 mb-6 -mx-.5 break-words text-4xl leading-tight mdx-heading"
+				"heading mt-10 mb-6 -mx-.5 break-words text-4xl leading-tight mdx-heading"
 			}
 		>
 			<MetaTitle>{props.children}</MetaTitle>
@@ -62,7 +78,7 @@ export default {
 				{...props}
 				class={
 					headerBold +
-          "heading text-2xl leading-10 my-6 mdx-heading text-solid-accent dark:text-solid-accentlight"
+					"heading text-2xl leading-10 my-6 mdx-heading text-solid-accent dark:text-solid-accentlight"
 				}
 			>
 				<Anchor id={props.id}>{props.children}</Anchor>
@@ -100,16 +116,7 @@ export default {
 			{props.children}
 		</p>
 	),
-	a: (props) => {
-		return (
-			<Link
-				{...props}
-				class="dark:text-solid-darklink break-normal text-solid-lightlink duration-100 ease-in transition font-semibold leading-normal transition hover:underline"
-			>
-				{props.children}
-			</Link>
-		)
-	},
+	a: EraserLinkOrNormalLink,
 	li: (props) => (
 		<li {...props} class="mb-2">
 			{props.children}
@@ -132,8 +139,8 @@ export default {
 	Link,
 	TesterComponent: () => (
 		<p>
-      Remove This Now!!! If you see this it means that markdown custom
-      components does work
+			Remove This Now!!! If you see this it means that markdown custom
+			components does work
 		</p>
 	),
 	code: (props) => {
@@ -158,19 +165,19 @@ export default {
 						get class() {
 							return (
 								props.className +
-                " " +
-                (props.bad ? "border-red-400 border-1" : "")
+								" relative " +
+								(props.bad ? "border-red-400 border-1" : "")
 							)
 						},
-						get className() {
-							return undefined
-						},
+						// get className() {
+						// 	return undefined
+						// },
 					})}
 					ref={ref}
 				>
+					<CopyButton parentRef={ref} />
 					{props.children}
 				</pre>
-				<CopyButton parentRef={ref} />
 			</div>
 		)
 	},

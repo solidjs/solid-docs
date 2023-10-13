@@ -398,8 +398,8 @@ export const LEARN_SECTIONS: SECTIONS = {
     name: "Essentials",
     pages: [
       {
-        name: "Understanding JSX Syntax",
-        link: "/essentials/understanding-jsx-syntax",
+        name: "Understanding JSX",
+        link: "/essentials/understanding-jsx",
       },
       {
         name: "Intro to Reactivity",
@@ -494,7 +494,7 @@ export const LEARN_SECTIONS: SECTIONS = {
       },
       {
         name: "Contribution Guide",
-        link: "#",
+        link: "https://github.com/solidjs/solid-docs-next/blob/main/CONTRIBUTING.md",
       },
       {
         name: "Community & Support",

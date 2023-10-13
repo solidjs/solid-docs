@@ -7,6 +7,7 @@ import { Title } from "./components/Main"
 import { Title as MetaTitle } from "@solidjs/meta"
 import { usePageState } from "~/components/context/PageStateContext"
 import CopyButton from "./components/CopyButton"
+import EraserLink, { getEraserLinkData } from "./components/EraserLink"
 
 function Anchor(props: ParentProps<{ id: string }>) {
 	return (
@@ -16,6 +17,21 @@ function Anchor(props: ParentProps<{ id: string }>) {
 		>
 			{props.children}
 		</a>
+	)
+}
+
+function EraserLinkOrNormalLink(props: ParentProps<{ href: string }>) {
+	const eraserLinkData = getEraserLinkData(props.href)
+	if (eraserLinkData) {
+		return <EraserLink linkData={eraserLinkData}>{props.children}</EraserLink>
+	}
+	return (
+		<Link
+			{...props}
+			class="dark:text-solid-darklink break-normal text-solid-lightlink duration-100 ease-in transition font-semibold leading-normal transition hover:underline"
+		>
+			{props.children}
+		</Link>
 	)
 }
 
@@ -100,16 +116,7 @@ export default {
 			{props.children}
 		</p>
 	),
-	a: (props) => {
-		return (
-			<Link
-				{...props}
-				class="dark:text-solid-darklink break-normal text-solid-lightlink duration-100 ease-in transition font-semibold leading-normal transition hover:underline"
-			>
-				{props.children}
-			</Link>
-		)
-	},
+	a: EraserLinkOrNormalLink,
 	li: (props) => (
 		<li {...props} class="mb-2">
 			{props.children}

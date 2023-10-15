@@ -61,9 +61,8 @@ function TopMenu() {
 				style={{ "--bg-opacity": "0.2" }}
 			>
 				<Routes>
-					<Route path={"/references/**/*"} component={ReferenceNav} />
-					<Route path={"/learn/**/*"} component={LearnNav} />
-					<Route path="/**/*" component={LearnNav} />
+					<Route path={"/reference/*"} component={ReferenceNav} />
+					<Route path="/*" component={LearnNav} />
 				</Routes>
 			</nav>
 		</aside>

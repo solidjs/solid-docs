@@ -24,7 +24,7 @@ export const REFERENCE_SECTIONS: SECTIONS = {
 		pages: [
 			{
 				name: "Introduction",
-				link: "/references",
+				link: "/reference",
 			},
 		],
 	},
@@ -190,7 +190,7 @@ export const REFERENCE_SECTIONS: SECTIONS = {
 				name: "Stores",
 				pages: [
 					{
-						name: "Using Stores",
+						name: "Stores",
 						link: "/reference/using-stores",
 					},
 					{

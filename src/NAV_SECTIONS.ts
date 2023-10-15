@@ -28,22 +28,22 @@ export const REFERENCE_SECTIONS: SECTIONS = {
 			},
 		],
 	},
-	concepts: {
-		name: "Concepts",
-		pages: [
-			{
-				name: "Reactivity",
-				pages: [
-					{
-						name: "What is Reactivity",
-						link: "/concepts/reactivity",
-					},
-					{
-						name: "Tracking",
-						link: "/concepts/reactivity/tracking",
-					},
-				],
-			},
+	// concepts: {
+	// 	name: "Concepts",
+	// 	pages: [
+	// 		{
+	// 			name: "Reactivity",
+	// 			pages: [
+	// 				{
+	// 					name: "What is Reactivity",
+	// 					link: "/concepts/reactivity",
+	// 				},
+	// 				{
+	// 					name: "Tracking",
+	// 					link: "/concepts/reactivity/tracking",
+	// 				},
+	// 			],
+	// 		},
 			// {
 			//   name: "State Management",
 			//   pages: [
@@ -57,33 +57,33 @@ export const REFERENCE_SECTIONS: SECTIONS = {
 			// },
 			//   ],
 			// },
-			{
-				name: "Server Side Rendering (SSR)",
-				pages: [
-					{
-						name: "Simple/Client-fetching SSR",
-						link: "/concepts/ssr/simple-client-fetching-ssr",
-					},
-					{
-						name: "Async SSR",
-						link: "/concepts/ssr/async-ssr",
-					},
-					{
-						name: "Streaming",
-						link: "/concepts/ssr/streaming",
-					},
-					{
-						name: "Static Site Generation (SSG)",
-						link: "/concepts/ssr/ssg",
-					},
-					{
-						name: "Hydration",
-						link: "/concepts/ssr/hydration",
-					},
-				],
-			},
-		],
-	},
+	// 		{
+	// 			name: "Server Side Rendering (SSR)",
+	// 			pages: [
+	// 				{
+	// 					name: "Simple/Client-fetching SSR",
+	// 					link: "/concepts/ssr/simple-client-fetching-ssr",
+	// 				},
+	// 				{
+	// 					name: "Async SSR",
+	// 					link: "/concepts/ssr/async-ssr",
+	// 				},
+	// 				{
+	// 					name: "Streaming",
+	// 					link: "/concepts/ssr/streaming",
+	// 				},
+	// 				{
+	// 					name: "Static Site Generation (SSG)",
+	// 					link: "/concepts/ssr/ssg",
+	// 				},
+	// 				{
+	// 					name: "Hydration",
+	// 					link: "/concepts/ssr/hydration",
+	// 				},
+	// 			],
+	// 		},
+	// 	],
+	// },
 	api: {
 		name: "API",
 		pages: [
@@ -388,10 +388,10 @@ export const LEARN_SECTIONS: SECTIONS = {
         name: "Quick Start Guide",
         link: "/quick-start",
       },
-      {
-        name: "FAQ",
-        link: "/faq",
-      },
+    //   {
+    //     name: "FAQ",
+    //     link: "/faq",
+    //   },
     ],
   },
   essentials: {
@@ -492,18 +492,18 @@ export const LEARN_SECTIONS: SECTIONS = {
   additonalResources: {
     name: "Additional Resources",
     pages: [
-      {
-        name: "Ecosystem",
-        link: "/ecosystem",
-      },
+    //   {
+    //     name: "Ecosystem",
+    //     link: "/ecosystem",
+    //   },
       {
         name: "Contribution Guide",
         link: "https://github.com/solidjs/solid-docs-next/blob/main/CONTRIBUTING.md",
       },
-      {
-        name: "Community & Support",
-        link: "/community-and-support",
-      },
+    //   {
+    //     name: "Community & Support",
+    //     link: "/community-and-support",
+    //   },
     ],
   },
 };

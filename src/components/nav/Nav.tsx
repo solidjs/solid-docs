@@ -31,9 +31,9 @@ export default function Nav() {
 				/>
 			</div>
 			{/* <div id="docsearch"></div> */}
-			<div class="hidden md:block">
+			{/* <div class="hidden md:block">
 				<NavPreferences id="desktop" />
-			</div>
+			</div> */}
 			<div
 				classList={{
 					hidden: !showMenu(),
@@ -46,9 +46,9 @@ export default function Nav() {
 			{/* <div class="my-2" classList={{ hidden: props.docsMode == "regular" }}>
         <div id="docsearch" />
       </div> */}
-			<div class="md:hidden">
+			{/* <div class="md:hidden">
 				<NavPreferences id="mobile" />
-			</div>
+			</div> */}
 		</div>
 	)
 }

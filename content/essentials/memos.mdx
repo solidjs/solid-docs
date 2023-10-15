@@ -1,33 +1,26 @@
 # Memos
 
-Memos in Solid serve a dual purpose. 
-They are both a *signal* and a *computation*, primarily used for memoizing derived state. 
+Memos in Solid serve a dual purpose - they are both a *signal* and a *computation*, primarily used for memoizing derived state. 
 Memos allow you to create a derived value that recalculates only when its dependencies change. 
 By doing so, they offer an efficient way to use these derived values, cache the results of the expensive or frequently accessed computations, and minimize unnecessary work. 
-This eliminates the need for repeated function calls.
 
-Through the combination of observing changes in their dependencies (similar to an effect) and exposing a *read-only* reactive value (like a signal), memos can adapt well to changes to reduce any re-running.
+Through the combination of observing changes in their dependencies (similar to an effect) and exposing a *read-only* reactive value (like a signal), memos can adapt well to changes to reduce unnecessary re-renders.
 
 ## Using memos
-
-To use memos, import the `createMemo` function from Solid:
-
-```jsx
-import { createMemo } from 'solid-js';
-```
 
 Writing a memo involves calling the `createMemo` function and passing a function as its argument.
 This function will define the derived value or computations you want to memoize. 
 When called, `createMemo` will return a **getter** function that reads the current value of the memo:
 
 ```jsx
+import { createMemo } from 'solid-js';
+
 const isEven = createMemo(() => count() % 2 === 0);
 
 console.log(isEven())
 ```
 
-In this example, `isEven` serves as the getter function. 
-It evaluates whether the value of the `count` signal is even.
+In this example, `isEven` serves as the getter function that evaluates whether the value of the `count` signal is even.
 Whenever `count` undergoes a change, `isEven` will automatically re-run.
 
 ### Advantages of using memos
@@ -36,11 +29,12 @@ While it is possible to use regular functions to mimic the behavior of a memo, `
 
 - Unlike a basic derived signal or effects, memos are optimized to execute only _once_ for each change in their dependencies.
 This significantly reduces computational overhead.
+
 - In scenarios where a signal is updated once but *accessed* multiple times, the memoized function will only execute once and will **cache** its results. 
 This cache means that any subsequent retrieval of the stored result can be accessed _without_ recalculating, shielding the dependents from redundant updates if the value remains consistent.
 
-- With a memos ability to automatically track dependencies, any signal or other memo accessed within its function is tracked. 
-As a result, the memo will re-evaluate automatically when these dependencies change, removing the need for a depenency array.
+- With a memos ability to automatically track dependencies, any signal or memo accessed within its function is **tracked**. 
+As a result, the memo will re-evaluate automatically when these dependencies change, removing the need for a dependency array.
 
 [View on Eraser![](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9/preview?elements=YtmtRTZ8qatHb6greYPovA&type=embed)](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=YtmtRTZ8qatHb6greYPovA)
 
@@ -59,10 +53,10 @@ They, however, serve different purposes and each have their own unique behaviors
 | Dependency tracking. | Automatically tracks all dependencies. | Automatically tracks all dependencies, running when relevant reactive values change. |
 | Example use cases | Transforming data structures, computing aggregated values, derived state, or other expensive computations. | UI updates, network requests, or external integrations. |
 
-
 ## Best practices
+
 When working with memos, its recommended that you leave them "pure". 
-This means you should not modify other signals as it can lead to unexpected behaviors and make the code harder to maintain. 
+This means you should not modify other signals because it can lead to unexpected behaviors and make the code harder to maintain. 
 
 ```jsx
 import { createSignal, createMemo } from 'solid-js';
@@ -72,7 +66,7 @@ const isEven = createMemo(() => count() % 2 === 0); // example of a pure functio
 ```
 
 Since memos are expected to be pure functions, their outputs should solely depend on their inputs without side effects. 
-When you add a side effect, you introduce complicated behaviours by complicating the reactivity chain and potentially introduce infinite update loops. 
+When you add a side effect, the reactivity chain is complicated which potentially introduces infinite update loops. 
 
 ```jsx
 import { createSignal, createMemo } from 'solid-js';
@@ -80,7 +74,7 @@ import { createSignal, createMemo } from 'solid-js';
 const [count, setCount] = createSignal(0);
 const [message, setMessage] = createSignal("");
 
-// this is an example of a impure function in createMemo
+// impure function in createMemo
 const badMemo = createMemo(() => {
     if (count() > 10) {
         setMessage("Count is too high!"); // this can introduce a side effect
@@ -89,12 +83,11 @@ const badMemo = createMemo(() => {
 });
 ```
 
-In this example, you introduce unpredictability. 
-If another part of the application reacts to the changes in the `message` signal, it could trigger further updates or side effects which complicate the flow of data and cause a possible infinite update loop. 
+In this example, if another part of the application reacts to the changes in the `message` signal, it can trigger further updates or side effects which complicate the flow of data and cause a possible infinite update loop. 
 
 If there's a need to perform a side effect based on a memo's value, it's better to use an effect:
 
-```
+```jsx
 import { createSignal, createMemo, createEffect } from 'solid-js';
 
 const [count, setCount] = createSignal(0);

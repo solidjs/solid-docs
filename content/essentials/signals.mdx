@@ -2,21 +2,22 @@ import { Aside } from "~/components/configurable/Aside";
 
 # Signals
 
-At the heart of a Solid's reactivity system are signals. 
-Signals serve as a reactive variable to tell other parts of an application when to refresh themselves.
-When the value of a signal changes, the parts of your application that depend on that signal are updated automatically.
+At the heart of Solid's reactivity system are signals. 
+Signals serve as a reactive variable that tell other parts of an application when to refresh.
+When the value of a signal changes, the parts of your application that depend on that signal are automatically updated.
 
-Signals eliminate the need to re-execute the entire component function, focusing instead on updating only the altered aspects of the component. 
-Furthermore, this adaptability of signals extend beyond component functions, allowing them to be used in other areas within the application. 
+Signals eliminate the need to re-render an entire component function, focusing instead on updating only the changed aspects of the component. 
+Furthermore, this adaptability of signals extend beyond component functions, providing them with the ability to be used in other areas of an application. 
 
 ## Creating a signal
 
 To create a signal, import the `createSignal` primitive from Solid:
 
-```jsx
-import { createSignal } form "solid-js";
+```js
+import { createSignal } from "solid-js";
 ```
-Upon its call, this function returns a pair of values: the first is a **getter** function, which is responsible for _reading _the current value of the signal, and the second is a **setter **function, designed to _write _the signal's value:
+
+Once called, this function returns a pair of values: **getter** function responsible for _reading _ the current value of the signal, and a **setter ** function, designed to _write_ the signal's value:
 
 ```jsx
 const [count, setCount] = createSignal(0);
@@ -25,14 +26,13 @@ const [count, setCount] = createSignal(0);
 In this example, `count` is the getter and `setCount`  is the setter function.
 
 <Aside>
-
-The syntax using `[` and `]` is called [array destructuring](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment). 
-This lets you extract values from the array. 
-Specifically, in the context of `createSignal` , there are two items being returned: the getter (first), and the setter (second).
-
+  The syntax using `[` and `]` is called [array destructuring](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment). 
+  This lets you extract values from the array. 
+  Specifically, in the context of `createSignal`, there are two items being returned: the getter (first), and the setter (second).
 </Aside>
 
-The ability of signals to handle any data type, along with components not owning state, lets you use signals anywhere in your application. This eliminates the need for any additional third-party state management libraries.
+The ability of signals to handle most data type, along with components not owning state, lets you use signals anywhere in your application. 
+This eliminates the need for any additional third-party state management libraries.
 
 ## Accessing values
 
@@ -43,22 +43,20 @@ console.log(count()) // output: 0
 ```
 
 When a signal is called within a [tracking scope](/essentials/intro-to-reactivity#tracking), it forms a dependent between the signal and the wrapping function. 
-In this context, if the value of the signal changes, it notifies its dependencies of this change. 
-As a result, anything that is subscribed to this signal by accessing it within a tracking scope, will be called again. 
+If the value of the signal changes, it notifies its dependencies of this change. 
+As a result, anything that is subscribed to this signal through accessing it in a tracking scope, will be called again. 
 This ensures that anything dependent on this signal will always be in sync with the state represented by these signals.
 
 <Aside>
+  A tracking scope is typically created by [`createEffect`](/reference/createEffect)  or [`createMemo`](/reference/createMemo), which are other Solid primitives. 
+  Both functions subscribe to the signals accessed within them, establishing a dependency relationship.
 
-A tracking scope is typically created by [`createEffect`](/reference/createEffect)  or [`createMemo`](/reference/createMemo), other Solid primitives. 
-Both functions subscribe to the signals accessed within them, establishing a dependency relationship.
-
-When a signal within this scope changes its value, these dependencies are identified, and the computations (such as Solid's effects or memos) relying on them are triggered to update.
-
+  When a signal within this scope changes its value, these dependencies are identified, and the computations (such as Solid's effects or memos) relying on them are triggered to update.
 </Aside>
 
 ## Updating values
 
-To update a signal's value, you just need to call the setter function returned by `createSignal`:
+To update a signal's value, you call the setter function returned by `createSignal`:
 
 ```jsx
 setCount(count()+1)
@@ -66,13 +64,9 @@ setCount(count()+1)
 console.log(count()) // output: 1
 ```
 
-When the setter is called, the value of the signal is automatically updated, re-executing the functions.
-
-## Reacting to changes
-
-A distinct feature of signals is their ability to keep a list of their dependents. 
-[Effects](/essentials/effects) and [memos](/essentials/memos) subscribe to signals, inherently becoming _dependent _on them.
-This ensures tracking across all the dependent functions whenever the signal's value changes.
+Signals are able to maintain a list of their dependents. 
+[Effects](/essentials/effects) and [memos](/essentials/memos) subscribe to signals, thereby establishing a *dependency* on them.
+This built-in dependency mechanism guarantees that whenever the signal's value changes, all associated functions are automatically notified and updated accordingly.
 
 ```jsx
 function Counter() {
@@ -95,22 +89,23 @@ function Counter() {
 
 export default Counter;
 ```
+
 In this example, `createSignal` initializes a reactive state variable `count` and sets its initial value to `0` .
 
-In the top-level code, including the `callonsole.log` statement, execution happens only once—when the component is initially rendered.
-Components in solid _are not_ re-executed to update.
-This means that the initial value of `count`, which is `0`, will be logged to the console only once, regardless of subsequent changes to `count`.
+In the top-level code, which includes the `console.log` statement, execution happens only **once** — when the component is initially rendered.
+ Components in Solid **do not** automatically trigger updates.
+As a result, the initial value of `count`, which is `0`, will be logged to the console during the initial component rendering, regardless of any subsequent changes to the `count` value.
 
-On the other hand, `double` is initialized using `createMemo`, another Solid primitive, which forms a reactive computed value based on `count` signal.
-Unlike the `console.log` statement, the `createMemo` function ensures that `double` tracks the changes in `count`. 
-This implies that `double` automatically recalculates and prompts the component to re-render, displaying the updated value whenever `count` is updated.
+In contrast, `double` is initialized using `createMemo`, a Solid primitive that establishes a reactive computed value that depends on the `count` signal.
+Unlike the `console.log` statement, `createMemo` ensures that `double` tracks the changes in `count`. 
+Consequently, whenever `count` is updated, `double` automatically recalculates its value and displays the updated value as a result.
 
 <Aside>
 Even without the explicit `createMemo()` wrapper, keeping `count()*2` wrapped in a function would still work. For example:
 
-```
+```js
 const double = () => count() * 2;
 ```
 
-This explicit use of `createMemo` was more for illustrative purposes, showcasing its ability to make values reactive to make sure the component stays responsive to changes in state.
+The explicit use of `createMemo` was more for illustrative purposes, showcasing its ability to make values reactive so components stay responsive to changes in state.
 </Aside>

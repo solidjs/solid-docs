@@ -3,8 +3,8 @@ import {Aside} from "~/components/configurable/Aside"
 # Stores
 
 Solid's stores function as a state management primitive, similar to [signals](/essentials/signals).
-While signals manage a single piece of state, however, stores can manage multiple pieces.
-Within Solid, these stores can spawn a network of reactive signals, each corresponding to a particular property making them important when managing more complex state.
+While signals manage a single piece of state, stores are capable of managing multiple.
+Within Solid, these stores can spawn a network of reactive signals, each corresponding to a particular property which can be useful when working with complex state.
 
 ## Creating a store
 
@@ -14,9 +14,9 @@ Solid's `createStore` function provides the entry point to set up a store:
 import { createStore } from "solid-js/store";
 ```
 
-Stores were created to handle complex data structures like objects and arrays, but accept other data types like strings and numbers.
-With having JavaScript's [proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) mechanism built in, reactivity will target not just the top-level objects or arrays, but their nested properties and elements as well.
-This allows stores to wrap their properties to create a dynamic tree of reactive data.
+Stores were intentionally designed to manage data structures like objects and arrays but are capable of handling other data types, such as strings and nu,bers.
+With including JavaScript's [proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) mechanism, reactivity extends beyond just the top-level objects or arrays.
+It can now also target nested properties and elements within these structures creating a dynamic tree of reactive data.
 
 ```jsx
 // Initialize store
@@ -47,14 +47,15 @@ const [store, setStore] = createStore({
 
 ### Accessing values
 
-Store properties can be accessed directly from the state proxy by directly reference your targeted property:
+Store properties can be accessed directly from the state proxy through directly referencing the targeted property:
 
 ```jsx
 console.log(store.userCount) // Outputs: 3
 ```
 
-Accessing stores within a tracking scope works the same way.
-Where signals make use of the `createSignal` function, however, store values do not need to be called when accesed:
+Accessing stores within a tracking scope follows a similar pattern to signals.
+While signals are created using the `createSignal` function and require calling the signal function to access their values, store values can be directly accessed without a function call.
+This provides access to the store's value directly within a tracking scope:
 
 ```jsx
 const App = () => {
@@ -91,12 +92,9 @@ const App = () => {
 };
 ```
 
-**Note:** While store values can be accessed directly, `mySignal` requires a function call.
-In using the reactive references, the UI will maintain its reactivity as values change.
-
 ### Modifying store values
 
-In Solid, updating values within a store is best accomplished using a setter provided by the `createStore` initialization.
+Updating values within a store is best accomplished using a setter provided by the `createStore` initialization.
 This setter allows for the modification of a specific key and its associated value, following the format `setStore(key, newValue)`:
 
 ```jsx
@@ -111,22 +109,34 @@ setStore("users", (otherUsers) =>[
 ```
 
 Modifying a store using this method is referred to as "path syntax." 
-Initial arguments specify the targeted keys, while the last argument provides the new value.
-String keys are commonly used in path syntax to access specific values, however, keys can also be accessed via an array or through filtering functions.
-
-[View on Eraser![](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9/preview?elements=aUOwffJd4QDWWDi22XI8DA&type=embed)](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=aUOwffJd4QDWWDi22XI8DA)
+In this approach, the initial arguments are used to specify the keys that lead to the target value you want to modify, while the last argument provides the new value.
 
 <Aside>
   Separating read and write capabilities to a store presents a valuable debugging advantage.
   It facilitates the tracking and control of which components can access or change store values.
 </Aside>
 
+### Path syntax flexibilty 
+
+String keys are frequently used to precisely target particular values.
+By specifying these exact key names, you can direclty retrieve the desired information.
+However, path syntax goes beyond string keys and offers more versatility when accessing targeted values.
+
+Instead of employing the use of just single string keys, there is the option of using an array of keys.
+This method grants you the ability to select multiple properties within the store, facilitating accessed to nested structures.
+Alternatively, you can use filtering functios to access keys based on dynamic conditions or specific rules.
+
+[View on Eraser![](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9/preview?elements=aUOwffJd4QDWWDi22XI8DA&type=embed)](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=aUOwffJd4QDWWDi22XI8DA)
+
+The flexibility in path syntax makes for efficient navigation and data retrieval from your store, regardless of the store's complexity or the requirement for dynamic access scenarios within your application.
+
 ## Store utilities
 
 ### Store updates with `produce`
  
-Rather than directly modifying the store with setters, Solid has the `produce` utility that provides a way to work with data as if it were a [mutable](https://developer.mozilla.org/en-US/docs/Glossary/Mutable) JavaScript object. 
-This provides a way to make changes to multiple properties simultaneously, eliminating the need for multiple setter calls.
+Rather than directly modifying a store with setters, Solid has the `produce` utility.
+This utility provides a way to work with data as if it were a [mutable](https://developer.mozilla.org/en-US/docs/Glossary/Mutable) JavaScript object.
+`produce` also provides a way to make changes to multiple properties at the same time which eliminates the need for multiple setter calls.
 
 ```jsx
 import { produce } from "solid-js/store"
@@ -143,20 +153,18 @@ produce((user) => {
 }))
 ```
 
-`produce` and `setState` have distinct functionalities. 
+`produce` and `setState` do have distinct functionalities. 
 While both can be used to modify the state, the key distinction lies in how they handle data.
 `produce` allows you to work with a temporary draft of the state, apply the changes, then produce a new [immutable](https://developer.mozilla.org/en-US/docs/Glossary/Immutable) version it.
 Comparatively, `setState` provides a more straightforward way of updating the state directly, without creating a new version.
 
-It's important to note, however, that `produce` is specifically designed to work with arrays and objects. 
+It's important to note, however, `produce` is specifically designed to work with arrays and objects. 
 Other collection types, such as JavaScript Sets and Maps, are not compatible with this utility.
 
 ### Data integration with `reconcile`
 
-In applications, there may be instances where new information needs to be merged into an existing store.
-`reconcile`, a utlity for Solid's stores, was designed to help with this.
-It determines the differences between the new and existing data, initiating updates only when there are changed values. 
-This avoids any unneccessary updates for changed elements.
+When new information needs to be merged into an existing store `reconcile`, a utlity for Solid's stores, can help.
+`reconcile` determines the differences between new and existing data, initiating updates only when there are *changed* values which avoids unneccessary updates.
 
 ```jsx
 const { createStore, reconcile } from "solid-js/stores"
@@ -170,15 +178,19 @@ const { createStore, reconcile } from "solid-js/stores"
 
 ```
 
-In this example, the store will looks for the differences between the existing and incoming data sets.
-Consequently, only the `'koala'` - the new edition - causes an update.
+In this example, the store will look for the differences between the existing and incoming data sets.
+Consequently, only `'koala'` - the new edition - will cause an update.
 
 ## Extracting raw data with `unrap`
 
-In situations where you may need to interact with data outside of a reactive context, the `unwrap` utlity offers a way to convert a store to a standard [object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object).
+When there is a need for dealing with data outside of a reactive context, the `unwrap` utlity offers a way to transform a store to a standard [object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object).
 
-If there is a need for a snapshot of the current state, without the reactive overhead, `unwrap` provides thisn immediate representation of the store's data.
-Additionally, it also offers a way to interact with third-party libraries or tools that expect regular JavaScript objects. 
+This conversion serves several important purposes. 
+Firstly, it provides a a snapshot of the current state without the processing overhead associated with reactivity. 
+This can be useful in situations where an unaltered, non-reactive view of the data is needed.
+
+Additionally, `unwrap` provides a means to interface with third-party libraries or tools that anticipate regular JavaScript objects. 
+This utility acts as a bridge, facilitating smooth integration with external components and simplifying the incorporation of stores into various applications and workflows.
 
 ```jsx
 import { createStore, unwrap } from 'solid-js/store'

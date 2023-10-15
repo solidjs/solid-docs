@@ -1,25 +1,23 @@
 # Conditional Rendering
 
-Conditional rendering in Solid introduces dedicated components that simplify and enhance the way UI is handled based on the presented conditions. 
-These components offer a more straightforward and readable way to manage these UI elements to make code more organized and maintainable.
+Conditional rendering in Solid introduces dedicated components that simplify the way UI is handled based on the desired conditions. 
+These components offer a more straightforward and readable way to manage UI elements and make code more organized and maintainable.
 
 ## `<Show>`
 
-The `<Show>` component integrates JavaScript control logic flow within templates, creating a more readable way to handle conditionals.
-It can be directly imported from Solid:
+The `<Show>` component integrates JavaScript control logic flow within templates.
+This offers a more readable way to handle conditionals.
 
-```JSX
-import { Show } from "solid-js"
-```
+`<Show>` uses a `when` property that determines the condition for rendering. 
+It accepts a boolean expression, which can be as simple as a boolean variable or complex expressions that evaluate to a boolean.
+This expression is re-evaluated whenever there is a change in the state or props it depends on.
 
-`<Show>` uses the `when` property is where the condition for rendering is specified. 
-It accepts a boolean expression, which could be as simple as a boolean variable or more complex expressions that evaluate to a boolean value.
-The expression in the `when` property is re-evaluated whenever there's a change in the state or props that it depends on.
-
-The `fallback` property is optional, however. 
+In addition to `when`, `<Show>` has an optional `fallback` property.
 Any valid JSX content or components can act as a fallback, ranging from simple text or HTML elements, to more complex components.
 
 ```jsx
+import { Show } from "solid-js"
+
 <Show when={!data.loading()} fallback={<div>Loading...</div>}>
   <h1>
     Hi, I am {data.name}.
@@ -30,25 +28,21 @@ Any valid JSX content or components can act as a fallback, ranging from simple t
 With this example, when the `!data.loading()` condition holds `true`, the primary content between the `<Show>` tags is rendered. 
 If it evaluates to `false`, the fallback content is rendered, if provided.
 
-When certain conditions are not met, `<Show>` can be used to show alternative content, loaders, error messages, or anything else that makes sense in the context of your application.
+When certain conditions are not met, `<Show>` can be used to show alternative content such as loaders, error messages, or other content that makes sense in the context of your application.
 
 ## `<Switch>` and `<Match>`
 
-Handling multiple conditions in Solid can be managed through the `<Switch>` and `<Match>` components, which are similar to JavaScript's [switch/case](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/switch) structure. 
-To use these components, import them from Solid:
+Handling multiple conditions in Solid can be managed through the `<Switch>` and `<Match>` components, which is similar to JavaScript's [switch/case](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/switch) structure. 
 
-```jsx
-import { Switch, Match } from "solid-js";
-```
-
-Simlar to show, `<Switch>` has the optional `fallback` prop available, which will specify the content that will be rendered if none of the `<Match>` components evaluate to true.
-
+Simlar to show, `<Switch>` has the optional `fallback` prop available, which will specify the content be rendered when none of the `<Match>` components evaluate to true.
 `<Match>`, however, is nested within `<Switch>` to represent individual conditions.
 These components will show based on when the `when` prop is evaluated to be true.
 
-These components will evaluate each condition *in sequence* and render the corresponding outcome of the **first** true condition encountered:
+Each condition is evlauted *in sequence* and will render the corresponding outcome based on the **first true condition** encountered:
 
 ```jsx
+import { Switch, Match } from "solid-js";
+
 <Switch fallback={<p>Fallback content</p>}>
   <Match when={condition1}>
     <p>Outcome 1</p>
@@ -59,7 +53,7 @@ These components will evaluate each condition *in sequence* and render the corre
 </Switch>
 ```
 
-Opting for this approach can create more readable and organized code. A nested `<Show>` component can be replaced with `<Switch>` and `<Match>` for the same results:
+Opting for this approach removes the need for nested `<Show>` components:
 
 ```jsx
 // nested show
@@ -91,14 +85,10 @@ Opting for this approach can create more readable and organized code. A nested `
 
 ## Dynamic
 
-`<Dynamic>` introduces a way to dynamically select and render components based on *varying* data. 
-It can be imported through Solid:
-
-```jsx
-import { Dynamic } from "solid-js";
-```
-
-`<Dynamic>` can either take a string representing a native element or a component function and it will render the rest of the provided props:
+`<Dynamic>` introduces a dynamic component rendering capability, allowing you to select and render components based on varying data. 
+You can provide it with either a string representing a native HTML element or a component function. 
+Once you've specified the component to render, `<Dynamic>` will render the remaining props that you provide. 
+This flexibility makes it a versatile tool for adapting your UI based on changing data or user interactions:
 
 ```jsx
 import { createSignal, Switch, Match, For } from "solid-js";
@@ -130,9 +120,10 @@ function App() {
 ```
 
 In this example, the `component` prop of `<Dynamic>` is assigned a value from the `options` array, which is indexed by the result of the `selected()` function call. 
-This dynamic assignment results in rendering the *chosen* component or element with the provided properties.
+This dynamic assignment results in rendering the chosen component or element with the provided properties.
 
-Using `<Dynamic>` can result in more compact and clean code other conditional rendering options, if it was replaced by a `<Switch>` statement, it would look like the following:
+Using `<Dynamic>` in scenarios like this can result in code that is more succinct and visually cleaner than alternative conditional rendering options. 
+If you were to replace it with a conditional rendering statement, the code would look something like this:
 
 ```jsx
 <Switch fallback={<BlueDiv />}>
@@ -141,12 +132,13 @@ Using `<Dynamic>` can result in more compact and clean code other conditional re
 </Switch>
 ```
 
-Choosing to use `<Dynamic>` can lead to a more compact code base when comparing to the use of multiple `<Switch>` or `<Switch>/<Match>` components.
+In this `<Switch>` statement, the `<Match>` components provide conditions to render specific components based on the result of `selected()`, which aligns with the behavior achieved using `<Dynamic>`. 
+However, `<Dynamic>` offers a more compact and readable way to achieve the same outcome.
 
 ## Portal
 
 The `<Portal>` element assists in tackling the difficulties that are typically encountered with overlay elements like modals.
-When an element requires rendering outside of the usual document flow, challenges related to stackign contents and z-index can present.
+When an element requires rendering outside of the usual document flow, challenges related to stacking contents and z-index can present.
 `<Portal>` enables the rendering elements of these elements so they are rendered correctly and interactively.
 
 ```jsx
@@ -157,28 +149,26 @@ import { Portal } from "solid-js";
 </Portal>
 ```
 
-[View on Eraser![](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9/preview?elements=hBlsXychIW_yV64t1x5IZA&type=embed)](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=hBlsXychIW_yV64t1x5IZA)
-
 The content nested within `<Portal>` is positioned at a designated location when shown.
 By default, Solid will render these elements in a `div` within `document.body` to make sure they are not bound by the styling or layout restrictions of the parent component.
 
 Using `<Portal>` can be particularly useful in cases where elements, like information popups, might be clipped or obscured due to the overflow settings of their parent elements.
 By encapsulating the element within `<Portal>`, it is effectively lifted from the standard flow and positioned in a manner that is both visually accessible and no longer effected by the layout constraints of its surrounding environment.
 
+[View on Eraser![](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9/preview?elements=hBlsXychIW_yV64t1x5IZA&type=embed)](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=hBlsXychIW_yV64t1x5IZA)
+
 ## Error Boundary
 
-The `<ErrorBoundary>` component in Solid serves as a protective layer around child components that are susceptible to throwing errors. 
+The `<ErrorBoundary>` component serves as a protective layer around child components that are susceptible to throwing errors. 
 By catching these errors, it prevents them from propagating and causing the entire application to crash:
 
 ```jsx
 import { ErrorBoundary } from "solid-js";
 
 <ErrorBoundary fallback={err => <div>Error: {err.message}</div>}>
-  <PotentiallyErroneousComponent />
+  <ProblematicComponent />
 </ErrorBoundary>
 ```
-
-[View on Eraser![](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9/preview?elements=uawsugh__apVsVq2YQmo_Q&type=embed)](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=uawsugh__apVsVq2YQmo_Q)
 
 In this setup, the `fallback` prop is important. 
 It determines what will be rendered in place of the child component(s) if an error is thrown.
@@ -188,3 +178,5 @@ If a component within `<ErrorBoundary>` throws an error, instead of causing a cr
 This way, even when a component fails, the user has a controlled UI response instead of a broken interface. 
 The fallback UI can be used to display the error message, or provide a friendly notification to the user.
 This mechanism aids in error containment and provides a better user experience even when unexpected issues arise in the UI.
+
+[View on Eraser![](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9/preview?elements=uawsugh__apVsVq2YQmo_Q&type=embed)](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=uawsugh__apVsVq2YQmo_Q)

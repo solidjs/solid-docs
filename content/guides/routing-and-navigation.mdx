@@ -7,9 +7,7 @@ import dataFunctionSnippet1JS from './snippets/data-function-snippet1-js.mdx';
 
 # Routing & Navigation
 
-Solid Router simplifies routing in Solid applications to help developers manage navigation and rendering. 
-Solid Router supports defining routes using JSX or objects passed via props. 
-This section will focus on the practical implementation of Solid Router using JSX.
+Solid Router simplifies routing in Solid applications to help developers manage navigation and rendering by defining routes using JSX or objects passed via props. 
 
 ## Getting Started
 
@@ -26,9 +24,10 @@ yarn add @solidjs/router
 pnpm i @solidjs/router
 ```
 
-2. Import the `Router`  component to wrap the root component.
+2. To use the router, import the `Router` component to wrap the root component.
+This allows the routes to be displayed throughout the entire application.
 
-```jsx=
+```jsx
 import {render} from "solid-js/web"
 import App from "./App"
 import {Router} from "@solidjs/router"
@@ -43,15 +42,13 @@ render(
 )
 ```
 
-This allows the routes to be displayed throughout the entire application.
-
 ### Configure the Routes
 
 Solid Router offers a convenient way to configure routes using `JSX` syntax:
 
-1. Use the `Routes`  component to specify where the routes should appear in the application.
+1. Using the `Routes` component, you can specify where the routes should appear in the application:
 
-```jsx=
+```jsx
 import { Routes, Route } from "@solidjs/router";
 
 export default function App() {
@@ -66,12 +63,12 @@ export default function App() {
 }
 ```
 
-2. The `Route`  component takes a `path`  prop, which specifies what path or element to render when navigated to. 
-When this path is successfully matched, the `component`  or `element`  prop will be triggered, rendering what it corresponds to.
-For grouping multiple routes, or for nesting, the `Routes`  component must be used. 
+2. The `Route` component takes a `path` prop, which specifies what path or element to render when navigated to. 
+When this path is successfully matched, the `component` or `element` prop will be triggered, rendering what it corresponds to.
+For grouping multiple routes, or for nesting, the `Routes` component must be used. 
 For example:
 
-```jsx=
+```jsx
 import { Routes, Route } from "@solidjs/router";
 
 import Home from "./pages/Home";
@@ -96,11 +93,9 @@ export default function App() {
 ### The `A` Component
 
 The `A` component creates an anchor tag that creates routes within an application. 
-Additionally, the component takes in an `href` prop which is the URL path that the link will navigate to.
+Additionally, the component takes in an `href` prop which acts as the URL path that the link will navigate to.
 
-Using the `A` component would look like the following:
-
-```jsx=
+```jsx
 import { A } from "@solidjs/router";
 
 export default function App() {
@@ -125,7 +120,7 @@ export default function App() {
 
 The `A` component can also take in the `activeClass` prop, which is a class that will be applied when the current location matches the `href` prop.
 
-```jsx=
+```jsx
 import { A } from "@solidjs/router";
 
 export default function App() {
@@ -185,7 +180,7 @@ function getPath ({navigate, location}) {
 
 Solid Router supports nested routes, allowing for more complex routing structures.
 
-```jsx=
+```jsx
 // Nested routes can be written as a single route
 <Route path="/about/me" component={User} />
 
@@ -195,11 +190,12 @@ Solid Router supports nested routes, allowing for more complex routing structure
 </Route>
 ```
 
-However, only leaf `Route` nodes, or the innermos `Route`, will be given a route. 
+However, only the innermost `Route` nodes will be given a route. 
 To ensure the parent has its own route, it must be specified separately.
 
 ```jsx
-<Route path="/about" component={About}> // This won't work
+// This will not work
+<Route path="/about" component={About}>
   <Route path="/me" component={User} />
 </Route>
 
@@ -207,7 +203,6 @@ To ensure the parent has its own route, it must be specified separately.
 <Route path="/about" component={About} />
 <Route path="/about/me" component={Me} />
 
-// This will also work
 <Route path="/about">
   <Route path="/" component={About} />
   <Route path="/me" component={Me} />
@@ -219,7 +214,7 @@ To ensure the parent has its own route, it must be specified separately.
 Nested routes can also take advantage of the `<Outlet />` component to render the nested content within a parent component. 
 The `<Outlet />` component serves as a placeholder that will be be replaced with the content of the matched child route.
 
-```jsx=
+```jsx
 import { Outlet } from "@solidjs/router";
 
 function PageWrapper() {
@@ -239,18 +234,18 @@ function PageWrapper() {
 ```
 
 In this example, the `<Outlet />` component is used to specify where the content of the child routes should be rendered within the `PageWrapper` component.
-When the `/about` route is matched, the `PageWrapper` component will be rendered, and the content of the child routes (`About` and `Me`) will be rendered inside the  component.
+When the `/about` route is matched, the `PageWrapper` component will be rendered, and the content of the child routes (`About` and `Me`) will be rendered inside the component.
 
-This approach allows you to define a shared layout or container component for a group of nested routes and render the specific element based on the child routes.
-As long as there are appropriate parent component `<Outlet />` placeholders defined at each level, you can nest routes indefinitely using this approach. .
+This approach allows you to define a **shared** layout or container component for a group of nested routes and render the specific element based on the child routes.
+As long as there are the appropriate parent component `<Outlet />` placeholders defined at each level, you can nest routes indefinitely using this approach.
 
 ## Dynamic Routing
 
 Dynamic routing lets an application handle URLs where some segments are not known ahead of time. 
-In Solid, you can create a dynamic route by using a colon (:) before a segment in the `path` prop of a `Route` component. 
+You can create a dynamic route by using a colon (:) before a segment in the `path` prop of a `Route` component. 
 This indicates that the segment can be any string.
 
-```jsx=
+```jsx
 import { Routes, Route } from "@solidjs/router";
 import Home from "./pages/Home";
 import About from "./pages/About"
@@ -277,6 +272,7 @@ As long as the URL matches this pattern, the User component will be displayed.
 ### Accessing parameters
 
 In cases where you may need to access a dynamic route's parameters within your components, the `useParams` primitive is available.
+And once the parameters have been accessed using `useParams`, they can be used within your component:
 
 ```jsx
 import { useParams } from "@solidjs/router";
@@ -284,20 +280,16 @@ import { useParams } from "@solidjs/router";
 const User = () => {
   const params = useParams(); // Retrieve the dynamic route parameters
   // Now you can access the id parameter as params.id
-};
+
+return (
+  <p>
+    This is the user with the id of <code>{params.id}</code>
+  </p>
+  )
+}
 ```
 
-Once the parameters have been accessed using `useParams`, they can be used within your component:
-
-```jsx
-<p>
-  This is the user with the id of <code>{params.id}</code>
-</p>
-
-```
-
-This primtive can be especially useful with other Solid primitives, such as [`createResource`](/reference/createResource) and [`createSignal`](/reference/createSignala).
-This creates dynamic behaviours based on the route parameters.
+This primtive can be especially useful with other Solid primitives, such as [`createResource`](/reference/createResource) and [`createSignal`](/reference/createSignal), which can create dynamic behaviours based on the route parameters.
 
 ```jsx
 import { createResource } from "solid-js";
@@ -328,7 +320,7 @@ const User = () => {
 };
 ```
 
-In this example, every time the `id` parameter changes, the `fetchUser` function is called to fetch the new user data.
+Every time the `id` parameter changes in this example, the `fetchUser` function is called to fetch the new user data.
 
 ### Validating routes
 
@@ -339,7 +331,7 @@ This task can be performed through `MatchFilters`.
 By including the `matchFilters={filters}` prop in the `<Route>` component, the parameters in the route path are automatically validated against their respective filters. 
 If any validation fails, the route will not be matched.
 
-```jsx=
+```jsx
 //...
 const filters: MatchFilters = {
   parent: ["mom", "dad"], // allow enum values
@@ -369,21 +361,13 @@ In this example, the `filters` object defines the validation rules for each para
 - The `parent`  parameter allows only the values `"mom"`  or `"dad"` . 
 - The `id` parameter allows only numeric values. 
 - The `withHtmlExtension` parameter is validated using a custom function that checks for a length greater than 5 and a `".html"`  extension.
-In this example, the following would match:
 
-- `/user/mom/123/contact.html` 
-- `/user/dad/123/about.html`
-
-While these wouldn't:
-
-- `/user/123/aunt/contact.html` - `:parent`  is not `"mom"`  or `"dad"`
-- `/user/123/mom/me/contact.html` - `:id`  is not a number
-- `/users/dad/contact` - `:withHtmlExtension`  is missing `.html` 
+[View on Eraser![](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9/preview?elements=vKUPYbf_IJ0r7F6DqCapoA&type=embed)](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=vKUPYbf_IJ0r7F6DqCapoA)
 
 ### Creating optional routes
 
-Routes can be specified as optional by adding `?` to the end of a parameter name. 
-This allows for more flexible routing patterns where certain segments of the path may or may not be present.
+Routes can be specified as optional by adding `?` to the end of a parameter name for more flexible routing patterns.
+This is especially useful when specific segments of the path may or may not be present.
 
 ```jsx
 <Route path="/stories/:id?" element={<Stories />} />
@@ -402,7 +386,7 @@ Additionally, this value can be exposed as a parameter to the component.
 In this example, the route path `"foo/*"` matches any path that begins with `"foo"`. 
 This includes paths like `"foo/"`, `"foo/a/"`, or `"foo/a/b/c"`.
 
-To expose the wildcard part of the path to the component as a parameter, the following can be done:
+To expose the wildcard part of the path to the component as a parameter, you can do the following:
 
 ```jsx
 <Route path="foo/*any" element={<div>{useParams().any}</div>} />
@@ -413,7 +397,7 @@ To expose the wildcard part of the path to the component as a parameter, the fol
 ## Defining Multiple Paths
 
 Routes can be defined with multiple paths using an array. 
-This feature allows a `Route` component to remain mounted and avoid re-rendering when switching between multiple locations that match any of the predetermined paths.
+This feature allows a `Route` component to **remain mounted** and avoid re-rendering when switching between multiple locations that match any of the predetermined paths.
 Using multiple paths can be useful when the same component and state are to be shared between different URLs that serve a similar purpose.
 
 ```jsx
@@ -438,7 +422,7 @@ const User = lazy(() => import("/pages/users/[id].js"));
 ```
 
 Once the data component is set up, the fetched data can be accessed within the route component by using the `useRouteData` hook.
-This hook allows you to retrieve the results of the `data` function once the route is loaded.
+This utility allows you to retrieve the results of the `data` function once the route is loaded.
 
 ```jsx
 // Inside the route component
@@ -474,8 +458,8 @@ Using this pattern means there is no need to import the `fetchUser` function dir
 
 ## Hash-based routing mode
 
-The default behaviour in Solid Router is to use `location.pathname` to determine the route path.
-However, there is more flexibility built into the router which gives you the option to easily switch to hash mode through the `source` property on the `<Router>` component.
+The default behaviour in Solid Router is to use `location.pathname` to find the route path.
+However, there is more flexibility built into the router which gives you the option to easily switch to hash mode through the `source` property in the `<Router>` component.
 
 ```jsx
 import { Router, hashIntegration } from '@solidjs/router';

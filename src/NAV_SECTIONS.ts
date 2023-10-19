@@ -460,8 +460,8 @@ export const LEARN_SECTIONS: SECTIONS = {
         link: "/guides/routing-and-navigation",
       },
       {
-        name: "Fetching Data",
-        link: "/guides/fetching-data",
+        name: "Data Fetching",
+        link: "/guides/data-fetching",
       },
       {
         name: "State Management",

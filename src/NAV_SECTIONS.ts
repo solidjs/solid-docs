@@ -475,27 +475,35 @@ export const LEARN_SECTIONS: SECTIONS = {
         name: "TypeScript for Solid",
         link: "/guides/typescript-for-solid",
       },
-      {
-        name: "Testing",
-        link: "/guides/testing",
-      },
+	  {
+		name: "Understanding Fine-Grained Reactivity",
+		link: "/guides/fine-grained-reactivity"
+	  }
+    //   {
+    //     name: "Testing",
+    //     link: "/guides/testing",
+    //   },
     ],
   },
-  additonalResources: {
-    name: "Additional Resources",
+  community: {
+    name: "Community",
     pages: [
       {
-        name: "Ecosystem",
-        link: "/ecosystem",
+        name: "The Solid Ecosystem",
+        link: "https://www.solidjs.com/ecosystem",
       },
       {
         name: "Contribution Guide",
         link: "https://github.com/solidjs/solid-docs-next/blob/main/CONTRIBUTING.md",
       },
-      {
-        name: "Community & Support",
-        link: "/community-and-support",
-      },
+	  {
+		name: "Our Open Collective",
+		link: "https://opencollective.com/solid",
+	  },
+	  {
+		name: "SolidJS on GitHib",
+		link: "https://github.com/solidjs"
+	  }
     ],
   },
 };

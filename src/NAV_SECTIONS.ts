@@ -422,8 +422,8 @@ export const LEARN_SECTIONS: SECTIONS = {
         link: "/essentials/managing-side-effects",
       },
       {
-        name: "Computed Values",
-        link: "/essentials/computed-values",
+        name: "Memos",
+        link: "/essentials/memos",
       },
       {
         name: "Control Flow",

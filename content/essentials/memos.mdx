@@ -37,8 +37,8 @@ This significantly reduces computational overhead.
 
 - Where a signal is updated once but *accessed* multiple times, the memoized function will only execute once and will **cache** its results.
 
-- If a cached value remains unchanged despite a change in its dependencies (as determined by `===),` it won't trigger subsequent updates. 
-For example, with `setCount(0)`, `isEven()` updates to `true`; however, `setCount(2)` might recompute `isEven()` and will yield `true`, prompting no further updates in components relying on `isEven()`.
+- If a cached value remains unchanged despite a change in its dependencies (as determined by `===`), it won't trigger subsequent updates. 
+For example, calling `setCount(0)` and then `setCount(2)` will cause the `isEven` memo to recompute both times, but because both evaluations are `true`, the second update will not cause any further updates in components relying on `isEven()`.
 
 - With a memo's ability to automatically track dependencies, any signal or memo accessed within its function is **tracked**. 
 As a result, the memo will re-evaluate automatically when these dependencies change, removing the need for a dependency array.
@@ -108,9 +108,9 @@ createEffect(() => {
 ```
 
 In this updated approach, the `isEven` memo will compute based on whether `count` is even *without* side effects.
-However, to minimize unnecessary updates that occur as a result of a change, it is better practice to convert any unnecessary effects into memos.
-This can help to minimize unnecessary updates in other parts of the application.
-And, generally speaing, opting for memos is the recommended approach over the use of effects:
+However, it is better practice to convert any unnecessary effects into memos.
+This helps minimize unnecessary updates in other parts of the application, because it lets Solid understand the reactive dependencies and thus optimize evaluation order.
+And, generally speaking, opting for memos is the recommended approach over the use of effects:
 
 ```jsx
 const message = createMemo(() => {
@@ -123,4 +123,7 @@ const message = createMemo(() => {
 
 ```
 
-**Note**: In situations where side effects, such as DOM updates, are important, using the `createEffect` function should be used over a memo.
+**Note**: While memo's are generally best practice, effects still have their place.
+For example, in situations where external side effects are required (eg. DOM updates) using the `createEffect` function *should* be used over a memo.
+
+The clear separation of concerns - keeping the computational logic in memos and the side effects in effects - keeps an application's reactivity straightforward and manageable, which reduces the risk of any unintended behaviors.

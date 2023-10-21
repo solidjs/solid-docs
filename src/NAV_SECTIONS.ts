@@ -426,8 +426,8 @@ export const LEARN_SECTIONS: SECTIONS = {
         link: "/essentials/computed-values",
       },
       {
-        name: "Conditional Rendering",
-        link: "/essentials/conditional-rendering",
+        name: "Control Flow",
+        link: "/essentials/control-flow",
       },
       {
         name: "List Rendering",

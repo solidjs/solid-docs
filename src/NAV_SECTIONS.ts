@@ -476,7 +476,7 @@ export const LEARN_SECTIONS: SECTIONS = {
         link: "/guides/typescript-for-solid",
       },
 	  {
-		name: "Understanding Fine-Grained Reactivity",
+		name: "Fine-Grained Reactivity",
 		link: "/guides/fine-grained-reactivity"
 	  }
     //   {

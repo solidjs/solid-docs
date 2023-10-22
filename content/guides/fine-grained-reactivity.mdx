@@ -1,45 +1,48 @@
 # Understanding Fine-Grained Reactivity
 
-Reactivity in programming establishes automatic responses to data changes, eliminating the need for manual updates to the user interface (UI). 
+Reactivity ensures automatic responses to data changes, eliminating the need for manual updates to the user interface (UI). 
 By connecting UI elements to the underlying data, updates become automated.
+In a fine-grained reactive system an application will now have the ability to make highly *targeted and specific* updates.
 
-Fine-grained reactivity refers to the ability of a system to make highly targeted and specific updates.
-An example of this can be seen in the contrast betwen Solid and React.
-In Solid, updates are made to the targeted attribute that needs to be changed, avoiding broader, sometimes unnecessary, updates.
-In contrast, React would re-execute the entire component for the singular attribute change, which can be less efficient.
-Because of this, adoption of a fine-grained reactive system minimizes the unnecessary recalculations through targeting only the areas of an application that have changed, both optimizing and improving the user experieince.
+An example of this can be seen in the contrast between Solid and [React](https://react.dev/).
+In Solid, updates are made to the targeted attribute that needs to be changed, avoiding broader and, sometimes unnecessary, updates.
+In contrast, React would re-execute an entire component for a change in the single attribute, which can be less efficient.
+
+Because of the fine-grained reactive system, unnecessary recalculations are avoided.
+Through targeting only the areas of an application that have changed the user experieince becomes smoother and more optimized.
 
 **Note:** If you're new to the concept of reactivity and want to learn the basics, consider starting with our [intro to reactivity guide](/essentials/intro-to-reactivity).
 
 ## Reactive Primitives
 
-In Solid's reactivity system, there are two key elements: signals and observers. These core elements serve as the foundation for more specialized reactive features:
+In Solid's reactivity system, there are two key elements: signals and observers. 
+These core elements serve as the foundation for more specialized reactive features:
 
-* Stores are [proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) that, under the hood, create, read, and write signals.
-* Memos resemble effects but are distinct in that they return a signal and optimize computations through caching. 
-They update based on the behavior of effects, ideal for computational optimization.
-* Resources, building on the concept of memos, convert the asynchronicity of network requests into synchronicity, where the results are embedded within a signal.
-* Render effects are a tailored type of effect that initiates immediately, specifically designed for managing the rendering process.
+* [Stores](/essentials/stores) which are [proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) that create, read, and write signals under the hood.
+* [Memos](/essentials/memos) resemble [effects](/essentials/effects) but are distinct in that they *return* a signal and optimize computations through caching. 
+They update based on the behavior of effects, but are more ideal for computational optimization.
+* [Resources](/guides/fetching-data), building on the concept of memos, convert the asynchronicity of network requests into synchronicity, where the results are embedded within a signal.
+* Render effects are a tailored type of effect that initiate immediately, specifically designed for managing the rendering process.
 
 ### Understanding signals
 
-Signals are like mutable variables, that can point to one value now and another in the future. 
+[Signals](/essentials/signals) are like mutable variables that can point to a value now and another in the future. 
 They are made up of two primary functions:
 
-* The **getter**, which allows you to read the current value of the signal.
-* The *setter*, which enables you to alter or update the signal's value.
+* **Getter**: how to read the current value of a signal.
+* **Setter**: a way to modify or update a signal's value.
 
-In Solid, the `createSignal` function can be used to generate a signal.
-This function returns both the getter and setter as a pair in a two-element array.
+In Solid, the [`createSignal`](/reference/createSignal) function can be used to create a signal.
+This function returns the getter and setter as a pair in a two-element array, called a tuple.
 
-```js=
+```js
 import { createSignal } from "solid-js";
 
 const [count, setCount] = createSignal(1);
 
 console.log(count()); // prints "1"
 
-setCount(0); // Modifies the count value to 0
+setCount(0); // modifies the count value to 0
 
 console.log(count()) // prints "0"
 ```
@@ -48,8 +51,7 @@ Here, `count` serves as the getter, and `setCount` functions as the setter.
 
 ### Effects
 
-Effects are functions that are triggered when the signals they depend on point to a different value.
-To create effects in Solid, there is the `createEffect` function.
+[Effects](/essentials/effects) are functions that are triggered when the signals they depend on point to a different value.
 
 ```js=
 import { createSignal, createEffect } from "solid-js";
@@ -61,15 +63,15 @@ createEffect(() => {
 });
 ```
 
-The effect takes a function that is re-invoked whenever any of the signals it relies on changes, such as `count`.
+The effect takes a function that is called whenever *any* of the signals it relies on changes, such as `count` in this example.
 
 ## Building a reactive system
 
-To grasp the concept of reactivity, it's often helpful to construct a reactive system from scratch. 
+To grasp the concept of reactivity, it is often helpful to construct a reactive system from scratch. 
 
-The following example will follow the observer pattern, where data entities (signals) will maintain a list of their subscribers (effects). When a signal changes, all the subscribers will be notified.
+The following example will follow the observer pattern, where data entities (signals) will maintain a list of their subscribers (effects). 
+This is a way to notify subscribers whenever a signal they changes.
 
-### Initial code structure
 
 Here is a basic code outline to begin:
 
@@ -85,13 +87,14 @@ createEffect(() => {
 });
 ```
 
-### Implementing `createSignal`
+## Reactive primitives
+
+### `createSignal`
 
 The `createSignal` function performs two main tasks:
-1. Initialize the value, in this case `count`, to 0.
-2. Return an array with two elements: a getter and a setter function.
 
-Implementation:
+1. Initialize the value (in this case, `count` is set to `0`).
+2. Return an array with two elements: the getter and setter function.
 
 ```tsx
 function createSignal(initialValue) {
@@ -107,35 +110,38 @@ function createSignal(initialValue) {
   
   return [getter, setter];
 }
+
+// ..
 ```
 
-This allows retrieval of the current value via the getter and modification through the setter. 
-However, reactivity is not yet implemented.
+This allows you to retrieve the current value through the getter and make any changes via the setter.
+At this stage, reactivity is not present, however. 
 
-### Implementing `createEffect`
+### `createEffect`
 
-The basic form of `createEffect` is simple:
+`createEffect` defines a function that immediately calls the function that is passed into it:
 
 ```jsx
+// ..
+
 function createEffect(fn) {
   fn();
 }
+
+// ..
 ```
 
-The core functionality emerges when linking `createSignal` and `createEffect`.
+### Making a system reactive
 
-### Linking signals and effects
+Reactivity emerges when linking `createSignal` and `createEffect` and this happens through:
 
-The way reactivity works is:
-1. Maintain a reference to the current subscriber function.
-2. Register this function during effect creation.
-3. Add the function to a subscriber list when accessing a signal.
-4. Notify all the subscribers when updating a signal.
-
-This can be shown as:
+1. Maintaining a reference to the current subscriber's function.
+2. Registering this function during the creation of an effect.
+3. Adding the function to a subscriber list when accessing a signal.
+4. Notifying all subscribers when the signal has updated.
 
 ```jsx
-let currentSubscriber = null;
+let currentSubscriber = null; 
 
 function createSignal(initialValue) {
   let value = initialValue;
@@ -152,26 +158,45 @@ function createSignal(initialValue) {
     if (value === newValue) return; // if the new value is not different, do not notify dependent effects and memos
     value = newValue;
     for (const subscriber of subscribers) {
-      subscriber();
+      subscriber(); // 
     }
   }
   
   return [getter, setter];
 }
 
+// creating an effect
 function createEffect(fn) {
-  const previousSubscriber = currentSubscriber;
+  const previousSubscriber = currentSubscriber; // Step 1
   currentSubscriber = fn;
   fn();
   currentSubscriber = previousSubscriber;
 }
+
+//.. 
 ```
+
+A variable is used to hold a reference to the current executing subscriber function.
+This is used to determine which effects are dependent on which signals.
+
+Inside `createSignal`, the initial value is stored and a [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set) is used to store any subscriber functions that are dependent on the signal.
+This function will then return two functions for the signal:
+* The `getter` function checks to see if the current subscriber function is being accessed and, if it is, adds it to the list of subscribers before returning the *current* value of the signal.
+* The `setter` function evaluated the new value against the old value, notifying the dependent functions only when the signal has been updated.
+
+When creating the `createEffect` function, a reference to any previous subscribers is intiailized to handle any possible nested effects present.
+The current subscriber is then passed to the given function, which is run immediately.
+During this run, if the effect accesses any signals it is then registered as a subscriber to those signals.
+The current subscriber, once the given function has been run, will be reset to its previous value so that, if there are any nested effects, they are operated correctly.
 
 ### Validating the reactive system
 
 To validate the system, increment the `count` value at one-second intervals:
 
-```jsxconst [count, setCount] = createSignal(0);
+```jsx
+//..
+
+const [count, setCount] = createSignal(0);
 
 createEffect(() => {
   console.log("The count is " + count());
@@ -180,6 +205,7 @@ createEffect(() => {
 setInterval(() => {
   setCount(count() + 1);
 }, 1000);
+
 ```
 
 This will display the incremented count value on the console at one-second intervals to confirm the reactive system's functionality.
@@ -191,11 +217,12 @@ These nodes can be signals, effects, or other reactive primitives.
 They serve as the individual units that collectively make up the reactive behavior of the system. 
 
 When a node changes, the system will re-evaluate the parts connected to that node. 
-This can result in updates, additions, or removals of these connections, affecting the overall behavior of the system.
+This can result in updates, additions, or removals of these connections, which affect the overall behavior of the system.
 
 Now, consider a scenario where a condition influences the data used to calculate an output:
 
 ```jsx
+// Temperature.jsx
 console.log("1. Initialize");
 const [temperature, setTemperature] = createSignal(72);
 const [unit, setUnit] = createSignal("Fahrenheit");
@@ -229,7 +256,7 @@ If the `unit` is changed while `displayTemp` is false, however, the effect won't
 ### Synchronous nature of effect tracking
 
 The reactivity system described above operates synchronously. 
-This synchronous operation has implications for how effects and their dependencies are tracked. 
+This operation has implications for how effects and their dependencies are tracked. 
 Specifically, the system registers the subscriber, runs the effect function, and then unregisters the subscriber — all in a linear, synchronous sequence.
 
 Consider the following example:
@@ -242,20 +269,20 @@ createEffect(() => {
 });
 ```
 
-Here, the `createEffect` function initiates a `setTimeout`, which delays the console log. 
+The `createEffect` function in this example, initiates a `setTimeout` to delay the console log. 
 Because the system is synchronous, it doesn't wait for this operation to complete. 
-By the time the `count` getter is invoked within the `setTimeout`, the global scope no longer has a registered subscriber.
-As a result, this `count` signal won't add the callback as a subscriber, leading to potential issues in tracking changes to count.
+By the time the `count` getter is triggered within the `setTimeout`, the global scope no longer has a registered subscriber.
+As a result, this `count` signal will not add the callback as a subscriber which leads to potential issues with tracking the changes to `count`.
 
 ### Handling asynchronous effects
 
 While the basic reactivity system is synchronous, frameworks like Solid offer more advanced features to handle asynchronous scenarios. 
-For example, Solid provides the `on` function, which allows for manually specifying dependencies for an effect. 
-This is particularly useful for ensuring that asynchronous operations are correctly tied into the reactive system. 
+For example, the `on` function provides a way to manually specify the dependencies of an effect. 
+This is particularly useful for to make sure asynchronous operations are correctly tied into the reactive system. 
 
 Solid also introduces the concept of resources for managing asynchronous operations. 
 Resources are specialized reactive primitives that convert the asynchronicity of operations like network requests into synchronicity, embedding the results within a signal. 
-This allows the system to track asynchronous operations and their state, ensuring that the UI updates correctly when the asynchronous operation completes or its state changes.
+The system can then track asynchronous operations and their state, keeping the UI up-to-date when the operation completes or its' state changes.
 
-Utilizing resources in Solid can help manage complex scenarios where multiple asynchronous operations are involved, and their completion might affect different parts of the reactive system. 
+Using resources in Solid can assist in complex scenarios when multiple asynchronous operations are involved and the completion may affect different parts of the reactive system. 
 By integrating resources into the system, you can ensure that dependencies are correctly tracked and that the UI remains consistent with the underlying asynchronous data.

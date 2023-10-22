@@ -24,26 +24,26 @@ export const REFERENCE_SECTIONS: SECTIONS = {
 		pages: [
 			{
 				name: "Introduction",
-				link: "/references",
+				link: "/reference/",
 			},
 		],
 	},
-	concepts: {
-		name: "Concepts",
-		pages: [
-			{
-				name: "Reactivity",
-				pages: [
-					{
-						name: "What is Reactivity",
-						link: "/concepts/reactivity",
-					},
-					{
-						name: "Tracking",
-						link: "/concepts/reactivity/tracking",
-					},
-				],
-			},
+	// concepts: {
+	// 	name: "Concepts",
+	// 	pages: [
+	// 		{
+	// 			name: "Reactivity",
+	// 			pages: [
+	// 				{
+	// 					name: "What is Reactivity",
+	// 					link: "/concepts/reactivity",
+	// 				},
+	// 				{
+	// 					name: "Tracking",
+	// 					link: "/concepts/reactivity/tracking",
+	// 				},
+	// 			],
+	// 		},
 			// {
 			//   name: "State Management",
 			//   pages: [
@@ -57,33 +57,33 @@ export const REFERENCE_SECTIONS: SECTIONS = {
 			// },
 			//   ],
 			// },
-			{
-				name: "Server Side Rendering (SSR)",
-				pages: [
-					{
-						name: "Simple/Client-fetching SSR",
-						link: "/concepts/ssr/simple-client-fetching-ssr",
-					},
-					{
-						name: "Async SSR",
-						link: "/concepts/ssr/async-ssr",
-					},
-					{
-						name: "Streaming",
-						link: "/concepts/ssr/streaming",
-					},
-					{
-						name: "Static Site Generation (SSG)",
-						link: "/concepts/ssr/ssg",
-					},
-					{
-						name: "Hydration",
-						link: "/concepts/ssr/hydration",
-					},
-				],
-			},
-		],
-	},
+	// 		{
+	// 			name: "Server Side Rendering (SSR)",
+	// 			pages: [
+	// 				{
+	// 					name: "Simple/Client-fetching SSR",
+	// 					link: "/concepts/ssr/simple-client-fetching-ssr",
+	// 				},
+	// 				{
+	// 					name: "Async SSR",
+	// 					link: "/concepts/ssr/async-ssr",
+	// 				},
+	// 				{
+	// 					name: "Streaming",
+	// 					link: "/concepts/ssr/streaming",
+	// 				},
+	// 				{
+	// 					name: "Static Site Generation (SSG)",
+	// 					link: "/concepts/ssr/ssg",
+	// 				},
+	// 				{
+	// 					name: "Hydration",
+	// 					link: "/concepts/ssr/hydration",
+	// 				},
+	// 			],
+	// 		},
+	// 	],
+	// },
 	api: {
 		name: "API",
 		pages: [
@@ -388,69 +388,110 @@ export const LEARN_SECTIONS: SECTIONS = {
         name: "Quick Start Guide",
         link: "/quick-start",
       },
-      {
-        name: "FAQ",
-        link: "/faq",
-      },
-    ],
-  },
-  essentials: {
-    name: "Essentials",
-    pages: [
-      {
-        name: "Understanding JSX",
-        link: "/essentials/understanding-jsx",
-      },
-      {
-        name: "Intro to Reactivity",
-        link: "/essentials/intro-to-reactivity",
-      },
-      {
-        name: "Components & Props",
-        link: "/essentials/components-and-props",
-      },
-      {
-        name: "Class & Style Bindings",
-        link: "/essentials/class-style-bindings",
-      },
-      {
-        name: "Signals",
-        link: "/essentials/signals",
-      },
-      {
-        name: "Managing Side Effects",
-        link: "/essentials/managing-side-effects",
-      },
-      {
-        name: "Memos",
-        link: "/essentials/memos",
-      },
-      {
-        name: "Control Flow",
-        link: "/essentials/control-flow",
-      },
-      {
-        name: "List Rendering",
-        link: "/essentials/list-rendering",
-      },
-	  {
-        name: "Event Handling",
-        link: "/essentials/event-handling",
-      },
-	  {
-		name: "Refs",
-		link: "/essentials/refs",
-	  }
+    //   {
+    //     name: "FAQ",
+    //     link: "/faq",
+    //   },
     ],
   },
   tutorials: {
     name: "Tutorials",
     pages: [
       {
-        name: "Beginner Tutorial",
-        link: "/tutorials/beginner-tutorial",
+        name: "Solid Foundations",
+        link: "https://www.solidjs.com/tutorial/introduction_basics",
       },
+	  {
+		name: "Build a Book Shelf",
+		link: "/tutorials/book-shelf"
+	  }
     ],
+  },
+  concepts: {
+    name: "Concepts",
+    pages: [
+      {
+        name: "Understanding JSX",
+        link: "/concepts/understanding-jsx",
+      },
+      {
+        name: "Intro to Reactivity",
+        link: "/concepts/intro-to-reactivity",
+      },
+      {
+        name: "Components",
+        pages: [
+			{
+				name: "Component Basics",
+				link: "/concepts/components/creating"
+			},
+			{
+				name: "Class & Style",
+				link: "/concepts/components/class-style"
+			},
+			{
+				name: "Event Handling",
+				link: "/concepts/components/event-handling"
+			},
+			{
+				name: "Props",
+				link: "/concepts/components/props"
+			}
+		]
+      },
+	  
+      {
+        name: "Signals",
+        link: "/concepts/signals",
+      },
+	{
+		name: "Conditional Rendering",
+		pages: [
+			{
+				name: "Control Flow",
+				link: "/concepts/conditional-rendering/control-flow"
+			},
+			{
+				name: "List Rendering",
+				link: "/concepts/conditional-rendering/list-rendering"
+			}
+		]
+	  },
+      {
+        name: "Side Effects",
+        link: "/concepts/effects",
+      },
+	  {
+		name: "Context",
+		link: "/concepts/context"
+	  },
+	  {
+		name: "Derived Values",
+		pages: [
+			{
+				name: "Derived Signals",
+				link: "/concepts/derived-values/derived-signals"
+			},
+			{
+				name: "Memos",
+				link: "/concepts/derived-values/memos"
+			}
+		]
+	  },
+	  {
+		name: "Refs",
+		link: "/concepts/refs",
+	  }
+    ],
+  },
+  advanced:{
+	name: "Advanced Concepts",
+	pages: [
+		{
+			name: "Fine-Grained Reactivity",
+			link: "/advanced/fine-grained-reactivity"
+		},
+	]
   },
   guides: {
     name: "Guides",
@@ -460,34 +501,39 @@ export const LEARN_SECTIONS: SECTIONS = {
         link: "/guides/styling-your-components",
       },
       {
-        name: "Routing & Navigation",
-        link: "/guides/routing-and-navigation",
+        name: "State Management",
+        link: "/guides/state-management",
       },
-      {
+	  {
         name: "Fetching Data",
         link: "/guides/fetching-data",
       },
       {
-        name: "State Management",
-        link: "/guides/state-management",
+        name: "Routing & Navigation",
+        link: "/guides/routing-and-navigation",
       },
       {
         name: "Deploying your App",
         link: "/guides/deploying-your-app",
       },
-      {
-        name: "TypeScript for Solid",
-        link: "/guides/typescript-for-solid",
-      },
-	  {
-		name: "Fine-Grained Reactivity",
-		link: "/guides/fine-grained-reactivity"
-	  }
     //   {
     //     name: "Testing",
     //     link: "/guides/testing",
     //   },
     ],
+  },
+  configuration: {
+	name: "Configuration",
+	pages: [
+		{
+			name: "TypeScript",
+			link: "/configuration/typescript"
+		},
+		{
+			name: "Environment Variables",
+			link: "/configuration/environment-variables"
+		}
+	]
   },
   community: {
     name: "Community",

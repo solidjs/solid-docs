@@ -27,7 +27,7 @@ const sections = [
 		title: "Learn",
 		href: "/",
 	},
-	{ title: "Reference", href: "/references" },
+	{ title: "Reference", href: "/reference" },
 ]
 
 export const NavHeader = (props: {

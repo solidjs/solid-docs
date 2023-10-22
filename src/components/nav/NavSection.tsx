@@ -56,14 +56,14 @@ export function SectionHeader(
 	return (
 		<h3>
 			<button
-				class="w-full text-solid-dark dark:text-solid-light text-left relative flex items-center justify-between py-2"
+				class="w-full text-solid-dark dark:text-solid-light p-2 -m-2 flex items-center justify-between hover:bg-solid-lightaction hover:dark:bg-solid-darkaction"
 				onClick={props.onClick}
 				// aria-expanded={!props.collapsed}
 				// aria-controls={props.panelId}
 			>
 				{props.children}
 				<IconChevron
-					class={`transition w-6 h-6 text-solid-lightaction dark:text-solid-darkaction transform ${
+					class={`transition w-5 h-5 text-solid-lightaction dark:text-solid-white transform ${
 						!props.collapsed ? "rotate-90" : ""
 					}`}
 				/>
@@ -88,7 +88,7 @@ export function NavItem(props) {
 	return (
 		<li>
 			<NavLink
-				class="p-2 pb-1.75 text-base w-full text-left relative flex items-center justify-between transition cursor-pointer"
+				class="p-2 w-full text-left relative flex items-center justify-between transition cursor-pointer"
 				{...props}
 				inactiveClass="hover:bg-solid-lightaction hover:dark:bg-solid-darkaction"
 				activeClass="text-black dark:text-white font-semibold bg-solid-lightitem dark:bg-solid-darkitem active"

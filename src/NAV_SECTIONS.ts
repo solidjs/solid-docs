@@ -445,11 +445,11 @@ export const LEARN_SECTIONS: SECTIONS = {
         link: "/concepts/signals",
       },
 	{
-		name: "Conditional Rendering",
+		name: "Control Flow",
 		pages: [
 			{
-				name: "Control Flow",
-				link: "/concepts/conditional-rendering/control-flow"
+				name: "Conditional Rendering",
+				link: "/concepts/control-flow/conditional-rendering"
 			},
 			{
 				name: "List Rendering",

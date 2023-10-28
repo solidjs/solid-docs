@@ -7,18 +7,14 @@ Both of these components faciliate looping over data collections to generate DOM
 ## `<For>`
 
 The `<For>` component serves as a more conventional way to iterate over arrays or objects in Solid.
-This component manages DOM items by updating or relocating them as the underlying data it loops over changes.
+This component manages DOM items by updating or relocating them as the *underlying data* it loops over changes.
 This capability removes the need for a complete re-render of the DOM elements, which optimizes rendering performance.
 
-To access `<For>` , you can import it directly from Solid:
-
-```
-import { For } from "solid-js";
-```
-
-The sole property that `<For>` has is `each` , through which you can specify the data collection to loop over:
+The sole property in `<For>` is `each` , through which you can specify the data collection to loop over:
 
 ```jsx
+import { For } from "solid-js";
+
 <For each={data()}>
   {(item, index) => 
     // rendering logic for each element
@@ -34,8 +30,8 @@ The function receives two arguments:
 
 Within the rendering function, you create and return JSX elements that will represent each item in the DOM.
 It is also possible to access properties of the current `item` to dynamically set attributes or content of the JSX elements.
-The `index` can be used for various purposes, such as controlling styling, setting unique keys, or any other case that requires the position of an item within the collection.
-Additionally, [conditional rendering](/essentials/conditional-rendering) can be used to show how or whether certain elements are rendered based on conditions related to the `item` or `index`.
+Furthermore, `index` can be used for various purposes, such as controlling styling, setting unique keys, or other cases require the position of an item within the collection.
+[Conditional rendering](/essentials/conditional-rendering) can also be used to show how, or if, certain elements are rendered based on conditions related to the `item` or `index`:
 
 ```jsx
 <For each={data()}>
@@ -49,8 +45,8 @@ Additionally, [conditional rendering](/essentials/conditional-rendering) can be 
 
 In this example, the [`classList`](/essentials/class-style-bindings#classList) directive is used to conditionally apply the `even` and `odd` classes to the `li` elements based on the current index.
 
-Furthermore, within the `<For>` component, other functions can be used to compute values, manage side effects, or handle events.
-There's also the ability to nest other looping components within the original `<For>` component, or to employ array methods to manage nested data structures or create more complex layouts:
+Other functions can be also be used to compute values, manage side effects, or handle events eithin the `<For>` component.
+It is even possible to add other looping components within the original `<For>`, or to use array methods to manage nested data structures or create more complex layouts:
 
 ```jsx
 function App() {
@@ -74,12 +70,15 @@ function App() {
     <ul>
       <For each={categories}>
         {(category, categoryIndex) => (
-          <li>
+          <li
+            key={categoryIndex}
+            >
             {category.name}
             <ul>
               <For each={category.items}>
                 {(item, itemIndex) => (
                   <li
+                    key="itemIndex"
                     classList={{ selected: item.selected }}
                     onClick={() => toggleSelection()}
                   >
@@ -96,11 +95,12 @@ function App() {
 }
 ```
 
-Through this nested looping structure, the arrangement of `<For>` components provides a way to efficiently render hierarchical data. In this example, a list of categories each containing a list of items is organized and rendered in a clear and structured format.
+This nested looping structure allows for the presentation of hierarchical data by utilizing the arrangement of the `<For>` components.
+In this specific instance, it creates organization and clear rendering of a list of categories, where each list of items is presented in a structured and organized manner.
 
 ## `Index`
 
-The `<Index>` component is designed to optimize list rendering in Solid, particularly when working with *primitives*.
+The `<Index>` component is designed to optimize list rendering in Solid, particularly when working with **primitives**.
 This component provides a way to manage the rendering of lists, ensuring fewer re-renders compared to the `<For>` component under *certain conditions*.
 `<Index>` becomes beneficial when the order and length of the list remain *stable*, but the content may change frequently.
 
@@ -110,7 +110,7 @@ To use `<Index>`, import it directly from Solid:
 import { Index } from "solid-js";
 ```
 
-Similar to the `<For>` component, `<Index>` accepts a single property named each, which is where you pass the array or object you want to loop over. 
+Similar to the `<For>` component, `<Index>` accepts a single property named `each`, which is where you pass the array or object you want to loop over. 
 In the rendering function, JSX elements will represent each item in the DOM, and the `item` and `index` arguments can dynamically set attributes or content of the JSX elements:
 
 ```jsx
@@ -161,7 +161,7 @@ function App() {
           <li>
             {category.name}
             <ul>
-              <Index each={category.items}>
+              <Index each={category.items}> // The inner `For` loop is replaced with `Index`
                 {(item, itemIndex) => (
                   <li
                     classList={{ selected: item.selected }}
@@ -180,9 +180,9 @@ function App() {
 }
 ```
 
-Replacing the nested `<For>` loop with an `<Index>` will improve rendering performance, particularly when the items in each category being updated frequently.
-Unlike `<For>`, `<Index>` does not trigger a re-render of the entire list when an item's list content changes, such as when it gets selected, provided the length of the list remains unchanged.
-This results in the content content at the specified index being updated to the `selected` class, while the rest of the list remains unchanged.
+Replacing the nested `<For>` loop with an `<Index>` will improve rendering performance, particularly when the items in each category are being updated frequently.
+Unlike `<For>`, `<Index>` does *not* trigger a re-render of the entire list when an item's list content changes, such as when it gets selected, provided the length of the list remains unchanged.
+This results in the content at the specified index being updated to the `selected` class, while the rest of the list remains unchanged.
 
 Another example of when *not* to use `<For>` is when you are working with a list of input elements:
 

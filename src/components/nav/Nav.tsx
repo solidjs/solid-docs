@@ -166,10 +166,10 @@ function SectionNav(props: { sections: SECTIONS }) {
 	const sectionNames = Object.keys(props.sections)
 
 	return (
-		<ul class="flex flex-col">
+		<ul class="flex flex-col gap-y-6">
 			<For each={sectionNames}>
 				{(name, i) => (
-					<li class="mb-7">
+					<li>
 						<a class="pb-1 pl-2 text-solid-dark dark:text-white font-semibold flex items-center"
 						>
 							{props.sections[name].name}

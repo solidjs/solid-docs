@@ -39,19 +39,19 @@ export const NavHeader = (props: {
 	return (
 		<nav
 			aria-label="Docs header"
-			class="sticky top-0 pt-8 items-center w-full z-1 flex flex-col gap-4"
+			class="sticky top-0 pt-4 items-center w-full z-1 flex flex-col gap-4"
 		>
 			<div class="flex items-center justify-between w-full">
 				<NavLink
 					href="/"
 					end={true}
-					class="inline-flex space-x-1 text-xl font-normal items-center text-primary dark:text-primary-dark py-1 mr-0"
+					class="inline-flex space-x-1 text-xl items-center text-primary dark:text-primary-dark py-1 mr-0"
 				>
 					<Logo class="w-8 h-8 -mt-2 text-link dark:text-link-dark" />
 					<span class="font-bold">Solid</span>
 					<span>Docs</span>
 				</NavLink>
-				<div class="flex items-center gap-3">
+				<div class="flex items-center gap-2">
 					<button
 						type="button"
 						aria-label={`Use ${config.mode === "dark" ? "light" : "dark"} mode`}
@@ -100,7 +100,7 @@ export const NavHeader = (props: {
 						!loc.pathname.includes(sections[1].href)
 					}
 					activeClass="text-white font-semibold bg-solid-accentlight dark:bg-solid-accent active"
-					class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0) hover:bg-solid-lightaction dark:hover:bg-solid-darkaction"
+					class="flex-1 py-1 tracking-wide inline-flex text-sm items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0) hover:bg-solid-lightaction dark:hover:bg-solid-darkaction"
 					href={sections[0].href}
 				>
 					{sections[0].title}
@@ -111,7 +111,7 @@ export const NavHeader = (props: {
 						loc.pathname.startsWith(sections[1].href)
 					}
 					activeClass="text-white font-semibold bg-solid-accentlight dark:bg-solid-accent active"
-					class="flex-1 inline-flex w-full p-2 items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0) hover:bg-solid-lightaction dark:hover:bg-solid-darkaction"
+					class="flex-1 tracking-wide inline-flex text-sm items-center justify-center whitespace-nowrap first:rounded-l-md border-r border-solid-lightborder dark:border-solid-darkitem last:(rounded-r-md border-0) hover:bg-solid-lightaction dark:hover:bg-solid-darkaction"
 					href={sections[1].href}
 				>
 					{sections[1].title}

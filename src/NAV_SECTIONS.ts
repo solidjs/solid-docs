@@ -423,7 +423,7 @@ export const LEARN_SECTIONS: SECTIONS = {
         pages: [
 			{
 				name: "Component Basics",
-				link: "/concepts/components/creating"
+				link: "/concepts/components/basics"
 			},
 			{
 				name: "Class & Style",
@@ -431,7 +431,7 @@ export const LEARN_SECTIONS: SECTIONS = {
 			},
 			{
 				name: "Event Handling",
-				link: "/concepts/components/event-handling"
+				link: "/concepts/components/event-handlers"
 			},
 			{
 				name: "Props",
@@ -453,7 +453,7 @@ export const LEARN_SECTIONS: SECTIONS = {
 			},
 			{
 				name: "List Rendering",
-				link: "/concepts/conditional-rendering/list-rendering"
+				link: "/concepts/control-flow/list-rendering"
 			}
 		]
 	  },

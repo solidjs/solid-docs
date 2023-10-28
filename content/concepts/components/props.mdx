@@ -1,0 +1,120 @@
+# Component props
+
+Props are a way through which data is passed from one component to another. 
+In Solid, props are used to pass data from a parent component to a child component, similar to how function arguments work. 
+
+```typescript
+function App() {
+  // Passing a prop "name" with the value "Ryan Carniato" to MyComponent
+  return (
+    <div>
+      <MyComponent name="Ryan Carniato" />
+    </div>
+  );
+}
+
+function MyComponent(props) {
+  // Accessing the "name" prop within MyComponent
+  return <div>Hello {props.name}</div>;
+}
+```
+
+### `mergeProps`
+
+In Solid, [`mergeProps`](/reference/mergeProps) is a utility function designed to merge multiple potentially reactive objects together. 
+Its behavior is similar to [`Object.assign`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign) but with a key distinction: it retains the reactivity of the properties being merged.
+This ensures that when individual properties within the merged object change, their reactivity is not lost.
+
+A common use case for `mergeProps` is when you want to provide default props:
+
+```typescript
+import { mergeProps } from 'solid-js';
+
+function MyComponent(props) {
+  // Using mergeProps to set default values for props
+  const finalProps = mergeProps({ defaultName: "Ryan Carniato" }, props);
+  
+  return <div>Hello {finalProps.defaultName}</div>;
+}
+
+// Usage: <MyComponent defaultName="Ryan Carniato" />
+```
+
+In the example above, if no `defaultName` prop is provided when using `<MyComponent />`, it will default to `"Ryan Carniato"` because of `mergeProps`. 
+If a value is provided, it will be used instead, all while retaining the reactivity of the `defaultName` prop.
+
+### Destructuring props
+
+Props objects are typically read-only, ensuring that a child component does not directly modify the data belonging to its parent.
+This encourages a one-way data flow, a pattern often seen to promote more predictable data management. 
+Since the properties within the props object are reactive, special care is needed when working with them.
+
+When destructuring props directly, you run the risk of breaking this reactivity, leading to potential unexpected behaviors in your components:
+
+```typescript
+function MyComponent(props) {
+  const name = props.name // ❌: breaks reactivity and will not update when the prop value changes
+  const name = () => props.name// ✓: by wrapping `props.name` into a function, `name()` always retrieves its current value
+}
+```
+
+<Aside>
+  While Solid's native design promotes separation of reading and writing logic, there may be a desire for writable computed properties. 
+  `createWritable` is a function that allows both reading and updating of derived values, like props objects. 
+  This helps in scenarios where you need to both access a computed value and occasionally override it, making it easier to create components with dynamic behaviors and manual updates.
+
+  ```tsx
+    const [name, setName] = createWritable(() => props.name);
+  ```
+</Aside>
+
+#### `splitProps`
+
+Solid provides the [`splitProps`](/reference/splitprops) utility for when destructuring is necessary. 
+This function is designed to help split a single props object into multiple sets of props, retaining the reactivity of the individual properties.
+
+The function allows you to define one or more arrays of keys that you wish to extract into separate props objects.
+It will return an array of props objects related to each set of keys, plus an additional props object containing any remaining keys. 
+Crucially, all the returned props objects will preserve their reactivity.
+
+This can be especially useful when you want to use certain props in the current component while passing others to child components:
+
+```typescript
+import { splitProps } from 'solid-js';
+
+function ParentComponent(props) {
+  // Splitting props into two groups: 'name' and 'age'
+  const [greetingProps, personalInfoProps, restProps] = splitProps(props, ['name'], ['age']);
+  
+  // Using greetingProps and personalInfoProps in the current component
+  return (
+    <div>
+      <Greeting {...greetingProps} />
+      <PersonalInfo {...personalInfoProps} />
+      {/* restProps can be passed down or used as needed */}
+    </div>
+  );
+}
+```
+### Passing props to children
+
+Solid's approach to performance revolves around ensuring components are lean and efficient. 
+
+One of Solid's core strategies is to wrap potentially reactive expressions within object [getters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get).
+Due to how these props are evaluated, however, accessing `props.children` multiple times can introduce problems and unexpected behaviors, such as repeated creation of child components or elements.
+
+In most instances, simply using props within JSX will work.
+However, Solid provides a [`children`](/reference/children) helper to make sure you can safely use child components without introducing any unexpected behaviours.
+
+```typescript
+import { children } from 'solid-js';
+
+function ColoredList(props) {
+  const safeChildren = children(() => props.children);
+
+  return <>{safeChildren()}</>;
+}
+```
+
+In this example, the `children` helper ensures you always get the right child components without anything unwanted happening. 
+

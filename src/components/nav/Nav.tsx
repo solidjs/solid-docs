@@ -8,7 +8,7 @@ import {
 	SECTION_PAGE,
 } from "~/NAV_SECTIONS"
 import { NavHeader } from "./NavHeader"
-import { NavPreferences } from "./NavPreferences"
+import IconChevron from "~icons/heroicons-outline/chevron-right"
 import { Collapsible, NavItem } from "./NavSection"
 
 export default function Nav() {
@@ -23,17 +23,13 @@ export default function Nav() {
 	})
 
 	return (
-		<div class="lg:max-h-screen lg:sticky lg:top-0 no-bg-scrollbar lg:min-w-[200px] lg:max-w-sm w-full z-50 overflow-y-auto flex flex-col gap-8 lg:pr-4">
-			<div class="flex flex-col gap-4">
+		<div class="lg:max-h-screen lg:sticky lg:top-0 no-bg-scrollbar lg:min-w-[250px] lg:max-w-xs w-full z-50 overflow-y-auto flex flex-col gap-8 lg:pr-4">
+			<div class="flex flex-col">
 				<NavHeader
 					showMenu={showMenu()}
 					setShowMenu={setShowMenu}
 				/>
 			</div>
-			{/* <div id="docsearch"></div> */}
-			{/* <div class="hidden md:block">
-				<NavPreferences id="desktop" />
-			</div> */}
 			<div
 				classList={{
 					hidden: !showMenu(),
@@ -43,12 +39,6 @@ export default function Nav() {
 			>
 				<TopMenu />
 			</div>
-			{/* <div class="my-2" classList={{ hidden: props.docsMode == "regular" }}>
-        <div id="docsearch" />
-      </div> */}
-			{/* <div class="md:hidden">
-				<NavPreferences id="mobile" />
-			</div> */}
 		</div>
 	)
 }
@@ -150,7 +140,7 @@ function SectionsNavIterate(props: {
 						</NavItem>
 					</Show>
 					<Show when={(subsection as SECTION_PAGE).pages}>
-						<ul>
+						<ul class="ml-2">
 							<Collapsible
 								header={subsection.name}
 								startCollapsed={() =>
@@ -176,22 +166,16 @@ function SectionNav(props: { sections: SECTIONS }) {
 	const sectionNames = Object.keys(props.sections)
 
 	return (
-		<ul class="flex flex-col">
+		<ul class="flex flex-col mb-6">
 			<For each={sectionNames}>
 				{(name, i) => (
-					<>
-						<li>
-							<h2 class="pl-2 text-solid-dark dark:text-white font-semibold text-xl my-3">
-								{props.sections[name].name}
-							</h2>
+					<li class="mb-6">
+						<a class="pl-2 text-solid-dark dark:text-white font-semibold flex items-center"
+						>
+							{props.sections[name].name}
+						</a>
 							<SectionsNavIterate pages={props.sections[name].pages} />
-						</li>
-						<Show when={i() !== sectionNames.length - 1}>
-							<li>
-								<hr class="w-full my-3" />
-							</li>
-						</Show>
-					</>
+					</li>
 				)}
 			</For>
 		</ul>

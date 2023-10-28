@@ -4,7 +4,6 @@ import IconChevron from "~icons/heroicons-outline/chevron-right"
 import {
 	ParentProps,
 	Show,
-	createEffect,
 	createSignal,
 	createUniqueId,
 } from "solid-js"
@@ -19,27 +18,21 @@ type CollapsibleProps = ParentProps<{
 }>;
 
 export function Collapsible(props: CollapsibleProps) {
-	const [collapsed, setCollapsed] = createSignal(
-		props.startCollapsed() || false
-	)
+	const [collapsed, setCollapsed] = createSignal(false)
 
 	const id = createUniqueId()
 
-	createEffect(() => {
-		const isCollapsed = props.startCollapsed()
-		setCollapsed(isCollapsed)
-	})
-
 	return (
-		<li value={props.header} class="m-2">
+		<li value={props.header}
+		class="text-sm text-solid-dark dark:text-solid-light">
 			<SectionHeader
 				collapsed={collapsed()}
-				onClick={() => setCollapsed((prev) => !prev)}
+				onClick={() => setCollapsed(!collapsed())}
 				panelId={id}
 			>
 				{props.header}
 			</SectionHeader>
-			<Show when={!collapsed()}>
+			<Show when={collapsed()}>
 				<SectionPanel id={id}>{props.children}</SectionPanel>
 			</Show>
 		</li>
@@ -54,21 +47,18 @@ export function SectionHeader(
   }>
 ) {
 	return (
-		<h3>
-			<button
-				class="w-full text-solid-dark dark:text-solid-light p-2 -m-2 flex items-center justify-between hover:bg-solid-lightaction hover:dark:bg-solid-darkaction"
-				onClick={props.onClick}
-				// aria-expanded={!props.collapsed}
-				// aria-controls={props.panelId}
-			>
-				{props.children}
-				<IconChevron
-					class={`transition w-5 h-5 text-solid-lightaction dark:text-solid-white transform ${
-						!props.collapsed ? "rotate-90" : ""
-					}`}
-				/>
-			</button>
-		</h3>
+		<a class="flex flex-row items-center w-full hover:bg-solid-lightaction hover:dark:bg-solid-darkaction hover:cursor-pointer px-2 py-1"
+			onClick={props.onClick}
+			// aria-expanded={!props.collapsed}
+			// aria-controls={props.panelId}
+		>
+			{props.children}
+			<IconChevron
+				class={`transition w-3 h-3 text-solid-lightaction dark:text-solid-white transform ml-2 mt-1 ${
+					!props.collapsed ? "rotate-90" : "-rotate-90"
+				}`}
+			/>
+		</a>
 	)
 }
 
@@ -76,7 +66,7 @@ function SectionPanel(props: ParentProps<{ id: string }>) {
 	return (
 		<ul
 			id={props.id}
-			class="opacity-100 md:border-l border-solid-darkitem dark:border-solid-lightitem"
+			class="opacity-100 md:border-l border-solid-darkitem dark:border-solid-lightitem ml-6"
 			style="list-none transition: opacity 250ms ease-in-out 0s; animation: 250ms ease-in-out 0s 1 normal none running nav-fadein;"
 		>
 			{props.children}
@@ -86,9 +76,9 @@ function SectionPanel(props: ParentProps<{ id: string }>) {
 
 export function NavItem(props) {
 	return (
-		<li>
+		<li class="ml-2">
 			<NavLink
-				class="p-2 w-full text-left relative flex items-center justify-between transition cursor-pointer"
+				class="px-2 py-1 w-full text-left relative flex items-center justify-between transition cursor-pointer text-sm"
 				{...props}
 				inactiveClass="hover:bg-solid-lightaction hover:dark:bg-solid-darkaction"
 				activeClass="text-black dark:text-white font-semibold bg-solid-lightitem dark:bg-solid-darkitem active"

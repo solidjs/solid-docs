@@ -12,7 +12,7 @@ import EraserLink, { getEraserLinkData } from "./components/EraserLink"
 function Anchor(props: ParentProps<{ id: string }>) {
 	return (
 		<a
-			class="hover:underline text-solid-dark dark:text-solid-light decoration-solid-lightitem font-bold dark:decoration-solid-darkitem"
+			class="hover:underline text-solid-dark dark:text-solid-light decoration-solid-lightitem font-medium dark:decoration-solid-darkitem"
 			href={`#${props.id}`}
 		>
 			{props.children}
@@ -35,7 +35,6 @@ function EraserLinkOrNormalLink(props: ParentProps<{ href: string }>) {
 	)
 }
 
-const headerBold = "font-bold"
 function getSectionString(children: unknown): string {
 	if (typeof children == "string") {
 		return children as string
@@ -57,10 +56,7 @@ export default {
 	h1: (props) => (
 		<h1
 			{...props}
-			class={
-				headerBold +
-				"heading mt-10 mb-6 -mx-.5 break-words text-4xl leading-tight mdx-heading"
-			}
+			class="heading mt-10 mb-6 -mx-.5 break-words text-4xl mdx-heading font-semibold font-semibold"
 		>
 			<MetaTitle>{props.children}</MetaTitle>
 			<Anchor id={props.id}>{props.children}</Anchor>
@@ -71,48 +67,60 @@ export default {
 	h2: (props) => {
 		const { addSection } = usePageState()
 		onMount(() => {
-			addSection(getSectionString(props.children), props.id)
+			addSection(getSectionString(props.children), props.id, 2)
 		})
 		return (
 			<h2
 				{...props}
-				class={
-					headerBold +
-					"heading text-2xl leading-10 my-6 mdx-heading text-solid-accent dark:text-solid-accentlight"
-				}
+				class="heading text-2xl leading-10 my-3 mdx-heading text-solid-accent dark:text-solid-accentlight font-semibold"
 			>
 				<Anchor id={props.id}>{props.children}</Anchor>
 			</h2>
 		)
 	},
-	h3: (props) => (
+	h3: (props) => {
+		const { addSection } = usePageState()
+		onMount(() => {
+			addSection(getSectionString(props.children), props.id, 3)
+		})
+		return (
 		<h3
 			{...props}
-			class={headerBold + "heading text-2xl leading-9 mt-14 mb-6 mdx-heading"}
+			class="font-semibold heading text-xl leading-9 my-3 mdx-heading text-solid-accent dark:text-solid-accentlight"
 		>
 			<Anchor id={props.id}>{props.children}</Anchor>
 		</h3>
-	),
-	h4: (props) => (
+	)},
+	h4: (props) => {
+		const { addSection } = usePageState()
+		onMount(() => {
+			addSection(getSectionString(props.children), props.id, 4)
+		})
+		return (
 		<h4
 			{...props}
-			class="heading text-xl font-bold leading-9 mt-14 mb-4 mdx-heading"
+			class="heading text-lg font-medium my-2 mdx-heading text-solid-accent dark:text-solid-accentlight"
 		>
 			<Anchor id={props.id}>{props.children}</Anchor>
 		</h4>
-	),
-	h5: (props) => (
-		<h5 {...props} class="text-xl leading-9 mt-4 mb-4 font-medium mdx-heading">
+	)},
+	h5: (props) => {
+		// const { addSection } = usePageState()
+		// onMount(() => {
+		// 	addSection(getSectionString(props.children), props.id)
+		// })
+		return (
+		<h5 {...props} class="text-lg my-3 font-medium mdx-heading text-solid-accent dark:text-solid-accentlight">
 			<Anchor id={props.id}>{props.children}</Anchor>
 		</h5>
-	),
+	)},
 	h6: (props) => (
-		<h6 {...props} class="text-xl font-400 mdx-heading">
+		<h6 {...props} class="text-lg font-medium mdx-heading text-solid-accent dark:text-solid-accentlight">
 			<Anchor id={props.id}>{props.children}</Anchor>
 		</h6>
 	),
 	p: (props) => (
-		<p {...props} class="text-lg font-400 my-4">
+		<p {...props} class="my-4">
 			{props.children}
 		</p>
 	),
@@ -145,7 +153,7 @@ export default {
 	),
 	code: (props) => {
 		return (
-			<code class="inline text-code font-mono" {...props}>
+			<code class="inline text-code font-mono text-lg" {...props}>
 				{props.children}
 			</code>
 		)
@@ -155,11 +163,6 @@ export default {
 
 		return (
 			<div class="relative">
-				{/* <Show when={props.filename?.length > 5}>
-        <span {...props} class="h-4 p-1">
-          {props.filename}
-        </span>
-      </Show> */}
 				<pre
 					{...mergeProps(props, {
 						get class() {
@@ -169,9 +172,6 @@ export default {
 								(props.bad ? "border-red-400 border-1" : "")
 							)
 						},
-						// get className() {
-						// 	return undefined
-						// },
 					})}
 					ref={ref}
 				>

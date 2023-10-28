@@ -1,0 +1,182 @@
+# Conditional Rendering
+
+Conditional rendering in Solid introduces dedicated components that simplify the way UI is handled based on the desired conditions. 
+These components offer a more straightforward and readable way to manage UI elements and make code more organized and maintainable.
+
+## `<Show>`
+
+The `<Show>` component integrates JavaScript control logic flow within templates.
+This offers a more readable way to handle conditionals.
+
+`<Show>` uses a `when` property that determines the condition for rendering. 
+It accepts a boolean expression, which can be as simple as a boolean variable or complex expressions that evaluate to a boolean.
+This expression is re-evaluated whenever there is a change in the state or props it depends on.
+
+In addition to `when`, `<Show>` has an optional `fallback` property.
+Any valid JSX content or components can act as a fallback, ranging from simple text or HTML elements, to more complex components.
+
+```jsx
+import { Show } from "solid-js"
+
+<Show when={!data.loading} fallback={<div>Loading...</div>}>
+  <h1>
+    Hi, I am {data().name}.
+  </h1>
+</Show>
+```
+
+With this example, when the `!data.loading` condition is truthy, the primary content between the `<Show>` tags is rendered. 
+If it is falsy, the fallback content is rendered, if provided.
+
+When certain conditions are not met, `<Show>` can be used to show alternative content such as loaders, error messages, or other content that makes sense in the context of your application.
+
+## `<Switch>` and `<Match>`
+
+Handling multiple conditions in Solid can be managed through the `<Switch>` and `<Match>` components, which is similar to JavaScript's [switch/case](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/switch) structure. 
+
+Simlar to show, `<Switch>` has the optional `fallback` prop available, which will specify the content be rendered when none of the `<Match>` components evaluate to true.
+`<Match>`, however, is nested within `<Switch>` to represent individual conditions.
+These components will show based on when the `when` prop is evaluated to be true.
+
+Each condition is evlauted *in sequence* and will render the corresponding outcome based on the **first true condition** encountered:
+
+```jsx
+import { Switch, Match } from "solid-js";
+
+<Switch fallback={<p>Fallback content</p>}>
+  <Match when={condition1}>
+    <p>Outcome 1</p>
+  </Match>
+  <Match when={condition2}>
+    <p>Outcome 2</p>
+  </Match>
+</Switch>
+```
+
+Opting for this approach removes the need for nested `<Show>` components:
+
+```jsx
+// nested show
+<Show
+    when={x() > 10}
+      fallback={
+        <Show
+          when={5 > x()}
+          fallback={<p>{x()} is between 5 and 10</p>}
+        >
+          <p>{x()} is less than 5</p>
+        </Show>
+      }
+    >
+      <p>{x()} is greater than 10</p>
+    </Show>
+
+// switch/match alternative:
+
+<Switch fallback={<p>{x()} is between 5 and 10</p>}>
+  <Match when={x() > 10}>
+    <p>{x()} is greater than 10</p>
+  </Match>
+  <Match when={5 > x()}>
+    <p>{x()} is less than 5</p>
+  </Match>
+</Switch>
+```
+
+## Dynamic
+
+`<Dynamic>` introduces a dynamic component rendering capability, allowing you to select and render components based on varying data. 
+You can provide it with either a string representing a native HTML element or a component function. 
+Once you've specified the component to render, `<Dynamic>` will render the remaining props that you provide. 
+This flexibility makes it a versatile tool for adapting your UI based on changing data or user interactions:
+
+```jsx
+import { createSignal, Switch, Match, For } from "solid-js";
+
+const RedDiv = () => <div style="color: red">Red</div>;
+const GreenDiv = () => <div style="color: green">Green</div>;
+const BlueDiv = () => <div style="color: blue">Blue</div>;
+
+const options = {
+  red: RedDiv,
+  green: GreenDiv,
+  blue: BlueDiv
+}
+
+function App() {
+  const [selected, setSelected] = createSignal("red");
+
+  return (
+    <>
+      <select value={selected()} onInput={e => setSelected(e.currentTarget.value)}>
+        <For each={Object.keys(options)}>{
+          color => <option value={color}>{color}</option>
+        }</For>
+      </select>
+      <Dynamic component={options[selected()]} />
+    </>
+  );
+}
+```
+
+In this example, the `component` prop of `<Dynamic>` is assigned a value from the `options` object, which is indexed by the result of the `selected()` signal call. 
+This dynamic assignment results in rendering the chosen component or element with the provided properties.
+
+Using `<Dynamic>` in scenarios like this can result in code that is more succinct and visually cleaner than alternative conditional rendering options. 
+If you were to replace it with a conditional rendering statement, the code would look something like this:
+
+```jsx
+<Switch fallback={<BlueDiv />}>
+  <Match when={selected() === 'red'}><RedDiv /></Match>
+  <Match when={selected() === 'green'}><GreenDiv /></Match>
+</Switch>
+```
+
+In this `<Switch>` statement, the `<Match>` components provide conditions to render specific components based on the result of `selected()`, which aligns with the behavior achieved using `<Dynamic>`. 
+However, `<Dynamic>` offers a more compact and readable way to achieve the same outcome.
+
+## Portal
+
+The `<Portal>` element assists in tackling the difficulties that are typically encountered with overlay elements like modals.
+When an element requires rendering outside of the usual document flow, challenges related to stacking contents and z-index can present.
+`<Portal>` enables the rendering elements of these elements so they are rendered correctly and interactively.
+
+```jsx
+import { Portal } from "solid-js";
+
+<Portal>
+  <div class="popup">...</div>
+</Portal>
+```
+
+The content nested within `<Portal>` is positioned at a designated location when shown.
+By default, Solid will render these elements in a `div` within `document.body` to make sure they are not bound by the styling or layout restrictions of the parent component.
+
+Using `<Portal>` can be particularly useful in cases where elements, like information popups, might be clipped or obscured due to the overflow settings of their parent elements.
+By encapsulating the element within `<Portal>`, it is effectively lifted from the standard flow and positioned in a manner that is both visually accessible and no longer effected by the layout constraints of its surrounding environment.
+
+[View on Eraser![](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9/preview?elements=hBlsXychIW_yV64t1x5IZA&type=embed)](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=hBlsXychIW_yV64t1x5IZA)
+
+## Error Boundary
+
+The `<ErrorBoundary>` component serves as a protective layer around child components that are susceptible to throwing errors. 
+By catching these errors, it prevents them from propagating and causing the entire application to crash:
+
+```jsx
+import { ErrorBoundary } from "solid-js";
+
+<ErrorBoundary fallback={err => <div>Error: {err.message}</div>}>
+  <ProblematicComponent />
+</ErrorBoundary>
+```
+
+In this setup, the `fallback` prop is important. 
+It determines what will be rendered in place of the child component(s) if an error is thrown.
+The `fallback` prop can take a function that receives the caught error as an argument, providing a flexible way to handle different error scenarios.
+
+If a component within `<ErrorBoundary>` throws an error, instead of causing a crash, `<ErrorBoundary>` will catch the error and render the fallback UI. 
+This way, even when a component fails, the user has a controlled UI response instead of a broken interface. 
+The fallback UI can be used to display the error message, or provide a friendly notification to the user.
+This mechanism aids in error containment and provides a better user experience even when unexpected issues arise in the UI.
+
+[View on Eraser![](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9/preview?elements=uawsugh__apVsVq2YQmo_Q&type=embed)](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=uawsugh__apVsVq2YQmo_Q)

@@ -190,7 +190,7 @@ export const REFERENCE_SECTIONS: SECTIONS = {
 				name: "Stores",
 				pages: [
 					{
-						name: "Using Stores",
+						name: "Stores",
 						link: "/reference/using-stores",
 					},
 					{
@@ -512,6 +512,10 @@ export const LEARN_SECTIONS: SECTIONS = {
         name: "Routing & Navigation",
         link: "/guides/routing-and-navigation",
       },
+	  {
+		name: "Complex State Management",
+		link: "/guides/complex-state-management",
+	  },
       {
         name: "Deploying your App",
         link: "/guides/deploying-your-app",

@@ -1,0 +1,33 @@
+<Title>use:*</Title>
+
+These are custom directives. In a sense this is just syntax sugar over ref but allows us to easily attach multiple directives to a single element. A directive is a function with the following signature:
+
+```ts
+function directive(element: Element, accessor: () => any): void;
+```
+
+Directive functions are called at render time but before being added to the DOM. You can do whatever you'd like in them including create signals, effects, register clean-up etc.
+
+```tsx
+const [name, setName] = createSignal("");
+
+function model(el, value) {
+  const [field, setField] = value();
+  createRenderEffect(() => (el.value = field()));
+  el.addEventListener("input", (e) => setField(e.target.value));
+}
+
+<input type="text" use:model={[name, setName]} />;
+```
+
+To register with TypeScript extend the JSX namespace.
+
+```ts
+declare module "solid-js" {
+  namespace JSX {
+    interface Directives {
+      model: [() => any, (v: any) => any];
+    }
+  }
+}
+```

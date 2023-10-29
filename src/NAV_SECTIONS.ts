@@ -401,10 +401,10 @@ export const LEARN_SECTIONS: SECTIONS = {
         name: "Solid Foundations",
         link: "https://www.solidjs.com/tutorial/introduction_basics",
       },
-	  {
-		name: "Build a Book Shelf",
-		link: "/tutorials/book-shelf"
-	  }
+	//   {
+	// 	name: "Build a Book Shelf",
+	// 	link: "/tutorials/book-shelf"
+	//   }
     ],
   },
   concepts: {

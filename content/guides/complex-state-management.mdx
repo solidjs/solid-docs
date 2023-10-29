@@ -302,6 +302,49 @@ export default App;
 
 ## State sharing
 
-// talk about prop drilling 
+As applications grow and become more complex, sharing state between components can become a challenge.
+Passing state and functions from parent to child components, especially across multiple levels, is commonly referred to as "prop drilling". 
+Prop drilling can lead to verbose, hard-to-maintain code, and can make the data flow in an application more difficult to follow. 
+To solve this problem and allow for a more scalable and maintainable codebase, Solid provides [context](/concepts/concept).
 
-// using context
+To use this, you need to create a context.
+This context will have a default value and can be consumed by any *descendant* component.
+
+```jsx
+import { createContext } from "solid-js";
+
+const TaskContext = createContext();
+```
+
+Your components will be wrapped with the `Provider` from the context, and passed with the values that you wish to share.
+
+```jsx
+import { createStore } from "solid-js/store";
+
+const TaskApp = () => {
+  const [state, setState] = createStore({
+      tasks: [],
+      numberOfTasks: 0,
+  });
+
+  return (
+    <TaskContext.Provider value={{ state, setState }}>
+      {/* Your components */}
+    </TaskContext.Provider>
+  )
+}
+```
+
+In any descendent component, you can consume the context values using `useContext`:
+
+```jsx
+  import { useContext } from "solid-js";
+
+  const TaskList = () => {
+      const { state, setState } = useContext(TaskContext);
+
+      // Now you can use the shared state and functions
+  }
+```
+
+For a deeper dive, please refer to our dedicated [page on context](/concepts/context).

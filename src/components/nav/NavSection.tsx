@@ -6,6 +6,7 @@ import {
 	Show,
 	createSignal,
 	createUniqueId,
+	onMount,
 } from "solid-js"
 
 export function CollapsedIcon(props) {
@@ -75,9 +76,18 @@ function SectionPanel(props: ParentProps<{ id: string }>) {
 }
 
 export function NavItem(props) {
+	
 	return (
 		<li class="ml-2">
-			<NavLink
+			{props.href?.charAt(0) === "h" ? 
+			<a
+				href={props.href}
+				class="px-2 py-1 w-full text-left relative flex items-center justify-between transition cursor-pointer text-sm"
+				target="_blank"
+			>
+				{props.title}
+			</a> 
+			: <NavLink
 				class="px-2 py-1 w-full text-left relative flex items-center justify-between transition cursor-pointer text-sm"
 				{...props}
 				inactiveClass="hover:bg-solid-lightaction hover:dark:bg-solid-darkaction"
@@ -85,7 +95,7 @@ export function NavItem(props) {
 				end={true}
 			>
 				{props.children}
-			</NavLink>
+			</NavLink>}
 		</li>
 	)
 }

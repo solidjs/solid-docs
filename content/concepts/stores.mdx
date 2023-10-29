@@ -39,7 +39,7 @@ const [store, setStore] = createStore({
 })
 ```
 
-### Accessing values
+## Accessing values
 
 Store properties can be accessed directly from the state proxy through directly referencing the targeted property:
 
@@ -86,7 +86,7 @@ const App = () => {
 };
 ```
 
-### Modifying store values
+## Modifying store values
 
 Updating values within a store is best accomplished using a setter provided by the `createStore` initialization.
 This setter allows for the modification of a specific key and its associated value, following the format `setStore(key, newValue)`:
@@ -122,7 +122,7 @@ Rather, you would have to add this in a tracking scope, such as within a [`creat
 ```
 
 
-### Path syntax flexibilty 
+## Path syntax flexibilty 
 
 Modifying a store using this method is referred to as "path syntax." 
 In this approach, the initial arguments are used to specify the keys that lead to the target value you want to modify, while the last argument provides the new value.
@@ -139,12 +139,12 @@ Alternatively, you can use filtering functios to access keys based on dynamic co
 
 The flexibility in path syntax makes for efficient navigation, retrieval, and modification of data in your store, regardless of the store's complexity or the requirement for dynamic access scenarios within your application.
 
-### Modifying values in arrays
+## Modifying values in arrays
 
 Path syntax provides a convenient way to modify arrays, making it easier to access and update their elements.
 Instead of relying on discovering individual indices, path syntax introduces several powerful techniques for array manipulation.
 
-#### Appending new values
+### Appending new values
 
 To append a new element to an array within a store, you specify the target array and set the index to the desired position.
 For example, if you wanted to append the new element to the end of the array, you would set the index to `array.length`:
@@ -169,7 +169,7 @@ setStore("users", (otherUsers) =>[
 })
 ```
 
-#### Range specification
+### Range specification
 
 With path syntax, you can specify a range of indices to update or modify to target a subset of the elements within the array for modification.
 You can do this using an array of values:
@@ -193,7 +193,7 @@ setStore({from: 0, to: store.length, by:2}, "loggedIn", false)
 ```
 </Aside>
 
-#### Dynamic value assignment
+### Dynamic value assignment
 
 Path syntax also provides a way to set values within an array using functions instead of static values.
 These functions receive the old value as an argument, allowing you to compute the new value based on the existing one.
@@ -205,7 +205,7 @@ This dynamic approach is particularly useful for complex transformations.
   );
 ```
 
-#### Filtering values
+### Filtering values
 
 In scenarios where you want to update elements in an array based on a specific condition, you can pass a function as an argument. 
 This function will act as a filter, allowing you to select elements that satisfy the condition. 
@@ -220,6 +220,26 @@ setStore("users",
 ```
 
 In addition to [`.startsWith`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith), you can use other array methods like [`.find`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find) to filter for the values that you need. 
+
+## Modifying objects
+
+When using store setters to modify objects, if a new value is an object, it will be shallow merged with the existing value.
+What this refers to is that the properties of the existing object will be combined with the properties of the "new" object you are setting, updating any overlapping properties with the values from the new object.
+
+What this means, is that you can directly make the change to the store *without* spreading out properties of the existing user object.
+
+```jsx
+  setStore("users", 0, {
+    id: 109,
+  })
+
+  // is equivalent to
+
+  setStore("users", 1, (user) => ({
+    ...user,
+    id: 69420
+  }));
+```
 
 ## Store utilities
 

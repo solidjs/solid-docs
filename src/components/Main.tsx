@@ -16,12 +16,12 @@ export function Main(props) {
 	const pages = createMemo(() => {
 		let prevPage: SECTION_LEAF_PAGE, nextPage: SECTION_LEAF_PAGE
 
-		if (location.pathname.startsWith("/references")) {
+		if (location.pathname.startsWith("/reference")) {
 			[prevPage, nextPage] = getNextPrevPages(
 				location.pathname,
 				REFERENCE_SECTIONS
 			)
-		} else if (location.pathname.startsWith("/guides")) {
+		} else if (location.pathname.startsWith("/")) {
 			[prevPage, nextPage] = getNextPrevPages(
 				location.pathname,
 				LEARN_SECTIONS

@@ -1,13 +1,13 @@
 import { REFERENCE_SECTIONS, SECTION_PAGE } from "~/NAV_SECTIONS"
 import MainSectionsGrid from "./ComponentGrid"
 
-const conceptsSubsections = REFERENCE_SECTIONS["concepts"].pages
+// const conceptsSubsections = REFERENCE_SECTIONS["concepts"].pages
 const apiSubsections = REFERENCE_SECTIONS["api"].pages
 
 const SectionsGrid = () => {
 	return (
 		<>
-			<span class="font-semibold text-lg ">Concepts</span>
+			{/* <span class="font-semibold text-lg ">Concepts</span>
 			<MainSectionsGrid
 				subSections={[
 					...conceptsSubsections.map((value: SECTION_PAGE) => ({
@@ -16,7 +16,7 @@ const SectionsGrid = () => {
 					})),
 				]}
 			/>
-			<br />
+			<br /> */}
 			<span class="font-semibold text-lg">API References</span>
 			<MainSectionsGrid
 				subSections={[

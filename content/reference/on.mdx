@@ -1,64 +1,32 @@
-import { Aside } from "~/components/configurable/Aside";
+<Title>on*</Title>
 
+Event handlers in Solid typically take the form of `onclick` or `onClick` depending on style.
 
-<Title>on</Title>
-
-```ts
-function on<T extends Array<() => any> | (() => any), U>(
-  deps: T,
-  fn: (input: T, prevInput: T, prevValue?: U) => U,
-  options: { defer?: boolean } = {}
-): (prevValue?: U) => U | undefined;
+```tsx
+<div onClick={(e) => console.log(e.currentTarget)} />
 ```
 
-`on` is designed to be passed into a computation to make its dependencies explicit. If an array of dependencies is passed, `input` and `prevInput` are arrays.
+Conceptually, this example attaches a `click` event listener (via [`addEventListener`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener)) to the `div`. However, Solid actually handles common UI events that bubble and are composed (such as `click`) at the document level, and then synthetically implements delegation (capturing and bubbling). This improves performance for these common events by reducing the number of event handlers.
 
-```ts
-createEffect(on(a, (v) => console.log(v, b())));
+Note that `onClick` handles the event `click`; in general, event names get mapped to lower case. If you need to work with event names containing capital letters, see [`on:`](/references/api-reference/special-jsx-attributes/on_-and-oncapture_) which attaches event handlers directly (also avoiding fancy delegation via document).
 
-// is equivalent to:
-createEffect(() => {
-  const v = a();
-  untrack(() => console.log(v, b()));
-});
+Solid also supports passing a two-element array to the event handler to bind a value to the first argument of the event handler. This doesn't use `bind` or create an additional closure, so it is a highly optimized way of delegating events.
+
+```tsx
+function handler(itemId, e) {
+  /*...*/
+}
+
+<ul>
+  <For each={state.list}>{(item) => <li onClick={[handler, item.id]} />}</For>
+</ul>;
 ```
 
-You can also not run the computation immediately and instead opt in for it to only run on change by setting the defer option to true.
+Events are never rebound and the bindings are not reactive, as it is expensive to attach and detach listeners. Since event handlers are called like any other function each time an event fires, there is no need for reactivity; shortcut your handler if desired.
 
-```ts
-// doesn't run immediately
-createEffect(on(a, (v) => console.log(v), { defer: true }));
-
-setA("new"); // now it runs
+```tsx
+// if defined, call it; otherwise don't.
+<div onClick={() => props.handleClick?.()} />
 ```
 
-## Using `on` with stores
-
-<Aside>
-  Please note that on stores and mutable, adding or removing a property from the parent object will 
-  trigger an effect. See <a href="/references/api-reference/stores/store-utilities/#createMutable">createMutable</a>
-</Aside>
-
-```ts
-const [state, setState] = createStore({ a: 1, b: 2 });
-
-// this will not work
-createEffect(on(state.a, (v) => console.log(v)));
-
-setState({ a: 3 }) // logs nothing
-
-
-// instead, use an arrow function 
-createEffect(on(() => state.a, (v) => console.log(v)));
-
-setState({ a: 4 }) // logs 4
-```
-
-
-## Arguments and Options
-
-| Argument | Type                                           | Description                                       |
-| :------- | :--------------------------------------------- | :------------------------------------------------ |
-| deps     | `T`                                            | The dependencies to watch.                        |
-| fn       | `(input: T, prevInput: T, prevValue?: U) => U` | The function to run when the dependencies change. |
-| options  | `{ defer?: boolean }`                          | Options to configure the effect.                  |
+Note that `onChange` and `onInput` work according to their native behavior (unlike, say, React). [`onInput`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/input_event) will fire immediately after the value has changed; for most `<input>` fields, [`onChange`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/change_event) will only fire after the field loses focus. The event's `currentTarget` refers to the element that the event was attached to, while `target` gives the element that actually triggered the event (e.g. the user clicked on).

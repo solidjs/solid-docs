@@ -1,0 +1,125 @@
+import { Aside } from "~/components/configurable/Aside";
+
+# Refs
+
+Refs, or references, allow you to have direct access to DOM element. 
+
+There are two ways to get a reference to a DOM element in Solid:
+1. Using JSX as a value, and assigning it to a variable
+2. Using the Solid `ref` attribute
+
+```jsx
+const myDiv = <div>My Element</div>;
+```
+
+<Aside>
+For a more idiomatic way, Solid provides the `ref` attribute.
+Refs in Solid are assignments that occur at creation time before elements are attached to the document DOM.
+This lets you access its properties and methods directly, allowing for manipulatinos such as animations and event handling.
+To use `ref`, you simply need to declare a variable and use it as a ref attribute:
+
+```tsx
+let myDiv;
+
+<div ref={myDiv}>My Element</div>
+
+```
+
+In TypeScript, you must use a definitive assignment assertion. 
+This signals to TypeScript that `myDiv` will definitely be assigned, even if TypeScript can not confirm it.
+This is particularly useful in Solid since the framework takes care of assigning the variable when the component is rendered.
+
+```tsx
+  let myDiv!: HTMLDivElement;
+```
+</Aside>
+
+## Callbacks
+
+Refs can also take the form of a callback function.
+This method can be convenient for encapsulating logic, especially when there is no need to wait until the elements are attached:
+
+```tsx
+let myDiv;
+
+<div ref={(el) => myDiv = el}>My Element</div>
+```
+
+Callback refs provide a more flexible way to set refs and can be beneficial in various scenarios, such as when you need to attach event listeners to the DOM elements immediately after creation.
+
+## Forwarding refs
+
+Forwarding refs provide a way to expose one of the inner elements' references to a parent component.
+By doing this, the parent component can directly access and interact the inner elements.
+
+When a component receives a `ref` attribute from its parent, it will come as `props.ref` in a callback form, regardless of whether the parent passed it as a simple assignment or a callback.
+
+The component can then "forward" this ref to a desired internal element by assigning the `props.ref` directly to the `ref` attribute of that element.
+
+Imagine there is a `Canvas` component, and from its parent, you want to directly manipulate the `canvas` element inside this Canvas component.
+
+1. Canvas component
+
+```tsx
+function Canvas(props) {
+  return (
+    <div className="canvas-container">
+      <canvas ref={props.ref} />
+    </div>
+  );
+}
+```
+
+2. Parent component
+```tsx
+import { Canvas } from './Canvas.jsx';
+
+function ParentComponent() {
+  let canvasRef;
+
+  const animateCanvas = () => {
+    // Manipulate the canvas using canvasRef...
+  };
+
+  return (
+    <div>
+      <Canvas ref={canvasRef} />
+      <button onClick={animateCanvas}>Animate Canvas</button>
+    </div>
+  );
+}
+```
+
+In the `Canvas` component, we're directly assigning the incoming `props.ref` to the `ref` attribute of the internal canvas element. 
+This forwards the reference to the parent component (`ParentComponent`), allowing it to have direct access to the `canvas` element.
+
+## Directives
+
+Directives allow the attachment of reusable behaviours to DOM elements.
+The [`use:`](/reference/use) prefix is used to denote these custom directives.
+Unlike props or attributes, directives operate at a lower level through providing fine-grained control over the elements they are attached to.
+
+Directives are like callback refs but they enable two extra features:
+* Having multiple directives on an element.
+* Passing in reactive data to the callback.
+
+A directive is essentially a function with a specific signature:
+
+```typescript
+function directive(element: Element, accessor: () => any): void;
+```
+
+* `element`: The DOM element that the directive is applied to.
+* `accessor`: A function that gives access to the value(s) passed to the directive.
+
+The directive functions are called at render time, but are called before the element is added to the DOM.
+Due to this order, elements are fully primed with their attributes, properties, or event listeners, therefore minimizing unexpected behaviors or premature interactions.
+
+Within directives, you're able to perform a variety of tasks, including:
+* creating [signals](/essentials/signals)
+* initiating [effects](/essentials/managing-side-effects)
+* registering [cleanup tasks](/essentials/managing-side-effects#clean-up)
+* adding [event listeners](#event-listeners)
+* and more.
+
+To learn more about directives and how they work with TypeScript, refer to our [TypeScript for Solid guide](/guides/typescript).

@@ -7,28 +7,30 @@ import { createStore } from "solid-js/store"
 type Section = {
   title: string;
   href: string;
+  level: number;
 };
 
 type PageStateData = {
   sections: () => readonly Section[];
-  addSection: (title: string, href: string) => void;
+  addSection: (title: string, href: string, level: number) => void;
 };
 
 export const PageStateContext = createContext<PageStateData>()
 
 export const PageStateProvider = (props: ParentProps) => {
-	const [store, setStore] = createStore<{ sections: Section[]; path: string }>({
+	const [store, setStore] = createStore({
 		sections: [],
 		path: "",
+		level: null,
 	})
 
 	const data: PageStateData = {
 		sections() {
 			return store.sections
 		},
-		addSection(title, href) {
+		addSection(title, href, level) {
 			setStore("sections", (sections) => [
-				...new Set([...sections, { title, href }]),
+				...new Set([...sections, { title, href, level }]),
 			])
 		},
 	}

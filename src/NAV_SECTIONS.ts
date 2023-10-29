@@ -462,10 +462,6 @@ export const LEARN_SECTIONS: SECTIONS = {
         link: "/concepts/effects",
       },
 	  {
-		name: "Context",
-		link: "/concepts/context"
-	  },
-	  {
 		name: "Derived Values",
 		pages: [
 			{
@@ -479,8 +475,16 @@ export const LEARN_SECTIONS: SECTIONS = {
 		]
 	  },
 	  {
+		name: "Context",
+		link: "/concepts/context"
+	  },
+	  {
 		name: "Refs",
 		link: "/concepts/refs",
+	  },
+	  {
+		name: "Stores",
+		link: "/concepts/stores"
 	  }
     ],
   },

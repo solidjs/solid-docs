@@ -39,6 +39,7 @@ export default function Nav() {
 			>
 				<TopMenu />
 		</div>
+	</div>
 	)
 }
 

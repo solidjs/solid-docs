@@ -1,0 +1,108 @@
+import { Aside } from "~/components/configurable/Aside";
+
+# Class & Style Bindings
+
+Similar to HTML, Solid uses `class` and `style` attributes to style elements via [CSS (Cascading Style Sheets)](https://developer.mozilla.org/en-US/docs/Glossary/CSS).
+
+* **Class Attribute**: Enables styling one or more elements through CSS rules.
+* **Style Attribute**: Inline styles that style single elements.
+
+## Inline styling
+
+The `style` attribute lets you style a single element and define CSS variables dynamically during runtime. 
+Solid allows `style` in both string (e.g. `<div style="color: red;"` /> and object forms  (e.g. `<div style={{ "color": "red" }}>` ).
+
+If you are styling using the object form, the keys will require dash-case form and any units must be explicitly provided:
+
+```jsx
+<div style={{
+  color: `red`,
+ "font-weight": 800,
+ "font-size": '2rem'
+}}
+>
+  Some Text
+</div>
+```
+
+Inline styles come in handy for rapid prototyping, setting dynamic CSS variables, and overriding classes. 
+However, because Solid uses JSX, it is not recommended to use the `style` tag within the JSX code directly. 
+Doing this clutters the component logic, making the code less readable and harder to maintain over time.
+
+## Classes
+
+Through the `class` attribute, you can style elements using CSS.
+The `class` attribute offers self-documentation and performance advantages over `style`.
+
+For a structured approach, pair CSS files with their respective component files. 
+Importing these files will globally scopes them.
+This means that the elements using those classes will inherit the styles automatically across the whole project, not just the ones located in the file they are imported into.
+
+```jsx
+import "./Card.css";
+function Card() {
+  // ...
+}
+```
+
+### Dynamic styling
+
+Dynamic styling allows interfaces to adapt and respond to various factors, such as user interaction or device preferences. 
+
+Component states serve as a primary mechanism for managing dynamic data within a component.
+This state can directly influence styles or, more flexibly, CSS variables.
+
+Rather than changing a style directly, these variables can be changed based on a single state:
+
+```tsx
+const [theme, setTheme] = createSignal("light");
+
+<div class={theme() === 'light' ? 'light-theme' : 'dark-theme'}>
+  This div's theme is determined dynamically!
+</div>
+```
+
+Props are another way to change styles. 
+By passing props to components, you can adapt styles based on the component's usage or the data it receives:
+
+```tsx
+function ThemedButton({ theme }) {
+  return (
+    <button class={theme}>
+      {theme === 'light' ? 'Light Button' : 'Dark Button'}
+    </button>
+  );
+}
+```
+
+### `classList`
+
+In scenarios where you may want to conditionally set classes, Solid offers the built-in [`classList`](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList) JSX attribute. 
+This attribute takes an object where the key represents the class name(s) and the value is a boolean expression. 
+When the value is `true`, the class is applied; when `false`, it is removed.
+
+When handling multiple conditional classes, `classList` is often more efficient. 
+This is because `classList` selectively toggles only the classes that require alteration, while `class` will be re-evaluated each time.
+For a single conditional class, using `class` might be simpler. 
+However, as the number of conditional classes increases, `classList` offers a more readable and declarative approach.
+
+```tsx
+  const [current, setCurrent] = createSignal("foo");
+
+    <button
+     classList={current() === 'foo' ? 'selected' : ''}
+     onClick={() => setCurrent('foo')}
+    >foo</button>
+```
+
+<Aside>
+**Caution**: While it is possible, mixing `class` and `classList` can introduce unexpected errors.
+If both are reactive, the following can occur: when the `class` value changes, Solid will set the entire `class` attribute, meaning any toggles in `classList` will be overwritten.
+<br />
+The main 'safe' situation is when `class` is set to a static string (or nothing) and `classList` is reactive.
+Alternatively, `class` could be set to a static computed value (e.g. `class={baseClass()}`), but then it must be put before any `classList` attributes.
+<br />
+Since `classList` is a pseudo-attribute, it doesn't work in prop spreads like <div {...props} /> or in `<Dynamic>`.
+</Aside>
+
+To dive deeper into how to style your Solid components, see our [detailed guide](guides/styling-your-components).

@@ -56,7 +56,7 @@ const EraserLink = ({
 			: `${workspaceUrl}/preview`
 
 		return (
-			<Link href={linkUrl} class="relative inline-block">
+			<Link href={linkUrl} class="relative inline-block" target="_blank">
 				<img src={imageUrl} alt={""} onLoad={() => setIsLoaded(true)} />
 				{isLoaded() ? (
 					<span class="eraserLinkContainer">
@@ -73,6 +73,7 @@ const EraserLink = ({
 	return (
 		<Link
 			href={linkUrl}
+
 			class="dark:text-solid-darklink break-normal text-solid-lightlink duration-100 ease-in transition font-semibold leading-normal transition hover:underline"
 		>
 			{children}

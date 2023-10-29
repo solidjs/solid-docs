@@ -4,28 +4,23 @@ import IconChevron from "~icons/heroicons-outline/chevron-right"
 
 export default function Summary(props: { collapsed?: boolean }) {
 	const { sections } = usePageState()
-	const [collapsed, setCollapsed] = createSignal(props.collapsed || false)
+	const [collapsed, setCollapsed] = createSignal(false)
 
 	return (
-		<div class="py-2 px-4 border border-solid-lightitem rounded-md md:(p-4 max-h-[95vh] overflow-auto border-none bg-transparent) max-h-[50vh] bg-solid-light z-50 dark:(bg-solid-dark md:bg-transparent border-solid-darkitem)">
-			<button
-				onClick={() => setCollapsed((prev) => !prev)}
-				aria-controls="preferences"
-				type="button"
-				class="w-full md:text-2xl font-bold flex items-center justify-between md:pointer-events-none"
-			>
-        Summary
-				<IconChevron
-					class={`md:hidden w-6 h-6 text-solid-lightaction dark:text-solid-darkaction transform transition ${
-						!collapsed() ? "rotate-90" : ""
-					}`}
-				/>
-			</button>
+		<div class="py-2 px-4 border-1 border-solid-lightitem rounded-md md:(p-4 max-h-[95vh] overflow-auto border-none bg-transparent) max-h-[50vh] bg-solid-light z-50 dark:(bg-solid-dark md:bg-transparent border-solid-darkitem)">
+			<span class="w-full md:text-2xl font-semibold flex items-center justify-between md:pointer-events-none mb-2">
+				Summary
+			</span>
 			<For each={sections()}>
 				{(item) => (
-					<li class="text-base py-2 hidden md:flex items-center gap-2 hover:bg-solid-lightaction hover:dark:bg-solid-darkaction px-4 border-solid-darkitem dark:border-solid-lightitem border-l-2">
+					<li class="list-none">
 						<a
-							class="font-semibold"
+							class="w-full py-1 text-xs tracking-wide md:flex items-center gap-2 hover:bg-solid-lightaction hover:dark:bg-solid-darkaction border-solid-darkitem dark:border-solid-lightitem border-l-2"
+							classList={{
+								"pl-4": item.level === 2,
+								"pl-10": item.level === 3,
+								"pl-16": item.level === 4
+							}}
 							onClick={() => setCollapsed(true)}
 							href={"#" + item.href}
 						>
@@ -38,9 +33,8 @@ export default function Summary(props: { collapsed?: boolean }) {
 				<ol class="mt-2 md:hidden list-none space-y-1">
 					<For each={sections()}>
 						{(item) => (
-							<li class="text-base py-2 flex items-center gap-2 hover:bg-solid-lightaction hover:dark:bg-solid-darkaction pl-4 pr-2">
+							<li class="text-xs flex items-center gap-2 hover:bg-solid-lightaction hover:dark:bg-solid-darkaction pl-4 pr-2">
 								<a
-									class="font-semibold"
 									onClick={() => setCollapsed(true)}
 									href={"#" + item.href}
 								>

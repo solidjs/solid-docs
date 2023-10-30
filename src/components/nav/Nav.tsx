@@ -23,7 +23,7 @@ export default function Nav() {
 	})
 
 	return (
-		<div class="lg:max-h-screen lg:sticky lg:top-0 no-bg-scrollbar lg:min-w-[250px] lg:max-w-xs w-full z-50 overflow-y-auto flex flex-col gap-8 lg:pr-4">
+		<div class="lg:max-h-screen lg:sticky lg:top-0 no-bg-scrollbar lg:min-w-[250px] lg:max-w-xs w-full z-50 overflow-y-auto flex flex-col lg:pr-4 mb-5">
 			<div class="flex flex-col">
 				<NavHeader
 					showMenu={showMenu()}
@@ -33,7 +33,7 @@ export default function Nav() {
 			<div
 				classList={{
 					hidden: !showMenu(),
-					"lg:block border-b md:border-none border-solid-e dark:border-solid-darkitem pb-4":
+					"lg:block border-b md:border-none border-solid-e dark:border-solid-darkitem mb-4":
 						true,
 				}}
 			>

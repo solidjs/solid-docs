@@ -15,7 +15,7 @@ export default function Summary(props: { collapsed?: boolean }) {
 				{(item) => (
 					<li class="list-none">
 						<a
-							class="w-full py-1 text-xs tracking-wide md:flex items-center gap-2 hover:bg-solid-lightaction hover:dark:bg-solid-darkaction border-solid-darkitem dark:border-solid-lightitem border-l-2"
+							class="w-full py-1 text-sm tracking-wide md:flex items-center gap-2 hover:bg-solid-lightaction hover:dark:bg-solid-darkaction border-solid-darkitem dark:border-solid-lightitem border-l-2"
 							classList={{
 								"pl-4": item.level === 2,
 								"pl-10": item.level === 3,
@@ -33,7 +33,7 @@ export default function Summary(props: { collapsed?: boolean }) {
 				<ol class="mt-2 md:hidden list-none space-y-1">
 					<For each={sections()}>
 						{(item) => (
-							<li class="text-xs flex items-center gap-2 hover:bg-solid-lightaction hover:dark:bg-solid-darkaction pl-4 pr-2">
+							<li class="text-sm flex items-center gap-2 hover:bg-solid-lightaction hover:dark:bg-solid-darkaction pl-4 pr-2">
 								<a
 									onClick={() => setCollapsed(true)}
 									href={"#" + item.href}

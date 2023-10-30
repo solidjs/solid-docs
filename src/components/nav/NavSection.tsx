@@ -67,8 +67,7 @@ function SectionPanel(props: ParentProps<{ id: string }>) {
 	return (
 		<ul
 			id={props.id}
-			class="opacity-100 md:border-l border-solid-darkitem dark:border-solid-lightitem ml-6"
-			style="list-none transition: opacity 250ms ease-in-out 0s; animation: 250ms ease-in-out 0s 1 normal none running nav-fadein;"
+			class="opacity-100 md:border-l border-solid-darkitem dark:border-solid-lightitem ml-6 list-none transition: opacity 250ms ease-in-out 0s; animation: 250ms ease-in-out 0s 1 normal none running nav-fadein"
 		>
 			{props.children}
 		</ul>

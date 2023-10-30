@@ -77,7 +77,6 @@ export default defineConfig({
 				theme: {
 					extend: {
 						fontFamily: {
-							sans: ["Gordita", "sans-serif"],
 							mono: [
 								"Source Code Pro",
 								"ui-monospace",

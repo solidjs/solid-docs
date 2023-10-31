@@ -67,7 +67,7 @@ We ask that you use them sparingly.
 
 ```
 <Aside>
-content here
+    content here
 </Aside>
 ```
 

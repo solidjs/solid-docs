@@ -7,24 +7,24 @@ Context works by creating a context object using the [`createContext`](/referenc
 This function takes in a default value as an argument:
 
 ```jsx
-import { createContext } from "solid-js";
+import { createContext } from "solid-js"
 
-const MyContext = createContext("default value");
+const MyContext = createContext("default value")
 ```
 
-The context object is then passed to the `Provider` component which is then used to provide a value to all components that are *descendants* of the `Provider`.
+The context object is then passed to the `Provider` component which is then used to provide a value to all components that are _descendants_ of the `Provider`.
 
 ```jsx
-import { createContext } from "solid-js";
+import { createContext } from "solid-js"
 
-const MyContext = createContext("default value");
+const MyContext = createContext("default value")
 
 function App() {
-  return (
-    <MyContext.Provider value="new value">
-      <Child />
-    </MyContext.Provider>
-  );
+	return (
+		<MyContext.Provider value="new value">
+			<Child />
+		</MyContext.Provider>
+	)
 }
 ```
 
@@ -35,30 +35,30 @@ The `value` prop can take on any value that matches the type of the default valu
 To use a context object, you need to call the `useContext` utility, which takes in a context object as an argument and returns the current context value for that context object.
 
 ```jsx
-import { createContext, useContext } from "solid-js";
+import { createContext, useContext } from "solid-js"
 
-const MyContext = createContext("default value");
+const MyContext = createContext("default value")
 
 function Child() {
-  const value = useContext(MyContext);
-  return <div>{value}</div>;
+	const value = useContext(MyContext)
+	return <div>{value}</div>
 }
 ```
 
 To access values more efficiently, you can create your own `useContext` utility:
 
 ```jsx
-import { createContext, useContext } from "solid-js";
+import { createContext, useContext } from "solid-js"
 
-const MyContext = createContext("default value");
+const MyContext = createContext("default value")
 
 function useMyContext() {
-  return useContext(MyContext);
+	return useContext(MyContext)
 }
 
 function Child() {
-  const value = useMyContext();
-  return <div>{value}</div>;
+	const value = useMyContext()
+	return <div>{value}</div>
 }
 ```
 
@@ -69,43 +69,44 @@ In creating a custom `useContext` utility, you can access context values without
 [Signals](/concepts/signals) offer a way to synchronize and manage data shared across your components using context:
 
 ```jsx
-import { createContext, useContext, createSignal } from "solid-js";
+import { createContext, useContext, createSignal } from "solid-js"
 
-const MyContext = createContext(["default value",() => {}]);
+const MyContext = createContext(["default value", () => {}])
 
 function App() {
-  const [value, setValue] = createSignal("new value");
+	const [value, setValue] = createSignal("new value")
 
-  return (
-    <MyContext.Provider value={[value, setValue]}>
-      <Child />
-      <button onClick={() => setValue("new value")}>Update value</button>
-    </MyContext.Provider>
-  );
+	return (
+		<MyContext.Provider value={[value, setValue]}>
+			<Child />
+			<button onClick={() => setValue("new value")}>Update value</button>
+		</MyContext.Provider>
+	)
 }
 
 function Child() {
-  const [value, setValue] = useContext(MyContext);
-  return (
-    <div>
-      <div>{value()}</div>
-      <button onClick={() => setValue("new value")}>Update value</button>
-    </div>
-  );
+	const [value, setValue] = useContext(MyContext)
+	return (
+		<div>
+			<div>{value()}</div>
+			<button onClick={() => setValue("new value")}>Update value</button>
+		</div>
+	)
 }
 ```
 
-## Considerations with context
+## Context vs Props
 
 While context is a useful tool, it is **not** a replacement for passing props.
-The main goal of using context is to make the data flow in your application clearer and your components more reusable. 
+The main goal of using context is to make the data flow in your application clearer and your components more reusable.
 With components in Solid do not own state, not every piece of state or function needs to be in context if being used by another component.
 
 Context is intended to be used for data that is required more "globally" in a tree of components and to avoid the practice of [prop drilling](https://developer.mozilla.org/en-US/docs/Learn/Tools_and_testing/Client-side_JavaScript_frameworks/Main_features#:~:text=The%20problem%20of%20passing%20data%20through%20many%20layers%20of%20components%20is%20called%20prop%20drilling%2C%20and%20it%27s%20not%20ideal%20for%20large%20applications.).
 It is most appropriate for state or functions that are truly "global" in nature, or at least shared among many components in different parts of the component tree.
 
-Additionally, context can create issues when debugging.
-Because `createContext` takes in an *optional* default value, it is possible it can return `undefined` if the default value is not specified.
+## Debugging with context
+
+Because `createContext` takes in an _optional_ default value, it is possible it can return `undefined` if the default value is not specified.
 When working with TypeScript, this can introduce type issues that make it difficult to determine why your component is not rendering as expected.
 To solve this issue, a default value can be specified when creating a context object, or errors can be handled manually through the use of a custom `useMyContext` utility:
 

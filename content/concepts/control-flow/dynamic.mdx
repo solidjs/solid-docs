@@ -1,0 +1,58 @@
+# Dynamic
+
+`<Dynamic>` introduces a dynamic component rendering capability, allowing you to select and render components based on varying data.
+You can provide it with either a string representing a [native HTML element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element) or a component function.
+Once you have chosen the component to render, `<Dynamic>` will show the remaining props you provide.
+This flexibility makes it a versatile tool for UI that changes based on data or user interactions:
+
+```jsx
+import { createSignal, Switch, Match, For } from "solid-js"
+
+const RedDiv = () => <div style="color: red">Red</div>
+const GreenDiv = () => <div style="color: green">Green</div>
+const BlueDiv = () => <div style="color: blue">Blue</div>
+
+const options = {
+	red: RedDiv,
+	green: GreenDiv,
+	blue: BlueDiv,
+}
+
+function App() {
+	const [selected, setSelected] = createSignal("red")
+
+	return (
+		<>
+			<select
+				value={selected()}
+				onInput={(e) => setSelected(e.currentTarget.value)}
+			>
+				<For each={Object.keys(options)}>
+					{(color) => <option value={color}>{color}</option>}
+				</For>
+			</select>
+			<Dynamic component={options[selected()]} />
+		</>
+	)
+}
+```
+
+In this example, the `component` prop of `<Dynamic>` is assigned a value from the `options` object, which is indexed by the result of the `selected()` signal call.
+This dynamic assignment results in rendering the chosen component or element with the provided properties.
+
+Using `<Dynamic>` in scenarios like this can result in code that is more succinct and visually cleaner than alternative conditional rendering options.
+If you were to replace it with a conditional rendering statement, the code would look something like this:
+
+```jsx
+<Switch fallback={<BlueDiv />}>
+	<Match when={selected() === "red"}>
+		<RedDiv />
+	</Match>
+	<Match when={selected() === "green"}>
+		<GreenDiv />
+	</Match>
+</Switch>
+```
+
+In this [`<Switch>` statement](/concepts/control-flow/conditional-rendering), the `<Match>` components provide conditions to render specific components based on the result of `selected()`, which aligns with the behavior achieved using `<Dynamic>`.
+However, `<Dynamic>` offers a more compact and readable way to achieve the same outcome.

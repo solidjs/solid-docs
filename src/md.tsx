@@ -72,7 +72,7 @@ export default {
 		return (
 			<h2
 				{...props}
-				class="heading text-2xl leading-10 my-3 mdx-heading text-solid-accent dark:text-solid-accentlight font-semibold"
+				class="heading text-3xl leading-10 my-3 mdx-heading text-solid-accent dark:text-solid-accentlight font-semibold"
 			>
 				<Anchor id={props.id}>{props.children}</Anchor>
 			</h2>
@@ -86,7 +86,7 @@ export default {
 		return (
 		<h3
 			{...props}
-			class="font-semibold heading text-xl leading-9 my-3 mdx-heading text-solid-accent dark:text-solid-accentlight"
+			class="font-semibold heading text-2xl leading-9 my-3 mdx-heading text-solid-accent dark:text-solid-accentlight"
 		>
 			<Anchor id={props.id}>{props.children}</Anchor>
 		</h3>
@@ -99,7 +99,7 @@ export default {
 		return (
 		<h4
 			{...props}
-			class="heading text-lg font-medium my-2 mdx-heading text-solid-accent dark:text-solid-accentlight"
+			class="heading text-xl font-medium my-2 mdx-heading text-solid-accent dark:text-solid-accentlight"
 		>
 			<Anchor id={props.id}>{props.children}</Anchor>
 		</h4>
@@ -110,12 +110,12 @@ export default {
 		// 	addSection(getSectionString(props.children), props.id)
 		// })
 		return (
-		<h5 {...props} class="text-lg my-3 font-medium mdx-heading text-solid-accent dark:text-solid-accentlight">
+		<h5 {...props} class="text-xl my-3 font-medium mdx-heading text-solid-accent dark:text-solid-accentlight">
 			<Anchor id={props.id}>{props.children}</Anchor>
 		</h5>
 	)},
 	h6: (props) => (
-		<h6 {...props} class="text-lg font-medium mdx-heading text-solid-accent dark:text-solid-accentlight">
+		<h6 {...props} class="text-xl font-medium mdx-heading text-solid-accent dark:text-solid-accentlight">
 			<Anchor id={props.id}>{props.children}</Anchor>
 		</h6>
 	),

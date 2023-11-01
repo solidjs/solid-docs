@@ -6,7 +6,6 @@ import {
 	Show,
 	createSignal,
 	createUniqueId,
-	onMount,
 } from "solid-js"
 
 export function CollapsedIcon(props) {

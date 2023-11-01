@@ -92,7 +92,6 @@ export default defineConfig({
 							sm: "0.875rem",
 							base: "0.9rem",
 							lg: "1rem",
-							code: "calc(1em - 20%)",
 						},
 						backgroundImage: {
 							darkgradient: "linear-gradient(180deg, #162537 0%, #070c12 100%)",

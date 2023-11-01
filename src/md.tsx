@@ -153,7 +153,7 @@ export default {
 	),
 	code: (props) => {
 		return (
-			<code class="inline text-code font-mono text-lg" {...props}>
+			<code class="text-mono text-sm" {...props}>
 				{props.children}
 			</code>
 		)

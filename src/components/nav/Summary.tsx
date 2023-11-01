@@ -8,10 +8,19 @@ export default function Summary(props: { collapsed?: boolean }) {
 
 	return (
 		<div class="py-2 px-4 border-1 border-solid-lightitem rounded-md md:(p-4 max-h-[95vh] overflow-auto border-none bg-transparent) max-h-[50vh] bg-solid-light z-50 dark:(bg-solid-dark md:bg-transparent border-solid-darkitem)">
-			<span class="w-full md:text-2xl font-semibold flex items-center justify-between md:pointer-events-none mb-2">
+			<button class="w-full md:text-2xl font-semibold flex items-center justify-between md:pointer-events-none"
+				onClick={() => setCollapsed(prev => !prev)}
+				aria-controls="preferences"
+			>
 				Summary
-			</span>
-			<For each={sections()}>
+				<IconChevron
+                    class={`md:hidden w-4 h-4 text-solid-lightaction dark:text-solid-darkaction transform transition ${
+                    !collapsed() ? "rotate-90" : ""
+                    }`}
+					/>
+			</button>
+			<div class="hidden md:flex md:flex-col">
+				<For each={sections()}>
 				{(item) => (
 					<li class="list-none">
 						<a
@@ -29,6 +38,8 @@ export default function Summary(props: { collapsed?: boolean }) {
 					</li>
 				)}
 			</For>
+			</div>
+			
 			<Show when={!collapsed()}>
 				<ol class="mt-2 md:hidden list-none space-y-1">
 					<For each={sections()}>

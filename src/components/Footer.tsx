@@ -8,8 +8,6 @@ const Footer = () => {
 	const pathname = () =>
 		location.pathname === "/" ? "/index" : location.pathname
 
-	console.log(location)
-
 	const url = () =>
 		`https://github.com/solidjs/solid-docs-next/edit/content-rewrite/content${pathname()}.mdx`
 

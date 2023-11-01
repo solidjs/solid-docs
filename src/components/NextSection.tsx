@@ -14,23 +14,23 @@ interface IPrevNextSectionBaseProps extends IPrevNextSectionProps {
 
 const PrevNextSectionBase = (props: IPrevNextSectionBaseProps) => {
 	return <NavLink
-		class="flex items-center border dark:border-solid-darkitem hover:dark:border-solid-darkaction transition rounded-lg p-4 justify-between group flex-1"
+		class="hover:bg-solid-lightaction hover:dark:bg-solid-darkbg flex items-center border border-solid-darklink dark:border-solid-darklink hover:dark:border-solid-lightaccent transition rounded-lg p-4 justify-between group flex-1"
 		href={props.href}
 	>
 		<Show
 			when={props.type === "prev"}
 		>
-			<IconChevron class="w-6 h-6 text-solid-lightaction dark:text-solid-darkaction transform transition group-hover:-translate-x-2 rotate-180"/>
+			<IconChevron class="w-6 h-6 text-solid-darkaction dark:text-solid-darkaction transform transition group-hover:-translate-x-2 rotate-180"/>
 		</Show>
 
 		<div class="flex flex-col">
-			<span class="uppercase dark:text-neutral-500 text-xs font-semibold">{props.type === "prev" ? "Previous" : "Next"}</span>
+			<span class="uppercase text-neutral-700 dark:text-neutral-500 text-xs font-semibold">{props.type === "prev" ? "Previous" : "Next"}</span>
 			{props.title}
 		</div>
 		<Show
 			when={props.type === "next"}
 		>
-			<IconChevron class="w-6 h-6 text-solid-lightaction dark:text-solid-darkaction transform transition group-hover:translate-x-2"/>
+			<IconChevron class="w-6 h-6 text-solid-darkaction dark:text-solid-darkaction transform transition group-hover:translate-x-2"/>
 		</Show>
 	</NavLink>
 }

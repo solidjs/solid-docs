@@ -137,10 +137,6 @@ export const REFERENCE_SECTIONS: SECTIONS = {
 						link: "/reference/batch",
 					},
 					{
-						name: "on",
-						link: "/reference/on",
-					},
-					{
 						name: "createRoot",
 						link: "/reference/createRoot",
 					},
@@ -348,7 +344,7 @@ export const REFERENCE_SECTIONS: SECTIONS = {
 					},
 					{
 						name: "on*",
-						link: "/reference/on_",
+						link: "/reference/on",
 					},
 					{
 						name: "on:* and oncapture:*",

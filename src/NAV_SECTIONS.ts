@@ -169,6 +169,10 @@ export const REFERENCE_SECTIONS: SECTIONS = {
 						link: "/reference/observable",
 					},
 					{
+						name: "on()",
+						link: "/reference/on"
+					},
+					{
 						name: "from",
 						link: "/reference/from",
 					},
@@ -344,7 +348,7 @@ export const REFERENCE_SECTIONS: SECTIONS = {
 					},
 					{
 						name: "on*",
-						link: "/reference/on",
+						link: "/reference/on_",
 					},
 					{
 						name: "on:* and oncapture:*",

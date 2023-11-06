@@ -4,18 +4,18 @@ import { Aside } from "~/components/configurable/Aside"
 
 **Note**: While this guide is useful for understanding reactive systems, it does use some Solid-specific terminology.
 
-Reactivity, at its core, provides the groundwork to power interactivity in dynamic applications.
-This programming paradigm is when systems automatically respond to changes in data or state, ensuring that the application's interface stays consistent with its underlying data.
-With Solid, reactivity is the basis of its design.
+Reactivity provides the groundwork to power interactivity in dynamic applications.
+This programming paradigm refers to a system's ability to respond to changes in data or state automatically.
+With Solid, reactivity is the basis of its design, ensuring application's stay up-to-date with its underlying data.
 
 ## Importance of reactivity
 
-1. **Automatic UI updates**: Reactivity ensures that as data changes, the user interface is automatically updated to reflect those changes.
+1. **Automatic UI updates**: Reactivity ensures that as data changes, the user interface(UI) is automatically updated to reflect those changes.
 
 2. **Simplified code**: By removing the need for manual DOM updates or UI refreshes, reactivity reduces the need for manual interventions.
    This synchronizes the state and the UI, leading to more straightforward and maintainable code.
 
-3. **Consistent user experience**: With the UI always being in sync with the underlying data, users get a consistent and expected response to their actions.
+3. **Consistent user experience**: With the UI being in sync with the underlying data, users get a consistent and expected response to their actions.
 
 4. **Scalability**: As applications grow, managing state and UI can become complex. Reactivity abstracts this complexity, ensuring that even large-scale applications remain manageable.
 
@@ -32,53 +32,48 @@ function Counter() {
 }
 ```
 
+This `Counter` function sets up a button that, when clicked, calls the `increment` function to increase the `count` by one. 
+This updates just the number displayed *without* refreshing the entire component.
+
 [View on Eraser![](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9/preview?elements=cry9JT4nroFQ4rRxzOpvCg&type=embed)](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=cry9JT4nroFQ4rRxzOpvCg)
 
 ## Reactive principles
-
-When delving into the world of reactivity, you'll encounter a few foundational principles.
 
 ### Signals
 
 Signals serve as core elements in reactive systems, playing a pivotal role in data management and system responsiveness.
 
-A signal can be visualized as a container for data.
-It not only holds the data, but provides ways for accessing and modifying its' value.
-
-Signals contain a dual capability that makes them both readable and writeable:
+Signals are both readable and writeable through the use of getters and setters.
 
 - **Getter**:
   The function responsible for accessing the current value of the signal.
-  When various components or parts of an application need to "read" or retrieve the data stored in a signal, they use a getter.
+	To access the data in a signal within a component, a getter function is called.
 - **Setter**:
-  The tool that permits the changing of the signal's value.
-  Any change to the value within a signal, made possible by the setter function, can create reactive updates in other connected parts of the system.
-  This ensures that the system remains responsive and up-to-date with the latest data changes.
+  The function used to modify a signal's value.
+  Changing a signal's value with its setter function can trigger reactive updates across different parts of the system that are dependent on that signal.
 
 [View on Eraser![](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9/preview?elements=lseAEjGlKLslaVsTlfej_g&type=embed)](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=lseAEjGlKLslaVsTlfej_g)
 
-### Listeners
+#### State management
 
-Listeners (such as effects and memos) can be thought of as automated responders.
-They are closely tied to signals and are set into motion whenever there is a change in the signals they observe.
-Their primary role is to ensure that any changes in signals are appropriately reflected throughout the application to maintain its' reactivity.
+Signals serve as containers for state by providing a means for updating and manipulating data.
+This simplifies accessing and changing state.
 
-The nature of effects revolves around two functionalities:
+When state changes, a cascade of reactive updates is triggered throughout the system.
+Components or functions that are subscribed to signals are promptly notified of these changes and able to respond accordingly.
+This keeps the user interface and other system components in sync with the underlying data.
 
-- **Observation**: At the heart of every effect is its ability to "observe" or watch signals.
-  This keeps effects primed to detect changes in the signals they are tied to.
-- **Activation**: Upon recognizing a change in an observed signal, the effect will promptly be called.
-  This can involve tasks like updating the UI, triggering a process, or calling external functions.
-  Through this activation, effects ensure that the system's reactivity is both immediate and relevant.
+### Subscribers
 
-#### Dependency tracking
+Subscribers can be thought of as automated responders.
+Their primary role is track any changes in signals and then update the application to maintain its' reactivity.
 
-An essential part of managing effects in a reactive system is _dependency tracking_.  
-This process involves keeping track of the specific signals that an effect relies on.
-By doing this, the system can determine when the effect needs to be re-triggered or updated based on changes in its dependent signals.
+Subscribers work based on two main actions:
 
-This tracking is important when maintaining a fine-grained reactive system.
-This level of precision in tracking dependencies helps in prevent unnecessary re-executions, contributing to a more reliable reactive system.
+- **Observation**: At their core, subscribers observe signals.
+This keeps the subscriber primed to pick up on any changes to the signal they are tracking.
+- **Activation**: When a subscriber notices a change in the signal it is tracking, it responds.
+This can involve tasks like updating the UI, triggering a process, or calling external functions.
 
 ## Building a reactive system
 
@@ -86,66 +81,56 @@ Reactive systems are designed around the principle of data-driven reactivity.
 This is when signals, effects, and memos maintain a relationship.
 This relationship ensures a seamless propagation of data changes throughout the system, guaranteeing its responsiveness and real-time updates.
 
-### Initialization
+**1. Initialization**
 
-The start of a reactive system begins with the setup of signals.
+A reactive system begins with the setup of signals.
 During this phase, signals are initialized with their respective starting values.
-These initialized signals serve as the primary data sources that the rest of the system will rely on.
+These signals will serve as the primary data sources that the rest of the system will rely on.
 
-### Subscription
+**2. Subscription**
 
-Once signals are established, the next step involves the effects indicating their dependencies.
-In this phase, effects "subscribe" to specific signals, marking their interest and establishing a link.
-This subscription keeps the effects aware of any changes to the signals they are tied to.
+Once signals are established, the next step involves linking subscribers to their dependencies.
+This provides subscribers the ability to track changes to the signals they can now access.
 
-### Notification
+**3. Notification**
 
-During the notification phase, any update in a signal's value sets off a chain reaction.
-The altered signal proactively notifies all its subscribed effects about the modification.
-Upon receiving this notification, these effects then update or activate as necessary to keep the system's state current and synchronized with the latest data changes.
+Any update in a signal's value sets off a chain reaction.
+The updated signal notifies all its subscribers about this change.
+When a subscriber receives an update, the necessary actions are taken to keep the application's data current with the latest data changes.
 
 ## Tracking
 
-At its core, tracking is fundamentally about managing subscriptions in a reactive system.
-When a signal undergoes a change, all the listeners subscribed to it are re-run, if needed; this ensures the propogation of changes throughout the application's components.
+Tracking is fundamentally about managing subscriptions in a reactive system.
+When a signal undergoes a change, all the subscribers are re-run, if needed; this ensures updates throughout the application's components, if required.
 
 ## Synchronous vs. asynchronous
 
-Reactivity in systems can manifest primarily in two ways: synchronous and asynchronous.
-The choice between these often depends on the requirements of the system and the nature of the tasks involved.
+Reactivity in systems can happen in two ways: synchronously and asynchronously.
+The choice between these often depends on the requirements of the application and the nature of the tasks involved.
 
 ### Synchronous reactivity
 
 [Synchronous](https://developer.mozilla.org/en-US/docs/Glossary/Synchronous) reactivity operates in a direct and linear fashion.
-When a signal changes, its corresponding effects are immediately updated in an ordered manner.
-This form of reactivity creates a relationship between a signal's change and the system's response, guaranteeing that the system remains updated with the most recent data.
+When a signal changes, the corresponding subscribers are immediately updated in an ordered manner.
+This creates a relationship between the udpated signal and the application's response keeping the system updated with the most recent data.
 
 ### Asynchronous reactivity
 
 [Asynchronous](https://developer.mozilla.org/en-US/docs/Glossary/Asynchronous) reactivity can improve performance in some cases.
-Unlike its synchronous counterpart, updates to effects are not instantaneous.
-Instead, they may be delayed, or they could wait for the completion of an external event or task.
+Unlike synchronicity, updates to effects are not instantaneous.
+They may be delayed or they could wait for the completion of an external event or task.
 
-This approach is useful in scenarios where an effect depends on multiple signals and when updating one signal before another may result a data inconsistency.
-In such a scenario, [`batch`](/reference/batch) can be used to delay triggering effects so the effect runs after both signals have been updated.
+This is useful in scenarios where an subscribers depend on multiple signals and updating one signal before another could result in data inconsistency.
+In these scenarios, [`batch`](/reference/batch) can be used to delay an update so the subscriber runs after each signal has been updated.
 
-## State management
-
-At the core, signals serve as containers for state by providing a means for updating and manipulating data.
-This makes changing state easier by simplifying interactions and modifications.
-
-When state changes, it triggers a cascade of reactive updates throughout the system.
-Components or functions that are subscribed to them are promptly notified of these changes and able to respond accordingly.
-This keeps the user interface and other system components synchronized with the underlying data.
-
-### Key concepts
+## Key concepts
 
 - Subscriptions are initaited when a piece of state is accessed through a signal.
   This interaction leads to the accessor _subscribing_ to the signal, establishing a dynamic connection.
-  Every interaction between the signal and its accessor guarantees that the associated listeners are re-run when the signal changes.
+- Every interaction between the signal and its accessor guarantees that the associated subscriber is re-run when the signal changes.
 - Interactions with a signal outside of a reactive scope will not initiate tracking, due to the absence of a subscriber, thus limiting the scope of reactivity.
-- The reactive system is built on the interplay between elements that can change (signals) and those that can be updated, listeners.
-  The principles of tracking are not limited to these elements, however, but also extend to props and other elements.
+- A reactive system is built on the interplay between elements that can change (signals) and their subscribers.
+The principles of tracking are not limited to these elements, however, but also extend to props and other elements.
 - A signal is unique since it operates independently and is reliable; it can be viewed as a standalone element in the reactivity graph.
 
 Using Solid:
@@ -158,15 +143,14 @@ function Counter() {
 	createEffect(() => {
 		console.log("My effect says " + count())
 	})
-	/* The `createEffect` acts as a listener and the `count()` (the signal) is now tracked as a subscription of this effect. This code will run *only* when `count()` changes. */
+	/* The `createEffect` acts as a subscriber and `count()` (the signal) is now tracked. This code will run *only* when `count()` changes. */
 
-	console.log(count()) // In this case,`count()` is *not* in a tracking scope. This means it will not re-run when `count()` changes.
+	console.log(count()) // In this case,`count()` is *not* in a tracking scope. Therefore, it will not re-run when `count()` changes.
 
 	return (
 		<button type="button" onClick={increment}>
 			{count()}
-			{/* JSX is a tracking scope because it wraps expressions in effects behind the scenes. 
-      Because of this, the code will register `count()` as a subscription when it is called. */}
+			{/* JSX creates a tracking scope because it wraps expressions in effects behind the scenes. This will provide a subscription to `count()` when called. */}
 		</button>
 	)
 }

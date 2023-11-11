@@ -1,3 +1,5 @@
+import ExternalLinkIcon from "./components/ExternalLinkIcon";
+
 export type SECTION_LEAF_PAGE = {
 	name: string
 	link: string
@@ -170,7 +172,7 @@ export const REFERENCE_SECTIONS: SECTIONS = {
 					},
 					{
 						name: "on()",
-						link: "/reference/on",
+						link: "/reference/on"
 					},
 					{
 						name: "from",
@@ -398,7 +400,7 @@ export const LEARN_SECTIONS: SECTIONS = {
 		name: "Tutorials",
 		pages: [
 			{
-				name: "Solid Foundations",
+				name: "Solid Foundations" + ExternalLinkIcon,
 				link: "https://www.solidjs.com/tutorial/introduction_basics",
 			},
 			//   {

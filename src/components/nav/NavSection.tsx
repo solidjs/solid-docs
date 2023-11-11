@@ -1,21 +1,17 @@
 import { NavLink } from "@solidjs/router"
 import IconChevron from "~icons/heroicons-outline/chevron-right"
 
-import {
-	ParentProps,
-	Show,
-	createSignal,
-	createUniqueId,
-} from "solid-js"
+import { ParentProps, Show, createSignal, createUniqueId } from "solid-js"
+import { ExternalLinkIcon } from "../ExternalLinkIcon"
 
 export function CollapsedIcon(props) {
 	return <div class={"duration-100 ease-in transition" + props.class}>▼</div>
 }
 
 type CollapsibleProps = ParentProps<{
-  startCollapsed?: () => boolean;
-  header: string;
-}>;
+	startCollapsed?: () => boolean
+	header: string
+}>
 
 export function Collapsible(props: CollapsibleProps) {
 	const [collapsed, setCollapsed] = createSignal(false)
@@ -23,8 +19,10 @@ export function Collapsible(props: CollapsibleProps) {
 	const id = createUniqueId()
 
 	return (
-		<li value={props.header}
-		class="text-sm text-solid-dark dark:text-solid-light">
+		<li
+			value={props.header}
+			class="text-sm text-solid-dark dark:text-solid-light"
+		>
 			<SectionHeader
 				collapsed={collapsed()}
 				onClick={() => setCollapsed(!collapsed())}
@@ -41,13 +39,14 @@ export function Collapsible(props: CollapsibleProps) {
 
 export function SectionHeader(
 	props: ParentProps<{
-    collapsed: boolean;
-    panelId: string;
-    onClick: () => void;
-  }>
+		collapsed: boolean
+		panelId: string
+		onClick: () => void
+	}>
 ) {
 	return (
-		<a class="flex flex-row items-center w-full hover:bg-solid-lightaction hover:dark:bg-solid-darkaction hover:cursor-pointer px-2 py-1"
+		<a
+			class="flex flex-row items-center w-full hover:bg-solid-lightaction hover:dark:bg-solid-darkaction hover:cursor-pointer px-2 py-1"
 			onClick={props.onClick}
 			// aria-expanded={!props.collapsed}
 			// aria-controls={props.panelId}
@@ -74,26 +73,32 @@ function SectionPanel(props: ParentProps<{ id: string }>) {
 }
 
 export function NavItem(props) {
-	
 	return (
 		<li class="ml-2">
-			{props.href?.charAt(0) === "h" ? 
-			<a
-				href={props.href}
-				class="px-2 py-1 w-full text-left relative flex items-center justify-between transition cursor-pointer text-sm"
-				target="_blank"
-			>
-				{props.title}
-			</a> 
-			: <NavLink
-				class="px-2 py-1 w-full text-left relative flex items-center justify-between transition cursor-pointer text-sm"
-				{...props}
-				inactiveClass="hover:bg-solid-lightaction hover:dark:bg-solid-darkaction"
-				activeClass="text-black dark:text-white font-semibold bg-solid-lightitem dark:bg-solid-darkitem active"
-				end={true}
-			>
-				{props.children}
-			</NavLink>}
+			{props.href?.charAt(0) === "h" ? (
+				<a
+					href={props.href}
+					class="px-2 py-1 w-full text-left relative flex items-center transition cursor-pointer text-sm"
+					target="_blank"
+				>
+					{props.title}{" "}
+					<Show when={props.title === "Solid Foundations"}>
+						<div class="pl-1 pb-1">
+							<ExternalLinkIcon />
+						</div>
+					</Show>
+				</a>
+			) : (
+				<NavLink
+					class="px-2 py-1 w-full text-left relative flex items-center justify-between transition cursor-pointer text-sm"
+					{...props}
+					inactiveClass="hover:bg-solid-lightaction hover:dark:bg-solid-darkaction"
+					activeClass="text-black dark:text-white font-semibold bg-solid-lightitem dark:bg-solid-darkitem active"
+					end={true}
+				>
+					{props.children}
+				</NavLink>
+			)}
 		</li>
 	)
 }

@@ -43,20 +43,20 @@ This updates just the number displayed *without* refreshing the entire component
 
 Signals serve as core elements in reactive systems, playing a pivotal role in data management and system responsiveness.
 
-Signals are both readable and writeable through the use of getters and setters.
+Signals are both readable and writeable because of getters and setters.
 
 - **Getter**:
-  The function responsible for accessing the current value of the signal.
-	To access the data in a signal within a component, a getter function is called.
+  A function responsible for accessing the current value of the signal.
+	You call a getter to access the data stored in a signal within a component.
 - **Setter**:
   The function used to modify a signal's value.
-  Changing a signal's value with its setter function can trigger reactive updates across different parts of the system that are dependent on that signal.
+  To trigger reactive updates across an application, you call a setter to update the value of a signal.
 
 [View on Eraser![](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9/preview?elements=lseAEjGlKLslaVsTlfej_g&type=embed)](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=lseAEjGlKLslaVsTlfej_g)
 
 #### State management
 
-Signals serve as containers for state by providing a means for updating and manipulating data.
+Signals serve as containers for state by providing a way to update and change data.
 This simplifies accessing and changing state.
 
 When state changes, a cascade of reactive updates is triggered throughout the system.
@@ -78,60 +78,72 @@ This can involve tasks like updating the UI, triggering a process, or calling ex
 ## Building a reactive system
 
 Reactive systems are designed around the principle of data-driven reactivity.
-This is when signals, effects, and memos maintain a relationship.
-This relationship ensures a seamless propagation of data changes throughout the system, guaranteeing its responsiveness and real-time updates.
+This means that the system's reactivity is driven by the data it is built on.
+Through this, the system is able to respond to changes in data, ensuring that the UI and other components are always up-to-date.
 
 **1. Initialization**
 
 A reactive system begins with the setup of signals.
 During this phase, signals are initialized with their respective starting values.
-These signals will serve as the primary data sources that the rest of the system will rely on.
+These will serve as the primary data sources that the rest of the system will rely on.
 
 **2. Subscription**
 
-Once signals are established, the next step involves linking subscribers to their dependencies.
-This provides subscribers the ability to track changes to the signals they can now access.
+Once signals are initialized, the next step is to establish subscriptions.
+This is done by linking subscribers to the signals they need to track, known as dependencies.
+Subscribers are then able to track, or follow, any changes to the signals they are subscribed to.
+
+**Note:** Tracking is the process of monitoring changes to signals.
+When a signal is tracked, it is added to a list of dependencies that the subscriber is subscribed to.
+This ensures that the subscriber is notified when the signal changes.
 
 **3. Notification**
 
-Any update in a signal's value sets off a chain reaction.
-The updated signal notifies all its subscribers about this change.
-When a subscriber receives an update, the necessary actions are taken to keep the application's data current with the latest data changes.
-
-## Tracking
-
-Tracking is fundamentally about managing subscriptions in a reactive system.
-When a signal undergoes a change, all the subscribers are re-run, if needed; this ensures updates throughout the application's components, if required.
+When a signal changes, the subscribers are notified.
+This ensures that the system is kept up-to-date with the latest data changes.
+Once a subscriber is notified, it can then take the necessary actions to keep the application's data current with the latest data changes.
 
 ## Synchronous vs. asynchronous
 
-Reactivity in systems can happen in two ways: synchronously and asynchronously.
-The choice between these often depends on the requirements of the application and the nature of the tasks involved.
+Reactive systems are designed to respond to changes in data.
+These responses can be immediate or delayed, depending on the nature of the system.
+Often, the choice between these two depends on the requirements of the application and the nature of the tasks involved.
+This is where synchronous and asynchronous reactivity come into play.
 
 ### Synchronous reactivity
 
-[Synchronous](https://developer.mozilla.org/en-US/docs/Glossary/Synchronous) reactivity operates in a direct and linear fashion.
+[Synchronous](https://developer.mozilla.org/en-US/docs/Glossary/Synchronous) reactivity is when a system responds to changes in a direct and linear fashion.
 When a signal changes, the corresponding subscribers are immediately updated in an ordered manner.
 This creates a relationship between the udpated signal and the application's response keeping the system updated with the most recent data.
 
+When synchronous reactivity is used, the system is able to respond to changes in a predictable manner.
+This is useful in scenarios where the order of updates is important.
+For example, if a subscriber depends on another signal, it is important that the subscriber is updated after the signal it depends on.
+
 ### Asynchronous reactivity
 
-[Asynchronous](https://developer.mozilla.org/en-US/docs/Glossary/Asynchronous) reactivity can improve performance in some cases.
-Unlike synchronicity, updates to effects are not instantaneous.
-They may be delayed or they could wait for the completion of an external event or task.
+[Asynchronous](https://developer.mozilla.org/en-US/docs/Glossary/Asynchronous) reactivity is when a system responds to changes in a delayed or non-linear fashion.
+When a signal changes, the corresponding subscribers are not immediately updated.
+Instead, the system waits for a specific event or task to complete before updating the subscribers.
 
-This is useful in scenarios where an subscribers depend on multiple signals and updating one signal before another could result in data inconsistency.
-In these scenarios, [`batch`](/reference/batch) can be used to delay an update so the subscriber runs after each signal has been updated.
+This is important in scenarios where subscribers depend on multiple signals.
+In these cases, updating one signal before another could result in data inconsistency.
+For example, if a subscriber depends on two signals, it is important that the subscriber is updated after both signals have been updated.
+Rather, the system waits for both signals to be updated before updating the subscriber.
+
+**Note:** When using asynchronous reactivity, it is important to ensure that the system is able to handle the delay in updates.
+[`batch`](/reference/batch) can be used to delay an update so the subscriber runs after each signal has been updated.
 
 ## Key concepts
 
-- Subscriptions are initaited when a piece of state is accessed through a signal.
-  This interaction leads to the accessor _subscribing_ to the signal, establishing a dynamic connection.
-- Every interaction between the signal and its accessor guarantees that the associated subscriber is re-run when the signal changes.
-- Interactions with a signal outside of a reactive scope will not initiate tracking, due to the absence of a subscriber, thus limiting the scope of reactivity.
-- A reactive system is built on the interplay between elements that can change (signals) and their subscribers.
-The principles of tracking are not limited to these elements, however, but also extend to props and other elements.
-- A signal is unique since it operates independently and is reliable; it can be viewed as a standalone element in the reactivity graph.
+- Signals are the core elements of a reactive system.
+  They are responsible for storing and managing data.
+- Signals are both readable and writeable because of getters and setters.
+- Subscribers are automated responders that track changes in signals and update the system accordingly.
+- Signals and subscribers work together to ensure that the system is kept up-to-date with the latest data changes.
+- A reactive system is built on the principles of data-driven reactivity.
+  This means that the system's reactivity is driven by the data it is built on.
+- Reactive systems can be synchronous or asynchronous.
 
 Using Solid:
 

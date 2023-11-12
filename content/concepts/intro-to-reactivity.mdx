@@ -4,20 +4,15 @@ import { Aside } from "~/components/configurable/Aside"
 
 **Note**: While this guide is useful for understanding reactive systems, it does use some Solid-specific terminology.
 
-Reactivity provides the groundwork to power interactivity in dynamic applications.
+Reactivity powers the interactivity in Solid applications.
 This programming paradigm refers to a system's ability to respond to changes in data or state automatically.
 With Solid, reactivity is the basis of its design, ensuring application's stay up-to-date with its underlying data.
 
 ## Importance of reactivity
 
-1. **Automatic UI updates**: Reactivity ensures that as data changes, the user interface(UI) is automatically updated to reflect those changes.
+1. Reactivity keeps the user interface (UI) and state in sync, which reduces the need for manual updates.
 
-2. **Simplified code**: By removing the need for manual DOM updates or UI refreshes, reactivity reduces the need for manual interventions.
-   This synchronizes the state and the UI, leading to more straightforward and maintainable code.
-
-3. **Consistent user experience**: With the UI being in sync with the underlying data, users get a consistent and expected response to their actions.
-
-4. **Scalability**: As applications grow, managing state and UI can become complex. Reactivity abstracts this complexity, ensuring that even large-scale applications remain manageable.
+2. Real-time updates create a more responsive and interactive user experience.
 
 ```jsx
 function Counter() {
@@ -25,9 +20,12 @@ function Counter() {
 	const increment = () => setCount(count() + 1)
 
 	return (
-		<button type="button" onClick={increment}>
-			{count()} {/* The UI is automatically updated when `count()` changes. */}
-		</button>
+		<div>
+			<span>Count: {count()}</span> {/* Only `count()` is updated when the button is clicked. */}
+			<button type="button" onClick={increment}>
+				Increment
+			</button>
+		</div>
 	)
 }
 ```
@@ -41,65 +39,45 @@ This updates just the number displayed *without* refreshing the entire component
 
 ### Signals
 
-Signals serve as core elements in reactive systems, playing a pivotal role in data management and system responsiveness.
-These signals are both readable and writeable, meaning they can be accessed and modified.
-This is made possible through the use of getters and setters.
+Signals serve as core elements in reactive systems, playing an important role in data management and system responsiveness.
+They are responsible for storing and managing data, as well as triggering updates across the system.
+This is done through the use of getters and setters.
 
 ```jsx
 const [count, setCount] = createSignal(0)
   //     ^ getter  ^ setter
 ```
 
-- **Getter**:
-  A function responsible for accessing the current value of the signal.
-	You call a getter to access the data stored in a signal within a component.
+[View on Eraser![](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9/preview?elements=lseAEjGlKLslaVsTlfej_g&type=embed)](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=lseAEjGlKLslaVsTlfej_g)
+
+- **Getter**: A function responsible for accessing the current value of the signal.
+You call a getter to access the data stored in a signal within a component.
+
 - **Setter**:
   The function used to modify a signal's value.
   To trigger reactive updates across an application, you call a setter to update the value of a signal.
 
-[View on Eraser![](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9/preview?elements=lseAEjGlKLslaVsTlfej_g&type=embed)](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=lseAEjGlKLslaVsTlfej_g)
+```js
+console.log(count()) // `count()` is a getter that returns the current value of `count`, which is `0`.
 
-#### State management
+setCount(1) // the setter, `setCount`, updates the value of `count`.
 
-Signals serve as containers for state by providing a way to update and change data.
-This simplifies accessing and changing state.
-
-When state changes, a cascade of reactive updates is triggered throughout the system.
-Components or functions that are subscribed to signals are promptly notified of these changes and able to respond accordingly.
-This keeps the user interface and other system components in sync with the underlying data.
-
-**Note:** With Solid, components are automatically subscribed to signals when they are accessed within the component's scope.
-What this means is that within the JSX of a component, any signal that is accessed will be tracked and subscribed to.
-However, if a signal is accessed outside of the JSX, it will not be tracked and therefore will not trigger a reactive update when it changes.
-
-```jsx
-function Counter() {
-	const [count, setCount] = createSignal(0)
-	const increment = () => setCount(count() + 1)
-
-	console.log(count()) // In this case,`count()` is *not* in a tracking scope. Therefore, it will not re-run when `count()` changes.
-
-	return (
-		<button type="button" onClick={increment}>
-			{count()}
-			{/* JSX creates a tracking scope because it wraps expressions in effects behind the scenes. This will provide a subscription to `count()` when called. */}
-		</button>
-	)
-}
+console.log(count()) // the updated value of `count` is now `1`.
 ```
 
 ### Subscribers
 
-Subscribers can be thought of as automated responders.
-Their primary role is track any changes in signals and then update the application to maintain its' reactivity.
-If a signal is accessed outside of the scope of a subscriber, it will not be tracked and therefore will not trigger a reactive update when it changes.
+Subscribers are the other core element in reactive systems.
+They are responsible for tracking changes in signals and updating the system accordingly.
+They are automated responders that keep the system up-to-date with the latest data changes.
 
 Subscribers work based on two main actions:
 
 - **Observation**: At their core, subscribers observe signals.
 This keeps the subscriber primed to pick up on any changes to the signal they are tracking.
-- **Activation**: When a subscriber notices a change in the signal it is tracking, it responds.
-This can involve tasks like updating the UI, triggering a process, or calling external functions.
+- **Response**: When a signal changes, the subscriber is notified.
+This triggers the subscriber to respond to the change in the signal.
+This can involve tasks like updating the UI or calling external functions.
 
 ```jsx
 function Counter() {
@@ -109,60 +87,115 @@ function Counter() {
 	createEffect(() => {
 		console.log(count())
 	})
-	/* The `createEffect` acts as a subscriber and `count()` (the signal) is now tracked. This code will run *only* when `count()` changes. */
+	// the `createEffect` will trigger the console log every time `count` changes.
+	}
+```
+
+## State management
+
+State management is the process of managing the state of an application.
+This involves storing and updating data, as well as responding to the changes in it.
+
+With Solid, state management is handled through signals and subscribers.
+Signals are used to store and update data, while subscribers are used to respond to changes in the data.
+
+### Tracking changes
+
+Tracking changes involves monitoring any updates to the data and responding accordingly.
+This is done through the use of subscribers.
+
+When a signal is not accessed within a tracking scope, an update to the signal will not trigger an update.
+This happens because if a signal is not being tracked, it is not able to notify any subscribers of the change.
+
+```jsx
+const [count, setCount] = createSignal(0)
+
+console.log("Count:", count())
+
+setCount(1)
+
+// Output: Count: 0
+
+// `count` is not being tracked, so the console log will not update when `count` changes.
+```
+
+Since initialization is a **one-time event**, if a signal is accessed *outside of a tracking scope*, it will not be tracked.
+To track a signal, it must be accessed within the scope of a subscriber.
+Reactive primitives, such as [effects](/concepts/effects), can be used to create subscribers.
+
+```jsx
+const [count, setCount] = createSignal(0)
+
+createEffect(() => {
+	console.log("Count:", count())
+})
+
+setCount(1)
+
+// Output: Count: 0
+//         Count: 1
+```
+
+### Updating the UI
+
+The UI of a Solid application is built using [JSX](/concepts/understanding-jsx).
+JSX creates a tracking scope behind the scenes, which allows signals to be tracked within the return statement of a component.
+
+```jsx
+function Counter() {
+	const [count, setCount] = createSignal(0)
+	const increment = () => setCount(count() + 1)
 
 	return (
-		<button type="button" onClick={increment}>
-			{count()}
-		</button>
+		<div>
+			<span>Count: {count()}</span> {/* ✅ will update when `count()` changes. */}
+			<button type="button" onClick={increment}>
+				Increment
+			</button>
+		</div>
 	)
 }
 ```
 
-## Building a reactive system
+Components, much like other functions, will only run *once*.
+This means that if a signal is accessed outside of the return statement, will run on initialization, but any updates to the signal will not trigger an update.
 
-Reactive systems are designed around the principle of data-driven reactivity.
-This means that the system's reactivity is driven by the data it is built on.
-Through this, the system is able to respond to changes in data, ensuring that the UI and other components are always up-to-date.
+```jsx
+function Counter() {
+	const [count, setCount] = createSignal(0)
+	const increment = () => setCount(count() + 1)
 
-**1. Initialization**
+	console.log("Count:", count()) // ❌ not tracked - only runs once during initialization.
 
-A reactive system begins with the setup of signals.
-During this phase, signals are initialized with their respective starting values.
-These will serve as the primary data sources that the rest of the system will rely on.
+	createEffect(() => {
+		console.log(count()) // ✅ will update whenever `count()` changes.
+	})
 
-**2. Subscription**
+	return (
+		<div>
+			<span>Count: {count()}</span> {/* ✅ will update whenever `count()` changes. */}
+			<button type="button" onClick={increment}>
+				Increment
+			</button>
+		</div>
+	)
+}
+```
 
-Once signals are initialized, the next step is to establish subscriptions.
-This is done by linking subscribers to the signals they need to track, known as dependencies.
-Subscribers are then able to track, or follow, any changes to the signals they are subscribed to.
-
-<Aside>
-	Tracking is the process of monitoring changes to signals.
-	When a signal is tracked, it is added to a list of dependencies that the subscriber is subscribed to.
-	This ensures that the subscriber is notified when the signal changes.
-</Aside>
-
-**3. Notification**
-
-When a signal changes, the subscribers are notified.
-This ensures that the system is kept up-to-date with the latest data changes.
-Once a subscriber is notified, it can then take the necessary actions to keep the application's data current with the latest data changes.
+To learn more about managing state in Solid, visit the [guide on state management](/guides/state-management).
 
 ## Synchronous vs. asynchronous
 
 Reactive systems are designed to respond to changes in data.
 These responses can be immediate or delayed, depending on the nature of the system.
 Often, the choice between these two depends on the requirements of the application and the nature of the tasks involved.
-This is where synchronous and asynchronous reactivity come into play.
 
 ### Synchronous reactivity
 
-[Synchronous](https://developer.mozilla.org/en-US/docs/Glossary/Synchronous) reactivity is Solid's default reactivity model.
-This is when a system responds to changes in a direct and linear fashion.
-When a signal changes, the corresponding subscribers are immediately updated in an ordered manner.
+[Synchronous](https://developer.mozilla.org/en-US/docs/Glossary/Synchronous) reactivity is Solid's default reactivity mode, where a system responds to changes in a direct and linear fashion.
+When a signal changes, any corresponding subscribers are immediately updated in an ordered manner.
 
-When synchronous reactivity is used, the system is able to respond to changes in a predictable manner.
+With synchronous reactivity, the system is able to respond to changes in a predictable manner.
 This is useful in scenarios where the order of updates is important.
 For example, if a subscriber depends on another signal, it is important that the subscriber is updated after the signal it depends on.
 

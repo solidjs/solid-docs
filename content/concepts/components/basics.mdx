@@ -2,11 +2,10 @@ import { Aside } from "~/components/configurable/Aside"
 
 # Component Basics
 
-Components act as the basic units for Solid applications.
-These code snippets create reusability and, when combined, facilitate the development of applications.
+Components are the building blocks of Solid applications.
+These units are reusable and can be combined to create more complex applications.
 
-Solid helps you to write reactive HTML through [JSX](/concepts/understanding-jsx).
-Components are functions that typically start with a capital letter and return a JSX element:
+Components are functions that return [JSX](/concepts/understanding-jsx) elements:
 
 ```tsx
 function MyComponent() {
@@ -14,7 +13,8 @@ function MyComponent() {
 }
 ```
 
-These components can then be integrated into other components or used as the primary application component:
+A component can be as simple as a single element or as complex as a full page.
+They can also be nested within each other to create more intricate applications:
 
 ```tsx
 function App() {
@@ -28,20 +28,20 @@ function App() {
 
 ## Component trees
 
-In Solid, you display your page by calling `render` on the root of the component tree.
-At the apex of the tree resides the primary application component.
-Components can have none, one, or multiple child components nested within them.
-In essence, a component's children are the components it renders.
+An web page is displayed by rendering a component tree, which is a hierarchical structure of components.
+At the top of the tree is the primary application component, which is the root of the tree.
+Child components are nested within the primary component, and those components can have their own child components.
+This nesting can continue as needed.
 
-You can think of a simple component tree as:
+A simple application may have a component tree that looks like this:
 
 ```json
 App // primary application component
 └── MyComponent // child component
 ```
 
-However, as applications grow, their component trees can become intricate.
-An expansive application's tree may resemble the following:
+When an application grows, the component tree can become more complex.
+For example, a more complex application may have a component tree that looks like this:
 
 ```json
 App
@@ -61,43 +61,41 @@ App
 └── Footer
 ```
 
-The nesting capabilities of components highlight their power, as they offer a way to break down applications into smaller, more manageable pieces.
+In nesting components, you can create a hierarchy of components that can be reused throughout the application.
+This allows for a more modular approach to building applications, as components can be reused in different contexts.
 
 ## Component lifecycles
 
-Solid's approach to components is tied to its unique take on [reactivity](/essentials/intro-to-reactivity).
+Components have a lifecycle that defines how they are created, updated, and destroyed.
+A Solid component's lifecycle is different from other frameworks, as it is tied to the [concept of reactivity](/essentials/intro-to-reactivity).
 
-The lifecycle of a Solid component ends once it has initially run, meaning it will not be re-run when the application's state changes.
-This is different from frameworks like [React](https://react.dev/) and [Angular](https://angular.io/), where functions are defined and run with every application state change.
+Where frameworks such as [React](https://react.dev/) and [Angular](https://angular.io/) re-run components on every state change, a Solid component's lifecycle is tied to its initial run.
+What this means is that a Solid component is only run once, when it is first rendered into the DOM.
+After that, the component is not re-run, even if the application's state changes.
 
-With a Solid component's initial run, it sets up a reactive system.
-It can then monitor for specific state changes and makes adjustments to the relevant areas without the need to re-run the entire component.
+When the Solid component renders, it sets up a reactive system that monitors for state changes.
+When a state change occurs, the component will update the relevant areas without re-running the entire component.
 By bypassing the full component lifecycle on every state change, Solid has a more predictable behavior compared to frameworks that re-run functions on every update.
 
-This approach emphasizes the importance of correctly establishing the initial reactive connections.
 Since the component's logic is not continuously visited, getting this setup right is important when working with Solid.
-
-To learn more about the concept of reactivity, refer to [Intro to Reactivity](/essentials/intro-to-reacticity).
-For a more comprehensive understanding of Solid's unique take on reactivity, explore the guide on [Understanding Fine-Grained Reactivity](/guide/understanding-fine-grained-reactivity).
 
 ### Initialization & configuration
 
-During the first run of your component, Solid sets up the reactive dependencies, event listeners, and other configurations.
+When a component is first rendered into the DOM, the component function is executed.
+This is where you will set up the component's state and side-effects.
+This includes setting up [signals](/concepts/understanding-signals), [stores](/concepts/understanding-stores), [effects](/concepts/understanding-effects), and other reactive elements.
+Since the logic in the component funciton is not continuously visited, it is important to set up the component correctly from the outset.
 
-This initial setup phase is crucial, not just for immediate functionality, but for the long-term reusability of your component.
-This step defines how your component will interact with data and other elements.
-
-Solid components are designed with reusability in mind.
-The initial configuration means that once a component is set up, it can be reused in different contexts without needing frequent reconfigurations.
-This plays a pivotal role throughout the component's lifecycle.
-
-Having the proper connections and dependencies established from the outset optimizes performance and makes it easier to reuse components across various parts of an application or even across different projects.
+Each component instance is independent of other instances, meaning that each component has its own state and side-effects.
+Through establishing proper dependencies, you can ensure that the component is set up correctly.
+This allows for components to be reused in different contexts without affecting each other.
 
 ```tsx
 function MyComponent() {
 	const [count, setCount] = createSignal(0)
 
-	createEffect(() => console.log(count()))
+	console.log(count())
+
 	return (
 		<div>
 			<p>Count: {count()}</p>
@@ -107,29 +105,25 @@ function MyComponent() {
 }
 ```
 
-In this example, when `MyComponent` is used (i.e., when it's rendered into the DOM for the first time), the function body is executed.
-This includes creating the `count` signal and the `console.log(count())` statement.
-Once these lines are run, they will not be executed again for the life of this component instance, meaning the log statement will show only _once_ in the console.
+When this component is rendered into the DOM, the function body is executed.
+This includes creating the `count` signal and the `console.log(count())` statement, which will log the current value of `count` to the console.
+In addition, the component's JSX is returned, which will be rendered into the DOM.
 
-The `return` statement provides JSX.
-For instance, something like `let x = <>{props.x}</> `is reactive while a simple `return props.x` is not.
-The actual rendering part (what's inside the `return`), however, is reactive.
-So, while the setup logic (like the `console.log`) is executed once, the JSX can update in response to state changes without re-running the entire function.
+After the component is rendered, the `console.log` statement will not be executed again, even if the component's state changes.
+However, because the component's JSX is reactive, each press of the button will update the DOM with the new value of `count`.
 
 In essence, Solid splits the concerns:
 
-1. The component function body sets up state and side-effects.
-2. The returned JSX where reactivity happens, updating the DOM as state changes, without re-executing the setup logic.
-
-This separation ensures efficient updates while preserving the logic and behavior set during the initial phase.
+1. The initial setup logic, which is executed once when the component is rendered.
+2. The reactive logic, which is executed when the component's state changes.
 
 ### Conditional rendering
 
-Solid allows for conditional rendering within components, which allows for different parts of a component to be displayed based on state or other criteria.
-Given that the primary component function does not get re-invoked with changes of state, conditional statements must be directly placed within the function body.
+To display different content based on state or other criteria, you can use conditional rendering.
+Given that the component function is only executed once, conditional statements must be placed within the function body.
 This design ensures that conditional paths are clear and immediately understood.
 
-```typescript
+```tsx
 function MyComponent() {
 	const [count, setCount] = createSignal(0)
 	return (
@@ -147,50 +141,50 @@ function MyComponent() {
 }
 ```
 
-<Aside>
-	To simplify the Solid component, you can reformat the example above with new
-	components for each side of the conditional.
-</Aside>
-
-In this example, the component will display `"Count limit reached"` when `count` exceeds 5.
+This example uses a [ternary operator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Conditional_operator) to conditionally render different content based on the value of `count`.
+When `count` is greater than 5, the component will display `"Count limit reached"`.
 Otherwise, it will display the current count with an increment button.
-However, if the conditional was placed above the return statement, the component _would not_ show `"Count limit reached"`.
-This is due to the component's lack of reactivity and single use when the state of `count` is above 5.
 
-Furthermore, Solid provides built-in [control-flow](/concepts/control-flow/conditional-rendering) components like [`<Show>`](/reference/show), which you can employ for a more simple conditional rendering experience:
+<Aside>
+	To simplify conditional rendering, Solid provides built-in [control-flow](/concepts/control-flow/conditional-rendering) components like [`Show`](/concepts/control-flow/conditional-rendering#show), which create a more readable conditional rendering experience.
 
-```tsx
-function MyComponent() {
-	const [count, setCount] = createSignal(0)
+	```tsx
+	function MyComponent() {
+		const [count, setCount] = createSignal(0)
 
-	return (
-		<div>
-			<Show
-				when={count() > 5}
-				fallback={
-					<>
-						<p>Count: {count()}</p>
-						<button onClick={() => setCount(count() + 1)}>Increment</button>
-					</>
-				}
-			>
-				<div>Count limit reached</div>
-			</Show>
-		</div>
-	)
-}
-```
+		return (
+			<div>
+				<Show
+					when={count() > 5}
+					fallback={
+						<>
+							<p>Count: {count()}</p>
+							<button onClick={() => setCount(count() + 1)}>Increment</button>
+						</>
+					}
+				>
+					<div>Count limit reached</div>
+				</Show>
+			</div>
+		)
+	}
+	```
+</Aside>
 
 ## Importing and exporting
 
-To be reusable across different parts of an application or project, components need to be exported from one module and imported into another.
-This makes sure that components can be shared and used where needed.
+For components to be reusable, they need to be exported from one module and imported into another.
+This allows for components to be shared and used where needed.
 
-### Exporting components
+### Exporting Components
 
-After a component has been defined, you can [export](https://developer.mozilla.org/en-US/docs/web/javascript/reference/statements/export) it to make it available for use in other parts of your application.
+Once defined, a component can be [exported](https://developer.mozilla.org/en-US/docs/web/javascript/reference/statements/export) to make it available for use in other parts of your application.
+There are two ways to export a component: [named exports](https://developer.mozilla.org/en-US/docs/web/javascript/reference/statements/export#named_exports) and [default exports](https://developer.mozilla.org/en-US/docs/web/javascript/reference/statements/export#default_exports).
 
 **Named export:**
+
+Named exports allow for multiple components to be exported from a single file.
+To export a component, you must use the `export` keyword before the function definition and specify the name of the component to export in curly braces (`{}`).
 
 ```typescript
 // MyComponent.ts
@@ -203,6 +197,9 @@ export { MyComponent }
 
 **Default export:**
 
+Default exports specify a single component to export from a file.
+This is done by using the `default` keyword.
+
 ```typescript
 // MyComponent.ts
 export default function MyComponent() {
@@ -212,11 +209,14 @@ export default function MyComponent() {
 
 ### Importing Components
 
-Once a component has been exported, they can be [imported](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import) into other files or components.
+To use a component in another file or component, it must be [imported](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import).
+To import a component, you must specify the path to the file containing the component and the name of the component to import.
 
 **Named import:**
 
-```typescript
+When importing a named export, you must specify the name of the component to import in curly braces (`{}`).
+
+```tsx
 // App.ts
 import { MyComponent } from "./MyComponent"
 
@@ -229,9 +229,29 @@ function App() {
 }
 ```
 
+This is the preferred way to import components, as it allows for better code readability and maintainability.
+Additionally, it allows for multiple components to be imported from the same file.
+
+```tsx
+// App.ts
+import { MyComponent, MyOtherComponent } from "./MyComponent"
+
+function App() {
+	return (
+		<div>
+			<MyComponent />
+			<MyOtherComponent />
+		</div>
+	)
+}
+
+```
+
 **Default import:**
 
-```typescript
+To import a default export, you must specify the name of the component to import.
+
+```tsx
 // App.ts
 import MyComponent from "./MyComponent"
 
@@ -246,8 +266,17 @@ function App() {
 
 ### Importing Solid and its utilities
 
-For a component to have reactivity and the other features provided by Solid, you will often need to import necessary functions and utilities.
+To use Solid, you must import the Solid library.
+The reactive primitives and utilities are exported from Solid's main module.
 
-```typescript
-import { createSignal, Show } from "solid-js"
+```tsx
+import { createSignal } from "solid-js"
 ```
+
+However, some of Solid's utilities are exported from their own modules.
+
+```tsx
+import { createStore } from "solid-js/store"
+```
+
+To see a full list of Solid's utilities, see the [API Reference](/reference).

@@ -2,50 +2,59 @@ import { Aside } from "~/components/configurable/Aside";
 
 # Event handlers
 
-Events handlers play an important role in capturing user interactions and executing the relevant logic based on those interactions.
-
-In Solid, event handlers are prefixed with `on`, to help distinguish them from other properties and attributes in your components.
-They can be written as either `onClick` and `onclick`, catering to different coding styles or project conventions.
+Event handlers are functions that are called in response to a specific event occurring in the browser, such as when a user clicks or taps on an element.
+To add an event handler to an element, you can use the `on` prefix followed by the event name, and assign it a function.
 
 ```tsx
 <button onClick={handleClick}>Click me</button>
 ```
 
+When using event handlers in Solid, they can be written using camelCase or all lowercase.
+
+```tsx
+<button onclick={handleClick}>Click me</button>
+```
+
 <Aside>
-  Events remain static and are _not_ reactive.
+  Event handlers are not reactive.
   This is to avoid the costly process of continuously attaching and detaching listeners.
-  Given that event handlers are called like regular functions upon each event trigger, there's no inherent need for them to be reactive.
+  Since event handlers are called like regular functions upon each event trigger, there's no inherent need for them to be reactive.
   <br />
   If necessary, you can write your handlers accordingly to call a reactive source:
-
     ```tsx
     <div onClick={() => props.handleClick?.()} />
     ```
-
 </Aside>
 
 ## Event delegation
 
-Rather than attaching event listeners to every individual element, Solid uses artificial event delegation. 
-This technique consolidates some event listening at a higher level in the document, allowing events to be captured more effectively on one place instead of many. 
-Supported events such as `click`, `mouseover`, and `keydown` are just a few examples that are optimized in this way. To view the full list see the [references below](#delegated-events).
+Instead of attaching event listeners to every individual element, Solid uses artificial event delegation.
+This keeps the number of event listeners to a minimum, allowing events to be captured more effectively on one place instead of many.
+Supported events such as `click`, `mouseover`, and `keydown` are just a few examples that are optimized in this way.
+To view the full list see the [references below](#delegated-events).
 
-**Note**: If you need to support other casings or want to avoid the event delegation, you can use [on:](/reference/on-and-oncapture) to match event handlers that follows the colon.
+If you need to attach an event listener to an element that is not supported by Solid's event delegation, you can use the [on:](/reference/on-and-oncapture) prefix followed by the event name, and assign it a function.
+
+```tsx
+<div on:customEvent={handleCustomEvent} />
+```
 
 ## Binding events
 
-Solid can bind data to event handlers without incurring the usual overhead of JavaScript's [`bind`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_objects/Function/bind) method or additional closures. 
-To achieve this you will have to pass an array to the event handler. Notably, the **second item** of the array will be supplied as the handler's **first argument**.
+In Solid, event handlers can be bound by passing an array to the event handler.
+The second item of the array is supplied as the handler's first argument.
+  
+  ```tsx
+  const handler = (data, event) => {
+    console.log('Data:', data, 'Event:', event);
+  }
 
-```jsx
-const handler = (data, event) => {
-   console.log('Data:', data, 'Event:', event);
-}
-
-<button onClick={[handler, 'Hello!']}>Click Me</button>
-```
+  <button onClick={[handler, 'Hello!']}>Click Me</button>
+  ```
 
 In this example, the string `'Hello!'` (the second item in the array) is passed as the data parameter (the first argument of the handler function) when the button is clicked.
+
+By binding events in this way, the overhead of using JavaScript's [bind](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_objects/Function/bind) method is avoided.
 
 ## Reference
 

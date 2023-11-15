@@ -1,19 +1,29 @@
 # Conditional Rendering
 
-Conditional rendering in Solid introduces dedicated components that simplify the way UI is handled based on the desired conditions.
-These components offer a more straightforward and readable way to manage UI elements and make code more organized and maintainable.
+Conditional rendering is the process of displaying different UI elements based on certain conditions.
+This is a common pattern in UI development, and is often used to show or hide elements based on user input, data, or other conditions.
+
+Solid offers dedicated components to handle conditional rendering in a more straightforward and readable way.
 
 ## Show
 
-The `<Show>` component integrates JavaScript control logic flow within templates.
-This offers a more readable way to handle [conditionals](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Building_blocks/conditionals).
+`<Show>` renders its children when a condition is evaluated to be true.
+Similar to the [ternary operator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Conditional_Operator) in JavaScript, it uses control logic flow within JSX to determine what to render.
 
-`<Show>` uses a `when` property that determines the condition for rendering.
-It accepts a boolean expression, which can be as simple as a boolean variable or complex expressions that evaluate to a boolean.
-This expression is re-evaluated whenever there is a change in the state or props it depends on.
+`<Show>` has a `when` property that is used to determine whether or not to render its children.
+When there is a change in the state or props it depends on, this property is re-evaluated.
+This property can be a boolean value, or a function that returns a boolean value.
 
-In addition to `when`, `<Show>` has an optional `fallback` property.
-Any valid JSX content or components can act as a fallback, ranging from simple text or HTML elements, to more complex components.
+```jsx
+import { Show } from "solid-js"
+
+<Show when={data.loading}>
+  <div>Loading...</div>
+</Show>
+```
+
+`<Show>` has the `fallback` property that can be used to specify the content to be rendered when the condition evaluates to false.
+This property can return a JSX element.
 
 ```jsx
 import { Show } from "solid-js"
@@ -23,20 +33,43 @@ import { Show } from "solid-js"
 </Show>
 ```
 
-With this example, when the `!data.loading` condition is truthy, the primary content between the `<Show>` tags is rendered.
-If it is falsy, the fallback content is rendered, if provided.
+If there are multiple conditions that need to be handled, `<Show>` can be nested to handle each condition.
 
-When certain conditions are not met, `<Show>` can be used to show alternative content such as loaders, error messages, or other content that makes sense in the context of your application.
+```jsx
+import { Show } from "solid-js"
+
+<Show when={data.loading}>
+  <div>Loading...</div>
+  <Show when={!data.error}>
+    <div>Error: {data.error}</div>
+  </Show>
+</Show>
+```
+
 
 ## Switch and Match
 
-Handling multiple conditions in Solid can be managed through the `<Switch>` and `<Match>` components, which is similar to JavaScript's [switch/case](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/switch) structure.
+When there are multiple conditions that need to be handled, it can be difficult to manage the logic flow with nested `<Show>` components.
+Solid has the `<Switch>` and `<Match>` components for this purpose.
 
-Simlar to show, `<Switch>` has the optional `fallback` prop available, which will specify the content be rendered when none of the `<Match>` components evaluate to true.
-`<Match>`, however, is nested within `<Switch>` to represent individual conditions.
-These components will show based on when the `when` prop is evaluated to be true.
+Similar to JavaScript's [switch/case](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/switch) structure, `<Switch>` wraps multiple `<Match>` components so that each condition is evaluated _in sequence_.
+The first `<Match>` component that evaluates to true will have its children rendered, and the rest will be ignored.
 
-Each condition is evlauted _in sequence_ and will render the corresponding outcome based on the **first true condition** encountered:
+```jsx
+import { Switch, Match } from "solid-js"
+
+<Switch>
+  <Match when={condition1}>
+    <p>Outcome 1</p>
+  </Match>
+  <Match when={condition2}>
+    <p>Outcome 2</p>
+  </Match>
+</Switch>
+```
+
+Similar to `<Show>`, each `<Match>` component has a `when` property that is used to determine whether or not to render its children.
+An optional `fallback` property can also be passed to `<Switch>` to specify the content be rendered when none of the `<Match>` components evaluate to true.
 
 ```jsx
 import { Switch, Match } from "solid-js"
@@ -48,35 +81,5 @@ import { Switch, Match } from "solid-js"
 	<Match when={condition2}>
 		<p>Outcome 2</p>
 	</Match>
-</Switch>
-```
-
-Opting for this approach removes the need for nested `<Show>` components:
-
-```jsx
-// nested show
-<Show
-    when={x() > 10}
-      fallback={
-        <Show
-          when={5 > x()}
-          fallback={<p>{x()} is between 5 and 10</p>}
-        >
-          <p>{x()} is less than 5</p>
-        </Show>
-      }
-    >
-      <p>{x()} is greater than 10</p>
-    </Show>
-
-// switch/match alternative:
-
-<Switch fallback={<p>{x()} is between 5 and 10</p>}>
-  <Match when={x() > 10}>
-    <p>{x()} is greater than 10</p>
-  </Match>
-  <Match when={5 > x()}>
-    <p>{x()} is less than 5</p>
-  </Match>
 </Switch>
 ```

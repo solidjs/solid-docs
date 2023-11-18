@@ -2,28 +2,21 @@ import { Aside } from "~/components/configurable/Aside";
 
 # Refs
 
-Refs, or references, allow you to have direct access to DOM element. 
+Refs, or references, allow you to have direct access to DOM elements. 
 
-There are two ways to get a reference to a DOM element in Solid:
-1. Using JSX as a value, and assigning it to a variable
-2. Using the Solid `ref` attribute
+Refs in Solid are assignments that occur at creation time before elements are attached to the 
+document DOM. This lets you access its properties and methods directly, allowing for manipulatinos 
+such as animations and event handling.
 
-```jsx
-const myDiv = <div>My Element</div>;
-```
-
-<Aside>
-For a more idiomatic way, Solid provides the `ref` attribute.
-Refs in Solid are assignments that occur at creation time before elements are attached to the document DOM.
-This lets you access its properties and methods directly, allowing for manipulatinos such as animations and event handling.
 To use `ref`, you simply need to declare a variable and use it as a ref attribute:
 
 ```tsx
 let myDiv;
 
 <div ref={myDiv}>My Element</div>
-
 ```
+
+<Aside>
 
 In TypeScript, you must use a definitive assignment assertion. 
 This signals to TypeScript that `myDiv` will definitely be assigned, even if TypeScript can not confirm it.
@@ -34,10 +27,65 @@ This is particularly useful in Solid since the framework takes care of assigning
 ```
 </Aside>
 
+
+## Why use refs?
+
+Refs are the most practical way to access DOM elements in Solid. They are localized, more 
+predictable, and easier to follow than the alternatives.
+
+
+### Why not use DOM selectors?
+
+In vanilla JavaScript, you would most likely use an element selector like `document.getElementById` 
+or `document.querySelector` to get a reference to a DOM element. Typically you know the element 
+exists in the DOM, so you can safely use these selectors. 
+
+However, in Solid, components are often added and removed from the DOM, so you can't always be 
+sure that the element exists. You might wonder why not just put a selector in the `onMount` so you
+can be sure the element exists like this.
+
+```tsx
+function Component() {
+  onMount(() => {
+    const element = document.getElementById('my-element');
+    // Do something with element
+  });
+
+  return <div id="my-element">My Element</div>;
+}
+```
+
+Although this works, now this component can only be used once in the DOM. If you try to use it
+multiple times the selector will always select the first element. Using DOM selectors which are 
+global in the localized scope of a component is not a good idea.
+
+
+### Why not use JSX as a value?
+
+You can use JSX as a value and assign it to a variable, which is similar to using 
+`document.createElement` in vanilla JavaScript. 
+
+```jsx
+function Component() {
+  const element = <p>My Element</p>;
+  // Do something with element
+
+  return (
+    <div>
+      {element}
+    </div>
+  );
+}
+```
+
+This isn't ideal because it requires you to separate the reference element and all of its children 
+from rest of the JSX tree. This can make reading through and understanding the component more 
+difficult. 
+
 ## Callbacks
 
-Refs can also take the form of a callback function.
-This method can be convenient for encapsulating logic, especially when there is no need to wait until the elements are attached:
+Refs can also take the form of a callback function. This method can be convenient for encapsulating 
+logic, especially when there is no need to wait until the elements are attached:
 
 ```tsx
 let myDiv;
@@ -45,7 +93,124 @@ let myDiv;
 <div ref={(el) => myDiv = el}>My Element</div>
 ```
 
-Callback refs provide a more flexible way to set refs and can be beneficial in various scenarios, such as when you need to attach event listeners to the DOM elements immediately after creation.
+Callback refs provide a more flexible way to set refs and can be beneficial in various scenarios, 
+such as when you need to attach event listeners to the DOM elements immediately after creation.
+
+
+## Storing a ref in a signal
+
+### Why aren't refs always stored in singals?
+
+Often you know that the element will exist for the whole time the component exists. In these
+cases, using a normal variable is appropriate because it will be set before the component mounts 
+and will never be updated. 
+
+### When should you store a ref in a signal?
+
+There are 2 cases when you should store a ref in a signal:
+
+1. If the element might not exist when the component is rendered.
+2. If the element might be removed/re-added to the DOM.
+
+#### Here is an example of both of these cases: 
+
+[<a href="https://playground.solidjs.com/anonymous/22a1abfa-a0f5-44a6-bbe6-40387cf63b95" target="_blank">
+SolidJS Playground Link
+</a>]()
+
+This example uses `createEffect`'s ability to store the previous value by returning it and passing
+in the previous value to the function to show how the ref variable changes over time.
+
+```tsx
+function App() {
+  const [show, setShow] = createSignal(false);
+  let element!: HTMLParagraphElement;
+
+  createEffect((previousElement) => {
+    console.log("show: ", show());
+    console.log("ref element: ", element);
+    console.log("ref element isConnected: ", element?.isConnected);
+    console.log("previous and new are equal: ", previousElement === element, previousElement, element)
+    return element
+  }, null);
+
+  return (
+    <div>
+      <button onClick={() => setShow((v) => !v)}>Toggle</button>
+
+      <Show when={show()}>
+        <p ref={element}>This is the ref element</p>
+      </Show>
+    </div>
+  );
+}
+
+render(() => <App />, document.getElementById("app")!);
+```
+
+
+```console
+// Initial render
+show:  false
+ref element:  undefined
+ref element isConnected:  undefined
+previous and new are equal:  false null undefined
+
+// First toggle click
+show:  true
+ref element:  HTMLParagraphElement
+ref element isConnected:  true
+previous and new are equal:  false undefined HTMLParagraphElement
+
+// Second toggle click
+show:  false
+ref element:  HTMLParagraphElement
+ref element isConnected:  false
+previous and new are equal:  true HTMLParagraphElement HTMLParagraphElement
+
+// Third toggle click
+show:  true
+ref element:  HTMLParagraphElement
+ref element isConnected:  true
+previous and new are equal:  false HTMLParagraphElement HTMLParagraphElement
+```
+
+From this you can see that the ref variable `element` is  
+1. `undefined` on the first render
+2. assigned when the element is added to the DOM
+3. remains assigned even when the element is removed from the DOM
+4. gets reassigned to a new element when it is added back to the DOM
+
+
+### How do you store a ref in a signal?
+
+```tsx
+function App() {
+  const [element, setElement] = createSignal<HTMLParagraphElement>();
+
+  createEffect(() => {
+    if (!element()) return;
+
+    // Do something with element
+  })
+
+  return (
+    <div>
+      <p ref={(el) => setElement(el)}>This is the ref element</p>
+    </div>
+  );
+}
+
+render(() => <App />, document.getElementById("app")!);
+```
+
+If we updated the previous example to use a signal, it will still print the same output because we 
+were already triggering the effect with the `show()` signal and the setting of `element` will still
+be the same value. 
+
+However, this will allow you to make the logic you are using the ref for to be trigger reactively 
+when the ref changes. 
+
 
 ## Forwarding refs
 
@@ -92,6 +257,8 @@ function ParentComponent() {
 
 In the `Canvas` component, we're directly assigning the incoming `props.ref` to the `ref` attribute of the internal canvas element. 
 This forwards the reference to the parent component (`ParentComponent`), allowing it to have direct access to the `canvas` element.
+
+
 
 ## Directives
 

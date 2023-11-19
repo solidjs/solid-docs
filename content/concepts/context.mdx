@@ -7,29 +7,19 @@ Context provides a way to pass data through the component tree without having to
 
 ## When to use context
 
-If you only want to avoid passing some props through many levels, component composition is often a simpler solution than context.
-Passing props through intermediate elements makes components more difficult to reuse, and makes it harder to see where props are coming from.
-Since the nature of Solid makes it easy to compose components without [prop drilling](/concepts/components/props#prop-drilling), [signals](/concepts/signals) or [stores](/concepts/stores) are often a better solution for managing state.
+When you have a large [component tree](/concepts/components/basics#component-trees) that requires state to be shared, context can be used.
+Context can be employed to avoid [prop drilling](/concepts/components/props#prop-drilling), which is the practice of passing props through intermediate elements without using them directly.
 
-Context is designed to share data that can be considered "global", such as the current authenticated user, theme, or preferred language.
-It offers a way to access values more efficiently instead of passing props through many levels of the component tree.
-When there may be information required at some levels of the component tree, but not all, context can be used to avoid passing props through intermediate elements.
+If you only want to avoid passing some props through a few levels levels, component composition is often a simpler solution than context.
+[Signals](/concepts/signals) are often a simplet solution since they can be imported directly into the components that need them.
+
+Context is designed to share data that can be considered "global", or information that is regularly accessed by many components in your application or component tree.
+It offers a way to access values more efficiently instead of passing props through intermediate elements or importing them directly into components.
 
 ## Creating context
 
-Context is created using the [`createContext`](/reference/createContext) function:
-
-```jsx
-import { createContext } from "solid-js"
-
-const MyContext = createContext()
-```
-
-`createContext` can take in a default value as an argument.
-If a component does not have a `Provider` component in its ancestry, this default value is given to the `createContext` function.
-
-To provide context to a component tree, you need to use the `Provider` method on the context object.
-This is done by wrapping the component tree in a `Provider` component:
+Context is created using the [`createContext`](/reference/createContext) function.
+This function has a `Provider` property that wraps the component tree you want to provide context to.
 
 ```jsx
 import { createContext } from "solid-js";
@@ -89,10 +79,11 @@ export const Provider() {
 }
 ```
 
+
 ## Consuming context
 
 Once the values are available to all the components in the context's component tree, they can be accessed using the [`useContext`](/references/useContext) utility.
-`useContext` takes in the context object and returns the value(s) passed to the `Provider`:
+This utility takes in the context object and returns the value(s) passed to the `Provider`:
 
 ```jsx
 import { createContext, useContext } from "solid-js"
@@ -115,8 +106,8 @@ export const App = () => (
 )
 ```
 
-When your context contains multiple values, you can destructure the values from `useContext`.
-This allows you to access the values you need without having to access the entire context object:
+When you are passing multiple values into the `Provider`, you can destructure the context object to access the values you need.
+This provides a readable way to access the values you need without having to access the entire context object:
 
 ```jsx
 import { createContext, useContext, createSignal } from "solid-js"
@@ -145,7 +136,7 @@ const Provider = (props) => {
 }
 
 const Child = () => {
-	const { stringVal, numberVal } = useContext(MyContext)
+	const { stringVal, numberVal } = useContext(MyContext) // only access the values you need through destructuring
 	return (
 		<>
 			<h1>{stringVal}</h1>
@@ -161,77 +152,136 @@ export const App = () => (
 )
 ```
 
+## Customizing context utilities
+
+When an application contains multiple context objects, it can be difficult to keep track of which context object is being used.
+To solve this issue, you can create a custom utilities to create a more readable way to access the context values.
+
+For example, when wrapping a component tree, you may want to create a custom `Provider` component that can be used to wrap the component tree.
+This also provides you with the option of re-using the `Provider` component in other parts of your application, if needed.
+
+```jsx
+import { createSignal, createContext, useContext } from "solid-js";
+
+const CounterContext = createContext();
+
+export function CounterProvider(props) { 
+  let count = 0;
+    
+	return (
+		<CounterContext.Provider value={count}>
+			{props.children}
+		</CounterContext.Provider>
+	);
+}
+```
+
+Now if you had to access the Provider in different areas of your application, you can simply import the `CounterProvider` component and wrap the component tree:
+
+```jsx
+import { CounterProvider } from "./counterProvider";
+
+export function App() {
+	return (
+		<CounterProvider count={1}>
+			<h1>Welcome to Counter</h1>
+			<NestedComponents />
+		</CounterProvider>
+	)
+}
+```
+
+Similarly, you can create a custom utility to access the context values.
+Instead of importing `useContext` and passing in the context object on each component that you're using it in, creating a customized utility can make it easier to access the values you need:
+
+```jsx
+export function useCounter() { return useContext(CounterContext); }
+```
+
+The `useCounter()` utility in this example can now be imported into any component that needs to access the context values:
+
+```jsx
+import { useCounter } from "./counter";
+
+export function CounterProvider(props) {
+  	const count = useCounter();
+	return (
+	  	<>
+			<div>{count()}</div>
+		</>
+	);
+};
+```
+
 ## Updating context values
 
 [Signals](/concepts/signals) offer a way to synchronize and manage data shared across your components using context.
 You can pass a signal directly to the `value` prop of the `Provider` component, and any changes to the signal will be reflected in all components that consume the context.
 
-		<TabsCodeBlocks>
-					<div id="App.jsx">
-						```jsx
-	import Counter from "./counter";
-	import { CounterProvider } from "./counter";
+<TabsCodeBlocks>
+	<div id="App.jsx">
+		```jsx
+		import Counter from "./counter";
+		import { CounterProvider } from "./counter";
 
-    export function App() {
-    	return (
-    		<CounterProvider count={1}>
-    			<h1>Welcome to Counter App</h1>
-    			<Nested />
-    		</CounterProvider>
-    	)
-    }
+		export function App() {
+			return (
+				<CounterProvider count={1}>
+					<h1>Welcome to Counter App</h1>
+					<Nested />
+				</CounterProvider>
+			)
+		}
+		```
+	</div>
+	<div id="Context.jsx">
+		```jsx
+		import { createSignal, createContext, useContext } from "solid-js";
 
-```
-			</div>
+		const CounterContext = createContext(); // create context
 
-			<div id="Context.jsx">
-						```jsx
-import { createSignal, createContext, useContext } from "solid-js";
+		export function CounterProvider(props) {
+		const [count, setCount] = createSignal(props.count || 0),
+			counter = [
+			count,
+			{
+				increment() {
+				setCount(c => c + 1);
+				},
+				decrement() {
+				setCount(c => c - 1);
+				}
+			}
+			];
 
-const CounterContext = createContext(); // create context
+		return (
+			<CounterContext.Provider value={counter}>
+				{props.children}
+			</CounterContext.Provider>
+			);
+		}
 
-export function CounterProvider(props) { // create provider
-  const [count, setCount] = createSignal(props.count || 0),
-    counter = [
-      count,
-      {
-        increment() {
-          setCount(c => c + 1);
-        },
-        decrement() {
-          setCount(c => c - 1);
-        }
-      }
-    ];
+		export function useCounter() { return useContext(CounterContext); }
+		```
+	</div>
+	<div id="Child.jsx">
+	```jsx
+	import { useCounter } from "./Context";
 
-return (
-<CounterContext.Provider value={counter}>
-{props.children}
-</CounterContext.Provider>
-);
-}
+	export function CounterProvider(props) {
+	const [count, { increment, decrement }] = useCounter();
 
-export function useCounter() { return useContext(CounterContext); } // custum utility to access context
-```
-
-			</div>
-			<div id="Child.jsx">
-						```jsx
-import { useCounter } from "./Context";
-
-export function CounterProvider(props) {
-  const [count, { increment, decrement }] = useCounter();
-return (
-  <>
-    <div>{count()}</div>
-    <button onClick={increment}>+</button>
-    <button onClick={decrement}>-</button>
-  </>
-);
-};
-```
-			</div>
-					</TabsCodeBlocks>
+	return (
+	<>
+		<div>{count()}</div>
+		<button onClick={increment}>+</button>
+		<button onClick={decrement}>-</button>
+	</>
+	);
+	};
+	```
+	</div>
+</TabsCodeBlocks>
 
 This offers a way to manage state across your components without having to pass props through intermediate elements.
 

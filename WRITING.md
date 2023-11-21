@@ -2,7 +2,7 @@
 
 _Read the [Solid Docs Manifesto](https://github.com/solidjs/solid-docs-next#the-solid-docs-manifesto) first!_
 
-_This is a draft! Help us improve it by making an issue or [reaching out directly](https://twitter.com/jutanium)._
+_This is a draft! Help us improve it by raising an issue.
 
 This document explains how to write content for the new Solid docs.
 

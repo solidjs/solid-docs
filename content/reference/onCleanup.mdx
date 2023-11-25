@@ -1,61 +1,28 @@
 <Title>onCleanup</Title>
 
-Registers a function that runs when the component is unmounted/removed from the page.
+`onCleanup` registers a cleanup method that executes on disposal or recalculation fo the current reactive scopes.
+Can be used in any Component or Effect to clean up any side effects that could be left behind when the component is removed from the page.
 
-This is useful for cleaning up up event listeners, intervals, timeouts or any other side effects 
-that could be left behind when the component is removed from the page if not cleaned up.
-
-onCleanup is will never be called on the sever since components only render in the browser.
-
-### TypeScript Function Signature
-
-```typescript
+```ts
 function onCleanup(fn: () => void): void;
 ```
 
-### Example
+Without the `onCleanup` function, the event listener would remain attached to the document even after the component is removed from the page.
+This can cause memory leaks and other issues.
 
-Expanding on the [`onMount`](/reference/onMount) example.
+```tsx
+import { createSignal, onCleanup } from "solid-js";
 
-Imagine that the component we setup an event listener for will be added and removed from page 
-using a [`<Show>`](/reference/Show) component. We can use `onCleanup` to remove the event listener 
-when the component is removed from the page.
+const Component = () => {
+  const [count, setCount] = createSignal(0);
 
-```jsx
-import { onMount, onCleanup, Show } from "solid-js";
+  const handleClick = () => setCount(count() + 1);
 
-const handleResize = () => {
-  console.log('resized')
-};
-
-const Card = () => {
-  onMount(() => {
-    console.log('added event listener')
-    window.addEventListener("resize", handleResize);
-  });
-
+  // Register a cleanup method to remove the event listener when the component is removed from the page.
   onCleanup(() => {
-    console.log('removed event listener')
-    window.removeEventListener("resize", handleResize);
+    document.removeEventListener("click", handleClick);
   });
 
-  return <div>Card</div>;
-};
-
-const App = () => {
-  const [show, setShow] = createSignal(false);
-
-  return (
-    <div>
-      <button onClick={() => setShow(v => !v)}>Toggle Card</button>
-
-      <Show when={show()}>
-        <Card />
-      </Show>
-    </div>
-  );
+  return <button onClick={handleClick}>Clicked {count()} times</button>;
 };
 ```
-
-Without the `onCleanup` function, the event listener would remain on the window even after the 
-component is removed from the page. 

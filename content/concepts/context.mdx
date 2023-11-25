@@ -1,113 +1,295 @@
+import TabsCodeBlocks from "~/components/configurable/TabsCodeBlocks"
+import { CodeTabs } from "~/components/Tabs"
+
 # Context
 
-Solid has the context api, which is a way to avoid manually passing props down to every level of the component tree, while still passing the desired data.
-For a tree of Solid components, context is intended to share information that can be regardded as "global", such as the authentication information, theme, or preferred langauge.
+Context provides a way to pass data through the component tree without having to pass props down manually at every level.
 
-Context works by creating a context object using the [`createContext`](/reference/createContext) function.
-This function takes in a default value as an argument:
+## When to use context
+
+When you have a large [component tree](/concepts/components/basics#component-trees) that requires state to be shared, context can be used.
+Context can be employed to avoid [prop drilling](/concepts/components/props#prop-drilling), which is the practice of passing props through intermediate elements without using them directly.
+
+If you only want to avoid passing some props through a few levels levels, component composition is often a simpler solution than context.
+[Signals](/concepts/signals) are often a simplet solution since they can be imported directly into the components that need them.
+
+Context is designed to share data that can be considered "global", or information that is regularly accessed by many components in your application or component tree.
+It offers a way to access values more efficiently instead of passing props through intermediate elements or importing them directly into components.
+
+## Creating context
+
+Context is created using the [`createContext`](/reference/createContext) function.
+This function has a `Provider` property that wraps the component tree you want to provide context to.
 
 ```jsx
-import { createContext } from "solid-js"
+import { createContext } from "solid-js";
 
-const MyContext = createContext("default value")
-```
+const MyContext = createContext()
 
-The context object is then passed to the `Provider` component which is then used to provide a value to all components that are _descendants_ of the `Provider`.
-
-```jsx
-import { createContext } from "solid-js"
-
-const MyContext = createContext("default value")
-
-function App() {
+export const Provider(props) {
 	return (
-		<MyContext.Provider value="new value">
-			<Child />
+		<MyContext.Provider>
+			{props.children}
 		</MyContext.Provider>
 	)
 }
 ```
 
-The `value` prop can take on any value that matches the type of the default value initially provided to the `createContext` function.
+## Providing context to children
 
-## Using context
+To pass a value to the `Provider`, you use the `value` prop which can take in any value, including [signals](#updating-context-values).
+Once a value is passed to the `Provider`, it is available to all components that are descendants of the `Provider`.
 
-To use a context object, you need to call the `useContext` utility, which takes in a context object as an argument and returns the current context value for that context object.
-
-```jsx
-import { createContext, useContext } from "solid-js"
-
-const MyContext = createContext("default value")
-
-function Child() {
-	const value = useContext(MyContext)
-	return <div>{value}</div>
-}
-```
-
-To access values more efficiently, you can create your own `useContext` utility:
+When passing a single value, it can be directly passed to the `value` prop:
 
 ```jsx
 import { createContext, useContext } from "solid-js"
 
+const MyContext = createContext("initial")
+
+const Provider = (props) => (
+	<MyContext.Provider value="new value">{props.children}</MyContext.Provider>
+)
+```
+
+However, if you need to access multiple values, they must be passed as an object literal, or using double curly braces (`{{ }}`):
+
+```jsx
+import { createContext, createSignal } from "solid-js"
+
 const MyContext = createContext("default value")
 
-function useMyContext() {
-	return useContext(MyContext)
-}
+export const Provider() {
+	const stringVal = "new value"
+	const numberVal = 3;
+	const objVal = {
+		foo: "bar",
+		obj: true,
+		};
 
-function Child() {
-	const value = useMyContext()
-	return <div>{value}</div>
+	return (
+		<MyContext.Provider value={{
+			stringVal,
+			numberVal,
+			objVal
+		}}>
+			{props.children}
+		</MyContext.Provider>
+	)
 }
 ```
 
-In creating a custom `useContext` utility, you can access context values without the need to re-implement the same context logic throughout your application.
 
-## Updating context values
+## Consuming context
 
-[Signals](/concepts/signals) offer a way to synchronize and manage data shared across your components using context:
+Once the values are available to all the components in the context's component tree, they can be accessed using the [`useContext`](/references/useContext) utility.
+This utility takes in the context object and returns the value(s) passed to the `Provider`:
+
+```jsx
+import { createContext, useContext } from "solid-js"
+
+const MyContext = createContext()
+
+const Provider = (props) => (
+	<MyContext.Provider value="new value">{props.children}</MyContext.Provider>
+)
+
+const Child = () => {
+	const value = useContext(Context)
+	return <>{value}</>
+}
+
+export const App = () => (
+	<Provider>
+		<Child /> {/* "new value" */}
+	</Provider>
+)
+```
+
+When you are passing multiple values into the `Provider`, you can destructure the context object to access the values you need.
+This provides a readable way to access the values you need without having to access the entire context object:
 
 ```jsx
 import { createContext, useContext, createSignal } from "solid-js"
 
-const MyContext = createContext(["default value", () => {}])
+const MyContext = createContext()
 
-function App() {
-	const [value, setValue] = createSignal("new value")
-
+const Provider = (props) => {
+	const stringVal = "new value"
+	const numberVal = 3
+	const objVal = {
+		foo: "bar",
+		obj: true,
+	}
+	const [signal, setSignal] = createSignal("example signal")
 	return (
-		<MyContext.Provider value={[value, setValue]}>
-			<Child />
-			<button onClick={() => setValue("new value")}>Update value</button>
+		<MyContext.Provider
+			value={{
+				stringVal,
+				numberVal,
+				objVal,
+			}}
+		>
+			{props.children}
 		</MyContext.Provider>
 	)
 }
 
-function Child() {
-	const [value, setValue] = useContext(MyContext)
+const Child = () => {
+	const { stringVal, numberVal } = useContext(MyContext) // only access the values you need through destructuring
 	return (
-		<div>
-			<div>{value()}</div>
-			<button onClick={() => setValue("new value")}>Update value</button>
-		</div>
+		<>
+			<h1>{stringVal}</h1>
+			<span>{numberVal}</span>
+		</>
+	)
+}
+
+export const App = () => (
+	<Provider>
+		<Child />
+	</Provider>
+)
+```
+
+## Customizing context utilities
+
+When an application contains multiple context objects, it can be difficult to keep track of which context object is being used.
+To solve this issue, you can create a custom utilities to create a more readable way to access the context values.
+
+For example, when wrapping a component tree, you may want to create a custom `Provider` component that can be used to wrap the component tree.
+This also provides you with the option of re-using the `Provider` component in other parts of your application, if needed.
+
+```jsx
+import { createSignal, createContext, useContext } from "solid-js";
+
+const CounterContext = createContext();
+
+export function CounterProvider(props) { 
+  let count = 0;
+    
+	return (
+		<CounterContext.Provider value={count}>
+			{props.children}
+		</CounterContext.Provider>
+	);
+}
+```
+
+Now if you had to access the Provider in different areas of your application, you can simply import the `CounterProvider` component and wrap the component tree:
+
+```jsx
+import { CounterProvider } from "./counterProvider";
+
+export function App() {
+	return (
+		<CounterProvider count={1}>
+			<h1>Welcome to Counter</h1>
+			<NestedComponents />
+		</CounterProvider>
 	)
 }
 ```
 
-## Context vs Props
+Similarly, you can create a custom utility to access the context values.
+Instead of importing `useContext` and passing in the context object on each component that you're using it in, creating a customized utility can make it easier to access the values you need:
 
-While context is a useful tool, it is **not** a replacement for passing props.
-The main goal of using context is to make the data flow in your application clearer and your components more reusable.
-With components in Solid do not own state, not every piece of state or function needs to be in context if being used by another component.
+```jsx
+export function useCounter() { return useContext(CounterContext); }
+```
 
-Context is intended to be used for data that is required more "globally" in a tree of components and to avoid the practice of [prop drilling](https://developer.mozilla.org/en-US/docs/Learn/Tools_and_testing/Client-side_JavaScript_frameworks/Main_features#:~:text=The%20problem%20of%20passing%20data%20through%20many%20layers%20of%20components%20is%20called%20prop%20drilling%2C%20and%20it%27s%20not%20ideal%20for%20large%20applications.).
-It is most appropriate for state or functions that are truly "global" in nature, or at least shared among many components in different parts of the component tree.
+The `useCounter()` utility in this example can now be imported into any component that needs to access the context values:
+
+```jsx
+import { useCounter } from "./counter";
+
+export function CounterProvider(props) {
+  	const count = useCounter();
+	return (
+	  	<>
+			<div>{count()}</div>
+		</>
+	);
+};
+```
+
+## Updating context values
+
+[Signals](/concepts/signals) offer a way to synchronize and manage data shared across your components using context.
+You can pass a signal directly to the `value` prop of the `Provider` component, and any changes to the signal will be reflected in all components that consume the context.
+
+<TabsCodeBlocks>
+	<div id="App.jsx">
+		```jsx
+		import Counter from "./counter";
+		import { CounterProvider } from "./counter";
+
+		export function App() {
+			return (
+				<CounterProvider count={1}>
+					<h1>Welcome to Counter App</h1>
+					<Nested />
+				</CounterProvider>
+			)
+		}
+		```
+	</div>
+	<div id="Context.jsx">
+		```jsx
+		import { createSignal, createContext, useContext } from "solid-js";
+
+		const CounterContext = createContext(); // create context
+
+		export function CounterProvider(props) {
+		const [count, setCount] = createSignal(props.count || 0),
+			counter = [
+			count,
+			{
+				increment() {
+				setCount(c => c + 1);
+				},
+				decrement() {
+				setCount(c => c - 1);
+				}
+			}
+			];
+
+		return (
+			<CounterContext.Provider value={counter}>
+				{props.children}
+			</CounterContext.Provider>
+			);
+		}
+
+		export function useCounter() { return useContext(CounterContext); }
+		```
+	</div>
+	<div id="Child.jsx">
+	```jsx
+	import { useCounter } from "./Context";
+
+	export function CounterProvider(props) {
+	const [count, { increment, decrement }] = useCounter();
+
+	return (
+	<>
+		<div>{count()}</div>
+		<button onClick={increment}>+</button>
+		<button onClick={decrement}>-</button>
+	</>
+	);
+	};
+	```
+	</div>
+</TabsCodeBlocks>
+
+This offers a way to manage state across your components without having to pass props through intermediate elements.
 
 ## Debugging with context
 
-Because `createContext` takes in an _optional_ default value, it is possible it can return `undefined` if the default value is not specified.
+`createContext` takes in an _optional_ default value and it is possible it can return `undefined` if not provided.
 When working with TypeScript, this can introduce type issues that make it difficult to determine why your component is not rendering as expected.
+
 To solve this issue, a default value can be specified when creating a context object, or errors can be handled manually through the use of a custom `useMyContext` utility:
 
 ```jsx
@@ -128,6 +310,3 @@ function Child() {
   return <div>{value}</div>;
 }
 ```
-
-In most cases, context is not needed due to Solid's primitives (eg. `createSignal`, `createStore`, `createMemo`).
-These pritmiives can achieve the same results since they are not only scoped to your components, but can be individually exported and imported into other components, allowing them to be used as more "global" variables.

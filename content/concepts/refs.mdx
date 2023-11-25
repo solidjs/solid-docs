@@ -2,76 +2,108 @@ import { Aside } from "~/components/configurable/Aside";
 
 # Refs
 
-Refs, or references, allow you to have direct access to DOM element. 
+Refs, or references, are a special attribute that can be attached to any element, and are used to reference a DOM element or a component instance.
+They are particularly useful when you need to access the DOM nodes directly or invoke methods on a component.
 
-There are two ways to get a reference to a DOM element in Solid:
-1. Using JSX as a value, and assigning it to a variable
-2. Using the Solid `ref` attribute
+## Accessing DOM elements
+
+One way of accessing DOM elements is through [element selectors](https://developer.mozilla.org/en-US/docs/Web/API/Document_object_model/Locating_DOM_elements_using_selectors) such as [`document.querySelector`](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector) or [`document.getElementById`](https://developer.mozilla.org/en-US/docs/Web/API/Document/getElementById).
+Since elements in Solid can be added or removed from the DOM based on state, you need to wait until the element is attached to the DOM before accessing it.
+This can be done by using [`onMount`](/reference/onMount) to wait until the element is attached to the DOM before accessing it:
+
+Accessing DOM elements through element selectors is not recommended for this reason.
+As elements with the same selectors are added and removed from the DOM, the first element that matches the selector will be returned, which may not be the element you want.
+
+## JSX as a value
+
+When wanting to directly access the DOM element, you can use JSX as a value and assign it to a variable.
 
 ```jsx
-const myDiv = <div>My Element</div>;
-```
+function Component() {
+  const myElement = <div>My Element</div>
 
-    <Aside>
-    For a more idiomatic way, Solid provides the `ref` attribute.
-Refs in Solid are assignments that occur at creation time before elements are attached to the document DOM.
-This lets you access its properties and methods directly, allowing for manipulatinos such as animations and event handling.
-To use `ref`, you simply need to declare a variable and use it as a ref attribute:
-
-```tsx
-let myDiv;
-
-<div ref={myDiv}>My Element</div>
-
-```
-
-In TypeScript, you must use a definitive assignment assertion. 
-This signals to TypeScript that `myDiv` will definitely be assigned, even if TypeScript can not confirm it.
-This is particularly useful in Solid since the framework takes care of assigning the variable when the component is rendered.
-
-```tsx
-  let myDiv!: HTMLDivElement;
-```
-    </Aside>
-
-## Callbacks
-
-Refs can also take the form of a callback function.
-This method can be convenient for encapsulating logic, especially when there is no need to wait until the elements are attached:
-
-```tsx
-let myDiv;
-
-<div ref={(el) => myDiv = el}>My Element</div>
-```
-
-Callback refs provide a more flexible way to set refs and can be beneficial in various scenarios, such as when you need to attach event listeners to the DOM elements immediately after creation.
-
-## Forwarding refs
-
-Forwarding refs provide a way to expose one of the inner elements' references to a parent component.
-By doing this, the parent component can directly access and interact the inner elements.
-
-When a component receives a `ref` attribute from its parent, it will come as `props.ref` in a callback form, regardless of whether the parent passed it as a simple assignment or a callback.
-
-The component can then "forward" this ref to a desired internal element by assigning the `props.ref` directly to the `ref` attribute of that element.
-
-Imagine there is a `Canvas` component, and from its parent, you want to directly manipulate the `canvas` element inside this Canvas component.
-
-1. Canvas component
-
-```tsx
-function Canvas(props) {
   return (
-    <div className="canvas-container">
-      <canvas ref={props.ref} />
+    <div>
+      {myElement}
+    </div>
+  )
+}
+```
+
+This can be a convenient way to access the DOM element.
+It lets you access the element directly without having to wait until it is attached to the DOM, and it can be used multiple times without having to worry about duplicate selectors.
+
+The downside to this approach is it separates the element and any child elements that are created from it from the rest of the DOM.
+This removes the ability to access the element directly from the variable, and reading through components that use JSX as a value can be more difficult to understand.
+
+## Refs in Solid
+
+Solid provides a ref system that allows you to access the DOM element directly without having to wait until it is attached to the DOM.
+These assignments occur at *creation time* prior to the element being added to the DOM.
+This provides access directly to the elements for manipulation, such as animations and event handling.
+
+To use `ref`, you declare a variable and use it as the `ref` attribute:
+
+```tsx
+let myElement;
+
+<div ref={myElement}>My Element</div>
+```
+
+<Aside>
+  In TypeScript, you must use a definitive assignment assertion. 
+  Since Solid takes care of assigning the variable when the component is rendered, this signals to TypeScript that the variable will be assigned, even if it can't confirm it.
+  ```tsx
+    let myElement!: HTMLDivElement;
+  ```
+</Aside>
+
+### Signals as refs
+
+[Signals](/concepts/signals) can also be used as refs.
+This is useful when you want to access the element directly, but the element may not exist when the component is first rendered, or may be removed from the DOM at some point.
+
+```jsx
+function App() {
+  const [show, setShow] = createSignal(false);
+  const [element] = createSignal()  
+
+  return (
+    <div>
+      <button onClick={() => setShow((isShown) => !isShown)}>Toggle</button>
+
+      <Show when={show()}>
+        <p ref={element()}>This is the ref element</p> 
+      </Show>
     </div>
   );
 }
 ```
 
-2. Parent component
+In this example, the paragraph element is only rendered when the `show` signal is `true`.
+When the component initializes, the paragraph element does not exist, so the `element` variable is not assigned.
+Once the `show` signal is set to `true`, the paragraph element is rendered, and the `element` variable is assigned to the paragraph element.
+
+If you would like to see a detailed example of how refs are created and used, you can view an intera
+
+ visit this [Solid playground example](https://playground.solidjs.com/anonymous/22a1abfa-a0f5-44a6-bbe6-40387cf63b95).
+ In this example, you can see when the `element` variable is assigned, and when it is removed.
+
+## Forwarding refs
+
+Forwarding refs is a technique that allows you to pass a ref from a parent component to a child component.
+This is useful when you want to access the DOM element of a child component from the parent component.
+
+To forward a ref, you need to pass the ref to the child component, and then assign the ref to the child component's element.
+
+When a child component receives a `ref` attribute from its parent, the `ref` is passed as a callback function.
+This is regardless of whether the parent passed it as a simple assignment or a callback.
+
+Once the child component receives the `ref`, it can be assigned to the element that the child component wants to expose through the `ref` attribute.
+To access the `ref` in the child component, it is passed as a prop:
+
 ```tsx
+// Parent component
 import { Canvas } from './Canvas.jsx';
 
 function ParentComponent() {
@@ -88,10 +120,19 @@ function ParentComponent() {
     </div>
   );
 }
+
+// Child component
+function Canvas(props) {
+  return (
+    <div className="canvas-container">
+      <canvas ref={props.ref} /> {/* Assign the ref to the canvas element */}
+    </div>
+  );
+}
 ```
 
-In the `Canvas` component, we're directly assigning the incoming `props.ref` to the `ref` attribute of the internal canvas element. 
-This forwards the reference to the parent component (`ParentComponent`), allowing it to have direct access to the `canvas` element.
+In this example, the `canvas` element is directly assigned the `ref` attribute through the `props.ref` variable.
+This forwards the reference to the parent component, giving it direct access to the `canvas` element.
 
 ## Directives
 

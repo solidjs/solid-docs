@@ -1,35 +1,30 @@
 <Title>onMount</Title>
 
-Lifecycle method run in the browser that registers a function that runs after the initial render and elements have been mounted.
-Ideal for using refs and managing other one-time side effects.
+Registers a method that runs after initial rendering is done and the elements are mounted to the page.
+Ideal for using [refs](/reference/ref) and managing other one-time setup that requires the
 
-You can be confident that this method will run only once after initial rendering is done and won't run on the server.
-
-It's an alias for an effect that is non-tracking, meaning that it is equivalent to a `createEffect` with no dependencies.
-
-While it can be used to perform data fetching, it is best to use Solid's resources with `createResource` for that task.
-
-## TypeScript Function Signature
-
-```typescript
+```tsx
 function onMount(fn: () => void): void;
 ```
 
-### Example
+This is an alias for an effect that is non-tracking, meaning that it is equivalent to a [`createEffect`](/reference/createEffect) with no dependencies.
 
-Imagine we would like to attach an event listener to our window and listen to the resize event.
-We only want to attach it once, so onMount will be helpful in this case.
+```tsx
+// example that shoes how to use onMount to get a ref to an element
+import { onMount } from 'solid-js';
 
-```jsx
-import { onMount } from "solid-js";
+function MyComponent() {
+  let ref: HTMLDivElement;
+  const focusStyle = "2px solid red"
 
-const handleResize = () => {
-  //...
-};
-
-const App = () => {
+  // when the component is mounted, the button will be disabled
   onMount(() => {
-    window.addEventListner("resize", handleResize);
+    ref.disabled = true;
   });
-};
+  return (
+    <button ref={ref}>
+      Focus me!
+    </button>
+  )
+}
 ```

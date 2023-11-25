@@ -1,1 +1,28 @@
 <Title>onCleanup</Title>
+
+`onCleanup` registers a cleanup method that executes on disposal or recalculation fo the current reactive scopes.
+Can be used in any Component or Effect to clean up any side effects that could be left behind when the component is removed from the page.
+
+```ts
+function onCleanup(fn: () => void): void;
+```
+
+Without the `onCleanup` function, the event listener would remain attached to the document even after the component is removed from the page.
+This can cause memory leaks and other issues.
+
+```tsx
+import { createSignal, onCleanup } from "solid-js";
+
+const Component = () => {
+  const [count, setCount] = createSignal(0);
+
+  const handleClick = () => setCount(count() + 1);
+
+  // Register a cleanup method to remove the event listener when the component is removed from the page.
+  onCleanup(() => {
+    document.removeEventListener("click", handleClick);
+  });
+
+  return <button onClick={handleClick}>Clicked {count()} times</button>;
+};
+```

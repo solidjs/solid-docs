@@ -8,7 +8,7 @@ They are particularly useful when you need to access the DOM nodes directly or i
 ## Accessing DOM elements
 
 One way of accessing DOM elements is through [element selectors](https://developer.mozilla.org/en-US/docs/Web/API/Document_object_model/Locating_DOM_elements_using_selectors) such as [`document.querySelector`](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector) or [`document.getElementById`](https://developer.mozilla.org/en-US/docs/Web/API/Document/getElementById).
-Since elements in Solid can be added or removed from the DOM based on state, however, you need to wait until the element is attached to the DOM before accessing it.
+Since elements in Solid can be added or removed from the DOM based on state, you need to wait until the element is attached to the DOM before accessing it.
 This can be done by using [`onMount`](/reference/onMount) to wait until the element is attached to the DOM before accessing it:
 
 ```tsx
@@ -29,6 +29,9 @@ function Component() {
 While this works, this component is now only able to be used once in the DOM.
 If you were to use this component multiple times, you would have multiple elements with the same `id`, which is invalid HTML.
 
+Accessing DOM elements through element selectors is not recommended for this reason.
+As elements with the same selectors are added and removed from the DOM, the first element that matches the selector will be returned, which may not be the element you want.
+
 ## JSX as a value
 
 When wanting to directly access the DOM element, you can use JSX as a value and assign it to a variable.
@@ -46,7 +49,7 @@ function Component() {
 ```
 
 This can be a convenient way to access the DOM element.
-It lets you access the element directly without having to wait until it is attached to the DOM, and it can be used multiple times without having to worry about duplicate `id`.
+It lets you access the element directly without having to wait until it is attached to the DOM, and it can be used multiple times without having to worry about duplicate selectors.
 
 The downside to this approach is it separates the element and any child elements that are created from it from the rest of the DOM.
 This removes the ability to access the element directly from the variable, and reading through components that use JSX as a value can be more difficult to understand.
@@ -81,14 +84,14 @@ This is useful when you want to access the element directly, but the element may
 ```jsx
 function App() {
   const [show, setShow] = createSignal(false);
-  let element!: HTMLParagraphElement;
+  const [element] = createSignal()  
 
   return (
     <div>
       <button onClick={() => setShow((isShown) => !isShown)}>Toggle</button>
 
       <Show when={show()}>
-        <p ref={element}>This is the ref element</p>
+        <p ref={element()}>This is the ref element</p> 
       </Show>
     </div>
   );

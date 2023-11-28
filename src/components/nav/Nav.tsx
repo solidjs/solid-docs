@@ -30,6 +30,14 @@ export default function Nav() {
 					setShowMenu={setShowMenu}
 				/>
 			</div>
+			<div class="leading-tight border px-3 py-3 mt-7 rounded-lg bg-gradient-to-br dark:from-solid-accent dark:to-solid-darkbg text-center text-solid-lightbg font-medium ">
+				<span class="block">
+				We're eager to hear your thoughts on our new docs!
+				</span>
+				<button class="hover:cursor-pointer bg-solid-lightitem hover:bg-solid-darklink hover:transition  ease-in-out px-1 py-[2px] mt-3 rounded-md border border-solid-darklink text-solid-darkitem font-semibold text-sm">
+					Give us some feedback
+				</button>
+			</div>
 			<div
 				classList={{
 					hidden: !showMenu(),

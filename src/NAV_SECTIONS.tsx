@@ -430,7 +430,7 @@ export const LEARN_SECTIONS: SECTIONS = {
 						link: "/concepts/components/class-style",
 					},
 					{
-						name: "Event Handling",
+						name: "Event Handlers",
 						link: "/concepts/components/event-handlers",
 					},
 					{

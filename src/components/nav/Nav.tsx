@@ -8,7 +8,6 @@ import {
 	SECTION_PAGE,
 } from "~/NAV_SECTIONS"
 import { NavHeader } from "./NavHeader"
-import IconChevron from "~icons/heroicons-outline/chevron-right"
 import { Collapsible, NavItem } from "./NavSection"
 
 export default function Nav() {
@@ -30,7 +29,7 @@ export default function Nav() {
 					setShowMenu={setShowMenu}
 				/>
 			</div>
-			<div class="leading-tight border px-3 py-3 mt-7 rounded-lg bg-gradient-to-br dark:from-solid-accent dark:to-solid-darkbg text-center text-solid-lightbg font-medium ">
+			<div class="leading-tight border px-3 py-3 mt-7 rounded-lg bg-gradient-to-br dark:from-solid-accent from-solid-lightlink dark:to-solid-darkbg to-solid-accent text-center text-solid-lightbg font-medium ">
 				<span class="block">
 				We're eager to hear your thoughts on our new docs!
 				</span>

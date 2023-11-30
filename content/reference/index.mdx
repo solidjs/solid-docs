@@ -1,15 +1,56 @@
-import ReferenceGrid from '~/components/ReferenceGrid.tsx'
+<Title>{"<Index>"}</Title>
 
-<Title>API Reference</Title>
+Non-keyed list iteration (rendered nodes are keyed to an array index). This is useful when there is no conceptual key, like if the data consists of primitives and it is the index that is fixed rather than the value.
 
-Welcome to the API Reference section of the Solid documentation site!
+```ts
+function Index<T, U extends JSX.Element>(props: {
+  each: readonly T[];
+  fallback?: JSX.Element;
+  children: (item: () => T, index: number) => U;
+}): () => U[];
+```
 
-This section is intended to be a comprehensive reference guide for all aspects of the Solid library. Here, you will find detailed information about Solid's core concepts, API, hooks, and utilities.
+A super simple implementation of this component might look like this:
 
-Solid is a reactive, declarative, and efficient library for building user interfaces. It offers a powerful yet intuitive programming model that allows you to easily create complex UIs with minimal boilerplate code.
+```tsx
+function Index<T, U extends JSX.Element>(props: {
+  each: readonly T[];
+  fallback?: JSX.Element;
+  children: (item: () => T, index: number) => U;
+}) {
+  return () => {
+    const [items, setItems] = createSignal(props.each);
+    return props.each.map((_, i) => props.children(() => items()[i], i));
+  };
+}
+```
 
-Whether you're a seasoned Solid developer or just getting started with the library, this reference section will be an invaluable resource for you. It is designed to help you quickly find the information you need, whether you're looking for details on a specific feature or just want to explore the library's capabilities.
+Here's a look at the implementation of the `Index` component in Solid:
 
-Here are some links to get you started:
+```tsx
+<Index each={state.list} fallback={<div>Loading...</div>}>
+  {(item) => <div>{item()}</div>}
+</Index>
+```
 
-<ReferenceGrid/>
+Notice that the item is a signal unlike the `For` component. This is because the `Index` component is not keyed to the item itself but rather the index.
+
+Optional second argument is an index number:
+
+```tsx
+<Index each={state.list} fallback={<div>Loading...</div>}>
+  {(item, index) => (
+    <div>
+      #{index} {item()}
+    </div>
+  )}
+</Index>
+```
+
+## Props
+
+| Name     | Type                                  | Description                                                     |
+| :------- | :------------------------------------ | :-------------------------------------------------------------- |
+| each     | `readonly T[]`                        | The array to iterate over.                                      |
+| fallback | `JSX.Element`                         | Optional fallback element to render while the array is loading. |
+| children | `(item: () => T, index: number) => U` | The function that renders the children.                         |

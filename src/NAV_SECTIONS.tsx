@@ -303,7 +303,7 @@ export const REFERENCE_SECTIONS: SECTIONS = {
 					},
 					{
 						name: "<Index>",
-						link: "/reference/Index",
+						link: "/reference/(Index)",
 					},
 					{
 						name: "<ErrorBoundary>",

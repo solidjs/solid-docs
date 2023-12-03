@@ -1,5 +1,7 @@
-import TabsCodeBlocks from "~/components/configurable/TabsCodeBlocks"
-import { CodeTabs } from "~/components/Tabs"
+---
+title: "Context"
+order: 5
+---
 
 # Context
 
@@ -78,7 +80,6 @@ export const Provider() {
 	)
 }
 ```
-
 
 ## Consuming context
 
@@ -161,25 +162,25 @@ For example, when wrapping a component tree, you may want to create a custom `Pr
 This also provides you with the option of re-using the `Provider` component in other parts of your application, if needed.
 
 ```jsx
-import { createSignal, createContext, useContext } from "solid-js";
+import { createSignal, createContext, useContext } from "solid-js"
 
-const CounterContext = createContext();
+const CounterContext = createContext()
 
-export function CounterProvider(props) { 
-  let count = 0;
-    
+export function CounterProvider(props) {
+	let count = 0
+
 	return (
 		<CounterContext.Provider value={count}>
 			{props.children}
 		</CounterContext.Provider>
-	);
+	)
 }
 ```
 
 Now if you had to access the Provider in different areas of your application, you can simply import the `CounterProvider` component and wrap the component tree:
 
 ```jsx
-import { CounterProvider } from "./counterProvider";
+import { CounterProvider } from "./counterProvider"
 
 export function App() {
 	return (
@@ -195,22 +196,24 @@ Similarly, you can create a custom utility to access the context values.
 Instead of importing `useContext` and passing in the context object on each component that you're using it in, creating a customized utility can make it easier to access the values you need:
 
 ```jsx
-export function useCounter() { return useContext(CounterContext); }
+export function useCounter() {
+	return useContext(CounterContext)
+}
 ```
 
 The `useCounter()` utility in this example can now be imported into any component that needs to access the context values:
 
 ```jsx
-import { useCounter } from "./counter";
+import { useCounter } from "./counter"
 
 export function CounterProvider(props) {
-  	const count = useCounter();
+	const count = useCounter()
 	return (
-	  	<>
+		<>
 			<div>{count()}</div>
 		</>
-	);
-};
+	)
+}
 ```
 
 ## Updating context values
@@ -224,63 +227,64 @@ You can pass a signal directly to the `value` prop of the `Provider` component, 
 		import Counter from "./counter";
 		import { CounterProvider } from "./counter";
 
-		export function App() {
-			return (
-				<CounterProvider count={1}>
-					<h1>Welcome to Counter App</h1>
-					<Nested />
-				</CounterProvider>
-			)
-		}
-		```
-	</div>
-	<div id="Context.jsx">
-		```jsx
-		import { createSignal, createContext, useContext } from "solid-js";
+    	export function App() {
+    		return (
+    			<CounterProvider count={1}>
+    				<h1>Welcome to Counter App</h1>
+    				<Nested />
+    			</CounterProvider>
+    		)
+    	}
+    	```
+    </div>
+    <div id="Context.jsx">
+    	```jsx
+    	import { createSignal, createContext, useContext } from "solid-js";
 
-		const CounterContext = createContext(); // create context
+    	const CounterContext = createContext(); // create context
 
-		export function CounterProvider(props) {
-		const [count, setCount] = createSignal(props.count || 0),
-			counter = [
-			count,
-			{
-				increment() {
-				setCount(c => c + 1);
-				},
-				decrement() {
-				setCount(c => c - 1);
-				}
-			}
-			];
+    	export function CounterProvider(props) {
+    	const [count, setCount] = createSignal(props.count || 0),
+    		counter = [
+    		count,
+    		{
+    			increment() {
+    			setCount(c => c + 1);
+    			},
+    			decrement() {
+    			setCount(c => c - 1);
+    			}
+    		}
+    		];
 
-		return (
-			<CounterContext.Provider value={counter}>
-				{props.children}
-			</CounterContext.Provider>
-			);
-		}
+    	return (
+    		<CounterContext.Provider value={counter}>
+    			{props.children}
+    		</CounterContext.Provider>
+    		);
+    	}
 
-		export function useCounter() { return useContext(CounterContext); }
-		```
-	</div>
-	<div id="Child.jsx">
-	```jsx
-	import { useCounter } from "./Context";
+    	export function useCounter() { return useContext(CounterContext); }
+    	```
+    </div>
+    <div id="Child.jsx">
+    ```jsx
+    import { useCounter } from "./Context";
 
-	export function CounterProvider(props) {
-	const [count, { increment, decrement }] = useCounter();
+    export function CounterProvider(props) {
+    const [count, { increment, decrement }] = useCounter();
 
-	return (
-	<>
-		<div>{count()}</div>
-		<button onClick={increment}>+</button>
-		<button onClick={decrement}>-</button>
-	</>
-	);
-	};
-	```
-	</div>
+    return (
+    <>
+    	<div>{count()}</div>
+    	<button onClick={increment}>+</button>
+    	<button onClick={decrement}>-</button>
+    </>
+    );
+    };
+    ```
+    </div>
+
 </TabsCodeBlocks>
 
 This offers a way to manage state across your components without having to pass props through intermediate elements.

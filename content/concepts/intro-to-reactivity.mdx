@@ -1,4 +1,7 @@
-import { Aside } from "~/components/configurable/Aside"
+---
+title: "Intro to Reactivity"
+order: 1
+---
 
 # Intro to Reactivity
 
@@ -21,7 +24,8 @@ function Counter() {
 
 	return (
 		<div>
-			<span>Count: {count()}</span> {/* Only `count()` is updated when the button is clicked. */}
+			<span>Count: {count()}</span>{" "}
+			{/* Only `count()` is updated when the button is clicked. */}
 			<button type="button" onClick={increment}>
 				Increment
 			</button>
@@ -30,8 +34,8 @@ function Counter() {
 }
 ```
 
-This `Counter` function sets up a button that, when clicked, calls the `increment` function to increase the `count` by one. 
-This updates just the number displayed *without* refreshing the entire component.
+This `Counter` function sets up a button that, when clicked, calls the `increment` function to increase the `count` by one.
+This updates just the number displayed _without_ refreshing the entire component.
 
 [View on Eraser![](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9/preview?elements=cry9JT4nroFQ4rRxzOpvCg&type=embed)](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=cry9JT4nroFQ4rRxzOpvCg)
 
@@ -45,13 +49,13 @@ This is done through the use of getters and setters.
 
 ```jsx
 const [count, setCount] = createSignal(0)
-  //     ^ getter  ^ setter
+//     ^ getter  ^ setter
 ```
 
 [View on Eraser![](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9/preview?elements=lseAEjGlKLslaVsTlfej_g&type=embed)](https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=lseAEjGlKLslaVsTlfej_g)
 
 - **Getter**: A function responsible for accessing the current value of the signal.
-You call a getter to access the data stored in a signal within a component.
+  You call a getter to access the data stored in a signal within a component.
 
 - **Setter**:
   The function used to modify a signal's value.
@@ -74,10 +78,10 @@ They are automated responders that keep the system up-to-date with the latest da
 Subscribers work based on two main actions:
 
 - **Observation**: At their core, subscribers observe signals.
-This keeps the subscriber primed to pick up on any changes to the signal they are tracking.
+  This keeps the subscriber primed to pick up on any changes to the signal they are tracking.
 - **Response**: When a signal changes, the subscriber is notified.
-This triggers the subscriber to respond to the change in the signal.
-This can involve tasks like updating the UI or calling external functions.
+  This triggers the subscriber to respond to the change in the signal.
+  This can involve tasks like updating the UI or calling external functions.
 
 ```jsx
 function Counter() {
@@ -88,7 +92,7 @@ function Counter() {
 		console.log(count())
 	})
 	// the `createEffect` will trigger the console log every time `count` changes.
-	}
+}
 ```
 
 ## State management
@@ -119,7 +123,7 @@ setCount(1)
 // `count` is not being tracked, so the console log will not update when `count` changes.
 ```
 
-Since initialization is a **one-time event**, if a signal is accessed *outside of a tracking scope*, it will not be tracked.
+Since initialization is a **one-time event**, if a signal is accessed _outside of a tracking scope_, it will not be tracked.
 To track a signal, it must be accessed within the scope of a subscriber.
 Reactive primitives, such as [effects](/concepts/effects), can be used to create subscribers.
 
@@ -148,7 +152,8 @@ function Counter() {
 
 	return (
 		<div>
-			<span>Count: {count()}</span> {/* ✅ will update when `count()` changes. */}
+			<span>Count: {count()}</span>{" "}
+			{/* ✅ will update when `count()` changes. */}
 			<button type="button" onClick={increment}>
 				Increment
 			</button>
@@ -157,7 +162,7 @@ function Counter() {
 }
 ```
 
-Components, much like other functions, will only run *once*.
+Components, much like other functions, will only run _once_.
 This means that if a signal is accessed outside of the return statement, will run on initialization, but any updates to the signal will not trigger an update.
 
 ```jsx
@@ -173,7 +178,8 @@ function Counter() {
 
 	return (
 		<div>
-			<span>Count: {count()}</span> {/* ✅ will update whenever `count()` changes. */}
+			<span>Count: {count()}</span>{" "}
+			{/* ✅ will update whenever `count()` changes. */}
 			<button type="button" onClick={increment}>
 				Increment
 			</button>
@@ -200,14 +206,14 @@ This is useful in scenarios where the order of updates is important.
 For example, if a subscriber depends on another signal, it is important that the subscriber is updated after the signal it depends on.
 
 ```jsx
-	const [count, setCount] = createSignal(0)
-	const [double, setDouble] = createSignal(0)
+const [count, setCount] = createSignal(0)
+const [double, setDouble] = createSignal(0)
 
-	createEffect(() => {
-		setDouble(count() * 2)
-	})
-	// The `double` signal will always be updated after `count` due to synchronous reactivity.
-	// This ensures that `double` is always up-to-date with the latest value of `count`.
+createEffect(() => {
+	setDouble(count() * 2)
+})
+// The `double` signal will always be updated after `count` due to synchronous reactivity.
+// This ensures that `double` is always up-to-date with the latest value of `count`.
 ```
 
 ### Asynchronous reactivity

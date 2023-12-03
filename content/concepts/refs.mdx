@@ -1,4 +1,7 @@
-import { Aside } from "~/components/configurable/Aside";
+---
+title: Refs
+order: 7
+---
 
 # Refs
 
@@ -20,13 +23,9 @@ When wanting to directly access the DOM element, you can use JSX as a value and 
 
 ```jsx
 function Component() {
-  const myElement = <div>My Element</div>
+	const myElement = <div>My Element</div>
 
-  return (
-    <div>
-      {myElement}
-    </div>
-  )
+	return <div>{myElement}</div>
 }
 ```
 
@@ -39,24 +38,22 @@ This removes the ability to access the element directly from the variable, and r
 ## Refs in Solid
 
 Solid provides a ref system that allows you to access the DOM element directly without having to wait until it is attached to the DOM.
-These assignments occur at *creation time* prior to the element being added to the DOM.
+These assignments occur at _creation time_ prior to the element being added to the DOM.
 This provides access directly to the elements for manipulation, such as animations and event handling.
 
 To use `ref`, you declare a variable and use it as the `ref` attribute:
 
 ```tsx
-let myElement;
-
-<div ref={myElement}>My Element</div>
+let myElement
+;<div ref={myElement}>My Element</div>
 ```
 
-<Aside>
-  In TypeScript, you must use a definitive assignment assertion. 
-  Since Solid takes care of assigning the variable when the component is rendered, this signals to TypeScript that the variable will be assigned, even if it can't confirm it.
-  ```tsx
-    let myElement!: HTMLDivElement;
-  ```
-</Aside>
+<CalloutTip>
+	In TypeScript, you must use a definitive assignment assertion. Since Solid
+	takes care of assigning the variable when the component is rendered, this
+	signals to TypeScript that the variable will be assigned, even if it can't
+	confirm it. ```tsx let myElement!: HTMLDivElement; ```
+</CalloutTip>
 
 ### Signals as refs
 
@@ -65,18 +62,18 @@ This is useful when you want to access the element directly, but the element may
 
 ```jsx
 function App() {
-  const [show, setShow] = createSignal(false);
-  const [element] = createSignal()  
+	const [show, setShow] = createSignal(false)
+	const [element] = createSignal()
 
-  return (
-    <div>
-      <button onClick={() => setShow((isShown) => !isShown)}>Toggle</button>
+	return (
+		<div>
+			<button onClick={() => setShow((isShown) => !isShown)}>Toggle</button>
 
-      <Show when={show()}>
-        <p ref={element()}>This is the ref element</p> 
-      </Show>
-    </div>
-  );
+			<Show when={show()}>
+				<p ref={element()}>This is the ref element</p>
+			</Show>
+		</div>
+	)
 }
 ```
 
@@ -86,8 +83,8 @@ Once the `show` signal is set to `true`, the paragraph element is rendered, and 
 
 If you would like to see a detailed example of how refs are created and used, you can view an intera
 
- visit this [Solid playground example](https://playground.solidjs.com/anonymous/22a1abfa-a0f5-44a6-bbe6-40387cf63b95).
- In this example, you can see when the `element` variable is assigned, and when it is removed.
+visit this [Solid playground example](https://playground.solidjs.com/anonymous/22a1abfa-a0f5-44a6-bbe6-40387cf63b95).
+In this example, you can see when the `element` variable is assigned, and when it is removed.
 
 ## Forwarding refs
 
@@ -104,30 +101,30 @@ To access the `ref` in the child component, it is passed as a prop:
 
 ```tsx
 // Parent component
-import { Canvas } from './Canvas.jsx';
+import { Canvas } from "./Canvas.jsx"
 
 function ParentComponent() {
-  let canvasRef;
+	let canvasRef
 
-  const animateCanvas = () => {
-    // Manipulate the canvas using canvasRef...
-  };
+	const animateCanvas = () => {
+		// Manipulate the canvas using canvasRef...
+	}
 
-  return (
-    <div>
-      <Canvas ref={canvasRef} />
-      <button onClick={animateCanvas}>Animate Canvas</button>
-    </div>
-  );
+	return (
+		<div>
+			<Canvas ref={canvasRef} />
+			<button onClick={animateCanvas}>Animate Canvas</button>
+		</div>
+	)
 }
 
 // Child component
 function Canvas(props) {
-  return (
-    <div className="canvas-container">
-      <canvas ref={props.ref} /> {/* Assign the ref to the canvas element */}
-    </div>
-  );
+	return (
+		<div className="canvas-container">
+			<canvas ref={props.ref} /> {/* Assign the ref to the canvas element */}
+		</div>
+	)
 }
 ```
 
@@ -141,25 +138,27 @@ The [`use:`](/reference/use) prefix is used to denote these custom directives.
 Unlike props or attributes, directives operate at a lower level through providing fine-grained control over the elements they are attached to.
 
 Directives are like callback refs but they enable two extra features:
-* Having multiple directives on an element.
-* Passing in reactive data to the callback.
+
+- Having multiple directives on an element.
+- Passing in reactive data to the callback.
 
 A directive is essentially a function with a specific signature:
 
 ```typescript
-function directive(element: Element, accessor: () => any): void;
+function directive(element: Element, accessor: () => any): void
 ```
 
-* `element`: The DOM element that the directive is applied to.
-* `accessor`: A function that gives access to the value(s) passed to the directive.
+- `element`: The DOM element that the directive is applied to.
+- `accessor`: A function that gives access to the value(s) passed to the directive.
 
 The directive functions are called at render time, but are called before the element is added to the DOM.
 Due to this order, elements are fully primed with their attributes, properties, or event listeners, therefore minimizing unexpected behaviors or premature interactions.
 
 Within directives, you're able to perform a variety of tasks, including:
-* creating [signals](/concepts/signals)
-* initiating [effects](/concepts/side-effects)
-* adding [event listeners](/concepts/components/event-handlers)
-* and more.
+
+- creating [signals](/concepts/signals)
+- initiating [effects](/concepts/side-effects)
+- adding [event listeners](/concepts/components/event-handlers)
+- and more.
 
 To learn more about directives and how they work with TypeScript, refer to our [TypeScript for Solid guide](/guides/typescript).

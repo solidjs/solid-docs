@@ -1,7 +1,0 @@
-<Title>startTransition</Title>
-
-```ts
-function startTransition: (fn: () => void) => Promise<void>;
-```
-
-Similar to `useTransition` except there is no associated pending state. This one can just be used directly to start the Transition.

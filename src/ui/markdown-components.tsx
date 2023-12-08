@@ -35,7 +35,7 @@ export default {
 	h1: (props: DefaultProps) => (
 		<h1
 			{...props}
-			class="heading mt-10 mb-6 -mx-.5 break-words text-4xl mdx-heading font-semibold"
+			class="heading mt-10 mb-6 -mx-.5 break-words text-4xl mdx-heading font-semibold dark:text-white"
 		>
 			<Anchor id={props.id}>{props.children}</Anchor>
 		</h1>

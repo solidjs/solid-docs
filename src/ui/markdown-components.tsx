@@ -1,25 +1,30 @@
-import { Link } from "@solidjs/router"
+import { Link } from "@solidjs/router";
 import {
 	createEffect,
 	createUniqueId,
 	ParentProps,
 	mergeProps,
 	type JSXElement,
-} from "solid-js"
-import { CalloutTip } from "~/ui/callout-tip"
-import { TabsCodeBlocks } from "~/ui/tab-code-blocks"
+} from "solid-js";
+import { CalloutTip } from "~/ui/callout-tip";
+import { TabsCodeBlocks } from "~/ui/tab-code-blocks";
+import EraserLink, { getEraserLinkData } from "./EraserLink";
 
-type DefaultProps = { children: JSXElement }
+type DefaultProps = { children: JSXElement };
 
-function Anchor(props: ParentProps<{ id: string }>) {
+function EraserLinkOrNormalLink(props: ParentProps<{ href: string }>) {
+	const eraserLinkData = getEraserLinkData(props.href);
+	if (eraserLinkData) {
+		return <EraserLink linkData={eraserLinkData}>{props.children}</EraserLink>;
+	}
 	return (
 		<a
-			class="hover:underline text-solid-dark dark:text-solid-light decoration-solid-lightitem font-medium dark:decoration-solid-darkitem"
-			href={`#${props.id}`}
+			{...props}
+			class="prose-a:no-underline prose-a:shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#fff),inset_0_calc(-1*(var(--tw-prose-underline-size,4px)+2px))_0_0_var(--tw-prose-underline,theme(colors.sky.300))] hover:prose-a:[--tw-prose-underline-size:6px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:prose-a:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.sky.800))] dark:hover:prose-a:[--tw-prose-underline-size:6px]"
 		>
 			{props.children}
 		</a>
-	)
+	);
 }
 
 export default {
@@ -32,64 +37,62 @@ export default {
 	TabsCodeBlocks: (props: DefaultProps) => (
 		<TabsCodeBlocks>{props.children}</TabsCodeBlocks>
 	),
+	ssr: (props: DefaultProps) => <>{props.children}</>,
+	spa: () => <></>,
 	h1: (props: DefaultProps) => (
 		<h1
 			{...props}
-			class="heading mt-10 mb-6 -mx-.5 break-words text-4xl mdx-heading font-semibold dark:text-white"
+			class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 		>
-			<Anchor id={props.id}>{props.children}</Anchor>
+			{props.children}
 		</h1>
 	),
-	ssr: (props: DefaultProps) => <>{props.children}</>,
-	spa: () => <></>,
 	h2: (props: DefaultProps) => {
 		return (
 			<h2
 				{...props}
-				class="heading text-3xl leading-10 my-3 mdx-heading text-solid-accent dark:text-solid-accentlight font-semibold"
+				class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 			>
-				<Anchor id={props.id}>{props.children}</Anchor>
+				{props.children}
 			</h2>
-		)
+		);
 	},
 	h3: (props: DefaultProps) => {
 		return (
 			<h3
 				{...props}
-				class="font-semibold heading text-2xl leading-9 my-3 mdx-heading text-solid-accent dark:text-solid-accentlight"
+				class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 			>
-				<Anchor id={props.id}>{props.children}</Anchor>
+				{props.children}
 			</h3>
-		)
+		);
 	},
 	h4: (props: DefaultProps) => {
 		return (
 			<h4
 				{...props}
-				class="heading text-xl font-medium my-2 mdx-heading text-solid-accent dark:text-solid-accentlight"
+				class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 			>
-				<Anchor id={props.id}>{props.children}</Anchor>
+				{props.children}
 			</h4>
-		)
+		);
 	},
 	h5: (props: DefaultProps) => {
-		//
-		//
 		return (
 			<h5
 				{...props}
-				class="text-xl my-3 font-medium mdx-heading text-solid-accent dark:text-solid-accentlight"
+				class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 			>
-				<Anchor id={props.id}>{props.children}</Anchor>
+				{props.children}
 			</h5>
-		)
+		);
 	},
 	h6: (props: DefaultProps) => (
 		<h6
 			{...props}
-			class="text-xl font-medium mdx-heading text-solid-accent dark:text-solid-accentlight"
+			class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 		>
-			<Anchor id={props.id}>{props.children}</Anchor>
+			{props.children}
 		</h6>
 	),
 	p: (props: DefaultProps) => (
@@ -97,6 +100,7 @@ export default {
 			{props.children}
 		</p>
 	),
+	a: EraserLinkOrNormalLink,
 	li: (props: DefaultProps) => (
 		<li {...props} class="mb-2">
 			{props.children}
@@ -116,7 +120,6 @@ export default {
 		</ol>
 	),
 	nav: (props: DefaultProps) => <nav {...props}>{props.children}</nav>,
-	Link,
 	TesterComponent: () => (
 		<p>
 			Remove This Now!!! If you see this it means that markdown custom
@@ -128,94 +131,31 @@ export default {
 			<code class="text-mono text-sm" {...props}>
 				{props.children}
 			</code>
-		)
+		);
 	},
-	pre: (props: DefaultProps) => {
-		let ref: HTMLPreElement
-
-		return (
-			<div class="relative">
-				<pre
-					{...mergeProps(props, {
-						get class() {
-							return (
-								props.className +
-								" relative " +
-								(props.bad ? "border-red-400 border-1" : "")
-							)
-						},
-					})}
-					ref={ref}
-				>
-					{props.children}
-				</pre>
-			</div>
-		)
-	},
-	table: (props: DefaultProps) => (
-		<table class="w-full max-w-full <sm:portrait:text-xs my-6 rounded-1xl dark:bg-[rgba(17,24,39,1)] shadow-lg text-left overflow-hidden">
+	pre: (props: DefaultProps) => (
+		<pre
+			{...props}
+			class="prose-pre:rounded-xl prose-pre:bg-slate-900 prose-pre:shadow-lg dark:prose-pre:bg-slate-800/60 dark:prose-pre:shadow-none dark:prose-pre:ring-1 dark:prose-pre:ring-slate-300/10"
+		>
 			{props.children}
-		</table>
+		</pre>
 	),
-	th: (props: DefaultProps) => <th class="p-4 <sm:p-2">{props.children}</th>,
-	thead: (props: DefaultProps) => (
-		<thead class="dark:border-blue-400 border-b-1">{props.children}</thead>
-	),
-	td: (props: DefaultProps) => <td class="p-4 <sm:p-2">{props.children}</td>,
-	tr: (props: DefaultProps) => (
-		<tr class="dark:even-of-type:bg-[#23406e] light:even-of-type:bg-[#90C2E7]">
-			{props.children}
-		</tr>
-	),
-	"data-lsp": (props: DefaultProps) => {
-		const id = createUniqueId()
-		createEffect(() => {
-			tippy(`[data-template="${id}"]`, {
-				content() {
-					const template = document.getElementById(id)
-					return template.innerHTML
-				},
-				allowHTML: true,
-			})
-		})
-		return (
-			<span class={"data-lsp"} data-template={id}>
-				{props.children}
-				<div id={id} style={{ display: "none" }}>
-					<pre class="text-white bg-transparent text-xs p-0 m-0 border-0">
-						{props.lsp}
-					</pre>
-				</div>
-			</span>
-		)
-	},
-	"docs-error": (props: DefaultProps) => {
-		return (
-			<div class="docs-error">
-				<p>
-					<span class="text-red-500">Error:</span>
-					{props.children}
-				</p>
-			</div>
-		)
-	},
-	"docs-info": (props: DefaultProps) => {
-		return (
-			<div class="docs-error">
-				<p>
-					<span class="text-red-500">Error:</span>
-					{props.children}
-				</p>
-			</div>
-		)
+	table: (props: DefaultProps) => <table>{props.children}</table>,
+	th: (props: DefaultProps) => <th>{props.children}</th>,
+	thead: (props: DefaultProps) => <thead>{props.children}</thead>,
+	td: (props: DefaultProps) => <td>{props.children}</td>,
+	tr: (props: DefaultProps) => <tr>{props.children}</tr>,
+	hr: (props: DefaultProps) => {
+		return <hr {...props} class="dark:prose-hr:border-slate-800" />;
 	},
 	response: (props: DefaultProps) => {
-		return <span>{props.children}</span>
+		return <span>{props.children}</span>;
 	},
 	void: (props: DefaultProps) => {
-		return <span>{props.children}</span>
+		return <span>{props.children}</span>;
 	},
 	unknown: (props: DefaultProps) => {
-		return <span>{props.children}</span>
+		return <span>{props.children}</span>;
 	},
-}
+};

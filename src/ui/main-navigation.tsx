@@ -1,8 +1,9 @@
 import { A } from "@solidjs/router"
 import { For, Show } from "solid-js"
 import { useLocation } from "solid-start"
-import { getEntries } from "~/data/get-entries"
+import { getEntries } from "~/data/get-nav"
 import { Tabs } from "@kobalte/core"
+import { unwrap } from "solid-js/store"
 
 type Entry = {
 	title: string

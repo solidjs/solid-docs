@@ -1,101 +1,120 @@
 import { createServerData$ } from "solid-start/server"
 import fs from "fs/promises"
 import path from "path"
-import matter from "gray-matter"
+import matter, { GrayMatterFile } from "gray-matter"
+import { z } from "zod"
 
-type DirInfo = {
-	path: string
-	title?: string
-	order?: number
+type Section = {
+	type: "section"
+	title: string
+	order: number
+	children: (Section | EntryFile)[]
 }
 
-/**
- *
- * Reads the `data.json` for each section.
- * If `data` is empty, returns just the path.
- * If file doesn't exists, it throws and is caught.
- *
- * @todo Every section should have `data.json`.
- * Actually throwing is a good idea if this happens on build-time.
- */
+type FrontMatter = GrayMatterFile<string> & {
+	data: { title: string; order: number }
+}
+
+type EntryFile = {
+	type: "markdown"
+	path: string
+	slug: string
+	title: FrontMatter["data"]["title"]
+	order: FrontMatter["data"]["order"]
+}
+type DirInfo = {
+	path: string
+	title: string
+	order: number
+}
+
+const sectionSchema = z.object({
+	title: z.string(),
+	order: z.number(),
+})
+
 async function getDirInfo(dirPath: string): Promise<DirInfo> {
 	try {
 		const data = await fs.readFile(path.resolve(dirPath, "data.json"), "utf-8")
 
-		if (data) {
-			return {
-				path: dirPath,
-				...JSON.parse(data),
-			}
-		} else {
-			return {
-				path: dirPath,
-			}
-		}
-	} catch {
 		return {
 			path: dirPath,
+			...sectionSchema.parse(JSON.parse(data))
 		}
+	} catch {
+		if (dirPath.endsWith("content")) {
+			return {
+				path: dirPath,
+				title: "root",
+				order: 0
+			}
+		}
+		throw new Error(`failed to parse directory info. Does ${dirPath} has a data.json?`)
 	}
 }
 
-type File = {
-	title: string
-	order: number
-	content: string
-}
-
-type Dir = {
-	title: string
-	order: number
-	children: Dir[] | File[]
-}
-
-type FileTreeItem = File | Dir
-
-/**
- *
- * Needs some type-guards to findout if it's File or Dir so we can annotate ReturnType.
- * Promise<FileTreeItem[]>
- */
-export async function buildFileTree(entry: string): Promise<any> {
+export async function buildFileTree(
+	entry: string
+): Promise<EntryFile | Section | void> {
 	const entryPath = path.resolve(process.cwd(), entry)
 	const stats = await fs.stat(entryPath)
 
 	if (stats.isDirectory()) {
 		const info = await getDirInfo(entryPath)
 		const files = await fs.readdir(entryPath)
+
 		const nested = await Promise.all(
 			files.map(async (file) => {
-				const tree = buildFileTree(path.join(entryPath, file))
-				if (tree) return tree
+				return buildFileTree(path.join(entryPath, file))
 			})
 		)
-		return {
-			title: info.title,
-			order: info.order,
-			children: nested.filter(Boolean).sort((a, b) => a.order - b.order),
-		}
-	} else if (!entryPath.includes("data.json")) {
-		const file = await fs.readFile(entryPath, "utf-8")
-		const { data } = matter(file)
 
 		return {
+			type: "section",
+			title: info.title,
+			order: info.order,
+			children: (nested.filter(Boolean) as Section[]).sort(
+				(a, b) => a.order - b.order
+			),
+		} satisfies Section
+	} else if (!entryPath.includes("data.json")) {
+		const file = await fs.readFile(entryPath, "utf-8")
+		const { data } = matter(file) as FrontMatter
+
+		return {
+			type: "markdown",
 			path:
 				"/" +
 				path
 					.relative(path.join(process.cwd(), "content"), entryPath)
 					.replace(/\.mdx?/, ""),
 			slug: path.basename(entryPath, path.extname(entryPath)),
-			...data,
-		}
+			title: data.title,
+			order: data.order,
+		} satisfies EntryFile
+	} else {
+		console.error(`WARNING: \n ${entry} was not found.\n Please fix it!\n` )
+		return
 	}
 }
 
 export function getEntries() {
 	return createServerData$(async () => {
-		const directories = await buildFileTree("content")
+		const nav = await buildFileTree("content")
 
-		return directories
+		if (nav && nav.type === "section")  {
+			const referencesIndex: number = nav.children.findIndex(({ title }) => {
+				if (typeof title === "string") {
+					return title.toLowerCase() === "reference"
+				}
+			})
+
+			const references = (nav.children.splice(referencesIndex, 1)[0] as Section).children
+
+			return {
+				references,
+				learn: nav.children,
+			}
+		}
 	})
 }

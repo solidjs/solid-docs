@@ -1,0 +1,41 @@
+---
+title: mapArray
+order: 5
+---
+
+```ts
+function mapArray<T, U>(
+	list: () => readonly T[],
+	mapFn: (v: T, i: () => number) => U
+): () => U[]
+```
+
+Reactive map helper that caches each item by reference to reduce unnecessary mapping on updates. It only runs the mapping function once per value and then moves or removes it as needed. The index argument is a signal. The map function itself is not tracking.
+
+Underlying helper for the `<For>` control flow.
+
+```ts
+const mapped = mapArray(source, (model) => {
+	const [name, setName] = createSignal(model.name)
+	const [description, setDescription] = createSignal(model.description)
+
+	return {
+		id: model.id,
+		get name() {
+			return name()
+		},
+		get description() {
+			return description()
+		},
+		setName,
+		setDescription,
+	}
+})
+```
+
+## Arguments
+
+| Name  | Type                           | Description              |
+| :---- | :----------------------------- | :----------------------- |
+| list  | `() => readonly T[]`           | The source array to map. |
+| mapFn | `(v: T, i: () => number) => U` | The mapping function.    |

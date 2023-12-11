@@ -1,7 +1,8 @@
-import { For, Show, Suspense } from "solid-js"
+import { A } from "@solidjs/router"
+import { For, Show } from "solid-js"
 import { useLocation } from "solid-start"
 import { getEntries } from "~/data/get-entries"
-
+import { Tabs } from "@kobalte/core"
 
 type Entry = {
 	title: string
@@ -11,27 +12,24 @@ type Entry = {
 
 function ListItemLink(props: { item: Entry }) {
 	const location = useLocation()
-
-	return (
-		<li class="relative">
-			<a
-				href={props.item.path}
-				class={`block w-full pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full
-				${
+	const linkStyles = () =>
 		location.pathname === props.item.path
 			? "font-semibold text-sky-500 before:bg-sky-500 before:block"
 			: "text-slate-500 before:hidden before:bg-slate-300 hover:text-slate-600 hover:before:block dark:text-slate-400 dark:before:bg-slate-700 dark:hover:text-slate-300"
-		}}`}
+
+	return (
+		<li class="relative">
+			<A
+				href={props.item.path}
+				class={`block w-full pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full ${linkStyles()}`}
 			>
 				{props.item.title}
-			</a>
+			</A>
 		</li>
 	)
 }
 
 function DirList(props: { list: Entry[] }) {
-	const location = useLocation()
-
 	return (
 		<For each={props.list}>
 			{(item) => {
@@ -50,9 +48,7 @@ function DirList(props: { list: Entry[] }) {
 										Array.isArray(child.children) ? (
 											<li>
 												<div class="relative">
-													<h3
-														class="block w-full pl-3.5 font-display font-medium before:pointer-events-none text-slate-400 dark:text-slate-300"
-													>
+													<h3 class="block w-full pl-3.5 font-display font-medium before:pointer-events-none text-slate-400 dark:text-slate-300">
 														{child.title}
 													</h3>
 												</div>
@@ -82,21 +78,46 @@ function DirList(props: { list: Entry[] }) {
 export function MainNavigation() {
 	const entries = getEntries()
 
-	console.log("entries", entries())
+	const learn = () => entries()?.learn
+	const references = () => entries()?.references
 
 	return (
-		<nav class="text-base lg:text-sm">
-			<Suspense fallback={"getting entries"}>
-				<Show when={entries()} fallback={<p>No routes found...</p>}>
-					{(_entries) => {
-						return (
+		<nav>
+			<Tabs.Root>
+				<Tabs.List class="w-full relative">
+					<Tabs.Trigger
+						value="learn"
+						class="inline-block px-4 py-2 outline-none hover:bg-gray-800 focus-visible:bg-gray-800"
+					>
+						<span class="text-white">Learn</span>
+					</Tabs.Trigger>
+					<Tabs.Trigger
+						value="reference"
+						class="inline-block px-4 py-2 outline-none hover:bg-gray-800 focus-visible:bg-gray-800"
+					>
+						<span class="text-white">Reference</span>
+					</Tabs.Trigger>
+					<Tabs.Indicator class="absolute bg-blue-500 transition-all duration-250 h-px" />
+				</Tabs.List>
+				<Tabs.Content value="learn">
+					<Show when={learn()} fallback={<p>No routes found...</p>}>
+						{(learnList) => (
 							<ul role="list" class="space-y-9">
-								<DirList list={_entries().children} />
+								<DirList list={learnList()} />
 							</ul>
-						)
-					}}
-				</Show>
-			</Suspense>
+						)}
+					</Show>
+				</Tabs.Content>
+				<Tabs.Content value="reference">
+					<Show when={references()} fallback={<p>No routes found...</p>}>
+						{(referenceList) => (
+							<ul role="list" class="space-y-9">
+								<DirList list={referenceList()} />
+							</ul>
+						)}
+					</Show>
+				</Tabs.Content>
+			</Tabs.Root>
 		</nav>
 	)
 }

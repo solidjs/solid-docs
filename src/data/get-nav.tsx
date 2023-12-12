@@ -40,7 +40,7 @@ async function getDirData(dirPath: string): Promise<DirData> {
 
 		return data
 	} catch {
-		throw new Error(`failed to parse directory info. Does ${dirPath} has a data.json?`)
+		throw new Error(`failed to parse directory info. Does ${dirPath} have a data.json?`)
 	}
 }
 

@@ -24,6 +24,7 @@ export const DocsLayout: ParentComponent = (props) => {
 	const entries = getEntries();
 
 	const [pageStore, setPageStore] = createStore<PageStore>({
+		location: location.pathname,
 		pageTitle: "",
 		section: null,
 		sectionData:
@@ -38,7 +39,6 @@ export const DocsLayout: ParentComponent = (props) => {
 				return setPageStore("pageTitle", section.title);
 			}
 			if (section.title.toLowerCase() === findMe.split("-").join(" ")) {
-				console.log(section.title);
 				return setPageStore({
 					section: section.title,
 					sectionData: section.children,
@@ -58,7 +58,20 @@ export const DocsLayout: ParentComponent = (props) => {
 	};
 
 	createEffect(() => {
-		headerInfo(location.pathname);
+		if (location.pathname !== pageStore.location) {
+			setPageStore({
+				location: location.pathname,
+				pageTitle: "",
+				section: null,
+				sectionData:
+					location[0] === "references"
+						? entries()?.references
+						: entries()?.learn,
+				prevPage: null,
+				nextPage: null,
+			});
+			headerInfo(location.pathname);
+		}
 	});
 
 	return (

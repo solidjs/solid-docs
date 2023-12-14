@@ -35,7 +35,8 @@ async function getDirData(dirPath: string): Promise<DirData> {
 		const data = JSON.parse(await fs.readFile(path.resolve(dirPath, "data.json"), "utf-8"))
 
 		if (!dirDataSchema.safeParse(data).success) {
-			throw new Error("failed to parse")
+			// throw new Error("failed to parse")
+			console.error("failed to parse::", data)
 		}
 
 		return data

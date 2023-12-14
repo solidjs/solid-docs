@@ -13,15 +13,14 @@ type Entry = {
 function ListItemLink(props: { item: Entry }) {
 	const location = useLocation();
 	const linkStyles = () =>
-		location.pathname === props.item.path
+		location.pathname === props.item.path.replace(/\\/g, "/")
 			? "font-semibold text-sky-500 before:bg-sky-500 before:block"
 			: "text-slate-500 before:hidden before:bg-slate-300 hover:text-slate-600 hover:before:block dark:text-slate-400 dark:before:bg-slate-700 dark:hover:text-slate-300";
-
 	return (
 		<li class="relative">
 			<A
 				href={props.item.path}
-				class={`capitalize block w-full pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full ${linkStyles()}`}
+				class={`capitalize block w-full text-sm pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full ${linkStyles()}`}
 			>
 				{props.item.title}
 			</A>
@@ -84,7 +83,7 @@ export function MainNavigation() {
 	return (
 		<nav>
 			<Tabs.Root>
-				<Tabs.List class="w-full relative">
+				<Tabs.List class="w-full relative pb-6">
 					<Tabs.Trigger
 						value="learn"
 						class="inline-block px-4 py-2 outline-none hover:bg-gray-800 focus-visible:bg-gray-800"
@@ -102,7 +101,7 @@ export function MainNavigation() {
 				<Tabs.Content value="learn">
 					<Show when={learn()} fallback={<p>No routes found...</p>}>
 						{(learnList) => (
-							<ul role="list" class="space-y-9">
+							<ul role="list" class="space-y-6">
 								<DirList list={learnList()} />
 							</ul>
 						)}
@@ -111,7 +110,7 @@ export function MainNavigation() {
 				<Tabs.Content value="reference">
 					<Show when={references()} fallback={<p>No routes found...</p>}>
 						{(referenceList) => (
-							<ul role="list" class="space-y-9">
+							<ul role="list" class="space-y-6">
 								<DirList list={referenceList()} />
 							</ul>
 						)}

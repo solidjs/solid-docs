@@ -3,6 +3,7 @@ import fs from "fs/promises"
 import path from "path"
 import matter, { GrayMatterFile } from "gray-matter"
 import { z } from "zod"
+import { createEffect } from "solid-js"
 
 export type Section = {
 	type: "section"

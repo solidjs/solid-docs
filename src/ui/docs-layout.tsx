@@ -75,7 +75,7 @@ export const DocsLayout: ParentComponent = (props) => {
 
 	return (
 		<>
-			<div class="min-w-0 max-w-2xl flex-auto px-4 py-16 lg:max-w-none lg:pl-8 lg:pr-0 xl:px-16">
+			<div class="min-w-0 max-w-2xl flex-auto px-4 pb-16 lg:max-w-none lg:pl-4 lg:pr-0 xl:px-16">
 				<article>
 					<header class="mb-9 capitalize">
 						<Show when={pageStore.section}>

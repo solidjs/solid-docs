@@ -1,6 +1,7 @@
 import {
 	ParentComponent,
 	Show,
+	createEffect,
 	createSignal,
 	onCleanup,
 	onMount,
@@ -21,10 +22,6 @@ export interface PageStore {
 export const DocsLayout: ParentComponent = (props) => {
 	let location = useLocation();
 	const entries = getEntries();
-
-	const [pageLocation, setPageLocation] = createSignal(
-		location.pathname.split("/").splice(1)
-	);
 
 	const [pageStore, setPageStore] = createStore<PageStore>({
 		pageTitle: "",
@@ -50,27 +47,18 @@ export const DocsLayout: ParentComponent = (props) => {
 		}
 	};
 
-	const headerInfo = () => {
-		for (let i = 0; i < pageLocation().length; i++) {
+	const headerInfo = (page) => {
+		const pathArr = page.split("/").splice(1);
+
+		for (let i = 0; i < pathArr.length; i++) {
 			if (Array.isArray(pageStore.sectionData)) {
-				find(pageLocation()[i], pageStore.sectionData);
+				find(pathArr[i], pageStore.sectionData);
 			}
 		}
 	};
 
-	onMount(() => {
-		headerInfo();
-	});
-
-	onCleanup(() => {
-		setPageStore({
-			pageTitle: "",
-			section: null,
-			sectionData:
-				location[0] === "references" ? entries()?.references : entries()?.learn,
-			prevPage: null,
-			nextPage: null,
-		});
+	createEffect(() => {
+		headerInfo(location.pathname);
 	});
 
 	return (

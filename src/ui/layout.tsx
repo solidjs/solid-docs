@@ -1,4 +1,4 @@
-import { ParentComponent, Show } from "solid-js";
+import { Match, ParentComponent, Show, Switch } from "solid-js";
 
 import { MainNavigation } from "~/ui/layout/main-navigation";
 import { MainFooter } from "~/ui/layout/main-footer";
@@ -14,7 +14,6 @@ export const Layout: ParentComponent = (props) => {
 			<MainHeader />
 
 			<Show when={isRoot()} keyed>
-				<div>heros</div>
 				{/* Hero */}
 			</Show>
 
@@ -28,11 +27,8 @@ export const Layout: ParentComponent = (props) => {
 					</div>
 				</div>
 				<main class="min-w-0 max-w-2xl flex-auto px-4 py-16 lg:max-w-none lg:pl-8 lg:pr-0 xl:px-16 prose prose-slate dark:prose-invert dark:text-slate-400">
-					<Show
-						when={isRoot()}
-						fallback={<DocsLayout>{props.children}</DocsLayout>}
-					>
-						{props.children}
+					<Show when={!isRoot()}>
+						<DocsLayout>{props.children}</DocsLayout>
 					</Show>
 				</main>
 			</div>

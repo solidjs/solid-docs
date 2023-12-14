@@ -1,19 +1,92 @@
-import { ParentComponent } from "solid-js";
-import { DocsHeader } from "./layout/docs-header";
+import {
+	ParentComponent,
+	Show,
+	createSignal,
+	onCleanup,
+	onMount,
+} from "solid-js";
+import { createStore } from "solid-js/store";
 
-export interface DocsLayoutProps {
-	title?: string;
-	section?: {
-		title: string;
-	};
+import { useLocation } from "solid-start";
+import { EntryFile, Section, getEntries } from "~/data/get-nav";
+
+export interface PageStore {
+	pageTitle: string;
+	section: string | null;
+	sectionData: Section | EntryFile[] | null;
+	prevPage: EntryFile | null;
+	nextPage: EntryFile | null;
 }
 
-export const DocsLayout: ParentComponent<DocsLayoutProps> = (props) => {
+export const DocsLayout: ParentComponent = (props) => {
+	let location = useLocation();
+	const entries = getEntries();
+
+	const [pageLocation, setPageLocation] = createSignal(
+		location.pathname.split("/").splice(1)
+	);
+
+	const [pageStore, setPageStore] = createStore<PageStore>({
+		pageTitle: "",
+		section: null,
+		sectionData:
+			location[0] === "references" ? entries()?.references : entries()?.learn,
+		prevPage: null,
+		nextPage: null,
+	});
+
+	const find = (findMe: string, data) => {
+		for (const section of data) {
+			if (section.slug === findMe) {
+				return setPageStore("pageTitle", section.title);
+			}
+			if (section.title.toLowerCase() === findMe.split("-").join(" ")) {
+				console.log(section.title);
+				return setPageStore({
+					section: section.title,
+					sectionData: section.children,
+				});
+			}
+		}
+	};
+
+	const headerInfo = () => {
+		for (let i = 0; i < pageLocation().length; i++) {
+			if (Array.isArray(pageStore.sectionData)) {
+				find(pageLocation()[i], pageStore.sectionData);
+			}
+		}
+	};
+
+	onMount(() => {
+		headerInfo();
+	});
+
+	onCleanup(() => {
+		setPageStore({
+			pageTitle: "",
+			section: null,
+			sectionData:
+				location[0] === "references" ? entries()?.references : entries()?.learn,
+			prevPage: null,
+			nextPage: null,
+		});
+	});
+
 	return (
 		<>
 			<div class="min-w-0 max-w-2xl flex-auto px-4 py-16 lg:max-w-none lg:pl-8 lg:pr-0 xl:px-16">
 				<article>
-					<DocsHeader title={props.title} section={props.section} />
+					<header class="mb-9 capitalize">
+						<Show when={pageStore.section}>
+							<p class="text-sm font-medium text-sky-500 my-1">
+								{pageStore.section}
+							</p>
+						</Show>
+						<h1 class="prose-headings:text-3xl text-slate-900 dark:text-white">
+							{pageStore.pageTitle}
+						</h1>
+					</header>
 					{props.children}
 				</article>
 			</div>

@@ -8,24 +8,8 @@ import {
 } from "solid-js";
 import { CalloutTip } from "~/ui/callout-tip";
 import { TabsCodeBlocks } from "~/ui/tab-code-blocks";
-import EraserLink, { getEraserLinkData } from "./EraserLink";
 
 type DefaultProps = { children: JSXElement };
-
-function EraserLinkOrNormalLink(props: ParentProps<{ href: string }>) {
-	const eraserLinkData = getEraserLinkData(props.href);
-	if (eraserLinkData) {
-		return <EraserLink linkData={eraserLinkData}>{props.children}</EraserLink>;
-	}
-	return (
-		<a
-			{...props}
-			class="prose-a:no-underline prose-a:shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#fff),inset_0_calc(-1*(var(--tw-prose-underline-size,4px)+2px))_0_0_var(--tw-prose-underline,theme(colors.sky.300))] hover:prose-a:[--tw-prose-underline-size:6px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:prose-a:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.sky.800))] dark:hover:prose-a:[--tw-prose-underline-size:6px]"
-		>
-			{props.children}
-		</a>
-	);
-}
 
 export default {
 	strong: (props: DefaultProps) => (
@@ -100,7 +84,14 @@ export default {
 			{props.children}
 		</p>
 	),
-	a: EraserLinkOrNormalLink,
+	a: (props: DefaultProps<{ href: string }>) => (
+		<a
+			{...props}
+			class="prose-a:no-underline prose-a:shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#fff),inset_0_calc(-1*(var(--tw-prose-underline-size,4px)+2px))_0_0_var(--tw-prose-underline,theme(colors.sky.300))] hover:prose-a:[--tw-prose-underline-size:6px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:prose-a:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.sky.800))] dark:hover:prose-a:[--tw-prose-underline-size:6px]"
+		>
+			{props.children}
+		</a>
+	),
 	li: (props: DefaultProps) => (
 		<li {...props} class="mb-2">
 			{props.children}

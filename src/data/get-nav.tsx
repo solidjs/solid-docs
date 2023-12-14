@@ -4,7 +4,7 @@ import path from "path"
 import matter, { GrayMatterFile } from "gray-matter"
 import { z } from "zod"
 
-type Section = {
+export type Section = {
 	type: "section"
 	title: string
 	children: (Section | EntryFile)[]
@@ -15,7 +15,7 @@ type FrontMatter = GrayMatterFile<string> & {
 	data: { title: string; }
 }
 
-type EntryFile = {
+export type EntryFile = {
 	type: "markdown"
 	path: string
 	slug: string

@@ -1,33 +1,32 @@
-import { A } from "@solidjs/router"
-import { For, Show } from "solid-js"
-import { useLocation } from "solid-start"
-import { getEntries } from "~/data/get-nav"
-import { Tabs } from "@kobalte/core"
-import { unwrap } from "solid-js/store"
+import { A } from "@solidjs/router";
+import { For, Show } from "solid-js";
+import { useLocation } from "solid-start";
+import { getEntries } from "~/data/get-nav";
+import { Tabs } from "@kobalte/core";
 
 type Entry = {
-	title: string
-	path: string
-	children?: Entry[]
-}
+	title: string;
+	path: string;
+	children?: Entry[];
+};
 
 function ListItemLink(props: { item: Entry }) {
-	const location = useLocation()
+	const location = useLocation();
 	const linkStyles = () =>
 		location.pathname === props.item.path
 			? "font-semibold text-sky-500 before:bg-sky-500 before:block"
-			: "text-slate-500 before:hidden before:bg-slate-300 hover:text-slate-600 hover:before:block dark:text-slate-400 dark:before:bg-slate-700 dark:hover:text-slate-300"
+			: "text-slate-500 before:hidden before:bg-slate-300 hover:text-slate-600 hover:before:block dark:text-slate-400 dark:before:bg-slate-700 dark:hover:text-slate-300";
 
 	return (
 		<li class="relative">
 			<A
 				href={props.item.path}
-				class={`block w-full pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full ${linkStyles()}`}
+				class={`capitalize block w-full pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full ${linkStyles()}`}
 			>
 				{props.item.title}
 			</A>
 		</li>
-	)
+	);
 }
 
 function DirList(props: { list: Entry[] }) {
@@ -67,20 +66,20 @@ function DirList(props: { list: Entry[] }) {
 								</For>
 							</ul>
 						</li>
-					)
+					);
 				} else {
-					return <ListItemLink item={item} />
+					return <ListItemLink item={item} />;
 				}
 			}}
 		</For>
-	)
+	);
 }
 
 export function MainNavigation() {
-	const entries = getEntries()
+	const entries = getEntries();
 
-	const learn = () => entries()?.learn
-	const references = () => entries()?.references
+	const learn = () => entries()?.learn;
+	const references = () => entries()?.references;
 
 	return (
 		<nav>
@@ -120,5 +119,5 @@ export function MainNavigation() {
 				</Tabs.Content>
 			</Tabs.Root>
 		</nav>
-	)
+	);
 }

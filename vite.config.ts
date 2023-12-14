@@ -23,4 +23,7 @@ export default defineConfig({
 			routesDir: "../content",
 		}),
 	],
+	ssr: {
+		noExternal: ["@kobalte/core", "@internationalized/message"],
+	  },
 })

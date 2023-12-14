@@ -33,12 +33,15 @@ export default {
 	),
 	h2: (props: DefaultProps) => {
 		return (
-			<h2
-				{...props}
-				class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
-			>
-				{props.children}
-			</h2>
+			<>
+				<hr class="dark:prose-hr:border-slate-800" />
+				<h2
+					{...props}
+					class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+				>
+					{props.children}
+				</h2>
+			</>
 		);
 	},
 	h3: (props: DefaultProps) => {

@@ -45,7 +45,7 @@ export const TableOfContents: Component = () => {
 						>
 							On this page
 						</h2>
-						<ol role="list" class="mt-4 space-y-3 text-sm list-none">
+						<ol role="list" class="mt-2 space-y-3 text-sm list-none">
 							{tableOfContents.map((section) => (
 								<li key={section.id}>
 									<h3>
@@ -60,7 +60,7 @@ export const TableOfContents: Component = () => {
 									{section.children.length > 0 && (
 										<ol
 											role="list"
-											class="mt-2 space-y-3 pl-5 text-slate-500 dark:text-slate-400 list-none"
+											class="space-y-3 pl-5 text-slate-500 dark:text-slate-400 list-none"
 										>
 											{section.children.map((subSection) => (
 												<li>

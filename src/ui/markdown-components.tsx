@@ -6,7 +6,7 @@ import {
 	mergeProps,
 	type JSXElement,
 } from "solid-js";
-import { CalloutTip } from "~/ui/callout-tip";
+import { Callout, CalloutProps } from "~/ui/callout";
 import { TabsCodeBlocks } from "~/ui/tab-code-blocks";
 
 type DefaultProps = { children: JSXElement };
@@ -15,8 +15,10 @@ export default {
 	strong: (props: DefaultProps) => (
 		<span class="font-bold">{props.children}</span>
 	),
-	CalloutTip: (props: DefaultProps) => (
-		<CalloutTip>{props.children}</CalloutTip>
+	Callout: (props: CalloutProps) => (
+		<Callout title={props.title} type={props.type}>
+			{props.children}
+		</Callout>
 	),
 	TabsCodeBlocks: (props: DefaultProps) => (
 		<TabsCodeBlocks>{props.children}</TabsCodeBlocks>

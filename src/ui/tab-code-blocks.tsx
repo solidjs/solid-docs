@@ -30,40 +30,58 @@ import { For, ParentComponent, Show, createSignal, onMount } from "solid-js"
  * </TabsCodeBlocks>
  */
 export const TabsCodeBlocks: ParentComponent = (props) => {
-	const [tabs, setTabs] = createSignal<[]>()
-	const [selectedTab, setSelectedTab] = createSignal<string>()
+	const [tabs, setTabs] = createSignal<Element[]>();
+	const [selectedTab, setSelectedTab] = createSignal<Element>();
+
+	const selectTabById = (id: string) => {
+		const tab = tabs()?.find((tab) => tab.id === id)
+		if (tab) setSelectedTab(tab)
+		else throw new Error(`Tab with id "${id}" not found`)
+	}
 
 	onMount(() => {
-		const childArray = props.children as []
-		setSelectedTab(childArray[0].id)
-		setTabs(childArray)
+		let children = props.children
+
+		// Check if children are an array
+		if (!Array.isArray(children)) throw new Error("TabsCodeBlocks children must be an array")
+
+		// Check if children are elements
+		const isArrayOfElements = (arr: any[]): arr is Element[] => {
+			return arr.every((item) => item instanceof Element);
+		};
+
+		if (!isArrayOfElements(children))
+			throw new Error("TabsCodeBlocks children must be an array of elements");
+
+		// Check if all elements have ids
+		const allElementsHaveIds = children.every((child) => "id" in child)
+
+		if (!allElementsHaveIds) throw new Error("All TabsCodeBlocks children must have an id")
+
+		setSelectedTab(children[0]);
+		setTabs(children)
 	})
 
 	return (
 		<div>
-			<For each={tabs()}>
-				{(tab) => (
-					<Show when={tab.id === selectedTab()}>
-						<nav>
-							<For each={tabs()}>
-								{(tab) => (
-									<button
-										classList={{
-											"dark:bg-black bg-white rounded-t-lg dark:text-blue-300 text-blue-400 font-bold":
-												selectedTab() === tab.id,
-											"p-2": true,
-										}}
-										onclick={() => setSelectedTab(tab.id)}
-									>
-										{tab.id}
-									</button>
-								)}
-							</For>
-						</nav>
-						<div class="-mt-10">{tab}</div>
-					</Show>
-				)}
-			</For>
+			<nav class="relative top-4 border-b-2 border-slate-800">
+				<For each={tabs()}>
+					{(tab) => (
+						<button
+							classList={{
+								"font-bold text-slate-300 border-b-2 border-sky-500":
+									selectedTab()?.id === tab.id,
+								"px-5 py-1 transition-colors duration-300": true,
+							}}
+							onclick={() => selectTabById(tab.id)}
+						>
+							{tab.id}
+						</button>
+					)}
+				</For>
+			</nav>
+
+			{selectedTab()}
 		</div>
-	)
+	);
 }

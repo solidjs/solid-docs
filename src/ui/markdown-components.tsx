@@ -84,7 +84,7 @@ export default {
 			{props.children}
 		</p>
 	),
-	a: (props: DefaultProps<{ href: string }>) => (
+	a: (props: DefaultProps) => (
 		<a
 			{...props}
 			class="prose-a:no-underline prose-a:shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#fff),inset_0_calc(-1*(var(--tw-prose-underline-size,4px)+2px))_0_0_var(--tw-prose-underline,theme(colors.sky.300))] hover:prose-a:[--tw-prose-underline-size:6px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:prose-a:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.sky.800))] dark:hover:prose-a:[--tw-prose-underline-size:6px]"
@@ -117,21 +117,26 @@ export default {
 			components does work
 		</p>
 	),
+	pre: (props: DefaultProps) => {
+		return (
+			<pre
+				{...props}
+				class="[&>code]:bg-transparent [&>code]:p-0 custom-scroll-bar"
+			>
+				{props.children}
+			</pre>
+		);
+	},
 	code: (props: DefaultProps) => {
 		return (
-			<code class="text-mono text-sm" {...props}>
+			<code
+				class="inline-block not-prose text-mono bg-slate-800/60 px-1.5 py-0.5 rounded-lg"
+				{...props}
+			>
 				{props.children}
 			</code>
 		);
 	},
-	pre: (props: DefaultProps) => (
-		<pre
-			{...props}
-			class="prose-pre:rounded-xl prose-pre:bg-slate-900 prose-pre:shadow-lg dark:prose-pre:bg-slate-800/60 dark:prose-pre:shadow-none dark:prose-pre:ring-1 dark:prose-pre:ring-slate-300/10"
-		>
-			{props.children}
-		</pre>
-	),
 	table: (props: DefaultProps) => <table>{props.children}</table>,
 	th: (props: DefaultProps) => <th>{props.children}</th>,
 	thead: (props: DefaultProps) => <thead>{props.children}</thead>,

@@ -20,7 +20,7 @@ function ListItemLink(props: { item: Entry }) {
 		<li class="relative">
 			<A
 				href={props.item.path}
-				class={`capitalize block w-full text-sm pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full ${linkStyles()}`}
+				class={`block w-full text-sm pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full ${linkStyles()}`}
 			>
 				{props.item.title}
 			</A>

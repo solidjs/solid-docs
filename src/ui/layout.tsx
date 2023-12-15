@@ -26,7 +26,7 @@ export const Layout: ParentComponent = (props) => {
 						<MainNavigation />
 					</div>
 				</div>
-				<main class="min-w-0 max-w-3xl flex-auto px-4 py-16 lg:max-w-none lg:pl-8 lg:pr-0 xl:px-6 prose prose-slate dark:prose-invert dark:text-slate-400">
+				<main class="min-w-0 max-w-3xl flex-auto py-16 lg:max-w-none lg:pr-0 prose prose-slate dark:prose-invert dark:text-slate-400">
 					<Show when={!isRoot()}>
 						<DocsLayout>{props.children}</DocsLayout>
 					</Show>

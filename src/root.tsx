@@ -27,7 +27,7 @@ export default function Root() {
 					<Meta name="viewport" content="width=device-width, initial-scale=1" />
 					<Link rel="shortcut icon" href="/favicon.ico" />
 				</Head>
-				<Body class="flex min-h-full bg-white dark:bg-slate-900">
+				<Body class="flex min-h-full bg-white dark:bg-slate-900 subpixel-antialiased">
 					<Layout>
 						<MDXProvider components={Md}>
 							<Routes>

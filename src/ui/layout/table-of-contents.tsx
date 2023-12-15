@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import { Component, For, Show } from "solid-js";
 import { A, useLocation } from "solid-start";
 
 export const TableOfContents: Component = () => {
@@ -35,51 +35,55 @@ export const TableOfContents: Component = () => {
 	];
 
 	return (
-		<div class="hidden xl:sticky xl:top-[4.75rem] xl:-mr-6 xl:block xl:h-[calc(100vh-4.75rem)] xl:flex-none xl:overflow-y-auto xl:py-4 xl:pr-6">
+		<div class="hidden xl:sticky xl:top-[4.75rem] xl:-mr-6 xl:block xl:h-[calc(100vh-4.75rem)] xl:flex-none xl:overflow-y-auto xl:py-4">
 			<nav aria-labelledby="on-this-page-title" class="w-56">
-				{tableOfContents.length > 0 && (
+				<Show when={tableOfContents.length > 0}>
 					<>
 						<h2
 							id="on-this-page-title"
-							class="font-display text-sm font-medium text-slate-900 dark:text-white"
+							class="font-display text-base font-medium text-slate-900 dark:text-white"
 						>
 							On this page
 						</h2>
-						<ol role="list" class="mt-2 space-y-3 text-sm list-none">
-							{tableOfContents.map((section) => (
-								<li key={section.id}>
-									<h3>
-										<A
-											href={`${location.pathname}#${section.id}`}
-											activeClass="text-sky-500"
-											inactiveClass="font-normal text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
-										>
-											{section.title}
-										</A>
-									</h3>
-									{section.children.length > 0 && (
-										<ol
-											role="list"
-											class="space-y-3 pl-5 text-slate-500 dark:text-slate-400 list-none"
-										>
-											{section.children.map((subSection) => (
-												<li>
-													<A
-														href={`${location.pathname}#${subSection.id}`}
-														activeClass="text-sky-500"
-														inactiveClass="hover:text-slate-600 dark:hover:text-slate-300"
-													>
-														{subSection.title}
-													</A>
-												</li>
-											))}
-										</ol>
-									)}
-								</li>
-							))}
+						<ol role="list" class="text-sm list-none p-0">
+							<For each={tableOfContents}>
+								{(section) => (
+									<li class="pl-0">
+										<h3 class="mt-2">
+											<A
+												href={`${location.pathname}#${section.id}`}
+												activeClass="text-sky-500"
+												class="font-normal text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 no-underline text-sm"
+											>
+												{section.title}
+											</A>
+										</h3>
+										<Show when={section.children.length > 0}>
+											<ol
+												role="list"
+												class="space-y-2 pl-5 text-slate-500 dark:text-slate-400 list-none"
+											>
+												<For each={section.children}>
+													{(subSection) => (
+														<li>
+															<A
+																href={`${location.pathname}#${subSection.id}`}
+																activeClass="text-sky-500"
+																class="no-underline hover:text-slate-600 dark:hover:text-slate-300 text-sm"
+															>
+																{subSection.title}
+															</A>
+														</li>
+													)}
+												</For>
+											</ol>
+										</Show>
+									</li>
+								)}
+							</For>
 						</ol>
 					</>
-				)}
+				</Show>
 			</nav>
 		</div>
 	);

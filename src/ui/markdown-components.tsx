@@ -13,7 +13,7 @@ type DefaultProps = { children: JSXElement };
 
 export default {
 	strong: (props: DefaultProps) => (
-		<span class="font-bold">{props.children}</span>
+		<span class="font-semibold text-slate-300">{props.children}</span>
 	),
 	Callout: (props: CalloutProps) => (
 		<Callout title={props.title} type={props.type}>
@@ -92,7 +92,7 @@ export default {
 	a: (props: DefaultProps) => (
 		<a
 			{...props}
-			class="prose-a:no-underline prose-a:shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#fff),inset_0_calc(-1*(var(--tw-prose-underline-size,4px)+2px))_0_0_var(--tw-prose-underline,theme(colors.sky.300))] hover:prose-a:[--tw-prose-underline-size:6px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:prose-a:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.sky.800))] dark:hover:prose-a:[--tw-prose-underline-size:6px]"
+			class="no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#fff),inset_0_calc(-1*(var(--tw-prose-underline-size,4px)+2px))_0_0_var(--tw-prose-underline,theme(colors.sky.300))] hover:[--tw-prose-underline-size:6px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.sky.800))] dark:hover:[--tw-prose-underline-size:6px] text-sky-300 font-medium"
 		>
 			{props.children}
 		</a>
@@ -135,7 +135,7 @@ export default {
 	code: (props: DefaultProps) => {
 		return (
 			<code
-				class="inline-block not-prose text-mono bg-slate-800/60 px-1.5 py-0.5 rounded-lg"
+				class="inline-block not-prose text-mono bg-slate-800/70 text-slate-300 px-1 py-[1px] rounded-lg text-sm"
 				{...props}
 			>
 				{props.children}

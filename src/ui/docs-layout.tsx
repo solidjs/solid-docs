@@ -1,29 +1,19 @@
 import { ParentComponent, Show } from "solid-js";
 import { useLocation, useMatch } from "solid-start";
 import flatEntries from "solid:collection/entries";
-
 import { TableOfContents } from "./layout/table-of-contents";
-
-export interface PageStore {
-	pageTitle: string;
-	section: string | null;
-}
-
-function Pagination() {
-	return;
-}
+import { Pagination } from "~/ui/pagination";
 
 export const DocsLayout: ParentComponent = (props) => {
 	const location = useLocation();
 	const paths = () => location.pathname.split("/").reverse();
 	const isReference = useMatch(() => "/reference/*");
+	const collection = () =>
+		Boolean(isReference()) ? flatEntries.references : flatEntries.learn;
+	const entryIndex = () =>
+		collection().findIndex((element) => paths()[0] === element.slug);
 	const titles = () => {
-		const collection = Boolean(isReference())
-			? flatEntries.references
-			: flatEntries.learn;
-
-		const fullEntry = collection.find((element) => paths()[0] === element.slug);
-
+		const fullEntry = collection()[entryIndex()];
 		return {
 			parent: fullEntry?.parent,
 			title: fullEntry?.title,
@@ -49,6 +39,7 @@ export const DocsLayout: ParentComponent = (props) => {
 						</Show>
 					</header>
 					{props.children}
+					<Pagination currentIndex={entryIndex()} collection={collection()} />
 				</article>
 			</div>
 			<TableOfContents />

@@ -51,7 +51,7 @@ async function getDirData(dirPath = process.cwd()) {
 
 async function buildFileTree(entry = "content") {
 	const entryPath = path.resolve(process.cwd(), entry);
-	const parentSegment = path.parse(entryPath).dir.split(path.sep).pop();
+	const parentSegment = path.parse(entryPath).dir;
 	const stats = await fs.stat(entryPath);
 
 	if (stats.isDirectory()) {
@@ -67,11 +67,12 @@ async function buildFileTree(entry = "content") {
 			type: "section",
 			title: info.title,
 			pages: info.pages,
-			parent: parentSegment,
 			children: nested.filter(Boolean),
 		};
 	} else if (!entryPath.includes("data.json")) {
 		const file = await fs.readFile(entryPath, "utf-8");
+		const parentSection = await getDirData(path.resolve(parentSegment));
+
 		const { title } = matter(file).data;
 
 		/**
@@ -87,7 +88,7 @@ async function buildFileTree(entry = "content") {
 					.relative(path.join(process.cwd(), "content"), entryPath)
 					.replace(/\.mdx?/, ""),
 			slug: path.basename(entryPath, path.extname(entryPath)),
-			parent: parentSegment,
+			parent: parentSection.title,
 			title,
 		};
 	} else {
@@ -96,7 +97,7 @@ async function buildFileTree(entry = "content") {
 	}
 }
 
-(async function createNavTree() {
+async function createNavTree() {
 	const [learn, references] = await Promise.all([
 		buildFileTree("content"),
 		buildFileTree("content/reference"),
@@ -108,20 +109,62 @@ async function buildFileTree(entry = "content") {
 		references &&
 		references.type === "section"
 	) {
-		const result = {
+		return {
 			references: references.children,
 			learn: learn.children,
 		};
-
-		const collectionDir = path.resolve(process.cwd(), ".solid");
-
-		if (!existsSync(collectionDir)) {
-			fs.mkdir(path.resolve(process.cwd(), ".solid"));
-		}
-
-		fs.writeFile(
-			path.resolve(collectionDir, "tree.ts"),
-			`export default ${JSON.stringify(result, null, 2)} as const`
-		);
 	}
+}
+
+/**
+ *
+ * @param {string} fileName
+ * @param {object} fileContent
+ * @param {string} collectionDir
+ */
+async function writeFile(fileName, fileContent, collectionDir = ".solid") {
+	fs.writeFile(
+		path.resolve(collectionDir, fileName),
+		`export default ${JSON.stringify(fileContent, null, 2)} as const`
+	);
+}
+
+async function createSolidCollectionDir() {
+	const collectionDir = path.resolve(process.cwd(), ".solid");
+
+	if (!existsSync(collectionDir)) {
+		fs.mkdir(path.resolve(process.cwd(), ".solid"));
+	}
+}
+
+/**
+ *
+ * @param {Awaited<ReturnType<typeof createNavTree>>} tree
+ * @param {object} entryMap
+ */
+function createFlatEntryList(tree, entryMap) {
+	for (const item of tree) {
+		if (item.type === "markdown") {
+			if (entryMap.findIndex((e) => e.slug === item.slug) > -1) {
+				console.error(`Duplicated entry found: ${item.slug}`);
+				break;
+			}
+			entryMap.push(item);
+		} else {
+			createFlatEntryList(item.children, entryMap);
+		}
+	}
+
+	return entryMap;
+}
+
+(async () => {
+	const tree = await createNavTree();
+	const learnMap = createFlatEntryList(tree.learn, []);
+	const referenceMap = createFlatEntryList(tree.references, []);
+
+	await Promise.all([
+		writeFile("tree.ts", tree),
+		writeFile("entries.ts", { references: referenceMap, learn: learnMap }),
+	]);
 })();

@@ -9,6 +9,7 @@ import { nodeTypes } from "@mdx-js/mdx";
 import remarkGfm from "remark-gfm";
 
 import tree from ".solid/tree";
+import entries from ".solid/entries";
 
 function docsTree() {
 	const virtualModuleId = "solid:collection/tree";
@@ -24,6 +25,25 @@ function docsTree() {
 		load(id: string) {
 			if (id === resolveVirtualModuleId) {
 				return `export default ${JSON.stringify(tree, null, 2)}`;
+			}
+		},
+	};
+}
+
+function docsEntries() {
+	const virtualModuleId = "solid:collection/entries";
+	const resolveVirtualModuleId = "\0" + virtualModuleId;
+
+	return {
+		name: "solid:collection/entries",
+		resolveId(id: string) {
+			if (id === virtualModuleId) {
+				return resolveVirtualModuleId;
+			}
+		},
+		load(id: string) {
+			if (id === resolveVirtualModuleId) {
+				return `export default ${JSON.stringify(entries, null, 2)}`;
 			}
 		},
 	};
@@ -48,6 +68,7 @@ export default defineConfig({
 			routesDir: "../content",
 		}),
 		docsTree(),
+		docsEntries(),
 	],
 	ssr: {
 		noExternal: ["@kobalte/core", "@internationalized/message"],

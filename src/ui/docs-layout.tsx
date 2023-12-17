@@ -15,7 +15,7 @@ export const DocsLayout: ParentComponent = (props) => {
 	const titles = () => {
 		const fullEntry = collection()[entryIndex()];
 		return {
-			parent: fullEntry?.parent,
+			parent: fullEntry?.parent !== "root" ? fullEntry.parent : undefined,
 			title: fullEntry?.title,
 		};
 	};

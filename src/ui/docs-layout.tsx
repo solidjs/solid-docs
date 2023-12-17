@@ -9,10 +9,14 @@ export interface PageStore {
 	section: string | null;
 }
 
+function Pagination() {
+	return;
+}
+
 export const DocsLayout: ParentComponent = (props) => {
 	const location = useLocation();
 	const paths = () => location.pathname.split("/").reverse();
-	const isReference = useMatch(() => "/reference");
+	const isReference = useMatch(() => "/reference/*");
 	const titles = () => {
 		const collection = Boolean(isReference())
 			? flatEntries.references
@@ -25,7 +29,6 @@ export const DocsLayout: ParentComponent = (props) => {
 			title: fullEntry?.title,
 		};
 	};
-	const entryTitle = () => paths()[0].replaceAll("-", " ");
 
 	return (
 		<div class="flex">

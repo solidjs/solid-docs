@@ -1,8 +1,8 @@
 import { A } from "@solidjs/router";
 import { For, Show } from "solid-js";
 import { useLocation } from "solid-start";
-import { getEntries } from "~/data/get-nav";
 import { Tabs } from "@kobalte/core";
+import nav from "solid:collection/tree";
 
 type Entry = {
 	title: string;
@@ -75,10 +75,10 @@ function DirList(props: { list: Entry[] }) {
 }
 
 export function MainNavigation() {
-	const entries = getEntries();
+	const entries = nav;
 
-	const learn = () => entries()?.learn;
-	const references = () => entries()?.references;
+	const learn = () => entries.learn;
+	const references = () => entries.references;
 
 	return (
 		<nav>

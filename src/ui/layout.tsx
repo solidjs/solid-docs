@@ -27,7 +27,7 @@ export const Layout: ParentComponent = (props) => {
 					</div>
 				</div>
 				<main class="min-w-0 max-w-3xl flex-auto py-16 lg:max-w-none lg:pr-0 prose prose-slate dark:prose-invert dark:text-slate-400">
-					<Show when={!isRoot()}>
+					<Show when={!isRoot()} keyed>
 						<DocsLayout>{props.children}</DocsLayout>
 					</Show>
 				</main>

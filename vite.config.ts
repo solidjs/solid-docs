@@ -8,6 +8,27 @@ import rehypeRaw from "rehype-raw";
 import { nodeTypes } from "@mdx-js/mdx";
 import remarkGfm from "remark-gfm";
 
+import tree from ".solid/tree";
+
+function docsTree() {
+	const virtualModuleId = "solid:collection/tree";
+	const resolveVirtualModuleId = "\0" + virtualModuleId;
+
+	return {
+		name: "solid:collection/tree",
+		resolveId(id: string) {
+			if (id === virtualModuleId) {
+				return resolveVirtualModuleId;
+			}
+		},
+		load(id: string) {
+			if (id === resolveVirtualModuleId) {
+				return `export default ${JSON.stringify(tree, null, 2)}`;
+			}
+		},
+	};
+}
+
 const adapter = process.env.GITHUB_ACTIONS ? node() : netlify();
 export default defineConfig({
 	plugins: [
@@ -26,6 +47,7 @@ export default defineConfig({
 			extensions: [".mdx", ".md"],
 			routesDir: "../content",
 		}),
+		docsTree(),
 	],
 	ssr: {
 		noExternal: ["@kobalte/core", "@internationalized/message"],

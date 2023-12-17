@@ -1,4 +1,4 @@
-import { ParentComponent } from "solid-js";
+import { ParentComponent, Show } from "solid-js";
 import { useLocation, useMatch } from "solid-start";
 import flatEntries from "solid:collection/entries";
 
@@ -22,7 +22,7 @@ export const DocsLayout: ParentComponent = (props) => {
 
 		return {
 			parent: fullEntry?.parent,
-			title: fullEntry?.title as string,
+			title: fullEntry?.title,
 		};
 	};
 	const entryTitle = () => paths()[0].replaceAll("-", " ");
@@ -32,13 +32,18 @@ export const DocsLayout: ParentComponent = (props) => {
 			<div class="min-w-0 max-w-2xl flex-auto pb-16 lg:max-w-none">
 				<article class="prose-pre:rounded-xl prose-pre:bg-slate-900 prose-pre:shadow-lg dark:prose-pre:bg-slate-800/60 dark:prose-pre:shadow-none dark:prose-pre:ring-1 dark:prose-pre:ring-slate-300/10 px-10">
 					<header class="mb-9 capitalize">
-						<p class="text-sm font-medium text-sky-500 my-1">
-							{titles().parent}
-						</p>
-
-						<h1 class="prose-headings:text-3xl text-slate-900 dark:text-white">
-							{titles().title}
-						</h1>
+						<Show when={titles().parent}>
+							{(t) => (
+								<p class="text-sm font-medium text-sky-500 my-1">{t()}</p>
+							)}
+						</Show>
+						<Show when={titles().title}>
+							{(t) => (
+								<h1 class="prose-headings:text-3xl text-slate-900 dark:text-white">
+									{t()}
+								</h1>
+							)}
+						</Show>
 					</header>
 					{props.children}
 				</article>

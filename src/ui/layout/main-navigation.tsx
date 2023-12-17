@@ -1,4 +1,4 @@
-import { A } from "@solidjs/router";
+import { A, useMatch } from "@solidjs/router";
 import { For, Show } from "solid-js";
 import { useLocation } from "solid-start";
 import { Tabs } from "@kobalte/core";
@@ -80,9 +80,11 @@ export function MainNavigation() {
 	const learn = () => entries.learn;
 	const references = () => entries.references;
 
+	const isReference = useMatch(() => "/reference/*");
+
 	return (
 		<nav>
-			<Tabs.Root>
+			<Tabs.Root defaultValue={isReference() ? "reference" : "learn"}>
 				<Tabs.List class="w-full relative pb-6">
 					<Tabs.Trigger
 						value="learn"

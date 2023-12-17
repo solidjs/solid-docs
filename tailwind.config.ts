@@ -1,5 +1,7 @@
 import { Config } from "tailwindcss"
 import typography from "@tailwindcss/typography"
+import scrollbar from "tailwind-scrollbar";
+import kobalte from "@kobalte/tailwindcss";
 
 export default {
 	content: [
@@ -34,6 +36,6 @@ export default {
       },
 		},
 	},
-	plugins: [typography()],
+	plugins: [typography(), scrollbar({ nocompatible: true}), kobalte({ prefix: "kb" })],
 } satisfies Config
 

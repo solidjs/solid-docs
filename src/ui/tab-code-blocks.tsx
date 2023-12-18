@@ -17,12 +17,12 @@ import { For, ParentComponent, Show, createSignal, onMount } from "solid-js"
  * //jsx
  * <TabsCodeBlocks>
  * 	<div id="npm">
- * 		\```bash
+ * 		\```bash frame="none"
  * 			npm install
  * 		\```
  * 	</div>
  * 	<div id="yarn">
- * 		\```bash
+ * 		\```bash frame="none"
  * 			yarn install
  * 		\```
  * 	</div>
@@ -64,14 +64,14 @@ export const TabsCodeBlocks: ParentComponent = (props) => {
 
 	return (
 		<div>
-			<nav class="relative top-4 border-b-2 border-slate-800">
+			<nav class="mb-2 border-b-2 border-slate-800">
 				<For each={tabs()}>
 					{(tab) => (
 						<button
 							classList={{
 								"font-bold text-slate-300 border-b-2 border-sky-500":
 									selectedTab()?.id === tab.id,
-								"px-5 py-1 transition-colors duration-300": true,
+								"px-5 py-1 relative top-0.5 transition-colors duration-300": true,
 							}}
 							onclick={() => selectTabById(tab.id)}
 						>

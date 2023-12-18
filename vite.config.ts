@@ -7,6 +7,7 @@ import remarkFrontmatter from "remark-frontmatter";
 import rehypeRaw from "rehype-raw";
 import { nodeTypes } from "@mdx-js/mdx";
 import remarkGfm from "remark-gfm";
+import remarkExpressiveCode from "remark-expressive-code";
 
 import tree from ".solid/tree";
 import entries from ".solid/entries";
@@ -58,7 +59,17 @@ export default defineConfig({
 				jsxImportSource: "solid-js",
 				providerImportSource: "solid-mdx",
 				rehypePlugins: [[rehypeRaw, { passThrough: nodeTypes }]],
-				remarkPlugins: [remarkFrontmatter, remarkGfm],
+				remarkPlugins: [
+					remarkFrontmatter,
+					remarkGfm,
+					[
+						remarkExpressiveCode,
+						{
+							theme: "material-theme-ocean",
+							frame: false,
+						},
+					],
+				],
 			}),
 			enforce: "pre",
 		} as PluginOption,

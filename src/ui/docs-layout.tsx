@@ -23,7 +23,7 @@ export const DocsLayout: ParentComponent = (props) => {
 	return (
 		<div class="flex">
 			<div class="min-w-0 max-w-2xl flex-auto pb-16 lg:max-w-none">
-				<article class="prose-pre:rounded-xl prose-pre:bg-slate-900 prose-pre:shadow-lg dark:prose-pre:bg-slate-800/60 dark:prose-pre:shadow-none dark:prose-pre:ring-1 dark:prose-pre:ring-slate-300/10 px-10">
+				<article class="px-10 expressive-code-overrides">
 					<header class="mb-9 capitalize">
 						<Show when={titles().parent}>
 							{(t) => (

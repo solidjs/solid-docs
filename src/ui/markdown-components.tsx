@@ -126,7 +126,7 @@ export default {
 		return (
 			<pre
 				{...props}
-				class="[&>code]:bg-transparent [&>code]:p-0 custom-scroll-bar"
+				class="[&>code]:bg-transparent [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal custom-scroll-bar"
 			>
 				{props.children}
 			</pre>
@@ -135,7 +135,7 @@ export default {
 	code: (props: DefaultProps) => {
 		return (
 			<code
-				class="inline-block not-prose text-mono bg-slate-800/70 text-slate-300 px-1 py-[1px] rounded-lg text-sm"
+				class="inline-block not-prose text-mono bg-slate-800/70 text-slate-300 px-1.5 py-0.5 rounded-lg text-[0.8em] leading-snug"
 				{...props}
 			>
 				{props.children}

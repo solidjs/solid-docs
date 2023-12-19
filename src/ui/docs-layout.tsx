@@ -1,4 +1,4 @@
-import { ParentComponent, Show } from "solid-js";
+import { ParentComponent, Show, createEffect } from "solid-js";
 import { useLocation, useMatch } from "solid-start";
 import flatEntries from "solid:collection/entries";
 import { TableOfContents } from "./layout/table-of-contents";

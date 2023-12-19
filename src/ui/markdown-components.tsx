@@ -1,4 +1,4 @@
-import { Link } from "@solidjs/router";
+import { onMount } from "solid-js";
 import {
 	createEffect,
 	createUniqueId,
@@ -6,10 +6,28 @@ import {
 	mergeProps,
 	type JSXElement,
 } from "solid-js";
+import { usePageState } from "~/data/page-state";
 import { Callout, CalloutProps } from "~/ui/callout";
 import { TabsCodeBlocks } from "~/ui/tab-code-blocks";
 
 type DefaultProps = { children: JSXElement };
+
+function getSectionString(children: unknown): string {
+	if (typeof children == "string") {
+		return children as string;
+	}
+	if (children instanceof Element) {
+		const e = document.createElement("textarea");
+		e.innerHTML = children.innerHTML;
+		return e.childNodes.length === 0 ? "" : e.childNodes[0].nodeValue;
+	}
+	if (Array.isArray(children)) {
+		let str = "";
+		children.forEach((item) => (str += getSectionString(item)));
+		return str;
+	}
+	return "";
+}
 
 export default {
 	strong: (props: DefaultProps) => (
@@ -34,6 +52,10 @@ export default {
 		</h1>
 	),
 	h2: (props: DefaultProps) => {
+		const { addSection } = usePageState();
+		onMount(() => {
+			addSection(getSectionString(props.children), 2);
+		});
 		return (
 			<>
 				<hr class="dark:prose-hr:border-slate-800" />
@@ -47,6 +69,10 @@ export default {
 		);
 	},
 	h3: (props: DefaultProps) => {
+		const { addSection } = usePageState();
+		onMount(() => {
+			addSection(getSectionString(props.children), 3);
+		});
 		return (
 			<h3
 				{...props}

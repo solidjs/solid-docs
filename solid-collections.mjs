@@ -160,6 +160,7 @@ function createFlatEntryList(tree, entryMap) {
 
 (async () => {
 	const tree = await createNavTree();
+	await createSolidCollectionDir();
 	const learnMap = createFlatEntryList(tree.learn, []);
 	const referenceMap = createFlatEntryList(tree.references, []);
 

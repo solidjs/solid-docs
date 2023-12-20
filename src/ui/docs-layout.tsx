@@ -50,7 +50,6 @@ export const DocsLayout: ParentComponent = (props) => {
 				path: location.pathname,
 				sections: sections,
 			});
-			console.log(pageSections);
 		}
 	});
 

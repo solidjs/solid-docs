@@ -8,14 +8,11 @@ export function MainHeader() {
 	const [isScrolled, setIsScrolled] = createSignal(false);
 
 	if (!isServer) {
-		console.log("MainHeader");
 		const onScroll = () => {
-			console.log("MainHeader scrolled", window.scrollY > 0);
 			setIsScrolled(window.scrollY > 0);
 		};
 
 		onMount(() => {
-			console.log("MainHeader 2");
 			onScroll();
 			window.addEventListener("scroll", onScroll, { passive: true });
 		});

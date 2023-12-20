@@ -1,11 +1,14 @@
-import { ParentComponent, Show, createEffect } from "solid-js";
+import { ParentComponent, Show, createEffect, onMount } from "solid-js";
 import { useLocation, useMatch } from "solid-start";
 import flatEntries from "solid:collection/entries";
 import { TableOfContents } from "./layout/table-of-contents";
 import { Pagination } from "~/ui/pagination";
+import { usePageState } from "~/data/page-state";
 
 export const DocsLayout: ParentComponent = (props) => {
 	const location = useLocation();
+	const { setPageSections, pageSections } = usePageState();
+
 	const paths = () => location.pathname.split("/").reverse();
 	const isReference = useMatch(() => "/reference/*");
 	const collection = () =>
@@ -19,6 +22,37 @@ export const DocsLayout: ParentComponent = (props) => {
 			title: fullEntry?.title,
 		};
 	};
+
+	createEffect(() => {
+		if (location.pathname !== pageSections.path) {
+			const headings = document?.querySelectorAll("h2, h3");
+			const sections: any = [];
+
+			if (headings) {
+				headings.forEach((heading) => {
+					if (heading.tagName === "H2") {
+						sections.push({
+							text: heading.textContent,
+							id: heading.id,
+							level: 2,
+							children: [],
+						});
+					} else if (heading.tagName === "H3") {
+						sections[sections.length - 1].children.push({
+							text: heading.textContent,
+							id: heading.id,
+							level: 3,
+						});
+					}
+				});
+			}
+			setPageSections({
+				path: location.pathname,
+				sections: sections,
+			});
+			console.log(pageSections);
+		}
+	});
 
 	return (
 		<div class="flex">

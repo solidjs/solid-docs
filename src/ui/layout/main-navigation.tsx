@@ -35,9 +35,9 @@ function DirList(props: { list: Entry[] }) {
 				if (Array.isArray(item.children)) {
 					return (
 						<li>
-							<h2 class="font-display font-medium text-slate-900 dark:text-white">
+							<span class="font-display font-medium text-slate-900 dark:text-white">
 								{item.title}
-							</h2>
+							</span>
 							<ul
 								role="list"
 								class="mt-2 space-y-2 border-l-2 border-slate-100 dark:border-slate-800 lg:mt-4 lg:space-y-4 lg:border-slate-200"
@@ -47,9 +47,9 @@ function DirList(props: { list: Entry[] }) {
 										Array.isArray(child.children) ? (
 											<li>
 												<div class="relative">
-													<h3 class="block w-full pl-3.5 font-display font-medium before:pointer-events-none text-slate-400 dark:text-slate-300">
+													<span class="block w-full pl-3.5 font-display font-medium before:pointer-events-none text-slate-400 dark:text-slate-300">
 														{child.title}
-													</h3>
+													</span>
 												</div>
 												<ul
 													role="list"

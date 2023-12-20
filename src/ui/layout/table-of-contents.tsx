@@ -1,30 +1,73 @@
-import { Component, For, Index, Show, createEffect } from "solid-js";
-import { A, useLocation } from "solid-start";
+import {
+	Component,
+	Index,
+	Show,
+	createEffect,
+	onCleanup,
+	createSignal,
+} from "solid-js";
+import { A } from "solid-start";
 import { usePageState } from "~/data/page-state";
 
 export const TableOfContents: Component = () => {
-	const location = useLocation();
 	const { pageSections } = usePageState();
+	const [currentSection, setCurrentSection] = createSignal("");
+
+	const onScroll = () => {
+		// console log the heading of the current section when the user scrolls
+		const headings = document.querySelectorAll("h2, h3");
+		let currentSection = "";
+		headings.forEach((heading) => {
+			if (heading.getBoundingClientRect().top < 0) {
+				currentSection = heading.id;
+			}
+		});
+		setCurrentSection(currentSection);
+	};
+
+	createEffect(() => {
+		window.addEventListener("scroll", onScroll);
+		onCleanup(() => {
+			window.removeEventListener("scroll", onScroll);
+		});
+	});
+
+	createEffect(() => {
+		isActive(pageSections.sections[0]);
+	});
+
+	let isActive = (section) => {
+		if (section.id === currentSection()) {
+			return true;
+		}
+		if (!section.children) {
+			return false;
+		}
+		return section.children.findIndex(isActive) > -1;
+	};
 
 	return (
 		<div class="hidden xl:sticky xl:top-[4.75rem] xl:-mr-6 xl:block xl:h-[calc(100vh-4.75rem)] xl:flex-none xl:overflow-y-auto xl:py-4">
 			<nav aria-labelledby="on-this-page-title" class="w-56">
-				<h2 class="font-display text-base font-medium text-slate-900 dark:text-white">
+				<span class="font-display text-base font-medium text-slate-900 dark:text-white">
 					On this page
-				</h2>
+				</span>
 				<ol role="list" class="text-sm list-none p-0">
 					<Index each={pageSections.sections}>
 						{(section) => (
 							<li class="pl-0">
-								<h3 class="mt-2">
-									<A
-										href={`${pageSections.path}#${section().id}`}
-										activeClass="text-sky-500"
-										class="font-normal text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 no-underline text-sm"
+								<span class="mt-2">
+									<a
+										href={`#${section().id}`}
+										classList={{
+											"dark:text-slate-400": currentSection() !== section().id,
+											"text-sky-500": currentSection() === section().id,
+										}}
+										class="no-underline hover:text-slate-700 dark:hover:text-slate-300"
 									>
-										{section().title}
-									</A>
-								</h3>
+										{section().text}
+									</a>
+								</span>
 								<Show when={section().children.length !== 0}>
 									<ol
 										role="list"
@@ -33,13 +76,18 @@ export const TableOfContents: Component = () => {
 										<Index each={section().children}>
 											{(subSection) => (
 												<li>
-													<A
-														href={`${location.pathname}#${subSection().id}`}
-														activeClass="text-sky-500"
-														class="no-underline hover:text-slate-600 dark:hover:text-slate-300 text-sm"
+													<a
+														href={`#${subSection().id}`}
+														classList={{
+															"dark:text-slate-400":
+																currentSection() !== subSection().id,
+															"text-sky-500":
+																currentSection() === subSection().id,
+														}}
+														class="no-underline hover:text-slate-700 dark:hover:text-slate-300"
 													>
-														{subSection().title}
-													</A>
+														{subSection().text}
+													</a>
 												</li>
 											)}
 										</Index>

@@ -8,6 +8,8 @@ import rehypeRaw from "rehype-raw";
 import { nodeTypes } from "@mdx-js/mdx";
 import remarkGfm from "remark-gfm";
 import remarkExpressiveCode from "remark-expressive-code";
+import rehypeSlug from "rehype-slug";
+import rehypeAutoLinkHeadings from "rehype-autolink-headings";
 
 import tree from ".solid/tree";
 import entries from ".solid/entries";
@@ -51,6 +53,7 @@ function docsEntries() {
 }
 
 const adapter = process.env.GITHUB_ACTIONS ? node() : netlify();
+
 export default defineConfig({
 	plugins: [
 		{
@@ -58,7 +61,16 @@ export default defineConfig({
 				jsx: true,
 				jsxImportSource: "solid-js",
 				providerImportSource: "solid-mdx",
-				rehypePlugins: [[rehypeRaw, { passThrough: nodeTypes }]],
+				rehypePlugins: [
+					[
+						rehypeRaw,
+						{
+							passThrough: nodeTypes,
+						},
+					],
+					[rehypeSlug],
+					[rehypeAutoLinkHeadings],
+				],
 				remarkPlugins: [
 					remarkFrontmatter,
 					remarkGfm,

@@ -1,7 +1,6 @@
 import { useLocation } from "solid-start";
 import { createEffect, createContext, ParentProps, useContext } from "solid-js";
 import { createStore } from "solid-js/store";
-import parse from "node-html-parser";
 
 type ChildSection = {
 	text: string | undefined;

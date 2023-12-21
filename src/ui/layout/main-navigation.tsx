@@ -35,25 +35,25 @@ function DirList(props: { list: Entry[] }) {
 				if (Array.isArray(item.children)) {
 					return (
 						<li>
-							<span class="font-display font-medium text-slate-900 dark:text-white">
+							<span class="font-display font-medium text-slate-900 dark:text-white text-sm">
 								{item.title}
 							</span>
 							<ul
 								role="list"
-								class="mt-2 space-y-2 border-l-2 border-slate-100 dark:border-slate-800 lg:mt-4 lg:space-y-4 lg:border-slate-200"
+								class="mt-2 space-y-2 border-l-2 border-slate-100 dark:border-slate-800 lg:mt-4 lg:space-y-3 lg:border-slate-200"
 							>
 								<For each={item.children}>
 									{(child) =>
 										Array.isArray(child.children) ? (
 											<li>
 												<div class="relative">
-													<span class="block w-full pl-3.5 font-display font-medium before:pointer-events-none text-slate-400 dark:text-slate-300">
+													<span class="block w-full pl-3.5 font-display font-medium before:pointer-events-none text-slate-400 dark:text-slate-300 text-sm">
 														{child.title}
 													</span>
 												</div>
 												<ul
 													role="list"
-													class="ml-4 mt-2 space-y-2 border-l-2 border-slate-100 dark:border-slate-800 lg:mt-4 lg:space-y-4 lg:border-slate-200"
+													class="ml-4 mt-2 space-y-2 border-l-2 border-slate-100 dark:border-slate-800 lg:mt-4 lg:space-y-3 lg:border-slate-200 text-sm"
 												>
 													<DirList list={child.children} />
 												</ul>

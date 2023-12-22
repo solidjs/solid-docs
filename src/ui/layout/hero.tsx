@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import { Component, For } from "solid-js";
 import { Button } from "../button";
 
 function TrafficLightsIcon(props: Component<"svg">) {
@@ -58,15 +58,15 @@ export const Hero: Component = () => {
 							<span>background</span>
 						</div>
 						<div class="relative">
-							<div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-sky-300 via-sky-300/70 to-blue-300 opacity-10 blur-lg" />
+							<div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-sky-500 dark:from-sky-300 via-sky-500/70 dark:via-sky-300/70 to-blue-300 opacity-10 blur-lg" />
 							<div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-sky-300 via-sky-300/70 to-blue-300 opacity-10" />
-							<div class="relative rounded-2xl bg-[#0A101F]/80 ring-1 ring-white/10 backdrop-blur">
+							<div class="relative rounded-2xl bg-[#0A101F]/80 ring-1 ring-sky-200/10 backdrop-blur">
 								<div class="absolute -top-px left-20 right-11 h-px bg-gradient-to-r from-sky-300/0 via-sky-300/70 to-sky-300/0" />
-								<div class="absolute -bottom-px left-11 right-20 h-px bg-gradient-to-r from-blue-400/0 via-blue-400 to-blue-400/0" />
+								<div class="absolute -bottom-px left-11 right-20 h-px bg-gradient-to-r from-blue-400/0 via-blue-800 dark:via-blue-400 to-blue-400/0" />
 								<div class="pl-4 pt-4">
 									<TrafficLightsIcon class="h-2.5 w-auto stroke-slate-500/30" />
 									<div class="mt-4 flex space-x-2 text-xs">
-										<div class="flex h-6 rounded-full bg-gradient-to-r from-sky-400/30 via-sky-400 to-sky-400/30 p-px font-medium text-sky-300">
+										<div class="flex h-6 rounded-full border dark:border-none border-sky-400 shadow-sm bg-gradient-to-r from-sky-400/30  via-sky-400 to-sky-400/30 p-px font-medium text-sky-300 ">
 											<div class="flex items-center rounded-full px-2.5 bg-slate-800">
 												Counter.jsx
 											</div>
@@ -75,25 +75,31 @@ export const Hero: Component = () => {
 									<div class="mt-6 flex items-start px-1 text-sm">
 										<div
 											aria-hidden="true"
-											class="select-none border-r border-slate-300/5 pr-4 font-mono text-slate-600"
+											class="select-none border-r border-slate-300/5 pr-4 font-mono text-slate-400"
 										>
-											{Array.from({
-												length: code.split("\n").length,
-											}).map((_, index) => (
-												<>
-													{(index + 1).toString().padStart(2, "0")}
-													<br />
-												</>
-											))}
-										</div>
-										<pre class="flex overflow-x-auto pb-6">
-											<code class="px-4">
-												{code.split("\n").map((line) => (
+											<For
+												each={Array.from({
+													length: code.split("\n").length,
+												})}
+											>
+												{(_, index) => (
 													<>
-														{line}
+														{(index() + 1).toString().padStart(2, "0")}
 														<br />
 													</>
-												))}
+												)}
+											</For>
+										</div>
+										<pre class="flex overflow-x-auto pb-6 custom-scrollbar px-4">
+											<code>
+												<For each={code.split("\n")}>
+													{(line) => (
+														<>
+															{line}
+															<br />
+														</>
+													)}
+												</For>
 											</code>
 										</pre>
 									</div>

@@ -20,14 +20,14 @@ import "~/styles.css";
 export default function Root() {
 	return (
 		<Suspense>
-			<Html lang="en" class="h-full antialiased dark">
+			<Html lang="en" class="h-full">
 				<Head>
 					<Title>Solid Docs</Title>
 					<Meta charset="utf-8" />
 					<Meta name="viewport" content="width=device-width, initial-scale=1" />
 					<Link rel="shortcut icon" href="/favicon.ico" />
 				</Head>
-				<Body class="flex min-h-full bg-white dark:bg-slate-900 subpixel-antialiased">
+				<Body class="flex min-h-full dark:bg-slate-900 bg-blue-100/80">
 					<Layout>
 						<MDXProvider components={Md}>
 							<Routes>

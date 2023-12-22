@@ -24,11 +24,11 @@ export function MainHeader() {
 
 	return (
 		<header
-			class={`sticky top-0 z-50 flex flex-none flex-wrap items-center justify-between bg-white px-4 py-2 
-				shadow-md shadow-slate-900/5 transition duration-500 dark:shadow-none sm:px-6 lg:px-8 ${
+			class={`sticky top-0 z-50 flex flex-none flex-wrap items-center justify-between px-4 py-2 
+				shadow-md dark:shadow-slate-900/5 dark:shadow-none sm:px-6 lg:px-8 backdrop-blur bg-transparent ${
 					isScrolled()
-						? "dark:bg-slate-900/95 dark:backdrop-blur dark:[@supports(backdrop-filter:blur(0))]:bg-slate-900/75"
-						: "dark:bg-transparent"
+						? "dark:bg-slate-900/95 dark:[@supports(backdrop-filter:blur(0))]:bg-slate-900/75"
+						: "dark:bg-transparent bg-transparent"
 				}`}
 		>
 			<div class="mr-6 flex lg:hidden">{/* <MobileNavigation /> */}</div>
@@ -41,7 +41,7 @@ export function MainHeader() {
 			<div class="relative flex basis-0 justify-end gap-6 sm:gap-8 md:flex-grow">
 				{/* <ThemeSelector class="relative z-10" /> */}
 				<A href="https://github.com" class="group" aria-label="GitHub">
-					<GitHubIcon class="h-6 w-6 fill-slate-400 group-hover:fill-slate-500 dark:group-hover:fill-slate-300" />
+					<GitHubIcon class="h-6 w-6 dark:fill-slate-400 group-hover:dark:fill-slate-500 dark:group-hover:fill-slate-300" />
 				</A>
 			</div>
 		</header>

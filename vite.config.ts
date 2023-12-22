@@ -87,7 +87,7 @@ export default defineConfig({
 		} as PluginOption,
 		solid({
 			adapter,
-			extensions: [".mdx", ".md"],
+			extensions: [".mdx", ".md", "tsx"],
 			routesDir: "../content",
 		}),
 		docsTree(),

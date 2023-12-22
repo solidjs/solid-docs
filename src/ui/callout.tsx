@@ -11,42 +11,50 @@ import {
 const styles = {
 	info: {
 		container:
-			"bg-emerald-50 dark:bg-slate-800/60 dark:ring-1 dark:ring-slate-300/10",
-		title: "text-emerald-900 dark:text-emerald-400",
-		body: "text-emerald-800 [--tw-prose-background:theme(colors.emerald.50)] prose-a:text-emerald-900 prose-code:text-emerald-900 dark:text-slate-300 dark:prose-code:text-slate-300",
+			"bg-emerald-500/30 border-emerald-500 dark:border-emerald-400 dark:bg-emerald-800/20 dark:border-emerald-900",
+		title: "text-emerald-900 dark:text-emerald-300",
 	},
 	tip: {
 		container:
-			"bg-violet-50 dark:bg-slate-800/60 dark:ring-1 dark:ring-slate-300/10",
-		title: "text-violet-900 dark:text-violet-400",
-		body: "text-violet-800 [--tw-prose-background:theme(colors.violet.50)] prose-a:text-violet-900 prose-code:text-violet-900 dark:text-slate-300 dark:prose-code:text-slate-300",
+			"bg-violet-800/70 border-violet-700 dark:border-violet-400 dark:bg-violet-800/10 dark:border-violet-900",
+		title: "text-violet-900 dark:text-violet-300",
 	},
 	advanced: {
 		container:
-			"bg-sky-50 dark:bg-slate-800/60 dark:ring-1 dark:ring-slate-300/10",
-		title: "text-sky-900 dark:text-sky-400",
-		body: "text-sky-800 [--tw-prose-background:theme(colors.sky.50)] prose-a:text-sky-900 prose-code:text-sky-900 dark:text-slate-300 dark:prose-code:text-slate-300",
+			"bg-sky-400/40 border-sky-600 dark:border-sky-400 dark:bg-sky-400/20 dark:border-sky-600",
+		title: "text-sky-700 dark:text-sky-300",
 	},
 	caution: {
 		container:
-			"bg-amber-50 dark:bg-slate-800/60 dark:ring-1 dark:ring-slate-300/10",
-		title: "text-amber-900 dark:text-amber-500",
-		body: "text-amber-800 [--tw-prose-underline:theme(colors.amber.400)] [--tw-prose-background:theme(colors.amber.50)] prose-a:text-amber-900 prose-code:text-amber-900 dark:text-slate-300 dark:[--tw-prose-underline:theme(colors.sky.700)] dark:prose-code:text-slate-300",
+			"bg-amber-400/40 border-amber-600 dark:border-amber-400 dark:bg-amber-400/20 dark:border-amber-600",
+		title: "text-amber-900 dark:text-amber-400",
 	},
 };
 
 const icons = {
 	tip: (props: { class?: string }) => (
-		<Icon path={lightBulb} class={`${props.class} fill-violet-500`} />
+		<Icon
+			path={lightBulb}
+			class={`${props.class} fill-violet-500 dark:fill-violet-300`}
+		/>
 	),
 	info: (props: { class?: string }) => (
-		<Icon path={bookOpen} class={`${props.class} fill-emerald-500`} />
+		<Icon
+			path={bookOpen}
+			class={`${props.class} fill-emerald-800 dark:fill-emerald-300`}
+		/>
 	),
 	advanced: (props: { class?: string }) => (
-		<Icon path={puzzlePiece} class={`${props.class} fill-sky-500`} />
+		<Icon
+			path={puzzlePiece}
+			class={`${props.class} fill-sky-700 dark:fill-sky-300`}
+		/>
 	),
 	caution: (props: { class?: string }) => (
-		<Icon path={exclamationCircle} class={`${props.class} fill-amber-500`} />
+		<Icon
+			path={exclamationCircle}
+			class={`${props.class} fill-amber-500 dark:fill-amber-400`}
+		/>
 	),
 };
 
@@ -54,7 +62,6 @@ export type CalloutProps = {
 	title?: string;
 	children: JSXElement;
 	type?: keyof typeof styles;
-	showType?: boolean;
 };
 
 export function Callout(props: CalloutProps) {
@@ -67,28 +74,23 @@ export function Callout(props: CalloutProps) {
 
 	return (
 		<Alert.Root
-			class={`my-8 flex rounded-3xl p-6 ${styles[mergedProps.type].container}`}
+			class={`my-6 rounded-3xl flex p-4 border ${
+				styles[mergedProps.type].container
+			}`}
 		>
-			<IconComponent class="h-6 w-8 mt-1 flex-none" />
-			<div class="ml-4 flex-auto">
-				<div
-					class={`m-0 mb-2.5 font-display text-xl ${
-						styles[mergedProps.type].title
-					}`}
+			<IconComponent class={`h-6 w-8 mt-1 flex-none`} />
+			<div class={`m-0 mb-1 ml-4 ${styles[mergedProps.type].title}`}>
+				<Show
+					when={props.title}
+					fallback={
+						<span class="capitalize font-semibold text-xl">
+							{props.type || "Info"}:{" "}
+						</span>
+					}
 				>
-					<Show when={!props.showType ? false : true}>
-						<span class="capitalize">{props.type || "Info"}: </span>
-					</Show>
-
-					<Show when={props.title}>
-						<span>{mergedProps.title}</span>
-					</Show>
-				</div>
-				<div
-					class={`prose ${
-						styles[mergedProps.type].body
-					} [&>*:first-child]:mt-0`}
-				>
+					<span class="font-semibold text-xl">{mergedProps.title}</span>
+				</Show>
+				<div class={`dark:prose-invert prose [&>*:first-child]:mt-1`}>
 					{mergedProps.children}
 				</div>
 			</div>

@@ -60,7 +60,9 @@ export const DocsLayout: ParentComponent = (props) => {
 					<header class="mb-9 capitalize">
 						<Show when={titles().parent}>
 							{(t) => (
-								<p class="text-sm font-medium text-sky-500 my-1">{t()}</p>
+								<p class="text-sm font-semibold text-sky-600 dark:text-sky-500 my-1">
+									{t()}
+								</p>
 							)}
 						</Show>
 						<Show when={titles().title}>

@@ -10,7 +10,7 @@ import { TabsCodeBlocks } from "~/ui/tab-code-blocks";
 
 export default {
 	strong: (props: ParentProps) => (
-		<span class="font-semibold text-slate-300">{props.children}</span>
+		<span class="font-semibold leading-relaxed">{props.children}</span>
 	),
 	Callout: (props: CalloutProps) => (
 		<Callout title={props.title} type={props.type}>
@@ -33,7 +33,7 @@ export default {
 	h2: (props: ParentProps) => {
 		return (
 			<>
-				<hr class="dark:prose-hr:border-slate-800" />
+				<hr class="dark:prose-hr:border-slate-800 border-slate-400 my-8" />
 				<h2
 					{...props}
 					class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
@@ -81,29 +81,31 @@ export default {
 			{props.children}
 		</h6>
 	),
+	a: (props: ParentProps) => {
+		return (
+			<a
+				{...props}
+				class={`no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,theme(colors.sky.400))] hover:[--tw-prose-underline-size:4px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.sky.800))] dark:hover:[--tw-prose-underline-size:6px] dark:text-sky-400 text-sky-700 font-semibold`}
+			>
+				{props.children}
+			</a>
+		);
+	},
 	p: (props: ParentProps) => (
 		<p {...props} class="my-4">
 			{props.children}
 		</p>
 	),
-	a: (props: ParentProps) => (
-		<a
-			{...props}
-			class="no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#fff),inset_0_calc(-1*(var(--tw-prose-underline-size,4px)+2px))_0_0_var(--tw-prose-underline,theme(colors.sky.300))] hover:[--tw-prose-underline-size:6px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.sky.800))] dark:hover:[--tw-prose-underline-size:6px] text-sky-300 font-medium"
-		>
-			{props.children}
-		</a>
-	),
 	li: (props: ParentProps) => (
-		<li {...props} class="mb-2">
+		<li
+			{...props}
+			class="mb-2 marker:text-slate-600 dark:marker:text-slate-300"
+		>
 			{props.children}
 		</li>
 	),
 	ul: (props: ParentProps) => (
-		<ul
-			{...props}
-			class="list-disc marker:text-solid-accent marker:dark:text-solid-accentlight marker:text-2xl pl-8 mb-2"
-		>
+		<ul {...props} class="pl-6 mb-2 list-disc">
 			{props.children}
 		</ul>
 	),
@@ -132,7 +134,7 @@ export default {
 	code: (props: ParentProps) => {
 		return (
 			<code
-				class="inline-block not-prose text-mono bg-slate-800/70 text-slate-300 px-1.5 py-0.5 rounded-lg text-[0.8em] leading-snug"
+				class={`inline-block not-prose text-mono bg-slate-800/40 px-1.5 py-0.5 rounded-lg text-[0.8em] leading-snug text-slate-200`}
 				{...props}
 			>
 				{props.children}

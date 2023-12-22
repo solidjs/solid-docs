@@ -7,7 +7,6 @@ import {
 } from "solid-js";
 import { Callout, CalloutProps } from "~/ui/callout";
 import { TabsCodeBlocks } from "~/ui/tab-code-blocks";
-import { usePageState } from "~/data/page-state";
 
 export default {
 	strong: (props: ParentProps) => (

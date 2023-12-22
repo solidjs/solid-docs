@@ -40,17 +40,15 @@ function DirList(props: { list: Entry[] }) {
 							</span>
 							<ul
 								role="list"
-								class="mt-2 space-y-2 border-l-2 border-slate-100 dark:border-slate-800 lg:mt-4 lg:space-y-3 lg:border-slate-200"
+								class="ml-4 mt-2 space-y-2 border-l-2 border-slate-100 dark:border-slate-800 lg:mt-4 lg:space-y-3 lg:border-slate-200 text-sm"
 							>
 								<For each={item.children}>
 									{(child) =>
 										Array.isArray(child.children) ? (
 											<li>
-												<div class="relative">
-													<span class="block w-full pl-3.5 font-display font-medium before:pointer-events-none text-slate-400 dark:text-slate-300 text-sm">
-														{child.title}
-													</span>
-												</div>
+												<span class="relative block w-full pl-3.5 font-display font-medium before:pointer-events-none text-slate-400 dark:text-slate-300 text-sm">
+													{child.title}
+												</span>
 												<ul
 													role="list"
 													class="ml-4 mt-2 space-y-2 border-l-2 border-slate-100 dark:border-slate-800 lg:mt-4 lg:space-y-3 lg:border-slate-200 text-sm"
@@ -112,7 +110,7 @@ export function MainNavigation() {
 				<Tabs.Content value="reference">
 					<Show when={references()} fallback={<p>No routes found...</p>}>
 						{(referenceList) => (
-							<ul role="list" class="space-y-6">
+							<ul role="list" class="space-y-4">
 								<DirList list={referenceList()} />
 							</ul>
 						)}

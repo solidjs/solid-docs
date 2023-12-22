@@ -1,8 +1,9 @@
 import { Match, ParentComponent, Show, Switch, createEffect } from "solid-js";
 
 import { MainNavigation } from "~/ui/layout/main-navigation";
-import { MainFooter } from "~/ui/layout/main-footer";
-import { MainHeader } from "~/ui/layout/main-header";
+import { MainFooter } from "./layout/main-footer";
+import { MainHeader } from "./layout/main-header";
+import { Hero } from "./layout/hero";
 import { useMatch } from "solid-start";
 import { DocsLayout } from "./docs-layout";
 import { PageStateProvider } from "~/data/page-state";
@@ -16,7 +17,7 @@ export const Layout: ParentComponent = (props) => {
 				<MainHeader />
 
 				<Show when={isRoot()} keyed>
-					{/* Hero */}
+					<Hero />
 				</Show>
 
 				<div class="relative mx-auto flex w-full max-w-8xl flex-auto justify-center sm:px-2 lg:px-8 xl:px-12">

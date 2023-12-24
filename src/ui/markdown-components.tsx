@@ -121,26 +121,6 @@ export default {
 			components does work
 		</p>
 	),
-	pre: (props: ParentProps) => {
-		return (
-			<pre
-				{...props}
-				class="[&>code]:bg-transparent [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal custom-scroll-bar"
-			>
-				{props.children}
-			</pre>
-		);
-	},
-	code: (props: ParentProps) => {
-		return (
-			<code
-				class={`inline-block not-prose text-mono bg-slate-800/40 px-1.5 py-0.5 rounded-lg text-[0.8em] leading-snug text-slate-200`}
-				{...props}
-			>
-				{props.children}
-			</code>
-		);
-	},
 	table: (props: ParentProps) => <table>{props.children}</table>,
 	th: (props: ParentProps) => <th>{props.children}</th>,
 	thead: (props: ParentProps) => <thead>{props.children}</thead>,

@@ -1,4 +1,4 @@
-import { Match, ParentComponent, Show, Switch, createEffect } from "solid-js";
+import { ParentComponent, Show } from "solid-js";
 
 import { MainNavigation } from "~/ui/layout/main-navigation";
 import { MainFooter } from "./layout/main-footer";

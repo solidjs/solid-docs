@@ -11,7 +11,7 @@ import {
 	Title,
 } from "solid-start";
 import { MDXProvider } from "solid-mdx";
-import { Suspense } from "solid-js";
+import { Suspense, createEffect } from "solid-js";
 
 import Md from "~/ui/markdown-components";
 import { Layout } from "~/ui/layout";
@@ -20,7 +20,7 @@ import "~/styles.css";
 export default function Root() {
 	return (
 		<Suspense>
-			<Html lang="en" class="h-full">
+			<Html lang="en" class={`h-full`}>
 				<Head>
 					<Title>Solid Docs</Title>
 					<Meta charset="utf-8" />

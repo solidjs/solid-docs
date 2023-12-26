@@ -86,10 +86,10 @@ interface IAddBookProps {
 async function searchBooks(query: string) {
   if (query.trim() === "") return [];
   const response = await fetch(
-    `https://openlibrary.org/search.json?q=${encodeURI(query)}`
+    `https://openlibrary.org/search.json?q=${encodeURI(query)}&limit=10`
   );
   const results = await response.json();
-  return results.docs.slice(0, 10).map(({ title, author_name }) => ({
+  return results.docs.map(({ title, author_name }) => ({
     title,
     author: author_name?.join(", "),
   }));

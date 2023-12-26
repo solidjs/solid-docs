@@ -10,7 +10,7 @@ type Book = {
 const initialBooks: Book[] = [
   { title: "Code Complete", author: "Steve McConnell" },
   { title: "The Hobbit", author: "J.R.R. Tolkien" },
-  { title: "Living a Feminist Life", author: "Sarah Ahmed" },
+  { title: "Living a Feminist Life", author: "Sara Ahmed" },
 ];
 
 interface IBookshelfProps {

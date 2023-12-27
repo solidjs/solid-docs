@@ -7,6 +7,7 @@ import {
 } from "solid-js";
 import { Callout, CalloutProps } from "~/ui/callout";
 import { TabsCodeBlocks } from "~/ui/tab-code-blocks";
+import { QuckLinks, QuickLinksProps } from "~/ui/quick-links";
 
 export default {
 	strong: (props: ParentProps) => (
@@ -19,6 +20,11 @@ export default {
 	),
 	TabsCodeBlocks: (props: ParentProps) => (
 		<TabsCodeBlocks>{props.children}</TabsCodeBlocks>
+	),
+	QuickLinks: (props: QuickLinksProps) => (
+		<QuckLinks title={props.title} icon={props.icon} href={props.href}>
+			{props.children}
+		</QuckLinks>
 	),
 	ssr: (props: ParentProps) => <>{props.children}</>,
 	spa: () => <></>,

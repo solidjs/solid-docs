@@ -1,4 +1,4 @@
-import { For, ParentComponent, Show, createSignal, onMount } from "solid-js"
+import { For, ParentComponent, Show, createSignal, onMount } from "solid-js";
 
 /**
  *  This is a code blocks component that can be used to divide code blocks into seperate tabs. Here's an example of how to use it in JSX and mdx:
@@ -34,16 +34,17 @@ export const TabsCodeBlocks: ParentComponent = (props) => {
 	const [selectedTab, setSelectedTab] = createSignal<Element>();
 
 	const selectTabById = (id: string) => {
-		const tab = tabs()?.find((tab) => tab.id === id)
-		if (tab) setSelectedTab(tab)
-		else throw new Error(`Tab with id "${id}" not found`)
-	}
+		const tab = tabs()?.find((tab) => tab.id === id);
+		if (tab) setSelectedTab(tab);
+		else throw new Error(`Tab with id "${id}" not found`);
+	};
 
 	onMount(() => {
-		let children = props.children
+		let children = props.children;
 
 		// Check if children are an array
-		if (!Array.isArray(children)) throw new Error("TabsCodeBlocks children must be an array")
+		if (!Array.isArray(children))
+			throw new Error("TabsCodeBlocks children must be an array");
 
 		// Check if children are elements
 		const isArrayOfElements = (arr: any[]): arr is Element[] => {
@@ -54,13 +55,14 @@ export const TabsCodeBlocks: ParentComponent = (props) => {
 			throw new Error("TabsCodeBlocks children must be an array of elements");
 
 		// Check if all elements have ids
-		const allElementsHaveIds = children.every((child) => "id" in child)
+		const allElementsHaveIds = children.every((child) => "id" in child);
 
-		if (!allElementsHaveIds) throw new Error("All TabsCodeBlocks children must have an id")
+		if (!allElementsHaveIds)
+			throw new Error("All TabsCodeBlocks children must have an id");
 
 		setSelectedTab(children[0]);
-		setTabs(children)
-	})
+		setTabs(children);
+	});
 
 	return (
 		<div>
@@ -69,9 +71,10 @@ export const TabsCodeBlocks: ParentComponent = (props) => {
 					{(tab) => (
 						<button
 							classList={{
-								"font-bold text-slate-300 border-b-2 border-sky-500":
+								"font-bold dark:text-slate-300 text-sky-500 border-b-2 border-sky-400":
 									selectedTab()?.id === tab.id,
-								"px-5 py-1 relative top-0.5 transition-colors duration-300": true,
+								"px-5 py-1 relative top-0.5 transition-colors duration-300":
+									true,
 							}}
 							onclick={() => selectTabById(tab.id)}
 						>
@@ -84,4 +87,4 @@ export const TabsCodeBlocks: ParentComponent = (props) => {
 			{selectedTab()}
 		</div>
 	);
-}
+};

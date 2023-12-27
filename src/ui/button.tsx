@@ -18,10 +18,10 @@ export const Button = (props: ButtonProps) => {
 					props.variant === "secondary",
 			}}
 			onClick={() => {
-				if (props.externalLink) {
-					navigate(props.href);
-				} else {
+				if (props.href.match(/https?:\/\//)) {
 					window.open(props.href, "_blank");
+				} else {
+					navigate(props.href);
 				}
 			}}
 		>

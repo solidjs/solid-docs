@@ -1,4 +1,3 @@
-import { Link } from "@solidjs/router";
 import { ParentProps, createSignal } from "solid-js";
 import "./eraser-link.css";
 
@@ -9,13 +8,13 @@ type EraserLinkData = {
 	elementsId?: string;
 };
 
-export const getEraserLinkData = (href: string): EraserLinkData | void => {
+const getEraserLinkData = (href: string): EraserLinkData | null => {
 	const matches = /app.eraser.io\/workspace\/(\w+)(.*elements=(\w+))?/.exec(
 		href
 	);
 
 	if (!matches) {
-		return;
+		return null;
 	}
 
 	if (matches[3]) {
@@ -56,28 +55,48 @@ const EraserLink = ({
 			: `${workspaceUrl}/preview`;
 
 		return (
-			<Link href={linkUrl} class="relative inline-block" target="_blank">
+			<a
+				href={linkUrl}
+				class="relative inline-block"
+				target="_blank"
+				rel="noopener noreferrer"
+			>
 				<img src={imageUrl} alt={""} onLoad={() => setIsLoaded(true)} />
 				{isLoaded() ? (
-					<span class="eraserLinkContainer">
+					<div class="eraserLinkContainer">
 						<img
 							src="https://firebasestorage.googleapis.com/v0/b/second-petal-295822.appspot.com/o/images%2Fgithub%2FOpen%20in%20Eraser.svg?alt=media&token=968381c8-a7e7-472a-8ed6-4a6626da5501"
-							class="max-w-none"
+							class="max-w-none m-0"
 							alt="Open in Eraser"
 						/>
-					</span>
+					</div>
 				) : null}
-			</Link>
+			</a>
 		);
 	}
 	return (
-		<Link
+		<a
 			href={linkUrl}
 			class="dark:text-solid-darklink break-normal text-solid-lightlink duration-100 ease-in font-semibold leading-normal transition hover:underline"
+			rel="noopener noreferrer"
 		>
 			{children}
-		</Link>
+		</a>
 	);
 };
 
-export default EraserLink;
+export default function EraserOrAnchor(props: ParentProps<{ href: string }>) {
+	const eraserLinkData = getEraserLinkData(props.href);
+	if (eraserLinkData) {
+		return <EraserLink linkData={eraserLinkData}>{props.children}</EraserLink>;
+	}
+	return (
+		<a
+			{...props}
+			class="dark:text-solid-darklink break-normal text-solid-lightlink duration-100 ease-in font-semibold leading-normal transition hover:underline"
+			rel="noopener noreferrer"
+		>
+			{props.children}
+		</a>
+	);
+}

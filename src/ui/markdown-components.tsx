@@ -4,10 +4,13 @@ import {
 	ParentProps,
 	mergeProps,
 	type JSXElement,
+	children,
+	splitProps,
 } from "solid-js";
+import { isServer } from "solid-js/web";
 import { Callout, CalloutProps } from "~/ui/callout";
 import { TabsCodeBlocks } from "~/ui/tab-code-blocks";
-import { QuckLinks, QuickLinksProps } from "~/ui/quick-links";
+import { QuickLinks, QuickLinksProps } from "~/ui/quick-links";
 
 export default {
 	strong: (props: ParentProps) => (
@@ -22,9 +25,9 @@ export default {
 		<TabsCodeBlocks>{props.children}</TabsCodeBlocks>
 	),
 	QuickLinks: (props: QuickLinksProps) => (
-		<QuckLinks title={props.title} icon={props.icon} href={props.href}>
+		<QuickLinks title={props.title} icon={props.icon} href={props.href}>
 			{props.children}
-		</QuckLinks>
+		</QuickLinks>
 	),
 	ssr: (props: ParentProps) => <>{props.children}</>,
 	spa: () => <></>,
@@ -88,12 +91,36 @@ export default {
 		</h6>
 	),
 	a: (props: ParentProps) => {
+		const [,rest] = splitProps(props, ["children"]);
+		const resolved = children(() => props.children);
+		const resolvedArray = resolved.toArray();
+
+		if (
+			// Server side
+			(isServer &&
+			resolvedArray[0] &&
+			typeof resolvedArray[0] === "object" &&
+			"t" in resolvedArray[0] &&
+			typeof resolvedArray[0].t === "string" &&
+			resolvedArray[0].t.substring(0, 5) === "<code") ||
+			// Client side
+			(!isServer && resolvedArray[0] instanceof Element && resolvedArray[0].nodeName === "CODE")
+		)
+			return (
+				<a
+					class="[&>code]:shadow-[0_0_0_1px_#38bdf8] hover:[&>code]:shadow-[0_0_0_2px_#38bdf8]"
+					{...rest}
+				>
+					{resolved()}
+				</a>
+			);
+
 		return (
 			<a
-				{...props}
+				{...rest}
 				class={`no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,theme(colors.sky.400))] hover:[--tw-prose-underline-size:4px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.sky.800))] dark:hover:[--tw-prose-underline-size:6px] dark:text-sky-400 text-sky-700 font-semibold`}
 			>
-				{props.children}
+				{resolved()}
 			</a>
 		);
 	},
@@ -127,6 +154,26 @@ export default {
 			components does work
 		</p>
 	),
+	pre: (props: ParentProps) => {
+		return (
+			<pre
+				{...props}
+				class="[&>code]:bg-transparent [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal custom-scroll-bar"
+			>
+				{props.children}
+			</pre>
+		);
+	},
+	code: (props: ParentProps) => {
+		return (
+			<code
+				class="inline-block not-prose font-mono bg-slate-800/70 text-slate-300 px-1.5 py-0.5 rounded-lg text-[0.8em] leading-snug"
+				{...props}
+			>
+				{props.children}
+			</code>
+		);
+	},
 	table: (props: ParentProps) => <table>{props.children}</table>,
 	th: (props: ParentProps) => <th>{props.children}</th>,
 	thead: (props: ParentProps) => <thead>{props.children}</thead>,

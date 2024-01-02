@@ -1,13 +1,10 @@
-import {
-	type ParentProps,
-	children,
-	splitProps,
-} from "solid-js";
+import { type ParentProps, children, splitProps } from "solid-js";
 import { A } from "solid-start";
 import { isServer } from "solid-js/web";
 import { Callout, CalloutProps } from "~/ui/callout";
 import { TabsCodeBlocks } from "~/ui/tab-code-blocks";
 import { QuickLinks, QuickLinksProps } from "~/ui/quick-links";
+import { ImageLinks, ImageLinksProps } from "~/ui/image-links";
 import { clientOnly } from "solid-start/islands";
 
 const EraserLink = clientOnly(() => import("./eraser-link/index"));
@@ -28,6 +25,9 @@ export default {
 		<QuickLinks title={props.title} icon={props.icon} href={props.href}>
 			{props.children}
 		</QuickLinks>
+	),
+	ImageLinks: (props: ImageLinksProps) => (
+		<ImageLinks title={props.title} href={props.href} logo={props.logo} />
 	),
 	ssr: (props: ParentProps) => <>{props.children}</>,
 	spa: () => <></>,
@@ -91,7 +91,7 @@ export default {
 		</h6>
 	),
 	a: (props: ParentProps & { href: string }) => {
-		const [,rest] = splitProps(props, ["children"]);
+		const [, rest] = splitProps(props, ["children"]);
 		const resolved = children(() => props.children);
 		const resolvedArray = resolved.toArray();
 
@@ -102,13 +102,15 @@ export default {
 		if (
 			// Server side
 			(isServer &&
-			resolvedArray[0] &&
-			typeof resolvedArray[0] === "object" &&
-			"t" in resolvedArray[0] &&
-			typeof resolvedArray[0].t === "string" &&
-			resolvedArray[0].t.substring(0, 5) === "<code") ||
+				resolvedArray[0] &&
+				typeof resolvedArray[0] === "object" &&
+				"t" in resolvedArray[0] &&
+				typeof resolvedArray[0].t === "string" &&
+				resolvedArray[0].t.substring(0, 5) === "<code") ||
 			// Client side
-			(!isServer && resolvedArray[0] instanceof Element && resolvedArray[0].nodeName === "CODE")
+			(!isServer &&
+				resolvedArray[0] instanceof Element &&
+				resolvedArray[0].nodeName === "CODE")
 		)
 			return (
 				<A

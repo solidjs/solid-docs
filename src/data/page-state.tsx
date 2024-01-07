@@ -1,6 +1,5 @@
-import { useLocation } from "solid-start";
 import { createEffect, createContext, ParentProps, useContext } from "solid-js";
-import { createStore } from "solid-js/store";
+import { SetStoreFunction, StoreSetter, createStore } from "solid-js/store";
 
 type ChildSection = {
 	text: string | undefined;
@@ -20,14 +19,23 @@ type PageStateStore = {
 	path: string;
 };
 
-const PageStateContext = createContext();
+const INITIAL_PAGE_STATE_STORE = {
+	sections: [],
+	path: "",
+};
+
+const PageStateContext = createContext<{
+	pageSections: PageStateStore;
+	setPageSections: SetStoreFunction<PageStateStore>;
+}>({
+	pageSections: INITIAL_PAGE_STATE_STORE,
+	setPageSections: () => {},
+});
 
 const PageStateProvider = (props: ParentProps) => {
-	const location = useLocation();
-	const [pageSections, setPageSections] = createStore<PageStateStore>({
-		sections: [],
-		path: "",
-	});
+	const [pageSections, setPageSections] = createStore<PageStateStore>(
+		INITIAL_PAGE_STATE_STORE
+	);
 
 	return (
 		<PageStateContext.Provider

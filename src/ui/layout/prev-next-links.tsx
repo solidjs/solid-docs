@@ -1,5 +1,5 @@
 import { Component, Show } from "solid-js";
-import { A } from "solid-start";
+import { A } from "@solidjs/router";
 
 import { Icon } from "solid-heroicons";
 import { arrowLeft, arrowRight } from "solid-heroicons/solid";

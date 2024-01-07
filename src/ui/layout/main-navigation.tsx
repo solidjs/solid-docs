@@ -1,6 +1,6 @@
 import { A, useMatch } from "@solidjs/router";
 import { For, Show } from "solid-js";
-import { useLocation } from "solid-start";
+import { useLocation } from "@solidjs/router";
 import { Tabs } from "@kobalte/core";
 import nav from "solid:collection/tree";
 import { Icon } from "solid-heroicons";
@@ -10,9 +10,11 @@ type Entry = {
 	title: string;
 	path: string;
 	children?: Entry[];
+	mainNavExclude: boolean;
 };
 
 function ListItemLink(props: { item: Entry }) {
+	if (props.item.mainNavExclude) return null;
 	const location = useLocation();
 	const linkStyles = () =>
 		location.pathname === props.item.path.replace(/\\/g, "/")

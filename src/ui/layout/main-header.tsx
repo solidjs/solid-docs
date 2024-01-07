@@ -1,5 +1,5 @@
 import { createSignal, onCleanup, onMount } from "solid-js";
-import { A } from "solid-start";
+import { A } from "@solidjs/router";
 import { isServer } from "solid-js/web";
 
 import { Logo, GitHubIcon } from "~/ui/logo";

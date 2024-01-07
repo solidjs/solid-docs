@@ -1,4 +1,4 @@
-import { useNavigate } from "solid-start";
+import { useNavigate } from "@solidjs/router";
 
 type ButtonProps = {
 	variant: "primary" | "secondary";

@@ -4,6 +4,8 @@ import { existsSync } from "fs";
 import path from "path";
 import matter from "gray-matter";
 
+const COLLECTIONS_ROOT = "src/routes";
+
 const pages = z.array(z.string());
 
 const sectionSchema = z.object({
@@ -49,7 +51,7 @@ async function getDirData(dirPath = process.cwd()) {
 	}
 }
 
-async function buildFileTree(entry = "src/routes") {
+async function buildFileTree(entry = COLLECTIONS_ROOT) {
 	const entryPath = path.resolve(process.cwd(), entry);
 	const parentSegment = path.parse(entryPath).dir;
 	const stats = await fs.stat(entryPath);
@@ -73,7 +75,7 @@ async function buildFileTree(entry = "src/routes") {
 		const file = await fs.readFile(entryPath, "utf-8");
 		const parentSection = await getDirData(path.resolve(parentSegment));
 
-		const { title } = matter(file).data;
+		const { title, mainNavExclude } = matter(file).data;
 
 		/**
 		 * @todo
@@ -85,11 +87,13 @@ async function buildFileTree(entry = "src/routes") {
 			path:
 				"/" +
 				path
-					.relative(path.join(process.cwd(), "src/routes"), entryPath)
+					.relative(path.join(process.cwd(), COLLECTIONS_ROOT), entryPath)
+					.replace(/\index\.mdx?/, "")
 					.replace(/\.mdx?/, ""),
 			slug: path.basename(entryPath, path.extname(entryPath)),
 			parent: parentSection.title,
 			title,
+			mainNavExclude,
 		};
 	} else {
 		console.error(`WARNING: \n ${entry} was not found.\n Please fix it!\n`);
@@ -99,8 +103,8 @@ async function buildFileTree(entry = "src/routes") {
 
 async function createNavTree() {
 	const [learn, references] = await Promise.all([
-		buildFileTree("src/routes"),
-		buildFileTree("src/routes/reference"),
+		buildFileTree(COLLECTIONS_ROOT),
+		buildFileTree(`${COLLECTIONS_ROOT}/reference`),
 	]);
 
 	if (

@@ -1,5 +1,5 @@
 import { Component, ParentComponent, Show, createEffect } from "solid-js";
-import { useLocation, useMatch } from "solid-start";
+import { useLocation, useMatch } from "@solidjs/router";
 import flatEntries from "solid:collection/entries";
 import { TableOfContents } from "./layout/table-of-contents";
 import { Pagination } from "~/ui/pagination";

@@ -1,11 +1,11 @@
 import { type ParentProps, children, splitProps } from "solid-js";
-import { A } from "solid-start";
+import { A } from "@solidjs/router";
 import { isServer } from "solid-js/web";
 import { Callout, CalloutProps } from "~/ui/callout";
 import { TabsCodeBlocks } from "~/ui/tab-code-blocks";
 import { QuickLinks, QuickLinksProps } from "~/ui/quick-links";
 import { ImageLinks, ImageLinksProps } from "~/ui/image-links";
-import { clientOnly } from "solid-start/islands";
+import { clientOnly } from "@solidjs/start";
 
 const EraserLink = clientOnly(() => import("./eraser-link/index"));
 

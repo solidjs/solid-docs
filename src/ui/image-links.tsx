@@ -1,5 +1,5 @@
 import { ParentComponent, Show } from "solid-js";
-import { A } from "solid-start";
+import { A } from "@solidjs/router";
 
 /**
  * @todo

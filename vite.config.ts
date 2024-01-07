@@ -1,7 +1,5 @@
-import { type PluginOption, defineConfig } from "vite";
-import solid from "solid-start/vite";
-import netlify from "solid-start-netlify";
-import node from "solid-start-node";
+import { type PluginOption } from "vite";
+import { defineConfig } from "@solidjs/start/config";
 import mdx from "@mdx-js/rollup";
 import remarkFrontmatter from "remark-frontmatter";
 import rehypeRaw from "rehype-raw";
@@ -13,8 +11,10 @@ import remarkExpressiveCode, {
 import rehypeSlug from "rehype-slug";
 import rehypeAutoLinkHeadings from "rehype-autolink-headings";
 
-import tree from ".solid/tree";
-import entries from ".solid/entries";
+// @ts-ignore missing types
+import pkg from "@vinxi/plugin-mdx";
+
+const { default: vinxiMdx } = pkg;
 
 function docsTree() {
 	const virtualModuleId = "solid:collection/tree";
@@ -27,8 +27,9 @@ function docsTree() {
 				return resolveVirtualModuleId;
 			}
 		},
-		load(id: string) {
+		async load(id: string) {
 			if (id === resolveVirtualModuleId) {
+				const tree = await import(`${process.cwd()}/.solid/tree`);
 				return `export default ${JSON.stringify(tree, null, 2)}`;
 			}
 		},
@@ -46,57 +47,61 @@ function docsEntries() {
 				return resolveVirtualModuleId;
 			}
 		},
-		load(id: string) {
+		async load(id: string) {
 			if (id === resolveVirtualModuleId) {
+				const entries = await import(`${process.cwd()}/.solid/entries`);
+
 				return `export default ${JSON.stringify(entries, null, 2)}`;
 			}
 		},
 	};
 }
 
-const adapter = process.env.GITHUB_ACTIONS ? node() : netlify();
-
 export default defineConfig({
+	start: {
+		server: {
+			preset: process.env.GITHUB_ACTIONS ? "node" : "netlify",
+		},
+		extensions: ["mdx", "md"],
+		routesDir: "../content",
+		solid: {
+			extensions: ["mdx", "md"],
+
+			ssr: {
+				noExternal: ["@kobalte/core", "@internationalized/message"],
+			},
+		},
+	},
 	plugins: [
-		{
-			...mdx({
-				jsx: true,
-				jsxImportSource: "solid-js",
-				providerImportSource: "solid-mdx",
-				rehypePlugins: [
-					[
-						rehypeRaw,
-						{
-							passThrough: nodeTypes,
-						},
-					],
-					[rehypeSlug],
-					[rehypeAutoLinkHeadings],
-				],
-				remarkPlugins: [
-					remarkFrontmatter,
-					remarkGfm,
-					[
-						remarkExpressiveCode,
-						{
-							themes: ["min-light", "material-theme-ocean"],
-							themeCSSSelector: (theme: ExpressiveCodeTheme) =>
-								`[data-theme="${theme.name}"]`,
-						},
-					],
-				],
-			}),
-			enforce: "pre",
-		} as PluginOption,
-		solid({
-			adapter,
-			extensions: [".mdx", ".md", "tsx"],
-			routesDir: "../content",
-		}),
 		docsTree(),
 		docsEntries(),
+		vinxiMdx.withImports({})({
+			jsx: true,
+			jsxImportSource: "solid-js",
+			providerImportSource: "solid-mdx",
+			rehypePlugins: [
+				[
+					rehypeRaw,
+					{
+						passThrough: nodeTypes,
+					},
+				],
+				[rehypeSlug],
+				[rehypeAutoLinkHeadings],
+			],
+			remarkPlugins: [
+				remarkFrontmatter,
+				remarkGfm,
+				[
+					remarkExpressiveCode,
+					{
+						themes: ["min-light", "material-theme-ocean"],
+						themeCSSSelector: (theme: ExpressiveCodeTheme) =>
+							`[data-theme="${theme.name}"]`,
+					},
+				],
+			],
+		}),
+		{ enforce: "pre" },
 	],
-	ssr: {
-		noExternal: ["@kobalte/core", "@internationalized/message"],
-	},
 });

@@ -6,7 +6,7 @@ import {
 	onCleanup,
 	createSignal,
 } from "solid-js";
-import { A } from "solid-start";
+import { A } from "@solidjs/router";
 import { usePageState } from "~/data/page-state";
 
 export const TableOfContents: Component = () => {

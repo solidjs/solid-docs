@@ -1,4 +1,3 @@
-import { useLocation } from "solid-start";
 import { createEffect, createContext, ParentProps, useContext } from "solid-js";
 import { createStore } from "solid-js/store";
 
@@ -23,7 +22,6 @@ type PageStateStore = {
 const PageStateContext = createContext();
 
 const PageStateProvider = (props: ParentProps) => {
-	const location = useLocation();
 	const [pageSections, setPageSections] = createStore<PageStateStore>({
 		sections: [],
 		path: "",

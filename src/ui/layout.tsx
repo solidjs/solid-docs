@@ -4,7 +4,7 @@ import { MainNavigation } from "~/ui/layout/main-navigation";
 import { MainFooter } from "./layout/main-footer";
 import { MainHeader } from "./layout/main-header";
 import { Hero } from "./layout/hero";
-import { useMatch } from "solid-start";
+import { useMatch } from "@solidjs/router";
 import { DocsLayout } from "./docs-layout";
 import { PageStateProvider } from "~/data/page-state";
 

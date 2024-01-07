@@ -1,6 +1,5 @@
-import { A, useMatch } from "@solidjs/router";
+import { A, useMatch, useLocation } from "@solidjs/router";
 import { For, Show } from "solid-js";
-import { useLocation } from "solid-start";
 import { Tabs } from "@kobalte/core";
 import nav from "solid:collection/tree";
 import { Icon } from "solid-heroicons";

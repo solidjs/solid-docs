@@ -30,7 +30,15 @@ export const Layout: ParentComponent = (props) => {
 						</div>
 					</div>
 					<main class="min-w-0 max-w-3xl flex-auto py-16 lg:max-w-none lg:pr-0 prose prose-slate dark:prose-invert dark:text-slate-400">
-						<Show when={!isRoot()} keyed>
+						<Show
+							when={!isRoot()}
+							keyed
+							fallback={
+								<article class="px-10 expressive-code-overrides">
+									{props.children}
+								</article>
+							}
+						>
 							<DocsLayout>{props.children}</DocsLayout>
 						</Show>
 					</main>

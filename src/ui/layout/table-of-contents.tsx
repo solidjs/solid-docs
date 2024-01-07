@@ -6,7 +6,6 @@ import {
 	onCleanup,
 	createSignal,
 } from "solid-js";
-import { A } from "@solidjs/router";
 import { usePageState } from "~/data/page-state";
 
 export const TableOfContents: Component = () => {
@@ -33,12 +32,12 @@ export const TableOfContents: Component = () => {
 	});
 
 	return (
-		<div class="hidden xl:sticky xl:top-[4.75rem] xl:-mr-6 xl:block xl:h-[calc(100vh-4.75rem)] xl:flex-none xl:overflow-y-auto xl:py-4">
-			<nav aria-labelledby="on-this-page-title" class="w-56">
+		<div class="hidden xl:sticky xl:top-[4.75rem] xl:-mr-6 xl:block xl:h-[calc(100vh-4.75rem)] xl:flex-none xl:overflow-y-auto xl:py-4 custom-scrollbar">
+			<aside aria-label="table of contents" class="w-full">
 				<span class="font-display text-base font-medium text-slate-900 dark:text-white">
 					On this page
 				</span>
-				<ol role="list" class="text-sm list-none p-0">
+				<ol role="list" class="text-sm list-none p-0 flex flex-col">
 					<Index each={pageSections.sections}>
 						{(section) => (
 							<li class="pl-0">
@@ -83,7 +82,7 @@ export const TableOfContents: Component = () => {
 						)}
 					</Index>
 				</ol>
-			</nav>
+			</aside>
 		</div>
 	);
 };

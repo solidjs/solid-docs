@@ -78,8 +78,8 @@ export function Callout(props: CalloutProps) {
 				styles[mergedProps.type].container
 			}`}
 		>
-			<IconComponent class={`h-6 w-8 mt-1 flex-none`} />
-			<div class={`m-0 mb-1 ml-4 ${styles[mergedProps.type].title}`}>
+			<IconComponent class={`h-6 w-8 pt-1 flex-none`} />
+			<div class={`m-0 pb-1 px-4 ${styles[mergedProps.type].title}`}>
 				<Show
 					when={props.title}
 					fallback={

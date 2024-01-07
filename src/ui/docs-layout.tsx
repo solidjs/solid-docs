@@ -54,10 +54,10 @@ export const DocsLayout: ParentComponent = (props) => {
 	});
 
 	return (
-		<div class="flex">
+		<div class="flex ">
 			<div class="min-w-0 max-w-2xl flex-auto pb-16 lg:max-w-none">
 				<article class="px-10 expressive-code-overrides">
-					<header class="mb-9 capitalize">
+					<div class="mb-9 capitalize">
 						<Show when={titles().parent}>
 							{(t) => (
 								<p class="text-sm font-semibold text-sky-600 dark:text-sky-500 my-1">
@@ -72,7 +72,7 @@ export const DocsLayout: ParentComponent = (props) => {
 								</h1>
 							)}
 						</Show>
-					</header>
+					</div>
 					{props.children}
 					<Pagination currentIndex={entryIndex()} collection={collection()} />
 				</article>

@@ -25,7 +25,7 @@ const icons = {
 
 export const QuickLinks: ParentComponent<QuickLinksProps> = (props) => {
 	return (
-		<div class="group relative rounded-xl border border-sky-600 dark:border-sky-800 bg-sky-50/90">
+		<div class="group relative rounded-xl border border-sky-600 dark:border-sky-800 dark:bg-transparent">
 			<div class="absolute -inset-px rounded-xl border-2 border-transparent opacity-0 [background:linear-gradient(var(--quick-links-hover-bg,theme(colors.sky.200)),var(--quick-links-hover-bg,theme(colors.sky.200)))_padding-box,linear-gradient(to_top,theme(colors.indigo.400),theme(colors.cyan.400),theme(colors.sky.500))_border-box] group-hover:opacity-100 dark:[--quick-links-hover-bg:theme(colors.slate.800)]" />
 			<div class="relative overflow-hidden rounded-xl p-6">
 				<div class="flex">

@@ -20,7 +20,7 @@ import "~/styles.css";
 export default function Root() {
 	return (
 		<Suspense>
-			<Html lang="en" class={`h-full`}>
+			<Html lang="en">
 				<Head>
 					<Title>Solid Docs</Title>
 					<Meta charset="utf-8" />

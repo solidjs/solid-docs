@@ -1,15 +1,18 @@
 ---
 title: createEffect
-order: 5
 ---
 
-```ts
+```tsx
 function createEffect<T>(fn: (v: T) => T, value?: T): void
+
 ```
 
-Effects are a general way to make arbitrary code ("side effects") run whenever dependencies change, e.g., to modify the DOM manually. `createEffect` creates a new computation that runs the given function in a tracking scope, thus automatically tracking its dependencies, and automatically reruns the function whenever the dependencies update. For example:
+Effects are a general way to make arbitrary code ("side effects") run whenever dependencies change, e.g., to modify the DOM manually. 
+`createEffect` creates a new computation that runs the given function in a tracking scope, thus automatically tracking its dependencies, and automatically reruns the function whenever the dependencies update. 
 
-```ts
+For example:
+
+```tsx
 const [a, setA] = createSignal(initialValue)
 
 // effect that depends on signal `a`
@@ -18,11 +21,13 @@ createEffect(() => doSideEffect(a()))
 
 The effect will run whenever `a` changes value.
 
-The effect will also run once, immediately after it is created, to initialize the DOM to the correct state. This is called the "mounting" phase. However, we recommend using `onMount` instead, which is a more explicit way to express this.
+The effect will also run once, immediately after it is created, to initialize the DOM to the correct state. This is called the "mounting" phase. 
+However, we recommend using `onMount` instead, which is a more explicit way to express this.
 
-The effect callback can return a value, which will be passed as the `prev` argument to the next invocation of the effect. This is useful for memoizing values that are expensive to compute. For example:
+The effect callback can return a value, which will be passed as the `prev` argument to the next invocation of the effect. 
+This is useful for memoizing values that are expensive to compute. For example:
 
-```ts
+```tsx
 const [a, setA] = createSignal(initialValue)
 
 // effect that depends on signal `a`
@@ -37,9 +42,10 @@ createEffect((prevA) => {
 
 Effects are meant primarily for side effects that read but don't write to the reactive system: it's best to avoid setting signals in effects, which without care can cause additional rendering or even infinite effect loops. Instead, prefer using [createMemo](/reference/basic-reactivity/create-memo) to compute new values that depend on other reactive values, so the reactive system knows what depends on what, and can optimize accordingly.
 
-The first execution of the effect function is not immediate; it's scheduled to run after the current rendering phase (e.g., after calling the function passed to [render](/reference/rendering/render), [createRoot](/reference/reactive-utilities/create-root), or [runWithOwner](/reference/reactive-utilities/run-with-owner)). If you want to wait for the first execution to occur, use [queueMicrotask](https://developer.mozilla.org/en-US/docs/Web/API/queueMicrotask) (which runs before the browser renders the DOM) or await Promise.resolve() or setTimeout(..., 0) (which runs after browser rendering).
+The first execution of the effect function is not immediate; it's scheduled to run after the current rendering phase (e.g., after calling the function passed to [render](/reference/rendering/render), [createRoot](/reference/reactive-utilities/create-root), or [runWithOwner](/reference/reactive-utilities/run-with-owner)). 
+If you want to wait for the first execution to occur, use [queueMicrotask](https://developer.mozilla.org/en-US/docs/Web/API/queueMicrotask) (which runs before the browser renders the DOM) or `await Promise.resolve()` or `setTimeout(..., 0)` (which runs after browser rendering).
 
-```ts
+```tsx
 // assume this code is in a component function, so is part of a rendering phase
 const [count, setCount] = createSignal(0)
 
@@ -65,15 +71,21 @@ queueMicrotask(() => {
 // goodbye
 ```
 
-This delay in first execution is useful because it means an effect defined in a component scope runs after the JSX returned by the component gets added the DOM. In particular, [refs](/reference/jsx-attributes/ref) will already be set. Thus you can use an effect to manipulate the DOM manually, call vanilla JS libraries, or other side effects.
+This delay in first execution is useful because it means an effect defined in a component scope runs after the JSX returned by the component gets added the DOM. 
+In particular, [refs](/reference/jsx-attributes/ref) will already be set. 
+Thus you can use an effect to manipulate the DOM manually, call vanilla JS libraries, or other side effects.
 
-Note that the first run of the effect still runs before the browser renders the DOM to the screen (similar to React's `useLayoutEffect`). If you need to wait until after rendering (e.g., to measure the rendering), you can use `await Promise.resolve()` (or `Promise.resolve().then(...)`), but note that subsequent use of reactive state (such as signals) will not trigger the effect to rerun, as tracking is not possible after an async function uses `await`. Thus you should use all dependencies before the promise.
+Note that the first run of the effect still runs before the browser renders the DOM to the screen (similar to React's `useLayoutEffect`). 
+If you need to wait until after rendering (e.g., to measure the rendering), you can use `await Promise.resolve()` (or `Promise.resolve().then(...)`), but note that subsequent use of reactive state (such as signals) will not trigger the effect to rerun, as tracking is not possible after an async function uses `await`. 
+Thus you should use all dependencies before the promise.
 
 If you'd rather an effect run immediately even for its first run, use [createRenderEffect](/reference/secondary-primitives/create-render-effect) or [createComputed](/reference/secondary-primitives/create-computed).
 
-You can clean up your side effects in between executions of the effect function by calling [onCleanup](/reference/lifecycles/on-cleanup) inside the effect function. Such a cleanup function gets called both in between effect executions and when the effect gets disposed (e.g., the containing component unmounts). For example:
+You can clean up your side effects in between executions of the effect function by calling [onCleanup](/reference/lifecycles/on-cleanup) inside the effect function. 
+Such a cleanup function gets called both in between effect executions and when the effect gets disposed (e.g., the containing component unmounts). 
+For example:
 
-```ts
+```tsx
 // listen to event dynamically given by eventName signal
 createEffect(() => {
 	const event = eventName()

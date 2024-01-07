@@ -1,7 +1,7 @@
 import { Component, For } from "solid-js";
 import { Button } from "../button";
 
-function TrafficLightsIcon(props: Component<"svg">) {
+const TrafficLightsIcon: Component<{ class: string }> = (props) => {
 	return (
 		<svg aria-hidden="true" viewBox="0 0 42 10" fill="none" {...props}>
 			<circle cx="5" cy="5" r="4.5" />
@@ -9,10 +9,9 @@ function TrafficLightsIcon(props: Component<"svg">) {
 			<circle cx="37" cy="5" r="4.5" />
 		</svg>
 	);
-}
+};
 
-export const Hero: Component = () => {
-	const code = `import { createSignal } from "solid-js";
+const code = `import { createSignal } from "solid-js";
 
 	function Counter() {
 		const [count, setCount] = createSignal(0);
@@ -26,12 +25,12 @@ export const Hero: Component = () => {
 		);
 	  }`;
 
+export const Hero: Component = () => {
 	return (
 		<div class="overflow-hidden bg-slate-900 dark:-mb-32 dark:mt-[-4.75rem] dark:pb-32 dark:pt-[4.75rem]">
 			<div class="py-16 sm:px-2 lg:relative lg:px-0 lg:py-20">
 				<div class="mx-auto grid max-w-2xl grid-cols-1 items-center gap-x-8 gap-y-16 px-4 lg:max-w-8xl lg:grid-cols-2 lg:px-8 xl:gap-x-16 xl:px-12">
 					<div class="relative z-10 md:text-center lg:text-left">
-						<span>image</span>
 						<div class="relative">
 							<p class="inline bg-gradient-to-r from-indigo-200 via-sky-400 to-indigo-200 bg-clip-text font-display text-5xl tracking-tight text-transparent">
 								Effortless UIs with Reactive Precision.
@@ -50,11 +49,8 @@ export const Hero: Component = () => {
 						</div>
 					</div>
 					<div class="relative lg:static xl:pl-10">
-						<div class="absolute inset-x-[-50vw] -bottom-48 -top-32 [mask-image:linear-gradient(transparent,white,white)] dark:[mask-image:linear-gradient(transparent,white,transparent)] lg:-bottom-32 lg:-top-32 lg:left-[calc(50%+14rem)] lg:right-0 lg:[mask-image:none] lg:dark:[mask-image:linear-gradient(white,white,transparent)]">
-							<span>background</span>
-						</div>
 						<div class="relative">
-							<div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-sky-500 dark:from-sky-300 via-sky-500/70 dark:via-sky-300/70 to-blue-300 opacity-10 blur-lg" />
+							<div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-sky-500 dark:from-sky-300 via-sky-500/70 dark:via-sky-300/70 to-blue-300 opacity-10 blur-lg dark:bg-white" />
 							<div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-sky-300 via-sky-300/70 to-blue-300 opacity-10" />
 							<div class="relative rounded-2xl bg-[#0A101F]/80 ring-1 ring-sky-200/10 backdrop-blur">
 								<div class="absolute -top-px left-20 right-11 h-px bg-gradient-to-r from-sky-300/0 via-sky-300/70 to-sky-300/0" />
@@ -87,16 +83,7 @@ export const Hero: Component = () => {
 											</For>
 										</div>
 										<pre class="flex overflow-x-auto pb-6 custom-scrollbar px-4">
-											<code>
-												<For each={code.split("\n")}>
-													{(line) => (
-														<>
-															{line}
-															<br />
-														</>
-													)}
-												</For>
-											</code>
+											{code}
 										</pre>
 									</div>
 								</div>

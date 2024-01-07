@@ -8,10 +8,12 @@ import { chevronDown } from "solid-heroicons/solid";
 type Entry = {
 	title: string;
 	path: string;
+	mainNavExclude?: boolean;
 	children?: Entry[];
 };
 
 function ListItemLink(props: { item: Entry }) {
+	if (props.item.mainNavExclude) return null;
 	const location = useLocation();
 	const linkStyles = () =>
 		location.pathname === props.item.path.replace(/\\/g, "/")

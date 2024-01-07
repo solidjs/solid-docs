@@ -11,7 +11,6 @@ const pages = z.array(z.string());
 const sectionSchema = z.object({
 	type: z.literal("section"),
 	title: z.string(),
-	// children: z.array(z.string()),
 	pages,
 });
 const entrySchema = z.object({
@@ -75,8 +74,7 @@ async function buildFileTree(entry = COLLECTIONS_ROOT) {
 		const file = await fs.readFile(entryPath, "utf-8");
 		const parentSection = await getDirData(path.resolve(parentSegment));
 
-		const { title } = matter(file).data;
-
+		const { title, mainNavExclude } = matter(file).data;
 		/**
 		 * @todo
 		 * parse frontmatter with Zod
@@ -92,6 +90,7 @@ async function buildFileTree(entry = COLLECTIONS_ROOT) {
 			slug: path.basename(entryPath, path.extname(entryPath)),
 			parent: parentSection.title,
 			title,
+			mainNavExclude,
 		};
 	} else {
 		console.error(`WARNING: \n ${entry} was not found.\n Please fix it!\n`);

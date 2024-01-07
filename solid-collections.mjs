@@ -86,6 +86,7 @@ async function buildFileTree(entry = COLLECTIONS_ROOT) {
 				"/" +
 				path
 					.relative(path.join(process.cwd(), COLLECTIONS_ROOT), entryPath)
+					.replace(/\index\.mdx?/, "")
 					.replace(/\.mdx?/, ""),
 			slug: path.basename(entryPath, path.extname(entryPath)),
 			parent: parentSection.title,

@@ -173,7 +173,7 @@ export default {
 	code: (props: ParentProps) => {
 		return (
 			<code
-				class="inline-block not-prose font-mono bg-slate-800/70 text-slate-300 px-1.5 py-0.5 rounded-lg text-[0.8em] leading-snug"
+				class="inline-block not-prose font-mono bg-slate-800/70 text-slate-200 px-1.5 py-0.5 rounded-lg text-[0.8em] leading-snug"
 				{...props}
 			>
 				{props.children}

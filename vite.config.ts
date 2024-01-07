@@ -1,6 +1,4 @@
-import { type PluginOption } from "vite";
 import { defineConfig } from "@solidjs/start/config";
-import mdx from "@mdx-js/rollup";
 import remarkFrontmatter from "remark-frontmatter";
 import rehypeRaw from "rehype-raw";
 import { nodeTypes } from "@mdx-js/mdx";

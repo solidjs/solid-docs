@@ -91,7 +91,6 @@ export default defineConfig({
 		solid({
 			adapter,
 			extensions: [".mdx", ".md", "tsx"],
-			routesDir: "../content",
 		}),
 		docsTree(),
 		docsEntries(),

@@ -11,7 +11,7 @@ import {
 	Title,
 } from "solid-start";
 import { MDXProvider } from "solid-mdx";
-import { Suspense, createEffect } from "solid-js";
+import { Suspense } from "solid-js";
 
 import Md from "~/ui/markdown-components";
 import { Layout } from "~/ui/layout";

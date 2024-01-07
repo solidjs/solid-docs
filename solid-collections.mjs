@@ -49,7 +49,7 @@ async function getDirData(dirPath = process.cwd()) {
 	}
 }
 
-async function buildFileTree(entry = "content") {
+async function buildFileTree(entry = "src/routes") {
 	const entryPath = path.resolve(process.cwd(), entry);
 	const parentSegment = path.parse(entryPath).dir;
 	const stats = await fs.stat(entryPath);
@@ -85,7 +85,7 @@ async function buildFileTree(entry = "content") {
 			path:
 				"/" +
 				path
-					.relative(path.join(process.cwd(), "content"), entryPath)
+					.relative(path.join(process.cwd(), "src/routes"), entryPath)
 					.replace(/\.mdx?/, ""),
 			slug: path.basename(entryPath, path.extname(entryPath)),
 			parent: parentSection.title,
@@ -99,8 +99,8 @@ async function buildFileTree(entry = "content") {
 
 async function createNavTree() {
 	const [learn, references] = await Promise.all([
-		buildFileTree("content"),
-		buildFileTree("content/reference"),
+		buildFileTree("src/routes"),
+		buildFileTree("src/routes/reference"),
 	]);
 
 	if (

@@ -21,19 +21,20 @@ export const ImageLinks: ParentComponent<ImageLinksProps> = (props) => {
 	const { file } = logos[props.logo];
 
 	return (
-		<div class="group relative rounded-xl border border-sky-600 dark:border-sky-800 bg-sky-50/90">
+		<div class="group relative rounded-xl  dark:border-sky-800 dark:bg-transparent">
 			<div class="absolute -inset-px rounded-xl border-2 border-transparent opacity-0 [background:linear-gradient(var(--quick-links-hover-bg,theme(colors.sky.200)),var(--quick-links-hover-bg,theme(colors.sky.200)))_padding-box,linear-gradient(to_top,theme(colors.indigo.400),theme(colors.cyan.400),theme(colors.sky.500))_border-box] group-hover:opacity-100 dark:[--quick-links-hover-bg:theme(colors.slate.800)]" />
 			<div class="relative overflow-hidden rounded-xl p-6">
 				<div class="flex flex-col items-center">
-					<img
-						src={`/assets/${file}`}
-						alt={props.title}
-						loading="lazy"
-						decoding="async"
-						height={64}
-						width={64}
-					/>
-					<div class="text-lg text-slate-900 dark:text-white capitalize no-underline pl-3">
+					<div class="bg-black dark:bg-transparent border border-slate-700  h-16 w-16 rounded-full flex justify-center items-center">
+						<img
+							class="h-10 w-10 not-prose"
+							src={`/assets/${file}`}
+							alt={props.title}
+							loading="lazy"
+							decoding="async"
+						/>
+					</div>
+					<div class="text-lg pt-1 text-slate-900 dark:text-white capitalize no-underline ">
 						<Show
 							when={props.href.match(/https?:\/\//)}
 							fallback={

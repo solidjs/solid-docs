@@ -28,7 +28,7 @@ const code = `import { createSignal } from "solid-js";
 export const Hero: Component = () => {
 	return (
 		<div class="overflow-hidden bg-slate-900 dark:-mb-32 dark:mt-[-4.75rem] dark:pb-32 dark:pt-[4.75rem]">
-			<div class="py-16 sm:px-2 lg:relative lg:px-0 lg:py-20">
+			<div class="py-16 sm:px-2 lg:relative lg:px-0 lg:py-12">
 				<div class="mx-auto grid max-w-2xl grid-cols-1 items-center gap-x-8 gap-y-16 px-4 lg:max-w-8xl lg:grid-cols-2 lg:px-8 xl:gap-x-16 xl:px-12">
 					<div class="relative md:text-center lg:text-left">
 						<div class="relative">

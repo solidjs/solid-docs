@@ -90,7 +90,7 @@ export function Callout(props: CalloutProps) {
 				>
 					<span class="font-semibold text-xl">{mergedProps.title}</span>
 				</Show>
-				<div class="text-slate-200 pr-7 [&>*:first-child]:mt-1">
+				<div class="dark:prose-invert prose pr-7 [&>*:first-child]:mt-1">
 					{mergedProps.children}
 				</div>
 			</div>

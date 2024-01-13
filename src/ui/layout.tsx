@@ -1,7 +1,6 @@
 import { ParentComponent, Show } from "solid-js";
 
 import { MainNavigation } from "~/ui/layout/main-navigation";
-import { MainFooter } from "./layout/main-footer";
 import { MainHeader } from "./layout/main-header";
 import { Hero } from "./layout/hero";
 import { useMatch } from "@solidjs/router";
@@ -43,7 +42,6 @@ export const Layout: ParentComponent = (props) => {
 						</Show>
 					</main>
 				</div>
-				<MainFooter />
 			</div>
 		</PageStateProvider>
 	);

@@ -60,7 +60,7 @@ function DirList(props: { list: Entry[] }) {
 															</span>
 															<Icon path={chevronDown} class="h-4 my-auto" />
 														</Collapsible.Trigger>
-														<Collapsible.Content>
+														<Collapsible.Content class="navigation_collapsible">
 															<ul
 																role="list"
 																class="ml-4 mt-2 space-y-2 border-l-2 border-slate-300 dark:border-slate-700 lg:mt-4 lg:space-y-3 dark:lg:border-slate-700 text-sm"

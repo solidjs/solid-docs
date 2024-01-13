@@ -4,6 +4,7 @@ import { isServer } from "solid-js/web";
 
 import { Logo, GitHubIcon } from "~/ui/logo";
 import { ThemeSelector } from "./theme-selector";
+import { MobileNavigation } from "./mobile-navigation";
 
 export function MainHeader() {
 	const [isScrolled, setIsScrolled] = createSignal(false);
@@ -25,14 +26,16 @@ export function MainHeader() {
 
 	return (
 		<header
-			class="sticky top-0 z-50 flex flex-none flex-wrap items-center justify-between bg-white/70 px-4 py-2 shadow-md shadow-slate-900/5 transition duration-500 dark:shadow-none sm:px-6 lg:px-8 backdrop-blur w-screen"
+			class="sticky top-0 z-50 flex flex-none flex-wrap items-center justify-between bg-blue-100/80 px-4 py-2 shadow-md shadow-slate-900/5 transition duration-500 dark:shadow-none sm:px-6 lg:px-8 backdrop-blur w-screen"
 			classList={{
 				"dark:bg-slate-900/95 dark:[@supports(backdrop-filter:blur(0))]:bg-slate-900/75":
 					isScrolled(),
 				"dark:bg-transparent bg-transparent": !isScrolled(),
 			}}
 		>
-			<div class="flex lg:hidden">{/* <MobileNavigation /> */}</div>
+			<div class="flex lg:hidden">
+				<MobileNavigation />
+			</div>
 			<A href="/" aria-label="Home page" class="ml-6">
 				<Logo class="h-9" />
 			</A>

@@ -5,6 +5,7 @@ import { Tabs } from "@kobalte/core";
 import nav from "solid:collection/tree";
 import { Icon } from "solid-heroicons";
 import { chevronDown } from "solid-heroicons/solid";
+import { setIsOpen } from "./mobile-navigation";
 
 type Entry = {
 	title: string;
@@ -23,6 +24,7 @@ function ListItemLink(props: { item: Entry }) {
 	return (
 		<li class="relative">
 			<A
+				onClick={() => setIsOpen(false)}
 				href={props.item.path}
 				class={`block w-full text-sm pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full ${linkStyles()}`}
 			>

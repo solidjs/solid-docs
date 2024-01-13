@@ -1,7 +1,7 @@
 import { A, useMatch } from "@solidjs/router";
 import { For, Show } from "solid-js";
 import { useLocation } from "@solidjs/router";
-import { Tabs } from "@kobalte/core";
+import { Collapsible, Tabs } from "@kobalte/core";
 import nav from "solid:collection/tree";
 import { Icon } from "solid-heroicons";
 import { chevronDown } from "solid-heroicons/solid";
@@ -51,20 +51,26 @@ function DirList(props: { list: Entry[] }) {
 								<For each={item.children}>
 									{(child) =>
 										Array.isArray(child.children) ? (
-											<li>
-												<button class="relative flex justify-between hover:cursor-pointer w-full pl-3.5 text-slate-400 dark:text-slate-300 text-sm">
-													<span class="font-display font-semibold text-slate-500 dark:text-slate-100 text-sm">
-														{child.title}
-													</span>
-													<Icon path={chevronDown} class="h-4 my-auto" />
-												</button>
-												<ul
-													role="list"
-													class="ml-4 mt-2 space-y-2 border-l-2 border-slate-300 dark:border-slate-700 lg:mt-4 lg:space-y-3 dark:lg:border-slate-700 text-sm"
-												>
-													<DirList list={child.children} />
-												</ul>
-											</li>
+											<>
+												<li>
+													<Collapsible.Root defaultOpen={true}>
+														<Collapsible.Trigger class="relative flex justify-between hover:cursor-pointer w-full pl-3.5 text-slate-400 dark:text-slate-300 text-sm">
+															<span class="font-display font-semibold text-slate-500 dark:text-slate-100 text-sm">
+																{child.title}
+															</span>
+															<Icon path={chevronDown} class="h-4 my-auto" />
+														</Collapsible.Trigger>
+														<Collapsible.Content>
+															<ul
+																role="list"
+																class="ml-4 mt-2 space-y-2 border-l-2 border-slate-300 dark:border-slate-700 lg:mt-4 lg:space-y-3 dark:lg:border-slate-700 text-sm"
+															>
+																<DirList list={child.children} />
+															</ul>
+														</Collapsible.Content>
+													</Collapsible.Root>
+												</li>
+											</>
 										) : (
 											<ListItemLink item={child} />
 										)
@@ -110,7 +116,7 @@ export function MainNavigation() {
 				<Tabs.Content value="learn">
 					<Show when={learn()} fallback={<p>No routes found...</p>}>
 						{(learnList) => (
-							<ul role="list" class="space-y-6">
+							<ul role="list" class="space-y-6 px-4">
 								<DirList list={learnList()} />
 							</ul>
 						)}

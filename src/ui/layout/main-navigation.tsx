@@ -98,7 +98,7 @@ export function MainNavigation() {
 	return (
 		<nav>
 			<Tabs.Root defaultValue={isReference() ? "reference" : "learn"}>
-				<Tabs.List class="w-full relative pb-6">
+				<Tabs.List class="w-full pt-6 sticky top-0 z-10 dark:bg-slate-900 bg-blue-100/80">
 					<Tabs.Trigger
 						value="learn"
 						class="inline-block px-4 py-2 outline-none hover:bg-sky-500/30 dark:hover:bg-sky-800 dark:focus-visible:bg-sky-800"
@@ -113,7 +113,7 @@ export function MainNavigation() {
 					</Tabs.Trigger>
 					<Tabs.Indicator class="absolute bg-sky-500 dark:bg-sky-500 transition-all duration-250 h-px" />
 				</Tabs.List>
-				<Tabs.Content value="learn">
+				<Tabs.Content value="learn" class="w-full relative top-8">
 					<Show when={learn()} fallback={<p>No routes found...</p>}>
 						{(learnList) => (
 							<ul role="list" class="space-y-6 px-4">
@@ -122,7 +122,7 @@ export function MainNavigation() {
 						)}
 					</Show>
 				</Tabs.Content>
-				<Tabs.Content value="reference">
+				<Tabs.Content value="reference" class="w-full relative top-8">
 					<Show when={references()} fallback={<p>No routes found...</p>}>
 						{(referenceList) => (
 							<ul role="list" class="space-y-4">

@@ -24,7 +24,7 @@ export const Layout: ParentComponent = (props) => {
 						<div class="absolute inset-y-0 right-0 w-[50vw] dark:hidden" />
 						<div class="absolute bottom-0 right-0 top-16 hidden h-12 w-px bg-gradient-to-t from-slate-800 dark:block" />
 						<div class="absolute bottom-0 right-0 top-28 hidden w-px bg-slate-800 dark:block" />
-						<div class="sticky top-[4.75rem] -ml-0.5 h-[calc(100vh-4.75rem)] w-64 overflow-y-auto mt-10 py-6 pl-0.5 pr-8 xl:w-72 xl:pr-16 custom-scrollbar">
+						<div class="sticky top-[4.75rem] -ml-0.5 h-[calc(100vh-4.75rem)] w-64 overflow-y-auto mt-10 my-6 pl-0.5 pr-8 xl:w-72 xl:pr-16 custom-scrollbar">
 							<MainNavigation />
 						</div>
 					</div>

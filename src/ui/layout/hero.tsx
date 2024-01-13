@@ -1,5 +1,10 @@
-import { Component, For } from "solid-js";
+import { Component, Index, Show, Suspense, createResource } from "solid-js";
 import { Button } from "../button";
+import { codeToHtml } from "shikiji";
+import { clientOnly } from "@solidjs/start";
+import { counterTxt, snippetLines } from "./hero-code-snippet";
+
+const RenderedCode = clientOnly(() => import("./hero-code-snippet"));
 
 const TrafficLightsIcon: Component<{ class: string }> = (props) => {
 	return (
@@ -10,20 +15,6 @@ const TrafficLightsIcon: Component<{ class: string }> = (props) => {
 		</svg>
 	);
 };
-
-const code = `import { createSignal } from "solid-js";
-
-	function Counter() {
-		const [count, setCount] = createSignal(0);
-
-		setInterval(() => setCount(count() + 1), 1000);
-		
-		return (
-			<div>
-				<p>Count: {count()}</p>
-			</div>
-		);
-	  }`;
 
 export const Hero: Component = () => {
 	return (
@@ -67,24 +58,29 @@ export const Hero: Component = () => {
 									<div class="mt-6 flex items-start px-1 text-sm">
 										<div
 											aria-hidden="true"
-											class="select-none border-r border-slate-300/5 pr-4 font-mono text-slate-400"
+											class="select-none border-r border-slate-300/5 pr-4 font-mono text-slate-400 pb-6"
 										>
-											<For
-												each={Array.from({
-													length: code.split("\n").length,
-												})}
-											>
+											<Index each={snippetLines}>
 												{(_, index) => (
-													<>
-														{(index() + 1).toString().padStart(2, "0")}
-														<br />
-													</>
+													<pre class="pb-px">
+														{(index + 1).toString().padStart(2, "0")}
+													</pre>
 												)}
-											</For>
+											</Index>
 										</div>
-										<pre class="flex overflow-x-auto pb-6 custom-scrollbar px-4">
-											{code}
-										</pre>
+										<div
+											class={`flex overflow-x-auto custom-scrollbar px-4 min-h-[${
+												snippetLines.length + 5
+											}em] text-white `}
+										>
+											<Suspense
+												fallback={
+													<pre class="text-slate-700">{counterTxt}</pre>
+												}
+											>
+												<RenderedCode />
+											</Suspense>
+										</div>
 									</div>
 								</div>
 							</div>

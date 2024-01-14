@@ -26,7 +26,7 @@ function ListItemLink(props: { item: Entry }) {
 			<A
 				onClick={() => setIsOpen(false)}
 				href={props.item.path}
-				class={`block w-full text-sm pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full ${linkStyles()}`}
+				class={`block w-full lg:text-sm pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full ${linkStyles()}`}
 			>
 				{props.item.title}
 			</A>
@@ -41,7 +41,7 @@ function DirList(props: { list: Entry[] }) {
 				if (Array.isArray(item.children)) {
 					return (
 						<li>
-							<span class="font-display font-semibold text-slate-500 dark:text-slate-100 text-sm">
+							<span class="font-display font-semibold text-slate-500 dark:text-slate-100 lg:text-sm">
 								{item.title}
 							</span>
 							<ul
@@ -54,8 +54,8 @@ function DirList(props: { list: Entry[] }) {
 											<>
 												<li>
 													<Collapsible.Root defaultOpen={true}>
-														<Collapsible.Trigger class="relative flex justify-between hover:cursor-pointer w-full pl-3.5 text-slate-400 dark:text-slate-300 text-sm">
-															<span class="font-display font-semibold text-slate-500 dark:text-slate-100 text-sm">
+														<Collapsible.Trigger class="relative flex justify-between hover:cursor-pointer w-full pl-3.5 text-slate-400 dark:text-slate-300 lg:text-sm">
+															<span class="font-display font-semibold text-slate-500 dark:text-slate-100 lg:text-sm">
 																{child.title}
 															</span>
 															<Icon path={chevronDown} class="h-4 my-auto" />
@@ -63,7 +63,7 @@ function DirList(props: { list: Entry[] }) {
 														<Collapsible.Content class="navigation_collapsible">
 															<ul
 																role="list"
-																class="ml-4 mt-2 space-y-2 border-l-2 border-slate-300 dark:border-slate-700 lg:mt-4 lg:space-y-3 dark:lg:border-slate-700 text-sm"
+																class="ml-4 mt-2 space-y-2 border-l-2 border-slate-300 dark:border-slate-700 lg:mt-4 lg:space-y-3 dark:lg:border-slate-700 text-base lg:text-sm"
 															>
 																<DirList list={child.children} />
 															</ul>
@@ -98,7 +98,7 @@ export function MainNavigation() {
 	return (
 		<nav>
 			<Tabs.Root defaultValue={isReference() ? "reference" : "learn"}>
-				<Tabs.List class="w-full pt-6 sticky top-0 z-10 dark:bg-slate-900 bg-blue-100/80">
+				<Tabs.List class="w-full pb-4 pt-8 sticky top-0 z-10 dark:bg-slate-900 bg-blue-100/80">
 					<Tabs.Trigger
 						value="learn"
 						class="inline-block px-4 py-2 outline-none hover:bg-sky-500/30 dark:hover:bg-sky-800 dark:focus-visible:bg-sky-800"
@@ -113,7 +113,7 @@ export function MainNavigation() {
 					</Tabs.Trigger>
 					<Tabs.Indicator class="absolute bg-sky-500 dark:bg-sky-500 transition-all duration-250 h-px" />
 				</Tabs.List>
-				<Tabs.Content value="learn" class="w-full relative top-8">
+				<Tabs.Content value="learn" class="w-full relative top-8 text-base">
 					<Show when={learn()} fallback={<p>No routes found...</p>}>
 						{(learnList) => (
 							<ul role="list" class="space-y-6 px-4">

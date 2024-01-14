@@ -61,14 +61,16 @@ export default defineConfig({
 			preset: process.env.GITHUB_ACTIONS ? "node" : "netlify",
 		},
 		extensions: ["mdx", "md"],
-		routesDir: "../content",
+		// @ts-ignore
 		solid: {
 			extensions: ["mdx", "md"],
-
-			ssr: {
-				noExternal: ["@kobalte/core", "@internationalized/message"],
-			},
 		},
+	},
+	optimizeDeps: {
+		include: [
+			"@solidjs/start > source-map-js",
+			"@solidjs/start > error-stack-parser",
+		],
 	},
 	plugins: [
 		docsTree(),

@@ -58,7 +58,7 @@ function docsEntries() {
 export default defineConfig({
 	start: {
 		server: {
-			preset: process.env.GITHUB_ACTIONS ? "node" : "netlify",
+			preset: "vercel",
 		},
 		extensions: ["mdx", "md"],
 		// @ts-ignore

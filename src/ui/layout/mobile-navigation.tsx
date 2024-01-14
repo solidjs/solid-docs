@@ -8,7 +8,7 @@ export const [isOpen, setIsOpen] = createSignal(false);
 
 export const MobileNavigation = () => {
 	return (
-		<Dialog.Root open={true} onOpenChange={setIsOpen}>
+		<Dialog.Root open={isOpen()} onOpenChange={setIsOpen}>
 			<Dialog.Trigger>
 				<Icon path={bars_3} class="h-6 prose dark:prose-invert" />
 			</Dialog.Trigger>

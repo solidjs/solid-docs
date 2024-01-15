@@ -95,7 +95,7 @@ export default {
 		const resolved = children(() => props.children);
 		const resolvedArray = resolved.toArray();
 
-		if (rest.href.startsWith("https://")) {
+		if (!isServer && rest.href.startsWith("https://")) {
 			return <EraserLink {...rest} />;
 		}
 
@@ -111,7 +111,7 @@ export default {
 			(!isServer &&
 				resolvedArray[0] instanceof Element &&
 				resolvedArray[0].nodeName === "CODE")
-		)
+		) {
 			return (
 				<A
 					class="[&>code]:shadow-[0_0_0_1px_#38bdf8] hover:[&>code]:shadow-[0_0_0_2px_#38bdf8]"
@@ -120,15 +120,16 @@ export default {
 					{resolved()}
 				</A>
 			);
-
-		return (
-			<A
-				{...rest}
-				class={`no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,theme(colors.sky.400))] hover:[--tw-prose-underline-size:4px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.sky.800))] dark:hover:[--tw-prose-underline-size:6px] dark:text-sky-400 text-sky-700 font-semibold`}
-			>
-				{resolved()}
-			</A>
-		);
+		} else {
+			return (
+				<A
+					{...rest}
+					class={`no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,theme(colors.sky.400))] hover:[--tw-prose-underline-size:4px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.sky.800))] dark:hover:[--tw-prose-underline-size:6px] dark:text-sky-400 text-sky-700 font-semibold`}
+				>
+					{resolved()}
+				</A>
+			);
+		}
 	},
 	p: (props: ParentProps) => (
 		<p {...props} class="my-4">

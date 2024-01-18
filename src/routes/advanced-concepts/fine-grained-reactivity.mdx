@@ -1,5 +1,5 @@
 ---
-title: Understanding Fine-Grained Reactivity
+title: Fine-Grained Reactivity
 ---
 
 Reactivity ensures automatic responses to data changes, eliminating the need for manual updates to the user interface (UI).
@@ -38,15 +38,15 @@ In Solid, the [`createSignal`](/reference/basic-reactivity/create-signal) functi
 This function returns the getter and setter as a pair in a two-element array, called a tuple.
 
 ```js
-import { createSignal } from "solid-js"
+import { createSignal } from "solid-js";
 
-const [count, setCount] = createSignal(1)
+const [count, setCount] = createSignal(1);
 
-console.log(count()) // prints "1"
+console.log(count()); // prints "1"
 
-setCount(0) // modifies the count value to 0
+setCount(0); // modifies the count value to 0
 
-console.log(count()) // prints "0"
+console.log(count()); // prints "0"
 ```
 
 Here, `count` serves as the getter, and `setCount` functions as the setter.
@@ -57,13 +57,13 @@ Here, `count` serves as the getter, and `setCount` functions as the setter.
 They can be tought of as automated responders where any changes in the signal's value will trigger the effect to run.
 
 ```jsx
-import { createSignal, createEffect } from "solid-js"
+import { createSignal, createEffect } from "solid-js";
 
-const [count, setCount] = createSignal(0)
+const [count, setCount] = createSignal(0);
 
 createEffect(() => {
-	console.log(count())
-})
+	console.log(count());
+});
 ```
 
 The effect takes a function that is called whenever _any_ of the signals it relies on changes, such as `count` in this example.
@@ -82,11 +82,11 @@ function createSignal() {}
 
 function createEffect() {}
 
-const [count, setCount] = createSignal(0)
+const [count, setCount] = createSignal(0);
 
 createEffect(() => {
-	console.log("The count is " + count())
-})
+	console.log("The count is " + count());
+});
 ```
 
 ## Reactive primitives
@@ -100,17 +100,17 @@ The `createSignal` function performs two main tasks:
 
 ```tsx
 function createSignal(initialValue) {
-	let value = initialValue
+	let value = initialValue;
 
 	function getter() {
-		return value
+		return value;
 	}
 
 	function setter(newValue) {
-		value = newValue
+		value = newValue;
 	}
 
-	return [getter, setter]
+	return [getter, setter];
 }
 
 // ..
@@ -127,7 +127,7 @@ At this stage, reactivity is not present, however.
 // ..
 
 function createEffect(fn) {
-	fn()
+	fn();
 }
 
 // ..
@@ -143,36 +143,36 @@ Reactivity emerges when linking `createSignal` and `createEffect` and this happe
 4. Notifying all subscribers when the signal has updated.
 
 ```jsx
-let currentSubscriber = null
+let currentSubscriber = null;
 
 function createSignal(initialValue) {
-	let value = initialValue
-	const subscribers = new Set()
+	let value = initialValue;
+	const subscribers = new Set();
 
 	function getter() {
 		if (currentSubscriber) {
-			subscribers.add(currentSubscriber)
+			subscribers.add(currentSubscriber);
 		}
-		return value
+		return value;
 	}
 
 	function setter(newValue) {
-		if (value === newValue) return // if the new value is not different, do not notify dependent effects and memos
-		value = newValue
+		if (value === newValue) return; // if the new value is not different, do not notify dependent effects and memos
+		value = newValue;
 		for (const subscriber of subscribers) {
-			subscriber() //
+			subscriber(); //
 		}
 	}
 
-	return [getter, setter]
+	return [getter, setter];
 }
 
 // creating an effect
 function createEffect(fn) {
-	const previousSubscriber = currentSubscriber // Step 1
-	currentSubscriber = fn
-	fn()
-	currentSubscriber = previousSubscriber
+	const previousSubscriber = currentSubscriber; // Step 1
+	currentSubscriber = fn;
+	fn();
+	currentSubscriber = previousSubscriber;
 }
 
 //..
@@ -199,15 +199,15 @@ To validate the system, increment the `count` value at one-second intervals:
 ```jsx
 //..
 
-const [count, setCount] = createSignal(0)
+const [count, setCount] = createSignal(0);
 
 createEffect(() => {
-	console.log("The count is " + count())
-})
+	console.log("The count is " + count());
+});
 
 setInterval(() => {
-	setCount(count() + 1)
-}, 1000)
+	setCount(count() + 1);
+}, 1000);
 ```
 
 This will display the incremented count value on the console at one-second intervals to confirm the reactive system's functionality.
@@ -225,26 +225,26 @@ Now, consider a scenario where a condition influences the data used to calculate
 
 ```jsx
 // Temperature.jsx
-console.log("1. Initialize")
-const [temperature, setTemperature] = createSignal(72)
-const [unit, setUnit] = createSignal("Fahrenheit")
-const [displayTemp, setDisplayTemp] = createSignal(true)
+console.log("1. Initialize");
+const [temperature, setTemperature] = createSignal(72);
+const [unit, setUnit] = createSignal("Fahrenheit");
+const [displayTemp, setDisplayTemp] = createSignal(true);
 
 const displayTemperature = createMemo(() => {
-	if (!displayTemp()) return "Temperature display is off"
-	return `${temperature()} degrees ${unit()}`
-})
+	if (!displayTemp()) return "Temperature display is off";
+	return `${temperature()} degrees ${unit()}`;
+});
 
-createEffect(() => console.log("Current temperature is", displayTemperature()))
+createEffect(() => console.log("Current temperature is", displayTemperature()));
 
-console.log("2. Turn off displayTemp")
-setDisplayTemp(false)
+console.log("2. Turn off displayTemp");
+setDisplayTemp(false);
 
-console.log("3. Change unit")
-setUnit("Celsius")
+console.log("3. Change unit");
+setUnit("Celsius");
 
-console.log("4. Turn on displayTemp")
-setDisplayTemp(true)
+console.log("4. Turn on displayTemp");
+setDisplayTemp(true);
 ```
 
 In this example, the `createMemo` primitive is used to cache the state of a computation.
@@ -266,9 +266,9 @@ Consider the following example:
 ```jsx
 createEffect(() => {
 	setTimeout(() => {
-		console.log(count())
-	}, 1000)
-})
+		console.log(count());
+	}, 1000);
+});
 ```
 
 The `createEffect` function in this example, initiates a `setTimeout` to delay the console log.

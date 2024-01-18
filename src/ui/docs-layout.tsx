@@ -55,7 +55,7 @@ export const DocsLayout: ParentComponent = (props) => {
 
 	return (
 		<div class="flex">
-			<article class="px-2 pb-16 md:px-10 expressive-code-overrides min-w-0 max-w-2xl lg:max-w-none">
+			<article class="px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none">
 				<Show when={titles().parent}>
 					{(t) => (
 						<p class="text-sm font-semibold text-sky-600 dark:text-sky-500 my-1">
@@ -70,7 +70,7 @@ export const DocsLayout: ParentComponent = (props) => {
 						</h1>
 					)}
 				</Show>
-				{props.children}
+				<div class="max-w-prose w-full">{props.children}</div>
 				<Pagination currentIndex={entryIndex()} collection={collection()} />
 			</article>
 			<TableOfContents />

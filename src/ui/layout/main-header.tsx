@@ -36,14 +36,16 @@ export function MainHeader() {
 			<div class="flex md:hidden">
 				<MobileNavigation />
 			</div>
-			<A href="/" aria-label="Home page" class="ml-6">
-				<Logo class="h-9" />
-			</A>
-			<div class="flex basis-0 gap-4">
-				<ThemeSelector />
-				<A href="https://github.com" class="group" aria-label="GitHub">
-					<GitHubIcon class="h-6 w-6 dark:fill-slate-400 group-hover:dark:fill-slate-500 dark:group-hover:fill-slate-300" />
+			<div class="flex justify-between w-full max-w-8xl mx-auto pt-4">
+				<A href="/" aria-label="Home page" class="ml-6">
+					<Logo class="h-9" />
 				</A>
+				<div class="flex basis-0 gap-4">
+					<ThemeSelector />
+					<A href="https://github.com" class="group" aria-label="GitHub">
+						<GitHubIcon class="h-6 w-6 dark:fill-slate-400 group-hover:dark:fill-slate-500 dark:group-hover:fill-slate-300" />
+					</A>
+				</div>
 			</div>
 		</header>
 	);

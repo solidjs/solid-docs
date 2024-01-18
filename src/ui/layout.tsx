@@ -12,14 +12,14 @@ export const Layout: ParentComponent = (props) => {
 
 	return (
 		<PageStateProvider>
-			<div class="flex flex-col w-full lg:w-screen">
+			<div class="flex flex-col w-full lg:w-screen overflow-x-hidden">
 				<MainHeader />
 
 				<Show when={isRoot()} keyed>
 					<Hero />
 				</Show>
 
-				<div class="relative mx-auto flex max-w-8xl flex-auto justify-center sm:px-2 lg:px-8 xl:px-12">
+				<div class="relative mx-auto flex max-w-8xl flex-auto justify-center">
 					<div class="hidden md:relative md:block lg:flex-none">
 						<div class="absolute inset-y-0 right-0 w-[50vw] dark:hidden" />
 						<div class="absolute bottom-0 right-0 top-16 hidden h-12 w-px bg-gradient-to-t from-slate-800 dark:block" />

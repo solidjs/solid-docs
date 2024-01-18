@@ -32,7 +32,7 @@ export default {
       },
 			maxWidth: {
         '8xl': '88rem',
-      },
+      }
 		},
 	},
 	plugins: [typography(), kobalte({ prefix: "kb" })],

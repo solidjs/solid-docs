@@ -55,28 +55,24 @@ export const DocsLayout: ParentComponent = (props) => {
 
 	return (
 		<div class="flex">
-			<div class="min-w-0 max-w-2xl flex-auto pb-16 lg:max-w-none">
-				<article class="px-2 md:px-10 expressive-code-overrides">
-					<div class="mb-9 capitalize">
-						<Show when={titles().parent}>
-							{(t) => (
-								<p class="text-sm font-semibold text-sky-600 dark:text-sky-500 my-1">
-									{t()}
-								</p>
-							)}
-						</Show>
-						<Show when={titles().title}>
-							{(t) => (
-								<h1 class="prose-headings:text-3xl text-slate-900 dark:text-white">
-									{t()}
-								</h1>
-							)}
-						</Show>
-					</div>
-					{props.children}
-					<Pagination currentIndex={entryIndex()} collection={collection()} />
-				</article>
-			</div>
+			<article class="px-2 pb-16 md:px-10 expressive-code-overrides min-w-0 max-w-2xl lg:max-w-none">
+				<Show when={titles().parent}>
+					{(t) => (
+						<p class="text-sm font-semibold text-sky-600 dark:text-sky-500 my-1">
+							{t()}
+						</p>
+					)}
+				</Show>
+				<Show when={titles().title}>
+					{(t) => (
+						<h1 class="prose-headings:text-3xl text-slate-900 dark:text-white">
+							{t()}
+						</h1>
+					)}
+				</Show>
+				{props.children}
+				<Pagination currentIndex={entryIndex()} collection={collection()} />
+			</article>
 			<TableOfContents />
 		</div>
 	);

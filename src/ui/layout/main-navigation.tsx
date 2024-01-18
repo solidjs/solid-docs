@@ -54,11 +54,14 @@ function DirList(props: { list: Entry[] }) {
 											<>
 												<li>
 													<Collapsible.Root defaultOpen={true}>
-														<Collapsible.Trigger class="relative flex justify-between hover:cursor-pointer w-full pl-3.5 text-slate-400 dark:text-slate-300 lg:text-sm">
+														<Collapsible.Trigger class="relative flex justify-between hover:cursor-pointer w-full pl-3.5 text-slate-400 dark:text-slate-300 lg:text-sm group">
 															<span class="font-display font-semibold text-slate-500 dark:text-slate-100 lg:text-sm">
 																{child.title}
 															</span>
-															<Icon path={chevronDown} class="h-4 my-auto" />
+															<Icon
+																path={chevronDown}
+																class="h-4 my-auto transition-transform  kb-group-closed:rotate-180"
+															/>
 														</Collapsible.Trigger>
 														<Collapsible.Content class="navigation_collapsible">
 															<ul

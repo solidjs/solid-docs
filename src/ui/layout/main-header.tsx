@@ -26,7 +26,7 @@ export function MainHeader() {
 
 	return (
 		<header
-			class="sticky top-0 z-50 flex flex-none flex-wrap items-center justify-between bg-blue-100/80 px-4 py-2 shadow-md shadow-slate-900/5 transition duration-500 dark:shadow-none sm:px-6 backdrop-blur w-full"
+			class="sticky top-0 z-50 flex flex-none flex-wrap items-center justify-between bg-blue-100/80 px-4 shadow-md shadow-slate-900/5 transition duration-500 dark:shadow-none sm:px-6 backdrop-blur w-full"
 			classList={{
 				"dark:bg-slate-900/95 dark:[@supports(backdrop-filter:blur(0))]:bg-slate-900/75":
 					isScrolled(),

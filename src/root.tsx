@@ -8,101 +8,36 @@ import {
 	Html,
 	Head,
 	Body,
-} from "solid-start"
-import { parseCookie } from "solid-start/session"
-import "./code.css"
-import "./scrollbar.css"
-import "virtual:windi.css"
+	Title,
+} from "solid-start";
+import { MDXProvider } from "solid-mdx";
+import { Suspense } from "solid-js";
 
-import {
-	Config,
-	ConfigProvider,
-	defaultConfig,
-} from "./components/context/ConfigContext"
-import { PageStateProvider } from "./components/context/PageStateContext"
-
-import { MDXProvider } from "solid-mdx"
-import Nav from "./components/nav/Nav"
-import md from "./md"
-import { Suspense, useContext } from "solid-js"
-import { Main } from "./components/Main"
-import { HttpHeader, ServerContext } from "solid-start/server"
-import { isServer } from "solid-js/web"
-import { Stylesheet } from "@solidjs/meta"
-
-function useCookies() {
-	const context = useContext(ServerContext)
-	const cookies = isServer
-		? context.request.headers.get("Cookie")
-		: document.cookie
-
-	return parseCookie(cookies ?? "")
-}
-
-function useCookieConfig(): Config {
-	const cookies = useCookies()
-	return cookies?.["docs_config"]
-		? JSON.parse(cookies["docs_config"])
-		: defaultConfig
-}
+import Md from "~/ui/markdown-components";
+import { Layout } from "~/ui/layout";
+import "~/styles.css";
 
 export default function Root() {
-	const config = useCookieConfig()
-	let mainRef
-
 	return (
-		<Html lang="en" class={"h-full " + config.mode}>
-			<Head>
-				<Meta charset="utf-8" />
-				<Meta name="viewport" content="width=device-width, initial-scale=1" />
-				<Link rel="preconnect" href="https://fonts.googleapis.com" />
-				<Link
-					rel="preconnect"
-					href="https://fonts.gstatic.com"
-					crossOrigin=""
-				/>
-				<Link rel="shortcut icon" href="/favicon.ico" />
-				<Link rel="stylesheet" href="/main.css" />
-				<Link
-					href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@200;300;400&display=swap"
-					rel="stylesheet"
-				/>
-				<Stylesheet href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
-				<HttpHeader name="x-robots-tag" value="nofollow" />
-			</Head>
-			<Body class="px-4 pb-4 font-sans antialiased bg-lightgradient dark:(bg-darkgradient text-white) bg-fixed leading-relaxed text-black min-h-screen lg:flex lg:flex-row">
-				<Suspense>
-					<ConfigProvider initialConfig={config}>
-						<PageStateProvider>
-							<MDXProvider components={{ ...md }}>
-								<button
-									onClick={() => mainRef.querySelector("a").focus()}
-									class="skip-to-content-link"
-								>
-                  Skip to content
-								</button>
-								<Nav/>
-								<Main ref={mainRef}>
-									<Routes>
-										<FileRoutes />
-									</Routes>
-								</Main>
-							</MDXProvider>
-						</PageStateProvider>
-					</ConfigProvider>
-				</Suspense>
-				<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3" />
-				<script>
-					{`docsearch({
-    appId: "VTVVKZ36GX",
-    apiKey: "f520312c8dccf1309453764ee2fed27e",
-    indexName: "solidjs",
-    container: "#docsearch",
-    debug: false 
-  });`}
-				</script>
-				<Scripts />
-			</Body>
-		</Html>
-	)
+		<Suspense>
+			<Html lang="en">
+				<Head>
+					<Title>Solid Docs</Title>
+					<Meta charset="utf-8" />
+					<Meta name="viewport" content="width=device-width, initial-scale=1" />
+					<Link rel="shortcut icon" href="/favicon.ico" />
+				</Head>
+				<Body>
+					<Layout>
+						<MDXProvider components={Md}>
+							<Routes>
+								<FileRoutes />
+							</Routes>
+						</MDXProvider>
+					</Layout>
+					<Scripts />
+				</Body>
+			</Html>
+		</Suspense>
+	);
 }

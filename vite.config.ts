@@ -1,133 +1,110 @@
-import { defineConfig } from "vite"
-import solid from "solid-start/vite"
-import netlify from "solid-start-netlify"
-import node from "solid-start-node"
-import mdx from "@mdx-js/rollup"
-import WindiCSS from "vite-plugin-windicss"
-import rehypeRaw from "rehype-raw"
-import { nodeTypes } from "@mdx-js/mdx"
-import remarkShikiTwoslash from "remark-shiki-twoslash"
-import rehypeSlug from "rehype-slug"
-import Icons from "unplugin-icons/vite"
-import colors from "windicss/colors"
-import remarkGfm from "remark-gfm"
+import { defineConfig } from "@solidjs/start/config";
+import remarkFrontmatter from "remark-frontmatter";
+import rehypeRaw from "rehype-raw";
+import { nodeTypes } from "@mdx-js/mdx";
+import remarkGfm from "remark-gfm";
+import remarkExpressiveCode, {
+	ExpressiveCodeTheme,
+} from "remark-expressive-code";
+import rehypeSlug from "rehype-slug";
+import rehypeAutoLinkHeadings from "rehype-autolink-headings";
 
-const adapter = process.env.GITHUB_ACTIONS ? node() : netlify()
-const colorScheme = colors.neutral
+// @ts-ignore missing types
+import pkg from "@vinxi/plugin-mdx";
+
+const { default: vinxiMdx } = pkg;
+
+function docsTree() {
+	const virtualModuleId = "solid:collection/tree";
+	const resolveVirtualModuleId = "\0" + virtualModuleId;
+
+	return {
+		name: "solid:collection/tree",
+		resolveId(id: string) {
+			if (id === virtualModuleId) {
+				return resolveVirtualModuleId;
+			}
+		},
+		async load(id: string) {
+			if (id === resolveVirtualModuleId) {
+				const tree = await import(`${process.cwd()}/.solid/tree`);
+				return `export default ${JSON.stringify(tree, null, 2)}`;
+			}
+		},
+	};
+}
+
+function docsEntries() {
+	const virtualModuleId = "solid:collection/entries";
+	const resolveVirtualModuleId = "\0" + virtualModuleId;
+
+	return {
+		name: "solid:collection/entries",
+		resolveId(id: string) {
+			if (id === virtualModuleId) {
+				return resolveVirtualModuleId;
+			}
+		},
+		async load(id: string) {
+			if (id === resolveVirtualModuleId) {
+				const entries = await import(`${process.cwd()}/.solid/entries`);
+
+				return `export default ${JSON.stringify(entries, null, 2)}`;
+			}
+		},
+	};
+}
 
 export default defineConfig({
-	plugins: [
-		Icons({
-			compiler: "solid",
-		}),
-		{
-			...mdx({
-				jsx: true,
-				jsxImportSource: "solid-js",
-				providerImportSource: "solid-mdx",
-				rehypePlugins: [rehypeSlug, [rehypeRaw, { passThrough: nodeTypes }]],
-				remarkPlugins: [
-					remarkGfm,
-					[
-						remarkShikiTwoslash.default,
-						{
-							disableImplicitReactImport: true,
-							includeJSDocInHover: true,
-							// theme: "css-variables",
-							themes: ["github-light", "github-dark"],
-							defaultOptions: {
-								lib: ["dom", "es2015"],
-							},
-							defaultCompilerOptions: {
-								allowSyntheticDefaultImports: true,
-								esModuleInterop: true,
-								target: "ESNext",
-								module: "ESNext",
-								lib: ["dom", "es2015"],
-								jsxImportSource: "solid-js",
-								jsx: "preserve",
-								types: ["vite/client"],
-								paths: {
-									"~/*": ["./src/*"],
-								},
-							},
-						},
-					],
-				],
-			}),
-			enforce: "pre",
+	start: {
+		server: {
+			preset: "vercel",
 		},
-		{
-			name: "twoslash-fix-lsp-linebreaks",
-			transform: (code, id) => {
-				if (id.endsWith(".md") || id.endsWith(".mdx")) {
-					return {
-						code: code.replace(/lsp="([^"]*)"/g, (match, p1) => {
-							return `lsp={\`${p1.replaceAll("`", "\\`")}\`}`
-						}),
-					}
-				}
-				return { code }
-			},
-			enforce: "pre",
+		extensions: ["mdx", "md"],
+		// @ts-ignore
+		solid: {
+			extensions: ["mdx", "md"],
 		},
-		WindiCSS({
-			config: {
-				darkMode: "class",
-				theme: {
-					extend: {
-						fontFamily: {
-							mono: [
-								"Source Code Pro",
-								"ui-monospace",
-								"SFMono-Regular",
-								"Menlo",
-							],
-						},
-						boxShadow: {
-							lg: "0px 0.8px 2px rgba(0,0,0,0.032),0px 2.7px 6.7px rgba(0,0,0,0.048),0px 12px 30px rgba(0,0,0,0.08)",
-						},
-						fontSize: {
-							xs: "0.75rem",
-							sm: "0.875rem",
-							base: "0.9rem",
-							lg: "1rem",
-						},
-						backgroundImage: {
-							darkgradient: "linear-gradient(180deg, #162537 0%, #070c12 100%)",
-							lightgradient: "linear-gradient(180deg, #f2f5fa 0%, #e1eaf4 100%)",
-						},
-						colors: {
-							solid: {
-								dark: "#000000",
-								darkbg: "#18293c",
-								darkitem: "#243e5a",
-								darkaction: "#406e9f",
-								darklink: "#528bc6",
-								light: "#FFFFFF",
-								lightbg: "#eef3f9",
-								lightitem: "#96b9dd",
-								lightaction: "#cbdcee",
-								lightlink: "#3971ad",
-								accent: "#2c4f7c",
-								accentlight: "#446b9e",
-							},
-						},
-					},
-				},
-			},
-		}),
-		solid({
-			adapter,
-
-			extensions: [".mdx", ".md"],
-			routesDir: "../content",
-		}),
-	],
+	},
 	optimizeDeps: {
-		exclude: ["solid-headless"],
+		include: [
+			"@solidjs/start > source-map-js",
+			"@solidjs/start > error-stack-parser",
+		],
 	},
-	ssr: {
-		noExternal: ["solid-headless", "solid-heroicons"],
-	},
-})
+	plugins: [
+		docsTree(),
+		docsEntries(),
+		vinxiMdx.withImports({})({
+			define: {
+				"import.meta.env": `'import.meta.env'`,
+			},
+			jsx: true,
+			jsxImportSource: "solid-js",
+			providerImportSource: "solid-mdx",
+			rehypePlugins: [
+				[
+					rehypeRaw,
+					{
+						passThrough: nodeTypes,
+					},
+				],
+				[rehypeSlug],
+				[rehypeAutoLinkHeadings],
+			],
+			remarkPlugins: [
+				remarkFrontmatter,
+				remarkGfm,
+				[
+					remarkExpressiveCode,
+					{
+						themes: ["min-light", "material-theme-ocean"],
+						themeCSSSelector: (theme: ExpressiveCodeTheme) =>
+							`[data-theme="${theme.name}"]`,
+					},
+				],
+			],
+		}),
+		{ enforce: "pre" },
+	],
+});

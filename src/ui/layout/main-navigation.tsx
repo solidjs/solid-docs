@@ -99,9 +99,9 @@ export function MainNavigation() {
 	const isReference = useMatch(() => "/reference/*");
 
 	return (
-		<nav>
+		<nav class="overflow-y-auto custom-scrollbar h-[calc(100vh-7rem)]">
 			<Tabs.Root defaultValue={isReference() ? "reference" : "learn"}>
-				<Tabs.List class="w-full pb-4 pt-8 sticky top-0 z-10 dark:bg-slate-900 bg-blue-100/80">
+				<Tabs.List class="sticky top-0 w-full pb-4 z-10 dark:bg-slate-900 bg-blue-100">
 					<Tabs.Trigger
 						value="learn"
 						class="inline-block px-4 py-2 outline-none hover:bg-sky-500/30 dark:hover:bg-sky-800 dark:focus-visible:bg-sky-800"
@@ -116,7 +116,7 @@ export function MainNavigation() {
 					</Tabs.Trigger>
 					<Tabs.Indicator class="absolute bg-sky-500 dark:bg-sky-500 transition-all duration-250 h-px" />
 				</Tabs.List>
-				<Tabs.Content value="learn" class="w-full relative top-8 text-base">
+				<Tabs.Content value="learn" class="w-full relative mt-8 text-base">
 					<Show when={learn()} fallback={<p>No routes found...</p>}>
 						{(learnList) => (
 							<ul role="list" class="space-y-6 px-4">

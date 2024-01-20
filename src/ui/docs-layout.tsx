@@ -1,9 +1,11 @@
-import { Component, ParentComponent, Show, createEffect } from "solid-js";
+import { createSignal, ParentComponent, Show, createEffect } from "solid-js";
 import { useLocation, useMatch } from "@solidjs/router";
 import flatEntries from "solid:collection/entries";
 import { TableOfContents } from "./layout/table-of-contents";
 import { Pagination } from "~/ui/pagination";
 import { usePageState } from "~/data/page-state";
+
+export const [trackHeading, setTrackHeading] = createSignal("");
 
 export const DocsLayout: ParentComponent = (props) => {
 	const location = useLocation();
@@ -54,13 +56,13 @@ export const DocsLayout: ParentComponent = (props) => {
 	});
 
 	return (
-		<div class="flex">
+		<div class="flex relative">
 			<article class="px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none">
 				<Show when={titles().parent}>
 					{(t) => (
-						<p class="text-sm font-semibold text-sky-600 dark:text-sky-500 my-1">
+						<span class="text-sm font-semibold text-sky-600 dark:text-sky-500 my-1">
 							{t()}
-						</p>
+						</span>
 					)}
 				</Show>
 				<Show when={titles().title}>
@@ -70,10 +72,12 @@ export const DocsLayout: ParentComponent = (props) => {
 						</h1>
 					)}
 				</Show>
-				<div class="max-w-prose w-full">{props.children}</div>
+				<div class="max-w-prose w-full overflow-y-auto">{props.children}</div>
 				<Pagination currentIndex={entryIndex()} collection={collection()} />
 			</article>
-			<TableOfContents />
+			<div class="sticky">
+				<TableOfContents />
+			</div>
 		</div>
 	);
 };

@@ -36,7 +36,7 @@ export function MainHeader() {
 			<div class="flex md:hidden">
 				<MobileNavigation />
 			</div>
-			<div class="flex justify-between w-full max-w-8xl mx-auto pt-4">
+			<div class="flex justify-between w-full max-w-8xl mx-auto pt-4 items-center">
 				<A href="/" aria-label="Home page" class="ml-6">
 					<Logo class="h-9" />
 				</A>

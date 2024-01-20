@@ -13,7 +13,6 @@ export const TableOfContents: Component = () => {
 	const [currentSection, setCurrentSection] = createSignal("");
 
 	const onScroll = () => {
-		// console log the heading of the current section when the user scrolls
 		const headings = document.querySelectorAll("h2, h3");
 		let currentSection = "";
 		headings.forEach((heading) => {
@@ -32,7 +31,7 @@ export const TableOfContents: Component = () => {
 	});
 
 	return (
-		<div class="hidden xl:sticky xl:top-[4.75rem] xl:-mr-6 xl:block xl:h-[calc(100vh-4.75rem)] xl:flex-none xl:overflow-y-auto xl:py-4 custom-scrollbar">
+		<div class="hidden fixed top-0lg:-mr-6 lg:block lg:h-[calc(100vh-4.75rem)] lg:flex-none lg:overflow-y-auto">
 			<aside aria-label="table of contents" class="w-full">
 				<span class="font-display text-base font-medium text-slate-900 dark:text-white">
 					On this page

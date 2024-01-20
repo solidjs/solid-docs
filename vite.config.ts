@@ -58,7 +58,7 @@ function docsEntries() {
 export default defineConfig({
 	start: {
 		server: {
-			preset: "vercel",
+			preset: "netlify",
 		},
 		extensions: ["mdx", "md"],
 		// @ts-ignore

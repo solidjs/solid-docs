@@ -104,13 +104,13 @@ export function MainNavigation() {
 				<Tabs.List class="sticky top-0 w-full pb-4 z-10 dark:bg-slate-900 bg-blue-100">
 					<Tabs.Trigger
 						value="learn"
-						class="inline-block px-4 py-2 outline-none hover:bg-sky-500/30 dark:hover:bg-sky-800 dark:focus-visible:bg-sky-800"
+						class="inline-block ml-2 px-6 py-2 outline-none hover:bg-sky-500/30 dark:hover:bg-sky-800 dark:focus-visible:bg-sky-800"
 					>
 						<span class="prose prose-slate dark:prose-invert">Learn</span>
 					</Tabs.Trigger>
 					<Tabs.Trigger
 						value="reference"
-						class="inline-block px-4 py-2 outline-none hover:bg-sky-500/30 dark:hover:bg-sky-800 dark:focus-visible:bg-sky-800"
+						class="inline-block px-6 py-2 outline-none hover:bg-sky-500/30 dark:hover:bg-sky-800 dark:focus-visible:bg-sky-800"
 					>
 						<span class="prose prose-slate dark:prose-invert">Reference</span>
 					</Tabs.Trigger>
@@ -128,7 +128,7 @@ export function MainNavigation() {
 				<Tabs.Content value="reference" class="w-full relative top-8">
 					<Show when={references()} fallback={<p>No routes found...</p>}>
 						{(referenceList) => (
-							<ul role="list" class="space-y-4">
+							<ul role="list" class="space-y-6 px-4">
 								<DirList list={referenceList()} />
 							</ul>
 						)}

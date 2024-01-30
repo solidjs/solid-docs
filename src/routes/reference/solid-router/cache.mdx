@@ -1,0 +1,63 @@
+---
+title: cache
+---
+
+To prevent duplicate fetching and to trigger handle refetching we provide a cache api. That takes a function and returns the same function.
+
+```jsx
+const getUser = cache((id) => {
+  return (await fetch(`/api/users${id}`)).json()
+}, "users") // used as cache key + serialized arguments
+```
+
+It is expected that the arguments to the cache function are serializable.
+
+This cache accomplishes the following:
+
+1. It does just deduping on the server for the lifetime of the request.
+2. It does preload cache in the browser which lasts 10 seconds. When a route is preloaded on hover or when load is called when entering a route it will make sure to dedupe calls.
+3. We have a reactive refetch mechanism based on key. So we can tell routes that aren't new to retrigger on action revalidation.
+4. It will serve as a back/forward cache for browser navigation up to 5 mins. Any user based navigation or link click bypasses it. Revalidation or new fetch updates the cache.
+
+Using it with load function might look like:
+
+```js
+import { lazy } from "solid-js";
+import { Route } from "@solidjs/router";
+import { getUser } from ... // the cache function
+
+const User = lazy(() => import("./pages/users/[id].js"));
+
+// load function
+function loadUser({params, location}) {
+  void getUser(params.id)
+}
+
+// Pass it in the route definition
+<Route path="/users/:id" component={User} load={loadUser} />;
+```
+
+Inside your page component you:
+
+```jsx
+// pages/users/[id].js
+import { getUser } from ... // the cache function
+
+export default function User(props) {
+  const user = createAsync(() => getUser(props.params.id));
+  return <h1>{user().name}</h1>;
+}
+```
+
+Cached function has a few useful methods for getting the key that are useful for invalidation.
+
+```ts
+let id = 5;
+
+getUser.key; // returns "users"
+getUser.keyFor(id); // returns "users[5]"
+```
+
+You can revalidate the cache using the `revalidate` method or you can set `revalidate` keys on your response from your actions. If you pass the whole key it will invalidate all the entries for the cache (ie "users" in the example above). You can also invalidate a single entry by using `keyFor`.
+
+`cache` can be defined anywhere and then used inside your components with:

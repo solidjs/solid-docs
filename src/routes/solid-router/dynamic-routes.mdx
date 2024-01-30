@@ -1,0 +1,118 @@
+---
+title: Dynamic Routes
+---
+
+If you don't know the path ahead of time, you might want to treat part of the path as a flexible parameter that is passed on to the component.
+
+```jsx
+import { lazy } from "solid-js";
+import { render } from "solid-js/web";
+import { Router, Route } from "@solidjs/router";
+
+const Users = lazy(() => import("./pages/Users"));
+const User = lazy(() => import("./pages/User"));
+const Home = lazy(() => import("./pages/Home"));
+
+render(
+	() => (
+		<Router>
+			<Route path="/users" component={Users} />
+			<Route path="/users/:id" component={User} />
+			<Route path="/" component={Home} />
+		</Router>
+	),
+	document.getElementById("app")
+);
+```
+
+The colon indicates that `id` can be any string, and as long as the URL fits that pattern, the `User` component will show.
+
+You can then access that `id` from within a route component with `useParams`.
+
+**Note on Animation/Transitions**:
+Routes that share the same path match will be treated as the same route. If you want to force re-render you can wrap your component in a keyed `<Show>` like:
+
+```jsx
+<Show when={params.something} keyed><MyComponent></Show>
+```
+
+---
+
+Each path parameter can be validated using a `MatchFilter`.
+This allows for more complex routing descriptions than just checking the presence of a parameter.
+
+```jsx
+import { lazy } from "solid-js";
+import { render } from "solid-js/web";
+import { Router, Route } from "@solidjs/router";
+import type { SegmentValidators } from "./types";
+
+const User = lazy(() => import("./pages/User"));
+
+const filters: MatchFilters = {
+	parent: ["mom", "dad"], // allow enum values
+	id: /^\d+$/, // only allow numbers
+	withHtmlExtension: (v: string) => v.length > 5 && v.endsWith(".html"), // we want an `*.html` extension
+};
+
+render(
+	() => (
+		<Router>
+			<Route
+				path="/users/:parent/:id/:withHtmlExtension"
+				component={User}
+				matchFilters={filters}
+			/>
+		</Router>
+	),
+	document.getElementById("app")
+);
+```
+
+Here, we have added the `matchFilters` prop. This allows us to validate the `parent`, `id` and `withHtmlExtension` parameters against the filters defined in `filters`.
+If the validation fails, the route will not match.
+
+So in this example:
+
+- `/users/mom/123/contact.html` would match,
+- `/users/dad/123/about.html` would match,
+- `/users/aunt/123/contact.html` would not match as `:parent` is not 'mom' or 'dad',
+- `/users/mom/me/contact.html` would not match as `:id` is not a number,
+- `/users/dad/123/contact` would not match as `:withHtmlExtension` is missing `.html`.
+
+---
+
+### Optional Parameters
+
+Parameters can be specified as optional by adding a question mark to the end of the parameter name:
+
+```jsx
+// Matches stories and stories/123 but not stories/123/comments
+<Route path="/stories/:id?" component={Stories} />
+```
+
+### Wildcard Routes
+
+`:param` lets you match an arbitrary name at that point in the path. You can use `*` to match any end of the path:
+
+```jsx
+// Matches any path that begins with foo, including foo/, foo/a/, foo/a/b/c
+<Route path="foo/*" component={Foo} />
+```
+
+If you want to expose the wild part of the path to the component as a parameter, you can name it:
+
+```jsx
+<Route path="foo/*any" component={Foo} />
+```
+
+Note that the wildcard token must be the last part of the path; `foo/*any/bar` won't create any routes.
+
+### Multiple Paths
+
+Routes also support defining multiple paths using an array. This allows a route to remain mounted and not rerender when switching between two or more locations that it matches:
+
+```jsx
+// Navigating from login to register does not cause the Login component to re-render
+<Route path={["login", "register"]} component={Login} />
+```

@@ -1,0 +1,75 @@
+---
+title: Nested Routes
+---
+
+The following two route definitions have the same result:
+
+```jsx
+<Route path="/users/:id" component={User} />
+```
+
+```jsx
+<Route path="/users">
+	<Route path="/:id" component={User} />
+</Route>
+```
+
+`/users/:id` renders the `<User/>` component, and `/users/` is an empty route.
+
+Only leaf Route nodes (innermost `Route` components) are given a route. If you want to make the parent its own route, you have to specify it separately:
+
+```jsx
+//This won't work the way you'd expect
+<Route path="/users" component={Users}>
+  <Route path="/:id" component={User} />
+</Route>
+
+// This works
+<Route path="/users" component={Users} />
+<Route path="/users/:id" component={User} />
+
+// This also works
+<Route path="/users">
+  <Route path="/" component={Users} />
+  <Route path="/:id" component={User} />
+</Route>
+```
+
+You can also take advantage of nesting by using `props.children` passed to the route component.
+
+```jsx
+function PageWrapper(props) {
+	return (
+		<div>
+			<h1> We love our users! </h1>
+			{props.children}
+			<A href="/">Back Home</A>
+		</div>
+	);
+}
+
+<Route path="/users" component={PageWrapper}>
+	<Route path="/" component={Users} />
+	<Route path="/:id" component={User} />
+</Route>;
+```
+
+The routes are still configured the same, but now the route elements will appear inside the parent element where the `props.children` was declared.
+
+You can nest indefinitely - just remember that only leaf nodes will become their own routes. In this example, the only route created is `/layer1/layer2`, and it appears as three nested divs.
+
+```jsx
+<Route
+	path="/"
+	component={(props) => <div>Onion starts here {props.children}</div>}
+>
+	<Route
+		path="layer1"
+		component={(props) => <div>Another layer {props.children}</div>}
+	>
+		<Route path="layer2" component={() => <div>Innermost layer</div>}>
+			{" "}
+		</Route>
+	</Route>
+</Route>
+```

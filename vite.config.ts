@@ -59,6 +59,9 @@ export default defineConfig({
 	start: {
 		server: {
 			preset: "netlify",
+			prerender: {
+				crawlLinks: true,
+			},
 		},
 		extensions: ["mdx", "md"],
 		// @ts-ignore

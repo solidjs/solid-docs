@@ -1,0 +1,87 @@
+---
+title: action
+---
+
+Actions are data mutations that can trigger invalidations and further routing. A list of prebuilt response helpers can be found below.
+
+```jsx
+import { action, revalidate, redirect } from "@solidjs/router"
+
+// anywhere
+const myAction = action(async (data) => {
+  await doMutation(data);
+  throw redirect("/", { revalidate: getUser.keyFor(data.id) }); // throw a response to do a redirect
+});
+
+// in component
+<form action={myAction} method="post" />
+
+//or
+<button type="submit" formaction={myAction}></button>
+```
+
+Actions only work with post requests, so make sure to put `method="post"` on your form.
+
+Sometimes it might be easier to deal with typed data instead of `FormData` and adding additional hidden fields. For that reason Actions have a with method. That works similar to `bind` which applies the arguments in order.
+
+Picture an action that deletes Todo Item:
+
+```js
+const deleteTodo = action(async (formData: FormData) => {
+  const id = Number(formData.get("id"))
+  await api.deleteTodo(id)
+})
+
+<form action={deleteTodo} method="post">
+  <input type="hidden" name="id" value={todo.id} />
+  <button type="submit">Delete</button>
+</form>
+```
+
+Instead with `with` you can write this:
+
+```js
+const deleteUser = action(api.deleteTodo)
+
+<form action={deleteTodo.with(todo.id)} method="post">
+  <button type="submit">Delete</button>
+</form>
+```
+
+### Notes of `<form>` implementation and SSR
+
+This requires stable references as you can only serialize a string as an attribute, and across SSR they'd need to match. The solution is providing a unique name.
+
+```jsx
+const myAction = action(async (args) => {}, "my-action");
+```
+
+## `useAction`
+
+Instead of forms you can use actions directly by wrapping them in a `useAction` primitive. This is how we get the router context.
+
+```jsx
+// in component
+const submit = useAction(myAction);
+submit(...args);
+```
+
+The outside of a form context you can use custom data instead of formData, and these helpers preserve types. However, even when used with server functions (in projects like SolidStart) this requires client side javascript and is not Progressive Enhancible like forms are.
+
+## `useSubmission`/`useSubmissions`
+
+Are used to injecting the optimistic updates while actions are in flight. They either return a single Submission(latest) or all that match with an optional filter function.
+
+```jsx
+type Submission<T, U> = {
+  input: T;
+  result: U;
+  error: any;
+  pending: boolean
+  clear: () => {}
+  retry: () => {}
+}
+
+const submissions = useSubmissions(action, (input) => filter(input));
+const submission = useSubmission(action, (input) => filter(input));
+```

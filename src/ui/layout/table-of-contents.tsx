@@ -31,57 +31,60 @@ export const TableOfContents: Component = () => {
 	});
 
 	return (
-		<div class="hidden fixed top-0lg:-mr-6 lg:block lg:h-[calc(100vh-4.75rem)] lg:flex-none lg:overflow-y-auto">
-			<aside aria-label="table of contents" class="w-full">
-				<span class="font-display text-base font-medium text-slate-900 dark:text-white">
-					On this page
-				</span>
-				<ol role="list" class="text-sm list-none p-0 flex flex-col">
-					<Index each={pageSections.sections}>
-						{(section) => (
-							<li class="pl-0">
-								<span class="mt-2">
-									<a
-										href={`#${section().id}`}
-										classList={{
-											"dark:text-slate-400": currentSection() !== section().id,
-											"text-sky-500": currentSection() === section().id,
-										}}
-										class="no-underline hover:text-slate-700 dark:hover:text-slate-300"
-									>
-										{section().text}
-									</a>
-								</span>
-								<Show when={section().children.length !== 0}>
-									<ol
-										role="list"
-										class="space-y-2 pl-5 text-slate-500 dark:text-slate-400 list-none"
-									>
-										<Index each={section().children}>
-											{(subSection) => (
-												<li>
-													<a
-														href={`#${subSection().id}`}
-														classList={{
-															"dark:text-slate-400":
-																currentSection() !== subSection().id,
-															"text-sky-500":
-																currentSection() === subSection().id,
-														}}
-														class="no-underline hover:text-slate-700 dark:hover:text-slate-300"
-													>
-														{subSection().text}
-													</a>
-												</li>
-											)}
-										</Index>
-									</ol>
-								</Show>
-							</li>
-						)}
-					</Index>
-				</ol>
-			</aside>
+		<div class="hidden xl:block relative">
+			<div class="fixed">
+				<aside aria-label="table of contents" class="w-full">
+					<span class="font-display text-base font-medium text-slate-900 dark:text-white">
+						On this page
+					</span>
+					<ol role="list" class="text-sm list-none p-0 flex flex-col">
+						<Index each={pageSections.sections}>
+							{(section) => (
+								<li class="pl-0">
+									<span class="mt-2">
+										<a
+											href={`#${section().id}`}
+											classList={{
+												"dark:text-slate-400":
+													currentSection() !== section().id,
+												"text-sky-500": currentSection() === section().id,
+											}}
+											class="no-underline hover:text-slate-700 dark:hover:text-slate-300"
+										>
+											{section().text}
+										</a>
+									</span>
+									<Show when={section().children.length !== 0}>
+										<ol
+											role="list"
+											class="space-y-2 pl-5 text-slate-500 dark:text-slate-400 list-none"
+										>
+											<Index each={section().children}>
+												{(subSection) => (
+													<li>
+														<a
+															href={`#${subSection().id}`}
+															classList={{
+																"dark:text-slate-400":
+																	currentSection() !== subSection().id,
+																"text-sky-500":
+																	currentSection() === subSection().id,
+															}}
+															class="no-underline hover:text-slate-700 dark:hover:text-slate-300"
+														>
+															{subSection().text}
+														</a>
+													</li>
+												)}
+											</Index>
+										</ol>
+									</Show>
+								</li>
+							)}
+						</Index>
+					</ol>
+				</aside>
+			</div>
 		</div>
 	);
 };

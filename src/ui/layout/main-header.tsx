@@ -26,20 +26,21 @@ export function MainHeader() {
 
 	return (
 		<header
-			class="sticky top-0 z-50 flex flex-none flex-wrap items-center justify-between bg-blue-100/80 px-4 shadow-md shadow-slate-900/5 transition duration-500 dark:shadow-none sm:px-6 backdrop-blur w-full"
+			class="sticky top-0 z-50 max-w-8xl mx-auto flex items-center justify-between bg-blue-100/80  shadow-md shadow-slate-900/5 transition duration-500 dark:shadow-none backdrop-blur"
 			classList={{
 				"dark:bg-slate-900/95 dark:[@supports(backdrop-filter:blur(0))]:bg-slate-900/75":
 					isScrolled(),
 				"dark:bg-transparent bg-transparent": !isScrolled(),
 			}}
 		>
-			<div class="flex md:hidden">
-				<MobileNavigation />
-			</div>
-			<div class="flex justify-between w-full max-w-8xl mx-auto pt-4 items-center">
-				<A href="/" aria-label="Home page" class="ml-6">
+			<div class="flex justify-between pt-4 px-4 items-center w-full">
+				<div class="flex md:hidden">
+					<MobileNavigation />
+				</div>
+				<A href="/" aria-label="Home page">
 					<Logo class="h-9" />
 				</A>
+
 				<div class="flex basis-0 gap-4">
 					<ThemeSelector />
 					<A href="https://github.com" class="group" aria-label="GitHub">

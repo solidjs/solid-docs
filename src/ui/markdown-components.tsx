@@ -187,7 +187,7 @@ export default {
 	td: (props: ParentProps) => <td>{props.children}</td>,
 	tr: (props: ParentProps) => <tr>{props.children}</tr>,
 	hr: (props: ParentProps) => {
-		return <hr {...props} class="dark:prose-hr:border-slate-800" />;
+		return <hr {...props} class="dark:prose-hr:border-slate-900" />;
 	},
 	response: (props: ParentProps) => {
 		return <span>{props.children}</span>;

@@ -9,7 +9,6 @@ import remarkExpressiveCode, {
 import rehypeSlug from "rehype-slug";
 import rehypeAutoLinkHeadings from "rehype-autolink-headings";
 
-// @ts-ignore missing types
 import pkg from "@vinxi/plugin-mdx";
 
 const { default: vinxiMdx } = pkg;
@@ -64,16 +63,6 @@ export default defineConfig({
 			},
 		},
 		extensions: ["mdx", "md"],
-		// @ts-ignore
-		solid: {
-			extensions: ["mdx", "md"],
-		},
-	},
-	optimizeDeps: {
-		include: [
-			"@solidjs/start > source-map-js",
-			"@solidjs/start > error-stack-parser",
-		],
 	},
 	plugins: [
 		docsTree(),

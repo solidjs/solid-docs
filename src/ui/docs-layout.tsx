@@ -56,7 +56,7 @@ export const DocsLayout: ParentComponent = (props) => {
 	});
 
 	return (
-		<div class="flex relative">
+		<div id="rr" class="flex relative">
 			<article class="px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none">
 				<Show when={titles().parent}>
 					{(t) => (
@@ -75,9 +75,7 @@ export const DocsLayout: ParentComponent = (props) => {
 				<div class="max-w-prose w-full overflow-y-auto">{props.children}</div>
 				<Pagination currentIndex={entryIndex()} collection={collection()} />
 			</article>
-			<div class="sticky">
-				<TableOfContents />
-			</div>
+			<TableOfContents />
 		</div>
 	);
 };

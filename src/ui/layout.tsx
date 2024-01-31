@@ -6,13 +6,14 @@ import { Hero } from "./layout/hero";
 import { useMatch } from "@solidjs/router";
 import { DocsLayout } from "./docs-layout";
 import { PageStateProvider } from "~/data/page-state";
+import { DiscordIcon } from "./logo";
 
 export const Layout: ParentComponent = (props) => {
 	const isRoot = useMatch(() => "/");
 
 	return (
 		<PageStateProvider>
-			<div class="flex flex-col w-full lg:w-screen">
+			<div class="relative">
 				<MainHeader />
 
 				<Show when={isRoot()} keyed>
@@ -24,11 +25,11 @@ export const Layout: ParentComponent = (props) => {
 						<div class="absolute inset-y-0 right-0 w-[50vw] dark:hidden" />
 						<div class="absolute bottom-0 right-0 top-16 hidden h-12 w-px bg-gradient-to-t from-slate-800 dark:block" />
 						<div class="absolute bottom-0 right-0 top-28 hidden w-px bg-slate-800 dark:block" />
-						<div class="sticky top-[4.75rem] h-[calc(100vh-4.75rem)] w-64 mt-10 py-6 pl-0.5 pr-2 xl:w-72">
+						<div class="sticky top-[4.75rem] h-[calc(100vh-4.75rem)] w-64 pt-16 pb-10 pl-0.5 pr-2 xl:w-72">
 							<MainNavigation />
 						</div>
 					</div>
-					<main class="w-screen md:max-w-2xl flex-auto px-4 pt-20 md:pb-16 lg:max-w-none prose prose-slate dark:prose-invert dark:text-slate-400">
+					<main class="md:max-w-2xl flex-auto px-4 pt-20 md:pb-16 lg:max-w-none prose prose-slate dark:prose-invert dark:text-slate-400">
 						<Show
 							when={!isRoot()}
 							keyed

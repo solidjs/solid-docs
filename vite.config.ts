@@ -82,7 +82,12 @@ export default defineConfig({
 					},
 				],
 				[rehypeSlug],
-				[rehypeAutoLinkHeadings],
+				[rehypeAutoLinkHeadings, {
+          behavior: 'wrap',
+          properties : {
+              className : "heading",
+          },
+        }],
 			],
 			remarkPlugins: [
 				remarkFrontmatter,

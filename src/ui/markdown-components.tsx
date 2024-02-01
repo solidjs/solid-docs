@@ -18,6 +18,26 @@ export default {
 			{props.children}
 		</Callout>
 	),
+	EraserLink: (props: ParentProps<{ href: string; preview: string }>) => {
+		const [, rest] = splitProps(props, ["children"]);
+
+		if (!isServer) {
+			return <EraserLink {...rest} />;
+		} else {
+			return (
+				<a
+					aria-hidden={true}
+					tabIndex="-1"
+					href={props.href}
+					class={`no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,theme(colors.sky.400))] hover:[--tw-prose-underline-size:4px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.sky.800))] dark:hover:[--tw-prose-underline-size:6px] dark:text-sky-400 text-sky-700 font-semibold`}
+					rel="noopener noreferrer"
+				>
+					View on Eraser
+					<img src={props.preview} />
+				</a>
+			);
+		}
+	},
 	TabsCodeBlocks: (props: ParentProps) => (
 		<TabsCodeBlocks>{props.children}</TabsCodeBlocks>
 	),
@@ -94,11 +114,9 @@ export default {
 		const [, rest] = splitProps(props, ["children"]);
 		const resolved = children(() => props.children);
 		const resolvedArray = resolved.toArray();
-
-		if (!isServer && rest.href.startsWith("https://")) {
-			return <EraserLink {...rest} />;
-		}
-
+		let extraAttrs = {};
+		if (props.href.startsWith("https://") || props.href.startsWith("http://"))
+			extraAttrs = { target: "_blank", rel: "noopener noreferrer" };
 		if (
 			// Server side
 			(isServer &&
@@ -115,6 +133,7 @@ export default {
 			return (
 				<A
 					class="[&>code]:shadow-[0_0_0_1px_#38bdf8] hover:[&>code]:shadow-[0_0_0_2px_#38bdf8]"
+					{...extraAttrs}
 					{...rest}
 				>
 					{resolved()}
@@ -125,6 +144,7 @@ export default {
 				<A
 					{...rest}
 					class={`no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,theme(colors.sky.400))] hover:[--tw-prose-underline-size:4px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.sky.800))] dark:hover:[--tw-prose-underline-size:6px] dark:text-sky-400 text-sky-700 font-semibold`}
+					{...extraAttrs}
 				>
 					{resolved()}
 				</A>

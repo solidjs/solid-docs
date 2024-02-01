@@ -43,7 +43,13 @@ export function MainHeader() {
 
 				<div class="flex basis-0 gap-4">
 					<ThemeSelector />
-					<A href="https://github.com" class="group" aria-label="GitHub">
+					<A
+						href="https://github.com/solidjs/solid-docs-next"
+						class="group"
+						aria-label="GitHub"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
 						<GitHubIcon class="h-6 w-6 dark:fill-slate-400 group-hover:dark:fill-slate-500 dark:group-hover:fill-slate-300" />
 					</A>
 				</div>

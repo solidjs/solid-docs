@@ -16,7 +16,7 @@ export const TableOfContents: Component = () => {
 		const headings = document.querySelectorAll("h2, h3");
 		let currentSection = "";
 		headings.forEach((heading) => {
-			if (heading.getBoundingClientRect().top < 0) {
+			if (heading.getBoundingClientRect().top < 300) {
 				currentSection = heading.id;
 			}
 		});

@@ -4,6 +4,7 @@ import flatEntries from "solid:collection/entries";
 import { TableOfContents } from "./layout/table-of-contents";
 import { Pagination } from "~/ui/pagination";
 import { usePageState } from "~/data/page-state";
+import { Title } from "@solidjs/meta";
 
 export const [trackHeading, setTrackHeading] = createSignal("");
 
@@ -56,28 +57,31 @@ export const DocsLayout: ParentComponent = (props) => {
 	});
 
 	return (
-		<div class="flex relative">
-			<article class="px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none">
-				<Show when={titles().parent}>
-					{(t) => (
-						<span class="text-sm font-semibold text-sky-600 dark:text-sky-500 my-1">
-							{t()}
-						</span>
-					)}
-				</Show>
-				<Show when={titles().title}>
-					{(t) => (
-						<h1 class="prose-headings:text-3xl text-slate-900 dark:text-white">
-							{t()}
-						</h1>
-					)}
-				</Show>
-				<div class="max-w-prose w-full overflow-y-auto">{props.children}</div>
-				<Pagination currentIndex={entryIndex()} collection={collection()} />
-			</article>
-			<div class="sticky">
-				<TableOfContents />
+		<>
+			<Title>{`${titles().title} - SolidDocs`}</Title>
+			<div class="flex relative">
+				<article class="px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none">
+					<Show when={titles().parent}>
+						{(t) => (
+							<span class="text-sm font-semibold text-sky-600 dark:text-sky-500 my-1">
+								{t()}
+							</span>
+						)}
+					</Show>
+					<Show when={titles().title}>
+						{(t) => (
+							<h1 class="prose-headings:text-3xl text-slate-900 dark:text-white">
+								{t()}
+							</h1>
+						)}
+					</Show>
+					<div class="max-w-prose w-full overflow-y-auto">{props.children}</div>
+					<Pagination currentIndex={entryIndex()} collection={collection()} />
+				</article>
+				<div class="sticky">
+					<TableOfContents />
+				</div>
 			</div>
-		</div>
+		</>
 	);
 };

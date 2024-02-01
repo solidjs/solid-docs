@@ -16,7 +16,7 @@ export const TableOfContents: Component = () => {
 		const headings = document.querySelectorAll("h2, h3");
 		let currentSection = "";
 		headings.forEach((heading) => {
-			if (heading.getBoundingClientRect().top < 0) {
+			if (heading.getBoundingClientRect().top < 300) {
 				currentSection = heading.id;
 			}
 		});
@@ -37,6 +37,20 @@ export const TableOfContents: Component = () => {
 					On this page
 				</span>
 				<ol role="list" class="text-sm list-none p-0 flex flex-col">
+					<li class="pl-0">
+						<span class="mt-2">
+							<a
+								href={`#_top`}
+								classList={{
+									"dark:text-slate-400": currentSection() !== "",
+									"text-sky-500": currentSection() === "",
+								}}
+								class="no-underline hover:text-slate-700 dark:hover:text-slate-300"
+							>
+								Overview
+							</a>
+						</span>
+					</li>
 					<Index each={pageSections.sections}>
 						{(section) => (
 							<li class="pl-0">

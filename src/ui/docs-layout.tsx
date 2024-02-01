@@ -1,9 +1,10 @@
 import { createSignal, ParentComponent, Show, createEffect } from "solid-js";
 import { useLocation, useMatch } from "@solidjs/router";
 import flatEntries from "solid:collection/entries";
-import { TableOfContents } from "./layout/table-of-contents";
 import { Pagination } from "~/ui/pagination";
 import { usePageState } from "~/data/page-state";
+import { SidePanel } from "./layout/side-panel";
+import { EditPageLink } from "./edit-page-link";
 
 export const [trackHeading, setTrackHeading] = createSignal("");
 
@@ -72,11 +73,14 @@ export const DocsLayout: ParentComponent = (props) => {
 						</h1>
 					)}
 				</Show>
+				<span class="md:hidden text-sm">
+					<EditPageLink />
+				</span>
 				<div class="max-w-prose w-full overflow-y-auto">{props.children}</div>
 				<Pagination currentIndex={entryIndex()} collection={collection()} />
 			</article>
 			<div class="sticky">
-				<TableOfContents />
+				<SidePanel />
 			</div>
 		</div>
 	);

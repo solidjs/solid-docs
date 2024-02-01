@@ -2,7 +2,8 @@
 title: action
 ---
 
-Actions are data mutations that can trigger invalidations and further routing. A list of prebuilt response helpers can be found below.
+Actions are data mutations that can trigger invalidations and further routing.
+A list of prebuilt response helpers can be found below.
 
 ```jsx
 import { action, revalidate, redirect } from "@solidjs/router"
@@ -20,11 +21,14 @@ const myAction = action(async (data) => {
 <button type="submit" formaction={myAction}></button>
 ```
 
-Actions only work with post requests, so make sure to put `method="post"` on your form.
+Actions only work with **post** requests.
+This means forms require `method="post"`.
 
-Sometimes it might be easier to deal with typed data instead of `FormData` and adding additional hidden fields. For that reason Actions have a with method. That works similar to `bind` which applies the arguments in order.
+A `with` method can be used when typed data is required.
+This removes the need to use `FormData` or other additional hidden fields.
+The `with` method works similar to `bind`, which applies the arguments in order.
 
-Picture an action that deletes Todo Item:
+Without `with`:
 
 ```js
 const deleteTodo = action(async (formData: FormData) => {
@@ -38,7 +42,7 @@ const deleteTodo = action(async (formData: FormData) => {
 </form>
 ```
 
-Instead with `with` you can write this:
+Using `with`:
 
 ```js
 const deleteUser = action(api.deleteTodo)
@@ -50,7 +54,8 @@ const deleteUser = action(api.deleteTodo)
 
 ### Notes of `<form>` implementation and SSR
 
-This requires stable references as you can only serialize a string as an attribute, and across SSR they'd need to match. The solution is providing a unique name.
+This requires stable references because a string can only serialize as an attribute, and across SSR they would need to match.
+The solution is to provide a unique name.
 
 ```jsx
 const myAction = action(async (args) => {}, "my-action");
@@ -58,7 +63,8 @@ const myAction = action(async (args) => {}, "my-action");
 
 ## `useAction`
 
-Instead of forms you can use actions directly by wrapping them in a `useAction` primitive. This is how we get the router context.
+Instead of forms, actions can directly be wrapped in a `useAction` primitive.
+This is how router context is created.
 
 ```jsx
 // in component
@@ -66,11 +72,15 @@ const submit = useAction(myAction);
 submit(...args);
 ```
 
-The outside of a form context you can use custom data instead of formData, and these helpers preserve types. However, even when used with server functions (in projects like SolidStart) this requires client side javascript and is not Progressive Enhancible like forms are.
+The outside of a form context can use custom data instead of `formData`.
+These helpers preserve types.
+
+However, even when used with server functions, such as with SolidStart, this requires client side javascript and is not Progressive Enhancible like forms are.
 
 ## `useSubmission`/`useSubmissions`
 
-Are used to injecting the optimistic updates while actions are in flight. They either return a single Submission(latest) or all that match with an optional filter function.
+Are used to injecting the optimistic updates while actions are in flight.
+They either return a single Submission(latest) or all that match with an optional filter function.
 
 ```jsx
 type Submission<T, U> = {

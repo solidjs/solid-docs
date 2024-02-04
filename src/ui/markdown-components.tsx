@@ -6,6 +6,7 @@ import { TabsCodeBlocks } from "~/ui/tab-code-blocks";
 import { QuickLinks, QuickLinksProps } from "~/ui/quick-links";
 import { ImageLinks, ImageLinksProps } from "~/ui/image-links";
 import { clientOnly } from "@solidjs/start";
+import { EditPageLink } from "./edit-page-link";
 
 const EraserLink = clientOnly(() => import("./eraser-link/index"));
 
@@ -13,6 +14,7 @@ export default {
 	strong: (props: ParentProps) => (
 		<span class="font-semibold leading-relaxed">{props.children}</span>
 	),
+	EditPageLink: () => <EditPageLink />,
 	Callout: (props: CalloutProps) => (
 		<Callout title={props.title} type={props.type}>
 			{props.children}

@@ -7,9 +7,11 @@ import {
 	createContext,
 	createEffect,
 	createSignal,
+	onMount,
 	useContext,
 } from "solid-js";
-import { isServer } from "solid-js/web";
+import { getRequestEvent, isServer } from "solid-js/web";
+import { parseCookies } from "vinxi/server";
 export interface Theme {
 	name: string;
 	value: string;
@@ -26,13 +28,23 @@ type ThemeContext = {
 	themes: Theme[];
 };
 const ThemeCtx = createContext<ThemeContext>();
+const getUserTheme = () => {
+	if (isServer) {
+		const e = getRequestEvent();
+		return parseCookies(e!).theme;
+	}
+	return parseCookies({
+		// @ts-ignore
+		node: { req: { headers: { cookie: document.cookie } } },
+	}).theme;
+};
+const getSystemTheme = () =>
+	!isServer && window.matchMedia("(prefers-color-scheme: dark)").matches
+		? { value: "dark", theme: "material-theme-ocean" }
+		: { value: "light", theme: "min-light" };
 
 export const ThemeProvider = (props: ParentProps) => {
-	const systemTheme =
-		!isServer && window.matchMedia("(prefers-color-scheme: dark)").matches
-			? { value: "dark", theme: "material-theme-ocean" }
-			: { value: "light", theme: "min-light" };
-
+	const systemTheme = getSystemTheme();
 	const themes: Theme[] = [
 		{ name: "Light", value: "light", icon: sun, theme: "min-light" },
 		{ name: "Dark", value: "dark", icon: moon, theme: "material-theme-ocean" },
@@ -43,7 +55,19 @@ export const ThemeProvider = (props: ParentProps) => {
 			theme: systemTheme.theme,
 		},
 	];
-	const [selectedTheme, setSelectedTheme] = createSignal<Theme>(themes[2]);
+	const themeName = getUserTheme();
+	const theme = themes.find((t) => t.value == themeName);
+	const [selectedTheme, setSelectedTheme] = createSignal<Theme>(
+		theme ?? themes[0]
+	);
+	onMount(() => {
+		// If the user has no theme cookie, set to their system theme on mount
+		if (theme) return;
+		setSelectedTheme(themes[2]);
+	});
+	createEffect(() => {
+		document.cookie = `theme=${selectedTheme().value}`;
+	});
 	return (
 		<ThemeCtx.Provider
 			value={{ selectedTheme: selectedTheme, themes, setSelectedTheme }}

@@ -82,6 +82,6 @@ export const DocsLayout: ParentComponent = (props) => {
 			<div class="sticky">
 				<SidePanel />
 			</div>
-		</>
+		</div>
 	);
 };

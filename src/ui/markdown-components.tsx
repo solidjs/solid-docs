@@ -7,6 +7,7 @@ import { QuickLinks, QuickLinksProps } from "~/ui/quick-links";
 import { ImageLinks, ImageLinksProps } from "~/ui/image-links";
 import { clientOnly } from "@solidjs/start";
 import { EditPageLink } from "./edit-page-link";
+import { PageIssueLink } from "./page-issue-link";
 
 const EraserLink = clientOnly(() => import("./eraser-link/index"));
 
@@ -15,6 +16,7 @@ export default {
 		<span class="font-semibold leading-relaxed">{props.children}</span>
 	),
 	EditPageLink: () => <EditPageLink />,
+	PageIssueLink: () => <PageIssueLink />,
 	Callout: (props: CalloutProps) => (
 		<Callout title={props.title} type={props.type}>
 			{props.children}

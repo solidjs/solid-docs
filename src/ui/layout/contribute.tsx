@@ -1,5 +1,6 @@
 import { Component } from "solid-js";
 import { EditPageLink } from "../edit-page-link";
+import { PageIssueLink } from "../page-issue-link";
 
 export const Contribute: Component = () => {
 	return (
@@ -11,6 +12,11 @@ export const Contribute: Component = () => {
 				<li class="pl-0">
 					<span>
 						<EditPageLink />
+					</span>
+				</li>
+				<li class="pl-0">
+					<span>
+						<PageIssueLink />
 					</span>
 				</li>
 			</ol>

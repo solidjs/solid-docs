@@ -1,8 +1,6 @@
 import { Component, createMemo } from "solid-js";
-import { usePageState } from "~/data/page-state";
 import { Icon } from "solid-heroicons";
 import { pencilSquare } from "solid-heroicons/solid";
-import { useLocale } from "@kobalte/core";
 import { useLocation } from "@solidjs/router";
 
 export const EditPageLink: Component = () => {
@@ -15,7 +13,7 @@ export const EditPageLink: Component = () => {
 			class="flex no-underline hover:text-slate-700 dark:hover:text-slate-300 dark:text-slate-400 "
 			href={`https://github.com/solidjs/solid-docs-next/edit/main/src/routes${path()}.mdx`}
 		>
-			<Icon class="mr-1" path={pencilSquare} style="width: 12px;" />
+			<Icon class="mr-1" path={pencilSquare} style="width: 16px;" />
 			Edit this page
 		</a>
 	);

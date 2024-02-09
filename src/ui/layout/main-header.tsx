@@ -2,7 +2,7 @@ import { createSignal, onCleanup, onMount } from "solid-js";
 import { A } from "@solidjs/router";
 import { isServer } from "solid-js/web";
 
-import { Logo, GitHubIcon } from "~/ui/logo";
+import { Logo, GitHubIcon, DiscordIcon } from "~/ui/logo";
 import { ThemeSelector } from "./theme-selector";
 import { MobileNavigation } from "./mobile-navigation";
 
@@ -42,9 +42,8 @@ export function MainHeader() {
 				</A>
 
 				<div class="flex basis-0 gap-4">
-					<ThemeSelector />
 					<A
-						href="https://github.com/solidjs/solid-docs-next"
+						href="https://github.com/solidjs/solid"
 						class="group"
 						aria-label="GitHub"
 						target="_blank"
@@ -52,6 +51,16 @@ export function MainHeader() {
 					>
 						<GitHubIcon class="h-6 w-6 dark:fill-slate-400 group-hover:dark:fill-slate-500 dark:group-hover:fill-slate-300" />
 					</A>
+					<A
+						href="https://discord.com/invite/solidjs"
+						class="group"
+						aria-label="Discord"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						<DiscordIcon class="h-6 w-6 dark:fill-slate-400 group-hover:dark:fill-slate-500 dark:group-hover:fill-slate-300" />
+					</A>
+					<ThemeSelector />
 				</div>
 			</div>
 		</header>

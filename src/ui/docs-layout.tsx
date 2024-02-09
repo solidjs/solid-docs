@@ -6,6 +6,7 @@ import { Pagination } from "~/ui/pagination";
 import { usePageState } from "~/data/page-state";
 import { SidePanel } from "./layout/side-panel";
 import { EditPageLink } from "./edit-page-link";
+import { PageIssueLink } from "./page-issue-link";
 
 export const [trackHeading, setTrackHeading] = createSignal("");
 
@@ -61,7 +62,7 @@ export const DocsLayout: ParentComponent = (props) => {
 		<>
 			<Title>{`${titles().title} - SolidDocs`}</Title>
 			<div id="rr" class="flex relative">
-				<article class="px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none">
+				<article class="px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none lg:min-w-[730px]">
 					<Show when={titles().parent}>
 						{(t) => (
 							<span class="text-sm font-semibold text-sky-600 dark:text-sky-500 my-1">
@@ -80,6 +81,9 @@ export const DocsLayout: ParentComponent = (props) => {
 						<EditPageLink />
 					</span>
 					<div class="max-w-prose w-full overflow-y-auto">{props.children}</div>
+					<span class="xl:hidden text-sm">
+						<PageIssueLink />
+					</span>
 					<Pagination currentIndex={entryIndex()} collection={collection()} />
 				</article>
 				<SidePanel />

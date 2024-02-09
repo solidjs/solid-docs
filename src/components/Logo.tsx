@@ -45,7 +45,7 @@ export function SolidDocsLogo() {
         ></path>
       </svg> */}
       <div class="flex flex-wrap">
-        <h1 class="text-5xl mr-4 -mt-1 flex wrap space-x-2 font-bold leading-tight text-primary dark:text-primary-dark">
+        <h1 class="shrink-0 text-5xl mr-4 flex wrap space-x-2 font-bold leading-tight text-primary dark:text-primary-dark">
           <span class="font-bold">Solid </span>
           <span class="italic font-normal">Docs</span>
         </h1>

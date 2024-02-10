@@ -7,7 +7,7 @@ export function Logo(props: { class?: string }) {
 				width="100%"
 				height="100%"
 				xmlns="http://www.w3.org/2000/svg"
-				class="w-9 h-9 -mt-1 text-link dark:text-link-dark"
+				class="w-9 h-9 text-link dark:text-link-dark"
 				viewBox="0 0 166 155.3"
 			>
 				<defs>

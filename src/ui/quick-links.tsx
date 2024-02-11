@@ -42,6 +42,7 @@ export const QuickLinks: ParentComponent<QuickLinksProps> = (props) => {
 						>
 							<a
 								href={props.href}
+								target="_blank"
 								class="no-underline font-semibold bg-gradient-to-br from-blue-400 to-blue-700 inline-block text-transparent bg-clip-text"
 							>
 								<span class="absolute -inset-px rounded-xl" />

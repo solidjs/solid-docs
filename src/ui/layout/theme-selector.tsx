@@ -72,7 +72,7 @@ export const ThemeSelector: Component = () => {
 								<Icon
 									class={`h-6 w-6 mr-2 rounded-md bg-white p-1 shadow ring-1 ring-slate-900/5 dark:bg-slate-700 dark:ring-inset dark:ring-white/5 `}
 									classList={{
-										"fill-sky-400": selectedTheme()!.name === theme.name,
+										"fill-blue-400": selectedTheme()!.name === theme.name,
 										"fill-slate-400": selectedTheme()!.name !== theme.name,
 									}}
 									path={theme.icon}
@@ -80,7 +80,7 @@ export const ThemeSelector: Component = () => {
 								<span
 									class="font-semibold prose prose-slate text-sm"
 									classList={{
-										"text-sky-500": selectedTheme()!.name === theme.name,
+										"text-blue-500": selectedTheme()!.name === theme.name,
 										"text-slate-700 dark:text-slate-300":
 											selectedTheme()!.value !== theme.name,
 									}}

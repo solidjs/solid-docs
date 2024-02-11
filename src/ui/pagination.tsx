@@ -38,7 +38,7 @@ export function Pagination(props: Pagination) {
 							Previous
 						</span>
 						<A
-							class="flex items-center gap-x-1 text-base font-medium text-slate-500 hover:text-sky-600 dark:text-slate-300 dark:hover:text-sky-300 flex-row-reverse no-underline"
+							class="flex items-center gap-x-1 text-base font-medium text-slate-500 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-300 flex-row-reverse no-underline"
 							href={entry().path}
 						>
 							← {entry().title}
@@ -53,7 +53,7 @@ export function Pagination(props: Pagination) {
 							Next
 						</span>
 						<A
-							class="flex items-center gap-x-1 text-base font-medium text-slate-500 hover:text-sky-700 dark:text-slate-300 dark:hover:text-sky-300 flex-row-reverse no-underline"
+							class="flex items-center gap-x-1 text-base font-medium text-slate-500 hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-300 flex-row-reverse no-underline"
 							href={entry().path}
 						>
 							{entry().title} →

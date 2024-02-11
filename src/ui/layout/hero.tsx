@@ -23,7 +23,7 @@ export const Hero: Component = () => {
 				<div class="mx-auto grid max-w-2xl grid-cols-1 items-center gap-x-8 gap-y-16 px-4 lg:max-w-8xl lg:grid-cols-2 lg:px-8 xl:gap-x-16 xl:px-12">
 					<div class="relative md:text-center lg:text-left">
 						<div class="relative">
-							<h2 class="inline bg-gradient-to-r from-indigo-200 via-sky-400 to-indigo-200 bg-clip-text font-display text-5xl tracking-tight text-transparent">
+							<h2 class="inline bg-gradient-to-r from-indigo-200 via-blue-400 to-indigo-200 bg-clip-text font-display text-5xl tracking-tight text-transparent">
 								Effortless UIs with Reactive Precision.
 							</h2>
 							<p class="mt-3 text-2xl tracking-tight text-slate-300">
@@ -41,15 +41,15 @@ export const Hero: Component = () => {
 					</div>
 					<div class="relative lg:static xl:pl-10">
 						<div class="relative">
-							<div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-sky-500 dark:from-sky-300 via-sky-500/70 dark:via-sky-300/70 to-blue-300 opacity-10 blur-lg dark:bg-white" />
-							<div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-sky-300 via-sky-300/70 to-blue-300 opacity-10" />
-							<div class="relative rounded-2xl bg-[#0A101F]/80 ring-1 ring-sky-200/10 backdrop-blur">
-								<div class="absolute -top-px left-20 right-11 h-px bg-gradient-to-r from-sky-300/0 via-sky-300/70 to-sky-300/0" />
+							<div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-blue-500 dark:from-blue-300 via-blue-500/70 dark:via-blue-300/70 to-blue-300 opacity-10 blur-lg dark:bg-white" />
+							<div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-blue-300 via-blue-300/70 to-blue-300 opacity-10" />
+							<div class="relative rounded-2xl bg-[#0A101F]/80 ring-1 ring-blue-200/10 backdrop-blur">
+								<div class="absolute -top-px left-20 right-11 h-px bg-gradient-to-r from-blue-300/0 via-blue-300/70 to-blue-300/0" />
 								<div class="absolute -bottom-px left-11 right-20 h-px bg-gradient-to-r from-blue-400/0 via-blue-800 dark:via-blue-400 to-blue-400/0" />
 								<div class="pl-4 pt-4">
 									<TrafficLightsIcon class="h-2.5 w-auto stroke-slate-500/30" />
 									<div class="mt-4 flex space-x-2 text-xs">
-										<div class="flex h-6 rounded-full border dark:border-none border-sky-400 shadow-sm bg-gradient-to-r from-sky-400/30  via-sky-400 to-sky-400/30 p-px font-medium text-sky-300 ">
+										<div class="flex h-6 rounded-full border dark:border-none border-blue-400 shadow-sm bg-gradient-to-r from-blue-400/30  via-blue-400 to-blue-400/30 p-px font-medium text-blue-300 ">
 											<div class="flex items-center rounded-full px-2.5 bg-slate-800">
 												Counter.jsx
 											</div>

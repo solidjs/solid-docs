@@ -11,22 +11,22 @@ import {
 const styles = {
 	info: {
 		container:
-			"bg-emerald-500/30 border-emerald-500 dark:border-emerald-400 dark:bg-emerald-800/20 dark:border-emerald-900",
+			"bg-emerald-500/20 border-emerald-500 dark:border-emerald-400 dark:bg-emerald-800/20 dark:border-emerald-900",
 		title: "text-emerald-900 dark:text-emerald-300",
 	},
 	tip: {
 		container:
-			"bg-violet-800/70 border-violet-700 dark:border-violet-400 dark:bg-violet-800/10 dark:border-violet-900",
+			"bg-violet-800/20 border-violet-900 dark:border-violet-400 dark:bg-violet-800/10 dark:border-violet-900",
 		title: "text-violet-900 dark:text-violet-300",
 	},
 	advanced: {
 		container:
-			"bg-sky-400/40 border-sky-600 dark:border-sky-400 dark:bg-sky-400/20 dark:border-sky-600",
-		title: "text-sky-700 dark:text-sky-300",
+			"bg-blue-400/20 border-blue-600 dark:border-blue-400 dark:bg-blue-400/20 dark:border-blue-600",
+		title: "text-blue-700 dark:text-blue-300",
 	},
 	caution: {
 		container:
-			"bg-amber-400/40 border-amber-600 dark:border-amber-400 dark:bg-amber-400/20 dark:border-amber-600",
+			"bg-amber-400/30 border-amber-600 dark:border-amber-400 dark:bg-amber-400/20 dark:border-amber-600",
 		title: "text-amber-900 dark:text-amber-400",
 	},
 };
@@ -35,7 +35,7 @@ const icons = {
 	tip: (props: { class?: string }) => (
 		<Icon
 			path={lightBulb}
-			class={`${props.class} fill-violet-500 dark:fill-violet-300`}
+			class={`${props.class} fill-violet-900 dark:fill-violet-300`}
 		/>
 	),
 	info: (props: { class?: string }) => (
@@ -47,7 +47,7 @@ const icons = {
 	advanced: (props: { class?: string }) => (
 		<Icon
 			path={puzzlePiece}
-			class={`${props.class} fill-sky-700 dark:fill-sky-300`}
+			class={`${props.class} fill-blue-700 dark:fill-blue-300`}
 		/>
 	),
 	caution: (props: { class?: string }) => (

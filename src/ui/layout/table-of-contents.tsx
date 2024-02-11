@@ -35,20 +35,18 @@ export const TableOfContents: Component = () => {
 			<span class="font-display text-base font-medium text-slate-900 dark:text-white">
 				On this page
 			</span>
-			<ol
-				role="list"
-				class="text-sm list-none mt-2 p-0 flex flex-col active:font-bold hover:text-slate-700 dark:hover:text-sky-200 font-bold active:text-sky-600"
-			>
+			<ol role="list" class="text-sm list-none mt-2 p-0 flex flex-col">
 				<li class="pl-0 mt-0">
 					<span>
 						<a
 							href={`#_top`}
 							classList={{
-								"dark:text-sky-200 hover:text-sky-700 dark:hover:text-sky-200":
+								"dark:text-blue-200 hover:text-blue-700 dark:hover:text-blue-200":
 									currentSection() !== "",
-								"text-sky-500 font-bold": currentSection() === "",
+								"text-blue-800 dark:text-blue-300 font-bold hover:text-slate-700 dark:hover:text-slate-200":
+									currentSection() === "",
 							}}
-							class="no-underline hover:font-bold hover:text-sky-800 dark:hover:text-sky-300"
+							class="no-underline hover:font-bold hover:text-slate-800"
 						>
 							Overview
 						</a>
@@ -62,10 +60,10 @@ export const TableOfContents: Component = () => {
 									href={`#${section().id}`}
 									classList={{
 										"dark:text-slate-300": currentSection() !== section().id,
-										"text-sky-400 hover:text-slate-700 dark:hover:text-sky-200 font-bold":
+										"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-bold":
 											currentSection() === section().id,
 									}}
-									class="no-underline hover:font-bold hover:text-slate-700 dark:hover:text-sky-300"
+									class="no-underline hover:font-bold hover:text-slate-700 dark:hover:text-blue-300"
 								>
 									{section().text}
 								</a>
@@ -73,7 +71,7 @@ export const TableOfContents: Component = () => {
 							<Show when={section().children.length !== 0}>
 								<ol
 									role="list"
-									class="space-y-2 pl-5 text-slate-500 dark:text-slate-300 list-none"
+									class="space-y-2 pl-5 text-slate-500 dark:text-slate-300 list-none active:font-bold hover:text-slate-700 dark:hover:text-blue-200 font-bold active:text-blue-600"
 								>
 									<Index each={section().children}>
 										{(subSection) => (
@@ -83,10 +81,10 @@ export const TableOfContents: Component = () => {
 													classList={{
 														"dark:text-slate-300":
 															currentSection() !== subSection().id,
-														"text-sky-300":
+														"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-bold":
 															currentSection() === subSection().id,
 													}}
-													class="no-underline hover:text-slate-700 dark:hover:text-slate-300"
+													class="no-underline hover:font-bold hover:text-blue-700 dark:hover:text-blue-300"
 												>
 													{subSection().text}
 												</a>

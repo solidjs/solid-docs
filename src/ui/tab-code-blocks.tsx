@@ -71,7 +71,7 @@ export const TabsCodeBlocks: ParentComponent = (props) => {
 					{(tab) => (
 						<button
 							classList={{
-								"font-bold dark:text-slate-300 text-sky-500 border-b-2 border-sky-400":
+								"font-bold dark:text-slate-300 text-blue-500 border-b-2 border-blue-400":
 									selectedTab()?.id === tab.id,
 								"px-5 py-1 relative top-0.5 transition-colors duration-300":
 									true,

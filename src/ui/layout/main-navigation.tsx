@@ -99,7 +99,7 @@ export function MainNavigation() {
 	const isReference = useMatch(() => "/reference/*");
 
 	return (
-		<nav class="overflow-y-auto custom-scrollbar h-[calc(100vh-7rem)] pb-20">
+		<nav class="overflow-y-auto custom-scrollbar h-full md:h-[calc(100vh-7rem)] pb-20">
 			<Tabs.Root defaultValue={isReference() ? "reference" : "learn"}>
 				<Tabs.List class="sticky top-0 w-full pb-4 z-10 dark:bg-slate-900 bg-blue-50">
 					<Tabs.Trigger

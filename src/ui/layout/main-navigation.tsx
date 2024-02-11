@@ -20,7 +20,7 @@ function ListItemLink(props: { item: Entry }) {
 	const linkStyles = () =>
 		location.pathname === props.item.path.replace(/\\/g, "/")
 			? "font-semibold text-sky-500 before:bg-sky-500 before:block"
-			: "text-slate-500 before:hidden before:bg-slate-300 hover:text-slate-600 hover:before:block dark:text-slate-400 dark:before:bg-slate-200 dark:hover:text-slate-200";
+			: "text-slate-500 before:hidden before:bg-slate-300 hover:text-slate-600 hover:before:block dark:text-slate-300 dark:before:bg-slate-200 dark:hover:text-slate-200";
 	return (
 		<li class="relative">
 			<A
@@ -54,7 +54,7 @@ function DirList(props: { list: Entry[] }) {
 											<>
 												<li>
 													<Collapsible.Root defaultOpen={true}>
-														<Collapsible.Trigger class="relative flex justify-between hover:cursor-pointer w-full pl-3.5 text-slate-400 dark:text-slate-300 lg:text-sm group">
+														<Collapsible.Trigger class="relative flex justify-between hover:cursor-pointer w-full pl-3.5 text-slate-300 dark:text-slate-300 lg:text-sm group">
 															<span class="font-display font-semibold text-slate-500 dark:text-slate-100 lg:text-sm">
 																{child.title}
 															</span>
@@ -101,7 +101,7 @@ export function MainNavigation() {
 	return (
 		<nav class="overflow-y-auto custom-scrollbar h-[calc(100vh-7rem)] pb-20">
 			<Tabs.Root defaultValue={isReference() ? "reference" : "learn"}>
-				<Tabs.List class="sticky top-0 w-full pb-4 z-10 dark:bg-slate-900 bg-blue-100">
+				<Tabs.List class="sticky top-0 w-full pb-4 z-10 dark:bg-slate-900 bg-blue-50">
 					<Tabs.Trigger
 						value="learn"
 						class="inline-block ml-2 px-6 py-2 outline-none hover:bg-sky-500/30 dark:hover:bg-sky-800 dark:focus-visible:bg-sky-800"

@@ -81,7 +81,7 @@ export const ThemeSelector: Component = () => {
 									class="font-semibold prose prose-slate text-sm"
 									classList={{
 										"text-sky-500": selectedTheme()!.name === theme.name,
-										"text-slate-700 dark:text-slate-400":
+										"text-slate-700 dark:text-slate-300":
 											selectedTheme()!.value !== theme.name,
 									}}
 								>

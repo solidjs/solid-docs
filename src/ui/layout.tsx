@@ -34,7 +34,7 @@ export const Layout: ParentComponent = (props) => {
 							<MainNavigation />
 						</div>
 					</div>
-					<main class="md:max-w-2xl flex-auto px-4 pt-20 md:pb-16 lg:max-w-none prose prose-slate dark:prose-invert dark:text-slate-400">
+					<main class="md:max-w-2xl flex-auto px-4 pt-20 md:pb-16 lg:max-w-none prose prose-slate dark:prose-invert dark:text-slate-300">
 						<Show
 							when={!isRoot()}
 							keyed

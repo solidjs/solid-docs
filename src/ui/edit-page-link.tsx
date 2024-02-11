@@ -10,7 +10,7 @@ export const EditPageLink: Component = () => {
 	});
 	return (
 		<a
-			class="flex no-underline hover:text-slate-700 dark:hover:text-slate-300 dark:text-slate-400 "
+			class="flex no-underline hover:text-slate-700 dark:hover:text-slate-300 dark:text-slate-300 "
 			href={`https://github.com/solidjs/solid-docs-next/edit/main/src/routes${path()}.mdx`}
 		>
 			<Icon class="mr-1" path={pencilSquare} style="width: 16px;" />

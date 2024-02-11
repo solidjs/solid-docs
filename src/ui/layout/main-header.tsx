@@ -26,14 +26,14 @@ export function MainHeader() {
 
 	return (
 		<header
-			class="sticky top-0 z-50 max-w-8xl mx-auto flex items-center justify-between bg-blue-100/80  shadow-md shadow-slate-900/5 transition duration-500 dark:shadow-none backdrop-blur"
+			class="sticky top-0 z-50 max-w-8xl mx-auto flex items-center justify-between bg-blue-50/80  shadow-md shadow-slate-900/5 transition duration-500 dark:shadow-none backdrop-blur"
 			classList={{
 				"dark:bg-slate-900/95 dark:[@supports(backdrop-filter:blur(0))]:bg-slate-900/75":
 					isScrolled(),
 				"dark:bg-transparent bg-transparent": !isScrolled(),
 			}}
 		>
-			<div class="flex justify-between pt-4 px-4 items-center w-full">
+			<div class="flex justify-between py-2 px-4 items-center w-full">
 				<div class="flex md:hidden">
 					<MobileNavigation />
 				</div>

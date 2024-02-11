@@ -51,7 +51,7 @@ export const QuickLinks: ParentComponent<QuickLinksProps> = (props) => {
 					</div>
 				</div>
 
-				<p class="mt-1 text-sm text-slate-800 dark:text-slate-400 -mb-2">
+				<p class="mt-1 text-sm text-slate-800 dark:text-slate-300 -mb-2">
 					{props.children}
 				</p>
 			</div>

@@ -19,7 +19,7 @@ const PageLink: Component<PageLinkProps> = (props) => {
 			<dd class="mt-1">
 				<A
 					href={props.href}
-					class="flex items-center gap-x-1 text-base font-semibold text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300"
+					class="flex items-center gap-x-1 text-base font-semibold text-slate-500 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-300"
 				>
 					{props.title}
 					<Show when={props.dir === "next"}>

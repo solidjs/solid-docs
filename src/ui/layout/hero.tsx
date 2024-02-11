@@ -26,7 +26,7 @@ export const Hero: Component = () => {
 							<h2 class="inline bg-gradient-to-r from-indigo-200 via-sky-400 to-indigo-200 bg-clip-text font-display text-5xl tracking-tight text-transparent">
 								Effortless UIs with Reactive Precision.
 							</h2>
-							<p class="mt-3 text-2xl tracking-tight text-slate-400">
+							<p class="mt-3 text-2xl tracking-tight text-slate-300">
 								SolidJS is a modern JavaScript framework for today's web.
 							</p>
 							<div class="mt-8 flex gap-4 md:justify-center lg:justify-start">
@@ -58,7 +58,7 @@ export const Hero: Component = () => {
 									<div class="mt-6 flex items-start px-1 text-sm">
 										<div
 											aria-hidden="true"
-											class="select-none border-r border-slate-300/5 pr-4 font-mono text-slate-400 pb-6"
+											class="select-none border-r border-slate-300/5 pr-4 font-mono text-slate-300 pb-6"
 										>
 											<Index each={snippetLines}>
 												{(_, index) => (

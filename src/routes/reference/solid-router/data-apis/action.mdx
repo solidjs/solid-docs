@@ -1,0 +1,97 @@
+---
+title: action
+---
+
+Actions are data mutations that can trigger invalidations and further routing.
+A list of prebuilt response helpers can be found below.
+
+```jsx
+import { action, revalidate, redirect } from "@solidjs/router"
+
+// anywhere
+const myAction = action(async (data) => {
+  await doMutation(data);
+  throw redirect("/", { revalidate: getUser.keyFor(data.id) }); // throw a response to do a redirect
+});
+
+// in component
+<form action={myAction} method="post" />
+
+//or
+<button type="submit" formaction={myAction}></button>
+```
+
+Actions only work with **post** requests.
+This means forms require `method="post"`.
+
+A `with` method can be used when typed data is required.
+This removes the need to use `FormData` or other additional hidden fields.
+The `with` method works similar to [`bind`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_objects/Function/bind), which applies the arguments in order.
+
+Without `with`:
+
+```js
+const deleteTodo = action(async (formData: FormData) => {
+  const id = Number(formData.get("id"))
+  await api.deleteTodo(id)
+})
+
+<form action={deleteTodo} method="post">
+  <input type="hidden" name="id" value={todo.id} />
+  <button type="submit">Delete</button>
+</form>
+```
+
+Using `with`:
+
+```js
+const deleteUser = action(api.deleteTodo)
+
+<form action={deleteTodo.with(todo.id)} method="post">
+  <button type="submit">Delete</button>
+</form>
+```
+
+### Notes of `<form>` implementation and SSR
+
+This requires stable references because a string can only be serialized as an attribute, and it is crucial for consistency across SSR. where these references must align.
+The solution is to provide a unique name.
+
+```jsx
+const myAction = action(async (args) => {}, "my-action");
+```
+
+## `useAction`
+
+Instead of forms, actions can directly be wrapped in a `useAction` primitive.
+This is how router context is created.
+
+```jsx
+// in component
+const submit = useAction(myAction);
+submit(...args);
+```
+
+The outside of a form context can use custom data instead of `formData`.
+These helpers preserve types.
+
+However, even when used with server functions, such as with [SolidStart](https://start.solidjs.com/getting-started/what-is-solidstart), this requires client side javascript and is not Progressive Enhancible like forms are.
+
+## `useSubmission`/`useSubmissions`
+
+These fucntions are used when incorporating optimistic updates during ongoing actions.
+They provide either a singular Submission (the latest one), or a collection of Submissions taht match, with an optional filtering function.
+
+```jsx
+type Submission<T, U> = {
+  input: T;
+  result: U;
+  error: any;
+  pending: boolean
+  clear: () => {}
+  retry: () => {}
+}
+
+const submissions = useSubmissions(action, (input) => filter(input));
+const submission = useSubmission(action, (input) => filter(input));
+```

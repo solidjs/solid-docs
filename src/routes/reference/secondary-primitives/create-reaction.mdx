@@ -1,0 +1,24 @@
+---
+title: createReaction
+---
+
+```ts
+function createReaction(onInvalidate: () => void): (fn: () => void) => void
+
+```
+
+Sometimes it is useful to separate tracking from re-execution. 
+This primitive registers a side effect that is run the first time the expression wrapped by the returned tracking function is notified of a change.
+
+```ts
+const [s, set] = createSignal("start")
+
+const track = createReaction(() => console.log("something"))
+
+// next time s changes run the reaction
+track(() => s())
+
+set("end") // "something"
+
+set("final") // no-op as reaction only runs on first update, need to call track again.
+```

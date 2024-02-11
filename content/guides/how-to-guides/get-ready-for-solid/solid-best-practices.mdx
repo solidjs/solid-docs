@@ -1,1 +1,0 @@
-<Title>Solid Best Practices</Title>

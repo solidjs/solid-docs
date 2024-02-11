@@ -1,0 +1,70 @@
+---
+title: createMemo
+---
+
+Memos let you efficiently use a derived value in many reactive computations. 
+`createMemo` creates a readonly reactive value equal to the return value of the given function and makes sure that function only gets executed when its dependencies change.
+
+```tsx
+function createMemo<T>(
+	fn: (v: T) => T,
+	value?: T,
+	options?: { equals?: false | ((prev: T, next: T) => boolean) }
+): () => T
+
+```
+
+Here's an example of how createMemo can be used:
+
+```ts
+const value = createMemo(() => computeExpensiveValue(a(), b()))
+
+//read the value
+value()
+```
+
+In Solid, you often don't need to wrap functions in memos; you can alternatively just define and call a regular function to get similar reactive behavior. 
+The main difference is when you call the function in multiple reactive settings. 
+In this case, when the function's dependencies update, the function will get called multiple times unless it is wrapped in createMemo. 
+For example:
+
+```tsx
+const user = createMemo(() => searchForUser(username()))
+// compare with: const user = () => searchForUser(username());
+return (
+	<ul>
+		<li>Your name is {user()?.name}</li>
+		<li>
+			Your email is <code>{user()?.email}</code>
+		</li>
+	</ul>
+)
+```
+
+When the username signal updates, searchForUser will get called just once. 
+If the returned user actually changed, the user memo updates, and then both list items will update automatically.
+
+If we had instead defined user as a plain function `() => searchForUser(username())`, then `searchForUser` would have been called twice, once when updating each list item.
+
+Another key difference is that a memo can shield dependents from updating when the memo's dependencies change but the resulting memo value doesn't. 
+Like [createSignal](/reference/basic-reactivity/create-signal), the derived signal made by `createMemo` updates (and triggers dependents to rerun) only when the value returned by the memo function actually changes from the previous value, according to JavaScript's `===` operator. 
+Alternatively, you can pass an options object with `equals` set to false to always update the memo when its dependencies change, or you can pass your own `equals` function for testing equality.
+
+The memo function is called with an argument equal to the value returned from the previous execution of the memo function, or, on the first call, equal to the optional second argument to `createMemo`. 
+This is useful for reducing computations, such as:
+
+```tsx
+// track the sum of all values taken on by input() as it updates
+const sum = createMemo((prev) => input() + prev, 0)
+```
+
+The memo function should not change other signals by calling setters (it should be "pure"). 
+This enables Solid to optimize the execution order of memo updates according to their dependency graph, so that all memos can update at most once in response to a dependency change.
+
+## Options and arguments
+
+| Name    | Type                                                    | Description                                                    |
+| :------ | :------------------------------------------------------ | :------------------------------------------------------------- |
+| fn      | `(v: T) => T`                                           | The function to memoize.                                       |
+| value   | `T`                                                     | The initial value of the memo.                                 |
+| options | `{ equals?: false \| ((prev: T, next: T) => boolean) }` | An optional object with an `equals` function to test equality. |

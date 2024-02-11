@@ -1,0 +1,145 @@
+---
+title: createSignal
+---
+
+Signals are the most basic reactive primitive. 
+They track a single value (which can be any JavaScript object) that changes over time.
+
+```tsx
+function createSignal<T>(
+	initialValue: T,
+	options?: {
+		equals?: false | ((prev: T, next: T) => boolean)
+		name?: string
+		internal?: boolean
+	}
+): [get: () => T, set: (v: T) => T]
+
+// available types for return value of createSignal:
+type Signal<T> = [get: Accessor<T>, set: Setter<T>]
+type Accessor<T> = () => T
+type Setter<T> = (v: T | ((prev?: T) => T)) => T
+
+```
+
+The Signal's value starts out equal to the passed first argument `initialValue` (or undefined if there are no arguments). 
+The `createSignal` function returns a pair of functions as a two-element array: a getter (or accessor) and a setter. 
+In typical use, you would destructure this array into a named Signal like so:
+
+```tsx
+const [count, setCount] = createSignal(0)
+const [ready, setReady] = createSignal(false)
+```
+
+Calling the getter (e.g., `count()` or `ready()`) returns the current value of the Signal.
+
+Crucial to automatic dependency tracking, calling the getter within a tracking scope causes the calling function to depend on this Signal, so that function will rerun if the Signal gets updated.
+
+Calling the setter (e.g., `setCount(nextCount)` or `setReady(nextReady)`) sets the Signal's value and updates the Signal (triggering dependents to rerun) if the value actually changed (see details below). 
+The setter takes either the new value for the signal or a function that maps the last value of the signal to a new value as its only argument. 
+The updated value is also returned by the setter. As an example:
+
+```tsx
+// read signal's current value, and
+// depend on signal if in a tracking scope
+// (but nonreactive outside of a tracking scope):
+const currentCount = count()
+
+// or wrap any computation with a function,
+// and this function can be used in a tracking scope:
+const doubledCount = () => 2 * count()
+
+// or build a tracking scope and depend on signal:
+const countDisplay = <div>{count()}</div>
+
+// write signal by providing a value:
+setReady(true)
+
+// write signal by providing a function setter:
+const newCount = setCount((prev) => prev + 1)
+
+```
+
+<Callout>
+	If you want to store a function in a Signal you must use the function form:
+
+	```tsx
+	setValue(() => myFunction);
+	``` 
+	
+	However, functions are not treated specially as the `initialValue` argument to `createSignal`, so you can pass a
+	function initial value as is: 
+	
+	```tsx
+	const [func, setFunc] = createSignal(myFunction); 
+	```
+
+</Callout>
+
+## Options
+
+| Name       | Type                                       | Default | Description                                                                                                                                                                                                                                                         |
+| ---------- | ------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `equals`   | `false \| ((prev: T, next: T) => boolean)` | `===`   | A function that determines whether the Signal's value has changed. If the function returns true, the Signal's value will not be updated and dependents will not rerun. If the function returns false, the Signal's value will be updated and dependents will rerun. |
+| `name`     | `string`                                   |         | A name for the Signal. This is useful for debugging.                                                                                                                                                                                                                |
+| `internal` | `boolean`                                  | `false` | If true, the Signal will not be accessible in the devtools.                                                                                                                                                                                                         |
+
+### `equals`
+
+The `equals` option can be used to customize the equality check used to determine whether the Signal's value has changed. 
+By default, the equality check is a strict equality check (`===`). 
+If you want to use a different equality check, you can pass a custom function as the `equals` option. 
+The custom function will be called with the previous and next values of the Signal as arguments. 
+If the function returns true, the Signal's value will not be updated and dependents will not rerun. 
+If the function returns false, the Signal's value will be updated and dependents will rerun.
+
+```tsx
+const [count, setCount] = createSignal(0, {
+	equals: (prev, next) => prev === next,
+})
+```
+
+Here's are some examples of this option in use:
+
+```tsx
+// use { equals: false } to allow modifying object in-place;
+// normally this wouldn't be seen as an update because the
+// object has the same identity before and after change
+const [object, setObject] = createSignal({ count: 0 }, { equals: false })
+setObject((current) => {
+	current.count += 1
+	current.updated = new Date()
+	return current
+})
+
+// use { equals: false } signal as trigger without value:
+const [depend, rerun] = createSignal(undefined, { equals: false })
+// now calling depend() in a tracking scope
+// makes that scope rerun whenever rerun() gets called
+
+// define equality based on string length:
+const [myString, setMyString] = createSignal("string", {
+	equals: (newVal, oldVal) => newVal.length === oldVal.length,
+})
+
+setMyString("string") // considered equal to the last value and won't cause updates
+setMyString("stranger") // considered different and will cause updates
+```
+
+### `name`
+
+The `name` option can be used to give the Signal a name. 
+This is useful for debugging. The name will be displayed in the devtools.
+
+```tsx
+const [count, setCount] = createSignal(0, { name: "count" })
+```
+
+### `internal`
+
+The `internal` option can be used to hide the Signal from the devtools. 
+This is useful for Signals that are used internally by a component and should not be exposed to the user.
+
+```tsx
+const [count, setCount] = createSignal(0, { internal: true })
+```

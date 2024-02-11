@@ -49,18 +49,21 @@ export const ThemeSelector: Component = () => {
 		<DropdownMenu.Root modal={true} gutter={10}>
 			<DropdownMenu.Trigger
 				aria-label="theme"
-				class="flex h-6 w-6 items-center justify-center rounded-lg shadow-md shadow-black/5 ring-1 ring-black/5 dark:bg-slate-500 dark:ring-inset dark:ring-white/20"
+				class="flex h-6 w-6 items-center justify-center rounded-lg shadow-md shadow-black/5 ring-1 ring-black/10 dark:bg-slate-800 dark:ring-inset dark:ring-white/60"
 			>
-				<Icon class="w-4 h-4" path={selectedTheme()!.icon} />
+				<Icon
+					class="w-4 h-4 fill-slate-700 dark:fill-slate-200"
+					path={selectedTheme()!.icon}
+				/>
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Portal>
-				<DropdownMenu.Content class="z-50 w-36 space-y-1 rounded-xl bg-white p-2 text-sm font-medium shadow-md shadow-black/5 ring-1 ring-black/5 dark:bg-slate-800 dark:ring-white/5">
+				<DropdownMenu.Content class="z-50 w-36 space-y-1 rounded-xl bg-white p-2 text-sm shadow-md shadow-black/5 ring-1 ring-black/5 dark:bg-slate-800 dark:ring-white/5">
 					<For each={themes}>
 						{(theme) => (
 							<DropdownMenu.Item
-								class="flex cursor-pointer select-none items-center rounded-[0.625rem] p-1 hover:bg-slate-200"
+								class="flex cursor-pointer select-none items-center rounded-[0.625rem] p-1 hover:bg-slate-200 hover:dark:bg-slate-600 group"
 								classList={{
-									"bg-slate-100 dark:bg-slate-900/40":
+									"bg-slate-200 dark:bg-slate-700 font-medium":
 										selectedTheme()!.name === theme.name,
 								}}
 								closeOnSelect={true}
@@ -72,15 +75,18 @@ export const ThemeSelector: Component = () => {
 								<Icon
 									class={`h-6 w-6 mr-2 rounded-md bg-white p-1 shadow ring-1 ring-slate-900/5 dark:bg-slate-700 dark:ring-inset dark:ring-white/5 `}
 									classList={{
-										"fill-blue-400": selectedTheme()!.name === theme.name,
-										"fill-slate-400": selectedTheme()!.name !== theme.name,
+										"fill-slate-800 dark:fill-white":
+											selectedTheme()!.name === theme.name,
+										"fill-slate-700 dark:fill-slate-200":
+											selectedTheme()!.name !== theme.name,
 									}}
 									path={theme.icon}
 								/>
 								<span
-									class="font-semibold prose prose-slate text-sm"
+									class="prose prose-slate text-sm group-hover:dark:text-white"
 									classList={{
-										"text-blue-500": selectedTheme()!.name === theme.name,
+										"text-blue-500 group-hover:dark:text-white":
+											selectedTheme()!.name === theme.name,
 										"text-slate-700 dark:text-slate-300":
 											selectedTheme()!.value !== theme.name,
 									}}

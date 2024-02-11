@@ -49,7 +49,7 @@ export function MainHeader() {
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						<GitHubIcon class="h-6 w-6 dark:fill-slate-400 group-hover:dark:fill-slate-500 dark:group-hover:fill-slate-300" />
+						<GitHubIcon class="h-6 w-6 fill-slate-800 dark:fill-slate-200 group-hover:dark:fill-white dark:group-hover:fill-slate-300" />
 					</A>
 					<A
 						href="https://discord.com/invite/solidjs"
@@ -58,7 +58,7 @@ export function MainHeader() {
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						<DiscordIcon class="h-6 w-6 dark:fill-slate-400 group-hover:dark:fill-slate-500 dark:group-hover:fill-slate-300" />
+						<DiscordIcon class="h-6 w-6 fill-slate-800 dark:fill-slate-200 group-hover:dark:fill-white dark:group-hover:fill-slate-300" />
 					</A>
 					<ThemeSelector />
 				</div>

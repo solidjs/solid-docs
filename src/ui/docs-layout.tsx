@@ -65,7 +65,7 @@ export const DocsLayout: ParentComponent = (props) => {
 				<article class="px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none lg:min-w-[730px]">
 					<Show when={titles().parent}>
 						{(t) => (
-							<span class="text-sm font-semibold text-blue-600 dark:text-blue-500 my-1">
+							<span class="text-sm font-semibold text-blue-700 dark:text-blue-300 my-1">
 								{t()}
 							</span>
 						)}

@@ -33,7 +33,7 @@ export default {
 					aria-hidden={true}
 					tabIndex="-1"
 					href={props.href}
-					class={`no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,theme(colors.sky.400))] hover:[--tw-prose-underline-size:4px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.sky.800))] dark:hover:[--tw-prose-underline-size:6px] dark:text-blue-400 text-blue-700 font-semibold`}
+					class={`no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,theme(colors.blue.400))] hover:[--tw-prose-underline-size:4px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.blue.800))] dark:hover:[--tw-prose-underline-size:6px] dark:text-blue-400 text-blue-700 font-semibold`}
 					rel="noopener noreferrer"
 				>
 					View on Eraser
@@ -136,7 +136,7 @@ export default {
 		) {
 			return (
 				<A
-					class="[&>code]:shadow-[0_0_0_1px_#38bdf8] hover:[&>code]:shadow-[0_0_0_2px_#38bdf8]"
+					class="[&>code]:shadow-[0_0_0_1.5px_#2563eb] hover:[&>code]:shadow-[0_0_0_2px_#1e3a8a] dark:[&>code]:shadow-[0_0_0_1.5px_#bae6fd] dark:hover:[&>code]:shadow-[0_0_0_2px_#FFFFFF]"
 					{...extraAttrs}
 					{...rest}
 				>
@@ -147,7 +147,7 @@ export default {
 			return (
 				<A
 					{...rest}
-					class={`no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,theme(colors.sky.400))] hover:[--tw-prose-underline-size:4px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.sky.800))] dark:hover:[--tw-prose-underline-size:6px] dark:text-blue-400 text-blue-700 font-semibold`}
+					class={`no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,theme(colors.blue.400))] hover:[--tw-prose-underline-size:4px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.blue.500))] dark:hover:[--tw-prose-underline-size:6px] dark:text-blue-300 text-blue-800 font-semibold`}
 					{...extraAttrs}
 				>
 					{resolved()}
@@ -189,7 +189,7 @@ export default {
 		return (
 			<pre
 				{...props}
-				class="[&>code]:bg-transparent [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal custom-scroll-bar"
+				class="[&>code]:bg-white dark:[&>code]:bg-slate-950 [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal custom-scroll-bar"
 			>
 				{props.children}
 			</pre>
@@ -198,7 +198,7 @@ export default {
 	code: (props: ParentProps) => {
 		return (
 			<code
-				class="inline-block not-prose font-mono bg-slate-800/70 text-slate-200 px-1.5 py-0.5 rounded-lg text-[0.8em] leading-snug"
+				class="inline-block not-prose font-mono font-medium bg-blue-300/30 dark:bg-blue-700/60 text-slate-900 dark:text-white px-1.5 py-0.5 rounded-lg text-[0.8em] leading-snug"
 				{...props}
 			>
 				{props.children}

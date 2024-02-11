@@ -6,7 +6,7 @@ import { Hero } from "./layout/hero";
 import { useMatch } from "@solidjs/router";
 import { DocsLayout } from "./docs-layout";
 import { PageStateProvider } from "~/data/page-state";
-import { DiscordIcon } from "./logo";
+import { Alert } from "@kobalte/core";
 
 export const Layout: ParentComponent = (props) => {
 	const isRoot = useMatch(() => "/");
@@ -14,8 +14,13 @@ export const Layout: ParentComponent = (props) => {
 	return (
 		<PageStateProvider>
 			<div class="relative">
+				<Alert.Root class="dark:text-slate-900 text-white text-center bg-[#0e8ee7] dark:bg-[#a2deff] p-1 font-semibold border-sky-00  dark:border-sky-600">
+					These docs are currently in Beta!{" "}
+					<a class="underline" href="https://shr.link/pna6n">
+						Share your feedback with us!
+					</a>
+				</Alert.Root>
 				<MainHeader />
-
 				<Show when={isRoot()} keyed>
 					<Hero />
 				</Show>

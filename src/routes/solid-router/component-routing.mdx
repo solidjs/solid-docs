@@ -1,0 +1,118 @@
+---
+title: Component Routing
+---
+
+Solid Router provides a way to configure routes using JSX:
+
+1. Add each route to a `<Router>` using the `Route` component.
+   Both a path and an element or component to render must be provided for when the user navigates to that path.
+
+```jsx
+import { render } from "solid-js/web";
+import { Router, Route } from "@solidjs/router";
+
+import Home from "./pages/Home";
+import Users from "./pages/Users";
+
+render(
+	() => (
+		<Router>
+			<Route path="/users" component={Users} />
+			<Route path="/" component={Home} />
+		</Router>
+	),
+	document.getElementById("app")
+);
+```
+
+2. Provide a root level layout
+
+This will always be present and will not update on page change.
+This is the ideal place for top level navigation and Context Providers.
+
+```jsx
+import { render } from "solid-js/web";
+import { Router, Route } from "@solidjs/router";
+
+import Home from "./pages/Home";
+import Users from "./pages/Users";
+
+const App = (props) => (
+	<>
+		<h1>My Site with lots of pages</h1>
+		{props.children}
+	</>
+);
+
+render(
+	() => (
+		<Router root={App}>
+			<Route path="/users" component={Users} />
+			<Route path="/" component={Home} />
+		</Router>
+	),
+	document.getElementById("app")
+);
+```
+
+3. Create a CatchAll Route (404 page)
+
+When pages are not found at any nested level, providing a catchall, or 404 page, provides a fallback option to display to the user.
+The asterisk (`*`) is used, along with optionally specifying a parameter's name, to access the remaining portion of the path.
+
+```jsx
+import { render } from "solid-js/web";
+import { Router, Route } from "@solidjs/router";
+
+import Home from "./pages/Home";
+import Users from "./pages/Users";
+import NotFound from "./pages/404";
+
+const App = (props) => (
+	<>
+		<h1>My Site with lots of pages</h1>
+		{props.children}
+	</>
+);
+
+render(
+	() => (
+		<Router root={App}>
+			<Route path="/users" component={Users} />
+			<Route path="/" component={Home} />
+			<Route path="*404" component={NotFound} />
+		</Router>
+	),
+	document.getElementById("app")
+);
+```
+
+4. Lazy-load route components
+
+This way, the `Users` and `Home` components will only be loaded when navigating to `/users` or `/`, respectively.
+
+```jsx
+import { lazy } from "solid-js";
+import { render } from "solid-js/web";
+import { Router, Route } from "@solidjs/router";
+
+const Users = lazy(() => import("./pages/Users"));
+const Home = lazy(() => import("./pages/Home"));
+
+const App = (props) => (
+	<>
+		<h1>My Site with lots of pages</h1>
+		{props.children}
+	</>
+);
+
+render(
+	() => (
+		<Router root={App}>
+			<Route path="/users" component={Users} />
+			<Route path="/" component={Home} />
+		</Router>
+	),
+	document.getElementById("app")
+);
+```

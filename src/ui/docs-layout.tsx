@@ -1,9 +1,12 @@
 import { createSignal, ParentComponent, Show, createEffect } from "solid-js";
 import { useLocation, useMatch } from "@solidjs/router";
+import { Title } from "@solidjs/meta";
 import flatEntries from "solid:collection/entries";
-import { TableOfContents } from "./layout/table-of-contents";
 import { Pagination } from "~/ui/pagination";
 import { usePageState } from "~/data/page-state";
+import { SidePanel } from "./layout/side-panel";
+import { EditPageLink } from "./edit-page-link";
+import { PageIssueLink } from "./page-issue-link";
 
 export const [trackHeading, setTrackHeading] = createSignal("");
 
@@ -56,26 +59,35 @@ export const DocsLayout: ParentComponent = (props) => {
 	});
 
 	return (
-		<div id="rr" class="flex relative">
-			<article class="px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none">
-				<Show when={titles().parent}>
-					{(t) => (
-						<span class="text-sm font-semibold text-sky-600 dark:text-sky-500 my-1">
-							{t()}
-						</span>
-					)}
-				</Show>
-				<Show when={titles().title}>
-					{(t) => (
-						<h1 class="prose-headings:text-3xl text-slate-900 dark:text-white">
-							{t()}
-						</h1>
-					)}
-				</Show>
-				<div class="max-w-prose w-full overflow-y-auto">{props.children}</div>
-				<Pagination currentIndex={entryIndex()} collection={collection()} />
-			</article>
-			<TableOfContents />
-		</div>
+		<>
+			<Title>{`${titles().title} - SolidDocs`}</Title>
+			<div id="rr" class="flex relative">
+				<article class="px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none lg:min-w-[730px]">
+					<Show when={titles().parent}>
+						{(t) => (
+							<span class="text-sm font-semibold text-sky-600 dark:text-sky-500 my-1">
+								{t()}
+							</span>
+						)}
+					</Show>
+					<Show when={titles().title}>
+						{(t) => (
+							<h1 class="prose-headings:text-3xl text-slate-900 dark:text-white">
+								{t()}
+							</h1>
+						)}
+					</Show>
+					<span class="xl:hidden text-sm">
+						<EditPageLink />
+					</span>
+					<div class="max-w-prose w-full overflow-y-auto">{props.children}</div>
+					<span class="xl:hidden text-sm">
+						<PageIssueLink />
+					</span>
+					<Pagination currentIndex={entryIndex()} collection={collection()} />
+				</article>
+				<SidePanel />
+			</div>
+		</>
 	);
 };

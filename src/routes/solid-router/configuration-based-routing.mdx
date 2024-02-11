@@ -1,0 +1,62 @@
+---
+title: Configuration Based Routing
+---
+
+JSX is not needed to set up routes.
+Passing an array of route definitions is another option:
+
+```jsx
+import { lazy } from "solid-js";
+import { render } from "solid-js/web";
+import { Router } from "@solidjs/router";
+
+const routes = [
+	{
+		path: "/users",
+		component: lazy(() => import("/pages/users.js")),
+	},
+	{
+		path: "/users/:id",
+		component: lazy(() => import("/pages/users/[id].js")),
+		children: [
+			{
+				path: "/",
+				component: lazy(() => import("/pages/users/[id]/index.js")),
+			},
+			{
+				path: "/settings",
+				component: lazy(() => import("/pages/users/[id]/settings.js")),
+			},
+			{
+				path: "/*all",
+				component: lazy(() => import("/pages/users/[id]/[...all].js")),
+			},
+		],
+	},
+	{
+		path: "/",
+		component: lazy(() => import("/pages/index.js")),
+	},
+	{
+		path: "/*all",
+		component: lazy(() => import("/pages/[...all].js")),
+	},
+];
+
+render(() => <Router>{routes}</Router>, document.getElementById("app"));
+```
+
+Additionally, a single route definition object for a single route can be passed:
+
+```jsx
+import { lazy } from "solid-js";
+import { render } from "solid-js/web";
+import { Router } from "@solidjs/router";
+
+const route = {
+	path: "/",
+	component: lazy(() => import("/pages/index.js")),
+};
+
+render(() => <Router>{route}</Router>, document.getElementById("app"));
+```

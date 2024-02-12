@@ -18,15 +18,15 @@ const TrafficLightsIcon: Component<{ class: string }> = (props) => {
 
 export const Hero: Component = () => {
 	return (
-		<div class="overflow-hidden bg-slate-900 mt-[4.75rem]">
+		<div class="overflow-hidden bg-sky-100/80 border border-sky-200  dark:border-none dark:bg-slate-900 mt-[4.75rem] ">
 			<div class="py-8 sm:px-2 lg:relative">
 				<div class="mx-auto grid max-w-2xl grid-cols-1 items-center gap-x-8 gap-y-16 px-4 lg:max-w-8xl lg:grid-cols-2 lg:px-8 xl:gap-x-16 xl:px-12">
 					<div class="relative md:text-center lg:text-left">
 						<div class="relative">
-							<h2 class="inline bg-gradient-to-r from-indigo-200 via-blue-400 to-indigo-200 bg-clip-text font-display text-5xl tracking-tight text-transparent">
+							<h2 class="inline bg-gradient-to-r dark:from-indigo-200 dark:via-blue-400 dark:to-indigo-200 from-blue-700 via-slate-800 to-blue-700 bg-clip-text font-display text-5xl tracking-tight text-transparent">
 								Effortless UIs with Reactive Precision.
 							</h2>
-							<p class="mt-3 text-2xl tracking-tight text-slate-300">
+							<p class="mt-3 text-2xl tracking-tight dark:text-slate-300">
 								SolidJS is a modern JavaScript framework for today's web.
 							</p>
 							<div class="mt-8 flex gap-4 md:justify-center lg:justify-start">

@@ -1,4 +1,4 @@
-import { For, ParentComponent, Show, createSignal, onMount } from "solid-js";
+import { For, ParentComponent, createSignal, onMount } from "solid-js";
 
 /**
  *  This is a code blocks component that can be used to divide code blocks into seperate tabs. Here's an example of how to use it in JSX and mdx:
@@ -43,8 +43,7 @@ export const TabsCodeBlocks: ParentComponent = (props) => {
 		let children = props.children;
 
 		// Check if children are an array
-		if (!Array.isArray(children))
-			throw new Error("TabsCodeBlocks children must be an array");
+		if (!Array.isArray(children)) throw new Error("TabsCodeBlocks children must be an array");
 
 		// Check if children are elements
 		const isArrayOfElements = (arr: any[]): arr is Element[] => {
@@ -57,8 +56,7 @@ export const TabsCodeBlocks: ParentComponent = (props) => {
 		// Check if all elements have ids
 		const allElementsHaveIds = children.every((child) => "id" in child);
 
-		if (!allElementsHaveIds)
-			throw new Error("All TabsCodeBlocks children must have an id");
+		if (!allElementsHaveIds) throw new Error("All TabsCodeBlocks children must have an id");
 
 		setSelectedTab(children[0]);
 		setTabs(children);
@@ -73,8 +71,7 @@ export const TabsCodeBlocks: ParentComponent = (props) => {
 							classList={{
 								"font-bold dark:text-slate-300 text-blue-500 border-b-2 border-blue-400":
 									selectedTab()?.id === tab.id,
-								"px-5 py-1 relative top-0.5 transition-colors duration-300":
-									true,
+								"px-5 py-1 relative top-0.5 transition-colors duration-300": true,
 							}}
 							onclick={() => selectTabById(tab.id)}
 						>

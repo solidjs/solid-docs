@@ -9,6 +9,7 @@ import remarkExpressiveCode, {
 import rehypeSlug from "rehype-slug";
 import rehypeAutoLinkHeadings from "rehype-autolink-headings";
 
+// @ts-expect-error missing types
 import pkg from "@vinxi/plugin-mdx";
 
 const { default: vinxiMdx } = pkg;
@@ -58,9 +59,6 @@ export default defineConfig({
 	start: {
 		server: {
 			preset: "netlify",
-			prerender: {
-				crawlLinks: true,
-			},
 		},
 		extensions: ["mdx", "md"],
 	},

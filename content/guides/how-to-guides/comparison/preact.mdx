@@ -1,1 +1,0 @@
-<Title>Comparison with Preact</Title>

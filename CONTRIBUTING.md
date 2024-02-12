@@ -1,103 +1,164 @@
-_Read the [Solid Docs Manifesto](https://github.com/solidjs/solid-docs-next#the-solid-docs-manifesto) first!_
+# CONTRIBUTION GUIDE
 
-# Contributing to the Solid Docs
+Thank you for helping us make this project great and being a part of the Solid community!
 
-We welcome contributions of any size and contributors of any skill level. As an open source project, we believe in giving back to our contributors. We are happy to help with guidance on PRs, technical writing, and turning a feature idea into a reality.
+We welcome contributions from anyone, regardless of your skill level.
+We are happy to help with guidance on PRs, technical writing, and turning features into realities.
 
-> **Tip for new contributors:**
-> Take a look at [this GitHub guide](https://docs.github.com/en/get-started/quickstart/hello-world) to learn how to use Git and GitHub to contribute to open-source.
+>  **New to contributing?**
+Take a look at [﻿this GitHub guide](https://docs.github.com/en/get-started/quickstart/hello-world) to learn how to use Git and GitHub to contribute to open-source. 
 
-## Getting Started
+If you're new to Solid, we ask that you check out our [﻿Writing Guide](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md).
 
-Our `#docs` channel on [Discord](https://discord.com/invite/solidjs) is our home for general docs discussion. Feel free to introduce yourself there!
+## Types of contributions
+There are many ways to contribute to the Solid's documentation!
 
-### Using GitHub Issues
+The Solid Docs website is built on Solid!
+Maintaining it requires not only written content and Solid code maintenance, but it also needs to address accessibility (a11y), CSS, UI, and UX concerns.
+We also aim to make our documentation available in several languages, so we need help translating the entire site.
 
-- [Submit a new GitHub Issue](https://github.com/solidjs/solid-docs-next/issues/new/choose) to propose a change or addition to the docs.
+You can help out by leaving review comments on [﻿PRs](https://github.com/solidjs/solid-docs-next/pulls)﻿ and adding ideas in existing GitHub [﻿issues ](https://github.com/solidjs/solid-docs-next/issues) and [﻿discussions](https://github.com/solidjs/solid-docs-next/discussions).
 
-- Bugs must be reported as Issues; it isn't enough to tell us on Discord!
+Every PR, especially translation PRs, will need reviewers.
+Reviewing PRs and leaving comments, suggestions, or even saying "Looks good!" can be a great way to get started on contributing alongside our Docs team.
+It's also a great way to learn more about Solid!
 
-- GitHub Issues allow us to assign tasks and prioritize them, thanks to our [GitHub project board](https://github.com/solidjs/solid-docs-next/projects/1). This is our task management tool.
+We encourage you to:
 
-- Because this project is new, most of our Issues represent new content that must be created. If you're interested in writing new content—or editing content to our standards—be sure to read the [Writing Guide](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md) before contributing.
+- File an issue﻿
+- Start a discussion
+- Make a PR
+- Look at our existing issues
+- Review existing PRs
+## File an issue
+Issues are a great way to keep track of tasks, enhancements, and bugs for our projects. They're typically the first step to making a change. 
 
-### Do you need to know Solid to contribute?
+After an issue has been considered by the community, we often reach out to community members to encourage them to submit PRs based on existing issues. 
 
-In short, no! Here are ways you can help us if you don't yet know how to use Solid:
+We encourage larger contributions to the docs after you participate in Issues and Discussions, as unsolicited material may not fit into our existing plans.
 
-- Editing existing content for clarity
-- Finding and fixing typos
-- Making sure existing content and proposed PRs follow our [Writing Guide](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md)
+> While you're more than welcome to mention a bug that you've encountered on our ﻿Discord, we ask that you also report it as an issue!﻿
 
-If you don't _yet_ know how to use Solid, but you're learning, here's how you can help us along the way:
+### Writing an issue
+Helpful issues generally include:
 
-- "Testing" a tutorial, how-to guide, or concept page by using it to learn that topic
-- Asking and answering questions in our #learn-solid channel on [Discord](https://github.com/solidjs/solid)
+- Clear, descriptive titles
+- Links to relevant pages/files
+- Explanations as to why (or _for whom_) this is a problem
+- _Option_: proposed solutions
+### Examples of helpful new issues
+- An explanation is confusing (with a reason why)
+- a code example is wrong (with or without a proposed fix)
+- accessibility (a11y) issues discovered
+- missing content
+- request for an example on how to implement a specific feature (e.g. responsive nav bar).
+### Issue labels
+We use labels as a way to organize and categorize our issues. Here are some common labels that you will see:
 
-That said, if you want to contribute to open-source but aren't interested in Solid or documentation, we'd be happy to help you find an open-source project that suits you.
+- `a11y` - related to anything accessibility.
+- `bug` - when something isn't working.
+- `good first issue` - a good place to start for newcomers
+- `help wanted` - when we are looking for assistance on an issue
+- `i18n`  - anything to do with internationalization and translation
+## Start a discussion
+Discussions are a place within this repository where we can have open-ended conversations.
+It's the perfect place for Q&A, sharing ideas, community engagement, and connecting with other members.
 
-## Finding Something to Work On
+Feel free to start a [﻿new discussion](https://github.com/solidjs/solid-docs-next/discussions) on any topic related to our docs!
 
-To find something to help with, check out our [existing Issues](https://github.com/solidjs/solid-docs-next/issues). We're also happy to help you find something that suits you: ask a member of the Docs Team on [Discord](https://discord.com/invite/solidjs) to help get you situated.
+### Examples of helpful discussions
+- Is a page in the right section of the docs?
+- Notice the colors are too bold? Too muted?
+- Is the site navigation clear and helpful?
+- Any suggestions of content that you think could be helpful adding
+## Make a PR (Pull Request)
+>  If you've never submitted a pull request on GitHub before, check out [﻿this overview on how to open a PR](https://opensource.guide/how-to-contribute/#opening-a-pull-request). 
 
-### Issue Labels
+PRs are the heart of collaboration on GitHub.
+When you open a pull request, you are putting forward your suggested changes, inviting us to review it, and requesting for these changes to be merged into our main branch.
 
-You can sort by labels, which categorize the issues. These include:
+Here's how to effectively contribute via a PR:
 
-- a label for each of the four [content types](https://github.com/solidjs/solid-docs-next/issues). For example, you know you prefer to work on deep concept explanations, you can choose the `concept` label.
-- `new content` for when something needs to be written from scratch.
-- `docs-migration` is used when content already exists but needs to be rewritten.
-- `infrastructure` for technical changes; great if you're interested in diving into our codebase
-- `advanced-experience` for issues that require advanced Solid knowledge to implement
-- `no-experience-needed` for issues that you can help with even if you don't have Solid knowledge
+- **Understand the Scope**: Before creating a PR, ensure it addresses an existing issue. Remember to link your PR to the issue it solves for easy tracking and understanding.
+- **Singular Focus**: Each PR should address a single issue or enhancement. Want to propose a larger change? Reach out to us on [﻿Discord](http://discord.com/invite/solidjs) and let's discuss the best way forward!
+- **Drafts for Early Feedback**: If you're seeking early feedback but aren't quite finished with your changes, consider creating a draft PR. Simply prefix your PR title with `**[Draft]**`. This way, you can get input on your work-in-progress.
+- **Quality over Quantity**: Strive for the quality of your contribution rather than the quantity. A well-thought-out, cleanly coded, and thoroughly tested PR is much more valuable than a hastily done large one.
+Contributing via PRs not only enhances the project, but also allows you to be a part of the active community, sharing ideas, learning, and growing with the project. 
 
-## Submitting a Pull Request
+>  Existing PRs and Issues need reviewing, triaging, and feedback, too! You can make valuable contributions by commenting, suggesting, testing, researching, brainstorming and generally helping in all areas! 
 
-> **Note**
-> If you've never submitted a pull request on GitHub before, check out [this overview](https://opensource.guide/how-to-contribute/#opening-a-pull-request).
+### Writing a PR
+> Need help making a PR? [﻿Join us on Discord](http://discord.com/invite/solidjs), we'll be more than happy to help you out!
 
-- Make sure your PR addresses an existing Issue.
-- Group your work so that one PR solves one problem.
-- Before you make a large PR, try to discuss it with the Docs Team on #docs. This will make sure we're on the same page and increase the chances of your PR getting merged.
-- When you make a PR, you get a Netlify preview link. If you're not done with your changes but want that link to share with us, feel free to make a draft PR and add `[Draft]` to the title.
+Contributions to the documentation site are made by editing the docs repository.
+You can do this directly on GitHub.com or by creating a copy of the repository locally, making your changes there, and contributing back to our repository.
 
-> **Note** Existing PRs and Issues need reviewing, triaging, and feedback, too! You can make valuable contributions by commenting, suggesting, testing, researching, brainstorming and generally helping in all areas on GitHub!
+#### Examples of helpful PRs
+- PRs addressing an existing fix
+- Unsolicited PRs addressing typos, broken links, and other minor problems
 
-## Navigating the Codebase
+### Edit this page via GitHub
+Every page on [﻿docs.solidjs.com](https://docs.solidjs.com/)﻿ has an **Edit this page** link at the bottom.
+You can click on that button to edit the source code for that page in **GitHub**.
 
-Our site is build on [SolidStart](https://github.com/solidjs/solid-start). This is a framework that's still in development, so if you have any issues, check out the #docs or #solid-start channels on Discord. (In fact, the SolidStart team is working on documentation [within our repo](https://github.com/solidjs/solid-docs-next/tree/main/src/routes/start), too!)
+After you make your changes, click **Commit changes**.
+This will automatically create a [﻿fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/about-forks)﻿ of the docs in your GitHub account with the changes.
 
-### Folder structure
+Once you have committed your edits within your fork, follow the prompts to create a **pull request** and submit your changes for review.
 
-We have two folders of note: **content** and **src**. **content** contains all of the pages and page-specific components. This includes the four content folders corresponding to our [four content types](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md#content-types):
-  - `content/guides/tutorials`
-  - `content/guides/how-to-guides`
-  - `content/guides/foundations`
-  - `content/references/concepts`
-  - `content/references/api-reference` (not being worked on currently, as we have the [existing API reference](https://www.solidjs.com/docs/latest/api))
+Every pull request needs to be reviewed by our contributors and approved by a maintainer.
 
+### Open a PR
+Once you have made your changes using your preferred method, you're ready to create a 'pull request'.
 
-In **src**, we have the SolidStart entry files, the root component, and the `md.tsx` component which maps markdown syntax to elements. Of note:
-  - `src/components`: General components, like the sidebar navigation, footer, and Asides.
-  - `src/NAV_SECTIONS.ts`: This file determines the two sidebar navigation sections, **Guides** and **Reference**. **Guides** contains Tutorials and How-To Guides, and **Reference** contains Concept pages and API reference.
+This will let the Solid docs team know you have some changes you would like to propose.
+At this point, we can give you feedback and possibly request changes.
 
-Every content page must have its own folder, even if it only has one page. For example, the Tracking concept page is one page, so it is found in an `index.md` file inside `content/references/concepts/tracking`. The Getting Started with Solid tutorial has several pages, which are found inside `content/guides/tutorials/getting-started-with-solid`.
+[﻿Read more about making a pull request in GitHub's docs.](https://docs.github.com/en/get-started/quickstart/contributing-to-projects#making-a-pull-request)﻿
 
-These folders will automatically generate routes; so, `content/guides/tutorials/getting-started-with-solid/installing-solid` will be shown at `https://docs.solidjs.com/guides/tutorials/getting-started-with-solid/installing-solid`.
+Please include a clear title.
+The description will have some pre-filled questions that we would like you to answer.
 
-If a content page has its own custom components and code snippets, place these inside its content folder. See [the Getting Started with Solid folder](https://github.com/solidjs/solid-docs-next/tree/main/src/content/guides/tutorials/getting-started-with-solid) for an example.
+Every pull request generates a preview of the site, including your proposed changes, using **Netlify** for anyone to see.
 
-> **Warning** There is also `start` folder in `content/routes`; it is a heavy work-in-progress managed by the SolidStart team and does not yet follow our Writing guide.
+Use the **Deploy Preview** link in your pull request to review and share your changes.
 
-### Adding New Content Pages
+The docs site will be automatically updated whenever pull requests are merged.
 
-1. Choose one of the four folders inside `content/`, corresponding to your page's [content type](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md#content-types)
-2. Create a new folder inside that folder. The new folder's name should be the kebab case of your page's title: e.g., `getting-started-with-solid`.
-3. Add `mdx` files for each subpage.
+## Helpful information
+### Forks
+On GitHub, you will need a 'fork' of this repository to work on.
+This is your own copy of the code base where you can make changes. You can read more about forks in [GitHub's documentation](https://guides.github.com/activities/forking/)﻿.
 
-Feel free to submit a PR at this stage, and we can handle adding it to the nav. But if you'd like to do that:
+Not sure how to get started with GitHub, forks, pull requests, or want a refresher?
+You can watch this video series: [﻿How to Contribute to an Open Source Project on GitHub](https://egghead.io/courses/how-to-contribute-to-an-open-source-project-on-github).
 
-4. Open `NAV_SECTIONS.ts`. This will allow you to add your new page to the nav. If your page is a tutorial or how-to guide, edit the `GUIDES_SECTIONS` object; if it's a concept page, edit the `REFERENCE_SECTIONS` object.
-5. Find the object key corresponding to your content type. Then, add a new object to its `pages` array.
-6. If your page doesn't have subpages, provide a `name` and a `link` property. (Search the file for "Tracking" for an example)
-7. If your page does subpages, provide a `name` property and a `pages` array which contains your subpages. (Search the file for "Getting Started with Solid" for an example)
+#### Creating a fork
+To create your copy, click the `Fork` button at the top right of any page in this repository.
+
+#### Maintaining a fork
+When you first create your fork, it will be an exact copy of this repository.
+Over time, our docs will change as they are updated, but your fork won’t automatically stay up-to-date.
+Here are some ways to keep your fork in sync with this repo:
+
+##### Update through GitHub UI
+1. Navigate to your fork on GitHub
+2. Click `Sync fork` and then `Update branch` 
+
+##### Update from your command line
+In the terminal on your computer:
+
+1. Make sure you're on the main branch and then run `git checkout main` 
+2. Fetch and merge the updates: `git pull upstream main` 
+3. Push the updates back to your fork on GitHub: `git push origin main` 
+
+##### Using the GitHub app
+1. Go to the [﻿"pull" GitHub app page](https://github.com/apps/pull)﻿
+2. Click `Install` 
+3. Follow the instructions to select 
+
+## Next Steps:
+- [﻿Read the docs](https://docs.solidjs.com)﻿
+- [﻿Fork the docs](https://github.com/solidjs/solid-docs-next/fork)﻿
+- [﻿Raise an issue](https://github.com/solidjs/solid-docs-next/issues/new)﻿
+- [﻿Discuss the docs](http://discord.com/invite/solidjs)﻿

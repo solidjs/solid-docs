@@ -1,0 +1,228 @@
+---
+title: Using Stores
+---
+
+The stores API are available at **solid-js/stores**. 
+They allow the creation of stores: [proxy objects](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) that allow a tree of signals to be independently tracked and modified.
+
+## createStore
+
+```ts
+import type { StoreNode, Store, SetStoreFunction } from "solid-js/store"
+
+function createStore<T extends StoreNode>(
+	state: T | Store<T>
+): [get: Store<T>, set: SetStoreFunction<T>]
+type Store<T> = T // conceptually readonly, but not typed as such
+
+```
+
+The create function takes an initial state, wraps it in a store, and returns a readonly proxy object and a setter function.
+
+```ts
+const [state, setState] = createStore(initialValue)
+
+// read value
+state.someValue
+
+// set value
+setState({ merge: "thisValue" })
+
+setState("path", "to", "value", newValue)
+
+```
+
+As proxies, store objects only track when a property is accessed.
+
+When nested objects are accessed, stores will produce nested store objects, and this applies all the way down the tree. 
+However, this only applies to arrays and plain objects. Classes are not wrapped, so objects like `Date`, `HTMLElement`, `RegExp`, `Map`, `Set` won't be granularly reactive as properties on a store.
+
+## Getters
+
+Store objects support the use of getters to store calculated values.
+
+```tsx
+const [state, setState] = createStore({
+	user: {
+		firstName: "John",
+		lastName: "Smith",
+		get fullName() {
+			return `${this.firstName} ${this.lastName}`
+		},
+	},
+})
+
+```
+
+These are getters that rerun when accessed, so you still need to use a memo if you want to cache a value:
+
+```tsx
+let fullName
+const [state, setState] = createStore({
+	user: {
+		firstName: "John",
+		lastName: "Smith",
+		get fullName() {
+			return fullName()
+		},
+	},
+})
+fullName = createMemo(() => `${state.user.firstName} ${state.user.lastName}`)
+
+```
+
+## Arrays in Stores
+
+As of version 1.4.0, the top level state object can be an array. 
+In prior versions, you need to create an object to wrap the array:
+
+```tsx
+const [todos, setTodos] = createStore([
+  { id: 1, title: "Thing I have to do", done: false },
+  { id: 2, title: "Learn a New Framework", done: false },
+]);
+
+<For each={todos}>{todo => <Todo todo={todo} />}</For>;
+```
+
+<Callout>
+Modifying an array inside a store will not trigger computations that subscribe to the array directly. 
+For example:
+
+```tsx
+createEffect(() => {
+	// This will not get triggered because we've subscribed to the array itself.
+	console.log(todos)
+})
+setTodos(todos.length, { id: 3 })
+
+```
+
+However, subscribing to any signals that change inside the array will trigger those computations.
+
+```ts
+createEffect(() => {
+	// This will be triggered because we've subscribed to the actual signals in the array.
+	console.log([...todos])
+	console.log(todos[2]) // Or we can subscribe only to a specific one.
+})
+setTodos(todos.length, { id: 3 })
+
+```
+
+</Callout>
+
+## Updating Stores
+
+Changes can take the form of function that passes previous state and returns new state or a value. 
+Objects are always shallowly merged. 
+Set values to undefined to delete them from the Store.
+
+```tsx
+const [state, setState] = createStore({
+	firstName: "John",
+	lastName: "Miller",
+})
+
+setState({ firstName: "Johnny", middleName: "Lee" })
+// ({ firstName: 'Johnny', middleName: 'Lee', lastName: 'Miller' })
+
+setState((state) => ({ preferredName: state.firstName, lastName: "Milner" }))
+// ({ firstName: 'Johnny', preferredName: 'Johnny', middleName: 'Lee', lastName: 'Milner' })
+
+setState((state) => ({ preferredName: undefined }))
+// ({ firstName: 'Johnny', middleName: 'Lee', lastName: 'Milner' })
+```
+
+<Callout>
+  To delete all properties of an object, you can use [reconcile](/reference/store-utilities#reconcile) like so:
+
+  ```ts
+  const [store, setStore] = createStore({a: 0, b: 1})
+  
+  setStore(reconcile({}))
+  // {}
+  ```
+</Callout>
+
+It supports paths including key arrays, object ranges, and filter functions.
+
+setState also supports nested setting where you can indicate the path to the change. 
+When nested the state you are updating may be other non Object values. 
+Objects are still merged but other values (including Arrays) are replaced.
+
+```tsx
+const [state, setState] = createStore({
+	counter: 2,
+	list: [
+		{ id: 23, title: "Birds" },
+		{ id: 27, title: "Fish" },
+	],
+})
+
+setState("counter", (c) => c + 1)
+setState("list", (prevList) => [...prevList, { id: 43, title: "Marsupials" }])
+setState("list", 2, "read", true)
+// {
+//   counter: 3,
+//   list: [
+//     { id: 23, title: 'Birds' },
+//     { id: 27, title: 'Fish' },
+//     { id: 43, title: 'Marsupials', read: true },
+//   ]
+// }
+```
+
+Path can be a string of keys, array of keys, iterating objects (from, to), or filter functions. 
+This gives incredible expressive power to describe state changes.
+
+```tsx
+const [state, setState] = createStore({
+	todos: [
+		{ task: "Finish work", completed: false },
+		{ task: "Go grocery shopping", completed: false },
+		{ task: "Make dinner", completed: false },
+	],
+})
+
+setState("todos", [0, 2], "completed", true)
+// {
+//   todos: [
+//     { task: 'Finish work', completed: true },
+//     { task: 'Go grocery shopping', completed: false },
+//     { task: 'Make dinner', completed: true },
+//   ]
+// }
+
+setState("todos", { from: 0, to: 1 }, "completed", (c) => !c)
+// {
+//   todos: [
+//     { task: 'Finish work', completed: false },
+//     { task: 'Go grocery shopping', completed: true },
+//     { task: 'Make dinner', completed: true },
+//   ]
+// }
+
+setState(
+	"todos",
+	(todo) => todo.completed,
+	"task",
+	(t) => t + "!"
+)
+// {
+//   todos: [
+//     { task: 'Finish work', completed: false },
+//     { task: 'Go grocery shopping!', completed: true },
+//     { task: 'Make dinner!', completed: true },
+//   ]
+// }
+
+setState("todos", {}, (todo) => ({ marked: true, completed: !todo.completed }))
+// {
+//   todos: [
+//     { task: 'Finish work', completed: true, marked: true },
+//     { task: 'Go grocery shopping!', completed: false, marked: true },
+//     { task: 'Make dinner!', completed: false, marked: true },
+//   ]
+// }
+```

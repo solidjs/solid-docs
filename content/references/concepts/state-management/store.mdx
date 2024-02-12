@@ -1,4 +1,0 @@
-<Title>Store</Title>
-
-## Introduction
-

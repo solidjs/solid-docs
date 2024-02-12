@@ -6,7 +6,7 @@ We welcome contributions from anyone, regardless of your skill level.
 We are happy to help with guidance on PRs, technical writing, and turning features into realities.
 
 >  **New to contributing?**
-Take a look at [﻿this GitHub guide](https://docs.github.com/en/get-started/quickstart/hello-world) to learn how to use Git and GitHub to contribute to open-source. 
+Take a look at [﻿this GitHub guide](https://docs.github.com/en/get-started/start-your-journey/hello-world) to learn how to use Git and GitHub to contribute to open-source.
 
 If you're new to Solid, we ask that you check out our [﻿Writing Guide](https://github.com/solidjs/solid-docs-next/blob/main/WRITING.md).
 
@@ -80,7 +80,7 @@ When you open a pull request, you are putting forward your suggested changes, in
 Here's how to effectively contribute via a PR:
 
 - **Understand the Scope**: Before creating a PR, ensure it addresses an existing issue. Remember to link your PR to the issue it solves for easy tracking and understanding.
-- **Singular Focus**: Each PR should address a single issue or enhancement. Want to propose a larger change? Reach out to us on [﻿Discord](http://discord.com/invite/solidjs) and let's discuss the best way forward!
+- **Singular Focus**: Each PR should address a single issue or enhancement. Want to propose a larger change? Reach out to us on [﻿Discord](https://discord.com/invite/solidjs) and let's discuss the best way forward!
 - **Drafts for Early Feedback**: If you're seeking early feedback but aren't quite finished with your changes, consider creating a draft PR. Simply prefix your PR title with `**[Draft]**`. This way, you can get input on your work-in-progress.
 - **Quality over Quantity**: Strive for the quality of your contribution rather than the quantity. A well-thought-out, cleanly coded, and thoroughly tested PR is much more valuable than a hastily done large one.
 Contributing via PRs not only enhances the project, but also allows you to be a part of the active community, sharing ideas, learning, and growing with the project. 
@@ -88,7 +88,7 @@ Contributing via PRs not only enhances the project, but also allows you to be a 
 >  Existing PRs and Issues need reviewing, triaging, and feedback, too! You can make valuable contributions by commenting, suggesting, testing, researching, brainstorming and generally helping in all areas! 
 
 ### Writing a PR
-> Need help making a PR? [﻿Join us on Discord](http://discord.com/invite/solidjs), we'll be more than happy to help you out!
+> Need help making a PR? [﻿Join us on Discord](https://discord.com/invite/solidjs), we'll be more than happy to help you out!
 
 Contributions to the documentation site are made by editing the docs repository.
 You can do this directly on GitHub.com or by creating a copy of the repository locally, making your changes there, and contributing back to our repository.
@@ -114,7 +114,7 @@ Once you have made your changes using your preferred method, you're ready to cre
 This will let the Solid docs team know you have some changes you would like to propose.
 At this point, we can give you feedback and possibly request changes.
 
-[﻿Read more about making a pull request in GitHub's docs.](https://docs.github.com/en/get-started/quickstart/contributing-to-projects#making-a-pull-request)﻿
+[﻿Read more about making a pull request in GitHub's docs.](https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-a-project#making-a-pull-request)﻿
 
 Please include a clear title.
 The description will have some pre-filled questions that we would like you to answer.
@@ -128,7 +128,7 @@ The docs site will be automatically updated whenever pull requests are merged.
 ## Helpful information
 ### Forks
 On GitHub, you will need a 'fork' of this repository to work on.
-This is your own copy of the code base where you can make changes. You can read more about forks in [GitHub's documentation](https://guides.github.com/activities/forking/)﻿.
+This is your own copy of the code base where you can make changes. You can read more about forks in [GitHub's documentation](https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-a-project)﻿.
 
 Not sure how to get started with GitHub, forks, pull requests, or want a refresher?
 You can watch this video series: [﻿How to Contribute to an Open Source Project on GitHub](https://egghead.io/courses/how-to-contribute-to-an-open-source-project-on-github).
@@ -161,4 +161,4 @@ In the terminal on your computer:
 - [﻿Read the docs](https://docs.solidjs.com)﻿
 - [﻿Fork the docs](https://github.com/solidjs/solid-docs-next/fork)﻿
 - [﻿Raise an issue](https://github.com/solidjs/solid-docs-next/issues/new)﻿
-- [﻿Discuss the docs](http://discord.com/invite/solidjs)﻿
+- [﻿Discuss the docs](https://discord.com/invite/solidjs)﻿

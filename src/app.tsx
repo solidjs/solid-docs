@@ -17,7 +17,6 @@ export default function App() {
 					<Title>Solid Docs</Title>
 					<ErrorBoundary
 						fallback={(e) => {
-							console.error(e);
 							return (
 								<>
 									<Title>404 - SolidDocs</Title>

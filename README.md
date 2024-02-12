@@ -51,4 +51,25 @@ If you're looking to make a larger contribution, please see our [﻿CONTRIBUTING
 
 At the moment, we recommend running the site locally through either [﻿CodeSandbox](https://codesandbox.io/p/github/solidjs/solid-docs-next/), [﻿Gitpod](https://gitpod.io/#https://github.com/solidjs/solid-docs-next), or [﻿StackBlitz](https://stackblitz.com/github/solidjs/solid-docs-next). These are the quickest and easiest way to browse and edit the project files and run the site locally.
 
-> **Note**: To run this project through your own IDE at this time, you will need to run _Node v16.19.0._ This may require using a [﻿Node Version Manager](https://www.digitalocean.com/community/tutorials/nodejs-node-version-manager)﻿.
+The app uses [pnpm](https://pnpm.io) as the package manager and it runs on Node.js `v18+`.
+
+Install dependencies:
+
+```sh
+pnpm i
+```
+
+And run the local dev server:
+
+```sh
+pnpm dev
+```
+
+This will start your the app at [localhost:3000](http://localhost:3000) or the next available port.
+
+### Collections and virtual modules
+
+The builds an [Astro](https://docs.astro.build/en/guides/content-collections/) inspired collection navigation, it will bring all routes and generate a couple of files at `/.solid`.
+These files are exposed to your app via [Vite virtual modules](https://vitejs.dev/guide/api-plugin#virtual-modules-convention). This task is perform via our `sync` script (`pnpm sync`), ran before every build.
+
+If changes are made to the navigation (new entry, or repositioning entry), it is necessary to restart the server for changes to take effect.

@@ -31,9 +31,7 @@ const frontMatterSchema = z.object({
 
 async function getDirData(dirPath = process.cwd()) {
 	try {
-		const data = JSON.parse(
-			await fs.readFile(path.resolve(dirPath, "data.json"), "utf-8")
-		);
+		const data = JSON.parse(await fs.readFile(path.resolve(dirPath, "data.json"), "utf-8"));
 
 		if (!sectionData.safeParse(data).success) {
 			// throw new Error("failed to parse")
@@ -45,9 +43,7 @@ async function getDirData(dirPath = process.cwd()) {
 		console.error("\n");
 		console.error("\n");
 		console.error(e);
-		throw new Error(
-			`failed to parse directory info. Does ${dirPath} have a data.json?`
-		);
+		throw new Error(`failed to parse directory info. Does ${dirPath} have a data.json?`);
 	}
 }
 
@@ -107,12 +103,7 @@ async function createNavTree() {
 		buildFileTree(`${COLLECTIONS_ROOT}/reference`),
 	]);
 
-	if (
-		learn &&
-		learn.type === "section" &&
-		references &&
-		references.type === "section"
-	) {
+	if (learn && learn.type === "section" && references && references.type === "section") {
 		return {
 			references: references.children,
 			learn: learn.children,

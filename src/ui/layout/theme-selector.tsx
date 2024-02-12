@@ -1,11 +1,4 @@
-import {
-	Component,
-	For,
-	createEffect,
-	createMemo,
-	createSignal,
-	onMount,
-} from "solid-js";
+import { Component, For, createEffect, createMemo, createSignal, onMount } from "solid-js";
 import { sun, moon, computerDesktop } from "solid-heroicons/solid";
 import { DropdownMenu } from "@kobalte/core";
 import { Icon } from "solid-heroicons";
@@ -51,10 +44,7 @@ export const ThemeSelector: Component = () => {
 				aria-label="theme"
 				class="flex h-6 w-6 items-center justify-center rounded-lg shadow-md shadow-black/5 ring-1 ring-black/10 dark:bg-slate-800 dark:ring-inset dark:ring-white/60"
 			>
-				<Icon
-					class="w-4 h-4 fill-slate-700 dark:fill-slate-200"
-					path={selectedTheme()!.icon}
-				/>
+				<Icon class="w-4 h-4 fill-slate-700 dark:fill-slate-200" path={selectedTheme()!.icon} />
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Portal>
 				<DropdownMenu.Content class="z-50 w-36 space-y-1 rounded-xl bg-white p-2 text-sm shadow-md shadow-black/5 ring-1 ring-black/5 dark:bg-slate-800 dark:ring-white/5">
@@ -75,10 +65,8 @@ export const ThemeSelector: Component = () => {
 								<Icon
 									class={`h-6 w-6 mr-2 rounded-md bg-white p-1 shadow ring-1 ring-slate-900/5 dark:bg-slate-700 dark:ring-inset dark:ring-white/5 `}
 									classList={{
-										"fill-slate-800 dark:fill-white":
-											selectedTheme()!.name === theme.name,
-										"fill-slate-700 dark:fill-slate-200":
-											selectedTheme()!.name !== theme.name,
+										"fill-slate-800 dark:fill-white": selectedTheme()!.name === theme.name,
+										"fill-slate-700 dark:fill-slate-200": selectedTheme()!.name !== theme.name,
 									}}
 									path={theme.icon}
 								/>
@@ -87,8 +75,7 @@ export const ThemeSelector: Component = () => {
 									classList={{
 										"text-blue-500 group-hover:dark:text-white":
 											selectedTheme()!.name === theme.name,
-										"text-slate-700 dark:text-slate-300":
-											selectedTheme()!.value !== theme.name,
+										"text-slate-700 dark:text-slate-300": selectedTheme()!.value !== theme.name,
 									}}
 								>
 									{theme.name}

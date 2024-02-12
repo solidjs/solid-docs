@@ -1,15 +1,5 @@
 // @refresh reload
-import {
-	Routes,
-	Meta,
-	Link,
-	FileRoutes,
-	Scripts,
-	Html,
-	Head,
-	Body,
-	Title,
-} from "solid-start";
+import { Routes, Meta, Link, FileRoutes, Scripts, Html, Head, Body, Title } from "solid-start";
 import { MDXProvider } from "solid-mdx";
 import { Suspense } from "solid-js";
 

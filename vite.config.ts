@@ -3,9 +3,7 @@ import remarkFrontmatter from "remark-frontmatter";
 import rehypeRaw from "rehype-raw";
 import { nodeTypes } from "@mdx-js/mdx";
 import remarkGfm from "remark-gfm";
-import remarkExpressiveCode, {
-	ExpressiveCodeTheme,
-} from "remark-expressive-code";
+import remarkExpressiveCode, { ExpressiveCodeTheme } from "remark-expressive-code";
 import rehypeSlug from "rehype-slug";
 import rehypeAutoLinkHeadings from "rehype-autolink-headings";
 
@@ -89,8 +87,7 @@ export default defineConfig({
 					remarkExpressiveCode,
 					{
 						themes: ["min-light", "material-theme-ocean"],
-						themeCSSSelector: (theme: ExpressiveCodeTheme) =>
-							`[data-theme="${theme.name}"]`,
+						themeCSSSelector: (theme: ExpressiveCodeTheme) => `[data-theme="${theme.name}"]`,
 					},
 				],
 			],

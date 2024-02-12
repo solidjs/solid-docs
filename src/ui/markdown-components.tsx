@@ -42,9 +42,7 @@ export default {
 			);
 		}
 	},
-	TabsCodeBlocks: (props: ParentProps) => (
-		<TabsCodeBlocks>{props.children}</TabsCodeBlocks>
-	),
+	TabsCodeBlocks: (props: ParentProps) => <TabsCodeBlocks>{props.children}</TabsCodeBlocks>,
 	QuickLinks: (props: QuickLinksProps) => (
 		<QuickLinks title={props.title} icon={props.icon} href={props.href}>
 			{props.children}
@@ -130,9 +128,7 @@ export default {
 				typeof resolvedArray[0].t === "string" &&
 				resolvedArray[0].t.substring(0, 5) === "<code") ||
 			// Client side
-			(!isServer &&
-				resolvedArray[0] instanceof Element &&
-				resolvedArray[0].nodeName === "CODE")
+			(!isServer && resolvedArray[0] instanceof Element && resolvedArray[0].nodeName === "CODE")
 		) {
 			return (
 				<A
@@ -161,10 +157,7 @@ export default {
 		</p>
 	),
 	li: (props: ParentProps) => (
-		<li
-			{...props}
-			class="mb-2 marker:text-slate-600 dark:marker:text-slate-300"
-		>
+		<li {...props} class="mb-2 marker:text-slate-600 dark:marker:text-slate-300">
 			{props.children}
 		</li>
 	),
@@ -180,10 +173,7 @@ export default {
 	),
 	nav: (props: ParentProps) => <nav {...props}>{props.children}</nav>,
 	TesterComponent: () => (
-		<p>
-			Remove This Now!!! If you see this it means that markdown custom
-			components does work
-		</p>
+		<p>Remove This Now!!! If you see this it means that markdown custom components does work</p>
 	),
 	pre: (props: ParentProps) => {
 		return (

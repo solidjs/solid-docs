@@ -1,11 +1,4 @@
-import {
-	Component,
-	Index,
-	Show,
-	createEffect,
-	onCleanup,
-	createSignal,
-} from "solid-js";
+import { Component, Index, Show, createEffect, onCleanup, createSignal } from "solid-js";
 import { usePageState } from "~/data/page-state";
 
 export const TableOfContents: Component = () => {
@@ -79,8 +72,7 @@ export const TableOfContents: Component = () => {
 												<a
 													href={`#${subSection().id}`}
 													classList={{
-														"dark:text-slate-300":
-															currentSection() !== subSection().id,
+														"dark:text-slate-300": currentSection() !== subSection().id,
 														"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-bold":
 															currentSection() === subSection().id,
 													}}

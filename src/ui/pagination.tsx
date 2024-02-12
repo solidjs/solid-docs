@@ -5,8 +5,8 @@ import flatEntries from "solid:collection/entries";
 /**
  * temporary until we have proper types inside collections
  */
-type ReferenceCollection = typeof flatEntries["references"];
-type LearnCollection = typeof flatEntries["learn"];
+type ReferenceCollection = (typeof flatEntries)["references"];
+type LearnCollection = (typeof flatEntries)["learn"];
 
 type Pagination = {
 	collection: ReferenceCollection | LearnCollection;

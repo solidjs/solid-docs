@@ -9,9 +9,7 @@ type EraserLinkData = {
 };
 
 const getEraserLinkData = (href: string): EraserLinkData | null => {
-	const matches = /app.eraser.io\/workspace\/(\w+)(.*elements=(\w+))?/.exec(
-		href
-	);
+	const matches = /app.eraser.io\/workspace\/(\w+)(.*elements=(\w+))?/.exec(href);
 
 	if (!matches) {
 		return null;
@@ -35,9 +33,7 @@ const EraserLink = ({
 	linkData: EraserLinkData;
 }>) => {
 	const workspaceUrl = `https://app.eraser.io/workspace/${linkData.workspaceId}`;
-	const elementParams = linkData.elementsId
-		? `elements=${linkData.elementsId}`
-		: "";
+	const elementParams = linkData.elementsId ? `elements=${linkData.elementsId}` : "";
 
 	const linkUrl = elementParams
 		? `${workspaceUrl}?${elementParams}&${ERASER_TRACKING_PARAMS}`
@@ -46,21 +42,13 @@ const EraserLink = ({
 	const [isLoaded, setIsLoaded] = createSignal(false);
 
 	// if there are no children or this was a right click-copy as markdown embed.
-	if (
-		children === undefined ||
-		(Array.isArray(children) && children[0] === "View on Eraser")
-	) {
+	if (children === undefined || (Array.isArray(children) && children[0] === "View on Eraser")) {
 		const imageUrl = elementParams
 			? `${workspaceUrl}/preview?${elementParams}&type=embed`
 			: `${workspaceUrl}/preview`;
 
 		return (
-			<a
-				href={linkUrl}
-				class="relative inline-block"
-				target="_blank"
-				rel="noopener noreferrer"
-			>
+			<a href={linkUrl} class="relative inline-block" target="_blank" rel="noopener noreferrer">
 				<img src={imageUrl} alt={""} onLoad={() => setIsLoaded(true)} />
 				{isLoaded() ? (
 					<div class="eraserLinkContainer">

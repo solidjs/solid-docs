@@ -33,9 +33,7 @@ const PageStateContext = createContext<{
 });
 
 const PageStateProvider = (props: ParentProps) => {
-	const [pageSections, setPageSections] = createStore<PageStateStore>(
-		INITIAL_PAGE_STATE_STORE
-	);
+	const [pageSections, setPageSections] = createStore<PageStateStore>(INITIAL_PAGE_STATE_STORE);
 
 	return (
 		<PageStateContext.Provider

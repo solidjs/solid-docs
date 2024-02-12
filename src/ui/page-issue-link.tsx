@@ -6,9 +6,7 @@ import { useLocation } from "@solidjs/router";
 export const PageIssueLink: Component = () => {
 	const location = useLocation();
 	const path = createMemo(() => {
-		return location.pathname !== "/"
-			? location.pathname.substring(1)
-			: "/index";
+		return location.pathname !== "/" ? location.pathname.substring(1) : "/index";
 	});
 	return (
 		<a

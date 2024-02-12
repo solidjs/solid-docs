@@ -16,10 +16,8 @@ export const DocsLayout: ParentComponent = (props) => {
 
 	const paths = () => location.pathname.split("/").reverse();
 	const isReference = useMatch(() => "/reference/*");
-	const collection = () =>
-		Boolean(isReference()) ? flatEntries.references : flatEntries.learn;
-	const entryIndex = () =>
-		collection().findIndex((element) => paths()[0] === element.slug);
+	const collection = () => (Boolean(isReference()) ? flatEntries.references : flatEntries.learn);
+	const entryIndex = () => collection().findIndex((element) => paths()[0] === element.slug);
 	const titles = () => {
 		const fullEntry = collection()[entryIndex()];
 		return {
@@ -65,17 +63,11 @@ export const DocsLayout: ParentComponent = (props) => {
 				<article class="w-full px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none lg:min-w-[730px]">
 					<Show when={titles().parent}>
 						{(t) => (
-							<span class="text-sm font-semibold text-blue-700 dark:text-blue-300 my-1">
-								{t()}
-							</span>
+							<span class="text-sm font-semibold text-blue-700 dark:text-blue-300 my-1">{t()}</span>
 						)}
 					</Show>
 					<Show when={titles().title}>
-						{(t) => (
-							<h1 class="prose-headings:text-3xl text-slate-900 dark:text-white">
-								{t()}
-							</h1>
-						)}
+						{(t) => <h1 class="prose-headings:text-3xl text-slate-900 dark:text-white">{t()}</h1>}
 					</Show>
 					<span class="xl:hidden text-sm">
 						<EditPageLink />

@@ -2,12 +2,7 @@ import { Icon } from "solid-heroicons";
 import { JSXElement, ParentComponent, Show } from "solid-js";
 import { A } from "@solidjs/router";
 
-import {
-	academicCap,
-	codeBracketSquare,
-	pencilSquare,
-	userGroup,
-} from "solid-heroicons/solid";
+import { academicCap, codeBracketSquare, pencilSquare, userGroup } from "solid-heroicons/solid";
 
 export type QuickLinksProps = {
 	icon: "learn" | "contribute" | "template" | "community";
@@ -52,9 +47,7 @@ export const QuickLinks: ParentComponent<QuickLinksProps> = (props) => {
 					</div>
 				</div>
 
-				<p class="mt-1 text-sm text-slate-800 dark:text-slate-300 -mb-2">
-					{props.children}
-				</p>
+				<p class="mt-1 text-sm text-slate-800 dark:text-slate-300 -mb-2">{props.children}</p>
 			</div>
 		</div>
 	);

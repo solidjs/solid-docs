@@ -11,14 +11,7 @@ export function Logo(props: { class?: string }) {
 				viewBox="0 0 166 155.3"
 			>
 				<defs>
-					<linearGradient
-						id="a"
-						gradientUnits="userSpaceOnUse"
-						x1="27.5"
-						y1="3"
-						x2="152"
-						y2="63.5"
-					>
+					<linearGradient id="a" gradientUnits="userSpaceOnUse" x1="27.5" y1="3" x2="152" y2="63.5">
 						<stop offset=".1" stop-color="#76b3e1" />
 						<stop offset=".3" stop-color="#dcf2fd" />
 						<stop offset="1" stop-color="#76b3e1" />

@@ -1,4 +1,9 @@
-import { For, ParentComponent, Show, createSignal, onMount } from "solid-js";
+import { Index, JSX, createSignal, onMount } from "solid-js";
+
+// Check if children are elements
+const isArrayOfElements = (arr: any[]): arr is Element[] => {
+	return arr.every((item) => item instanceof Element);
+};
 
 /**
  *  This is a code blocks component that can be used to divide code blocks into seperate tabs. Here's an example of how to use it in JSX and mdx:
@@ -29,15 +34,12 @@ import { For, ParentComponent, Show, createSignal, onMount } from "solid-js";
  * 	...
  * </TabsCodeBlocks>
  */
-export const TabsCodeBlocks: ParentComponent = (props) => {
-	const [tabs, setTabs] = createSignal<Element[]>();
-	const [selectedTab, setSelectedTab] = createSignal<Element>();
 
-	const selectTabById = (id: string) => {
-		const tab = tabs()?.find((tab) => tab.id === id);
-		if (tab) setSelectedTab(tab);
-		else throw new Error(`Tab with id "${id}" not found`);
-	};
+type Props = { children: JSX.Element };
+
+export const TabsCodeBlocks = (props: Props) => {
+	const [tabs, setTabs] = createSignal<Element[]>();
+	const [activeTab, setActiveTab] = createSignal(0);
 
 	onMount(() => {
 		let children = props.children;
@@ -45,11 +47,6 @@ export const TabsCodeBlocks: ParentComponent = (props) => {
 		// Check if children are an array
 		if (!Array.isArray(children))
 			throw new Error("TabsCodeBlocks children must be an array");
-
-		// Check if children are elements
-		const isArrayOfElements = (arr: any[]): arr is Element[] => {
-			return arr.every((item) => item instanceof Element);
-		};
 
 		if (!isArrayOfElements(children))
 			throw new Error("TabsCodeBlocks children must be an array of elements");
@@ -60,31 +57,34 @@ export const TabsCodeBlocks: ParentComponent = (props) => {
 		if (!allElementsHaveIds)
 			throw new Error("All TabsCodeBlocks children must have an id");
 
-		setSelectedTab(children[0]);
 		setTabs(children);
 	});
 
 	return (
 		<div>
 			<nav class="mb-2 border-b-2 border-slate-800">
-				<For each={tabs()}>
-					{(tab) => (
+				<Index each={tabs()}>
+					{(tab, idx) => (
 						<button
 							classList={{
 								"font-bold dark:text-slate-300 text-blue-500 border-b-2 border-blue-400":
-									selectedTab()?.id === tab.id,
+									activeTab() === idx,
 								"px-5 py-1 relative top-0.5 transition-colors duration-300":
 									true,
 							}}
-							onclick={() => selectTabById(tab.id)}
+							onclick={() => setActiveTab(idx)}
 						>
-							{tab.id}
+							{tab().id}
 						</button>
 					)}
-				</For>
+				</Index>
 			</nav>
 
-			{selectedTab()}
+			<Index each={tabs()}>
+				{(tab, idx) => (
+					<div classList={{ hidden: activeTab() !== idx }}>{tab()}</div>
+				)}
+			</Index>
 		</div>
 	);
 };

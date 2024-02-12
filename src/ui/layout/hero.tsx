@@ -33,7 +33,7 @@ export const Hero: Component = () => {
 								<Button href="/quick-start" variant="primary">
 									Get started
 								</Button>
-								<Button href="https://discord.gg/solidjs" variant="secondary">
+								<Button href="https://discord.com/invite/solidjs" variant="secondary">
 									Join the community
 								</Button>
 							</div>

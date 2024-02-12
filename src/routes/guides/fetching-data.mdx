@@ -3,24 +3,24 @@ title: Fetching Data
 order: 3
 ---
 
-For most modern web applications, data fetching is a common task. 
+For most modern web applications, data fetching is a common task.
 Solid has a built-in utility, `createResource` , that was created to simplify data fetching.
 
 ## What is `createResource` ?
 
-`createResource` is a specialized [signal](/essentials/signal) designed specifically for managing asynchronous data fetching. 
+`createResource` is a specialized [signal](/concepts/signals) designed specifically for managing asynchronous data fetching.
 It wraps around the async operations, providing a way to handle various states: loading, success, and error.
 
-This function is non-blocking, meaning that `createResource` guarantees that the application remains responsive, even during the retrieval of information. 
+This function is non-blocking, meaning that `createResource` guarantees that the application remains responsive, even during the retrieval of information.
 Because of this, common pitfalls of traditional async handling, such as unresponsive UIs during data fetching can be avoided.
 
 ## Using `createResource`
 
-`createResource` requires a function that returns a promise as its argument. 
-Upon the call, `createResource` returns a signal which has reactive properties like loading, error, latest, etc. 
+`createResource` requires a function that returns a promise as its argument.
+Upon the call, `createResource` returns a signal which has reactive properties like loading, error, latest, etc.
 These properties can be used to conditionally render JSX based on the current reactive state.
 
-The fetcher function that is created makes a call to get a user, which is then passed in as an argument to `createResource`. 
+The fetcher function that is created makes a call to get a user, which is then passed in as an argument to `createResource`.
 
 The signal returned from the `createResource` provides the properties that help can assist with conditional rendering based on the current reactive state:
 * `state`: The current status of the operation (`unresolved`, `pending`, `ready`, `refreshing`, or `errored`).
@@ -46,7 +46,7 @@ function App() {
 
   return (
     <div>
-      <input 
+      <input
         type="number"
         min="1"
         placeholder="Enter Numeric Id"
@@ -69,20 +69,20 @@ function App() {
 }
 ```
 
-Whenever the signal value, `userId`, changes, the internal fetch method `fetchUser` gets triggered. 
+Whenever the signal value, `userId`, changes, the internal fetch method `fetchUser` gets triggered.
 The properties of the `user` resource allow for conditional rendering based on the different states of the fetch process.
 
-The `Switch/Match` construct provides one way to manage these conditions. 
+The `Switch/Match` construct provides one way to manage these conditions.
 When the fetch succeeds and user data is retrieved, the `user(`) condition becomes active, and its related block executes.
-However, if there's an error while fetching, the `user.error` block becomes `true`, leading to its corresponding `Match` block being shown. 
+However, if there's an error while fetching, the `user.error` block becomes `true`, leading to its corresponding `Match` block being shown.
 
 In addition to the `error` property, the `loading` property offers a way to display a loading state to the user during the fetch operation.
 
 
 ## Calling multiple async events
 
-Although you can use `createResource` independently, Solid provides an alternative method for synchronizing the display of multiple asynchronous events. 
-`Suspense` is a component in Solid designed to act as a boundary. 
+Although you can use `createResource` independently, Solid provides an alternative method for synchronizing the display of multiple asynchronous events.
+`Suspense` is a component in Solid designed to act as a boundary.
 It allows you to display a fallback placeholder while waiting for all asynchronous events to resolve, preventing the display of partially loaded content:
 
 ```jsx
@@ -99,7 +99,7 @@ function App() {
 
   return (
     <div>
-    <input 
+    <input
       type="number"
       min="1"
       placeholder="Enter Numeric Id"
@@ -136,7 +136,7 @@ With the second output of `createResource`, there are 2 powerful methods designe
 
 ### `mutate`
 
-In situations where immediate feedback or responsiveness is important, the `mutate` method offers "optimistic mutations." 
+In situations where immediate feedback or responsiveness is important, the `mutate` method offers "optimistic mutations."
 These mutations provide instant feedback, even while background processes, such as server confirmations, are still in progress.
 
 This functionality is particularly valuable in applications like task lists.
@@ -148,7 +148,7 @@ import { createResource } from 'solid-js';
 function TodoList() {
   const [tasks, { mutate }] = createResource(fetchTasksFromServer);
 
-  // .. 
+  // ..
 
   return (
     <>

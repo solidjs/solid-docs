@@ -8,7 +8,7 @@ import { DocsLayout } from "./docs-layout";
 import { PageStateProvider } from "~/data/page-state";
 import { Alert } from "@kobalte/core";
 
-export const Layout: ParentComponent = (props) => {
+export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 	const isRoot = useMatch(() => "/");
 
 	return (
@@ -24,16 +24,17 @@ export const Layout: ParentComponent = (props) => {
 				<Show when={isRoot()} keyed>
 					<Hero />
 				</Show>
-
 				<div class="relative mx-auto flex max-w-8xl flex-auto justify-center custom-scrollbar">
-					<div class="hidden md:relative md:block lg:flex-none top-8">
-						<div class="absolute inset-y-0 right-0 w-[50vw] dark:hidden" />
-						<div class="absolute bottom-0 right-0 top-16 hidden h-12 w-px bg-gradient-to-t from-slate-800 dark:block" />
-						<div class="absolute bottom-0 right-0 top-28 hidden w-px bg-slate-800 dark:block" />
-						<div class="sticky top-[4.75rem] h-[calc(100vh-4.75rem)] w-64 pt-16 pb-10 pl-0.5 pr-2 xl:w-72">
-							<MainNavigation />
+					<Show when={!props.isError}>
+						<div class="hidden md:relative md:block lg:flex-none top-8">
+							<div class="absolute inset-y-0 right-0 w-[50vw] dark:hidden" />
+							<div class="absolute bottom-0 right-0 top-16 hidden h-12 w-px bg-gradient-to-t from-slate-800 dark:block" />
+							<div class="absolute bottom-0 right-0 top-28 hidden w-px bg-slate-800 dark:block" />
+							<div class="sticky top-[4.75rem] h-[calc(100vh-4.75rem)] w-64 pt-16 pb-10 pl-0.5 pr-2 xl:w-72">
+								<MainNavigation />
+							</div>
 						</div>
-					</div>
+					</Show>
 					<main class="w-full md:max-w-2xl flex-auto px-4 pt-20 md:pb-16 lg:max-w-none prose prose-slate dark:prose-invert dark:text-slate-300">
 						<Show
 							when={!isRoot()}
@@ -44,7 +45,9 @@ export const Layout: ParentComponent = (props) => {
 								</article>
 							}
 						>
-							<DocsLayout>{props.children}</DocsLayout>
+							<Show when={!props.isError} fallback={<>{props.children}</>}>
+								<DocsLayout>{props.children}</DocsLayout>
+							</Show>
 						</Show>
 					</main>
 				</div>

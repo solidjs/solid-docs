@@ -4,8 +4,7 @@ import { TableOfContents } from "./table-of-contents";
 
 export const SidePanel: Component = () => {
 	return (
-		<div class="hidden xl:block relative">
-			<div class="fixed">
+		<div class="hidden shrink-0 fixed right-4 xl:block">
 				<TableOfContents />
 				<Contribute />
 			</div>

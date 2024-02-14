@@ -31,7 +31,7 @@ export const TableOfContents: Component = () => {
 	});
 
 	return (
-		<aside aria-label="table of contents" class="w-full">
+		<aside aria-label="table of contents" class="w-full max-w-64">
 			<span class="font-display text-base font-medium text-slate-900 dark:text-white">
 				On this page
 			</span>

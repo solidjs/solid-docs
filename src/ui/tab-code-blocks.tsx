@@ -67,7 +67,7 @@ export const TabsCodeBlocks = (props: Props) => {
 					{(tab, idx) => (
 						<button
 							classList={{
-								"font-bold dark:text-slate-300 text-blue-500 border-b-2 border-blue-400":
+								"font-bold dark:text-slate-300 text-blue-600 border-b-2 border-blue-400":
 									activeTab() === idx,
 								"px-5 py-1 relative top-0.5 transition-colors duration-300":
 									true,

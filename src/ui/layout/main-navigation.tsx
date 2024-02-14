@@ -20,7 +20,7 @@ function ListItemLink(props: { item: Entry }) {
 	const linkStyles = () =>
 		location.pathname === props.item.path.replace(/\\/g, "/")
 			? "font-semibold text-blue-800 before:bg-blue-700 dark:before:bg-blue-200 dark:text-blue-300 before:block"
-			: "text-slate-500 before:hidden before:bg-blue-600 before:dark:bg-blue-200 hover:text-blue-500 hover:font-bold hover:before:block dark:text-slate-300 ";
+			: "text-slate-600 before:hidden before:bg-blue-600 before:dark:bg-blue-200 hover:text-blue-500 hover:font-bold hover:before:block dark:text-slate-300 ";
 	return (
 		<li class="relative">
 			<A
@@ -41,7 +41,7 @@ function DirList(props: { list: Entry[] }) {
 				if (Array.isArray(item.children)) {
 					return (
 						<li>
-							<span class="font-display font-semibold text-slate-700 dark:text-slate-100 lg:text-sm">
+							<span class="font-display font-semibold text-slate-800 dark:text-slate-100 lg:text-sm">
 								{item.title}
 							</span>
 							<ul

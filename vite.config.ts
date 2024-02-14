@@ -57,6 +57,7 @@ function docsEntries() {
 
 export default defineConfig({
 	start: {
+		middleware: "src/middleware/index.ts",
 		server: {
 			preset: "netlify",
 		},

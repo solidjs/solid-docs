@@ -124,12 +124,20 @@ async function createNavTree() {
  *
  * @param {string} fileName
  * @param {object} fileContent
+ * @param {boolean} removeAsConst
  * @param {string} collectionDir
  */
-async function writeFile(fileName, fileContent, collectionDir = ".solid") {
+async function writeFile(
+	fileName,
+	fileContent,
+	removeAsConst = false,
+	collectionDir = ".solid"
+) {
 	fs.writeFile(
 		path.resolve(collectionDir, fileName),
-		`export default ${JSON.stringify(fileContent, null, 2)} as const`
+		`export default ${JSON.stringify(fileContent, null, 2)} ${
+			removeAsConst ? "" : "as const"
+		}`
 	);
 }
 
@@ -170,6 +178,14 @@ function createFlatEntryList(tree, entryMap) {
 
 	await Promise.all([
 		writeFile("tree.ts", tree),
+		writeFile(
+			"entriesList.js",
+			{
+				references: referenceMap,
+				learn: learnMap,
+			},
+			true
+		),
 		writeFile("entries.ts", { references: referenceMap, learn: learnMap }),
 	]);
 })();

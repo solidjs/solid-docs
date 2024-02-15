@@ -7,6 +7,7 @@ import { useMatch } from "@solidjs/router";
 import { DocsLayout } from "./docs-layout";
 import { PageStateProvider } from "~/data/page-state";
 import { Alert } from "@kobalte/core";
+import { SidePanel } from "./layout/side-panel";
 
 export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 	const isRoot = useMatch(() => "/");
@@ -26,11 +27,11 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 				</Show>
 				<div class="relative mx-auto flex max-w-8xl flex-auto justify-center custom-scrollbar">
 					<Show when={!props.isError}>
-						<div class="hidden md:relative md:block lg:flex-none top-8">
+						<div class="hidden md:relative md:block lg:flex-none ">
 							<div class="absolute inset-y-0 right-0 w-[50vw] dark:hidden" />
 							<div class="absolute bottom-0 right-0 top-16 hidden h-12 w-px bg-gradient-to-t from-slate-800 dark:block" />
 							<div class="absolute bottom-0 right-0 top-28 hidden w-px bg-slate-800 dark:block" />
-							<div class="sticky top-[4.75rem] h-[calc(100vh-4.75rem)] w-64 pt-16 pb-10 pl-0.5 pr-2 xl:w-72">
+							<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] w-64 pl-0.5 pr-2 xl:w-72">
 								<MainNavigation />
 							</div>
 						</div>
@@ -50,6 +51,11 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 							</Show>
 						</Show>
 					</main>
+					<div class="hidden xl:block prose prose-slate dark:prose-invert dark:text-slate-300">
+						<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] overflow-y-auto pr-4 w-64 xl:w-72">
+							<SidePanel />
+						</div>
+					</div>
 				</div>
 			</div>
 		</PageStateProvider>

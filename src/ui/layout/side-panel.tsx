@@ -4,11 +4,9 @@ import { TableOfContents } from "./table-of-contents";
 
 export const SidePanel: Component = () => {
 	return (
-		<div class="hidden xl:block relative">
-			<div class="fixed">
-				<TableOfContents />
-				<Contribute />
-			</div>
+		<div class="h-full relative">
+			<TableOfContents />
+			<Contribute />
 		</div>
 	);
 };

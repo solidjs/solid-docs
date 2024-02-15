@@ -4,7 +4,6 @@ import { Title } from "@solidjs/meta";
 import flatEntries from "solid:collection/entries";
 import { Pagination } from "~/ui/pagination";
 import { usePageState } from "~/data/page-state";
-import { SidePanel } from "./layout/side-panel";
 import { EditPageLink } from "./edit-page-link";
 import { PageIssueLink } from "./page-issue-link";
 
@@ -86,7 +85,6 @@ export const DocsLayout: ParentComponent = (props) => {
 					</span>
 					<Pagination currentIndex={entryIndex()} collection={collection()} />
 				</article>
-				<SidePanel />
 			</div>
 		</>
 	);

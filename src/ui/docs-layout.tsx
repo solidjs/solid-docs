@@ -4,7 +4,6 @@ import { Title } from "@solidjs/meta";
 import flatEntries from "solid:collection/entries";
 import { Pagination } from "~/ui/pagination";
 import { usePageState } from "~/data/page-state";
-import { SidePanel } from "./layout/side-panel";
 import { EditPageLink } from "./edit-page-link";
 import { PageIssueLink } from "./page-issue-link";
 
@@ -62,7 +61,7 @@ export const DocsLayout: ParentComponent = (props) => {
 		<>
 			<Title>{`${titles().title} - SolidDocs`}</Title>
 			<div id="rr" class="flex relative">
-				<article class="w-fit px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none lg:min-w-[730px]">
+				<article class="w-fit overflow-hidden px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none lg:min-w-[730px]">
 					<Show when={titles().parent}>
 						{(t) => (
 							<span class="text-sm font-semibold text-blue-700 dark:text-blue-300 my-1">
@@ -86,7 +85,6 @@ export const DocsLayout: ParentComponent = (props) => {
 					</span>
 					<Pagination currentIndex={entryIndex()} collection={collection()} />
 				</article>
-				<SidePanel />
 			</div>
 		</>
 	);

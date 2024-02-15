@@ -54,7 +54,7 @@ const LEGACY_ROUTES = {
 	"/references/api-reference/rendering/renderToStringAsync": "/reference/rendering/render-to-string-async",
 	"/references/api-reference/secondary-primitives/createComputed": "/reference/secondary-primitives/create-computed",
 	"/references/api-reference/secondary-primitives/createDeferred": "/reference/secondary-primitives/create-deferred",
-	"/references/api-reference/secondary-primitives/createReaction": "/references/api-reference/secondary-primitives/createReaction",
+	"/references/api-reference/secondary-primitives/createReaction": "/reference/secondary-primitives/create-reaction",
 	"/references/api-reference/secondary-primitives/createRenderEffect": "/reference/secondary-primitives/create-render-effect",
 	"/references/api-reference/secondary-primitives/createSelector": "/reference/secondary-primitives/create-selector",
 	"/references/api-reference/special-jsx-attributes/attr_": "/reference/jsx-attributes/attr",

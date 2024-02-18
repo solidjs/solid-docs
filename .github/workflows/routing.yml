@@ -1,10 +1,10 @@
 name: Routing Integration Tests
-on: [deployment_status]
+on: push
 
 jobs:
-  ping-routes:
-    if: github.event.deployment_status.state == 'success'
+  check-redirects:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
 
@@ -18,8 +18,14 @@ jobs:
           node-version: 20
           cache: "pnpm"
 
+      - name: Waiting for 200 from the Netlify Preview
+        uses: jakepartusch/wait-for-netlify-action@v1.4
+        id: waitFor200
+        with:
+          site_name: "solid-docs"
+
       - run: pnpm install
 
       - name: Ping redirects against deploy url
         id: integration
-        run: TEST_URL=${{ fromJSON('{"production":"https://docs.solidjs.com"}')[github.event.deployment_status.environment] || github.event.deployment_status.target_url }} pnpm test:ci
+        run: TEST_URL=${{ steps.waitFor200.outputs.url }} pnpm test:ci

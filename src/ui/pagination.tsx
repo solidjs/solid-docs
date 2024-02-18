@@ -34,7 +34,7 @@ export function Pagination(props: Pagination) {
 			<Show when={previous()}>
 				{(entry) => (
 					<A 
-						class="flex items-center gap-5 no-underline border-[1px] border-transparent rounded-lg group hover:border-blue-150 dark:hover:border-blue-300 p-3 min-w-[200px]"
+						class="flex items-center gap-5 no-underline border-[1px] border-transparent rounded-lg group hover:border-blue-150 dark:hover:border-blue-300 p-3 min-w-[200px] justify-start"
 						href={entry().path}
 					>
 						<div class="text-xl text-blue-925/60 group-hover:text-blue-700 dark:group-hover:text-blue-300 dark:text-slate-600">←</div>
@@ -54,7 +54,7 @@ export function Pagination(props: Pagination) {
 			<Show when={next()}>
 				{(entry) => (
 					<A 
-						class="flex items-center gap-5 no-underline border-[1px] border-transparent rounded-lg group hover:border-blue-150 dark:hover:border-blue-300 p-3 min-w-[200px]"
+						class="flex items-center gap-5 no-underline border-[1px] border-transparent rounded-lg group hover:border-blue-150 dark:hover:border-blue-300 p-3 min-w-[200px] justify-end"
 						href={entry().path}
 					>
 						<div class="w-max">

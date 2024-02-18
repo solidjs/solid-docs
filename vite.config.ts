@@ -61,7 +61,7 @@ export default defineConfig({
 		server: {
 			preset: "netlify",
 		},
-		extensions: ["mdx", "md"],
+		extensions: ["mdx", "md", "tsx"],
 	},
 	plugins: [
 		docsTree(),

@@ -25,7 +25,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 				<Show when={isRoot()} keyed>
 					<Hero />
 				</Show>
-				<div class="relative mx-auto flex max-w-[90rem] flex-auto justify-center custom-scrollbar">
+				<div class="relative mx-auto flex max-w-[90rem] flex-auto justify-center custom-scrollbar px-[1rem]">
 					<Show when={!props.isError}>
 						<div class="hidden md:relative md:block lg:flex-none ">
 							<div class="absolute inset-y-0 right-0 w-[50vw] dark:hidden" />

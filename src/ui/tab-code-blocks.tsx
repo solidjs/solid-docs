@@ -62,12 +62,12 @@ export const TabsCodeBlocks = (props: Props) => {
 
 	return (
 		<div>
-			<nav class="mb-2 border-b-2 border-slate-800">
+			<nav class="mb-2 border-b-2 border-blue-150 dark:border-slate-800">
 				<Index each={tabs()}>
 					{(tab, idx) => (
 						<button
 							classList={{
-								"font-bold dark:text-slate-300 text-blue-500 border-b-2 border-blue-400":
+								"font-bold dark:text-slate-300 text-blue-700 border-b-2 border-blue-700 dark:border-blue-300":
 									activeTab() === idx,
 								"px-5 py-1 relative top-0.5 transition-colors duration-300":
 									true,

@@ -49,7 +49,7 @@ export const ThemeSelector: Component = () => {
 		<DropdownMenu.Root modal={true} gutter={10}>
 			<DropdownMenu.Trigger
 				aria-label="theme"
-				class="flex h-6 w-6 items-center justify-center rounded-lg shadow-md shadow-blue-925/5 ring-1 ring-black/10 dark:bg-slate-800 dark:ring-inset dark:ring-white/60"
+				class="flex h-6 w-6 items-center justify-center rounded-lg shadow-sm shadow-blue-925/5 ring-1 ring-black/10 dark:bg-slate-800 dark:ring-inset dark:ring-white/60"
 			>
 				<Icon
 					class="w-4 h-4 fill-blue-925 dark:fill-slate-200"
@@ -57,7 +57,7 @@ export const ThemeSelector: Component = () => {
 				/>
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Portal>
-				<DropdownMenu.Content class="z-50 w-36 space-y-1 rounded-xl bg-white p-2 text-sm shadow-md shadow-blue-925/5 ring-1 ring-black/5 dark:bg-slate-800 dark:ring-white/5">
+				<DropdownMenu.Content class="z-50 w-36 space-y-1 rounded-xl bg-white p-2 text-sm shadow-md dark:shadow-slate-800 ring-1 ring-black/5 dark:bg-slate-800 dark:ring-white/5">
 					<For each={themes}>
 						{(theme) => (
 							<DropdownMenu.Item
@@ -73,7 +73,7 @@ export const ThemeSelector: Component = () => {
 								}}
 							>
 								<Icon
-									class={`h-6 w-6 mr-2 rounded-md bg-white p-1 shadow shadow-blue-925 ring-1 ring-slate-900/5 dark:bg-slate-700 dark:ring-inset dark:ring-white/5 `}
+									class={`h-6 w-6 mr-2 rounded-md bg-white p-1 shadow dark:shadow-slate-800 ring-1 ring-slate-900/5 dark:bg-slate-700 dark:ring-inset dark:ring-white/5 `}
 									classList={{
 										"fill-slate-800 dark:fill-white":
 											selectedTheme()!.name === theme.name,

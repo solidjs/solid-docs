@@ -30,35 +30,45 @@ export function Pagination(props: Pagination) {
 	};
 
 	return (
-		<nav class="flex justify-between mt-10 pt-6 border-t border-slate-200 dark:border-slate-800">
+		<nav class="flex justify-between mt-10 pt-4 border-t border-blue-150 dark:border-slate-800">
 			<Show when={previous()}>
 				{(entry) => (
-					<div>
-						<span class="font-display text-sm font-medium text-slate-900 dark:text-white">
-							Previous
-						</span>
-						<A
-							class="flex items-center gap-x-1 text-base font-medium text-slate-500 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-300 flex-row-reverse no-underline"
-							href={entry().path}
-						>
-							← {entry().title}
-						</A>
-					</div>
+					<A 
+						class="flex items-center gap-5 no-underline border-[1px] border-transparent rounded-lg group hover:border-blue-150 dark:hover:border-blue-300 p-3 min-w-[200px]"
+						href={entry().path}
+					>
+						<div class="text-xl text-blue-925/60 group-hover:text-blue-700 dark:group-hover:text-blue-300 dark:text-slate-600">←</div>
+						<div class="w-max">
+							<span class="font-display text-sm leading-tight font-medium text-blue-925/50 tracking-[0.2px] dark:text-slate-600 dark:group-hover:text-blue-300 group-hover:text-blue-700">
+								Previous
+							</span>
+							<span
+								class="w-max flex text-lg items-center leading-tight gap-x-1 text-base font-medium text-blue-925 group-hover:text-blue-300 group-hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-300 flex-row-reverse no-underline"
+							>
+								{entry().title}
+							</span>
+						</div>
+					</A>
 				)}
 			</Show>
 			<Show when={next()}>
 				{(entry) => (
-					<div>
-						<span class="font-display text-sm font-medium text-slate-900 dark:text-white">
-							Next
-						</span>
-						<A
-							class="flex items-center gap-x-1 text-base font-medium text-slate-500 hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-300 flex-row-reverse no-underline"
-							href={entry().path}
-						>
-							{entry().title} →
-						</A>
-					</div>
+					<A 
+						class="flex items-center gap-5 no-underline border-[1px] border-transparent rounded-lg group hover:border-blue-150 dark:hover:border-blue-300 p-3 min-w-[200px]"
+						href={entry().path}
+					>
+						<div class="w-max">
+							<span class="font-display text-sm leading-tight font-medium text-blue-925/50 dark:text-slate-600 tracking-[0.2px] dark:group-hover:text-blue-300 group-hover:text-blue-700 text-right block">
+								Next
+							</span>
+							<span
+								class="w-max flex text-lg items-center gap-x-1 text-base leading-tight font-medium text-blue-925 group-hover:text-blue-700 dark:text-slate-300 dark:group-hover:text-blue-300 flex-row-reverse no-underline"
+							>
+								{entry().title}
+							</span>
+						</div>
+						<div class="text-xl text-blue-925/60 group-hover:text-blue-700 dark:group-hover:text-blue-300 dark:text-slate-600">→</div>
+					</A>
 				)}
 			</Show>
 		</nav>

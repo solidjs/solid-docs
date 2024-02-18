@@ -76,7 +76,7 @@ export const DocsLayout: ParentComponent = (props) => {
 							</h1>
 						)}
 					</Show>
-					<span class="block -mt-[23px] pl-[2px] text-sm opacity-90 font-xs tracking-wider hover:opacity-1 transition-all [&>a>svg]:w-[12px] ">
+					<span class="block -mt-[23px] pl-[2px] text-sm opacity-90 font-xs tracking-wider hover:opacity-1 transition-all [&>a>svg]:w-[12px] xl:hidden">
 						<EditPageLink />
 					</span>
 					<div class="max-w-prose w-full overflow-y-auto">{props.children}</div>

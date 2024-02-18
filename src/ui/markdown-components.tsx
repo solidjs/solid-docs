@@ -66,7 +66,7 @@ export default {
 	h2: (props: ParentProps) => {
 		return (
 			<>
-				<hr class="dark:prose-hr:border-slate-800 border-blue-150 my-8" />
+				<hr class="dark:prose-hr:border-slate-800 border-blue-150 dark:border-slate-800 my-8" />
 				<h2
 					{...props}
 					class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
@@ -189,7 +189,7 @@ export default {
 		return (
 			<pre
 				{...props}
-				class="[&>code]:bg-blue-25 bg-blue-25 dark:[&>code]:bg-slate-950 [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal custom-scroll-bar"
+				class="[&>code]:bg-blue-25 bg-blue-25 [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal custom-scroll-bar"
 			>
 				{props.children}
 			</pre>
@@ -198,7 +198,7 @@ export default {
 	code: (props: ParentProps) => {
 		return (
 			<code
-				class="inline-block not-prose font-mono font-medium bg-blue-200 dark:bg-blue-700/60 text-slate-900 dark:text-white px-1.5 py-0.5 rounded-lg text-[0.8em] leading-snug"
+				class="inline-block not-prose font-mono font-medium dark:bg-slate-1000 text-slate-900 dark:text-white px-1.5 py-0.5 rounded-lg text-[0.8em] leading-snug"
 				{...props}
 			>
 				{props.children}

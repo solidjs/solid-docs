@@ -1,5 +1,5 @@
 import { type ParentProps, children, splitProps } from "solid-js";
-import { A } from "@solidjs/router";
+import { A } from "~/ui/i18n-anchor";
 import { isServer } from "solid-js/web";
 import { Callout, CalloutProps } from "~/ui/callout";
 import { TabsCodeBlocks } from "~/ui/tab-code-blocks";

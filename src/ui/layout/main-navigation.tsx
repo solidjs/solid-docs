@@ -1,4 +1,4 @@
-import { A, useMatch } from "@solidjs/router";
+import { useMatch } from "@solidjs/router";
 import { For, Show } from "solid-js";
 import { useLocation } from "@solidjs/router";
 import { Collapsible, Tabs } from "@kobalte/core";
@@ -6,6 +6,7 @@ import nav from "solid:collection/tree";
 import { Icon } from "solid-heroicons";
 import { chevronDown } from "solid-heroicons/solid";
 import { setIsOpen } from "./mobile-navigation";
+import { A } from "~/ui/i18n-anchor";
 
 type Entry = {
 	title: string;

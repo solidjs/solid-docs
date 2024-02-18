@@ -1,10 +1,10 @@
 // @refresh reload
-import { A, Router } from "@solidjs/router";
+import { Router } from "@solidjs/router";
+import { A } from "~/ui/i18n-anchor";
 import { FileRoutes, HttpStatusCode } from "@solidjs/start";
 import { MDXProvider } from "solid-mdx";
 import { ErrorBoundary, Suspense, createEffect } from "solid-js";
 import { MetaProvider, Title } from "@solidjs/meta";
-
 import Md from "~/ui/markdown-components";
 import { Layout } from "~/ui/layout";
 import "~/styles.css";

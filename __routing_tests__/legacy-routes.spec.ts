@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { LEGACY_ROUTES } from "../src/middleware/legacy-routes";
+import { LEGACY_ROUTES } from "../src/middleware/legacy-redirects/legacy-routes";
 
 const baseUrl = process.env.TEST_URL || "http://localhost:3000";
 

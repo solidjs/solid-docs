@@ -60,23 +60,23 @@ export const DocsLayout: ParentComponent = (props) => {
 	return (
 		<>
 			<Title>{`${titles().title} - SolidDocs`}</Title>
-			<div id="rr" class="flex relative">
-				<article class="w-fit overflow-hidden px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none lg:min-w-[730px]">
+			<div id="rr" class="flex relative mx-auto justify-center">
+				<article class="w-fit overflow-hidden pb-16 md:px-10 expressive-code-overrides lg:max-w-none ">
 					<Show when={titles().parent}>
 						{(t) => (
-							<span class="text-sm font-semibold text-blue-700 dark:text-blue-300 my-1">
+							<span class="text-sm font-semibold tracking-[1.4px] text-blue-800 dark:text-blue-300 my-1 opacity-[65%]">
 								{t()}
 							</span>
 						)}
 					</Show>
 					<Show when={titles().title}>
 						{(t) => (
-							<h1 class="prose-headings:text-3xl text-slate-900 dark:text-white">
+							<h1 class="prose-headings text-[2.85rem] text-blue-950 tracking-wider dark:text-white mb-[24px]">
 								{t()}
 							</h1>
 						)}
 					</Show>
-					<span class="xl:hidden text-sm">
+					<span class="block -mt-[23px] pl-[2px] text-sm opacity-90 font-xs tracking-wider hover:opacity-1 transition-all [&>a>svg]:w-[12px] ">
 						<EditPageLink />
 					</span>
 					<div class="max-w-prose w-full overflow-y-auto">{props.children}</div>

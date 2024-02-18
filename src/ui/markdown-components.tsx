@@ -66,7 +66,7 @@ export default {
 	h2: (props: ParentProps) => {
 		return (
 			<>
-				<hr class="dark:prose-hr:border-slate-800 border-slate-400 my-8" />
+				<hr class="dark:prose-hr:border-slate-800 border-blue-150 my-8" />
 				<h2
 					{...props}
 					class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
@@ -189,7 +189,7 @@ export default {
 		return (
 			<pre
 				{...props}
-				class="[&>code]:bg-white dark:[&>code]:bg-slate-950 [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal custom-scroll-bar"
+				class="[&>code]:bg-blue-25 bg-blue-25 dark:[&>code]:bg-slate-950 [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal custom-scroll-bar"
 			>
 				{props.children}
 			</pre>

@@ -31,22 +31,22 @@ export const TableOfContents: Component = () => {
 	});
 
 	return (
-		<aside aria-label="table of contents" class="w-full">
-			<span class="font-display text-base font-medium text-slate-900 dark:text-white">
+		<aside aria-label="table of contents" class="w-full pb-[42px]">
+			<span class="font-display text-base text-blue-925 font-medium tracking-[0.3px] dark:text-white">
 				On this page
 			</span>
-			<ol role="list" class="text-sm list-none mt-2 p-0 flex flex-col">
-				<li class="pl-0 mt-0">
+			<ol role="list" class="text-sm list-none mt-2 p-0 flex flex-col ml-[10px]">
+				<li class="pl-0 mt-0 mb-0">
 					<span>
 						<a
 							href={`#_top`}
 							classList={{
 								"dark:text-blue-200 hover:text-blue-700 dark:hover:text-blue-200":
 									currentSection() !== "",
-								"text-blue-800 dark:text-blue-300 font-bold hover:text-slate-700 dark:hover:text-slate-200":
+								"text-blue-700 dark:text-blue-300 font-semibold dark:hover:text-slate-200":
 									currentSection() === "",
 							}}
-							class="no-underline hover:font-bold hover:text-slate-800"
+							class="no-underline hover:font-semibold hover:text-slate-700 tracking-[0.3px] text-blue-350 "
 						>
 							Overview
 						</a>
@@ -54,16 +54,16 @@ export const TableOfContents: Component = () => {
 				</li>
 				<Index each={pageSections.sections}>
 					{(section) => (
-						<li class="pl-0">
-							<span class="mt-2">
+						<li class="pl-0 mb-0 mt-[5px]">
+							<span class="">
 								<a
 									href={`#${section().id}`}
 									classList={{
 										"dark:text-slate-300": currentSection() !== section().id,
-										"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-bold":
+										"text-blue-700 font-semibold dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200":
 											currentSection() === section().id,
 									}}
-									class="no-underline hover:font-bold hover:text-slate-700 dark:hover:text-blue-300"
+									class="no-underline hover:font-semibold hover:text-blue-700 dark:hover:text-blue-300 text-blue-350 tracking-[0.3px]"
 								>
 									{section().text}
 								</a>
@@ -71,20 +71,20 @@ export const TableOfContents: Component = () => {
 							<Show when={section().children.length !== 0}>
 								<ol
 									role="list"
-									class="space-y-2 pl-5 text-slate-500 dark:text-slate-300 list-none active:font-bold hover:text-slate-700 dark:hover:text-blue-200 font-bold active:text-blue-600"
+									class="pl-[10px] text-slate-500 dark:text-slate-300 list-none active:font-semibold hover:text-blue-700 dark:hover:text-blue-200 font-semibold active:text-blue-600 m-0"
 								>
 									<Index each={section().children}>
 										{(subSection) => (
-											<li>
+											<li class="py-0 mb-0">
 												<a
 													href={`#${subSection().id}`}
 													classList={{
 														"dark:text-slate-300":
 															currentSection() !== subSection().id,
-														"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-bold":
+														"text-blue-700 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-semibold":
 															currentSection() === subSection().id,
 													}}
-													class="no-underline hover:font-bold hover:text-blue-700 dark:hover:text-blue-300"
+													class="no-underline hover:font-semibold hover:text-blue-700 dark:hover:text-blue-300 text-blue-350 tracking-[0.3px]"
 												>
 													{subSection().text}
 												</a>

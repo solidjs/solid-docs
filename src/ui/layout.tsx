@@ -25,18 +25,18 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 				<Show when={isRoot()} keyed>
 					<Hero />
 				</Show>
-				<div class="relative mx-auto flex max-w-8xl flex-auto justify-center custom-scrollbar">
+				<div class="relative mx-auto flex max-w-[90rem] flex-auto justify-center custom-scrollbar">
 					<Show when={!props.isError}>
 						<div class="hidden md:relative md:block lg:flex-none ">
 							<div class="absolute inset-y-0 right-0 w-[50vw] dark:hidden" />
 							<div class="absolute bottom-0 right-0 top-16 hidden h-12 w-px bg-gradient-to-t from-slate-800 dark:block" />
 							<div class="absolute bottom-0 right-0 top-28 hidden w-px bg-slate-800 dark:block" />
-							<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] w-64 pl-0.5 pr-2 xl:w-72">
+							<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] w-max-64 pl-0.5 pr-2 xl:w-max-72 xl:w-fit">
 								<MainNavigation />
 							</div>
 						</div>
 					</Show>
-					<main class="w-full md:max-w-2xl flex-auto px-4 pt-20 md:pb-16 lg:max-w-none prose prose-slate dark:prose-invert dark:text-slate-300">
+					<main class="w-full md:max-w-2xl flex-auto md:pb-16 lg:max-w-none prose prose-slate dark:prose-invert dark:text-slate-300">
 						<Show
 							when={!isRoot()}
 							keyed
@@ -52,7 +52,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 						</Show>
 					</main>
 					<div class="hidden xl:block prose prose-slate dark:prose-invert dark:text-slate-300">
-						<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] overflow-y-auto pr-4 w-64 xl:w-72">
+						<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] overflow-y-auto pr-4 w-64 xl:w-max-72 xl:w-max">
 							<SidePanel />
 						</div>
 					</div>

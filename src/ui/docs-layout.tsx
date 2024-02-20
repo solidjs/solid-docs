@@ -86,6 +86,6 @@ export const DocsLayout: ParentComponent = (props) => {
 					<Pagination currentIndex={entryIndex()} collection={collection()} />
 				</article>
 			</div>
-		</div>
+		</>
 	);
 };

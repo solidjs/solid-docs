@@ -11,7 +11,6 @@ import {
 	useContext,
 } from "solid-js";
 import { getRequestEvent, isServer } from "solid-js/web";
-import { parseCookies } from "vinxi/server";
 export interface Theme {
 	name: string;
 	value: string;
@@ -27,16 +26,20 @@ type ThemeContext = {
 	setSelectedTheme: Setter<Theme>;
 	themes: Theme[];
 };
+
+function getCookie(name: string, cookieString: string) {
+	let value = `; ${cookieString}`;
+	let parts = value.split(`; ${name}=`);
+	if (parts.length === 2) return parts.pop()!.split(";").shift();
+}
+
 const ThemeCtx = createContext<ThemeContext>();
 const getUserTheme = () => {
 	if (isServer) {
 		const e = getRequestEvent();
-		return parseCookies(e!).theme;
+		return getCookie("theme", e?.request.headers.get("cookie")!);
 	}
-	return parseCookies({
-		// @ts-ignore
-		node: { req: { headers: { cookie: document.cookie } } },
-	}).theme;
+	return getCookie("theme", document.cookie);
 };
 const getSystemTheme = () =>
 	!isServer && window.matchMedia("(prefers-color-scheme: dark)").matches

@@ -6,7 +6,7 @@ import { type FetchEvent } from "@solidjs/start/server/types";
  * {origin: destination}
  */
 const LEGACY_ROUTES = {
-	
+
 	// api reference
 	"/references/api-reference/basic-reactivity/createEffect": "/reference/basic-reactivity/create-effect",
 	"/references/api-reference/basic-reactivity/createMemo": "/reference/basic-reactivity/create-memo",
@@ -86,12 +86,24 @@ const LEGACY_ROUTES = {
 	"/guides/how-to-guides/styling-in-solid/tailwind-css": "/guides/styling-your-components#tailwindcss",
 	"/guides/how-to-guides/styling-in-solid/css-modules": "/guides/styling-your-components#css-modules",
 	"/guides/how-to-guides/styling-in-solid/unocss": "/guides/styling-your-components#unocss",
-	
+
 	// trailing slash removal
 	"/routing/migration/": "/routing/migration",
 	"/concepts/refs/": "/concepts/refs",
-	"/guides/state-management/": "/guides/state-management"
-	
+	"/guides/state-management/": "/guides/state-management",
+
+	// miscellaneous
+	"/guides/foundations/typescript-for-solid": "/configuration/typescript",
+	"/guides/foundations/understanding-components": "/concepts/components/basics",
+	"/guides/foundations/why-solid": "/#advantages-of-using-solid",
+	"/guides/how-to-guides/routing-in-solid/solid-router": "/routing/installation-and-setup",
+	"/guides/tutorials/getting-started-with-solid/installing-solid": "/quick-start",
+	"/references/concepts/reactivity": "/concepts/intro-to-reactivity",
+	"/references/concepts/reactivity/tracking": "/concepts/intro-to-reactivity#subscribers",
+	"/references/concepts/ssr/async-ssr": "/guides/fetching-data",
+	"/references/concepts/ssr/simple-client-fetching-ssr": "/guides/fetching-data",
+	"/references/concepts/state-management/context": "/guides/complex-state-management#state-sharing"
+
 } as const;
 
 function isLegacyRoute(path: string): path is keyof typeof LEGACY_ROUTES {

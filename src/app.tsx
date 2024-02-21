@@ -17,8 +17,10 @@ export default function App() {
 				const ctx = useThemeContext();
 				return (
 					<div
+						class={ctx.selectedTheme().value}
 						data-theme={ctx.selectedTheme().value}
 					>
+						<div class="dark:bg-slate-900">
 							<Router
 								root={(props) => (
 									<MetaProvider>
@@ -52,6 +54,7 @@ export default function App() {
 							>
 								<FileRoutes />
 							</Router>
+						</div>
 					</div>
 				);
 			})()}

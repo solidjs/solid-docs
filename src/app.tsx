@@ -17,10 +17,8 @@ export default function App() {
 				const ctx = useThemeContext();
 				return (
 					<div
-						class={ctx.selectedTheme().value}
 						data-theme={ctx.selectedTheme().value}
 					>
-						<div class="flex dark:bg-slate-900 bg-blue-100">
 							<Router
 								root={(props) => (
 									<MetaProvider>
@@ -54,7 +52,6 @@ export default function App() {
 							>
 								<FileRoutes />
 							</Router>
-						</div>
 					</div>
 				);
 			})()}

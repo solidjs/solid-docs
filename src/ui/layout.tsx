@@ -15,7 +15,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 	return (
 		<PageStateProvider>
 			<div class="relative">
-				<Alert.Root class="dark:text-slate-900 text-white text-center bg-[#0e8ee7] dark:bg-[#a2deff] p-1 font-semibold border-blue-00  dark:border-blue-600">
+				<Alert.Root class="dark:text-slate-900 text-white text-center p-1 font-semibold border-blue-00  dark:border-blue-600">
 					These docs are currently in Beta!{" "}
 					<a class="underline" href="https://shr.link/pna6n">
 						Share your feedback with us!

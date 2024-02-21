@@ -30,7 +30,6 @@ export const ThemeSelector: Component = () => {
 								}}
 								closeOnSelect={true}
 								onSelect={() => {
-									console.log(theme);
 									setSelectedTheme(theme);
 								}}
 							>

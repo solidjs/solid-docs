@@ -26,6 +26,7 @@ export default function Root() {
 					<Meta charset="utf-8" />
 					<Meta name="viewport" content="width=device-width, initial-scale=1" />
 					<Link rel="shortcut icon" href="/favicon.ico" />
+					<Link rel="alternate icon" href="/favicon.svg" type="image/svg+xml" />
 				</Head>
 				<Body>
 					<Layout>

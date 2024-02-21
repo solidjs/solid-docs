@@ -136,7 +136,7 @@ export default {
 		) {
 			return (
 				<A
-					class="[&>code]:shadow-[0_0_0_1.5px_#2563eb] hover:[&>code]:shadow-[0_0_0_2px_#1e3a8a] dark:[&>code]:shadow-[0_0_0_1.5px_#bae6fd] dark:hover:[&>code]:shadow-[0_0_0_2px_#FFFFFF]"
+					class="[&>code]:shadow-[0_0_0_1.5px_#2563eb] hover:[&>code]:shadow-[0_0_0_2px_#1e3a8a] dark:[&>code]:shadow-[0_0_0_1.5px_#bae6fd] dark:hover:[&>code]:shadow-[0_0_0_2px_#FFFFFF] [&>code]:mx-[2px]"
 					{...extraAttrs}
 					{...rest}
 				>

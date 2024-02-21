@@ -79,7 +79,7 @@ export function Callout(props: CalloutProps) {
 			}`}
 		>
 			<IconComponent class={`h-6 w-8 pt-1 flex-none`} />
-			<div class={`m-0 pb-1 px-4 w-full ${styles[mergedProps.type].title}`}>
+			<div class={`m-0 pb-1 px-4 ${styles[mergedProps.type].title}`} style="width: calc(100% - 2rem);">
 				<Show
 					when={props.title}
 					fallback={

@@ -18,6 +18,7 @@ export default createHandler(() => (
 										content="width=device-width, initial-scale=1"
 									/>
 									<link rel="icon" href="/favicon.ico" />
+									<link rel="alternate icon" href="/favicon.svg" type="image/svg+xml" />
 									{assets}
 								</head>
 								<body>

@@ -79,7 +79,7 @@ export const DocsLayout: ParentComponent = (props) => {
 					<span class="xl:hidden text-sm">
 						<EditPageLink />
 					</span>
-					<div class="max-w-prose w-full overflow-y-auto">{props.children}</div>
+					<div class="max-w-prose w-full">{props.children}</div>
 					<span class="xl:hidden text-sm">
 						<PageIssueLink />
 					</span>

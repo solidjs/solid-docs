@@ -4,7 +4,7 @@ export default createHandler(() => (
 	<StartServer
 		document={({ assets, children, scripts }) => {
 			return (
-				<html lang="en" class="custom-scrollbar">
+				<html lang="en" data-theme="min-light">
 					<head>
 						<meta charset="utf-8" />
 						<meta

@@ -121,6 +121,8 @@ export default {
 		let extraAttrs = {};
 		if (props.href.startsWith("https://") || props.href.startsWith("http://"))
 			extraAttrs = { target: "_blank", rel: "noopener noreferrer" };
+
+		// Check if the link is a code block
 		if (
 			// Server side
 			(isServer &&
@@ -136,7 +138,7 @@ export default {
 		) {
 			return (
 				<A
-					class="[&>code]:shadow-[0_0_0_1.5px_#2563eb] hover:[&>code]:shadow-[0_0_0_2px_#1e3a8a] dark:[&>code]:shadow-[0_0_0_1.5px_#bae6fd] dark:hover:[&>code]:shadow-[0_0_0_2px_#FFFFFF]"
+					class="[&>code]:shadow-[0_0_0_1.5px_#2563eb] hover:[&>code]:shadow-[0_0_0_2px_#1e3a8a] dark:[&>code]:shadow-[0_0_0_1.5px_#38bdf8] dark:hover:[&>code]:shadow-[0_0_0_2px_#7dd3fc]"
 					{...extraAttrs}
 					{...rest}
 				>
@@ -146,9 +148,9 @@ export default {
 		} else {
 			return (
 				<A
-					{...rest}
 					class={`no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,theme(colors.blue.400))] hover:[--tw-prose-underline-size:4px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.blue.500))] dark:hover:[--tw-prose-underline-size:6px] dark:text-blue-300 text-blue-800 font-semibold`}
 					{...extraAttrs}
+					{...rest}
 				>
 					{resolved()}
 				</A>
@@ -189,7 +191,7 @@ export default {
 		return (
 			<pre
 				{...props}
-				class=" [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal custom-scroll-bar"
+				class="[&>code]:bg-white dark:[&>code]:!bg-slate-950 [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal custom-scroll-bar"
 			>
 				{props.children}
 			</pre>
@@ -198,7 +200,7 @@ export default {
 	code: (props: ParentProps) => {
 		return (
 			<code
-				class="inline-block not-prose font-mono font-medium bg-blue-200 dark:bg-blue-700/60 text-slate-900 dark:text-white px-1 py-0.5 rounded-lg text-[0.8em] leading-snug"
+				class="inline-block not-prose !font-mono font-medium bg-blue-200 dark:bg-slate-600/60 text-slate-900 dark:text-white px-1 py-0.5 rounded-lg text-[0.8em] leading-snug"
 				{...props}
 			>
 				{props.children}

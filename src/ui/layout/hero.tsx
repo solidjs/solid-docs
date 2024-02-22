@@ -73,7 +73,7 @@ export const Hero: Component = () => {
 										<div
 											class={`flex overflow-x-auto px-4 min-h-[${
 												snippetLines.length + 5
-											}em] text-white `}
+											}em] text-white custom-scrollbar`}
 										>
 											<Suspense
 												fallback={

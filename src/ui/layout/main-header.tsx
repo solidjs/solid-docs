@@ -28,9 +28,9 @@ export function MainHeader() {
 		<header
 			class="sticky top-0 z-50 flex items-center justify-between bg-blue-50/80 shadow-md shadow-slate-900/5 transition duration-500 dark:shadow-none backdrop-blur"
 			classList={{
-				"dark:bg-slate-900/95 dark:[@supports(backdrop-filter:blur(0))]:bg-slate-900/75":
+				"bg-slate-50/95 dark:bg-slate-900/95 dark:[@supports(backdrop-filter:blur(0))]:bg-slate-900/75":
 					isScrolled(),
-				"dark:bg-transparent bg-transparent": !isScrolled(),
+				"bg-slate-50 dark:bg-slate-900": !isScrolled(),
 			}}
 		>
 			<div class="flex justify-between py-2 px-4 items-center w-full max-w-8xl mx-auto ">

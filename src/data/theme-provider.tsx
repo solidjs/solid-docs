@@ -30,7 +30,7 @@ type ThemeContext = {
 function getCookie(name: string, cookieString: string) {
 	let value = `; ${cookieString}`;
 	let parts = value.split(`; ${name}=`);
-	if (parts.length === 2) return parts.pop()!.split(";").shift();
+	if (parts.length === 2) return parts.pop()!.split(";").shift() || "system";
 }
 
 const ThemeCtx = createContext<ThemeContext>();

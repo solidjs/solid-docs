@@ -2,7 +2,7 @@
 import { A, Router } from "@solidjs/router";
 import { FileRoutes, HttpStatusCode } from "@solidjs/start";
 import { MDXProvider } from "solid-mdx";
-import { ErrorBoundary, Suspense } from "solid-js";
+import { ErrorBoundary, Suspense, createEffect } from "solid-js";
 import { MetaProvider, Title } from "@solidjs/meta";
 
 import Md from "~/ui/markdown-components";
@@ -15,10 +15,13 @@ export default function App() {
 		<ThemeProvider>
 			{(() => {
 				const ctx = useThemeContext();
+
 				return (
 					<div
+						class={ctx.selectedTheme().value}
 						data-theme={ctx.selectedTheme().value}
 					>
+						<div>
 							<Router
 								root={(props) => (
 									<MetaProvider>
@@ -52,6 +55,7 @@ export default function App() {
 							>
 								<FileRoutes />
 							</Router>
+						</div>
 					</div>
 				);
 			})()}

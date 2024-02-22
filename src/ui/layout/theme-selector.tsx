@@ -8,11 +8,8 @@ export const ThemeSelector: Component = () => {
 	const selectedTheme = ctx.selectedTheme;
 	const setSelectedTheme = ctx.setSelectedTheme;
 	return (
-		<DropdownMenu.Root modal={true} gutter={10}>
-			<DropdownMenu.Trigger
-				aria-label="theme"
-				class="flex h-6 w-6 items-center justify-center rounded-lg shadow-md shadow-black/5 ring-1 ring-black/10 dark:bg-slate-800 dark:ring-inset dark:ring-white/60"
-			>
+		<DropdownMenu.Root gutter={10}>
+			<DropdownMenu.Trigger class="flex h-6 w-6 items-center justify-center rounded-lg shadow-md shadow-black/5 ring-1 ring-black/10 dark:bg-slate-800 dark:ring-inset dark:ring-white/60">
 				<Icon
 					class="w-4 h-4 fill-slate-700 dark:fill-slate-200"
 					path={selectedTheme()!.icon}

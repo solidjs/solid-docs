@@ -189,7 +189,7 @@ export default {
 		return (
 			<pre
 				{...props}
-				class="[&>code]:bg-white dark:[&>code]:bg-slate-950 [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal"
+				class=" [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal custom-scroll-bar"
 			>
 				{props.children}
 			</pre>
@@ -198,7 +198,7 @@ export default {
 	code: (props: ParentProps) => {
 		return (
 			<code
-				class="inline-block not-prose font-mono font-medium bg-blue-200 dark:bg-blue-700/60 text-slate-900 dark:text-white px-1.5 py-0.5 rounded-lg text-[0.8em] leading-snug"
+				class="inline-block not-prose font-mono font-medium bg-blue-200 dark:bg-blue-700/60 text-slate-900 dark:text-white px-1 py-0.5 rounded-lg text-[0.8em] leading-snug"
 				{...props}
 			>
 				{props.children}

@@ -35,9 +35,5 @@ export default {
 			},
 		},
 	},
-	plugins: [
-		typography(),
-		kobalte({ prefix: "kb" }),
-		require("tailwind-scrollbar"),
-	],
+	plugins: [typography(), kobalte({ prefix: "kb" })],
 } satisfies Config;

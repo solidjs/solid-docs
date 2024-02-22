@@ -21,7 +21,7 @@ export default function App() {
 						class={ctx.selectedTheme().value}
 						data-theme={ctx.selectedTheme().value}
 					>
-						<div class="dark:bg-slate-900">
+						<div>
 							<Router
 								root={(props) => (
 									<MetaProvider>

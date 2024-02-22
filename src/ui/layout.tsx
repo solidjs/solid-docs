@@ -14,8 +14,8 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 
 	return (
 		<PageStateProvider>
-			<div class="relative">
-				<Alert.Root class="dark:text-slate-900 text-white text-center p-1 font-semibold border-blue-00  dark:border-blue-600 bg-[rgb(14,142,231)] dark:bg-[rgb(162,222,255)]">
+			<div class="relative dark:bg-slate-900 bg-slate-50">
+				<Alert.Root class="dark:text-slate-900 text-white text-center p-1 font-semibold border-blue-50 dark:border-blue-600 bg-[rgb(14,142,231)] dark:bg-[rgb(162,222,255)]">
 					These docs are currently in Beta!{" "}
 					<a class="underline" href="https://shr.link/pna6n">
 						Share your feedback with us!
@@ -41,7 +41,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 							when={!isRoot()}
 							keyed
 							fallback={
-								<article class="px-2 md:px-10 expressive-code-overrides overflow-y-auto custom-scrollbar">
+								<article class="px-2 md:px-10 expressive-code-overrides overflow-y-auto">
 									{props.children}
 								</article>
 							}
@@ -52,7 +52,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 						</Show>
 					</main>
 					<div class="hidden xl:block prose prose-slate dark:prose-invert dark:text-slate-300">
-						<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] overflow-y-auto pr-4 w-64 xl:w-72 custom-scrollbar">
+						<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] overflow-y-auto pr-4 w-64 xl:w-72">
 							<SidePanel />
 						</div>
 					</div>

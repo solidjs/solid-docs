@@ -1,6 +1,5 @@
 import { Component, Index, Show, Suspense, createResource } from "solid-js";
 import { Button } from "../button";
-import { codeToHtml } from "shikiji";
 import { clientOnly } from "@solidjs/start";
 import { counterTxt, snippetLines } from "./hero-code-snippet";
 
@@ -18,7 +17,7 @@ const TrafficLightsIcon: Component<{ class: string }> = (props) => {
 
 export const Hero: Component = () => {
 	return (
-		<div class="overflow-hidden bg-sky-100/80 border border-sky-200  dark:border-none dark:bg-slate-900 mt-[4.75rem] ">
+		<div class="overflow-hidden bg-sky-100/80 border border-sky-200  dark:border-none dark:bg-slate-900 my-[4rem] ">
 			<div class="py-8 sm:px-2 lg:relative">
 				<div class="mx-auto grid max-w-2xl grid-cols-1 items-center gap-x-8 gap-y-16 px-4 lg:max-w-8xl lg:grid-cols-2 lg:px-8 xl:gap-x-16 xl:px-12">
 					<div class="relative md:text-center lg:text-left">
@@ -33,7 +32,10 @@ export const Hero: Component = () => {
 								<Button href="/quick-start" variant="primary">
 									Get started
 								</Button>
-								<Button href="https://discord.com/invite/solidjs" variant="secondary">
+								<Button
+									href="https://discord.com/invite/solidjs"
+									variant="secondary"
+								>
 									Join the community
 								</Button>
 							</div>
@@ -69,7 +71,7 @@ export const Hero: Component = () => {
 											</Index>
 										</div>
 										<div
-											class={`flex overflow-x-auto custom-scrollbar px-4 min-h-[${
+											class={`flex overflow-x-auto px-4 min-h-[${
 												snippetLines.length + 5
 											}em] text-white `}
 										>

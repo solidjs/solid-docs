@@ -28,9 +28,9 @@ type ThemeContext = {
 };
 
 function getCookie(name: string, cookieString: string) {
-	let value = `; ${cookieString}`;
-	let parts = value.split(`; ${name}=`);
-	if (parts.length === 2) return parts.pop()!.split(";").shift() || "system";
+	if (!name || !cookieString) return "system";
+	const match = cookieString.match(new RegExp(`\\W?${name}=(?<theme>\\w+)`));
+	return match?.groups?.theme || "system";
 }
 
 const ThemeCtx = createContext<ThemeContext>();
@@ -69,7 +69,7 @@ export const ThemeProvider = (props: ParentProps) => {
 		setSelectedTheme(themes[2]);
 	});
 	createEffect(() => {
-		document.cookie = `theme=${selectedTheme().value}`;
+		document.cookie = `theme=${selectedTheme().value};path=/`;
 	});
 	return (
 		<ThemeCtx.Provider

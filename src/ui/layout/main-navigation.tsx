@@ -101,7 +101,7 @@ export function MainNavigation() {
 	return (
 		<nav class="overflow-y-auto custom-scrollbar h-full md:h-[calc(100vh-7rem)] pb-20">
 			<Tabs.Root defaultValue={isReference() ? "reference" : "learn"}>
-				<Tabs.List class="sticky top-0 w-full pb-4 z-10 dark:bg-slate-900 bg-blue-50">
+				<Tabs.List class="sticky top-0 w-full pb-4 z-10 dark:bg-slate-900 bg-slate-50">
 					<Tabs.Trigger
 						value="learn"
 						class="inline-block ml-2 px-6 py-2 outline-none hover:bg-blue-500/30 dark:hover:bg-blue-300  dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:dark:text-slate-800 hover:font-bold"

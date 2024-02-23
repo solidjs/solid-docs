@@ -64,14 +64,14 @@ export const DocsLayout: ParentComponent = (props) => {
 				<article class="w-fit overflow-hidden px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none lg:min-w-[730px]">
 					<Show when={titles().parent}>
 						{(t) => (
-							<span class="text-sm font-semibold text-blue-700 dark:text-blue-300 my-1">
+							<span class="text-sm font-semibold text-blue-700 dark:text-blue-300 my-1 tracking-widest">
 								{t()}
 							</span>
 						)}
 					</Show>
 					<Show when={titles().title}>
 						{(t) => (
-							<h1 class="prose-headings:text-3xl text-slate-900 dark:text-white">
+							<h1 class="prose-h1 text-[2.8rem] tracking-wide text-slate-900 dark:text-white">
 								{t()}
 							</h1>
 						)}

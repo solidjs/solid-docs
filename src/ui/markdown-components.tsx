@@ -69,7 +69,7 @@ export default {
 				<hr class="dark:border-slate-800 border-slate-300 my-8 pb-5" />
 				<h2
 					{...props}
-					class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+					class="prose-headings:scroll-mt-28 prose-headings:font-display text-[1.7rem] tracking-wide prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 				>
 					{props.children}
 				</h2>

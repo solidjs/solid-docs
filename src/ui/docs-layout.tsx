@@ -76,7 +76,7 @@ export const DocsLayout: ParentComponent = (props) => {
 							</h1>
 						)}
 					</Show>
-					<span class="xl:hidden text-sm">
+					<span class="xl:hidden text-sm -mt-[30px] block opacity-80 tracking-wide [&>a>svg]:w-[15px]">
 						<EditPageLink />
 					</span>
 					<div class="max-w-prose w-full">{props.children}</div>

@@ -1,3 +1,4 @@
+import { link } from "fs";
 import {
 	Component,
 	Index,
@@ -30,23 +31,30 @@ export const TableOfContents: Component = () => {
 		});
 	});
 
+	const linkClasses = {
+		inactive: 'text-slate-600 dark:text-slate-300/80',
+		active: 'text-blue-700 dark:text-blue-300 font-semibold',
+		default: 'prose-a:no-underline',
+		hover: 'hover:text-blue-700 hover:font-semibold dark:hover:text-slate-200',
+		get(...variantNames: ('inactive' | 'active' | 'default' | 'hover')[]) {
+			return variantNames.map(name => this[name]).join(' ')
+		}
+	}
+
 	return (
-		<aside aria-label="table of contents" class="w-full">
-			<span class="font-display text-base font-medium text-slate-900 dark:text-white">
+		<aside aria-label="table of contents" class={"w-full pt-5 pb-10 " + linkClasses.default}>
+			<span class="font-display text-base font-medium text-slate-900 dark:text-white tracking-wide">
 				On this page
 			</span>
-			<ol role="list" class="text-sm list-none mt-2 p-0 flex flex-col">
-				<li class="pl-0 mt-0">
+			<ol role="list" class="text-sm list-none mt-2 p-0 flex flex-col pl-2.5 tracking-[0.38px]">
+				<li class="pl-0 mt-0 mb-0">
 					<span>
 						<a
 							href={`#_top`}
 							classList={{
-								"dark:text-blue-200 hover:text-blue-700 dark:hover:text-blue-200":
-									currentSection() !== "",
-								"text-blue-800 dark:text-blue-300 font-bold hover:text-slate-700 dark:hover:text-slate-200":
-									currentSection() === "",
+								[linkClasses.get('active')]: currentSection() === "",
+								[linkClasses.get('inactive', 'hover')]: currentSection() !== "",
 							}}
-							class="no-underline hover:font-bold hover:text-slate-800"
 						>
 							Overview
 						</a>
@@ -54,16 +62,14 @@ export const TableOfContents: Component = () => {
 				</li>
 				<Index each={pageSections.sections}>
 					{(section) => (
-						<li class="pl-0">
-							<span class="mt-2">
+						<li class="pl-0 my-1">
+							<span class="mt-0">
 								<a
 									href={`#${section().id}`}
 									classList={{
-										"dark:text-slate-300": currentSection() !== section().id,
-										"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-bold":
-											currentSection() === section().id,
+										[linkClasses.get('active')]: currentSection() === section().id,
+										[linkClasses.get('inactive', 'hover')]: currentSection() !== section().id,
 									}}
-									class="no-underline hover:font-bold hover:text-slate-700 dark:hover:text-blue-300"
 								>
 									{section().text}
 								</a>
@@ -71,7 +77,7 @@ export const TableOfContents: Component = () => {
 							<Show when={section().children.length !== 0}>
 								<ol
 									role="list"
-									class="space-y-2 pl-5 text-slate-500 dark:text-slate-300 list-none active:font-bold hover:text-slate-700 dark:hover:text-blue-200 font-bold active:text-blue-600"
+									class="space-y-1 pl-2.5 my-0 list-none"
 								>
 									<Index each={section().children}>
 										{(subSection) => (
@@ -79,12 +85,9 @@ export const TableOfContents: Component = () => {
 												<a
 													href={`#${subSection().id}`}
 													classList={{
-														"dark:text-slate-300":
-															currentSection() !== subSection().id,
-														"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-bold":
-															currentSection() === subSection().id,
+														[linkClasses.get('active')]: currentSection() === subSection().id,
+														[linkClasses.get('inactive', 'hover')]: currentSection() !== subSection().id,
 													}}
-													class="no-underline hover:font-bold hover:text-blue-700 dark:hover:text-blue-300"
 												>
 													{subSection().text}
 												</a>

@@ -36,7 +36,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 							</div>
 						</div>
 					</Show>
-					<main class="w-full md:max-w-2xl flex-auto px-4 pt-20 md:pb-16 lg:max-w-none prose prose-slate dark:prose-invert dark:text-slate-300">
+					<main class="w-full md:max-w-2xl flex-auto px-4 pt-2 md:pb-16 lg:max-w-none prose prose-slate dark:prose-invert dark:text-slate-300">
 						<Show
 							when={!isRoot()}
 							keyed

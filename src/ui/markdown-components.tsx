@@ -66,7 +66,7 @@ export default {
 	h2: (props: ParentProps) => {
 		return (
 			<>
-				<hr class="dark:prose-hr:border-slate-800 border-slate-400 my-8" />
+				<hr class="dark:border-slate-800 border-slate-300 my-8 pb-5" />
 				<h2
 					{...props}
 					class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
@@ -213,7 +213,7 @@ export default {
 	td: (props: ParentProps) => <td>{props.children}</td>,
 	tr: (props: ParentProps) => <tr>{props.children}</tr>,
 	hr: (props: ParentProps) => {
-		return <hr {...props} class="dark:prose-hr:border-slate-900" />;
+		return <hr {...props} class="dark:border-slate-800 border-slate-300" />;
 	},
 	response: (props: ParentProps) => {
 		return <span>{props.children}</span>;

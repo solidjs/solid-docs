@@ -32,7 +32,7 @@ export const TableOfContents: Component = () => {
 	});
 
 	const linkClasses = {
-		inactive: 'text-slate-600 dark:text-slate-300/80',
+		inactive: 'text-slate-600 dark:text-slate-300',
 		active: 'text-blue-700 dark:text-blue-300 font-semibold',
 		default: 'prose-a:no-underline',
 		hover: 'hover:text-blue-700 hover:font-semibold dark:hover:text-slate-200',

@@ -66,7 +66,7 @@ function DirList(props: { list: Entry[] }) {
 														<Collapsible.Content class="navigation_collapsible">
 															<ul
 																role="list"
-																class="ml-4 mt-2 space-y-2 border-l-[1px] border-slate-300 dark:border-slate-700 lg:mt-4 lg:space-y-3 dark:lg:border-slate-700 text-base lg:text-sm"
+																class="ml-4 mt-2 space-y-2 border-l-[1px] border-slate-300 dark:border-slate-700 lg:mt-3.5 lg:space-y-3 dark:lg:border-slate-700 text-base lg:text-sm"
 															>
 																<DirList list={child.children} />
 															</ul>
@@ -114,7 +114,7 @@ export function MainNavigation() {
 					>
 						Reference
 					</Tabs.Trigger>
-					<Tabs.Indicator class="absolute bottom-0 bg-blue-500 dark:bg-blue-500 transition-all duration-250 h-[2px]" />
+					<Tabs.Indicator class="absolute bottom-0 bg-blue-500 dark:bg-blue-300 transition-all duration-250 h-[2px]" />
 				</Tabs.List>
 				<Tabs.Content value="learn" class="w-full relative mt-8 text-base prose-a:tracking-[0.2px]">
 					<Show when={learn()} fallback={<p>No routes found...</p>}>

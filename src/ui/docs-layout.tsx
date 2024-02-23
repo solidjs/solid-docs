@@ -60,8 +60,8 @@ export const DocsLayout: ParentComponent = (props) => {
 	return (
 		<>
 			<Title>{`${titles().title} - SolidDocs`}</Title>
-			<div id="rr" class="flex relative">
-				<article class="w-fit overflow-hidden px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none lg:min-w-[730px]">
+			<div id="rr" class="flex relative justify-center">
+				<article class="w-fit overflow-hidden px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none lg:min-w-[65ch]">
 					<Show when={titles().parent}>
 						{(t) => (
 							<span class="text-sm font-semibold text-blue-700 dark:text-blue-300 my-1 tracking-widest">

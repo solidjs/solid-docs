@@ -7,8 +7,12 @@ import { A } from "~/ui/i18n-anchor";
  * we can probably move this to a data folder or something like that
  */
 export const logos = {
-	tailwind: { file: "tailwind.svg" },
-	aws: { file: "aws.svg" },
+	cloudflare: { file: "cloudflare-pages.svg" },
+	firebase: { file: "firebase.svg" },
+	flightControl: { file: "flightcontrol.svg" },
+	netlify: { file: "netlify.svg" },
+	railway: { file: "railway.svg" },
+	vercel: { file: "vercel.svg" },
 };
 
 export type ImageLinksProps = {
@@ -34,11 +38,14 @@ export const ImageLinks: ParentComponent<ImageLinksProps> = (props) => {
 							decoding="async"
 						/>
 					</div>
-					<div class="text-lg pt-1 text-slate-900 dark:text-white capitalize no-underline ">
+					<div class="text-lg pt-1 text-slate-900 dark:text-white no-underline ">
 						<Show
 							when={props.href.match(/https?:\/\//)}
 							fallback={
-								<A href={props.href} class="no-underline font-semibold">
+								<A
+									href={props.href}
+									class="no-underline text-center font-semibold bg-gradient-to-br from-blue-400 to-blue-700 inline-block text-transparent bg-clip-text"
+								>
 									<span class="absolute -inset-px rounded-xl" />
 									{props.title}
 								</A>
@@ -46,7 +53,7 @@ export const ImageLinks: ParentComponent<ImageLinksProps> = (props) => {
 						>
 							<a
 								href={props.href}
-								class="no-underline font-semibold bg-gradient-to-br from-blue-400 to-blue-700 inline-block text-transparent bg-clip-text"
+								class="no-underline text-center font-semibold bg-gradient-to-br from-blue-400 to-blue-700 inline-block text-transparent bg-clip-text"
 							>
 								<span class="absolute -inset-px rounded-xl" />
 								{props.title}

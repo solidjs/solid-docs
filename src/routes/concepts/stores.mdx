@@ -14,6 +14,8 @@ Using JavaScript's [proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScri
 With stores, you can now target nested properties and elements within these structures to create a dynamic tree of reactive data.
 
 ```jsx
+import { createStore } from "solid-js/store"
+
 // Initialize store
 const [store, setStore] = createStore({
 	userCount: 3,
@@ -40,7 +42,7 @@ const [store, setStore] = createStore({
 })
 ```
 
-## Accessing values
+## Accessing store values
 
 Store properties can be accessed directly from the state proxy through directly referencing the targeted property:
 
@@ -87,14 +89,75 @@ const App = () => {
 }
 ```
 
+When you create a store, it contains the initial state, but _no signals_ are immediately created to track changes to that state.
+These signals are created lazily, meaning they come into existence only when you access the data within a reactive context.
+
+When you use this data within a reactive context, such as in a template, computed property, or effect, that is when the signals are created and dependencies are established.
+
+For example, if you wanted to you wanted to print out every new user, adding the 
+line below won't work because it is not within a tracked scope.
+
+
+```tsx ins={9}
+const App = () => {
+	const [store, setStore] = createStore({
+		userCount: 3,
+		users: [ ... ],
+	})
+
+	const addUser = () => { ... }
+
+	console.log(store.users.at(-1)) // This won't work
+
+	return (
+		<div>
+			<h1>Hello, {store.users[0].username}</h1>
+			<p>User count: {store.userCount}</p>
+      <button onClick={addUser}>Add user</button>
+		</div>
+	)
+}
+```
+
+Rather, you would have to add this in a tracking scope, such as within a [`createEffect`](/reference/basic-reactivity/create-effect) so that a dependency is established.
+
+```tsx del={9} ins={10-12}
+const App = () => {
+	const [store, setStore] = createStore({
+		userCount: 3,
+		users: [ ... ],
+	})
+
+	const addUser = () => { ... }
+
+	console.log(store.users.at(-1))
+	createEffect(() => {
+		console.log(store.users.at(-1))
+	})
+
+	return (
+		<div>
+			<h1>Hello, {store.users[0].username}</h1>
+			<p>User count: {store.userCount}</p>
+      <button onClick={addUser}>Add user</button>
+		</div>
+	)
+}
+```
+
 ## Modifying store values
 
 Updating values within a store is best accomplished using a setter provided by the `createStore` initialization.
 This setter allows for the modification of a specific key and its associated value, following the format `setStore(key, newValue)`:
 
-```jsx
-setStore("users", (otherUsers) => [
-	...otherUsers,
+```jsx "setStore"
+const [store, setStore] = createStore({
+	userCount: 3,
+	users: [ ... ],
+})
+
+setStore("users", (currentUsers) => [
+	...currentUsers,
 	{
 		id: 3,
 		username: "michael584",
@@ -104,26 +167,37 @@ setStore("users", (otherUsers) => [
 ])
 ```
 
-    <Callout>
-      Separating read and write capabilities to a store presents a valuable debugging advantage.
+We could also set update the value of `userCount` whenever a new user is added.
 
-It facilitates the tracking and control of which components can access or change store values.
+```tsx ins={11}
+const App = () => {
+	const [store, setStore] = createStore({
+		userCount: 3,
+		users: [ ... ],
+	})
 
-</Callout>
+	const addUser = () => { ... }
 
-When you create a store, it contains the initial state, but _no signals_ are immediately created to track changes to that state.
-These signals are created lazily, meaning they come into existence only when you access the data within a reactive context.
+	createEffect(() => {
+		console.log(store.users.at(-1))
+		setStore("userCount", store.users.length)
+	})
 
-When you use this data within a reactive context, such as in a template or a computed property, that is when the signals are created and dependencies are established.
-
-For example, if you wanted to you wanted to update `store.userCount` with every new user, simply writing `setStore("userCount", store.userCount.length)` would not work.
-Rather, you would have to add this in a tracking scope, such as within a [`createEffect`](/reference/basic-reactivity/create-effect) so that a dependency is established.
-
-```jsx
-createEffect(() => {
-	setStore("usercount", store.userCount.length)
-})
+	return (
+		<div>
+			<h1>Hello, {store.users[0].username}</h1>
+			<p>User count: {store.userCount}</p>
+      <button onClick={addUser}>Add user</button>
+		</div>
+	)
+}
 ```
+
+<Callout>
+  Separating read and write capabilities to a store presents a valuable debugging advantage.
+
+	It facilitates the tracking and control of which components can access or change store values.
+</Callout>
 
 ## Path syntax flexibilty
 

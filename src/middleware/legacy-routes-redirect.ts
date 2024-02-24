@@ -72,12 +72,12 @@ const LEGACY_ROUTES = {
 
 	// deployment
 	"/guides/how-to-guides/deployment": "/guides/deploying-your-app",
-	"/guides/how-to-guides/deployment/deploying-to-cloudflare": "/guides/deploying-your-app#cloudflare",
-	"/guides/how-to-guides/deployment/deploying-to-firebase": "/guides/deploying-your-app#firebase",
-	"/guides/how-to-guides/deployment/deploying-to-flightcontrol": "/guides/deploying-your-app#aws-via-flightcontrol",
-	"/guides/how-to-guides/deployment/deploying-to-netlify": "/guides/deploying-your-app#netlify",
-	"/guides/how-to-guides/deployment/deploying-to-railway": "/guides/deploying-your-app#railway",
-	"/guides/how-to-guides/deployment/deploying-to-vercel": "/guides/deploying-your-app#vercel",
+	"/guides/how-to-guides/deployment/deploying-to-cloudflare": "/guides/deployment-options/cloudflare",
+	"/guides/how-to-guides/deployment/deploying-to-firebase": "/guides/deployment-options/firebase",
+	"/guides/how-to-guides/deployment/deploying-to-flightcontrol": "/guides/deployment-options/aws-via-flightcontrol",
+	"/guides/how-to-guides/deployment/deploying-to-netlify": "/guides/deployment-options/netlify",
+	"/guides/how-to-guides/deployment/deploying-to-railway": "/guides/deployment-options/railway",
+	"/guides/how-to-guides/deployment/deploying-to-vercel": "/guides/deployment-options/vercel",
 
 	// styling
 	"/guides/how-to-guides/styling-in-solid": "/guides/styling-your-components",

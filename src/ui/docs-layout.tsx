@@ -16,7 +16,7 @@ export const DocsLayout: ParentComponent = (props) => {
 	const paths = () => location.pathname.split("/").reverse();
 	const isReference = useMatch(() => "/reference/*");
 	const collection = () =>
-		Boolean(isReference()) ? flatEntries.references : flatEntries.learn;
+		Boolean(isReference()) ? flatEntries.reference : flatEntries.learn;
 	const entryIndex = () =>
 		collection().findIndex((element) => paths()[0] === element.slug);
 	const titles = () => {

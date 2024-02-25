@@ -5,7 +5,10 @@ import fs from "fs";
 
 const generateLinkArray = (routes) => {
 	return routes.reduce((acc, route) => {
-		return [...acc, { url: route, priority: route == "/" ? 1 : 0.7, changefreq: "weekly" }];
+		return [
+			...acc,
+			{ url: route, priority: route == "/" ? 1 : 0.7, changefreq: "weekly" },
+		];
 	}, []);
 };
 

@@ -34,7 +34,11 @@ export const QuickLinks: ParentComponent<QuickLinksProps> = (props) => {
 						<Show
 							when={props.href.match(/https?:\/\//)}
 							fallback={
-								<A href={props.href} class="no-underline font-semibold">
+								<A
+									href={props.href}
+									class="no-underline font-semibold"
+									addLocale
+								>
 									<span class="absolute -inset-px rounded-xl" />
 									{props.title}
 								</A>
@@ -43,6 +47,7 @@ export const QuickLinks: ParentComponent<QuickLinksProps> = (props) => {
 							<a
 								href={props.href}
 								target="_blank"
+								rel="noopener noreferrer"
 								class="no-underline font-semibold bg-gradient-to-br from-blue-400 to-blue-700 inline-block text-transparent bg-clip-text"
 							>
 								<span class="absolute -inset-px rounded-xl" />

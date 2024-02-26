@@ -1,5 +1,5 @@
 import { Component, Index, Show, Suspense, createResource } from "solid-js";
-import { Button } from "../button";
+import { ButtonLink } from "../button-link";
 import { clientOnly } from "@solidjs/start";
 import { counterTxt, snippetLines } from "./hero-code-snippet";
 
@@ -29,15 +29,15 @@ export const Hero: Component = () => {
 								SolidJS is a modern JavaScript framework for today's web.
 							</p>
 							<div class="mt-8 flex gap-4 md:justify-center lg:justify-start">
-								<Button href="/quick-start" variant="primary">
+								<ButtonLink href="/quick-start" variant="primary">
 									Get started
-								</Button>
-								<Button
+								</ButtonLink>
+								<ButtonLink
 									href="https://discord.com/invite/solidjs"
 									variant="secondary"
 								>
 									Join the community
-								</Button>
+								</ButtonLink>
 							</div>
 						</div>
 					</div>

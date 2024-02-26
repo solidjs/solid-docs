@@ -1,31 +1,23 @@
-import { useNavigate } from "@solidjs/router";
+import { type AnchorProps } from "@solidjs/router";
+import { A } from "./i18n-anchor";
 
-type ButtonProps = {
+type ButtonLinkProps = AnchorProps & {
 	variant: "primary" | "secondary";
-	externalLink?: boolean;
-	href: string;
-	children: string;
 };
 
-export const Button = (props: ButtonProps) => {
-	const navigate = useNavigate();
+export const ButtonLink = (props: ButtonLinkProps) => {
+	const target = () => (props.href.startsWith("http") ? "_blank" : undefined);
 	return (
-		<button
+		<A
 			classList={{
 				"rounded-full bg-blue-300 py-2 px-4 text-sm font-semibold text-slate-900 hover:bg-blue-200 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300/50 active:bg-blue-500":
 					props.variant === "primary",
 				"rounded-full bg-slate-800 py-2 px-4 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50 active:text-slate-300":
 					props.variant === "secondary",
 			}}
-			onClick={() => {
-				if (props.href.match(/https?:\/\//)) {
-					window.open(props.href, "_blank");
-				} else {
-					navigate(props.href);
-				}
-			}}
-		>
-			{props.children}
-		</button>
+			target={target()}
+			rel={target() === "_blank" ? "noopener noreferrer" : undefined}
+			{...props}
+		/>
 	);
 };

@@ -4,15 +4,30 @@ import {
 	type AnchorProps,
 } from "@solidjs/router";
 import { Show } from "solid-js";
-import { getLocaleFromPathname, isValidLocale } from "~/i18n/helpers";
+import {
+	getLocaleFromPathname,
+	getValidLocaleFromPathname,
+	isValidLocale,
+} from "~/i18n/helpers";
 
-export function A(props: AnchorProps) {
+type RouterLinkProps = AnchorProps & {
+	addLocale?: boolean;
+};
+
+export function A(props: RouterLinkProps) {
 	const { pathname } = useLocation();
-	const locale = () => getLocaleFromPathname(pathname);
+	const locale = () => getValidLocaleFromPathname(pathname);
 
 	return (
-		<Show when={isValidLocale(locale())} fallback={<RouterAnchor {...props} />}>
-			<RouterAnchor {...props} hreflang={locale()} rel="alternate" />
+		<Show when={locale()} fallback={<RouterAnchor {...props} />}>
+			{(loc) => (
+				<RouterAnchor
+					{...props}
+					href={props.addLocale ? `${loc()}/${props.href}` : props.href}
+					hreflang={loc()}
+					rel="alternate"
+				/>
+			)}
 		</Show>
 	);
 }

@@ -1,0 +1,30 @@
+export default {
+	// main navigation
+	"main.nav.tab.learn": "Learn",
+	"main.nav.tab.reference": "Reference",
+	"main.nav.section.concepts": "Concepts",
+	"main.nav.section.components": "Components",
+	"main.nav.section.control.flow": "Control Flow",
+	"main.nav.section.derived.values": "Derived Values",
+	"main.nav.section.routing": "Routing",
+	"main.nav.section.advanced.concepts": "Advanced Concepts",
+	"main.nav.section.guides": "Guides",
+	"main.nav.section.configuration": "Configuration",
+	"main.nav.section.basic.reactivity": "Basic Reactivity",
+	"main.nav.section.component.apis": "Component APIs",
+	"main.nav.section.jsx.attributes": "JSX Attributes",
+	"main.nav.section.lifecycle": "Lifecycle",
+	"main.nav.section.reactive.utilities": "Reactive Utilities",
+	"main.nav.section.rendering": "Rendering",
+	"main.nav.section.secondary.primitives": "Secondary Primitives",
+	"main.nav.section.stores": "Stores",
+	"main.nav.section.solid.router": "Solid-Router",
+	"main.nav.section.solid.router.components": "Components",
+	"main.nav.section.solid.router.data.apis": "Data APIs",
+	"main.nav.section.solid.router.load.functions": "Load Functions",
+	"main.nav.section.solid.router.primitives": "Primitives",
+	"main.nav.no.routes": "No routes found",
+
+	// 404
+	"missing.translation": "This section has not yet been translated.",
+} as const;

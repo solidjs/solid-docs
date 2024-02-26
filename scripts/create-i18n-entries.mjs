@@ -65,5 +65,8 @@ export async function createI18nEntries(defaultEntries, locale) {
 		buildSectionList(defaultEntries.reference, locale),
 	]);
 
-	return referenceLearn.flat();
+	return {
+		learn: referenceLearn[0],
+		reference: referenceLearn[1],
+	};
 }

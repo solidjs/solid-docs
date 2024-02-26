@@ -10,10 +10,7 @@ import { languages } from "../index.mjs";
 function formatDirPath(path) {
 	for (const lang of languages) {
 		if (path.includes(lang)) {
-			console.log(lang, path, path.includes(lang));
-			const newpath = path.replace("/" + lang, "");
-			console.log("new path", newpath);
-			return newpath;
+			return path.replace("/" + lang, "");
 		}
 	}
 

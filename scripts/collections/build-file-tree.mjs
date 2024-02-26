@@ -53,6 +53,7 @@ export async function buildFileTree(entry = COLLECTIONS_ROOT) {
 				parent: parentSection.title,
 				title,
 				mainNavExclude,
+				isTranslated: true,
 			};
 		} else {
 			console.error(`WARNING: \n ${entry} was not found.\n Please fix it!\n`);

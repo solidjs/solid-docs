@@ -72,6 +72,7 @@ export async function createI18nTree(entryList, locale) {
 					...entry,
 					isTranslated: true,
 					title,
+					path: `/${locale}${entry.path}`,
 				});
 			} else {
 				entries.push({

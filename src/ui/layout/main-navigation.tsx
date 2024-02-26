@@ -1,14 +1,7 @@
 // @refresh reload
 
-import { createAsync, useMatch } from "@solidjs/router";
-import {
-	For,
-	Show,
-	Suspense,
-	createEffect,
-	createResource,
-	lazy,
-} from "solid-js";
+import { useMatch } from "@solidjs/router";
+import { For, Show, Suspense, createResource } from "solid-js";
 import { useLocation } from "@solidjs/router";
 import { Collapsible, Tabs } from "@kobalte/core";
 import englishNav from "solid:collection/tree";
@@ -16,12 +9,20 @@ import { Icon } from "solid-heroicons";
 import { chevronDown } from "solid-heroicons/solid";
 import { setIsOpen } from "./mobile-navigation";
 import { A } from "~/ui/i18n-anchor";
+import { SUPPORTED_LOCALES } from "~/i18n/config";
+import { createTranslator } from "~/i18n/translator";
+import {
+	getLocaleFromPathname,
+	getValidLocaleFromPathname,
+	isValidLocale,
+} from "~/i18n/helpers";
 
 type Entry = {
 	title: string;
 	path: string;
 	children?: Entry[];
 	mainNavExclude: boolean;
+	isTranslated?: boolean;
 };
 
 function ListItemLink(props: { item: Entry }) {
@@ -39,6 +40,16 @@ function ListItemLink(props: { item: Entry }) {
 				class={`block w-full lg:text-sm pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full ${linkStyles()}`}
 			>
 				{props.item.title}
+				<Show when={!props.item.isTranslated}>
+					<span>
+						<abbr
+							title="english"
+							class="text-[0.7em] relative -top-2 left-2 no-underline  text-neutral-400 "
+						>
+							EN
+						</abbr>
+					</span>
+				</Show>
 			</A>
 		</li>
 	);
@@ -64,7 +75,7 @@ function DirList(props: { list: Entry[] }) {
 											<>
 												<li>
 													<Collapsible.Root defaultOpen={true}>
-														<Collapsible.Trigger class="relative flex justify-between hover:cursor-pointer w-full pl-3.5 dark:text-slate-300 dark:text-slate-300 lg:text-sm group">
+														<Collapsible.Trigger class="relative flex justify-between hover:cursor-pointer w-full pl-3.5 dark:text-slate-300 lg:text-sm group">
 															<span class="font-display font-semibold dark:text-slate-100 lg:text-sm">
 																{child.title}
 															</span>
@@ -104,18 +115,19 @@ export function MainNavigation() {
 	const { pathname } = useLocation();
 
 	const [entries] = createResource(
-		() => pathname,
-		async (pathname) => {
+		() => getLocaleFromPathname(pathname),
+		async (locale) => {
 			"use server";
-			const locale = pathname.split("/")[1];
 
-			if (["pt-br"].some((lang) => lang === locale)) {
+			if (SUPPORTED_LOCALES.some((lang) => lang === locale)) {
 				return (await import(`../../../.solid/tree-${locale}.ts`)).default;
 			}
 
 			return englishNav;
 		}
 	);
+
+	const translate = createTranslator(getValidLocaleFromPathname(pathname));
 
 	const learn = () => entries()?.learn;
 	const reference = () => entries()?.reference;
@@ -124,43 +136,60 @@ export function MainNavigation() {
 
 	return (
 		<Suspense>
-			<nav class="overflow-y-auto custom-scrollbar h-full md:h-[calc(100vh-7rem)] pb-20">
-				<Tabs.Root defaultValue={isReference() ? "reference" : "learn"}>
-					<Tabs.List class="sticky top-0 flex w-full pb-4 pr-4 z-10 md:dark:bg-slate-900 md:bg-slate-50">
-						<Tabs.Trigger
-							value="learn"
-							class="inline-block flex-1 ml-2 px-6 py-2 outline-none hover:bg-blue-500/30 dark:hover:bg-blue-300/20  dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:font-bold"
-						>
-							Learn
-						</Tabs.Trigger>
-						<Tabs.Trigger
-							value="reference"
-							class="inline-block flex-1 px-6 py-2 hover:bg-blue-500/30 dark:hover:bg-blue-300/20  dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:font-bold"
-						>
-							Reference
-						</Tabs.Trigger>
-						<Tabs.Indicator class="absolute bottom-4 bg-blue-500 dark:bg-blue-500 transition-all duration-250 h-[2px]" />
-					</Tabs.List>
-					<Tabs.Content value="learn" class="w-full relative mt-8 text-base">
-						<Show when={learn()} fallback={<p>No routes found...</p>}>
-							{(learnList) => (
-								<ul role="list" class="space-y-6 px-4">
-									<DirList list={learnList()} />
-								</ul>
-							)}
-						</Show>
-					</Tabs.Content>
-					<Tabs.Content value="reference" class="w-full relative top-8">
-						<Show when={reference()} fallback={<p>No routes found...</p>}>
-							{(referenceList) => (
-								<ul role="list" class="space-y-6 px-4">
-									<DirList list={referenceList()} />
-								</ul>
-							)}
-						</Show>
-					</Tabs.Content>
-				</Tabs.Root>
-			</nav>
+			<Show when={translate}>
+				{(t) => (
+					<>
+						<nav class="overflow-y-auto custom-scrollbar h-full md:h-[calc(100vh-7rem)] pb-20">
+							<Tabs.Root defaultValue={isReference() ? "reference" : "learn"}>
+								<Tabs.List class="sticky top-0 flex w-full pb-4 pr-4 z-10 md:dark:bg-slate-900 md:bg-slate-50">
+									<Tabs.Trigger
+										value="learn"
+										class="inline-block flex-1 ml-2 px-6 py-2 outline-none hover:bg-blue-500/30 dark:hover:bg-blue-300/20  dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:font-bold"
+									>
+										{t()("main.nav.tab.learn")}
+									</Tabs.Trigger>
+									<Tabs.Trigger
+										value="reference"
+										class="inline-block flex-1 px-6 py-2 hover:bg-blue-500/30 dark:hover:bg-blue-300/20  dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:font-bold"
+									>
+										{t()("main.nav.tab.reference")}
+									</Tabs.Trigger>
+									<Tabs.Indicator class="absolute bottom-4 bg-blue-500 dark:bg-blue-500 transition-all duration-250 h-[2px]" />
+								</Tabs.List>
+								<Tabs.Content
+									value="learn"
+									class="w-full relative mt-8 text-base"
+								>
+									<Show
+										when={learn()}
+										fallback={
+											<p class="text-white">{t()("main.nav.no.routes")}</p>
+										}
+									>
+										{(learnList) => (
+											<ul role="list" class="space-y-6 px-4">
+												<DirList list={learnList()} />
+											</ul>
+										)}
+									</Show>
+								</Tabs.Content>
+								<Tabs.Content value="reference" class="w-full relative top-8">
+									<Show
+										when={reference()}
+										fallback={<p>{t()("main.nav.no.routes")}</p>}
+									>
+										{(referenceList) => (
+											<ul role="list" class="space-y-6 px-4">
+												<DirList list={referenceList()} />
+											</ul>
+										)}
+									</Show>
+								</Tabs.Content>
+							</Tabs.Root>
+						</nav>
+					</>
+				)}
+			</Show>
 		</Suspense>
 	);
 }

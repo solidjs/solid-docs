@@ -13,7 +13,7 @@ const generateLinkArray = (routes) => {
 };
 
 (async () => {
-	const referencesRoutes = entries.references.map(({ path }) => path);
+	const referencesRoutes = entries.reference.map(({ path }) => path);
 	const learnRoutes = entries.learn.map(({ path }) => path);
 	const links = [
 		...generateLinkArray(learnRoutes),

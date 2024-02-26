@@ -1,6 +1,6 @@
 // @refresh reload
 
-import { useMatch } from "@solidjs/router";
+import { AnchorProps, useMatch } from "@solidjs/router";
 import { For, Show, Suspense, createResource } from "solid-js";
 import { useLocation } from "@solidjs/router";
 import { Collapsible, Tabs } from "@kobalte/core";
@@ -16,6 +16,7 @@ import {
 	getValidLocaleFromPathname,
 	isValidLocale,
 } from "~/i18n/helpers";
+import { Dynamic } from "solid-js/web";
 
 type Entry = {
 	title: string;
@@ -24,6 +25,10 @@ type Entry = {
 	mainNavExclude: boolean;
 	isTranslated?: boolean;
 };
+
+// passing to the Dynamic component
+// to prevent stale show issue
+const HtmlAnchor = (props: any) => <a {...props} />;
 
 function ListItemLink(props: { item: Entry }) {
 	if (props.item.mainNavExclude) return null;
@@ -34,7 +39,8 @@ function ListItemLink(props: { item: Entry }) {
 			: "text-slate-500 before:hidden before:bg-blue-600 before:dark:bg-blue-200 hover:text-blue-500 hover:font-bold hover:before:block dark:text-slate-300 ";
 	return (
 		<li class="relative">
-			<A
+			<Dynamic
+				component={props.item.isTranslated ? A : HtmlAnchor}
 				onClick={() => setIsOpen(false)}
 				href={props.item.path}
 				class={`block w-full lg:text-sm pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full ${linkStyles()}`}
@@ -50,7 +56,7 @@ function ListItemLink(props: { item: Entry }) {
 						</abbr>
 					</span>
 				</Show>
-			</A>
+			</Dynamic>
 		</li>
 	);
 }

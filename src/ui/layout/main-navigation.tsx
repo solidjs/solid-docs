@@ -176,7 +176,6 @@ export function MainNavigation() {
 									when={reference()}
 									fallback={<p>{translate("main.nav.no.routes")}</p>}
 								>
-									\{" "}
 									<ul role="list" class="space-y-6 px-4">
 										<DirList list={reference()} />
 									</ul>

@@ -6,7 +6,7 @@ import {
 	createResource,
 	Suspense,
 } from "solid-js";
-import { useLocation } from "@solidjs/router";
+import { useLocation, useMatch } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import flatEntries from "solid:collection/entries";
 import { Pagination } from "~/ui/pagination";
@@ -20,6 +20,7 @@ export const [trackHeading, setTrackHeading] = createSignal("");
 export const DocsLayout: ParentComponent = (props) => {
 	const location = useLocation();
 	const { setPageSections, pageSections } = usePageState();
+	const isReference = useMatch(() => "/reference/*");
 
 	const [entries] = createResource(
 		() => location.pathname,
@@ -31,30 +32,29 @@ export const DocsLayout: ParentComponent = (props) => {
 				const i18n = (await import(`../../.solid/flat-entries-${locale}.ts`))
 					.default as typeof flatEntries;
 
-				return maybeReference === "reference" ? i18n.reference : i18n.learn;
+				return i18n;
 			} else {
-				return maybeReference === "reference"
-					? flatEntries.reference
-					: flatEntries.learn;
+				return flatEntries;
 			}
 		}
 	);
 
 	const paths = () => location.pathname.split("/").reverse();
+	const collection = () =>
+		isReference() ? entries()?.reference : entries()?.learn;
 
 	createEffect(() => {
-		if (entries()) {
-			entries()!.findIndex((element) => paths()[0] === element.slug);
+		if (collection()) {
+			collection()!.findIndex((element) => paths()[0] === element.slug);
 		}
 	});
 
 	const entryIndex = () =>
-		entries()!.findIndex((element) => paths()[0] === element.slug);
+		collection()!.findIndex((element) => paths()[0] === element.slug);
 
 	const titles = () => {
-		const collection = entries();
 		const fullEntry = collection
-			? collection[entryIndex()]
+			? collection()![entryIndex()]
 			: { parent: undefined, title: undefined };
 		if (fullEntry) {
 			return {
@@ -96,7 +96,7 @@ export const DocsLayout: ParentComponent = (props) => {
 
 	return (
 		<Suspense>
-			<Show when={entries()}>
+			<Show when={entries()} keyed>
 				<Show when={titles()?.title} fallback={<Title>SolidDocs</Title>}>
 					{(title) => <Title>{`${title()} - SolidDocs`}</Title>}
 				</Show>

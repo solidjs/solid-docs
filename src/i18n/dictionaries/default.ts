@@ -1,4 +1,10 @@
 export default {
+	// hero
+	"hero.title": "Effortless UIs with Reactive Precision.",
+	"hero.subtitle": "SolidJS is a modern JavaScript framework for today's web.",
+	"hero.button.primary": "Get started",
+	"hero.button.secondary": "Join the community",
+
 	// main navigation
 	"main.nav.tab.learn": "Learn",
 	"main.nav.tab.reference": "Reference",

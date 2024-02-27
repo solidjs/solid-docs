@@ -123,7 +123,7 @@ export const DocsLayout: ParentComponent = (props) => {
 						<span class="xl:hidden text-sm">
 							<PageIssueLink />
 						</span>
-						<Pagination currentIndex={entryIndex()} collection={entries()} />
+						<Pagination currentIndex={entryIndex()} collection={collection()} />
 					</article>
 				</div>
 			</Show>

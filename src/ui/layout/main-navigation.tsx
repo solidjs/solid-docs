@@ -14,7 +14,6 @@ import { createTranslator } from "~/i18n/translator";
 import {
 	getLocaleFromPathname,
 	getValidLocaleFromPathname,
-	isValidLocale,
 } from "~/i18n/helpers";
 import { Dynamic } from "solid-js/web";
 
@@ -26,10 +25,6 @@ type Entry = {
 	isTranslated?: boolean;
 };
 
-// passing to the Dynamic component
-// to prevent stale show issue
-const HtmlAnchor = (props: any) => <a {...props} />;
-
 function ListItemLink(props: { item: Entry }) {
 	if (props.item.mainNavExclude) return null;
 	const location = useLocation();
@@ -40,7 +35,7 @@ function ListItemLink(props: { item: Entry }) {
 	return (
 		<li class="relative">
 			<Dynamic
-				component={props.item.isTranslated ? A : HtmlAnchor}
+				component={props.item.isTranslated ? A : "a"}
 				onClick={() => setIsOpen(false)}
 				href={props.item.path}
 				class={`block w-full lg:text-sm pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full ${linkStyles()}`}

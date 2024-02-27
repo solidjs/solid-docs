@@ -19,12 +19,12 @@ export function A(props: RouterLinkProps) {
 	const locale = () => getValidLocaleFromPathname(pathname);
 
 	return (
-		<Show when={locale()} fallback={<RouterAnchor {...props} />}>
+		<Show when={locale()} fallback={<RouterAnchor {...props} />} keyed>
 			{(loc) => (
 				<RouterAnchor
 					{...props}
-					href={props.addLocale ? `${loc()}/${props.href}` : props.href}
-					hreflang={loc()}
+					href={props.addLocale ? `${loc}/${props.href}` : props.href}
+					hreflang={loc}
 					rel="alternate"
 				/>
 			)}

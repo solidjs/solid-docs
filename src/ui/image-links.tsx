@@ -13,6 +13,12 @@ export const logos = {
 	netlify: { file: "netlify.svg" },
 	railway: { file: "railway.svg" },
 	vercel: { file: "vercel.svg" },
+	sass: { file: "sass.svg" },
+	less: { file: "less.svg" },
+	cssmodules: { file: "css-modules.svg" },
+	macaron: { file: "macaron.svg" },
+	tailwind: { file: "tailwind.svg" },
+	uno: { file: "uno.svg" },
 };
 
 export type ImageLinksProps = {

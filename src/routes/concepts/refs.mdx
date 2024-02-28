@@ -16,40 +16,58 @@ As elements with the same selectors are added and removed from the DOM, the firs
 
 ## JSX as a value
 
-When wanting to directly access the DOM element, you can use JSX as a value and assign it to a variable.
+JSX can be used as a value and assigned to a variable when looking to directly access DOM elements.
 
-```jsx
+```tsx
 function Component() {
-	const myElement = <div>My Element</div>
+	const myElement = <p>My Element</p>
 
 	return <div>{myElement}</div>
 }
 ```
 
-This can be a convenient way to access the DOM element.
-It lets you access the element directly without having to wait until it is attached to the DOM, and it can be used multiple times without having to worry about duplicate selectors.
+This lets you create and access DOM elements similar to [`document.createElement`](https://developer.mozilla.org/en-US/docs/Web/API/Document/createElement) but without having to wait until it is attached to the DOM. 
+It can be used multiple times without having to worry about duplicate selectors.
 
-The downside to this approach is it separates the element and any child elements that are created from it from the rest of the DOM.
-This removes the ability to access the element directly from the variable, and reading through components that use JSX as a value can be more difficult to understand.
+The downside to this approach is it separates the element and any child elements from the rest of the JSX structure. 
+This makes the component's JSX structure more difficult to read and understand.
 
 ## Refs in Solid
 
-Solid provides a ref system that allows you to access the DOM element directly without having to wait until it is attached to the DOM.
-These assignments occur at _creation time_ prior to the element being added to the DOM.
-This provides access directly to the elements for manipulation, such as animations and event handling.
+Solid provides a ref system to access DOM elements directly inside the JSX template, which keeps the structure of the elements intact.
 
-To use `ref`, you declare a variable and use it as the `ref` attribute:
+To use [`ref`](/reference/jsx-attributes/ref), you declare a variable and use it as the `ref` attribute:
 
 ```tsx
-let myElement
-;<div ref={myElement}>My Element</div>
+function Component() {
+	let myElement;
+
+	return (
+		<div>
+			<p ref={myElement}>My Element</p>
+		</div>
+	)
+}
+```
+
+These assignments occur at _creation time_ prior to the element being added to the DOM.
+If access to an element is needed before it is added to the DOM, you can use the callback form of `ref`:
+
+```jsx
+<p ref={el => {
+	// el is created but not yet added to the DOM
+	myElement = el
+}}>My Element</p>
 ```
 
 <Callout>
-	In TypeScript, you must use a definitive assignment assertion. Since Solid
-	takes care of assigning the variable when the component is rendered, this
-	signals to TypeScript that the variable will be assigned, even if it can't
-	confirm it. ```tsx let myElement!: HTMLDivElement; ```
+	In TypeScript, you must use a definitive assignment assertion. 
+	Since Solid takes care of assigning the variable when the component is rendered, this signals to TypeScript that the variable will be assigned, even if it can't
+	confirm it. 
+	
+```tsx
+let myElement!: HTMLDivElement; 
+```
 </Callout>
 
 ### Signals as refs
@@ -60,14 +78,14 @@ This is useful when you want to access the element directly, but the element may
 ```jsx
 function App() {
 	const [show, setShow] = createSignal(false)
-	const [element] = createSignal()
+	const [element, setElement] = createSignal()
 
 	return (
 		<div>
 			<button onClick={() => setShow((isShown) => !isShown)}>Toggle</button>
 
 			<Show when={show()}>
-				<p ref={element()}>This is the ref element</p>
+				<p ref={setElement}>This is the ref element</p>
 			</Show>
 		</div>
 	)
@@ -78,10 +96,7 @@ In this example, the paragraph element is only rendered when the `show` signal i
 When the component initializes, the paragraph element does not exist, so the `element` variable is not assigned.
 Once the `show` signal is set to `true`, the paragraph element is rendered, and the `element` variable is assigned to the paragraph element.
 
-If you would like to see a detailed example of how refs are created and used, you can view an intera
-
-visit this [Solid playground example](https://playground.solidjs.com/anonymous/22a1abfa-a0f5-44a6-bbe6-40387cf63b95).
-In this example, you can see when the `element` variable is assigned, and when it is removed.
+You can see a detailed view of the ref update lifecycle in this [Solid playground example](https://playground.solidjs.com/anonymous/22a1abfa-a0f5-44a6-bbe6-40387cf63b95).
 
 ## Forwarding refs
 

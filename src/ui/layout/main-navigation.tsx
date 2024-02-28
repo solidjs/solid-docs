@@ -101,20 +101,20 @@ export function MainNavigation() {
 	return (
 		<nav class="overflow-y-auto custom-scrollbar h-full md:h-[calc(100vh-7rem)] pb-20">
 			<Tabs.Root defaultValue={isReference() ? "reference" : "learn"}>
-				<Tabs.List class="sticky top-0 w-full pb-4 z-10 dark:bg-slate-900 bg-blue-50">
+				<Tabs.List class="sticky top-0 flex w-full pb-4 pr-4 z-10 md:dark:bg-slate-900 md:bg-slate-50">
 					<Tabs.Trigger
 						value="learn"
-						class="inline-block ml-2 px-6 py-2 outline-none hover:bg-blue-500/30 dark:hover:bg-blue-300  dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:dark:text-slate-800 hover:font-bold"
+						class="inline-block flex-1 ml-2 px-6 py-2 outline-none hover:bg-blue-500/30 dark:hover:bg-blue-300/20  dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:font-bold"
 					>
 						Learn
 					</Tabs.Trigger>
 					<Tabs.Trigger
 						value="reference"
-						class="inline-block px-6 py-2 hover:bg-blue-500/30 dark:hover:bg-blue-300  dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:dark:text-slate-800 hover:font-bold"
+						class="inline-block flex-1 px-6 py-2 hover:bg-blue-500/30 dark:hover:bg-blue-300/20  dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:font-bold"
 					>
 						Reference
 					</Tabs.Trigger>
-					<Tabs.Indicator class="absolute bg-blue-500 dark:bg-blue-500 transition-all duration-250 h-[2px]" />
+					<Tabs.Indicator class="absolute bottom-4 bg-blue-500 dark:bg-blue-500 transition-all duration-250 h-[2px]" />
 				</Tabs.List>
 				<Tabs.Content value="learn" class="w-full relative mt-8 text-base">
 					<Show when={learn()} fallback={<p>No routes found...</p>}>

@@ -148,9 +148,10 @@ Here is a [Solid Playground example](https://playground.solidjs.com/anonymous/b0
 When you want to calculate new state values based on existing state values, you can use derived state.
 This is a useful pattern when you want to display a transformation of a state value to the user, but do not want to modify the original state value or create a new state value.
 
-Derived values can be created through using a signal within a function, which can be referred to as a [derived signal](/concepts/derived-values/derived-signals).
+Derived values can be created using a signal within a function, which can be referred to as a [derived signal](/concepts/derived-values/derived-signals).
 
-We can use this approach to simplify the `doubleCount` example above so we don't have to create a signal or effect:
+This approach can be used to simplify the `doubleCount` example above.
+The additional signal and the effect can be replaced with a derived signal:
 
 ```jsx del={5, 11-13} ins={15}
 import { createSignal } from "solid-js"
@@ -179,9 +180,11 @@ function Counter() {
 }
 ```
 
-This approach works great for a simple use case like this, but what if `doubleCount` needs to be used several times in our component? And what if the calculation was more computationally expensive? 
+This approach works great for a simple use case like this, but what if `doubleCount` is used several times in our component? 
+And what if the calculation is more computationally expensive? 
 
-A derived signal could lead to performance issues as it would be re-evaluated for each use of `doubleCount`.
+A derived signal could lead to performance issues. 
+It would be re-evaluated not just for each time `count` is changed, but also for each use of `doubleCount`.
 
 ```jsx del={10} ins={11-14, 20-21}
 import { createSignal } from "solid-js"
@@ -217,10 +220,10 @@ doubleCount called
 doubleCount called
 ```
 
-For cases like this, we can use [Memos](/concepts/derived-values/memos) to save the value of `doubleCount` (also referred to as memoized or cached value). 
-This way it is only recalculated **1 time** when the value of `count` changes and can be reused throughout the component without re-evaluating.
+For cases like this, we can use [Memos](/concepts/derived-values/memos) to store the value of `doubleCount` (also referred to as a memoized or cached value). 
+This way it is only recalculated **1 time** when the value of `count` changes and can be accessed many times throughout the component without re-evaluating for each additional use.
 
-In Solid we have the [`createMemo`](/reference/basic-reactivity/create-memo) function:
+In Solid we have the [`createMemo`](/reference/basic-reactivity/create-memo) function to create a memo of a function:
 
 ```jsx ins={15-18, 26-28} ins=", createMemo"
 import { createSignal, createMemo } from "solid-js"

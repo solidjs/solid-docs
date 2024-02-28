@@ -3,8 +3,8 @@ title: "Portal"
 order: 3
 ---
 
-When an element requires rendering outside of the usual document flow, challenges related to stacking contents and z-index can present.
-`<Portal>` helps this by rendering elements outside of the usual document flow so they are rendered correctly and interactively.
+When an element requires rendering outside of the usual document flow, challenges related to stacking contents and z-index can interfere with the desired intention or look of an application.
+`<Portal>` helps with this by putting elements in a different place in the document, bringing an element into the document flow so they can render as expected.
 
 ```jsx
 import { Portal } from "solid-js/web"
@@ -14,8 +14,7 @@ import { Portal } from "solid-js/web"
 </Portal>
 ```
 
-The content nested within `<Portal>` is positioned at a designated location when shown.
-By default, these elements are rendered at the end of the document body, to make sure they are not bound by the styling or layout restrictions of the parent component.
+The content nested within `<Portal>` is rendered and positioned by default at the end of the document body.
 
 <EraserLink
 	href="https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=IEPk0uiH2OC365hkpKf3wA"
@@ -28,11 +27,38 @@ The `mount` prop accepts a function that returns a [DOM node](https://developer.
 ```jsx
 import { Portal } from "solid-js/web"
 
-<Portal mount={document.querySelector("#popup-container")}>
+<Portal mount={document.querySelector("main")}>
 	<div class="popup">...</div>
 </Portal>
 ```
 
+
 Using `<Portal>` can be particularly useful in cases where elements, like information popups, might be clipped or obscured due to the overflow settings of their parent elements.
 By putting the element outside of the parent element, it is no longer bound by the overflow settings of its parent.
 This creates a more accessible experience for users, as the content is no longer obscured.
+
+
+<Callout>
+  `<Portal>` will render wrapped unless specifically targeting `document.head`.
+
+  This is so events propagate through the Portal according to the component hierarchy instead of the elements hierarchy.
+
+By default, children will wrap in a `<div>`. If you portal into an SVG, then the `isSVG` prop must be used to avoid wrapping the children in a `<div>` and wrap in a `<g>` instead.
+
+```jsx
+import { Portal } from "solid-js/web"
+
+function Rect() {
+  return (
+    <Portal mount={document.querySelector("svg")} isSVG={true}>
+      <rect fill="red" x="25" y="25" height="50" width="50" />
+    </Portal>
+  );
+}
+
+function SVG() {
+  return <svg xmlns="http://www.w3.org/2000/svg" />;
+}
+```
+</Callout>
+

@@ -1,14 +1,15 @@
-import { type AnchorProps } from "@solidjs/router";
-import { A } from "./i18n-anchor";
+import { Dynamic } from "solid-js/web";
+import { A, type RouterLinkProps } from "./i18n-anchor";
 
-type ButtonLinkProps = AnchorProps & {
+type ButtonLinkProps = RouterLinkProps & {
 	variant: "primary" | "secondary";
 };
 
 export const ButtonLink = (props: ButtonLinkProps) => {
 	const target = () => (props.href.startsWith("http") ? "_blank" : undefined);
 	return (
-		<A
+		<Dynamic
+			component={Boolean(target()) ? A : "a"}
 			classList={{
 				"rounded-full bg-blue-300 py-2 px-4 text-sm font-semibold text-slate-900 hover:bg-blue-200 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300/50 active:bg-blue-500":
 					props.variant === "primary",

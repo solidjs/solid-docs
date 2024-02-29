@@ -10,7 +10,7 @@ import {
 	isValidLocale,
 } from "~/i18n/helpers";
 
-type RouterLinkProps = AnchorProps & {
+export type RouterLinkProps = AnchorProps & {
 	addLocale?: boolean;
 };
 

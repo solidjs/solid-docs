@@ -35,7 +35,7 @@ export const Hero: Component = () => {
 								{t("hero.subtitle")}
 							</p>
 							<div class="mt-8 flex gap-4 md:justify-center lg:justify-start">
-								<ButtonLink href="/quick-start" variant="primary">
+								<ButtonLink href="/quick-start" variant="primary" addLocale>
 									{t("hero.button.primary")}
 								</ButtonLink>
 								<ButtonLink

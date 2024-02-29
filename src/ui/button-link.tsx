@@ -9,7 +9,8 @@ export const ButtonLink = (props: ButtonLinkProps) => {
 	const target = () => (props.href.startsWith("http") ? "_blank" : undefined);
 	return (
 		<Dynamic
-			component={Boolean(target()) ? A : "a"}
+			addLocale
+			component={Boolean(target()) ? "a" : A}
 			classList={{
 				"rounded-full bg-blue-300 py-2 px-4 text-sm font-semibold text-slate-900 hover:bg-blue-200 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300/50 active:bg-blue-500":
 					props.variant === "primary",

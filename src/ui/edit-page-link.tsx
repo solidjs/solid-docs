@@ -2,11 +2,19 @@ import { Component, createMemo } from "solid-js";
 import { Icon } from "solid-heroicons";
 import { pencilSquare } from "solid-heroicons/solid";
 import { useLocation } from "@solidjs/router";
+import { getValidLocaleFromPathname } from "~/i18n/helpers";
 
 export const EditPageLink: Component = () => {
-	const location = useLocation();
+	const { pathname } = useLocation();
+
 	const path = createMemo(() => {
-		return location.pathname !== "/" ? location.pathname : "/index";
+		const locale = getValidLocaleFromPathname(pathname);
+
+		if (locale) {
+			return pathname.endsWith(locale) ? `${pathname}/index` : pathname;
+		} else {
+			return pathname !== "/" ? pathname : "/index";
+		}
 	});
 	return (
 		<a

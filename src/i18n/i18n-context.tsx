@@ -28,7 +28,6 @@ export function I18nProvider(props: ProviderProps) {
 
 export function useI18n() {
 	const context = useContext(I18nContext);
-	console.log(context);
 	if (!context) {
 		throw new Error("useI18n: must be used inside <I18nProvider />");
 	}

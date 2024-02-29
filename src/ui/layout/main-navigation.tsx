@@ -10,12 +10,12 @@ import { chevronDown } from "solid-heroicons/solid";
 import { setIsOpen } from "./mobile-navigation";
 import { A } from "~/ui/i18n-anchor";
 import { SUPPORTED_LOCALES } from "~/i18n/config";
-import { createTranslator } from "~/i18n/translator";
 import {
 	getLocaleFromPathname,
 	getValidLocaleFromPathname,
 } from "~/i18n/helpers";
 import { Dynamic } from "solid-js/web";
+import { useI18n } from "~/i18n/i18n-context";
 
 type Entry = {
 	title: string;
@@ -128,7 +128,7 @@ export function MainNavigation() {
 		}
 	);
 
-	const translate = createTranslator(getValidLocaleFromPathname(pathname));
+	const i18n = useI18n();
 
 	const learn = () => entries()?.learn;
 	const reference = () => entries()?.reference;
@@ -137,7 +137,7 @@ export function MainNavigation() {
 
 	return (
 		<Suspense>
-			<Show when={translate}>
+			<Show when={i18n.t}>
 				<>
 					<nav class="overflow-y-auto custom-scrollbar h-full md:h-[calc(100vh-7rem)] pb-20">
 						<Tabs.Root defaultValue={isReference() ? "reference" : "learn"}>
@@ -146,13 +146,13 @@ export function MainNavigation() {
 									value="learn"
 									class="inline-block flex-1 ml-2 px-6 py-2 outline-none hover:bg-blue-500/30 dark:hover:bg-blue-300/20  dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:font-bold"
 								>
-									{translate("main.nav.tab.learn")}
+									{i18n.t("main.nav.tab.learn")}
 								</Tabs.Trigger>
 								<Tabs.Trigger
 									value="reference"
 									class="inline-block flex-1 px-6 py-2 hover:bg-blue-500/30 dark:hover:bg-blue-300/20  dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:font-bold"
 								>
-									{translate("main.nav.tab.reference")}
+									{i18n.t("main.nav.tab.reference")}
 								</Tabs.Trigger>
 								<Tabs.Indicator class="absolute bottom-4 bg-blue-500 dark:bg-blue-500 transition-all duration-250 h-[2px]" />
 							</Tabs.List>
@@ -163,7 +163,7 @@ export function MainNavigation() {
 								<Show
 									when={learn()}
 									fallback={
-										<p class="text-white">{translate("main.nav.no.routes")}</p>
+										<p class="text-white">{i18n.t("main.nav.no.routes")}</p>
 									}
 								>
 									<ul role="list" class="space-y-6 px-4">
@@ -174,7 +174,7 @@ export function MainNavigation() {
 							<Tabs.Content value="reference" class="w-full relative top-8">
 								<Show
 									when={reference()}
-									fallback={<p>{translate("main.nav.no.routes")}</p>}
+									fallback={<p>{i18n.t("main.nav.no.routes")}</p>}
 								>
 									<ul role="list" class="space-y-6 px-4">
 										<DirList list={reference()} />

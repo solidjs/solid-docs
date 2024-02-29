@@ -18,3 +18,13 @@ export function getValidLocaleFromPathname(pathname: string) {
 
 	return isValidLocale(locale) ? locale : null;
 }
+
+export function getEntryFileName(pathname: string) {
+	const locale = getValidLocaleFromPathname(pathname);
+
+	if (locale) {
+		return pathname.endsWith(locale) ? `${pathname}/index` : pathname;
+	} else {
+		return pathname !== "/" ? pathname : "/index";
+	}
+}

@@ -1,11 +1,7 @@
-import { useLocation } from "@solidjs/router";
-import { getValidLocaleFromPathname } from "~/i18n/helpers";
-import { createTranslator } from "~/i18n/translator";
+import { useI18n } from "~/i18n/i18n-context";
 
 export default function NoEntry() {
-	const { pathname } = useLocation();
-	const locale = getValidLocaleFromPathname(pathname);
-	const t = createTranslator(locale);
+	const i18n = useI18n();
 
-	return <p>{t("missing.translation")}</p>;
+	return <p>{i18n.t("missing.translation")}</p>;
 }

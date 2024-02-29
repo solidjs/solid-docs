@@ -12,6 +12,11 @@ export default {
 	"main.nav.section.concepts": "Conceitos",
 	"main.nav.section.components": "Componentes",
 
+	// ToC
+	"contribute.title": "Contribua",
+	"contribute.edit": "Edite este artigo.",
+	"contribute.report": "Reporte um erro neste artigo.",
+
 	// 404
 	"missing.translation": "Esta seção ainda não foi traduzida.",
 } as const;

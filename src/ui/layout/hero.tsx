@@ -2,9 +2,9 @@ import { Component, Index, Show, Suspense, createResource } from "solid-js";
 import { ButtonLink } from "../button-link";
 import { clientOnly } from "@solidjs/start";
 import { counterTxt, snippetLines } from "./hero-code-snippet";
-import { createTranslator } from "~/i18n/translator";
 import { useLocation } from "@solidjs/router";
 import { getValidLocaleFromPathname } from "~/i18n/helpers";
+import { useI18n } from "~/i18n/i18n-context";
 
 const RenderedCode = clientOnly(() => import("./hero-code-snippet"));
 
@@ -19,9 +19,7 @@ const TrafficLightsIcon: Component<{ class: string }> = (props) => {
 };
 
 export const Hero: Component = () => {
-	const locale = getValidLocaleFromPathname(useLocation().pathname);
-	const t = createTranslator(locale);
-
+	const i18n = useI18n();
 	return (
 		<div class="overflow-hidden bg-sky-100/80 border border-sky-200  dark:border-none dark:bg-slate-900 my-[4rem] ">
 			<div class="py-8 sm:px-2 lg:relative">
@@ -29,20 +27,20 @@ export const Hero: Component = () => {
 					<div class="relative md:text-center lg:text-left">
 						<div class="relative">
 							<h2 class="inline bg-gradient-to-r dark:from-indigo-200 dark:via-blue-400 dark:to-indigo-200 from-blue-700 via-slate-800 to-blue-700 bg-clip-text font-display text-5xl tracking-tight text-transparent">
-								{t("hero.title")}
+								{i18n.t("hero.title")}
 							</h2>
 							<p class="mt-3 text-2xl tracking-tight dark:text-slate-300">
-								{t("hero.subtitle")}
+								{i18n.t("hero.subtitle")}
 							</p>
 							<div class="mt-8 flex gap-4 md:justify-center lg:justify-start">
 								<ButtonLink href="/quick-start" variant="primary" addLocale>
-									{t("hero.button.primary")}
+									{i18n.t("hero.button.primary")}
 								</ButtonLink>
 								<ButtonLink
 									href="https://discord.com/invite/solidjs"
 									variant="secondary"
 								>
-									{t("hero.button.secondary")}
+									{i18n.t("hero.button.secondary")}
 								</ButtonLink>
 							</div>
 						</div>

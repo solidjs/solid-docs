@@ -31,6 +31,11 @@ export default {
 	"main.nav.section.solid.router.primitives": "Primitives",
 	"main.nav.no.routes": "No routes found",
 
+	// ToC
+	"contribute.title": "Contribute",
+	"contribute.edit": "Edit this page.",
+	"contribute.report": "Report an issue with this page.",
+
 	// 404
 	"missing.translation": "This section has not yet been translated.",
 } as const;

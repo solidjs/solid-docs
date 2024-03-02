@@ -13,6 +13,8 @@ export default {
 	"main.nav.section.components": "Componentes",
 
 	// ToC
+	"toc.this.page": "Nesta página",
+	"toc.overview": "Sumário",
 	"contribute.title": "Contribua",
 	"contribute.edit": "Edite este artigo.",
 	"contribute.report": "Reporte um erro neste artigo.",

@@ -32,6 +32,8 @@ export default {
 	"main.nav.no.routes": "No routes found",
 
 	// ToC
+	"toc.this.page": "On this page.",
+	"toc.overview": "Overview",
 	"contribute.title": "Contribute",
 	"contribute.edit": "Edit this page.",
 	"contribute.report": "Report an issue with this page.",

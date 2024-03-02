@@ -26,7 +26,7 @@ export const DocsLayout: ParentComponent = (props) => {
 		() => location.pathname,
 		async (pathname) => {
 			"use server";
-			const [, locale, maybeReference] = pathname.split("/");
+			const [, locale] = pathname.split("/");
 
 			if (SUPPORTED_LOCALES.some((lang) => lang === locale)) {
 				const i18n = (await import(`../../.solid/flat-entries-${locale}.ts`))
@@ -43,11 +43,11 @@ export const DocsLayout: ParentComponent = (props) => {
 	const collection = () =>
 		isReference() ? entries()?.reference : entries()?.learn;
 
-	createEffect(() => {
-		if (collection()) {
-			collection()!.findIndex((element) => paths()[0] === element.slug);
-		}
-	});
+	// createEffect(() => {
+	// 	if (collection()) {
+	// 		collection()!.findIndex((element) => paths()[0] === element.slug);
+	// 	}
+	// });
 
 	const entryIndex = () =>
 		collection()!.findIndex((element) => paths()[0] === element.slug);

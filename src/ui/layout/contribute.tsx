@@ -12,7 +12,7 @@ export const Contribute: Component = () => {
 				{i18n.t("contribute.title")}
 			</span>
 			<ol role="list" class="text-sm list-none p-0 mt-2 flex flex-col">
-				<li>
+				<li class="pl-0">
 					<EditPageLink />
 				</li>
 				<li class="pl-0">

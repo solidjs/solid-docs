@@ -28,3 +28,5 @@ export function getEntryFileName(pathname: string) {
 		return pathname !== "/" ? pathname : "/index";
 	}
 }
+
+export const isExternalURL = (url: string) => /^https?:\/\//.test(url);

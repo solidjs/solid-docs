@@ -10,7 +10,10 @@ export const EditPageLink: Component = () => {
 	const { pathname } = useLocation();
 
 	const srcPath = createMemo(() => {
-		return `https://github.com/solidjs/solid-docs-next/edit/main/src/routes${getEntryFileName(pathname)}.mdx`;
+		return `https://github.com/solidjs/solid-docs-next/edit/main/src/routes${getEntryFileName(pathname)}.mdx`.replace(
+			"/.mdx",
+			"/index.mdx"
+		);
 	});
 	return (
 		<a

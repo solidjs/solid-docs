@@ -95,20 +95,13 @@ If you need to attach an event listener to an element that is not supported by S
 
 While delegated events provide some performance enhancements, there are tradeoffs.
 
-<Callout type="info" title="Design">
 
-    Event delegation is designed for event propagation through the JSX Tree, rather than the DOM Tree.
-
-</Callout>
-
-This differs from the acquired expectations one may have over how events work and flow.
-
-Here is a list of peculiarities to keep in mind:
-
-1. Delegated event listeners are added to the `document` once per event type.
-   When the element/component that added it is removed, it's handler function will no longer be called, but the delegated event listener will still be present on the `document`.
-   Considering the following example, a `div` listening for `mousemove`.
-   `mousemove` will still be dispatched to the `document` even if the `div` is disposed.
+Event delegation is designed for event propagation through the JSX Tree, rather than the DOM Tree.
+This can differ from the previous expectations of how events work and flow.
+Some things to keep in mind include:
+ - Delegated event listeners remain active even if the element that added them is removed. 
+For example, if a `div` listens for `mousemove` and is later removed, the `mousemove` events will still be dispatched to the `document`. 
+Delegated event listeners are added _once_ per event type and handle all events of that type. Once setup, the delegated event listener will call the handlers attached to any existing elements, but the listener itself will persist even if all elements with that handler type are removed.
 
 ```tsx
 <div onMouseMove={handleCustomEvent} />

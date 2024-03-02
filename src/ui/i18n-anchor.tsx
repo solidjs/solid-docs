@@ -3,7 +3,7 @@ import {
 	useLocation,
 	type AnchorProps,
 } from "@solidjs/router";
-import { Show, splitProps } from "solid-js";
+import { Match, Switch, splitProps } from "solid-js";
 import { getValidLocaleFromPathname, isExternalURL } from "~/i18n/helpers";
 
 export type RouterLinkProps = AnchorProps & {
@@ -18,25 +18,24 @@ export function A(props: RouterLinkProps) {
 	const [_, rest] = splitProps(props, ["addLocale"]);
 
 	return (
-		<Show
-			when={!external() && locale()}
-			fallback={
+		<Switch fallback={<RouterAnchor {...rest} />}>
+			<Match when={!external() && locale()} keyed>
+				{(loc) => (
+					<RouterAnchor
+						{...rest}
+						href={
+							props.addLocale
+								? `/${loc}${props.href}`.replace(/\/$/, "")
+								: props.href.replace(/\/$/, "")
+						}
+						hreflang={loc}
+						rel="alternate"
+					/>
+				)}
+			</Match>
+			<Match when={external()} keyed>
 				<RouterAnchor target="_blank" rel="noopener noreferrer" {...rest} />
-			}
-			keyed
-		>
-			{(loc) => (
-				<RouterAnchor
-					{...rest}
-					href={
-						props.addLocale
-							? `/${loc}${props.href}`.replace(/\/$/, "")
-							: props.href.replace(/\/$/, "")
-					}
-					hreflang={loc}
-					rel="alternate"
-				/>
-			)}
-		</Show>
+			</Match>
+		</Switch>
 	);
 }

@@ -114,6 +114,6 @@ export const handleLegacyRoutes = (event: FetchEvent) => {
 	const { pathname } = new URL(event.request.url);
 
 	if (isLegacyRoute(pathname)) {
-		return redirect(LEGACY_ROUTES[pathname], 308);
+		return redirect(LEGACY_ROUTES[pathname], 301);
 	}
 };

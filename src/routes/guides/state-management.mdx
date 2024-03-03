@@ -141,7 +141,7 @@ Here, a side-effect refers to operations or updates that affect state outside of
 In the `Counter` component, a `createEffect` function can be used to update the `doubleCount` state whenever the `count` state changes.
 This keeps the `doubleCount` state in sync with the `count` state, and allows the UI to display the doubled value of `count` to the user.
 
-Here is a [Solid Playground example](https://playground.solidjs.com/anonymous/b05dddaa-e62a-4c56-b745-5704f3a40194) to see the example in action.
+View this example of [`doubleCount` in a `createEffect` in the Solid Playground example](https://playground.solidjs.com/anonymous/b05dddaa-e62a-4c56-b745-5704f3a40194).
 
 ## Derived state
 
@@ -180,11 +180,9 @@ function Counter() {
 }
 ```
 
-This approach works great for a simple use case like this, but what if `doubleCount` is used several times in our component? 
-And what if the calculation is more computationally expensive? 
+While this approach works for simple use cases, if `doubleCount` is used several times within a component or contains a computationally expensive calculation, it can lead to performance issues.
 
-A derived signal could lead to performance issues. 
-It would be re-evaluated not just for each time `count` is changed, but also for each use of `doubleCount`.
+The derived signal would be re-evaluated not just each time `count` is changed, but also for each use of `doubleCount()`.
 
 ```jsx del={10} ins={11-14, 20-21}
 import { createSignal } from "solid-js"
@@ -220,10 +218,10 @@ doubleCount called
 doubleCount called
 ```
 
-For cases like this, we can use [Memos](/concepts/derived-values/memos) to store the value of `doubleCount` (also referred to as a memoized or cached value). 
-This way it is only recalculated **1 time** when the value of `count` changes and can be accessed many times throughout the component without re-evaluating for each additional use.
+For cases like this, you can use [Memos](/concepts/derived-values/memos) to store the value of `doubleCount`, which is also referred to as a memoized or cached value. 
+When using a memo, the calculation will only run **once** when the value of `count` changes and can be accessed multiple times without re-evaluating for each additional use.
 
-In Solid we have the [`createMemo`](/reference/basic-reactivity/create-memo) function to create a memo of a function:
+Using the [`createMemo`](/reference/basic-reactivity/create-memo) function, you can create a memoized value:
 
 ```jsx ins={15-18, 26-28} ins=", createMemo"
 import { createSignal, createMemo } from "solid-js"
@@ -267,9 +265,10 @@ doubleCount called
 doubleCount called
 ```
 
-The `doubleCountMemo` function is only called once even though it is accessed the same number of times as `doubleCount`.
+While accessed multiple times, the `doubleCountMemo` will only re-evaluate and log once.
+This is different from the derived signal, `doubleCount`, which is re-evaluated for each time it is accessed.
 
-Here is a [Solid Playground example](https://playground.solidjs.com/anonymous/288736aa-d5ba-45f7-a01f-1ac3dcb1b479) similar to the above example.
+View a similar [example comparing a derived signal and a memo in the Solid Playground](https://playground.solidjs.com/anonymous/288736aa-d5ba-45f7-a01f-1ac3dcb1b479).
 
 ## Lifting state
 

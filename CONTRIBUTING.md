@@ -127,13 +127,31 @@ Every pull request needs to be reviewed by our contributors and approved by a ma
 
 ### Translating
 
+Though it is not a hard requirement, we'd deeply appreciate if you could recommend a native speaker to review your newly added translations. This ensures translations can also adhere to our review-based system for Pull Requests.
+
 #### Adding support to a new language
 
-> Coming soon.
+1. Create a dictionary file in `src/i18n/dictionaries`. The name should follow our locale convention.
+
+   - language (ISO 639-1 - set 1): https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
+
+- country code (ISO 3166-1 alpha-2): https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+
+- E.g.: Canadian French would be: `fr-ca`
+
+2. Add it to the barrel file: `src/i18n/dictionaries/index.ts`. So it will be identified by the routing system.
+
+3. Add the important UI translations.
+
+> [!TIP]
+> To save time, you can use chatGPT to translate the the `default.ts` dictionary to the language and adjust based on context.
 
 #### Adding translations to a supported language
 
-> Coming soon.
+To translate a new entry to an existing language, go to `src/routes/{locale}` and add the entry following the exact same structure as the default.
+
+> [!NOTE]  
+> We can't accept half translated entries because there is not a way of tracking if an entry is not fully translated. Please, make sure you have the time to do the whole entry in your PR.
 
 ### Open a PR
 

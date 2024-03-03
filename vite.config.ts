@@ -60,8 +60,9 @@ export default defineConfig({
 		middleware: "src/middleware/index.ts",
 		server: {
 			preset: "netlify",
+			routeRules: {},
 		},
-		extensions: ["mdx", "md"],
+		extensions: ["mdx", "md", "tsx"],
 	},
 	plugins: [
 		docsTree(),

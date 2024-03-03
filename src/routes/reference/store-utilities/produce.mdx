@@ -1,0 +1,35 @@
+---
+title: produce
+---
+
+
+`produce` is an [Immer](https://immerjs.github.io/immer/) inspired API for Solid's Store objects that allow for localized mutation.
+
+```ts
+function produce<T>(
+	fn: (state: T) => void
+): (
+	state: T extends NotWrappable ? T : Store<T>
+) => T extends NotWrappable ? T : Store<T>;
+```
+
+For use with [`createStore`](/reference/store-utilities/create-store):
+
+```tsx
+import { produce } from "solid-js/store";
+
+const [state, setState] = createStore({
+	user: {
+		name: "John",
+		age: 30,
+	},
+	list: ["book", "pen"],
+});
+
+setState(
+	produce((state) => {
+		state.user.name = "Jane";
+		state.list.push("pencil");
+	})
+);
+```

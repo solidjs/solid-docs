@@ -67,8 +67,8 @@ const LEGACY_ROUTES = {
 	"/references/api-reference/special-jsx-attributes/ref": "/reference/jsx-attributes/ref",
 	"/references/api-reference/special-jsx-attributes/style": "/reference/jsx-attributes/style",
 	"/references/api-reference/special-jsx-attributes/use_": "/reference/jsx-attributes/use",
-	"/references/api-reference/stores/store-utilities": "/reference/stores/store-utilities",
-	"/references/api-reference/stores/using-stores": "/reference/stores/using-stores",
+	"/references/api-reference/stores/store-utilities": "/concepts/stores#store-utilities",
+	"/references/api-reference/stores/using-stores": "/concepts/stores",
 
 	// deployment
 	"/guides/how-to-guides/deployment": "/guides/deploying-your-app",

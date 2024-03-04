@@ -6,7 +6,7 @@ import { A } from "~/ui/i18n-anchor";
  * keeping track of the logos is not the responsibility of this file
  * we can probably move this to a data folder or something like that
  */
-export const logos = {
+export const logos: { [key: string]: { file: string; style?: string } } = {
 	cloudflare: { file: "cloudflare-pages.svg" },
 	firebase: { file: "firebase.svg" },
 	flightControl: { file: "flightcontrol.svg" },
@@ -15,7 +15,7 @@ export const logos = {
 	vercel: { file: "vercel.svg" },
 	sass: { file: "sass.svg" },
 	less: { file: "less.svg" },
-	cssmodules: { file: "css-modules.svg" },
+	cssmodules: { file: "css-modules.svg", style: "invert" },
 	macaron: { file: "macaron.svg" },
 	tailwind: { file: "tailwind.svg" },
 	uno: { file: "uno.svg" },
@@ -28,7 +28,7 @@ export type ImageLinksProps = {
 };
 
 export const ImageLinks: ParentComponent<ImageLinksProps> = (props) => {
-	const { file } = logos[props.logo];
+	const { file, style } = logos[props.logo];
 
 	return (
 		<div class="group relative rounded-xl  dark:border-blue-800 dark:bg-transparent">
@@ -37,7 +37,7 @@ export const ImageLinks: ParentComponent<ImageLinksProps> = (props) => {
 				<div class="flex flex-col items-center">
 					<div class="bg-black dark:bg-transparent border border-slate-700  h-16 w-16 rounded-full flex justify-center items-center">
 						<img
-							class="h-10 w-10 not-prose"
+							class={`${style} h-10 w-10 not-prose`}
 							src={`/assets/${file}`}
 							alt={props.title}
 							loading="lazy"

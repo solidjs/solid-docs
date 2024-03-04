@@ -81,11 +81,11 @@ const LEGACY_ROUTES = {
 
 	// styling
 	"/guides/how-to-guides/styling-in-solid": "/guides/styling-your-components",
-	"/guides/how-to-guides/styling-in-solid/sass": "/guides/styling-your-components#sass",
-	"/guides/how-to-guides/styling-in-solid/less": "/guides/styling-your-components#less",
-	"/guides/how-to-guides/styling-in-solid/tailwind-css": "/guides/styling-your-components#tailwindcss",
-	"/guides/how-to-guides/styling-in-solid/css-modules": "/guides/styling-your-components#css-modules",
-	"/guides/how-to-guides/styling-in-solid/unocss": "/guides/styling-your-components#unocss",
+	"/guides/how-to-guides/styling-in-solid/sass": "/guides/styling-components/sass",
+	"/guides/how-to-guides/styling-in-solid/less": "/guides/styling-components/less",
+	"/guides/how-to-guides/styling-in-solid/tailwind-css": "/guides/styling-components/tailwind",
+	"/guides/how-to-guides/styling-in-solid/css-modules": "/guides/styling-components/css-modules",
+	"/guides/how-to-guides/styling-in-solid/unocss": "/guides/styling-components/uno",
 
 	// trailing slash removal
 	"/routing/migration/": "/routing/migration",

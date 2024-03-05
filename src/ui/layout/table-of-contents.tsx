@@ -7,10 +7,12 @@ import {
 	createSignal,
 } from "solid-js";
 import { usePageState } from "~/data/page-state";
+import { useI18n } from "~/i18n/i18n-context";
 
 export const TableOfContents: Component = () => {
 	const { pageSections } = usePageState();
 	const [currentSection, setCurrentSection] = createSignal("");
+	const i18n = useI18n();
 
 	const onScroll = () => {
 		const headings = document.querySelectorAll("h2, h3");
@@ -33,7 +35,7 @@ export const TableOfContents: Component = () => {
 	return (
 		<aside aria-label="table of contents" class="w-full">
 			<span class="font-display text-base font-medium text-slate-900 dark:text-white">
-				On this page
+				{i18n.t("toc.this.page")}
 			</span>
 			<ol role="list" class="text-sm list-none mt-2 p-0 flex flex-col">
 				<li class="pl-0 mt-0">
@@ -48,7 +50,7 @@ export const TableOfContents: Component = () => {
 							}}
 							class="no-underline hover:font-bold hover:text-slate-800"
 						>
-							Overview
+							{i18n.t("toc.overview")}
 						</a>
 					</span>
 				</li>

@@ -143,19 +143,19 @@ This functionality is particularly valuable in applications like task lists.
 For example, when users input a new task and click the `Add` button, the list will refresh immediately, regardless of the ongoing data communication with the server.
 
 ```jsx
-import { createResource } from 'solid-js';
+import { For, createResource } from 'solid-js';
 
 function TodoList() {
   const [tasks, { mutate }] = createResource(fetchTasksFromServer);
 
-  // ..
-
   return (
     <>
       <ul>
-        {tasks().map(task => (
-          <li key={task.id}>{task.name}</li>
-        ))}
+        <For each={tasks()}>
+          {task => (
+            <li>{task.name}</li>
+          )}
+        </For>
       </ul>
       <button onClick={() => {
         mutate((todos) => [...todos, "do new task"]) // add todo for user
@@ -164,7 +164,6 @@ function TodoList() {
     </>
   );
 }
-
 ```
 
 ### `refetch`

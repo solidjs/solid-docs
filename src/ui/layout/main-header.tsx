@@ -1,13 +1,17 @@
 import { createSignal, onCleanup, onMount } from "solid-js";
-import { A } from "@solidjs/router";
+import { A } from "~/ui/i18n-anchor";
 import { isServer } from "solid-js/web";
 
 import { Logo, GitHubIcon, DiscordIcon } from "~/ui/logo";
 import { ThemeSelector } from "./theme-selector";
 import { MobileNavigation } from "./mobile-navigation";
+import { useLocation } from "@solidjs/router";
+import { getValidLocaleFromPathname } from "~/i18n/helpers";
 
 export function MainHeader() {
 	const [isScrolled, setIsScrolled] = createSignal(false);
+	const { pathname } = useLocation();
+	const locale = getValidLocaleFromPathname(pathname);
 
 	if (!isServer) {
 		const onScroll = () => {
@@ -37,7 +41,7 @@ export function MainHeader() {
 				<div class="flex md:hidden">
 					<MobileNavigation />
 				</div>
-				<A href="/" aria-label="Home page">
+				<A href="/" aria-label="Home page" addLocale>
 					<Logo class="h-9" />
 				</A>
 

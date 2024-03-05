@@ -60,8 +60,9 @@ export default defineConfig({
 		middleware: "src/middleware/index.ts",
 		server: {
 			preset: "netlify",
+			routeRules: {},
 		},
-		extensions: ["mdx", "md"],
+		extensions: ["mdx", "md", "tsx"],
 	},
 	plugins: [
 		docsTree(),
@@ -81,7 +82,12 @@ export default defineConfig({
 					},
 				],
 				[rehypeSlug],
-				[rehypeAutoLinkHeadings],
+				[rehypeAutoLinkHeadings, {
+          behavior: 'wrap',
+          properties : {
+              className : "heading",
+          },
+        }],
 			],
 			remarkPlugins: [
 				remarkFrontmatter,

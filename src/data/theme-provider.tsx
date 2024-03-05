@@ -69,7 +69,7 @@ export const ThemeProvider = (props: ParentProps) => {
 		setSelectedTheme(themes[2]);
 	});
 	createEffect(() => {
-		document.cookie = `theme=${selectedTheme().value};path=/`;
+		document.cookie = `theme=${selectedTheme().value};path=/;max-age=${60 * 60 * 24 * 365}`;
 	});
 	return (
 		<ThemeCtx.Provider

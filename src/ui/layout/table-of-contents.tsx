@@ -6,7 +6,6 @@ import {
 	onCleanup,
 	createSignal,
 	onMount,
-	JSX,
 	type ResolvedChildren,
 } from "solid-js";
 import { useLocation } from "@solidjs/router";
@@ -20,7 +19,7 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (props
 	const i18n = useI18n();
 
 	const onScroll = () => {
-		const headings = document.querySelectorAll("h2, h3");
+		const headings = document.querySelectorAll("main h2, main h3");
 		let currentSection = "";
 		headings.forEach((heading) => {
 			if (heading.getBoundingClientRect().top < 300) {
@@ -42,13 +41,10 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (props
 			if (!Array.isArray(children)) return
 			const firstElement = children.find((child) => child instanceof HTMLElement) as HTMLElement | null;
 			// if any of the child elements are not connected to the DOM the page contents haven't mounted yet
-			if (firstElement && !firstElement.isConnected) {
-				setTimeout(() => getHeaders(children), 0);
-				return 
-			}
+			if (firstElement && !firstElement.isConnected) return 
 		}
 
-		const headings = document?.querySelectorAll("main h2, main h3");
+		const headings = document.querySelectorAll("main h2, main h3");
 		const sections: any = []
 
 		if (headings) {
@@ -77,6 +73,10 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (props
 	}
 
 	createEffect(() => getHeaders(props.children))
+
+	onMount(() => {
+		document.addEventListener("docs-layout-mounted", () => getHeaders(props.children));
+	})
 
 	return (
 		<aside aria-label="table of contents" class="w-full">

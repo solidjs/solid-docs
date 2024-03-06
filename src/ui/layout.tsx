@@ -1,4 +1,4 @@
-import { ParentComponent, Show, children } from "solid-js";
+import { ParentComponent, Show, children, Suspense } from "solid-js";
 
 import { MainNavigation } from "~/ui/layout/main-navigation";
 import { MainHeader } from "./layout/main-header";
@@ -56,7 +56,9 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 							}
 						>
 							<Show when={!props.isError} fallback={<>{resolved()}</>}>
-								<DocsLayout>{resolved()}</DocsLayout>
+								<Suspense>
+									<DocsLayout>{resolved()}</DocsLayout>
+								</Suspense>
 							</Show>
 						</Show>
 					</main>

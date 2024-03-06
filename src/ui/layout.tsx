@@ -1,4 +1,4 @@
-import { ParentComponent, Show } from "solid-js";
+import { ParentComponent, Show, children } from "solid-js";
 
 import { MainNavigation } from "~/ui/layout/main-navigation";
 import { MainHeader } from "./layout/main-header";
@@ -14,6 +14,8 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 	const isRoot = useMatch(() => "/:locale?", {
 		locale: SUPPORTED_LOCALES,
 	});
+
+	const resolved = children(() => props.children);
 
 	return (
 		<PageStateProvider>
@@ -49,18 +51,18 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 							keyed
 							fallback={
 								<article class="px-2 md:px-10 expressive-code-overrides overflow-y-auto">
-									{props.children}
+									{resolved()}
 								</article>
 							}
 						>
-							<Show when={!props.isError} fallback={<>{props.children}</>}>
-								<DocsLayout>{props.children}</DocsLayout>
+							<Show when={!props.isError} fallback={<>{resolved()}</>}>
+								<DocsLayout>{resolved()}</DocsLayout>
 							</Show>
 						</Show>
 					</main>
 					<div class="hidden xl:block prose prose-slate dark:prose-invert dark:text-slate-300">
 						<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] overflow-y-auto pr-4 w-64 xl:w-72">
-							<SidePanel />
+							<SidePanel children={resolved()} />
 						</div>
 					</div>
 				</div>

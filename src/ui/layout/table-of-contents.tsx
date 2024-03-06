@@ -6,12 +6,14 @@ import {
 	onCleanup,
 	createSignal,
 	onMount,
+	JSX,
+	type ResolvedChildren,
 } from "solid-js";
 import { useLocation } from "@solidjs/router";
 import { usePageState } from "~/data/page-state";
 import { useI18n } from "~/i18n/i18n-context";
 
-export const TableOfContents: Component = () => {
+export const TableOfContents: Component<{ children: ResolvedChildren }> = (props) => {
 	const location = useLocation();
 	const { setPageSections, pageSections } = usePageState();
 	const [currentSection, setCurrentSection] = createSignal("");
@@ -35,19 +37,19 @@ export const TableOfContents: Component = () => {
 		});
 	});
 
-	function getHeaders() {
-		const mainHeading = document.querySelector("h1");
-		const headings = document?.querySelectorAll("h2, h3");
-		const sections: any = [];
-
-		console.log("mainHeading", mainHeading);
-		console.log("headings", headings);
-
-		// if mainHeading is not found the page contents haven't mounted yet
-		if (!mainHeading) {
-			setTimeout(getHeaders, 0);
-			return;
+	function getHeaders(children: ResolvedChildren) {
+		if (children) {
+			if (!Array.isArray(children)) return
+			const firstElement = children.find((child) => child instanceof HTMLElement) as HTMLElement | null;
+			// if any of the child elements are not connected to the DOM the page contents haven't mounted yet
+			if (firstElement && !firstElement.isConnected) {
+				setTimeout(() => getHeaders(children), 0);
+				return 
+			}
 		}
+
+		const headings = document?.querySelectorAll("main h2, main h3");
+		const sections: any = []
 
 		if (headings) {
 			headings.forEach((heading) => {
@@ -74,9 +76,7 @@ export const TableOfContents: Component = () => {
 		});
 	}
 
-	createEffect(() => {
-		if (location.pathname !== pageSections.path) getHeaders()
-	});
+	createEffect(() => getHeaders(props.children))
 
 	return (
 		<aside aria-label="table of contents" class="w-full">

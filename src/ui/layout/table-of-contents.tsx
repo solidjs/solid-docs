@@ -5,6 +5,7 @@ import {
 	createEffect,
 	onCleanup,
 	createSignal,
+	onMount,
 } from "solid-js";
 import { useLocation } from "@solidjs/router";
 import { usePageState } from "~/data/page-state";
@@ -34,39 +35,47 @@ export const TableOfContents: Component = () => {
 		});
 	});
 
-	createEffect(() => {
-		if (location.pathname !== pageSections.path) {
-			const mainHeading = document.querySelector("h1");
-			const headings = document?.querySelectorAll("h2, h3");
-			const sections: any = [];
+	function getHeaders() {
+		const mainHeading = document.querySelector("h1");
+		const headings = document?.querySelectorAll("h2, h3");
+		const sections: any = [];
 
-			// if mainHeading is not found the page is not ready
-			if (!mainHeading) return;
+		console.log("mainHeading", mainHeading);
+		console.log("headings", headings);
 
-			if (headings) {
-				headings.forEach((heading) => {
-					if (heading.tagName === "H2") {
-						sections.push({
-							text: heading.textContent,
-							id: heading.id,
-							level: 2,
-							children: [],
-						});
-					} else if (heading.tagName === "H3") {
-						sections[sections.length - 1].children.push({
-							text: heading.textContent,
-							id: heading.id,
-							level: 3,
-						});
-					}
-				});
-			}
+		// if mainHeading is not found the page contents haven't mounted yet
+		if (!mainHeading) {
+			setTimeout(getHeaders, 0);
+			return;
+		}
 
-			setPageSections({
-				path: location.pathname,
-				sections: sections,
+		if (headings) {
+			headings.forEach((heading) => {
+				if (heading.tagName === "H2") {
+					sections.push({
+						text: heading.textContent,
+						id: heading.id,
+						level: 2,
+						children: [],
+					});
+				} else if (heading.tagName === "H3") {
+					sections[sections.length - 1].children.push({
+						text: heading.textContent,
+						id: heading.id,
+						level: 3,
+					});
+				}
 			});
 		}
+
+		setPageSections({
+			path: location.pathname,
+			sections: sections,
+		});
+	}
+
+	createEffect(() => {
+		if (location.pathname !== pageSections.path) getHeaders()
 	});
 
 	return (

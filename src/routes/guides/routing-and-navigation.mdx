@@ -44,7 +44,7 @@ import { Router } from "@solidjs/router";
 
 render(
   () => <Router />,
-  document.getElementById("app")
+  document.getElementById("root")
 );
 ```
 
@@ -56,10 +56,7 @@ This will always be there and won't update on page change. It is the ideal place
 
 ```jsx
 import { render } from "solid-js/web";
-import { Router, Route } from "@solidjs/router";
-
-import Home from "./pages/Home";
-import Users from "./pages/Users";
+import { Router } from "@solidjs/router";
 
 const App = props => (
   <>
@@ -70,7 +67,7 @@ const App = props => (
 
 render(() => (
   <Router root={App} />
-), document.getElementById("app"));
+), document.getElementById("root"));
 ```
 
 **4. Add routes to the `<Router>` component using the `Route` component**
@@ -85,11 +82,11 @@ import Home from "./pages/Home";
 import Users from "./pages/Users";
 
 render(() => (
-  <Router>
+  <Router root={App}>
     <Route path="/" component={Home} />
     <Route path="/users" component={Users} />
   </Router>
-), document.getElementById("app"));
+), document.getElementById("root"));
 ```
 
 **5. Create a CatchAll Route (404 page)**
@@ -117,7 +114,7 @@ render(() => (
     <Route path="/users" component={Users} />
     <Route path="*404" component={NotFound} />
   </Router>
-), document.getElementById("app"));
+), document.getElementById("root"));
 ```
 
 **6. Create Links to Your Routes**
@@ -125,9 +122,8 @@ render(() => (
 Use the `A` component to provide navigation to the application's routes. Alternatively, you can use an anchor tag. However, the `A` component has additional functionality including properties for CSS `inactiveClass` and `activeClass`.
 
 ```jsx
-import { lazy } from "solid-js";
 import { render } from "solid-js/web";
-import { Router, Route } from "@solidjs/router";
+import { Router, Route, A } from "@solidjs/router";
 
 import Home from "./pages/Home";
 import Users from "./pages/Users";
@@ -135,9 +131,8 @@ import Users from "./pages/Users";
 const App = props => (
   <>
     <nav>
-      ** SHOULD I BE USING <A> HERE?
-      <a href="/">Home</a>
-      <a href="/">Users</a>
+      <A href="/">Home</A>
+      <A href="/users">Users</A>
     </nav>
     <h1>My Site with lots of pages</h1>
     {props.children}
@@ -150,7 +145,7 @@ render(() => (
      <Route path="/users" component={Users} />
      <Route path="*404" component={NotFound} />
   </Router>
-), document.getElementById("app"));
+), document.getElementById("root"));
 ```
 
 ## Lazy-loading Route Components
@@ -177,7 +172,7 @@ render(() => (
     <Route path="/users" component={Users} />
     <Route path="/" component={Home} />
   </Router>
-), document.getElementById("app"));
+), document.getElementById("root"));
 ```
 
 ## Dynamic Routes
@@ -199,7 +194,7 @@ render(() => (
     <Route path="/users/:id" component={User} />
     <Route path="/" component={Home} />
   </Router>
- ), document.getElementById("app"));
+ ), document.getElementById("root"));
 ```
 
 The colon indicates that `id` can be any string, and as long as the URL fits that pattern, the `User` component will show.
@@ -238,7 +233,7 @@ render(() => (
       matchFilters={filters}
     />
   </Router>
-), document.getElementById("app"));
+), document.getElementById("root"));
 ```
 
 Here, we have added the `matchFilters` prop. This allows us to validate the `parent`, `id` and `withHtmlExtension` parameters against the filters defined in `filters`.
@@ -643,7 +638,7 @@ const routes = [
 
 render(() =>
   <Router>{routes}</Router>,
-  document.getElementById("app")
+  document.getElementById("root")
 );
 ```
 
@@ -659,7 +654,7 @@ const route = {
   component: lazy(() => import("/pages/index.js"))
 };
 
-render(() => <Router>{route}</Router>, document.getElementById("app"));
+render(() => <Router>{route}</Router>, document.getElementById("root"));
 ```
 
 ## Alternative Routers

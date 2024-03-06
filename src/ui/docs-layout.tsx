@@ -2,7 +2,6 @@ import {
 	createSignal,
 	ParentComponent,
 	Show,
-	createEffect,
 	createResource,
 	Suspense,
 } from "solid-js";
@@ -10,7 +9,6 @@ import { useLocation, useMatch } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import flatEntries from "solid:collection/entries";
 import { Pagination } from "~/ui/pagination";
-import { usePageState } from "~/data/page-state";
 import { EditPageLink } from "./edit-page-link";
 import { PageIssueLink } from "./page-issue-link";
 import { SUPPORTED_LOCALES } from "~/i18n/config";
@@ -19,7 +17,6 @@ export const [trackHeading, setTrackHeading] = createSignal("");
 
 export const DocsLayout: ParentComponent = (props) => {
 	const location = useLocation();
-	const { setPageSections, pageSections } = usePageState();
 	const isReference = useMatch(() => "/reference/*");
 
 	const [entries] = createResource(
@@ -63,36 +60,6 @@ export const DocsLayout: ParentComponent = (props) => {
 			};
 		}
 	};
-
-	createEffect(() => {
-		if (location.pathname !== pageSections.path) {
-			const headings = document?.querySelectorAll("h2, h3");
-			const sections: any = [];
-
-			if (headings) {
-				headings.forEach((heading) => {
-					if (heading.tagName === "H2") {
-						sections.push({
-							text: heading.textContent,
-							id: heading.id,
-							level: 2,
-							children: [],
-						});
-					} else if (heading.tagName === "H3") {
-						sections[sections.length - 1].children.push({
-							text: heading.textContent,
-							id: heading.id,
-							level: 3,
-						});
-					}
-				});
-			}
-			setPageSections({
-				path: location.pathname,
-				sections: sections,
-			});
-		}
-	});
 
 	return (
 		<Suspense>

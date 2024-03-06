@@ -6,11 +6,13 @@ import {
 	onCleanup,
 	createSignal,
 } from "solid-js";
+import { useLocation } from "@solidjs/router";
 import { usePageState } from "~/data/page-state";
 import { useI18n } from "~/i18n/i18n-context";
 
 export const TableOfContents: Component = () => {
-	const { pageSections } = usePageState();
+	const location = useLocation();
+	const { setPageSections, pageSections } = usePageState();
 	const [currentSection, setCurrentSection] = createSignal("");
 	const i18n = useI18n();
 
@@ -30,6 +32,41 @@ export const TableOfContents: Component = () => {
 		onCleanup(() => {
 			window.removeEventListener("scroll", onScroll);
 		});
+	});
+
+	createEffect(() => {
+		if (location.pathname !== pageSections.path) {
+			const mainHeading = document.querySelector("h1");
+			const headings = document?.querySelectorAll("h2, h3");
+			const sections: any = [];
+
+			// if mainHeading is not found the page is not ready
+			if (!mainHeading) return;
+
+			if (headings) {
+				headings.forEach((heading) => {
+					if (heading.tagName === "H2") {
+						sections.push({
+							text: heading.textContent,
+							id: heading.id,
+							level: 2,
+							children: [],
+						});
+					} else if (heading.tagName === "H3") {
+						sections[sections.length - 1].children.push({
+							text: heading.textContent,
+							id: heading.id,
+							level: 3,
+						});
+					}
+				});
+			}
+
+			setPageSections({
+				path: location.pathname,
+				sections: sections,
+			});
+		}
 	});
 
 	return (

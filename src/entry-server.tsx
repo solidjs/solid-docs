@@ -19,6 +19,7 @@ export default createHandler(() => (
 									/>
 									<link rel="icon" href="/favicon.ico" />
 									<link rel="alternate icon" href="/favicon.svg" type="image/svg+xml" />
+									<script src="/scripts/browser-specific.js" type="module" />
 									{assets}
 								</head>
 								<body>

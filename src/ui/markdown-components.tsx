@@ -188,7 +188,7 @@ export default {
 		return (
 			<pre
 				{...props}
-				class="[&>code]:bg-white dark:[&>code]:!bg-slate-950 [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal custom-scroll-bar"
+				class="[&>code]:bg-white dark:[&>code]:!bg-slate-950 [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal custom-scrollbar"
 			>
 				{props.children}
 			</pre>

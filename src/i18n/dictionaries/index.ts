@@ -1,5 +1,5 @@
-import english from "./default";
-import ptbr from "./pt-br";
+import english from "./en/ui";
+import ptbr from "./pt-br/ui";
 
 export const dictionaries = {
 	default: english,

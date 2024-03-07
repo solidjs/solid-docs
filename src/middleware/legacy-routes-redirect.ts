@@ -72,20 +72,20 @@ const LEGACY_ROUTES = {
 
 	// deployment
 	"/guides/how-to-guides/deployment": "/guides/deploying-your-app",
-	"/guides/how-to-guides/deployment/deploying-to-cloudflare": "/guides/deploying-your-app#cloudflare",
-	"/guides/how-to-guides/deployment/deploying-to-firebase": "/guides/deploying-your-app#firebase",
-	"/guides/how-to-guides/deployment/deploying-to-flightcontrol": "/guides/deploying-your-app#aws-via-flightcontrol",
-	"/guides/how-to-guides/deployment/deploying-to-netlify": "/guides/deploying-your-app#netlify",
-	"/guides/how-to-guides/deployment/deploying-to-railway": "/guides/deploying-your-app#railway",
-	"/guides/how-to-guides/deployment/deploying-to-vercel": "/guides/deploying-your-app#vercel",
+	"/guides/how-to-guides/deployment/deploying-to-cloudflare": "/guides/deployment-options/cloudflare",
+	"/guides/how-to-guides/deployment/deploying-to-firebase": "/guides/deployment-options/firebase",
+	"/guides/how-to-guides/deployment/deploying-to-flightcontrol": "/guides/deployment-options/aws-via-flightcontrol",
+	"/guides/how-to-guides/deployment/deploying-to-netlify": "/guides/deployment-options/netlify",
+	"/guides/how-to-guides/deployment/deploying-to-railway": "/guides/deployment-options/railway",
+	"/guides/how-to-guides/deployment/deploying-to-vercel": "/guides/deployment-options/vercel",
 
 	// styling
 	"/guides/how-to-guides/styling-in-solid": "/guides/styling-your-components",
-	"/guides/how-to-guides/styling-in-solid/sass": "/guides/styling-your-components#sass",
-	"/guides/how-to-guides/styling-in-solid/less": "/guides/styling-your-components#less",
-	"/guides/how-to-guides/styling-in-solid/tailwind-css": "/guides/styling-your-components#tailwindcss",
-	"/guides/how-to-guides/styling-in-solid/css-modules": "/guides/styling-your-components#css-modules",
-	"/guides/how-to-guides/styling-in-solid/unocss": "/guides/styling-your-components#unocss",
+	"/guides/how-to-guides/styling-in-solid/sass": "/guides/styling-components/sass",
+	"/guides/how-to-guides/styling-in-solid/less": "/guides/styling-components/less",
+	"/guides/how-to-guides/styling-in-solid/tailwind-css": "/guides/styling-components/tailwind",
+	"/guides/how-to-guides/styling-in-solid/css-modules": "/guides/styling-components/css-modules",
+	"/guides/how-to-guides/styling-in-solid/unocss": "/guides/styling-components/uno",
 
 	// trailing slash removal
 	"/routing/migration/": "/routing/migration",

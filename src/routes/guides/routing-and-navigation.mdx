@@ -119,7 +119,7 @@ render(() => (
   <Router root={App}>
     <Route path="/" component={Home} />
     <Route path="/users" component={Users} />
-    <Route path="*NotFound" component={NotFound} />
+    <Route path="*404" component={NotFound} />
   </Router>
 ), document.getElementById("root"));
 ```
@@ -268,7 +268,7 @@ Parameters can be specified as optional by adding a question mark to the end of 
 
 ### Wildcard Routes
 
-`:param` lets you match an arbitrary name at that point in the path. You can use `*` to match any end of the path:
+While `:param` lets you match an arbitrary name at that point in the path, you can use `*` to match any end of the path:
 
 ```jsx
 // Matches any path that begins with foo, including foo/, foo/a/, foo/a/b/c
@@ -294,33 +294,36 @@ The `Routes` component also supports defining multiple paths using an array. Thi
 
 ## Nested Routes
 
-The following two route definitions have the same result:
+Only leaf Route nodes (innermost `Route` components) are given a route. 
+
+The following code won't work the way you expect. It will only match
+`/users/:id` and it will only render `User`. `/users` will not be matched and `Users`
+will never be rendered.
+
+```jsx
+<Route path="/users" component={Users}>
+  <Route path="/:id" component={User} />
+</Route>
+```
+
+The following two route definitions both match the same URL `/users:id` and 
+render the same component:
 
 ```jsx
 <Route path="/users/:id" component={User} />
-```
 
-```jsx
 <Route path="/users">
   <Route path="/:id" component={User} />
 </Route>
 ```
 
-`/users/:id` renders the `<User/>` component, and `/users/` is an empty route.
-
-Only leaf Route nodes (innermost `Route` components) are given a route. If you want to make the parent its own route, you have to specify it separately:
+If you want to make the parent its own route, you have to specify it separately. 
+These examples will work. They both will match `/users` and `/users/:id`.
 
 ```jsx
-//This won't work the way you'd expect
-<Route path="/users" component={Users}>
-  <Route path="/:id" component={User} />
-</Route>
-
-// This works
 <Route path="/users" component={Users} />
 <Route path="/users/:id" component={User} />
 
-// This also works
 <Route path="/users">
   <Route path="/" component={Users} />
   <Route path="/:id" component={User} />
@@ -346,9 +349,11 @@ function PageWrapper(props) {
 </Route>;
 ```
 
-The routes are still configured the same, but now the route components will appear inside the parent component where the `props.children` was declared.
+The routes are still configured the same, but now the route components will appear 
+inside the parent component where the `props.children` is declared.
 
-You can nest indefinitely - just remember that only leaf nodes will become their own routes. In this example, the only route created is `/layer1/layer2`, and it appears as three nested divs.
+You can nest indefinitely. Just remember that only leaf nodes will become their own routes. 
+In this example, the only route created is `/layer1/layer2`, and it appears as three nested divs.
 
 ```jsx
 <Route
@@ -368,7 +373,8 @@ You can nest indefinitely - just remember that only leaf nodes will become their
     }
   >
     <Route path="layer2"
-      component={() => <div>Innermost layer</div>}>           </Route>
+      component={() => <div>Innermost layer</div>}>
+    </Route>
   </Route>
 </Route>
 ```

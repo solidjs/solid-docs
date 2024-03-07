@@ -3,237 +3,37 @@ title: Styling your Components
 order: 1
 ---
 
-Solid provides flexible and versatile ways to style your components. 
-[`class`  and `style` bindings](/concepts/components/class-style) can both be added to dynamically style components with plain CSS. 
+Solid provides flexible and versatile ways to style your components.
+[`class` and `style` bindings](/concepts/components/class-style) can both be added to dynamically style components with plain CSS.
 Solid also supports a range of styling methods - from traditional CSS preprocessors to modern CSS-in-JS solutions - ensuring the flexibility to choose the best approach for your projects.
 
 ## CSS Preprocessors
 
-### SASS
+<div class="flex flex-col md:grid md:grid-cols-2 md:grid-rows-1  gap-3">
 
-[SASS](https://sass-lang.com/) is a popular CSS preprocessor that makes authoring CSS easier. 
-It is a superset of CSS and offers two syntaxes: SCSS and the indented syntax (often referred to as just "SASS").
+<ImageLinks title="SASS" href="/guides/styling-components/sass" logo="sass" />
+<ImageLinks title="LESS" href="/guides/styling-components/less" logo="less" />
 
-#### Installation
+</div>
 
-Depending on your package manager, SASS can be installed as a development dependency:
-
-```bash frame="none"
-npm i --save-dev sass
-
-# or
-
-pnpm i --dev sass
-
-# or
-
-yarn add --dev sass
-```
-
-#### Convert filename extensions
-
-After installation, the `.css` filename extensions will have to be changed to `.scss`  or `.sass`. 
-The `.scss`  syntax is a strict superset of CSS, while `.sass`  offers a more relaxed syntax.
-Vite, which is integrated with Solid, supports both. 
-However, `.scss`  is generally recommended.
-
-```scss
-// Card.scss
-.grid {
-  display: grid;
-  &-center { place-items: center; }
-}
-.screen { min-height: 100vh; }
-.card {
-  height: 160px;
-  aspect-ratio: 2;
-  border-radius: 16px;
-  background-color: white;
-  box-shadow: 0 0 0 4px hsl(0 0% 0% / 15%);
-}
-```
-
-In a Solid component:
-
-```jsx
-// Card.jsx
-import "./card.scss"
-
-function Card() {
-  return (
-    <>
-      <div class="grid grid-center screen">
-        <div class="card">Hello, world!</div>
-      </div>
-    </>
-  );
-}
-```
-
-By simply changing the file extension from `.css`  to `.scss`  or `.sass` , Vite will automatically recognize these files and compile SASS to CSS on demand. 
-When building in production, all SASS files are converted to CSS.
-This ensures compatibility with most modern browsers.
-
-### LESS
-
-[LESS](https://lesscss.org/) is a preprocessor based on JavaScript. 
-It provides the ability to use mixins, variables, and other programmatic tools, making styling code cleaner and less redundant.
-
-#### Installation
-
-To utilize LESS in a Solid app, it will need to be installed as a development dependency:
-
-```bash frame="none"
-npm install --save-dev less
-
-# or
-
-pnpm i --dev less
-
-# or
-
-yarn add --dev less
-```
-
-#### Using LESS in your app
-
-Start by creating a `.less`  file in the `src` directory:
-
-```less
-//styles.less
-.foo {
-  color: red;
-}
-.bar {
-  background-color: blue;
-}
-```
-
-The basic syntax of LESS is very similar to CSS.
-However, LESS allows the declaration and usage of variables:
-
-```less
-//styles.less
-@plainred: red;
-@plainblue: blue;
-.foo {
-  color: @plainred;
-}
-.bar {
-  background-color: @plainblue;
-}
-```
-
-To use these styles in a Solid component, import the `.less` file:
-
-```jsx
-//component.jsx
-import "./styles.less";
-
-function Component() {
-  return (
-    <>
-      <div class="foo bar">Hello, world!</div>
-    </>
-  );
-}
-```
-
-By changing the file extension of the imported styles to `.less`, Vite will recognize it as a LESS file and compile it to CSS on demand.
+SASS
+LESS
 
 ## CSS modules
 
-CSS Modules are CSS files where class names, animations, and media queries are scoped locally by default. 
-These provide a way to encapsulate styles within components, preventing global conflicts and optimizing the final output by bundling only the used selectors.
-
-### Creating CSS module files
-
-Begin by creating a CSS module file. 
-Conventionally, these files have a `.module.css` extension, like `style.module.css`. 
-However, you can also use other other extensions, such as `.scss` and `.sass`.
-
-```css
-/* styles.module.css */
-.foo {
-  color: red;
-}
-.bar {
-  background-color: blue;
-}
-``` 
-**Note:** Avoid the use of HTML tags in CSS modules.
-Since they are not considered pure selectors, it can lead to specificity issues which can make it more difficult to override with other styles and lead to unexpected behaviors.
-
-### Using modules in components
-
-1. **Importing styles:** In your component file (eg. `Component.jsx`), import the styles from the CSS module.
-
-```jsx
-// component.jsx
-import styles from "styles.module.css";
-```
-
-2. **Applying styles:** Use the imported styles by referencing them as properties of the styles object in your JSX:
-
-```jsx
-function Component() {
-  return (
-    <>
-      <div class={`${styles.foo} ${styles.bar}`} >
-        Hello, world!
-      </div>
-    </>
-  );
-}
-```
-
-3. **Using a single style:** If you only need one style from the module, import and apply it directly:
-
-```jsx
-// component.jsx
-import styles from "styles.module.css";
-
-function Component() {
-  return (
-    <>
-      <div class={styles.foo}>
-        Hello, world!
-      </div>
-    </>
-  );
-}
-```
-
-4. **Mixing with regular class names:** You can combine CSS module syntax with regular string class names, as well:
-
-```jsx
-// component.jsx
-import styles from "styles.module.css";
-
-function Component() {
-  return (
-    <>
-      <div class={`${styles.foo} container`}>
-        Hello, world!
-      </div>
-    </>
-  );
-}
-```
-
-**Note:** If your styles have dashes in their names, use bracket notation:
-
-```jsx
-const className = styles["foo-with-dash"];
-```
+<ImageLinks
+	title="CSS Modules"
+	href="/guides/styling-components/css-modules"
+	logo="cssmodules"
+/>
 
 ## CSS-in-JS
 
 CSS-in-JS is a modern approach to styling components.
 Within the [Solid ecosystem](https://www.solidjs.com/ecosystem), there are various libraries and solutions available for working with CSS-in-JS, including but not limited to:
 
-* [Solid Styled Components](https://github.com/solidjs/solid-styled-components)
-* [Solid Styled JSX](https://github.com/solidjs/solid-styled-jsx)
+- [Solid Styled Components](https://github.com/solidjs/solid-styled-components)
+- [Solid Styled JSX](https://github.com/solidjs/solid-styled-jsx)
 
 CSS-in-JS libraries often come with their own set of APIs and methods for defining, updating, and applying styles dynamically.
 Many also offer features like theming, media queries, and server-side rendering support right out of the box.
@@ -242,286 +42,22 @@ Many also offer features like theming, media queries, and server-side rendering 
 
 ### Macaron
 
-[Macaron](https://macaron.js.org/) is compile-time CSS-in-JS library that offers type safety. 
-
-#### Installation
-
-1. Install and set up the macaron plugin for your bundler:
-
-```bash frame="none"
-# npm
-npm install @macaron-css/core @macaron-css/solid
-
-# yarn
-yarn add @macaron-css/core @macaron-css/solid
-```
-
-2. Within your `vite.config.js` folder, add the macaron plugin prior to other plugins:
-
-```js
-import { macaronVitePlugin } from '@macaron-css/vite';
-import { defineConfig } from 'vite';
-
-export default defineConfig({
-  plugins: [
-    macaronVitePlugin(),
-    // other plugins
-  ],
-});
-```
-
-#### Usage
-
-1. Import `styled` from `@macaron-css/solid` and create a styled component:
-
-```jsx
-// button.tsx
-import { styled } from '@macaron-css/solid';
-
-const Button = styled('button', {});
-```
-
-2. Add styles that will be applied to the components by default:
-
-```jsx
-import { styled } from '@macaron-css/solid';
-
-const Button = styled('button', {
-  base: {
-    backgroundColor: 'red',
-    borderRadius: '10px',
-  },
-});
-```
-Variants can be added using the `variants` key:
-
-```jsx
-import { styled } from '@macaron-css/solid';
-
-const Button = styled('button', {
-    base: {
-      backgroundColor: 'red',
-      borderRadius: '10px',
-    },
-    variants: {
-      color: {
-        violet: {
-          backgroundColor: 'violet',
-        },
-        gray: {
-          backgroundColor: 'gray',
-        },
-      }
-    }
-  });
-```
-
-Additionally, the `defaultVariants` feature is set to `variants` by default. This can be overrided at the time of usage:
-
-```jsx
-import { styled } from '@macaron-css/solid';
-
-const Button = styled('button', {
-    base: {
-      backgroundColor: 'red',
-      borderRadius: '10px',
-    },
-    variants: {
-      color: {
-        violet: {
-          backgroundColor: 'violet',
-        },
-        gray: {
-          backgroundColor: 'gray',
-        },
-      }
-    },
-    defaultVariants: {
-      color: 'blue'
-    },
-  });
-```
-
-These components can be used like any other Solid component, with type-safe props derived from your variants. 
-For more information on how to use macaron, visit their [documentation](https://macaron.js.org/docs/installation/).
-
+<ImageLinks
+	title="Macaron"
+	href="/guides/styling-components/macaron"
+	logo="macaron"
+/>
 ## CSS frameworks
 
-CSS frameworks provide pre-styled components and utility classes to speed up development. 
+CSS frameworks provide pre-styled components and utility classes to speed up development.
 
-### TailwindCSS
+<div class="flex flex-col md:grid md:grid-cols-2 md:grid-rows-1  gap-3">
 
-[Tailwind CSS](https://tailwindcss.com/) is an on-demand utility CSS library that integrates seamlessly with Solid as a built-in PostCSS plugin.
+<ImageLinks
+	title="TailwindCSS"
+	href="/guides/styling-components/tailwind"
+	logo="tailwind"
+/>
+<ImageLinks title="UnoCSS" href="/guides/styling-components/uno" logo="uno" />
 
-#### Installation
-1. Install Tailwind CSS as a development dependency:
-
-```bash frame="none"
-npm i --save-dev tailwindcss postcss autoprefixer
-
-# or 
-
-pnpm i --save-dev tailwindcss postcss autoprefixer
-
-# or
-
-yarn add --dev tailwindcss postcss autoprefixer
-
-# Initialize
-
-npx tailwindcss init -p
-```
-2. Since TailwindCSS is configuration-driven, after initializing, a `tailwind.config.js` file will be created at the root of your project directory:
-
-```js
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-};
-```
-
-For a deeper dive into configuration, you can check out the [Tailwind Official Documentation](https://tailwindcss.com/docs/configuration).
-
-#### Add Tailwind directives
-
-In your `src/index.css` file, add the following Tailwind directives:
-
-```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-```
-
-These directives inform PostCSS that you're using Tailwind and establish the order of the directives. You can append custom CSS below these directives.
-
-#### Import TailwindCSS
-
-Import your `index.css` file into the root `index.jsx`  or `index.tsx`  file:
-
-```jsx
-import { render } from 'solid-js/web';
-import App from './App';
-import "./index.css";
-
-render(() => <App />, document.getElementById('root') as HTMLElement);
-```
-
-#### Usage
-
-With Tailwind CSS set up, you can now utilize its utility classes. 
-For instance, if you previously had a `Card.css` file, you can replace or remove it:
-
-```
-/* src/components/Card.css */
-/* Remove or replace these styles with Tailwind utility classes */
-```
-Update your components to use Tailwind's utility classes:
-
-```jsx
-/* src/components/Card.jsx */
-function Card() {
-  return (
-    <div class="grid place-items-center min-h-screen">
-      <div class="h-[160px] aspect aspect-[2] rounded-[16px] shadow-[0_0_0_4px_hsl(0_0%_0%_/_15%)]">Hello, world!</div>
-    </div>
-  );
-}
-```
-
-#### Support
-
-For additional assistance, refer to the [Tailwind CSS/Vite integration guide](https://tailwindcss.com/docs/guides/vite).
-
-### UnoCSS
-
-[UnoCSS](https://unocss.dev/) is an on-demand utility CSS library that integrates seamlessly with Solid as a Vite plugin.
-
-#### Install Vite plugin
-To get started with UnoCSS in your Solid app:
-
-```bash frame="none"
-npm i --save-dev unocss
-
-# or 
-
-pnpm i --save-dev unocss
-# or
-
-yarn add --dev unocss
-```
-#### Import Vite plugin
-
-After installation, open your `vite.config.js` or `vite.config.ts`. The default Solid Vite configuration looks like this:
-
-```jsx
-import { defineConfig } from "vite"
-import solidPlugin from "vite-plugin-solid"
-
-export default defineConfig({
-	plugins: [
-		solidPlugin(),
-	],
-	server: {
-		port: 3000,
-	},
-	build: {
-		target: "esnext",
-	},
-})
-```
-
-Now, import `unocssPlugin` from "unocss/vite" and add it to the plugins array:
-
-```jsx
-import { defineConfig } from "vite"
-import unocssPlugin from "unocss/vite"
-import solidPlugin from "vite-plugin-solid"
-
-export default defineConfig({
-	plugins: [
-		unocssPlugin(),
-		solidPlugin(),
-	],
-	server: {
-		port: 3000,
-	},
-	build: {
-		target: "esnext",
-	},
-})
-```
-
-Ensure that `unocssPlugin` is ordered before `solidPlugin` to prevent certain edge cases.
-
-#### Import UnoCSS
-In your root `index.jsx` or `index.tsx` file, import UnoCSS:
-
-```jsx
-/* @refresh reload */
-import "uno.css"
-import { render } from 'solid-js/web';
-import './index.css';
-import App from './App';
-
-render(() => <App />, document.getElementById('root') as HTMLElement);
-```
-
-Alternatively, you can use the alias `import "virtual:uno.css"`:
-
-```jsx
-/* @refresh reload */
-import "virtual:uno.css"
-import { render } from 'solid-js/web';
-import './index.css';
-import App from './App';
-
-render(() => <App />, document.getElementById('root') as HTMLElement);
-```
-
-#### Support
-
-For additional assistance, refer to the [UnoCSS/Vite integration guide](https://unocss.dev/integrations/vite) .
+</div>

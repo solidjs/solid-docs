@@ -6,8 +6,8 @@ export const counterTxt = `import { createSignal } from "solid-js";
 function Counter() {
 	const [count, setCount] = createSignal(0);
 
-	setInterval(() => setCount(count() + 1), 1000);
-	
+	setInterval(() => setCount((prev) => prev + 1), 1000);
+
 	return (
 		<div>
 			<p>Count: {count()}</p>
@@ -23,8 +23,8 @@ const renderCode = async () => {
 function Counter() {
 	const [count, setCount] = createSignal(0);
 
-	setInterval(() => setCount(count() + 1), 1000);
-	
+	setInterval(() => setCount((prev) => prev + 1), 1000);
+
 	return (
 		<div>
 			<p>Count: {count()}</p>

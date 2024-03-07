@@ -25,15 +25,11 @@ This function has a `Provider` property that wraps the component tree you want t
 ```jsx
 import { createContext } from "solid-js";
 
-const MyContext = createContext()
+const MyContext = createContext();
 
 export const Provider = (props) => {
-	return (
-		<MyContext.Provider>
-			{props.children}
-		</MyContext.Provider>
-	)
-}
+	return <MyContext.Provider>{props.children}</MyContext.Provider>;
+};
 ```
 
 ## Providing context to children
@@ -44,84 +40,30 @@ Once a value is passed to the `Provider`, it is available to all components that
 When passing a single value, it can be directly passed to the `value` prop:
 
 ```jsx
-import { createContext, useContext } from "solid-js"
+import { createContext, useContext } from "solid-js";
 
-const MyContext = createContext("initial")
+const MyContext = createContext("initial");
 
 const Provider = (props) => (
 	<MyContext.Provider value="new value">{props.children}</MyContext.Provider>
-)
+);
 ```
 
 However, if you need to access multiple values, they must be passed as an object literal, or using double curly braces (`{{ }}`):
 
 ```jsx
-import { createContext, createSignal } from "solid-js"
+import { createContext, createSignal } from "solid-js";
 
-const MyContext = createContext("default value")
+const MyContext = createContext("default value");
 
 export const Provider = (props) => {
-	const stringVal = "new value"
+	const stringVal = "new value";
 	const numberVal = 3;
 	const objVal = {
 		foo: "bar",
 		obj: true,
-		};
+	};
 
-	return (
-		<MyContext.Provider value={{
-			stringVal,
-			numberVal,
-			objVal
-		}}>
-			{props.children}
-		</MyContext.Provider>
-	)
-}
-```
-
-## Consuming context
-
-Once the values are available to all the components in the context's component tree, they can be accessed using the [`useContext`](/reference/component-apis/use-context) utility.
-This utility takes in the context object and returns the value(s) passed to the `Provider`:
-
-```jsx
-import { createContext, useContext } from "solid-js"
-
-const MyContext = createContext()
-
-const Provider = (props) => (
-	<MyContext.Provider value="new value">{props.children}</MyContext.Provider>
-)
-
-const Child = () => {
-	const value = useContext(MyContext)
-	return <>{value}</>
-}
-
-export const App = () => (
-	<Provider>
-		<Child /> {/* "new value" */}
-	</Provider>
-)
-```
-
-When you are passing multiple values into the `Provider`, you can destructure the context object to access the values you need.
-This provides a readable way to access the values you need without having to access the entire context object:
-
-```jsx
-import { createContext, useContext, createSignal } from "solid-js"
-
-const MyContext = createContext()
-
-const Provider = (props) => {
-	const stringVal = "new value"
-	const numberVal = 3
-	const objVal = {
-		foo: "bar",
-		obj: true,
-	}
-	const [signal, setSignal] = createSignal("example signal")
 	return (
 		<MyContext.Provider
 			value={{
@@ -132,24 +74,80 @@ const Provider = (props) => {
 		>
 			{props.children}
 		</MyContext.Provider>
-	)
-}
+	);
+};
+```
+
+## Consuming context
+
+Once the values are available to all the components in the context's component tree, they can be accessed using the [`useContext`](/reference/component-apis/use-context) utility.
+This utility takes in the context object and returns the value(s) passed to the `Provider`:
+
+```jsx
+import { createContext, useContext } from "solid-js";
+
+const MyContext = createContext();
+
+const Provider = (props) => (
+	<MyContext.Provider value="new value">{props.children}</MyContext.Provider>
+);
 
 const Child = () => {
-	const { stringVal, numberVal } = useContext(MyContext) // only access the values you need through destructuring
+	const value = useContext(MyContext);
+	return <>{value}</>;
+};
+
+export const App = () => (
+	<Provider>
+		<Child /> {/* "new value" */}
+	</Provider>
+);
+```
+
+When you are passing multiple values into the `Provider`, you can destructure the context object to access the values you need.
+This provides a readable way to access the values you need without having to access the entire context object:
+
+```jsx
+import { createContext, useContext, createSignal } from "solid-js";
+
+const MyContext = createContext();
+
+const Provider = (props) => {
+	const stringVal = "new value";
+	const numberVal = 3;
+	const objVal = {
+		foo: "bar",
+		obj: true,
+	};
+	const [signal, setSignal] = createSignal("example signal");
+	return (
+		<MyContext.Provider
+			value={{
+				stringVal,
+				numberVal,
+				objVal,
+			}}
+		>
+			{props.children}
+		</MyContext.Provider>
+	);
+};
+
+const Child = () => {
+	const { stringVal, numberVal } = useContext(MyContext); // only access the values you need through destructuring
 	return (
 		<>
 			<h1>{stringVal}</h1>
 			<span>{numberVal}</span>
 		</>
-	)
-}
+	);
+};
 
 export const App = () => (
 	<Provider>
 		<Child />
 	</Provider>
-)
+);
 ```
 
 ## Customizing context utilities
@@ -161,25 +159,25 @@ For example, when wrapping a component tree, you may want to create a custom `Pr
 This also provides you with the option of re-using the `Provider` component in other parts of your application, if needed.
 
 ```jsx
-import { createSignal, createContext, useContext } from "solid-js"
+import { createSignal, createContext, useContext } from "solid-js";
 
-const CounterContext = createContext()
+const CounterContext = createContext();
 
 export function CounterProvider(props) {
-	let count = 0
+	let count = 0;
 
 	return (
 		<CounterContext.Provider value={count}>
 			{props.children}
 		</CounterContext.Provider>
-	)
+	);
 }
 ```
 
 Now if you had to access the Provider in different areas of your application, you can simply import the `CounterProvider` component and wrap the component tree:
 
 ```jsx
-import { CounterProvider } from "./counterProvider"
+import { CounterProvider } from "./counterProvider";
 
 export function App() {
 	return (
@@ -187,7 +185,7 @@ export function App() {
 			<h1>Welcome to Counter</h1>
 			<NestedComponents />
 		</CounterProvider>
-	)
+	);
 }
 ```
 
@@ -196,22 +194,22 @@ Instead of importing `useContext` and passing in the context object on each comp
 
 ```jsx
 export function useCounter() {
-	return useContext(CounterContext)
+	return useContext(CounterContext);
 }
 ```
 
 The `useCounter()` utility in this example can now be imported into any component that needs to access the context values:
 
 ```jsx
-import { useCounter } from "./counter"
+import { useCounter } from "./counter";
 
 export function CounterProvider(props) {
-	const count = useCounter()
+	const count = useCounter();
 	return (
 		<>
 			<div>{count()}</div>
 		</>
-	)
+	);
 }
 ```
 
@@ -220,11 +218,11 @@ export function CounterProvider(props) {
 [Signals](/concepts/signals) offer a way to synchronize and manage data shared across your components using context.
 You can pass a signal directly to the `value` prop of the `Provider` component, and any changes to the signal will be reflected in all components that consume the context.
 
-		<TabsCodeBlocks>
-					<div id="App.jsx">
-					```jsx
-		import Counter from "./counter";
-		import { CounterProvider } from "./counter";
+    	<TabsCodeBlocks>
+    				<div id="App.jsx">
+    				```jsx
+    	import Counter from "./counter";
+    	import { CounterProvider } from "./counter";
 
     	export function App() {
     		return (
@@ -248,10 +246,10 @@ You can pass a signal directly to the `value` prop of the `Provider` component, 
     		count,
     		{
     			increment() {
-    			setCount(c => c + 1);
+    			setCount(prev => prev + 1);
     			},
     			decrement() {
-    			setCount(c => c - 1);
+    			setCount(prev => prev - 1);
     			}
     		}
     		];
@@ -284,7 +282,7 @@ You can pass a signal directly to the `value` prop of the `Provider` component, 
     ```
     			</div>
 
-					</TabsCodeBlocks>
+    				</TabsCodeBlocks>
 
 This offers a way to manage state across your components without having to pass props through intermediate elements.
 

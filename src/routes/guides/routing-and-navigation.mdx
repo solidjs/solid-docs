@@ -9,7 +9,9 @@ Solid Router simplifies routing in Solid applications to help developers manage 
 
 ## Routing Quick Start
 
-Solid Router allows you to configure your routes using JSX. This section will demonstrate how to set up routes and navigate to them using the `Router`, `Route` and `A` components. Additionally, we will add a root component which acts as a page layout.
+Solid Router allows you to configure your routes using JSX. This section will demonstrate how to set up routes
+ and navigate to them using the `<Router>`, `<Route>` and `<A>` components. Additionally, we will add a root 
+ component which acts as a page layout.
 
 **1. Install the Router**
 
@@ -34,7 +36,7 @@ pnpm i @solidjs/router
 </div>
 </TabsCodeBlocks>
 
-**2. Setup the `Router` component**
+**2. Setup the `<Router>` component**
 
 Start your application by rendering the router component.
 
@@ -70,7 +72,7 @@ render(() => (
 ), document.getElementById("root"));
 ```
 
-**4. Add routes to the `<Router>` component using the `Route` component**
+**4. Add routes to the `<Router>` component using the `<Route>` component**
 
 Add each route to a `Router` using the `Route` component. Specifying a path and a component to render when the user navigates to that path.
 
@@ -98,7 +100,8 @@ render(() => (
 
 **5. Create a CatchAll Route (404 page)**
 
-You can create catchall routes for pages not found at any nested level of the router. Use `*` and optionally the name of a parameter to retrieve the rest of the path.
+You can create catchall routes for pages not found at any nested level of the router. Use `*` 
+and optionally the name of a parameter to retrieve the rest of the path.
 
 ```jsx
 import { render } from "solid-js/web";
@@ -126,7 +129,13 @@ render(() => (
 
 **6. Create Links to Your Routes**
 
-Use the `A` component to provide navigation to the application's routes. Alternatively, you can use an anchor tag. However, the `A` component has additional functionality including properties for CSS `inactiveClass` and `activeClass`.
+Use the `<A>` component to provide navigation to the application's routes. 
+Alternatively, you can use an anchor tag. However, the `<A>` component has additional 
+functionality including properties for CSS `inactiveClass` and `activeClass`.
+
+<div style="background-color: darkorange; padding: 5px">
+Add `active` and `inactive` here and remove from section below.
+</div>
 
 ```jsx
 import { render } from "solid-js/web";
@@ -158,7 +167,8 @@ render(() => (
 
 ## Lazy-loading Route Components
 
-This way, the `Users` and `Home` components will only be loaded if you're navigating to `/users` or `/`, respectively.
+This way, the `<Users>` and `<Home>` components will only be loaded if you're navigating 
+to `/users` or `/`, respectively.
 
 ```jsx
 import { lazy } from "solid-js";
@@ -205,12 +215,14 @@ render(() => (
  ), document.getElementById("root"));
 ```
 
-The colon indicates that `id` can be any string, and as long as the URL fits that pattern, the `User` component will show.
+The colon indicates that `id` can be any string, and as long as the URL fits that pattern, 
+the `<User>` component will show.
 
 You can then access that `id` from within a route component with `useParams`.
 
 **Note on Animation/Transitions**:
-Routes that share the same path match will be treated as the same route. If you want to force re-render you can wrap your component in a keyed `<Show>` like:
+Routes that share the same path match will be treated as the same route. If you want to force 
+re-render you can wrap your component in a keyed `<Show>` like:
 ```jsx
 <Show when={params.something} keyed><MyComponent></Show>
 ```
@@ -244,10 +256,11 @@ render(() => (
 ), document.getElementById("root"));
 ```
 
-Here, we have added the `matchFilters` prop. This allows us to validate the `parent`, `id` and `withHtmlExtension` parameters against the filters defined in `filters`.
-If the validation fails, the route will not match.
+Here, we have added the `matchFilters` prop. This allows us to validate the `parent`, `id` and 
+`withHtmlExtension` parameters against the filters defined in `filters`. If the validation fails, 
+the route will not match.
 
-So in this example:
+In this example:
 
 - `/users/mom/123/contact.html` will match,
 - `/users/dad/123/about.html` will match,
@@ -285,7 +298,8 @@ Note that the wildcard token must be the last part of the path; `foo/*any/bar` w
 
 ### Multiple Paths
 
-The `Routes` component also supports defining multiple paths using an array. This allows a route to remain mounted and not rerender when switching between two or more locations that it matches:
+The `Routes` component also supports defining multiple paths using an array. This allows a route to 
+remain mounted and not rerender when switching between two or more locations that it matches:
 
 ```jsx
 // Navigating from login to register does not cause the Login component to re-render
@@ -294,10 +308,10 @@ The `Routes` component also supports defining multiple paths using an array. Thi
 
 ## Nested Routes
 
-Only leaf Route nodes (innermost `Route` components) are given a route. 
+Only leaf `<Route>` nodes (innermost `<Route>` components) are given a route. 
 
 The following code won't work the way you expect. It will only match
-`/users/:id` and it will only render `User`. `/users` will not be matched and `Users`
+`/users/:id` and it will only render `<User>`. `/users` will not be matched and `<Users>`
 will never be rendered.
 
 ```jsx
@@ -381,7 +395,10 @@ In this example, the only route created is `/layer1/layer2`, and it appears as t
 
 ## Load Functions
 
-Even with smart caches, it is possible that we have waterfalls both with view logic and with lazy loaded code. With load functions, we can instead start fetching the data parallel to loading the route, so we can use the data as soon as possible. The load function is called when the Route is loaded or eagerly when links are hovered.
+Even with smart caches, it is possible that we have waterfalls both with view logic and with 
+lazy loaded code. With load functions, we can instead start fetching the data parallel to loading 
+the route, so we can use the data as soon as possible. The load function is called when the Route 
+is loaded or eagerly when links are hovered.
 
 As its only argument, the load function is passed an object that you can use to access route information:
 
@@ -407,7 +424,8 @@ function loadUser({params, location}) {
 | intent | `"initial", "navigate", "native", "preload"` | Indicates why this function is being called. <ul><li>"initial" - the route is being initially shown (ie page load)</li><li>"native" - navigate originated from the browser (eg back/forward)</li><li>"navigate" - navigate originated from the router (eg call to navigate or anchor clicked)</li><li>"preload" - not navigating, just preloading (eg link hover)</li></ul> |
 
 
-A common pattern is to export the load function and data wrappers that correspond to a route in a dedicated `route.data.js` file. This way, the data function can be imported without loading anything else.
+A common pattern is to export the load function and data wrappers that correspond to a route in a 
+dedicated `route.data.js` file. This way, the data function can be imported without loading anything else.
 
 ```js
 import { lazy } from "solid-js";
@@ -419,7 +437,8 @@ const User = lazy(() => import("/pages/users/[id].js"));
 <Route path="/users/:id" component={User} load={loadUser} />;
 ```
 
-The return value of the `load` function is passed to the page component when called at any time other than `"preload"`, so you can initialize things in there, or alternatively use our new Data APIs:
+The return value of the `load` function is passed to the page component when called at any time other 
+than `"preload"`, so you can initialize things in there, or alternatively use our new Data APIs:
 
 ## Data APIs
 
@@ -427,7 +446,8 @@ Keep in mind these are completely optional, but showcase the power of our load m
 
 ### `cache`
 
-To prevent duplicate fetching and to trigger handle refetching we provide a cache API. That takes a function and returns the same function.
+To prevent duplicate fetching and to trigger handle refetching we provide a cache API 
+that takes a function and returns the same function.
 
 ```jsx
 const getUser = cache((id) => {

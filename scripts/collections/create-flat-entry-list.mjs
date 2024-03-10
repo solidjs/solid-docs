@@ -6,7 +6,7 @@
 export function createFlatEntryList(tree, entryMap) {
 	for (const item of tree) {
 		if (item.type === "markdown") {
-			if (entryMap.findIndex((e) => e.slug === item.slug) > -1) {
+			if (entryMap.findIndex((e) => e.path === item.path) > -1) {
 				console.error(`Duplicated entry found: ${item.slug}`);
 				break;
 			}

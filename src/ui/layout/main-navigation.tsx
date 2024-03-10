@@ -25,6 +25,10 @@ type Entry = {
 	isTranslated?: boolean;
 };
 
+// check if every item on the list has mainNavExclude as true
+const shouldHideNavItem = (list: Entry[]) =>
+	list.filter(({ mainNavExclude }) => mainNavExclude).length === list.length;
+
 function ListItemLink(props: { item: Entry }) {
 	if (props.item.mainNavExclude) return null;
 	const location = useLocation();
@@ -71,8 +75,14 @@ function DirList(props: { list: Entry[] }) {
 								class="ml-2 mt-2 space-y-2 border-l-2 border-slate-400 dark:border-slate-700 lg:mt-4 lg:space-y-4 lg:border-slate-400"
 							>
 								<For each={item.children}>
-									{(child) =>
-										Array.isArray(child.children) ? (
+									{(child) => {
+										if (
+											Array.isArray(child.children) &&
+											shouldHideNavItem(child.children)
+										)
+											return null;
+
+										return Array.isArray(child.children) ? (
 											<>
 												<li>
 													<Collapsible.Root defaultOpen={true}>
@@ -98,8 +108,8 @@ function DirList(props: { list: Entry[] }) {
 											</>
 										) : (
 											<ListItemLink item={child} />
-										)
-									}
+										);
+									}}
 								</For>
 							</ul>
 						</li>

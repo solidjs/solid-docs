@@ -97,7 +97,7 @@ export default MyTsComponent
 If using an existing JavaScript component, import the TypeScript component:
 
 ```jsx
-import MyTsComponent from "./MyTsComponent"
+import MyTsComponent from "./MyTsComponent";
 
 function MyJsComponent() {
 	return (
@@ -105,7 +105,7 @@ function MyJsComponent() {
 			{/* ... */}
 			<MyTsComponent />
 		</>
-	)
+	);
 }
 ```
 
@@ -113,7 +113,7 @@ function MyJsComponent() {
 If you wish to change the entry point file from `index.jsx` to `index.tsx`, you need to modify the `src` attribute in `<script>` to look like the following:
 
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 	<head>
 		<!-- ... -->
@@ -140,15 +140,15 @@ In addition, there are several helpful definitions to make it easier for specify
 Using `createSignal<T>`, a signal's type can be defined as `T`.
 
 ```ts
-const [count, setCount] = createSignal<number>()
+const [count, setCount] = createSignal<number>();
 ```
 
 Here, `createSignal` has the return type `Signal<number | undefined>`, which corresponds to the type passed into it, and `undefined` as it was uninitialized.
 This resolves to a getter-setter [tuple](https://www.typescriptlang.org/docs/handbook/2/objects.html#tuple-types), both of which are generically typed:
 
 ```typescript
-import type { Signal, Accessor, Setter } from "solid-js"
-type Signal<T> = [get: Accessor<T>, set: Setter<T>]
+import type { Signal, Accessor, Setter } from "solid-js";
+type Signal<T> = [get: Accessor<T>, set: Setter<T>];
 ```
 
 In Solid, a signal's getter, like `count`, is essentially a function that returns a specific type.
@@ -173,7 +173,7 @@ This is because it can not distinguish whether the function should be executed t
 In these situations, using the callback form of the setter is recommended:
 
 ```ts
-setSignal(() => value)
+setSignal(() => value);
 ```
 
 #### Default values
@@ -182,8 +182,8 @@ By providing default values when `createSignal` is called, the need for explicit
 This leverages type inference to determine the type automatically:
 
 ```typescript
-const [count, setCount] = createSignal(0)
-const [name, setName] = createSignal("")
+const [count, setCount] = createSignal(0);
+const [name, setName] = createSignal("");
 ```
 
 In this example, TypeScript understands the types as `number` and `string`.
@@ -194,7 +194,7 @@ This means that `count` and `name` directly receive the types `Accessor<number>`
 Just as signals use `createSignal<T>`, context uses `createContext<T>`, which is parameterized by the type `T` of the context's value:
 
 ```tsx
-type Data = { count: number; name: string }
+type Data = { count: number; name: string };
 ```
 
 When invoking `useContext(dataContext)`, the type contained within the context is returned.
@@ -208,7 +208,7 @@ The `| undefined` arises when the context's value will be used but cannot be det
 Much like [default values](#default-values) in signals, `| undefined` can be avoided in the type by giving a default value that will be returned if no value is assigned by a context provider:
 
 ```typescript
-const dataContext = createContext({ count: 0, name: "" })
+const dataContext = createContext({ count: 0, name: "" });
 ```
 
 By providing a default value, TypeScript determines that `dataContext` is `Context<{ count: number, name: string }>`.
@@ -219,25 +219,25 @@ By using TypeScript's [`ReturnType`](https://www.typescriptlang.org/docs/handboo
 
 ```tsx
 export const makeCountNameContext = (initialCount = 0, initialName = "") => {
-	const [count, setCount] = createSignal(initialCount)
-	const [name, setName] = createSignal(initialName)
+	const [count, setCount] = createSignal(initialCount);
+	const [name, setName] = createSignal(initialName);
 	return [
 		{ count, name },
 		{ setCount, setName },
-	] as const
-}
+	] as const;
+};
 
-type CountNameContextType = ReturnType<typeof makeCountNameContext>
-export const CountNameContext = createContext<CountNameContextType>()
+type CountNameContextType = ReturnType<typeof makeCountNameContext>;
+export const CountNameContext = createContext<CountNameContextType>();
 ```
 
 `CountNameContextType` will correspond to the result of `makeCountNameContext`:
 
 ```tsx
-;[
+[
 	{ count: Accessor<number>, name: Accessor<string> },
 	{ setCount: Setter<number>, setName: Setter<string> },
-]
+];
 ```
 
 To retrieve the context, use `useCountNameContext`, which has a type signature of `() => CountNameContextType | undefined`.
@@ -247,14 +247,14 @@ Additionally, throwing a readable error may be preferable to non-null asserting:
 
 ```tsx
 export const useCountNameContext = () => {
-	const countName = useContext(CountNameContext)
+	const countName = useContext(CountNameContext);
 	if (!countName) {
 		throw new Error(
 			"useCountNameContext should be called inside its ContextProvider"
-		)
+		);
 	}
-	return countName
-}
+	return countName;
+};
 ```
 
 **Note:** While supplying a default value to `createContext` can make the context perpetually defined, this approach may not always be advisable.
@@ -281,14 +281,16 @@ Trying to pass unneccessary props or children will result in type errors:
 ```tsx
 // in counter.tsx
 const Counter: Component = () => {
-	const [count, setCount] = createSignal(0)
-	return <button onClick={() => setCount((c) => c + 1)}>{count()}</button>
-}
+	const [count, setCount] = createSignal(0);
+	return (
+		<button onClick={() => setCount((prev) => prev + 1)}>{count()}</button>
+	);
+};
 
 // in app.tsx
-;<Counter /> // ✔️
-;<Counter initial={5} /> // ❌: No 'initial' prop defined
-;<Counter>hi</Counter> // ❌: Children aren't expected
+<Counter />; // ✔️
+<Counter initial={5} />; // ❌: No 'initial' prop defined
+<Counter>hi</Counter>; // ❌: Children aren't expected
 ```
 
 #### Components with props
@@ -297,11 +299,13 @@ For components that require the use of props, they can be typed using [generics]
 
 ```tsx
 const InitCounter: Component<{ initial: number }> = (props) => {
-	const [count, setCount] = createSignal(props.initial)
-	return <button onClick={() => setCount((c) => c + 1)}>{count()}</button>
-}
+	const [count, setCount] = createSignal(props.initial);
+	return (
+		<button onClick={() => setCount((prev) => prev + 1)}>{count()}</button>
+	);
+};
 
-;<InitCounter initial={5} />
+<InitCounter initial={5} />;
 ```
 
 #### Components with children
@@ -311,17 +315,17 @@ For this, Solid provides `ParentComponent`, which includes `children?` as an opt
 If defining a component with the `function` keyword, `ParentProps` can be used as a helper for the props:
 
 ```tsx
-import { ParentComponent } from "solid-js"
+import { ParentComponent } from "solid-js";
 
 const CustomCounter: ParentComponent = (props) => {
-	const [count, setCount] = createSignal(0)
+	const [count, setCount] = createSignal(0);
 	return (
-		<button onClick={() => setCount((c) => c + 1)}>
+		<button onClick={() => setCount((prev) => prev + 1)}>
 			{count()}
 			{props.children}
 		</button>
-	)
-}
+	);
+};
 ```
 
 In this example, `props` is inferred to be of the type `{children?: JSX.Element }`, streamlining the process of defining components that can accept children.
@@ -360,7 +364,7 @@ const MyGenericComponent = <T extends unknown>(
 	props: MyProps<T>
 ): JSX.Element => {
 	/* ... */
-}
+};
 
 // Using a function declaration for a generic component
 function MyGenericComponent<T>(props: MyProps<T>): JSX.Element {
@@ -402,7 +406,7 @@ Defining an event handler inline within a JSX attribute automatically provides t
 ```tsx
 <input
 	onInput={(event) => {
-		console.log("Input changed to", event.currentTarget.value)
+		console.log("Input changed to", event.currentTarget.value);
 	}}
 />
 ```
@@ -425,12 +429,12 @@ For specific events like `Input` and `Focus` that are directly associated with i
 In an environment without TypeScript, using the `ref` attribute in Solid ensures that the corresponding DOM element is assigned to the variable after it is rendered:
 
 ```js
-let divRef
-console.log(divRef) // Outputs: undefined
+let divRef;
+console.log(divRef); // Outputs: undefined
 onMount(() => {
-	console.log(divRef) // Outputs: <div> element
-})
-return <div ref={divRef} />
+	console.log(divRef); // Outputs: <div> element
+});
+return <div ref={divRef} />;
 ```
 
 In a TypeScript environment, particularly with strict `null` checks enabled, typing these variables can be a challenge.
@@ -452,8 +456,8 @@ Within the scope of the `onMount` function, which runs after rendering, you can 
 
 ```typescript
 onMount(() => {
-	divRef!.focus()
-})
+	divRef!.focus();
+});
 ```
 
 Another approach is to bypass `null` during the assignment phase and then apply a definite assignment assertion within the `ref` attribute:
@@ -471,27 +475,27 @@ return <div ref={divRef!}>...</div>
 In this case, using `divRef!` within the `ref` attribute signals to TypeScript that `divRef` will receive an assignment after this stage, which is more in line with how Solid works.
 
 <Callout>
-	While TypeScript does catch incorrect usage of refs that occur
-	before their JSX block definition, it currently does not identify undefined
-	variables within certain nested functions in Solid. Therefore, additional care
-	is needed when using `ref`s in functions such as
+	While TypeScript does catch incorrect usage of refs that occur before their
+	JSX block definition, it currently does not identify undefined variables
+	within certain nested functions in Solid. Therefore, additional care is needed
+	when using `ref`s in functions such as
 	[`createMemo`](/reference/basic-reactivity/create-memo),
-	[`createRenderEffect`](/reference/secondary-primitives/create-render-effect), and
-	[`createComputed`](/reference/secondary-primitives/create-computed).
+	[`createRenderEffect`](/reference/secondary-primitives/create-render-effect),
+	and [`createComputed`](/reference/secondary-primitives/create-computed).
 </Callout>
 
 Finally, a riskier approach involves using the definite assignment assertion right at the point of variable initialization.
 While this method bypasses TypeScript's assignment checks for that particular variable, it offers a quick but less secure workaround that could lead to runtime errors.
 
 ```typescript
-let divRef!: HTMLDivElement
+let divRef!: HTMLDivElement;
 
 // Permitted by TypeScript but will throw an error at runtime:
 // divRef.focus();
 
 onMount(() => {
-	divRef.focus()
-})
+	divRef.focus();
+});
 ```
 
 ## Control flow-based narrowing
@@ -501,15 +505,15 @@ Control flow-based narrowing involves refining the type of a value by using cont
 Consider the following:
 
 ```tsx
-const user: User | undefined = maybeUser()
-return <div>{user && user.name}</div>
+const user: User | undefined = maybeUser();
+return <div>{user && user.name}</div>;
 ```
 
 In Solid, however, accessors cannot be narrowed in a similar way:
 
 ```tsx
-const [user, setUser] = createSignal<User>()
-return <div>{user() && user().name}</div>
+const [user, setUser] = createSignal<User>();
+return <div>{user() && user().name}</div>;
 //                    ^ Object may be 'undefined'.
 
 // Using `<Show>`:
@@ -520,13 +524,13 @@ return (
 			{user().name /* Object is possibly 'undefined' */}
 		</Show>
 	</div>
-)
+);
 ```
 
 In this case, using optional chaining serves as an good alternative:
 
 ```tsx
-return <div>{user()?.name}</div>
+return <div>{user()?.name}</div>;
 
 // Using `<Show>`:
 
@@ -534,7 +538,7 @@ return (
 	<div>
 		<Show when={user()}>{(nonNullishUser) => nonNullishUser().name}</Show>
 	</div>
-)
+);
 ```
 
 This approach is simillar using the keyed option, but offers an accessor to prevent the recreation of children each time the `when` value changes.
@@ -546,14 +550,14 @@ return (
 			{(nonNullishUser) => nonNullishUser.name}
 		</Show>
 	</div>
-)
+);
 ```
 
 Note that optional chaining may not always be possible.
 For instance, when a `UserPanel` component exclusively requires a `User` object:
 
 ```tsx
-return <UserPanel user={user()} />
+return <UserPanel user={user()} />;
 //                        ^ Type 'undefined' is not assignable to type 'User'.
 ```
 
@@ -567,13 +571,13 @@ return (
 	<Show when={user()}>
 		{(nonNullishUser) => <UserPanel user={nonNullishUser()} />}
 	</Show>
-)
+);
 ```
 
 Casting can also be a solution so long as the assumption is valid:
 
 ```tsx
-return <div>{user() && (user() as User).name}</div>
+return <div>{user() && (user() as User).name}</div>;
 ```
 
 It's worth noting that runtime type errors may arise from doing this.
@@ -583,12 +587,12 @@ This may happen when passing a type-cast value to a component, which discards in
 If the types in a union need to be differentiated, a memo or computed signal can work as an alternative solution:
 
 ```tsx
-type User = Admin | OtherUser
+type User = Admin | OtherUser;
 const admin = createMemo(() => {
-	const u = user()
-	return u && u.type === "admin" ? u : undefined
-})
-return <Show when={admin()}>{(a) => <AdminPanel user={a()} />}</Show>
+	const u = user();
+	return u && u.type === "admin" ? u : undefined;
+});
+return <Show when={admin()}>{(a) => <AdminPanel user={a()} />}</Show>;
 ```
 
 The following alternative also works when using `Show`:
@@ -596,8 +600,8 @@ The following alternative also works when using `Show`:
 ```tsx
 <Show
 	when={(() => {
-		const u = user()
-		return u && u.type === "admin" ? u : undefined
+		const u = user();
+		return u && u.type === "admin" ? u : undefined;
 	})()}
 >
 	{(admin) => <AdminPanel user={admin()} />}
@@ -613,27 +617,27 @@ Typing these events requires an extension of Solid's JSX namespace.
 
 ```tsx
 class NameEvent extends CustomEvent {
-	type: "Name"
-	detail: { name: string }
+	type: "Name";
+	detail: { name: string };
 
 	constructor(name: string) {
-		super("Name", { detail: { name } })
+		super("Name", { detail: { name } });
 	}
 }
 
 declare module "solid-js" {
 	namespace JSX {
 		interface CustomEvents {
-			Name: NameEvent // Matches `on:Name`
+			Name: NameEvent; // Matches `on:Name`
 		}
 		interface CustomCaptureEvents {
-			Name: NameEvent // Matches `oncapture:Name`
+			Name: NameEvent; // Matches `oncapture:Name`
 		}
 	}
 }
 
 // Usage
-;<div on:Name={(event) => console.log("name is", event.detail.name)} />
+<div on:Name={(event) => console.log("name is", event.detail.name)} />;
 ```
 
 <Callout>
@@ -708,43 +712,43 @@ function model(
 	element: Element, // directives can be used on any HTML and SVG element
 	value: Accessor<Signal<string>> // second param will always be an accessor in case value being reactive
 ) {
-	const [field, setField] = value()
-	createRenderEffect(() => (element.value = field()))
+	const [field, setField] = value();
+	createRenderEffect(() => (element.value = field()));
 	element.addEventListener("input", (e) => {
-		const value = (e.target as HTMLInputElement).value
-		setField(value)
-	})
+		const value = (e.target as HTMLInputElement).value;
+		setField(value);
+	});
 }
 
 declare module "solid-js" {
 	namespace JSX {
 		interface Directives {
-			model: Signal<string> // Corresponds to `use:model`
+			model: Signal<string>; // Corresponds to `use:model`
 		}
 	}
 }
 
 // Usage
-let [name, setName] = createSignal("")
-;<input type="text" use:model={[name, setName]} />
+let [name, setName] = createSignal("");
+<input type="text" use:model={[name, setName]} />;
 ```
 
 In using `DirectiveFunctions`, there's the ability to check both arguments (if present) by detailing the entire function type:
 
 ```tsx
 function model(element: HTMLInputElement, value: Accessor<Signal<string>>) {
-	const [field, setField] = value()
-	createRenderEffect(() => (element.value = field()))
-	element.addEventListener("input", (e) => setField(e.target.value))
+	const [field, setField] = value();
+	createRenderEffect(() => (element.value = field()));
+	element.addEventListener("input", (e) => setField(e.target.value));
 }
 
 function log(element: Element) {
-	console.log(element)
+	console.log(element);
 }
 
-let num = 0
+let num = 0;
 function count() {
-	num++
+	num++;
 }
 
 function foo(comp: Element, args: Accessor<string[]>) {
@@ -754,10 +758,10 @@ function foo(comp: Element, args: Accessor<string[]>) {
 declare module "solid-js" {
 	namespace JSX {
 		interface DirectiveFunctions {
-			model: typeof model
-			log: typeof log
-			count: typeof count
-			foo: typeof foo
+			model: typeof model;
+			log: typeof log;
+			count: typeof count;
+			foo: typeof foo;
 		}
 	}
 }

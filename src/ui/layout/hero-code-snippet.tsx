@@ -1,4 +1,4 @@
-import { codeToHtml } from "shikiji";
+import { codeToHtml } from "shiki";
 import { createResource } from "solid-js";
 
 export const counterTxt = `import { createSignal } from "solid-js";

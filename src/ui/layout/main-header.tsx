@@ -7,6 +7,7 @@ import { ThemeSelector } from "./theme-selector";
 import { MobileNavigation } from "./mobile-navigation";
 import { useLocation } from "@solidjs/router";
 import { getValidLocaleFromPathname } from "~/i18n/helpers";
+import { LanguageSelector } from "./language-selector";
 
 export function MainHeader() {
 	const [isScrolled, setIsScrolled] = createSignal(false);
@@ -65,6 +66,7 @@ export function MainHeader() {
 						<DiscordIcon class="h-6 w-6 fill-slate-800 dark:fill-slate-200 group-hover:dark:fill-white dark:group-hover:fill-slate-300" />
 					</A>
 					<ThemeSelector />
+					<LanguageSelector />
 				</div>
 			</div>
 		</header>

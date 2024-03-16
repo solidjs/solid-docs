@@ -41,11 +41,13 @@ export const LanguageSelector: Component = () => {
 					path={language}
 				/>
 				<span class="truncate pl-1 w-16 text-slate-700 dark:text-slate-300 prose prose-slate text-sm ">
-					{languages[selectedLanguage]}
+					{selectedLanguage === "en"
+						? languages[selectedLanguage]
+						: selectedLanguage.toUpperCase()}
 				</span>
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Portal>
-				<DropdownMenu.Content class="z-50 w-36 space-y-1 rounded-xl bg-white p-2 text-sm shadow-md shadow-black/5 ring-1 ring-black/5 dark:bg-slate-800 dark:ring-white/5">
+				<DropdownMenu.Content class="z-50 w-44 space-y-1 rounded-xl bg-white p-2 text-sm shadow-md shadow-black/5 ring-1 ring-black/5 dark:bg-slate-800 dark:ring-white/5">
 					<For each={languageEntries}>
 						{([langCode, lang]) => (
 							<A
@@ -61,7 +63,7 @@ export const LanguageSelector: Component = () => {
 										langCode === selectedLanguage,
 								}}
 							>
-								<span class="text-slate-700 dark:text-slate-300 prose prose-slate text-sm group-hover:dark:text-white">
+								<span class="pl-1 text-slate-700 dark:text-slate-300 prose prose-slate text-sm group-hover:dark:text-white">
 									{lang}
 								</span>
 							</A>

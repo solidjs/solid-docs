@@ -35,7 +35,7 @@ export const LanguageSelector: Component = () => {
 
 	return (
 		<DropdownMenu.Root gutter={10}>
-			<DropdownMenu.Trigger class=" w-20 flex h-6 items-center text-left rounded-lg shadow-md shadow-black/5 ring-1 ring-black/10 dark:bg-slate-800 dark:ring-inset dark:ring-white/60">
+			<DropdownMenu.Trigger class=" w-[4.5rem] flex h-6 items-center text-left rounded-lg shadow-md shadow-black/5 ring-1 ring-black/10 dark:bg-slate-800 dark:ring-inset dark:ring-white/60">
 				<Icon
 					class="w-4 pl-1 fill-slate-700 dark:fill-slate-200"
 					path={language}

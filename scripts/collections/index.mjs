@@ -6,6 +6,7 @@ import { createI18nEntries } from "../create-i18n-entries.mjs";
 import { createI18nTree } from "../create-i18n-tree.mjs";
 
 export const languages = ["pt-br"];
+const projects = ["solid-router"];
 export const COLLECTIONS_ROOT = "src/routes";
 
 (async () => {
@@ -16,6 +17,44 @@ export const COLLECTIONS_ROOT = "src/routes";
 		learn: createFlatEntryList(tree.learn, []),
 		reference: createFlatEntryList(tree.reference, []),
 	};
+	const projectTrees = {};
+	const projectFlatEntries = {};
+
+	for (const project of projects) {
+		projectTrees[project] = await createNavTree(
+			`${COLLECTIONS_ROOT}/${project}`
+		);
+
+		projectFlatEntries[project] = {
+			learn: await createFlatEntryList(projectTrees[project].learn, []),
+			reference: await createFlatEntryList(projectTrees[project].reference, []),
+		};
+
+		writeFile(`${project}-tree.ts`, projectTrees[project]);
+		writeFile(`${project}-flat-entries.ts`, projectFlatEntries[project]);
+
+		for (const locale of languages) {
+			const entryTitles = await createI18nEntries(
+				projectFlatEntries[project],
+				locale,
+				project
+			);
+
+			writeFile(`${project}-flat-entries-${locale}.ts`, entryTitles);
+			writeFile(`${project}-tree-${locale}.ts`, {
+				learn: await createI18nTree(
+					projectTrees[project].learn,
+					locale,
+					project
+				),
+				reference: await createI18nTree(
+					projectTrees[project].reference,
+					locale,
+					project
+				),
+			});
+		}
+	}
 
 	for (const locale of languages) {
 		const entryTitles = await createI18nEntries(defaultFlatEntries, locale);
@@ -29,6 +68,9 @@ export const COLLECTIONS_ROOT = "src/routes";
 	await Promise.all([
 		writeFile("tree.ts", tree),
 		writeFile("entriesList.js", defaultFlatEntries, true),
-		writeFile("entries.ts", defaultFlatEntries),
+		writeFile("flat-entries.ts", defaultFlatEntries),
+		Object.keys(projectTrees).forEach((project) =>
+			writeFile(`${project}-entries.ts`, projectTrees[project])
+		),
 	]);
 })();

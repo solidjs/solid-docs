@@ -1,7 +1,7 @@
 // @refresh reload
 
-import { AnchorProps, useMatch } from "@solidjs/router";
-import { For, Show, Suspense, createResource } from "solid-js";
+import { cache, createAsync, useMatch } from "@solidjs/router";
+import { For, Show, Suspense, createEffect, createResource } from "solid-js";
 import { useLocation } from "@solidjs/router";
 import { Collapsible, Tabs } from "@kobalte/core";
 import englishNav from "solid:collection/tree";
@@ -10,12 +10,10 @@ import { chevronDown } from "solid-heroicons/solid";
 import { setIsOpen } from "./mobile-navigation";
 import { A } from "~/ui/i18n-anchor";
 import { SUPPORTED_LOCALES } from "~/i18n/config";
-import {
-	getLocaleFromPathname,
-	getValidLocaleFromPathname,
-} from "~/i18n/helpers";
+import { getValidLocaleFromPathname } from "~/i18n/helpers";
 import { Dynamic } from "solid-js/web";
 import { useI18n } from "~/i18n/i18n-context";
+import { PathMatch } from "@solidjs/router/dist/types";
 
 type Entry = {
 	title: string;
@@ -24,6 +22,36 @@ type Entry = {
 	mainNavExclude: boolean;
 	isTranslated?: boolean;
 };
+
+// const getNav = cache(
+// 	async (
+// 		isFirstMatch: PathMatch | undefined,
+// 		isI18nRouter: PathMatch | undefined
+// 	) => {
+// 		"use server";
+
+// 		if (!isFirstMatch && !isI18nRouter) return englishNav;
+
+// 		const matchedRoute = (isFirstMatch || isI18nRouter) as PathMatch;
+// 		const { path } = matchedRoute;
+// 		const locale = getValidLocaleFromPathname(path);
+
+// 		if (path.includes("solid-router")) {
+// 			if (SUPPORTED_LOCALES.some((lang) => lang === locale)) {
+// 				return (await import(`../../../.solid/tree-solid-router-${locale}.ts`))
+// 					.default;
+// 			}
+
+// 			return (await import(`../../../.solid/solid-router-tree`)).default;
+// 		}
+// 		if (SUPPORTED_LOCALES.some((lang) => lang === locale)) {
+// 			return (await import(`../../../.solid/tree-${locale}.ts`)).default;
+// 		}
+
+// 		return englishNav;
+// 	},
+// 	"main-navigation"
+// );
 
 // check if every item on the list has mainNavExclude as true
 const shouldHideNavItem = (list: Entry[]) =>
@@ -122,78 +150,82 @@ function DirList(props: { list: Entry[] }) {
 	);
 }
 
-export function MainNavigation() {
-	const { pathname } = useLocation();
-
-	const [entries] = createResource(
-		() => getLocaleFromPathname(pathname),
-		async (locale) => {
-			"use server";
-
-			if (SUPPORTED_LOCALES.some((lang) => lang === locale)) {
-				return (await import(`../../../.solid/tree-${locale}.ts`)).default;
-			}
-
-			return englishNav;
-		}
-	);
-
+const PROJECTS = ["solid-router"];
+interface NavProps {
+	tree: typeof englishNav;
+}
+export function MainNavigation(props: NavProps) {
 	const i18n = useI18n();
 
-	const learn = () => entries()?.learn;
-	const reference = () => entries()?.reference;
+	// is Project i18n
+	const isTranslatedProject = useMatch(() => "/:locale/:project", {
+		locale: SUPPORTED_LOCALES,
+		project: PROJECTS,
+	});
 
-	const isReference = useMatch(() => "/reference/*");
+	// is english main
+	// is i18n main
+	// is en project
+	const isFirstMatch = useMatch(() => "/:locale?", {
+		locale: [...SUPPORTED_LOCALES, ...PROJECTS],
+	});
+
+	// const entries = createAsync(() =>
+	// 	getNav(isFirstMatch(), isTranslatedProject())
+	// );
+
+	const learn = () => props.tree.learn;
+	const reference = () => props.tree.reference;
+
+	const loc = useLocation();
+	const path = () => loc.pathname;
 
 	return (
 		<Suspense>
-			<Show when={i18n.t}>
-				<>
-					<nav class="overflow-y-auto custom-scrollbar h-full md:h-[calc(100vh-7rem)] pb-20">
-						<Tabs.Root defaultValue={isReference() ? "reference" : "learn"}>
-							<Tabs.List class="sticky top-0 flex w-full pb-4 pr-4 z-10 md:dark:bg-slate-900 md:bg-slate-50">
-								<Tabs.Trigger
-									value="learn"
-									class="inline-block flex-1 ml-2 px-6 py-2 outline-none hover:bg-blue-500/30 dark:hover:bg-blue-300/20  dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:font-bold"
-								>
-									{i18n.t("main.nav.tab.learn")}
-								</Tabs.Trigger>
-								<Tabs.Trigger
-									value="reference"
-									class="inline-block flex-1 px-6 py-2 hover:bg-blue-500/30 dark:hover:bg-blue-300/20  dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:font-bold"
-								>
-									{i18n.t("main.nav.tab.reference")}
-								</Tabs.Trigger>
-								<Tabs.Indicator class="absolute bottom-4 bg-blue-500 dark:bg-blue-500 transition-all duration-250 h-[2px]" />
-							</Tabs.List>
-							<Tabs.Content
+			<Show when={i18n.t} keyed>
+				<nav class="overflow-y-auto custom-scrollbar h-full md:h-[calc(100vh-7rem)] pb-20">
+					<Tabs.Root
+						defaultValue={path().includes("reference") ? "reference" : "learn"}
+					>
+						<Tabs.List class="sticky top-0 flex w-full pb-4 pr-4 z-10 md:dark:bg-slate-900 md:bg-slate-50">
+							<Tabs.Trigger
 								value="learn"
-								class="w-full relative mt-8 text-base"
+								class="inline-block flex-1 ml-2 px-6 py-2 outline-none hover:bg-blue-500/30 dark:hover:bg-blue-300/20  dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:font-bold"
 							>
-								<Show
-									when={learn()}
-									fallback={
-										<p class="text-white">{i18n.t("main.nav.no.routes")}</p>
-									}
-								>
-									<ul role="list" class="space-y-6 px-4">
-										<DirList list={learn()} />
-									</ul>
-								</Show>
-							</Tabs.Content>
-							<Tabs.Content value="reference" class="w-full relative top-8">
-								<Show
-									when={reference()}
-									fallback={<p>{i18n.t("main.nav.no.routes")}</p>}
-								>
-									<ul role="list" class="space-y-6 px-4">
-										<DirList list={reference()} />
-									</ul>
-								</Show>
-							</Tabs.Content>
-						</Tabs.Root>
-					</nav>
-				</>
+								{i18n.t("main.nav.tab.learn")}
+							</Tabs.Trigger>
+							<Tabs.Trigger
+								value="reference"
+								class="inline-block flex-1 px-6 py-2 hover:bg-blue-500/30 dark:hover:bg-blue-300/20  dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:font-bold"
+							>
+								{i18n.t("main.nav.tab.reference")}
+							</Tabs.Trigger>
+							<Tabs.Indicator class="absolute bottom-4 bg-blue-500 dark:bg-blue-500 transition-all duration-250 h-[2px]" />
+						</Tabs.List>
+						<Tabs.Content value="learn" class="w-full relative mt-8 text-base">
+							<Show
+								when={learn()}
+								fallback={
+									<p class="text-white">{i18n.t("main.nav.no.routes")}</p>
+								}
+							>
+								<ul role="list" class="space-y-6 px-4">
+									<DirList list={learn()} />
+								</ul>
+							</Show>
+						</Tabs.Content>
+						<Tabs.Content value="reference" class="w-full relative top-8">
+							<Show
+								when={reference()}
+								fallback={<p>{i18n.t("main.nav.no.routes")}</p>}
+							>
+								<ul role="list" class="space-y-6 px-4">
+									<DirList list={reference()} />
+								</ul>
+							</Show>
+						</Tabs.Content>
+					</Tabs.Root>
+				</nav>
 			</Show>
 		</Suspense>
 	);

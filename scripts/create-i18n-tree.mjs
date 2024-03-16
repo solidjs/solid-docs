@@ -48,13 +48,14 @@ function traverseTree(children) {
  *
  * @param {Tree["reference" | "learn"]} entryList
  * @param {string} locale
+ * @param {string | undefined} project
  */
-export async function createI18nTree(entryList, locale) {
+export async function createI18nTree(entryList, locale, project = "") {
 	const entries = [];
 
 	for (const entry of entryList) {
 		if (entry.type === "section") {
-			const nested = await createI18nTree(entry.children, locale);
+			const nested = await createI18nTree(entry.children, locale, project);
 			entries.push({
 				...entry,
 				children: nested.filter(Boolean),
@@ -63,9 +64,11 @@ export async function createI18nTree(entryList, locale) {
 			const i18nEntryPath = path.join(
 				process.cwd(),
 				COLLECTIONS_ROOT,
+				project,
 				locale,
-				entry.path.endsWith("/") ? entry.path + "index" : entry.path
+				entry?.path?.endsWith("/") ? entry?.path + "index" : entry.path
 			);
+
 			if (existsSync(i18nEntryPath + ".mdx")) {
 				const { title } = await getFrontMatterData(i18nEntryPath + ".mdx");
 				entries.push({

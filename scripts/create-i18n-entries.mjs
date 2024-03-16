@@ -21,17 +21,32 @@ import { getFrontMatterData } from "./collections/utils/get-frontamtter.mjs";
 /**
  *
  * @param {DocsEntry[]} entryList
+ * @param {string} locale
+ * @param {string | undefined} project
  */
-async function buildSectionList(entryList = [], locale) {
+async function buildSectionList(entryList = [], locale, project = "") {
 	const sectionList = [];
 
 	for (const entry of entryList) {
+		console.log("defined", project, locale, entry.path, entry.slug, entry.type);
+		console.log(entryList);
+		if (!entry.path) {
+			console.log(
+				"undefined",
+				project,
+				locale,
+				entry.path,
+				entry.slug,
+				entry.type
+			);
+		}
 		const entryPath = entry.path.endsWith("/")
 			? entry.path + "index"
 			: entry.path;
 		const i18nEntryPath = path.join(
 			process.cwd(),
 			COLLECTIONS_ROOT,
+			project,
 			locale,
 			entryPath
 		);
@@ -58,11 +73,12 @@ async function buildSectionList(entryList = [], locale) {
 /**
  * @param {DefaultEntries} defaultEntries
  * @param {string} locale
+ * @param {string} project
  */
-export async function createI18nEntries(defaultEntries, locale) {
+export async function createI18nEntries(defaultEntries, locale, project) {
 	const referenceLearn = await Promise.all([
-		buildSectionList(defaultEntries.learn, locale),
-		buildSectionList(defaultEntries.reference, locale),
+		buildSectionList(defaultEntries.learn, locale, project),
+		buildSectionList(defaultEntries.reference, locale, project),
 	]);
 
 	return {

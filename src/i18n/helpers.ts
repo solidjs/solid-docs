@@ -1,3 +1,4 @@
+import { useMatch } from "@solidjs/router";
 import { SUPPORTED_LOCALES } from "./config";
 
 export function getLocaleFromPathname(pathname: string) {

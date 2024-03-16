@@ -3,17 +3,85 @@ import { ParentComponent, Show, children, Suspense } from "solid-js";
 import { MainNavigation } from "~/ui/layout/main-navigation";
 import { MainHeader } from "./layout/main-header";
 import { Hero } from "./layout/hero";
-import { useMatch } from "@solidjs/router";
+import { cache, createAsync, useMatch } from "@solidjs/router";
 import { DocsLayout } from "./docs-layout";
 import { PageStateProvider } from "~/data/page-state";
 import { Alert } from "@kobalte/core";
 import { SidePanel } from "./layout/side-panel";
 import { SUPPORTED_LOCALES } from "~/i18n/config";
+import { getValidLocaleFromPathname } from "~/i18n/helpers";
+import flatEntries from "solid:collection/flat-entries";
+import englishNav from "solid:collection/tree";
+import { PathMatch } from "@solidjs/router/dist/types";
+
+const PROJECTS = ["solid-router"];
+
+const getDocsMetadata = cache(
+	async (
+		isFirstMatch: PathMatch | undefined,
+		isTranslatedProject: PathMatch | undefined
+	) => {
+		"use server";
+
+		if (!isFirstMatch && !isTranslatedProject)
+			return {
+				tree: englishNav,
+				entries: flatEntries,
+			};
+
+		const { path } = (isFirstMatch || isTranslatedProject) as PathMatch;
+		const locale = getValidLocaleFromPathname(path);
+
+		if (path.includes("solid-router")) {
+			if (SUPPORTED_LOCALES.some((lang) => lang === locale)) {
+				return {
+					tree: (await import(`../../.solid/solid-router-tree-${locale}.ts`))
+						.default,
+					entries: (
+						await import(`../../.solid/solid-router-flat-entries-${locale}.ts`)
+					).default,
+				};
+			}
+
+			return {
+				tree: (await import(`../../.solid/solid-router-tree`)).default,
+				entries: (await import("../../.solid/solid-router-flat-entries"))
+					.default,
+			};
+		}
+
+		if (SUPPORTED_LOCALES.some((lang) => lang === locale)) {
+			return {
+				tree: (await import(`../../.solid/tree-${locale}.ts`)).default,
+				entries: (await import(`../../.solid/flat-entries-${locale}.ts`))
+					.default,
+			};
+		} else {
+			return {
+				tree: englishNav,
+				entries: flatEntries,
+			};
+		}
+	},
+	"global-metadata"
+);
 
 export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
-	const isRoot = useMatch(() => "/:locale?", {
-		locale: SUPPORTED_LOCALES,
+	const isTranslatedProject = useMatch(() => "/:locale/:project/*", {
+		locale: [...SUPPORTED_LOCALES, ...PROJECTS],
+		project: PROJECTS,
 	});
+
+	// is english main
+	// is i18n main
+	// is en project
+	const isRoot = useMatch(() => "/:localeOrProject?", {
+		localeOrProject: [...SUPPORTED_LOCALES, ...PROJECTS],
+	});
+
+	const entries = createAsync(() =>
+		getDocsMetadata(isRoot(), isTranslatedProject())
+	);
 
 	const resolved = children(() => props.children);
 
@@ -34,15 +102,21 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 				<Show when={isRoot()} keyed>
 					<Hero />
 				</Show>
-				<div class="relative mx-auto flex max-w-8xl flex-auto justify-center custom-scrollbar">
+				<div class="relative mx-auto flex max-w-8xl flex-auto justify-center custom-scrollbar pt-10">
 					<Show when={!props.isError}>
 						<div class="hidden md:relative md:block lg:flex-none ">
 							<div class="absolute inset-y-0 right-0 w-[50vw] dark:hidden" />
 							<div class="absolute bottom-0 right-0 top-16 hidden h-12 w-px bg-gradient-to-t from-slate-800 dark:block" />
 							<div class="absolute bottom-0 right-0 top-28 hidden w-px bg-slate-800 dark:block" />
-							<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] w-64 pl-0.5 pr-2 xl:w-72">
-								<MainNavigation />
-							</div>
+							<Suspense>
+								<Show when={entries()}>
+									{(data) => (
+										<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] w-64 pl-0.5 pr-2 xl:w-72">
+											<MainNavigation tree={data().tree} />
+										</div>
+									)}
+								</Show>
+							</Suspense>
 						</div>
 					</Show>
 					<main class="w-full md:max-w-2xl flex-auto px-4 pt-20 md:pb-16 lg:max-w-none prose prose-slate dark:prose-invert dark:text-slate-300">
@@ -57,7 +131,13 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 						>
 							<Show when={!props.isError} fallback={<>{resolved()}</>}>
 								<Suspense>
-									<DocsLayout>{resolved()}</DocsLayout>
+									<Show when={entries()}>
+										{(data) => (
+											<DocsLayout entries={data().entries}>
+												{resolved()}
+											</DocsLayout>
+										)}
+									</Show>
 								</Suspense>
 							</Show>
 						</Show>

@@ -5,14 +5,19 @@ import { isServer } from "solid-js/web";
 import { Logo, GitHubIcon, DiscordIcon } from "~/ui/logo";
 import { ThemeSelector } from "./theme-selector";
 import { MobileNavigation } from "./mobile-navigation";
-import { useLocation } from "@solidjs/router";
-import { getValidLocaleFromPathname } from "~/i18n/helpers";
+import { useMatch } from "@solidjs/router";
+import { SUPPORTED_LOCALES } from "~/i18n/config";
 import { LanguageSelector } from "./language-selector";
 
 export function MainHeader() {
 	const [isScrolled, setIsScrolled] = createSignal(false);
-	const { pathname } = useLocation();
-	const locale = getValidLocaleFromPathname(pathname);
+	const notSolidCore = useMatch(() => "/:project/*", {
+		project: ["solid-router", "solid-start", "solid-metadata"],
+	});
+	const translatedLocale = useMatch(() => "/:locale/:project/*", {
+		locale: SUPPORTED_LOCALES,
+		project: ["solid-router", "solid-start", "solid-metadata"],
+	});
 
 	if (!isServer) {
 		const onScroll = () => {
@@ -38,7 +43,7 @@ export function MainHeader() {
 				"dark:bg-transparent bg-transparent": !isScrolled(),
 			}}
 		>
-			<div class="flex justify-between py-2 px-4 items-center w-full max-w-8xl mx-auto ">
+			<div class="grid grid-cols-[1fr,2fr,1fr] py-2 px-4 items-center w-full max-w-8xl mx-auto ">
 				<div class="flex md:hidden">
 					<MobileNavigation />
 				</div>
@@ -46,7 +51,60 @@ export function MainHeader() {
 					<Logo class="h-9" />
 				</A>
 
-				<div class="flex basis-0 gap-4">
+				<ul class="flex gap-5 justify-center">
+					<li>
+						<A
+							href="/"
+							class={`text-slate-200 relative overflow-hidden drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] px-2 `}
+							classList={{
+								"border-b-2 border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250":
+									!notSolidCore() && !translatedLocale(),
+							}}
+							addLocale
+						>
+							Solid Core
+							<span class="absolute w-full h-1 left-0 bottom-0 drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] " />
+						</A>
+					</li>
+					<li>
+						<A
+							href="/solid-router"
+							class="text-slate-200 px-2"
+							activeClass="border-b-2 border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
+							addLocale
+						>
+							Solid-Router
+						</A>
+					</li>
+					<li>
+						<span class="text-slate-400">
+							SolidStart
+							<span>
+								<abbr
+									title="coming soon"
+									class="text-[0.5em] relative -top-2 left-1 no-underline text-slate-200 border py-px px-1 rounded-md border-slate-300"
+								>
+									soon
+								</abbr>
+							</span>
+						</span>
+					</li>
+					<li>
+						<span class="text-slate-400">
+							Solid-Meta
+							<span>
+								<abbr
+									title="coming soon"
+									class="text-[0.5em] relative -top-2 left-1 no-underline text-slate-200 border py-px px-1 rounded-md border-slate-300"
+								>
+									soon
+								</abbr>
+							</span>
+						</span>
+					</li>
+				</ul>
+
+				<div class="flex basis-0 gap-4 justify-end">
 					<A
 						href="https://github.com/solidjs/solid"
 						class="group"

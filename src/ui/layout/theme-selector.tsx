@@ -22,7 +22,7 @@ export const ThemeSelector: Component = () => {
 							<DropdownMenu.Item
 								class="flex cursor-pointer select-none items-center rounded-[0.625rem] p-1 hover:bg-slate-200 hover:dark:bg-slate-600 group"
 								classList={{
-									"bg-slate-200 dark:bg-slate-700 font-medium":
+									"bg-slate-200 dark:bg-slate-700 font-semibold":
 										selectedTheme()!.name === theme.name,
 								}}
 								closeOnSelect={true}

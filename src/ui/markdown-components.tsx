@@ -58,7 +58,7 @@ export default {
 	h1: (props: ParentProps) => (
 		<h1
 			{...props}
-			class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+			class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 		>
 			{props.children}
 		</h1>
@@ -69,7 +69,7 @@ export default {
 				<hr class="dark:prose-hr:border-slate-800 border-slate-400 my-8" />
 				<h2
 					{...props}
-					class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+					class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 				>
 					{props.children}
 				</h2>
@@ -80,7 +80,7 @@ export default {
 		return (
 			<h3
 				{...props}
-				class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+				class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 			>
 				{props.children}
 			</h3>
@@ -90,7 +90,7 @@ export default {
 		return (
 			<h4
 				{...props}
-				class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+				class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 			>
 				{props.children}
 			</h4>
@@ -100,7 +100,7 @@ export default {
 		return (
 			<h5
 				{...props}
-				class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+				class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 			>
 				{props.children}
 			</h5>
@@ -109,7 +109,7 @@ export default {
 	h6: (props: ParentProps) => (
 		<h6
 			{...props}
-			class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+			class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 		>
 			{props.children}
 		</h6>
@@ -197,7 +197,7 @@ export default {
 	code: (props: ParentProps) => {
 		return (
 			<code
-				class="inline-block not-prose !font-mono font-medium bg-blue-200 dark:bg-slate-600/60 text-slate-900 dark:text-white px-1 py-0.5 rounded-lg text-[0.8em] leading-snug"
+				class="inline-block not-prose !font-mono font-semibold bg-blue-200 dark:bg-slate-600/60 text-slate-900 dark:text-white px-1 py-0.5 rounded-lg text-[0.8em] leading-snug"
 				{...props}
 			>
 				{props.children}

@@ -8,7 +8,7 @@ export const Contribute: Component = () => {
 
 	return (
 		<>
-			<span class="font-display text-base font-medium text-slate-900 dark:text-white">
+			<span class="text-base font-semibold text-slate-900 dark:text-white">
 				{i18n.t("contribute.title")}
 			</span>
 			<ol

@@ -86,10 +86,13 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (
 
 	return (
 		<aside aria-label="table of contents" class="w-full pt-5">
-			<span class="font-display text-base font-semibold text-slate-900 dark:text-white">
+			<span class="text-base font-semibold text-slate-900 dark:text-white">
 				{i18n.t("toc.this.page")}
 			</span>
-			<ol role="list" class="text-sm list-none mt-2 p-0 flex flex-col pl-2.5">
+			<ol
+				role="list"
+				class="text-sm list-none mt-2 p-0 flex flex-col pl-2.5 space-y-2"
+			>
 				<li class="pl-0 mt-0 mb-0">
 					<span>
 						<a
@@ -107,8 +110,8 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (
 				</li>
 				<Index each={pageSections.sections}>
 					{(section) => (
-						<li class="pl-0 my-1">
-							<span class="mt-0">
+						<li class="pl-0 pt-0 space-y-2">
+							<span>
 								<a
 									href={`#${section().id}`}
 									classList={{
@@ -124,7 +127,7 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (
 							<Show when={section().children.length !== 0}>
 								<ol
 									role="list"
-									class="space-y-2 pl-2.5 text-slate-500 dark:text-slate-300 list-none active:font-bold hover:text-slate-700 dark:hover:text-blue-200 font-bold active:text-blue-600"
+									class="pl-2.5 text-slate-500 dark:text-slate-300 list-none active:font-bold hover:text-slate-700 dark:hover:text-blue-200 font-bold active:text-blue-600 space-y-2"
 								>
 									<Index each={section().children}>
 										{(subSection) => (

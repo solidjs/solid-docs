@@ -10,6 +10,8 @@ We offer support for two test runners:
 
 - uvu - only brings the bare necessities
 
+- WebdriverIO - offers component testing in the browser
+
 Both are based around [solid-testing-library](https://github.com/solidjs/solid-testing-library), which integrates [Testing Library](https://testing-library.com/) into Solid. Testing Library mimics a light-weight browser and provides an API to interact with it from your tests.
 
 We maintain a starter template for Solid and Jest tests. We recommend you base your project on it, or alternatively install the starter template in a scratch project and copy the configuration from it into your own project.
@@ -72,6 +74,32 @@ If you want nice HTML coverage reports, you can use `c8 -r html` instead of `c8`
 ```
 
 Now if you run `npm run test:watch`, the tests will run every time you change a file.
+
+### Setting up WebdriverIO
+
+If you prefer testing your Solid components in the browser, we recommend using WebdriverIO which comes with a preset for Solid component testing. In your project run:
+
+```bash
+$ npm init wdio@latest ./tests
+```
+
+It will kick off a configuration wizard in which you have the opportunity to choose Solid as preset or if you using Solid with Vitejs pick "Other" so you can re-use your existing Vite config.
+
+The configuration wizard will set-up a `wdio` NPM script that allows to start the test via:
+
+```sh
+npm run wdio
+```
+
+#### Watch Mode
+
+You can run your tests in watch mode which will automatically re-run test files that have been changed. You can also [define](https://webdriver.io/docs/configuration#filestowatch) a glob for your application files and have these tests re-run whenever you change your components.
+
+To run in watch mode, call:
+
+```sh
+npm run wdio -- --watch
+```
 
 ## Testing Patterns and Best Practices
 
@@ -428,4 +456,34 @@ testCounter("it increases its value on click", async () => {
 });
 
 testCounter.run();
+```
+
+#### Testing with WebdriverIO
+
+```ts
+// counter.test.tsx
+import { $, expect } from '@wdio/globals'
+import { cleanup, render, screen } from 'solid-testing-library'
+
+import { Counter } from '../components/counter'
+
+describe('my component tests', () => {
+  afterEach(cleanup)
+
+  it('it starts with zero', async () => {
+    render(() => <Counter />)
+    const button = screen.getByRole("button");
+    expect($(button)).toBePresent();
+    expect($(button)).toHaveTextContaining("Count: 0");
+  });
+
+  it("it increases its value on click", async () => {
+    render(() => <Counter />);
+    const button = screen.getByRole("button");
+    await $(button).click()
+    expect($(button)).toHaveTextContaining("Count: 1");
+    await $(button).click()
+    expect(button).toHaveTextContaining("Count: 2");
+  });
+})
 ```

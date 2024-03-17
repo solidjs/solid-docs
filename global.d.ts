@@ -4,8 +4,8 @@ declare module "solid:collection/tree" {
 	export default tree;
 }
 
-declare module "solid:collection/entries" {
-	import entries from ".solid/entries";
+declare module "solid:collection/flat-entries" {
+	import entries from ".solid/flat-entries";
 	// eslint-disable-next-line
 	export default entries;
 }

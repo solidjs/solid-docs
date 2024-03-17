@@ -35,11 +35,11 @@ function docsTree() {
 }
 
 function docsEntries() {
-	const virtualModuleId = "solid:collection/entries";
+	const virtualModuleId = "solid:collection/flat-entries";
 	const resolveVirtualModuleId = "\0" + virtualModuleId;
 
 	return {
-		name: "solid:collection/entries",
+		name: "solid:collection/flat-entries",
 		resolveId(id: string) {
 			if (id === virtualModuleId) {
 				return resolveVirtualModuleId;
@@ -47,7 +47,7 @@ function docsEntries() {
 		},
 		async load(id: string) {
 			if (id === resolveVirtualModuleId) {
-				const entries = await import(`${process.cwd()}/.solid/entries`);
+				const entries = await import(`${process.cwd()}/.solid/flat-entries`);
 
 				return `export default ${JSON.stringify(entries, null, 2)}`;
 			}
@@ -82,12 +82,15 @@ export default defineConfig({
 					},
 				],
 				[rehypeSlug],
-				[rehypeAutoLinkHeadings, {
-          behavior: 'wrap',
-          properties : {
-              className : "heading",
-          },
-        }],
+				[
+					rehypeAutoLinkHeadings,
+					{
+						behavior: "wrap",
+						properties: {
+							className: "heading",
+						},
+					},
+				],
 			],
 			remarkPlugins: [
 				remarkFrontmatter,

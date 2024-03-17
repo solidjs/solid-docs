@@ -4,9 +4,26 @@ import { bars_3, xMark } from "solid-heroicons/solid";
 import { MainNavigation } from "./main-navigation";
 import { createSignal } from "solid-js";
 
+interface Entry {
+	title: string;
+	path: string;
+	children?: Entry[];
+	mainNavExclude: boolean;
+	isTranslated?: boolean;
+}
+
+type EntryList = { learn: Entry[]; reference: Entry[] };
+
+interface NavProps {
+	tree: {
+		learn: Entry[];
+		reference: Entry[];
+	};
+}
+
 export const [isOpen, setIsOpen] = createSignal(false);
 
-export const MobileNavigation = () => {
+export const MobileNavigation = (props: NavProps) => {
 	return (
 		<Dialog.Root open={isOpen()} onOpenChange={setIsOpen}>
 			<Dialog.Trigger>
@@ -20,7 +37,7 @@ export const MobileNavigation = () => {
 							<Icon path={xMark} class="w-6 dark:prose-invert prose" />
 						</Dialog.CloseButton>
 						<Dialog.Description class="pr-3 w-full">
-							<MainNavigation />
+							<MainNavigation tree={props.tree} />
 						</Dialog.Description>
 					</Dialog.Content>
 				</div>

@@ -87,7 +87,7 @@ export function Logo(props: { class?: string }) {
 					fill="url(#d)"
 				/>
 			</svg>
-			<span class="dark:text-white text-2xl leading-none font-normal inactive font-display">
+			<span class="dark:text-white text-2xl leading-none font-normal inactive font-display md:block hidden">
 				<b>Solid</b> Docs
 			</span>
 		</div>

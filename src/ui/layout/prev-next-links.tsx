@@ -13,7 +13,7 @@ interface PageLinkProps {
 const PageLink: Component<PageLinkProps> = (props) => {
 	return (
 		<div {...props}>
-			<dt class="font-display text-sm font-medium text-slate-900 dark:text-white">
+			<dt class="text-sm font-semibold text-slate-900 dark:text-white">
 				{props.dir === "next" ? "Next" : "Previous"}
 			</dt>
 			<dd class="mt-1">

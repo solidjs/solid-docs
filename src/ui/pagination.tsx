@@ -34,7 +34,7 @@ export function Pagination(props: Pagination) {
 			<Show when={previous()}>
 				{(entry) => (
 					<div>
-						<span class="font-display text-sm font-medium text-slate-900 dark:text-white">
+						<span class="font-semibold text-slate-900 dark:text-white">
 							Previous
 						</span>
 						<A
@@ -49,7 +49,7 @@ export function Pagination(props: Pagination) {
 			<Show when={next()}>
 				{(entry) => (
 					<div>
-						<span class="font-display text-sm font-medium text-slate-900 dark:text-white">
+						<span class="font-semibold text-slate-900 dark:text-white">
 							Next
 						</span>
 						<A

@@ -1,0 +1,16 @@
+{
+  "files": [
+    {
+      "name": "main",
+      "content": "import { render } from \"solid-js/web\";\nimport Nested from \"./nested\";\nimport { CounterProvider } from \"./counter\";\n\nfunction App() {\n  return <>\n    <h1>Welcome to Counter App</h1>\n    <Nested />\n  </>\n};\n\nrender(() => <App />, document.getElementById(\"app\"));"
+    },
+    {
+      "name": "nested",
+      "content": "import { useCounter } from \"./counter\";\n\nexport default function Nested() {\n  return (\n    <>\n      <div>0</div>\n      <button>+</button>\n      <button>-</button>\n    </>\n  );\n};"
+    },
+    {
+      "name": "counter",
+      "content": "import { createSignal, createContext, useContext } from \"solid-js\";\n\nconst CounterContext = createContext();\n\nexport function CounterProvider(props) {\n  const [count, setCount] = createSignal(props.count || 0),\n    store = [\n      count,\n      {\n        increment() {\n          setCount(c => c + 1);\n        },\n        decrement() {\n          setCount(c => c - 1);\n        }\n      }\n    ];\n\n  return (\n    <CounterContext.Provider value={store}>\n      {props.children}\n    </CounterContext.Provider>\n  );\n}\n\nexport function useCounter() { return useContext(CounterContext); }"
+    }
+  ]
+}

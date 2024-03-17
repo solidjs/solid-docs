@@ -1,36 +1,143 @@
 # Reatividade Básica
 
+A abordagem geral do Solid para reatividade é envolver qualquer computação reativa em
+uma função, e reexecutar esta função quando suas dependências atualizarem.
+O compilador JSX do Solid também envolve a maioria das expressões (código entre chaves) com uma
+função, para que elas sejam atualizadas automaticamente (e acionam as atualizações correspondentes no DOM)
+quando as suas dependências mudarem.
+Mais precisamente, a reexecução automáticas de uma função ocorre sempre que a função
+é chamada em um _escopo de rastreamento_ como em uma expressão JSX ou chamadas a API que constroem "computações" (`createEffect`, `createMemo`, etc.).
+Por padrão, as dependências de uma função são rastreadas automaticamente quando elas são chamadas em um escopo de rastreamento, detectando quando a função lê
+o estado reativo (p.ex., via um Signal getter or um atributo de Store).
+Como resultado, você geralmente não precisa se preocupar sobre dependências.
+(Mas se o rastreio de dependências automático não produzir os resultados desejados,
+você pode [sobrescrever o rastreio de dependências](#reactive-utilities).)
+Essa abordagem torna a reatividade _composta_: chamar uma função dentro de outra função que geralmente causa que a função principal herde as dependências da função chamada.
+
 ## `createSignal`
 
 ```ts
-export function createSignal<T>(
-  value: T,
-  options?: { name?: string; equals?: false | ((prev: T, next: T) => boolean) }
+import { createSignal } from "solid-js";
+
+function createSignal<T>(
+  initialValue: T,
+  options?: { equals?: false | ((prev: T, next: T) => boolean) }
 ): [get: () => T, set: (v: T) => T];
+
+// available types for return value of createSignal:
+import type { Signal, Accessor, Setter } from "solid-js";
+type Signal<T> = [get: Accessor<T>, set: Setter<T>];
+type Accessor<T> = () => T;
+type Setter<T> = (v: T | ((prev?: T) => T)) => T;
 ```
 
-Este é o reativo primitivo mais básico usado para rastrear um único valor que muda com o tempo. A função `create` retorna um par de funções `get` e `set` para acessar e atualizar o Signal.
+Sinais são o tipo primitivo mais básico. Eles rastreiam um único valor (que pode ser qualquer objeto Javascript) que muda durante o tempo.
+O valor do Sinal começa igual o que foi passado no primeiro argumento `initialValue` (ou `undefined` caso não existam argumentos).
+A função `createSignal` retorna um par de funções como um array de dois elementos:
+um _getter_ (ou _accessor_) e um _setter_. No uso tipico vocÊ desestrutura esse array em um Sinal nomeado da seguinte maneira:
 
-```js
-const [getValue, setValue] = createSignal(initialValue);
-
-// ler valor
-getValue();
-
-// definir valor
-setValue(nextValue);
-
-// definir o valor com uma função
-setValue((prev) => prev + next);
+```ts
+const [count, setCount] = createSignal(0);
+const [ready, setReady] = createSignal(false);
 ```
 
-Lembre-se de acessar os sinais em um escopo de rastreamento se desejar que eles reajam às atualizações. Os escopos de rastreamento são funções passadas para cálculos como `createEffect` ou expressões JSX.
+Chamar o getter (p.ex., `count()` ou `ready()`)
+retorna o valor atual do Sinal.
+É crucial para o rastreio automático de dependências que o getter do Sinal seja chamado dentro do escopo de rastreamento para fazer com que o sinal seja adicionado as dependências
+para que então a função seja reexecutada caso o Sinal seja atualizado.
 
-> Se você deseja armazenar uma função em um Signal, você deve usar a forma de função:
+Chamar o setter (p.ex., `setCount(nextCount)` ou `setReady(nextReady)`)
+seta o valor do Sinal e _atualiza_ o Sinal
+(acionando as dependências para reexecutarem)
+se o valor realmente mudar (veja os detalhes abaixo).
+Como o seu único argumento, o setter recebe ou um novo valor para o Sinal, ou uma função que mapeia o ultimo valor do Sinal para um novo valor.
+O setter também retorna o valor atualizado. Por exemplo:
+
+```ts
+// read signal's current value, and
+// depend on signal if in a tracking scope
+// (but nonreactive outside of a tracking scope):
+const currentCount = count();
+
+// or wrap any computation with a function,
+// and this function can be used in a tracking scope:
+const doubledCount = () => 2 * count();
+
+// or build a tracking scope and depend on signal:
+const countDisplay = <div>{count()}</div>;
+
+// write signal by providing a value:
+setReady(true);
+
+// write signal by providing a function setter:
+const newCount = setCount((prev) => prev + 1);
+```
+
+> If you want to store a function in a Signal you must use the function form:
 >
 > ```js
 > setValue(() => myFunction);
 > ```
+>
+> However, functions are not treated specially as the `initialValue` argument
+> to `createSignal`, so you should pass a function initial value as is:
+>
+> ```js
+> const [func, setFunc] = createSignal(myFunction);
+> ```
+
+A não ser que você esteja em um [lote](#batch), [efeito](#createEffect), ou [transição](#use-transition), sinais são atualizados imediatamente quando você os muda.
+Por exemplo:
+
+```ts
+setReady(false);
+console.assert(ready() === false);
+setReady(true);
+console.assert(ready() === true);
+```
+
+Se você não tem certeza que seu código vai executar em um lote ou uma transição
+(p.ex., código de uma biblioteca), você pode evitar fazer suposições.
+
+##### Opções
+
+Muitos primitivos em Solid recebem um objeto de "opções" como um último parâmetro opcional. as opções do `createSignal` permite que você determine uma opção `equals`. Por exemplo:
+
+```ts
+const [getValue, setValue] = createSignal(initialValue, { equals: false });
+```
+
+Por padrão, quando chamando um setter do sinal, o sinal só atualiza (e causa suas dependências para reexecutar)
+se o novo valor é na verdade diferente do ultimo valor,
+de acordo com o o operador `===` do JavaScript.
+
+De forma alternativa, você pode definir o `equals` to `false` para sempre que o setter seja chamado reexecutar as dependências, ou você pode passar sua própria função de equidade.
+Alguns exemplos:
+
+```ts
+// use { equals: false } to allow modifying object in-place;
+// normally this wouldn't be seen as an update because the
+// object has the same identity before and after change
+const [object, setObject] = createSignal({ count: 0 }, { equals: false });
+setObject((current) => {
+  current.count += 1;
+  current.updated = new Date();
+  return current;
+});
+
+// use { equals: false } signal as trigger without value:
+const [depend, rerun] = createSignal(undefined, { equals: false });
+// now calling depend() in a tracking scope
+// makes that scope rerun whenever rerun() gets called
+
+// define equality based on string length:
+const [myString, setMyString] = createSignal("string", {
+  equals: (newVal, oldVal) => newVal.length === oldVal.length,
+});
+
+setMyString("strung"); // considered equal to the last value and won't cause updates
+setMyString("stranger"); // considered different and will cause updates
+```
 
 ## `createEffect`
 

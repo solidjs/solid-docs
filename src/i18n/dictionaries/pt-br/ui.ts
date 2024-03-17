@@ -19,6 +19,10 @@ export default {
 	"contribute.edit": "Edite este artigo",
 	"contribute.report": "Reporte um erro neste artigo",
 
+	// pagination
+	"pagination.next": "Próximo",
+	"pagination.previous": "Anterior",
+
 	// 404
 	"missing.translation": "Esta seção ainda não foi traduzida",
 } as const;

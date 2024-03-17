@@ -38,6 +38,10 @@ export default {
 	"contribute.edit": "Edit this page",
 	"contribute.report": "Report an issue with this page",
 
+	// pagination
+	"pagination.next": "Next",
+	"pagination.previous": "Previous",
+
 	// 404
 	"missing.translation": "This section has not yet been translated",
 } as const;

@@ -1,60 +1,34 @@
 // @refresh reload
 
-import { cache, createAsync, useMatch } from "@solidjs/router";
-import { For, Show, Suspense, createEffect, createResource } from "solid-js";
+import { For, Show, Suspense } from "solid-js";
 import { useLocation } from "@solidjs/router";
 import { Collapsible, Tabs } from "@kobalte/core";
-import englishNav from "solid:collection/tree";
 import { Icon } from "solid-heroicons";
 import { chevronDown } from "solid-heroicons/solid";
 import { setIsOpen } from "./mobile-navigation";
 import { A } from "~/ui/i18n-anchor";
-import { SUPPORTED_LOCALES } from "~/i18n/config";
-import { getValidLocaleFromPathname } from "~/i18n/helpers";
 import { Dynamic } from "solid-js/web";
 import { useI18n } from "~/i18n/i18n-context";
-import { PathMatch } from "@solidjs/router/dist/types";
 
-type Entry = {
+interface Entry {
 	title: string;
 	path: string;
 	children?: Entry[];
 	mainNavExclude: boolean;
 	isTranslated?: boolean;
-};
+}
 
-// const getNav = cache(
-// 	async (
-// 		isFirstMatch: PathMatch | undefined,
-// 		isI18nRouter: PathMatch | undefined
-// 	) => {
-// 		"use server";
+type EntryList = { learn: Entry[]; reference: Entry[] };
 
-// 		if (!isFirstMatch && !isI18nRouter) return englishNav;
-
-// 		const matchedRoute = (isFirstMatch || isI18nRouter) as PathMatch;
-// 		const { path } = matchedRoute;
-// 		const locale = getValidLocaleFromPathname(path);
-
-// 		if (path.includes("solid-router")) {
-// 			if (SUPPORTED_LOCALES.some((lang) => lang === locale)) {
-// 				return (await import(`../../../.solid/tree-solid-router-${locale}.ts`))
-// 					.default;
-// 			}
-
-// 			return (await import(`../../../.solid/solid-router-tree`)).default;
-// 		}
-// 		if (SUPPORTED_LOCALES.some((lang) => lang === locale)) {
-// 			return (await import(`../../../.solid/tree-${locale}.ts`)).default;
-// 		}
-
-// 		return englishNav;
-// 	},
-// 	"main-navigation"
-// );
+interface NavProps {
+	tree: {
+		learn: Entry[];
+		reference: Entry[];
+	};
+}
 
 // check if every item on the list has mainNavExclude as true
-const shouldHideNavItem = (list: Entry[]) =>
+const shouldHideNavItem = (list: EntryList["learn" | "reference"]) =>
 	list.filter(({ mainNavExclude }) => mainNavExclude).length === list.length;
 
 function ListItemLink(props: { item: Entry }) {
@@ -150,29 +124,8 @@ function DirList(props: { list: Entry[] }) {
 	);
 }
 
-const PROJECTS = ["solid-router"];
-interface NavProps {
-	tree: typeof englishNav;
-}
 export function MainNavigation(props: NavProps) {
 	const i18n = useI18n();
-
-	// is Project i18n
-	const isTranslatedProject = useMatch(() => "/:locale/:project", {
-		locale: SUPPORTED_LOCALES,
-		project: PROJECTS,
-	});
-
-	// is english main
-	// is i18n main
-	// is en project
-	const isFirstMatch = useMatch(() => "/:locale?", {
-		locale: [...SUPPORTED_LOCALES, ...PROJECTS],
-	});
-
-	// const entries = createAsync(() =>
-	// 	getNav(isFirstMatch(), isTranslatedProject())
-	// );
 
 	const learn = () => props.tree.learn;
 	const reference = () => props.tree.reference;

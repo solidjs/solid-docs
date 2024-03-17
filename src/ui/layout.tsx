@@ -14,7 +14,16 @@ import flatEntries from "solid:collection/flat-entries";
 import englishNav from "solid:collection/tree";
 import { PathMatch } from "@solidjs/router/dist/types";
 
-const PROJECTS = ["solid-router"];
+const PROJECTS = ["solid-router", "solid-start", "solid-meta"];
+
+const getProjectFromUrl = (path: string) => {
+	for (const project of PROJECTS) {
+		if (path.includes(project)) {
+			return project;
+		}
+	}
+	return null;
+};
 
 const getDocsMetadata = cache(
 	async (
@@ -31,22 +40,21 @@ const getDocsMetadata = cache(
 
 		const { path } = (isFirstMatch || isTranslatedProject) as PathMatch;
 		const locale = getValidLocaleFromPathname(path);
-
-		if (path.includes("solid-router")) {
+		const project = getProjectFromUrl(path);
+		if (project) {
 			if (SUPPORTED_LOCALES.some((lang) => lang === locale)) {
 				return {
-					tree: (await import(`../../.solid/solid-router-tree-${locale}.ts`))
+					tree: (await import(`../../.solid/${project}-tree-${locale}.ts`))
 						.default,
 					entries: (
-						await import(`../../.solid/solid-router-flat-entries-${locale}.ts`)
+						await import(`../../.solid/${project}-flat-entries-${locale}.ts`)
 					).default,
 				};
 			}
 
 			return {
-				tree: (await import(`../../.solid/solid-router-tree`)).default,
-				entries: (await import("../../.solid/solid-router-flat-entries"))
-					.default,
+				tree: (await import(`../../.solid/${project}-tree`)).default,
+				entries: (await import(`../../.solid/${project}-flat-entries`)).default,
 			};
 		}
 

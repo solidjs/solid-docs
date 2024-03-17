@@ -21,8 +21,8 @@ const TrafficLightsIcon: Component<{ class: string }> = (props) => {
 export const Hero: Component = () => {
 	const i18n = useI18n();
 	return (
-		<div class="overflow-hidden bg-sky-100/80 border border-sky-200  dark:border-none dark:bg-slate-900 my-[4rem] ">
-			<div class="py-8 sm:px-2 lg:relative">
+		<div class="overflow-hidden bg-sky-100/80 border border-sky-200  dark:border-none dark:bg-slate-900 mb-10 ">
+			<div class="py-10 sm:px-2 lg:relative">
 				<div class="mx-auto grid max-w-2xl grid-cols-1 items-center gap-x-8 gap-y-16 px-4 lg:max-w-8xl lg:grid-cols-2 lg:px-8 xl:gap-x-16 xl:px-12">
 					<div class="relative md:text-center lg:text-left">
 						<div class="relative">

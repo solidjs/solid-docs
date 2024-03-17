@@ -122,7 +122,7 @@ export function MainHeader(props: NavProps) {
 					</li>
 				</ul>
 
-				<div class="lg:order-2 flex basis-0 gap-4 justify-end order-">
+				<div class="lg:order-2 flex basis-0 gap-4 items-center justify-end order-">
 					<A
 						href="https://github.com/solidjs/solid"
 						class="group"

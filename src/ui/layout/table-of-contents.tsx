@@ -12,7 +12,9 @@ import { useLocation } from "@solidjs/router";
 import { usePageState } from "~/data/page-state";
 import { useI18n } from "~/i18n/i18n-context";
 
-export const TableOfContents: Component<{ children: ResolvedChildren }> = (props) => {
+export const TableOfContents: Component<{ children: ResolvedChildren }> = (
+	props
+) => {
 	const location = useLocation();
 	const { setPageSections, pageSections } = usePageState();
 	const [currentSection, setCurrentSection] = createSignal("");
@@ -38,14 +40,16 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (props
 
 	function getHeaders(children: ResolvedChildren) {
 		if (children) {
-			if (!Array.isArray(children)) return
-			const firstElement = children.find((child) => child instanceof HTMLElement) as HTMLElement | null;
+			if (!Array.isArray(children)) return;
+			const firstElement = children.find(
+				(child) => child instanceof HTMLElement
+			) as HTMLElement | null;
 			// if any of the child elements are not connected to the DOM the page contents haven't mounted yet
-			if (firstElement && !firstElement.isConnected) return 
+			if (firstElement && !firstElement.isConnected) return;
 		}
 
 		const headings = document.querySelectorAll("main h2, main h3");
-		const sections: any = []
+		const sections: any = [];
 
 		if (headings) {
 			headings.forEach((heading) => {
@@ -72,25 +76,26 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (props
 		});
 	}
 
-	createEffect(() => getHeaders(props.children))
+	createEffect(() => getHeaders(props.children));
 
 	onMount(() => {
-		document.addEventListener("docs-layout-mounted", () => getHeaders(props.children));
-	})
+		document.addEventListener("docs-layout-mounted", () =>
+			getHeaders(props.children)
+		);
+	});
 
 	return (
-		<aside aria-label="table of contents" class="w-full">
+		<aside aria-label="table of contents" class="w-full pt-5">
 			<span class="font-display text-base font-medium text-slate-900 dark:text-white">
 				{i18n.t("toc.this.page")}
 			</span>
-			<ol role="list" class="text-sm list-none mt-2 p-0 flex flex-col">
-				<li class="pl-0 mt-0">
+			<ol role="list" class="text-sm list-none mt-2 p-0 flex flex-col pl-2.5">
+				<li class="pl-0 mt-0 mb-0">
 					<span>
 						<a
 							href={`#_top`}
 							classList={{
-								"dark:text-blue-200 hover:text-blue-700 dark:hover:text-blue-200":
-									currentSection() !== "",
+								"dark:text-slate-300": currentSection() !== "",
 								"text-blue-800 dark:text-blue-300 font-bold hover:text-slate-700 dark:hover:text-slate-200":
 									currentSection() === "",
 							}}
@@ -102,8 +107,8 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (props
 				</li>
 				<Index each={pageSections.sections}>
 					{(section) => (
-						<li class="pl-0">
-							<span class="mt-2">
+						<li class="pl-0 my-1">
+							<span class="mt-0">
 								<a
 									href={`#${section().id}`}
 									classList={{
@@ -119,7 +124,7 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (props
 							<Show when={section().children.length !== 0}>
 								<ol
 									role="list"
-									class="space-y-2 pl-5 text-slate-500 dark:text-slate-300 list-none active:font-bold hover:text-slate-700 dark:hover:text-blue-200 font-bold active:text-blue-600"
+									class="space-y-2 pl-2.5 text-slate-500 dark:text-slate-300 list-none active:font-bold hover:text-slate-700 dark:hover:text-blue-200 font-bold active:text-blue-600"
 								>
 									<Index each={section().children}>
 										{(subSection) => (

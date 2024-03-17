@@ -70,7 +70,7 @@ export function MainHeader(props: NavProps) {
 					</A>
 				</div>
 
-				<ul class="order-2 col-span-2 lg:col-span-1 flex pt-12 lg:pt-0 lg:w-auto w-full gap-5 justify-center">
+				<ul class="order-2 col-span-2 lg:col-span-1 flex pt-6 lg:pt-0 lg:w-auto w-full gap-5 justify-center">
 					<li>
 						<A
 							href="/"

@@ -117,7 +117,9 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 							Share your feedback with us!
 						</a>
 					</Alert.Root>
-					<MainHeader />
+					<Show when={entries()}>
+						{(data) => <MainHeader tree={data().tree} />}
+					</Show>
 					<Show when={isRoot()} keyed>
 						<Hero />
 					</Show>

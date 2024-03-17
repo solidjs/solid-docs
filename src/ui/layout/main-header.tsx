@@ -9,7 +9,24 @@ import { useMatch } from "@solidjs/router";
 import { SUPPORTED_LOCALES } from "~/i18n/config";
 import { LanguageSelector } from "./language-selector";
 
-export function MainHeader() {
+interface Entry {
+	title: string;
+	path: string;
+	children?: Entry[];
+	mainNavExclude: boolean;
+	isTranslated?: boolean;
+}
+
+type EntryList = { learn: Entry[]; reference: Entry[] };
+
+interface NavProps {
+	tree: {
+		learn: Entry[];
+		reference: Entry[];
+	};
+}
+
+export function MainHeader(props: NavProps) {
 	const [isScrolled, setIsScrolled] = createSignal(false);
 	const notSolidCore = useMatch(() => "/:project/*", {
 		project: ["solid-router", "solid-start", "solid-metadata"],
@@ -43,15 +60,17 @@ export function MainHeader() {
 				"dark:bg-transparent bg-transparent": !isScrolled(),
 			}}
 		>
-			<div class="grid grid-cols-[1fr,2fr,1fr] py-2 px-4 items-center w-full max-w-8xl mx-auto ">
-				<div class="flex md:hidden">
-					<MobileNavigation />
+			<div class="grid lg:grid-cols-[1fr,2fr,1fr] grid-cols-2 py-2 px-4 items-center w-full max-w-8xl mx-auto ">
+				<div class="flex justify-start gap-2">
+					<div class="flex md:hidden">
+						<MobileNavigation tree={props.tree} />
+					</div>
+					<A href="/" aria-label="Home page" addLocale>
+						<Logo class="h-9" />
+					</A>
 				</div>
-				<A href="/" aria-label="Home page" addLocale>
-					<Logo class="h-9" />
-				</A>
 
-				<ul class="flex gap-5 justify-center">
+				<ul class="order-2 col-span-2 lg:col-span-1 flex pt-12 lg:pt-0 lg:w-auto w-full gap-5 justify-center">
 					<li>
 						<A
 							href="/"
@@ -62,8 +81,7 @@ export function MainHeader() {
 							}}
 							addLocale
 						>
-							Solid Core
-							<span class="absolute w-full h-1 left-0 bottom-0 drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] " />
+							Core
 						</A>
 					</li>
 					<li>
@@ -73,7 +91,7 @@ export function MainHeader() {
 							activeClass="border-b-2 border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
 							addLocale
 						>
-							Solid-Router
+							Router
 						</A>
 					</li>
 					<li>
@@ -91,7 +109,7 @@ export function MainHeader() {
 					</li>
 					<li>
 						<span class="text-slate-400">
-							Solid-Meta
+							Meta
 							<span>
 								<abbr
 									title="coming soon"
@@ -104,7 +122,7 @@ export function MainHeader() {
 					</li>
 				</ul>
 
-				<div class="flex basis-0 gap-4 justify-end">
+				<div class="lg:order-2 flex basis-0 gap-4 justify-end order-">
 					<A
 						href="https://github.com/solidjs/solid"
 						class="group"

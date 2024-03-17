@@ -20,5 +20,5 @@ export default {
 	"contribute.report": "Reporte um erro neste artigo",
 
 	// 404
-	"missing.translation": "Esta seção ainda não foi traduzida.",
+	"missing.translation": "Esta seção ainda não foi traduzida",
 } as const;

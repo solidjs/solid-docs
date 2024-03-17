@@ -80,7 +80,7 @@ Pour plus de détails au sujet de la Réactivité et de son fonctionnent, ces ar
 
 [Building a Reactive Library from Scratch](https://dev.to/ryansolid/building-a-reactive-library-from-scratch-1i0p)
 
-[SolidJS: Reactivity to Rendering](https://indepth.dev/posts/1289/solidjs-reactivity-to-rendering)
+[SolidJS: Reactivity to Rendering](https://angularindepth.com/posts/1289/solidjs-reactivity-to-rendering)
 
 ## Considérations
 

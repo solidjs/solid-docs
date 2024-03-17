@@ -32,7 +32,7 @@ const [count, setCount] = createSignal(0);
 ```
 
 이펙트는 시그널 읽기를 래핑해서, 관련 시그널의 값이 변경될 때마다 재실행되는 함수입니다. 렌더링과 같은 사이드 이펙트를 생성하는데 유용합니다.
- 
+
 ```js
 createEffect(() => console.log("The latest count is", count()));
 ```
@@ -80,7 +80,7 @@ function createSignal(value) {
 
 [Building a Reactive Library from Scratch](https://dev.to/ryansolid/building-a-reactive-library-from-scratch-1i0p)
 
-[SolidJS: Reactivity to Rendering](https://indepth.dev/posts/1289/solidjs-reactivity-to-rendering)
+[SolidJS: Reactivity to Rendering](https://angularindepth.com/posts/1289/solidjs-reactivity-to-rendering)
 
 ## 고려 사항
 

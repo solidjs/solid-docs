@@ -30,7 +30,6 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 		collection()!.findIndex((element) => lastSegmentPath() === element.slug);
 
 	const titles = () => {
-		console.log(collection()[entryIndex()]);
 		const fullEntry = collection
 			? collection()![entryIndex()]
 			: { parent: undefined, title: undefined };

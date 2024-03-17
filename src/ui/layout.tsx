@@ -96,8 +96,9 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 		localeOrProject: [...SUPPORTED_LOCALES, ...PROJECTS],
 	});
 
-	const entries = createAsync(() =>
-		getDocsMetadata(isI18nOrProject(), isTranslatedProject(), isCore())
+	const entries = createAsync(
+		() => getDocsMetadata(isI18nOrProject(), isTranslatedProject(), isCore()),
+		{ deferStream: true }
 	);
 
 	const resolved = children(() => props.children);

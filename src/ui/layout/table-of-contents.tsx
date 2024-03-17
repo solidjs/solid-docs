@@ -86,7 +86,7 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (
 
 	return (
 		<aside aria-label="table of contents" class="w-full pt-5">
-			<span class="font-display text-base font-medium text-slate-900 dark:text-white">
+			<span class="font-display text-base font-semibold text-slate-900 dark:text-white">
 				{i18n.t("toc.this.page")}
 			</span>
 			<ol role="list" class="text-sm list-none mt-2 p-0 flex flex-col pl-2.5">

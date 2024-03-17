@@ -10,7 +10,11 @@ export default createHandler(() => (
 						const ctx = useThemeContext();
 
 						return (
-							<html lang="en" class={ctx.selectedTheme().value} data-theme={ctx.selectedTheme().theme}>
+							<html
+								lang="en"
+								class={ctx.selectedTheme().value}
+								data-theme={ctx.selectedTheme().theme}
+							>
 								<head>
 									<meta charset="utf-8" />
 									<meta
@@ -18,16 +22,20 @@ export default createHandler(() => (
 										content="width=device-width, initial-scale=1"
 									/>
 									<link rel="icon" href="/favicon.ico" />
-									<link rel="alternate icon" href="/favicon.svg" type="image/svg+xml" />
+									<link
+										rel="alternate icon"
+										href="/favicon.svg"
+										type="image/svg+xml"
+									/>
 									<script src="/scripts/browser-specific.js" type="module" />
 									{assets}
 								</head>
-								<body>
+								<body class="min-h-screen dark:bg-slate-900 bg-slate-50">
 									<div id="app">{children}</div>
 									{scripts}
 								</body>
 							</html>
-						)
+						);
 					})()}
 				</ThemeProvider>
 			);

@@ -28,19 +28,22 @@ const getProjectFromUrl = (path: string) => {
 const getDocsMetadata = cache(
 	async (
 		isFirstMatch: PathMatch | undefined,
-		isTranslatedProject: PathMatch | undefined
+		isI18nOrProject: PathMatch | undefined,
+		isCore: PathMatch | undefined
 	) => {
 		"use server";
 
-		if (!isFirstMatch && !isTranslatedProject)
+		if (!isFirstMatch && !isI18nOrProject)
 			return {
 				tree: englishNav,
 				entries: flatEntries,
 			};
 
-		const { path } = (isFirstMatch || isTranslatedProject) as PathMatch;
+		const { path } = (isFirstMatch || isI18nOrProject || isCore) as PathMatch;
+
 		const locale = getValidLocaleFromPathname(path);
 		const project = getProjectFromUrl(path);
+
 		if (project) {
 			if (SUPPORTED_LOCALES.some((lang) => lang === locale)) {
 				return {
@@ -81,16 +84,20 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 		project: PROJECTS,
 	});
 
-	// is english main
 	// is i18n main
 	// is en project
+	const isI18nOrProject = useMatch(() => "/:localeOrProject/*", {
+		localeOrProject: [...SUPPORTED_LOCALES, ...PROJECTS],
+	});
+
+	const isCore = useMatch(() => "/*");
+
 	const isRoot = useMatch(() => "/:localeOrProject?", {
 		localeOrProject: [...SUPPORTED_LOCALES, ...PROJECTS],
 	});
 
-	const entries = createAsync(
-		() => getDocsMetadata(isRoot(), isTranslatedProject()),
-		{ deferStream: true }
+	const entries = createAsync(() =>
+		getDocsMetadata(isI18nOrProject(), isTranslatedProject(), isCore())
 	);
 
 	const resolved = children(() => props.children);

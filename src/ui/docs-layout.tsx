@@ -15,16 +15,22 @@ interface DocsLayoutProps {
 
 export const DocsLayout = (props: DocsLayoutProps) => {
 	const location = useLocation();
-	const isReference = useMatch(() => "/reference/*");
+	// const isReference = useMatch(() => "/reference/*");
+	// const isSubReference = useMatch(() => "/:project/reference", {
+	// 	project: ["solid-router"],
+	// });
 
 	const lastSegmentPath = () => location.pathname.split("/").reverse()[0];
 	const collection = () =>
-		isReference() ? props.entries.reference : props.entries.learn;
+		location.pathname.includes("/reference/")
+			? props.entries.reference
+			: props.entries.learn;
 
 	const entryIndex = () =>
 		collection()!.findIndex((element) => lastSegmentPath() === element.slug);
 
 	const titles = () => {
+		console.log(collection()[entryIndex()]);
 		const fullEntry = collection
 			? collection()![entryIndex()]
 			: { parent: undefined, title: undefined };

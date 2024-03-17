@@ -1,0 +1,16 @@
+{
+  "files": [
+    {
+      "name": "main",
+      "content": "import { render } from \"solid-js/web\";\nimport { Suspense } from \"solid-js\";\n\nimport fetchProfileData from \"./mock-api\";\nimport ProfilePage from \"./profile\";\n\nconst App = () => {\n  const { user, posts, trivia } = fetchProfileData();\n  return (\n    <Suspense fallback={<h1>Loading...</h1>}>\n      <ProfilePage user={user()} posts={posts()} trivia={trivia()} />\n    </Suspense>\n  );\n};\n\nrender(App, document.getElementById(\"app\"));\n"
+    },
+    {
+      "name": "profile",
+      "content": "import { For, Suspense, SuspenseList } from \"solid-js\";\n\nconst ProfileDetails = (props) => <h1>{props.user?.name}</h1>;\n\nconst ProfileTimeline = (props) => (\n  <ul>\n    <For each={props.posts}>{(post) => <li>{post.text}</li>}</For>\n  </ul>\n);\n\nconst ProfileTrivia = (props) => (\n  <>\n    <h2>Fun Facts</h2>\n    <ul>\n      <For each={props.trivia}>{(fact) => <li>{fact.text}</li>}</For>\n    </ul>\n  </>\n);\n\nconst ProfilePage = (props) => (\n  <SuspenseList revealOrder=\"forwards\" tail=\"collapsed\">\n    <ProfileDetails user={props.user} />\n    <Suspense fallback={<h2>Loading posts...</h2>}>\n      <ProfileTimeline posts={props.posts} />\n    </Suspense>\n    <Suspense fallback={<h2>Loading fun facts...</h2>}>\n      <ProfileTrivia trivia={props.trivia} />\n    </Suspense>\n  </SuspenseList>\n);\n\nexport default ProfilePage;"
+    },
+    {
+      "name": "mock-api",
+      "content": "import { createResource } from \"solid-js\";\n\nexport default function fetchProfileData() {\n  const [user] = createResource(fetchUser);\n  const [posts] = createResource(fetchPosts);\n  const [trivia] = createResource(fetchTrivia);\n  return { user, posts, trivia };\n}\n\nfunction fetchUser() {\n  console.log(\"fetch user...\");\n  return new Promise((resolve) => {\n    setTimeout(() => {\n      console.log(\"fetched user\");\n      resolve({\n        name: \"Ringo Starr\"\n      });\n    }, 500);\n  });\n}\n\nlet ringoPosts = [\n  {\n    id: 0,\n    text: \"I get by with a little help from my friends\"\n  },\n  {\n    id: 1,\n    text: \"I'd like to be under the sea in an octupus's garden\"\n  },\n  {\n    id: 2,\n    text: \"You got that sand all over your feet\"\n  }\n];\n\nfunction fetchPosts() {\n  let ringoPostsAtTheTime = ringoPosts;\n  console.log(\"fetch posts...\");\n  return new Promise((resolve) => {\n    setTimeout(() => {\n      console.log(\"fetched posts\");\n      resolve(ringoPostsAtTheTime);\n    }, 3000 * Math.random());\n  });\n}\n\nfunction fetchTrivia() {\n  console.log(\"fetch trivia...\");\n  return new Promise((resolve) => {\n    setTimeout(() => {\n      console.log(\"fetched trivia\");\n      resolve([\n        {\n          id: 1,\n          text:\n            'The nickname \"Ringo\" came from his habit of wearing numerous rings.'\n        },\n        {\n          id: 2,\n          text: \"Plays the drums left-handed with a right-handed drum set.\"\n        },\n        {\n          id: 3,\n          text: \"Nominated for one Daytime Emmy Award, but did not win\"\n        }\n      ]);\n    }, 3000 * Math.random());\n  });\n}\n"
+    }
+  ]
+}

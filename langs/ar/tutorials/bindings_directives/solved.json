@@ -1,0 +1,17 @@
+{
+  "files": [
+    {
+      "name": "main",
+      "content": "// @ts-nocheck\nimport { render } from \"solid-js/web\";\nimport { createSignal, Show } from \"solid-js\";\nimport clickOutside from \"./click-outside\";\nimport \"./style.css\";\n\nfunction App() {\n  const [show, setShow] = createSignal(false);\n\n  return (\n    <Show\n      when={show()}\n      fallback={<button onClick={(e) => setShow(true)}>Open Modal</button>}\n    >\n      <div class=\"modal\" use:clickOutside={() => setShow(false)}>\n        Some Modal\n      </div>\n    </Show>\n  );\n}\n\nrender(() => <App />, document.getElementById(\"app\"));\n"
+    },
+    {
+      "name": "click-outside",
+      "content": "import { onCleanup } from \"solid-js\";\n\nexport default function clickOutside(el, accessor) {\n  const onClick = (e) => !el.contains(e.target) && accessor()?.();\n  document.body.addEventListener(\"click\", onClick);\n\n  onCleanup(() => document.body.removeEventListener(\"click\", onClick));\n}\n"
+    },
+    {
+      "name": "style",
+      "type": "css",
+      "content": ".modal {\n  padding: 16px;\n  border: 1px solid #444;\n  box-shadow: 4px 4px #88888866;\n}"
+    }
+  ]
+}

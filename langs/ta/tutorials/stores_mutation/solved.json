@@ -1,0 +1,8 @@
+{
+  "files": [
+    {
+      "name": "main",
+      "content": "import { render, For } from \"solid-js\/web\";\r\nimport { createStore, produce } from \"solid-js\/store\";\r\n\r\nconst App = () => {\r\n  let input;\r\n  let todoId = 0;\r\n  const [todos, setTodos] = createStore([]);\r\n  const addTodo = (text) => {\r\n    setTodos(\r\n      produce((todos) => {\r\n        todos.push({ id: ++todoId, text, completed: false });\r\n      }),\r\n    );\r\n  };\r\n  const toggleTodo = (id) => {\r\n    setTodos(\r\n      todo => todo.id === id,\r\n      produce((todo) => (todo.completed = !todo.completed)),\r\n    );\r\n  };\r\n\r\n  return (\r\n    <>\r\n      <div>\r\n        <input ref={input} \/>\r\n        <button\r\n          onClick={(e) => {\r\n            if (!input.value.trim()) return;\r\n            addTodo(input.value);\r\n            input.value = \"\";\r\n          }}\r\n        >\r\n          Add Todo\r\n        <\/button>\r\n      <\/div>\r\n      <For each={todos}>\r\n        {(todo) => {\r\n          const { id, text } = todo;\r\n          console.log(`Creating ${text}`)\r\n          return <div>\r\n            <input\r\n              type=\"checkbox\"\r\n              checked={todo.completed}\r\n              onchange={[toggleTodo, id]}\r\n            \/>\r\n            <span\r\n              style={{ \"text-decoration\": todo.completed ? \"line-through\" : \"none\" }}\r\n            >{text}<\/span>\r\n          <\/div>\r\n        }}\r\n      <\/For>\r\n    <\/>\r\n  );\r\n};\r\n\r\nrender(App, document.getElementById(\"app\"));"
+    }
+  ]
+}

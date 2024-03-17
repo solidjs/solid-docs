@@ -1,0 +1,13 @@
+{
+  "files": [
+    {
+      "name": "main",
+      "content": "import { render } from \"solid-js/web\";\nimport { createSignal, onMount, For } from \"solid-js\";\nimport \"./styles.css\";\n\nfunction App() {\n  const [photos, setPhotos] = createSignal([]);\n\n  onMount(async () => {\n    const res = await fetch(`https://jsonplaceholder.typicode.com/photos?_limit=20`);\n    setPhotos(await res.json());\n  });\n\n  return <>\n    <h1>Photo album</h1>\n\n    <div class=\"photos\">\n      <For each={photos()} fallback={<p>Loading...</p>}>{ photo =>\n        <figure>\n          <img src={photo.thumbnailUrl} alt={photo.title} />\n          <figcaption>{photo.title}</figcaption>\n        </figure>\n      }</For>\n    </div>\n  </>;\n}\n\nrender(() => <App />, document.getElementById('app'));"
+    },
+    {
+      "name": "styles",
+      "type": "css",
+      "content": ".photos {\n  width: 100%;\n  display: grid;\n  grid-template-columns: repeat(5, 1fr);\n  grid-gap: 8px;\n}\n\nfigure, img {\n  width: 100%;\n  margin: 0;\n}"
+    }
+  ]
+}

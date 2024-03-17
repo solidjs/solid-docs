@@ -36,7 +36,7 @@ Or you can install the dependencies in your own project. To use Solid with JSX
 Babel plugin:
 
 ```sh
-> npm install solid-js babel-preset-solid
+> npm install solid-js@1.7.x babel-preset-solid@1.7.x
 ```
 
 Then add `babel-preset-solid` to your `.babelrc`, or to your Babel config in webpack or rollup:

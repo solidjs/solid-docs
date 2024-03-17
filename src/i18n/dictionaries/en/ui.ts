@@ -39,5 +39,5 @@ export default {
 	"contribute.report": "Report an issue with this page",
 
 	// 404
-	"missing.translation": "This section has not yet been translated.",
+	"missing.translation": "This section has not yet been translated",
 } as const;

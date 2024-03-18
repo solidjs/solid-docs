@@ -57,7 +57,7 @@ function docsEntries() {
 export default defineConfig({
 	middleware: "src/middleware/index.ts",
 	server: {
-		preset: "netlify",
+		preset: "netlify-edge",
 	},
 	extensions: ["mdx", "md", "tsx"],
 	vite: () => ({

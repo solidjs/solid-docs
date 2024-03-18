@@ -13,6 +13,8 @@ import rehypeAutoLinkHeadings from "rehype-autolink-headings";
 import pkg from "@vinxi/plugin-mdx";
 
 const { default: vinxiMdx } = pkg;
+import tree from "./.solid/tree";
+import entries from "./.solid/flat-entries";
 
 function docsTree() {
 	const virtualModuleId = "solid:collection/tree";
@@ -27,7 +29,6 @@ function docsTree() {
 		},
 		async load(id: string) {
 			if (id === resolveVirtualModuleId) {
-				const tree = await import(`${process.cwd()}/.solid/tree`);
 				return `export default ${JSON.stringify(tree, null, 2)}`;
 			}
 		},
@@ -47,8 +48,6 @@ function docsEntries() {
 		},
 		async load(id: string) {
 			if (id === resolveVirtualModuleId) {
-				const entries = await import(`${process.cwd()}/.solid/flat-entries`);
-
 				return `export default ${JSON.stringify(entries, null, 2)}`;
 			}
 		},
@@ -56,55 +55,54 @@ function docsEntries() {
 }
 
 export default defineConfig({
-	start: {
-		middleware: "src/middleware/index.ts",
-		server: {
-			preset: "netlify",
-			routeRules: {},
-		},
-		extensions: ["mdx", "md", "tsx"],
+	middleware: "src/middleware/index.ts",
+	server: {
+		preset: "netlify",
 	},
-	plugins: [
-		docsTree(),
-		docsEntries(),
-		vinxiMdx.withImports({})({
-			define: {
-				"import.meta.env": `'import.meta.env'`,
-			},
-			jsx: true,
-			jsxImportSource: "solid-js",
-			providerImportSource: "solid-mdx",
-			rehypePlugins: [
-				[
-					rehypeRaw,
-					{
-						passThrough: nodeTypes,
-					},
-				],
-				[rehypeSlug],
-				[
-					rehypeAutoLinkHeadings,
-					{
-						behavior: "wrap",
-						properties: {
-							className: "heading",
+	extensions: [".mdx", ".md", ".tsx"],
+	vite: () => ({
+		plugins: [
+			docsTree(),
+			docsEntries(),
+			vinxiMdx.withImports({})({
+				define: {
+					"import.meta.env": `'import.meta.env'`,
+				},
+				jsx: true,
+				jsxImportSource: "solid-js",
+				providerImportSource: "solid-mdx",
+				rehypePlugins: [
+					[
+						rehypeRaw,
+						{
+							passThrough: nodeTypes,
 						},
-					},
+					],
+					[rehypeSlug],
+					[
+						rehypeAutoLinkHeadings,
+						{
+							behavior: "wrap",
+							properties: {
+								className: "heading",
+							},
+						},
+					],
 				],
-			],
-			remarkPlugins: [
-				remarkFrontmatter,
-				remarkGfm,
-				[
-					remarkExpressiveCode,
-					{
-						themes: ["min-light", "material-theme-ocean"],
-						themeCSSSelector: (theme: ExpressiveCodeTheme) =>
-							`[data-theme="${theme.name}"]`,
-					},
+				remarkPlugins: [
+					remarkFrontmatter,
+					remarkGfm,
+					[
+						remarkExpressiveCode,
+						{
+							themes: ["min-light", "material-theme-ocean"],
+							themeCSSSelector: (theme: ExpressiveCodeTheme) =>
+								`[data-theme="${theme.name}"]`,
+						},
+					],
 				],
-			],
-		}),
-		{ enforce: "pre" },
-	],
+			}),
+			{ enforce: "pre" },
+		],
+	}),
 });

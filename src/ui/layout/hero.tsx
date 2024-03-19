@@ -81,7 +81,7 @@ export const Hero: Component = () => {
 										>
 											<Suspense
 												fallback={
-													<pre class="text-slate-700">{counterTxt}</pre>
+													<pre class="text-slate-300">{counterTxt}</pre>
 												}
 											>
 												<RenderedCode />

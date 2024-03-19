@@ -32,7 +32,7 @@ function Counter() {
 	);
 }`.trim();
 	return codeToHtml(code, {
-		lang: "javascript",
+		lang: "tsx",
 		theme: "material-theme-ocean",
 	});
 };

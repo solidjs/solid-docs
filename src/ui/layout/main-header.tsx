@@ -95,17 +95,14 @@ export function MainHeader(props: NavProps) {
 						</A>
 					</li>
 					<li>
-						<span class="text-slate-400 dark:text-slate-400">
+						<A
+							href="/solid-start"
+							class="text-slate-900 dark:text-slate-200 px-2"
+							activeClass="border-b-2 border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
+							addLocale
+						>
 							SolidStart
-							<span>
-								<abbr
-									title="coming soon"
-									class="text-[0.5em] relative -top-2 left-1 no-underline  border py-px px-1 rounded-md dark:text-slate-200 dark:border-slate-300 text-slate-400 border-slate-400"
-								>
-									soon
-								</abbr>
-							</span>
-						</span>
+						</A>
 					</li>
 					<li>
 						<span class="text-slate-400">

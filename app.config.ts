@@ -58,6 +58,12 @@ export default defineConfig({
 	middleware: "src/middleware/index.ts",
 	server: {
 		preset: "netlify",
+		prerender: {
+			crawlLinks: true,
+			autoSubfolderIndex: false,
+			failOnError: true,
+			ignore: [/\{\getPath}/],
+		},
 	},
 	extensions: ["mdx", "md", "tsx"],
 	vite: () => ({

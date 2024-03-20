@@ -2,35 +2,21 @@
 title: app.config.ts
 ---
 
-`app.config.ts` is where you configure your application.
+The `app.config.ts` in the root of every SolidStart app is the main point of configuration. Together with some SolidStart-specific settings it's where [Vite](https://vitejs.dev) and [Nitro](https://nitro.unjs.io), which SolidStart is built upon, are configured.
 
-<div class="text-lg">
+
+A minimal configuration looks like this:
+
 
 ```tsx
 import { defineConfig } from "@solidjs/start/config";
 
-export default defineConfig({
-	vite: {
-		// vite options
-		plugins: [],
-	},
-	server: {
-		preset: "netlify",
-	},
-});
+export default defineConfig({});
 ```
 
-</div>
+## Configuring Vite
 
-<table-of-contents></table-of-contents>
-
-## Usage
-
-### Configuring your application
-
-SolidStart is built on top of [Vinxi](https://vinxi.vercel.app/) which combines the power of [Vite](https://vitejs.dev) and [Nitro](https://nitro.unjs.io).
-
-The core configuration used by SolidStart is found at `@solidjs/start/config`.
+The `defineConfig` function used by SolidStart is found at `@solidjs/start/config`.
 
 SolidStart supports most vite options, including plugins via the `vite` option:
 
@@ -45,7 +31,7 @@ export default defineConfig({
 });
 ```
 
-The `vite` option can also be a function which can be customized for each Vinxi router. In SolidStart we use 3, `server` for SSR, `client` for the browser, and `server-function` for server functions.
+The `vite` option can also be a function which can be customized for each Vinxi router. In SolidStart we use 3 routers, `server` for server-side routing, `client` for the client-side routing, and `server-function` for server functions.
 
 ```tsx
 import { defineConfig } from "@solidjs/start/config";
@@ -61,17 +47,26 @@ export default defineConfig({
 });
 ```
 
-SolidStart uses Nitro which can run on a number of platforms. The `server` option exposes some Nitro options including deployment presets.
+## Configuring Nitro
 
-- Node
-- Static hosting
-- Netlify Functions and Edge
-- Vercel Functions and Edge
-- AWS Lambda and Lambda@Edge
-- Cloudflare Workers and Pages
-- Deno Deploy
+SolidStart uses Nitro to run on a number of platforms. The `server` option exposes some Nitro options including the build and deployment presets. There is an overview of all available presets in the [Deploy](https://nitro.unjs.io/deploy) section of the Nitro documumentation, and some common ones are:
 
-The simplest usage is passing no arguments, which defaults to the Node preset. Some presets may be autodetected by the provider. Otherwise they must added to the configuration via the `server.preset` option. For example, this uses Netlify Edge:
+
+Servers
+- [Node.js Server](https://nitro.unjs.io/deploy/runtimes/node#handler-advanced) (`node`) (Default)
+- [Deno Server](https://nitro.unjs.io/deploy/runtimes/deno) (`deno_server`) 
+
+Providers
+- [Netlify Functions and Edge](https://nitro.unjs.io/deploy/providers/netlify) (`netlify`, `netlify-edge`)
+- [Vercel Functions and Edge](https://nitro.unjs.io/deploy/providers/vercel) (`vecel`, `vecel-edge`)
+- [AWS Lambda and Lambda@Edge](https://nitro.unjs.io/deploy/providers/aws) (`aws_lambda`)
+- [Cloudflare Workers and Pages](https://nitro.unjs.io/deploy/providers/cloudflare) (`cloudflare`, `cloudflare_pages`, `cloudflare_module`)
+- [Deno Deploy](https://nitro.unjs.io/deploy/providers/deno-deploy) (`deno_deploy`)
+
+Static Site Generation
+- [Route pre-rendering](/solid-start/building-your-application/route-prerendering)
+
+The simplest usage is passing no arguments, which defaults to the Node preset. Some presets may be autodetected by the provider. Otherwise they must added to the configuration via the `server.preset` option. For example, this is how to use Netlify Edge:
 
 ```tsx
 import { defineConfig } from "@solidjs/start/config";
@@ -108,12 +103,16 @@ compatibility_flags = [ "nodejs_compat" ]
 
 ## Reference
 
-### `@solidjs/start/config`
 
-The vite options are same as the default with exception of the `start` property exposes the following options:
-
-- `server` (_object_): Nitro server config options
-- `appRoot` (_string_, default `"./src"`): Sets the root of the application code.
-- `routesDir` (_string_, default `"./routes"`): The path to where the routes are located.
-- `ssr` (_boolean_ | "sync" | "async", default `true`): Providing a boolean value will toggle between client rendering and [streaming](https://docs.solidjs.com/references/concepts/ssr/streaming) server rendering (ssr) mode, while "sync" and "async" will render using Solid's [renderToString](https://docs.solidjs.com/references/concepts/ssr/simple-client-fetching-ssr) and [renderToStringAsync](https://docs.solidjs.com/references/concepts/ssr/async-ssr) respectively.
-- `experimental.islands` (_boolean_, default `false`): _experimental_ toggles on "islands" mode.
+| prop          | type    | default | description                                                                                                                                                                              |
+| ------------- | ------- | --------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | ssr | boolean | true | Toggle between client and server rendering. |
+  | solid | object |  | Configuration object for [vite-plugin-solid](https://github.com/solidjs/vite-plugin-solid) |
+  | extensions | string[] | ["js", "jsx", "ts", "tsx"] | Array of file extensions to be treated as routes. |
+  | server | object |  | Nitro server config options |
+  | appRoot | string | "./src"| The path to the root of the application. |
+  | routeDir | string | "./routes " | The path to where the routes are located. |
+  | middleware | string;
+  | devOverlay |  boolean | true | Toggle the dev overlay. |
+  | experimental.islands | boolean | false |  _experimental_  Enable "islands" mode. |
+  | vite | `ViteConfig` or `({ router })=>ViteConfig` | | [Vite config object](https://vitejs.dev/config/shared-options.html). Can be configured for each `router` which has the string value "server", "client" or "server-function"` |

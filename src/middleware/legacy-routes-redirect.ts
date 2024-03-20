@@ -1,5 +1,5 @@
 import { redirect } from "@solidjs/router";
-import { type FetchEvent } from "@solidjs/start/server/types";
+import { type FetchEvent } from "@solidjs/start/server";
 
 /**
  * Redirect Dictionary

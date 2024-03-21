@@ -67,42 +67,42 @@ const LEGACY_ROUTES = {
 	"/references/api-reference/special-jsx-attributes/ref": "/solid-js/reference/jsx-attributes/ref",
 	"/references/api-reference/special-jsx-attributes/style": "/solid-js/reference/jsx-attributes/style",
 	"/references/api-reference/special-jsx-attributes/use_": "/solid-js/reference/jsx-attributes/use",
-	"/references/api-reference/stores/store-utilities": "/concepts/stores#store-utilities",
-	"/references/api-reference/stores/using-stores": "/concepts/stores",
+	"/references/api-reference/stores/store-utilities": "/solid-js/concepts/stores#store-utilities",
+	"/references/api-reference/stores/using-stores": "/solid-js/concepts/stores",
 
 	// deployment
-	"/guides/how-to-guides/deployment": "/guides/deploying-your-app",
-	"/guides/how-to-guides/deployment/deploying-to-cloudflare": "/guides/deployment-options/cloudflare",
-	"/guides/how-to-guides/deployment/deploying-to-firebase": "/guides/deployment-options/firebase",
-	"/guides/how-to-guides/deployment/deploying-to-flightcontrol": "/guides/deployment-options/aws-via-flightcontrol",
-	"/guides/how-to-guides/deployment/deploying-to-netlify": "/guides/deployment-options/netlify",
-	"/guides/how-to-guides/deployment/deploying-to-railway": "/guides/deployment-options/railway",
-	"/guides/how-to-guides/deployment/deploying-to-vercel": "/guides/deployment-options/vercel",
+	"/guides/how-to-guides/deployment": "/solid-js/guides/deploying-your-app",
+	"/guides/how-to-guides/deployment/deploying-to-cloudflare": "/solid-js/guides/deployment-options/cloudflare",
+	"/guides/how-to-guides/deployment/deploying-to-firebase": "/solid-js/guides/deployment-options/firebase",
+	"/guides/how-to-guides/deployment/deploying-to-flightcontrol": "/solid-js/guides/deployment-options/aws-via-flightcontrol",
+	"/guides/how-to-guides/deployment/deploying-to-netlify": "/solid-js/guides/deployment-options/netlify",
+	"/guides/how-to-guides/deployment/deploying-to-railway": "/solid-js/guides/deployment-options/railway",
+	"/guides/how-to-guides/deployment/deploying-to-vercel": "/solid-js/guides/deployment-options/vercel",
 
 	// styling
-	"/guides/how-to-guides/styling-in-solid": "/guides/styling-your-components",
-	"/guides/how-to-guides/styling-in-solid/sass": "/guides/styling-components/sass",
-	"/guides/how-to-guides/styling-in-solid/less": "/guides/styling-components/less",
-	"/guides/how-to-guides/styling-in-solid/tailwind-css": "/guides/styling-components/tailwind",
-	"/guides/how-to-guides/styling-in-solid/css-modules": "/guides/styling-components/css-modules",
-	"/guides/how-to-guides/styling-in-solid/unocss": "/guides/styling-components/uno",
+	"/guides/how-to-guides/styling-in-solid": "/solid-js/guides/styling-your-components",
+	"/guides/how-to-guides/styling-in-solid/sass": "/solid-js/guides/styling-components/sass",
+	"/guides/how-to-guides/styling-in-solid/less": "/solid-js/guides/styling-components/less",
+	"/guides/how-to-guides/styling-in-solid/tailwind-css": "/solid-js/guides/styling-components/tailwind",
+	"/guides/how-to-guides/styling-in-solid/css-modules": "/solid-js/guides/styling-components/css-modules",
+	"/guides/how-to-guides/styling-in-solid/unocss": "/solid-js/guides/styling-components/uno",
 
 	// trailing slash removal
 	"/routing/migration/": "/routing/migration",
-	"/concepts/refs/": "/concepts/refs",
-	"/guides/state-management/": "/guides/state-management",
+	"/concepts/refs/": "/solid-js/concepts/refs",
+	"/guides/state-management/": "/solid-js/guides/state-management",
 
 	// miscellaneous
-	"/guides/foundations/typescript-for-solid": "/configuration/typescript",
-	"/guides/foundations/understanding-components": "/concepts/components/basics",
+	"/guides/foundations/typescript-for-solid": "/solid-js/configuration/typescript",
+	"/guides/foundations/understanding-components": "/solid-js/concepts/components/basics",
 	"/guides/foundations/why-solid": "/#advantages-of-using-solid",
 	"/guides/how-to-guides/routing-in-solid/solid-router": "/routing/installation-and-setup",
 	"/guides/tutorials/getting-started-with-solid/installing-solid": "/quick-start",
-	"/references/concepts/reactivity": "/concepts/intro-to-reactivity",
-	"/references/concepts/reactivity/tracking": "/concepts/intro-to-reactivity#subscribers",
-	"/references/concepts/ssr/async-ssr": "/guides/fetching-data",
-	"/references/concepts/ssr/simple-client-fetching-ssr": "/guides/fetching-data",
-	"/references/concepts/state-management/context": "/guides/complex-state-management#state-sharing"
+	"/references/concepts/reactivity": "/solid-js/concepts/intro-to-reactivity",
+	"/references/concepts/reactivity/tracking": "/solid-js/concepts/intro-to-reactivity#subscribers",
+	"/references/concepts/ssr/async-ssr": "/solid-js/guides/fetching-data",
+	"/references/concepts/ssr/simple-client-fetching-ssr": "/solid-js/guides/fetching-data",
+	"/references/concepts/state-management/context": "/solid-js/guides/complex-state-management#state-sharing"
 
 } as const;
 

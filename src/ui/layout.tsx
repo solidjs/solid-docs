@@ -14,7 +14,7 @@ import flatEntries from "solid:collection/flat-entries";
 import englishNav from "solid:collection/tree";
 import { PathMatch } from "@solidjs/router/dist/types";
 
-const PROJECTS = ["solid-router", "solid-start", "solid-meta"];
+const PROJECTS = ["solid-js", "solid-router", "solid-start", "solid-meta"];
 
 const getProjectFromUrl = (path: string) => {
 	for (const project of PROJECTS) {
@@ -28,8 +28,7 @@ const getProjectFromUrl = (path: string) => {
 const getDocsMetadata = cache(
 	async (
 		isFirstMatch: PathMatch | undefined,
-		isI18nOrProject: PathMatch | undefined,
-		isCore: PathMatch | undefined
+		isI18nOrProject: PathMatch | undefined
 	) => {
 		"use server";
 
@@ -39,7 +38,7 @@ const getDocsMetadata = cache(
 				entries: flatEntries,
 			};
 
-		const { path } = (isFirstMatch || isI18nOrProject || isCore) as PathMatch;
+		const { path } = (isFirstMatch || isI18nOrProject) as PathMatch;
 
 		const locale = getValidLocaleFromPathname(path);
 		const project = getProjectFromUrl(path);
@@ -90,14 +89,16 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 		localeOrProject: [...SUPPORTED_LOCALES, ...PROJECTS],
 	});
 
-	const isCore = useMatch(() => "/*");
+	const isOrigin = useMatch(() => "/:locale?", {
+		locale: [...SUPPORTED_LOCALES]
+	});
 
 	const isRoot = useMatch(() => "/:localeOrProject?", {
 		localeOrProject: [...SUPPORTED_LOCALES, ...PROJECTS],
 	});
 
 	const entries = createAsync(
-		() => getDocsMetadata(isI18nOrProject(), isTranslatedProject(), isCore()),
+		() => getDocsMetadata(isI18nOrProject(), isTranslatedProject()),
 		{ deferStream: true }
 	);
 
@@ -120,57 +121,60 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 					<Show when={entries()}>
 						{(data) => <MainHeader tree={data().tree} />}
 					</Show>
-					<Show when={isRoot()} keyed>
+					<Show when={isOrigin()} keyed>
 						<Hero />
 					</Show>
-					<div class="relative mx-auto flex max-w-8xl flex-auto justify-center custom-scrollbar pt-10">
-						<Show when={!props.isError}>
-							<div class="hidden md:relative md:block lg:flex-none ">
-								<div class="absolute inset-y-0 right-0 w-[50vw] dark:hidden" />
-								<div class="absolute bottom-0 right-0 top-16 hidden h-12 w-px bg-gradient-to-t from-slate-800 dark:block" />
-								<div class="absolute bottom-0 right-0 top-28 hidden w-px bg-slate-800 dark:block" />
-								<Suspense>
-									<Show when={entries()}>
-										{(data) => (
-											<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] w-64 pl-0.5 pr-2 xl:w-72">
-												<MainNavigation tree={data().tree} />
-											</div>
-										)}
-									</Show>
-								</Suspense>
-							</div>
-						</Show>
-						<main class="w-full md:max-w-2xl flex-auto px-4 pt-2 md:pb-16 lg:max-w-none prose prose-slate dark:prose-invert dark:text-slate-300">
-							<Show
-								when={!isRoot()}
-								keyed
-								fallback={
-									<article class="px-2 md:px-10 expressive-code-overrides overflow-y-auto">
-										{resolved()}
-									</article>
-								}
-							>
-								<Show when={!props.isError} fallback={<>{resolved()}</>}>
+
+					<Show when={!isOrigin()}>
+						<div class="relative mx-auto flex max-w-8xl flex-auto justify-center custom-scrollbar pt-10">
+							<Show when={!props.isError}>
+								<div class="hidden md:relative md:block lg:flex-none ">
+									<div class="absolute inset-y-0 right-0 w-[50vw] dark:hidden" />
+									<div class="absolute bottom-0 right-0 top-16 hidden h-12 w-px bg-gradient-to-t from-slate-800 dark:block" />
+									<div class="absolute bottom-0 right-0 top-28 hidden w-px bg-slate-800 dark:block" />
 									<Suspense>
 										<Show when={entries()}>
 											{(data) => (
-												<DocsLayout entries={data().entries}>
-													{resolved()}
-												</DocsLayout>
+												<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] w-64 pl-0.5 pr-2 xl:w-72">
+													<MainNavigation tree={data().tree} />
+												</div>
 											)}
 										</Show>
 									</Suspense>
-								</Show>
-							</Show>
-						</main>
-						<Show when={!props.isError}>
-							<div class="hidden xl:block prose prose-slate dark:prose-invert dark:text-slate-300">
-								<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] overflow-y-auto pr-4 w-64 xl:w-72 custom-scrollbar">
-									<SidePanel children={resolved()} />
 								</div>
-							</div>
-						</Show>
-					</div>
+							</Show>
+							<main class="w-full md:max-w-2xl flex-auto px-4 pt-2 md:pb-16 lg:max-w-none prose prose-slate dark:prose-invert dark:text-slate-300">
+								<Show
+									when={!isRoot()}
+									keyed
+									fallback={
+										<article class="px-2 md:px-10 expressive-code-overrides overflow-y-auto">
+											{resolved()}
+										</article>
+									}
+								>
+									<Show when={!props.isError} fallback={<>{resolved()}</>}>
+										<Suspense>
+											<Show when={entries()}>
+												{(data) => (
+													<DocsLayout entries={data().entries}>
+														{resolved()}
+													</DocsLayout>
+												)}
+											</Show>
+										</Suspense>
+									</Show>
+								</Show>
+							</main>
+							<Show when={!props.isError}>
+								<div class="hidden xl:block prose prose-slate dark:prose-invert dark:text-slate-300">
+									<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] overflow-y-auto pr-4 w-64 xl:w-72 custom-scrollbar">
+										<SidePanel children={resolved()} />
+									</div>
+								</div>
+							</Show>
+						</div>
+					</Show>
 				</div>
 			</PageStateProvider>
 		</Suspense>

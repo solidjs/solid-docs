@@ -15,14 +15,14 @@ interface DocsLayoutProps {
 
 export const DocsLayout = (props: DocsLayoutProps) => {
 	const location = useLocation();
-	// const isReference = useMatch(() => "/reference/*");
+	// const isReference = useMatch(() => "/solid-js/reference/*");
 	// const isSubReference = useMatch(() => "/:project/reference", {
 	// 	project: ["solid-router"],
 	// });
 
 	const lastSegmentPath = () => location.pathname.split("/").reverse()[0];
 	const collection = () =>
-		location.pathname.includes("/reference/")
+		location.pathname.includes("/solid-js/reference/")
 			? props.entries.reference
 			: props.entries.learn;
 

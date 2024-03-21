@@ -73,12 +73,9 @@ export function MainHeader(props: NavProps) {
 				<ul class="order-2 col-span-2 lg:col-span-1 flex pt-6 lg:pt-0 lg:w-auto w-full gap-5 justify-center">
 					<li>
 						<A
-							href="/"
+							href="/solid-js"
 							class={`text-slate-900 dark:text-slate-200 relative overflow-hidden drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] px-2 `}
-							classList={{
-								"border-b-2 border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250":
-									!notSolidCore() && !translatedLocale(),
-							}}
+							activeClass="border-b-2 border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
 							addLocale
 						>
 							Core

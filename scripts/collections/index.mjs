@@ -6,7 +6,7 @@ import { createI18nEntries } from "../create-i18n-entries.mjs";
 import { createI18nTree } from "../create-i18n-tree.mjs";
 
 export const languages = ["pt-br"];
-const projects = ["solid-router", "solid-start"];
+const projects = ["solid-js", "solid-router", "solid-start"];
 export const COLLECTIONS_ROOT = "src/routes";
 
 (async () => {

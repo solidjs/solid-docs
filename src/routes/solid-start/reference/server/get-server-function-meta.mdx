@@ -1,0 +1,28 @@
+---
+title: getServerFunctionMeta
+---
+
+`getServerFunctionMeta` returns a function-specific id, which is stable across all instances if you run server functions in parallel on multiple cpu cores or workers.
+
+Keep in mind: this `id` can and will change between builds!
+
+```tsx
+import { getServerFunctionMeta } from "@solidjs/start/server";
+
+// or some in-memory db
+const appCache: any = globalThis;
+
+const counter = async () => {
+  "use server"
+  const { id } = getServerFunctionMeta()!;
+  const key = `counter_${id}`;
+  appCache[key] = appCache[key] ?? 0;
+  appCache[key]++;
+
+  return appCache[key] as number;
+};
+```
+
+## reference
+
+### `getServerFunctionMeta(): { id: string }`

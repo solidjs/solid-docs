@@ -12,7 +12,9 @@ import { PageIssueLink } from "./page-issue-link";
 const EraserLink = clientOnly(() => import("./eraser-link/index"));
 
 export default {
-	strong: (props: ParentProps) => <b class="font-semibold">{props.children}</b>,
+	strong: (props: ParentProps) => (
+		<span class="font-semibold leading-relaxed">{props.children}</span>
+	),
 	EditPageLink: () => <EditPageLink />,
 	PageIssueLink: () => <PageIssueLink />,
 	Callout: (props: CalloutProps) => (

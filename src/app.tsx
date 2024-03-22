@@ -30,7 +30,11 @@ export default function App() {
 							<I18nProvider>
 								<MetaProvider>
 									<Title>Solid Docs</Title>
-									<ErrorBoundary fallback={<NotFound />}>
+									<ErrorBoundary
+										fallback={(error) => {
+											return <NotFound error={error} />;
+										}}
+									>
 										<Layout>
 											<MDXProvider components={Md}>
 												<Suspense>{props.children}</Suspense>

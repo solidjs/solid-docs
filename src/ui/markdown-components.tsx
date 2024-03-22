@@ -152,11 +152,14 @@ export default {
 			);
 		}
 	},
-	p: (props: ParentProps) => (
-		<p {...props} class="my-4">
-			{props.children}
-		</p>
-	),
+	p: (props: ParentProps) => {
+		console.log("rendering p", props);
+		return (
+			<p {...props} class="my-4">
+				{props.children}
+			</p>
+		);
+	},
 	li: (props: ParentProps) => (
 		<li
 			{...props}

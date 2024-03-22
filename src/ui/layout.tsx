@@ -1,4 +1,10 @@
-import { ParentComponent, Show, children, Suspense } from "solid-js";
+import {
+	ParentComponent,
+	Show,
+	children,
+	Suspense,
+	createEffect,
+} from "solid-js";
 
 import { MainNavigation } from "~/ui/layout/main-navigation";
 import { MainHeader } from "./layout/main-header";
@@ -84,7 +90,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 		project: PROJECTS,
 	});
 
-	console.log("isError", props.isError);
+	console.log("isError", props.isError, !props.isError);
 
 	// is i18n main
 	// is en project
@@ -98,14 +104,14 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 		localeOrProject: [...SUPPORTED_LOCALES, ...PROJECTS],
 	});
 
-	console.log("isRoot", isRoot());
+	createEffect(() => console.log("isRoot", isRoot()));
 
 	const entries = createAsync(() =>
 		getDocsMetadata(isI18nOrProject(), isTranslatedProject(), isCore())
 	);
 
 	const resolved = children(() => props.children);
-
+	createEffect(() => console.log("resolved", resolved()));
 	return (
 		<Suspense>
 			<PageStateProvider>

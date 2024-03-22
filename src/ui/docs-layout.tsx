@@ -1,4 +1,4 @@
-import { createSignal, Show, onMount, JSX } from "solid-js";
+import { createSignal, Show, onMount, JSX, createEffect } from "solid-js";
 import { useLocation, useMatch } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import flatEntries from "solid:collection/flat-entries";
@@ -19,7 +19,7 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 	// const isSubReference = useMatch(() => "/:project/reference", {
 	// 	project: ["solid-router"],
 	// });
-
+	console.log("docs layout");
 	const lastSegmentPath = () => location.pathname.split("/").reverse()[0];
 	const collection = () =>
 		location.pathname.includes("/reference/")
@@ -28,6 +28,8 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 
 	const entryIndex = () =>
 		collection()!.findIndex((element) => lastSegmentPath() === element.slug);
+	createEffect(() => console.log("collection", collection()));
+	createEffect(() => console.log("entryIndex", entryIndex()));
 
 	const titles = () => {
 		const fullEntry = collection

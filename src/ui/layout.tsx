@@ -84,6 +84,8 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 		project: PROJECTS,
 	});
 
+	console.log("isError", props.isError);
+
 	// is i18n main
 	// is en project
 	const isI18nOrProject = useMatch(() => "/:localeOrProject/*", {
@@ -96,9 +98,10 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 		localeOrProject: [...SUPPORTED_LOCALES, ...PROJECTS],
 	});
 
-	const entries = createAsync(
-		() => getDocsMetadata(isI18nOrProject(), isTranslatedProject(), isCore()),
-		{ deferStream: true }
+	console.log("isRoot", isRoot());
+
+	const entries = createAsync(() =>
+		getDocsMetadata(isI18nOrProject(), isTranslatedProject(), isCore())
 	);
 
 	const resolved = children(() => props.children);
@@ -120,9 +123,9 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 					<Show when={entries()}>
 						{(data) => <MainHeader tree={data().tree} />}
 					</Show>
-					<Show when={isRoot()} keyed>
+					{/* <Show when={isRoot()} keyed>
 						<Hero />
-					</Show>
+					</Show> */}
 					<div class="relative mx-auto flex max-w-8xl flex-auto justify-center custom-scrollbar pt-10">
 						<Show when={!props.isError}>
 							<div class="hidden md:relative md:block lg:flex-none ">

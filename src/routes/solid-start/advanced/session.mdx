@@ -2,27 +2,16 @@
 title: "Sessions"
 ---
 
-Let's see how some common authentication and authorization patterns work:
+When user information is required, it is usally done by checking the request for information.
+The best way for the client and server to do that is using cookies.
 
-## Authentication
+The `Request` object can be used to access the `Cookie` Headers, which can then be parsed to get the value for that specific cookie.
+For example, `"session"` can be used to identify the session.
+Fortunately, Nitro comes ready with helpers that enable this.
 
-We need to know who the user is. This is usually done by checking the request for information. The best way for the client and server to do is using cookies.
+For example, if you wanted to use a cookie to identify a user, you can use the `useSession` helper from `vinxi/http`:
 
-We can use the `Request` object to access the `Cookie` header. We can then parse the cookie header to get the cookie value for a specific cookie name, for e.g. `"session"`. We can then use the cookie value to identify the session. Fortunately, Nitro already comes with helpers that enable this.
-
-Let's look at an example of how to use the cookie to identify the user. Imagine we are implementing a `getUser` function that returns the user making the request.
-
-```tsx {6} filename="/lib/session.ts"
-export async function getUser() {
-  // return user
-}
-```
-
-The session cookie can be used to get the session data about the request. How the session data is stored and retrieved is up to the implementation of the `useSession`.
-
-Let's use this `useSession` to get the session data for the request:
-
-```tsx filename="/lib/session.ts"
+```tsx title="/lib/session.ts"
 import { useSession } from "vinxi/http";
 export async function getUser(request: Request) {
   const session = await useSession({
@@ -31,9 +20,13 @@ export async function getUser(request: Request) {
 }
 ```
 
-Typically, we will have saved the `userId` in the session. If we don't find it, that means that this was not an authenticated request. Our `getUser` function returns a `null` when it doesn't find a user. If we find a `userId`, we can use that to get the user from the database:
+The session cookie can be used to get the session data about the request.
+How the session data is stored and retrieved, however, is up to the implementation of the `useSession`.
 
-```tsx filename="/lib/session.ts"
+Typically, `userId` will be saved in the session data and if it is not found, it indicates that the request was not authenticated.
+The `getUser` function returns a `null` when it does not find a user and if a user is found, it will be used to get the user from the database:
+
+```tsx title="/lib/session.ts"
 import { useSession } from "vinxi/http";
 
 export async function getUser(): Promise<User | null> {
@@ -42,33 +35,34 @@ export async function getUser(): Promise<User | null> {
   });
   const userId = session.data.userId;
   if (!userId) return null;
-  return await hogwarts.getUser(userId);
+  return await store.getUser(userId);
 }
 ```
 
-This helper can be used in all kinds of situations wherever we want to authenticate the request. They can be used in [server functions][serverfunctions] and [API routes][apiroutes].
+This helper can be used wherever you want to authenticate the request, including in server functions and [API routes](/solid-start/building-your-application/api-routes).
 
-Let's see how we can use this in a `cache` call to make sure that only authenticated users can access the data. If the user is not authenticated, we can redirect them to the login page:
+Additionally, you can use it with [`cache`](/solid-router/reference/data-apis/cache) from `solid-router` to make sure that only authenticated users can access the data.
+That way if the user is not authenticated, the request will be redirected to the login page.
 
-```tsx filename="/routes/api/[house]/admin.ts"
+```tsx title="/routes/api/store/admin.ts"
 import { cache, createAsync, redirect } from "@solidjs/router";
 
-const getStudents = cache(async (house: string) => {
+const getUsers = cache(async (id: string) => {
   "use server";
   const user = await getUser();
   if (!user) throw redirect("/login");
-  return hogwarts.getStudents(house, "*");
+  return store.getUsers(id, "*");
 });
 
 // page component
 export default function Students() {
-  const students = createAsync(() => getStudents());
+  const users = createAsync(() => getUsers());
 }
 ```
 
-We can log in or logout in a similar manner.
+This also allows logging in and out of the session in a similar manner:
 
-```tsx filename="/routes/session.server.ts"
+```tsx title="/routes/session.server.ts"
 import { redirect } from "@solidjs/router";
 import { useSession } from "vinxi/http";
 
@@ -103,6 +97,3 @@ export async function logout() {
   throw redirect("/login");
 }
 ```
-
-[serverfunctions]: /docs/server-functions
-[apiroutes]: /docs/api-routes

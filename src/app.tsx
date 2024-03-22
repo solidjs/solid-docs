@@ -37,7 +37,9 @@ export default function App() {
 									>
 										<Layout>
 											<MDXProvider components={Md}>
-												<Suspense>{props.children}</Suspense>
+												<Suspense fallback={<p>Suspense fallback</p>}>
+													{props.children}
+												</Suspense>
 											</MDXProvider>
 										</Layout>
 									</ErrorBoundary>

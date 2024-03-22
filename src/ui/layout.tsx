@@ -112,6 +112,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 
 	const resolved = children(() => props.children);
 	createEffect(() => console.log("resolved", resolved()));
+	createEffect(() => console.log("entries", entries()));
 	return (
 		<Suspense>
 			<PageStateProvider>

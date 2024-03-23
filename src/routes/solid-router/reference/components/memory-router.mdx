@@ -1,0 +1,111 @@
+---
+title: MemoryRouter
+---
+
+`MemoryRouter` can be used to route while keeping the entire routing history internally in memory.
+
+Other routers keep the history externally i.e. in the url like the [`<HashRouter>`](/solid-router/reference/components/hash-router) or in the browser history like the [`<Router>`](/solid-router/reference/components/memory-router).
+
+Keeping the history in memory is desirable when you want full control over the routing history.
+
+The MemoryRouter is therefore often used for testing purposes, where it's controlled through manipulating the `MemoryHistory`.
+
+In the example below, a history object pre-filled with a navigation to the `/about` route is passed to the `MemoryRouter`.
+
+```jsx
+import { MemoryRouter, createMemoryHistory, A } from "@solidjs/router";
+import { Suspense } from "solid-js";
+
+export default function App() {
+	const history = createMemoryHistory();
+
+	const toHome = () => {
+		history.set({ value: "/" });
+	};
+	const toAbout = () => {
+		history.set({ value: "/about" });
+	};
+
+	return (
+		<>
+			<button onClick={toHome}>{'"/"'}</button>
+			<button onClick={toAbout}>{'"/about"'}</button>
+
+			<MemoryRouter
+				history={history}
+				root={(props) => <Suspense>{props.children}</Suspense>}
+			>
+				{/*... routes */}
+			</MemoryRouter>
+		</>
+	);
+}
+```
+
+## Manipulating the history
+
+The `MemoryHistory` object has the following functions, which are used to control the navigation:
+
+### get
+
+Returns the current route.
+
+```ts
+get(): string;
+```
+
+### set
+
+Used to navigate to a new route.
+
+- `value` is the url to navigate to.
+- `scroll` determines if the page should scroll to an HTML element with an id matching a hash value in the URL. Default value: `false`
+- `replace` determines if the navigation should replace the current history entry, or make a new. Default value: `false`
+
+```ts
+set({ value: string, scroll?: boolean, replace?: boolean }) => void;
+```
+
+### back
+
+Navigates 1 step back in the history. Corresponds to `go(-1)`.
+
+```ts
+back(): void;
+```
+
+### forward
+
+Navigates 1 step forward in the history. Corresponds to `go(1)`.
+
+```ts
+forward(): void;
+```
+
+### go
+
+Navigates n steps in the history. Negative numbers navigate back, positive numbers navigate forward. It's clamped to the history length, so additional steps will be ignored.
+
+```ts
+go(n: number): void;
+```
+
+### listen
+
+Registers a listener that will be called on navigation.
+
+```ts
+listen(listener: (value: string) => void): () => void;
+```
+
+## Properties
+
+| prop          | type                                                     | description                                                                                |
+| ------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| children      | `JSX.Element`, `RouteDefinition`, or `RouteDefinition[]` | The route definitions                                                                      |
+| root          | Component                                                | Top level layout component                                                                 |
+| base          | string                                                   | Base url to use for matching routes                                                        |
+| actionBase    | string                                                   | Root url for server actions, default: `/_server`                                           |
+| preload       | boolean                                                  | Enables/disables preloads globally, default: `true`                                        |
+| explicitLinks | boolean                                                  | Disables all anchors being intercepted and instead requires `<A>`. default: `false`        |
+| history       | MemoryHistory                                            | An optionally pre-filled and mutable history object which will store any navigation events |

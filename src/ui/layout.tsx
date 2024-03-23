@@ -10,11 +10,39 @@ import { Alert } from "@kobalte/core";
 import { SidePanel } from "./layout/side-panel";
 import { SUPPORTED_LOCALES } from "~/i18n/config";
 import { getValidLocaleFromPathname } from "~/i18n/helpers";
-import flatEntries from "solid:collection/flat-entries";
-import englishNav from "solid:collection/tree";
+import {
+	coreTree,
+	routerTree,
+	startTree,
+	coreEntries,
+	startEntries,
+	routerEntries,
+} from "solid:collection";
 import { PathMatch } from "@solidjs/router/dist/types";
 
-const PROJECTS = ["solid-router", "solid-start", "solid-meta"];
+const PROJECTS = ["solid-router", "solid-start", "solid-meta"] as const;
+
+function getDefaultTree(project: (typeof PROJECTS)[number]) {
+	switch (project) {
+		case "solid-router":
+			return routerTree;
+		case "solid-start":
+			return startTree;
+		default:
+			return coreTree;
+	}
+}
+
+function getDefaultEntries(project: (typeof PROJECTS)[number]) {
+	switch (project) {
+		case "solid-router":
+			return routerEntries;
+		case "solid-start":
+			return startEntries;
+		default:
+			return coreEntries;
+	}
+}
 
 const getProjectFromUrl = (path: string) => {
 	for (const project of PROJECTS) {
@@ -35,8 +63,8 @@ const getDocsMetadata = cache(
 
 		if (!isFirstMatch && !isI18nOrProject)
 			return {
-				tree: englishNav,
-				entries: flatEntries,
+				tree: coreTree,
+				entries: coreEntries,
 			};
 
 		const { path } = (isFirstMatch || isI18nOrProject || isCore) as PathMatch;
@@ -56,9 +84,8 @@ const getDocsMetadata = cache(
 			}
 
 			return {
-				tree: (await import(`../../.solid/${project}-tree.ts`)).default,
-				entries: (await import(`../../.solid/${project}-flat-entries.ts`))
-					.default,
+				tree: getDefaultTree(project),
+				entries: getDefaultEntries(project),
 			};
 		}
 
@@ -70,8 +97,8 @@ const getDocsMetadata = cache(
 			};
 		} else {
 			return {
-				tree: englishNav,
-				entries: flatEntries,
+				tree: coreTree,
+				entries: coreEntries,
 			};
 		}
 	},

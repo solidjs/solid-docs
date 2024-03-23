@@ -208,23 +208,26 @@ SolidStart offers a way to add additional route configuration outside of the fil
 Since SolidStart supports the use of other routers, you can use the `route` export to provided by `<FileRoutes />` to define the route configuration for the router of your choice.
 
 ```jsx {3-7}
-import type { RouteSectionProps, RouteDefinition } from "@solidjs/router";
+import type { RouteDefinition } from "@solidjs/router";
+import { Component } from "solid-js";
+
+type LoadFnReturnType = { user: { name: string } };
 
 export const route = {
   load() {
     // define load function
-  }
-} satisfies RouteDefinition
+    return { user: { name: "Jane Doe" } };
+  },
+} satisfies RouteDefinition<string, LoadFnReturnType>;
 
-export default function UsersLayout(props: RouteSectionProps) {
+const UserLayout: Component<{ data: LoadFnReturnType }> = (props) => {
   return (
     <div>
-      <h1>Users</h1>
-      {props.children}
+      <h1>User</h1>
+      <p>Name: {props.data.user.name}</p>
     </div>
   );
-}
-```
+};
 
-[api-routes]: /core-concepts/api-routes
-[fileroutes]: /api/FileRoutes
+export default UserLayout;
+```

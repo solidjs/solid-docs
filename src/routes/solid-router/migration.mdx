@@ -31,7 +31,35 @@ This allows link hover preloads, since the load function can be run as much as w
 This supports deduping/cache APIs which give more control over how things are cached.
 It also addresses TypeScript issues with getting the right types in the Component without `typeof` checks.
 
-That being said the old pattern can be reproduced by turning off preloads at the router level and then injecting your own Context:
+The new pattern is to add a `load` function directly on the `Route` component.
+You can then access the data from the `props` object in the component you linked to the `Route`.
+
+```js
+import { lazy } from "solid-js";
+import { Route } from "@solidjs/router";
+
+const User = lazy(() => import("./pages/users/[id].js"));
+
+// load function
+function loadUser({ params, location }) {
+	const [user] = createResource(() => params.id, fetchUser);
+	return user;
+}
+
+// Pass it in the route definition
+<Router>
+	<Route path="/users/:id" component={User} load={loadUser} />
+</Router>;
+
+export const User = (props) => {
+	
+	// props.data is the data returned from the load function
+	return <div>{props.data.name}</div>;
+};
+
+```
+
+The old pattern can still be reproduced by turning off preloads at the router level and then injecting your own Context:
 
 ```js
 import { lazy } from "solid-js";
@@ -66,3 +94,7 @@ function UserDetails() {
 	// render stuff
 }
 ```
+
+### `<FileRoutes />`
+
+If you use SolidStart and [`FileRoutes`](/solid-start/reference/file-routes) to define your RouteDefinitions, see this [Guide](/solid-start/building-your-application/routing#additional-route-config) how a load function can be added to a [`Route`](/solid-router/reference/components/route).

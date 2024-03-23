@@ -11,11 +11,13 @@ import { SidePanel } from "./layout/side-panel";
 import { SUPPORTED_LOCALES } from "~/i18n/config";
 import { getValidLocaleFromPathname } from "~/i18n/helpers";
 import {
+	coreTree,
+	routerTree,
+	startTree,
 	coreEntries,
 	startEntries,
 	routerEntries,
-} from "solid:collection/flat-entries";
-import { coreTree, routerTree, startTree } from "solid:collection/tree";
+} from "solid:collection";
 import { PathMatch } from "@solidjs/router/dist/types";
 
 const PROJECTS = ["solid-router", "solid-start", "solid-meta"] as const;

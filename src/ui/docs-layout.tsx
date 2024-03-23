@@ -1,7 +1,7 @@
 import { createSignal, Show, onMount, JSX } from "solid-js";
 import { useLocation, useMatch } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
-import { coreEntries } from "solid:collection/flat-entries";
+import { coreEntries } from "solid:collection";
 import { Pagination } from "~/ui/pagination";
 import { EditPageLink } from "./edit-page-link";
 import { PageIssueLink } from "./page-issue-link";
@@ -40,7 +40,7 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 	onMount(() => document.dispatchEvent(new CustomEvent("docs-layout-mounted")));
 
 	return (
-		<Show when={props.entries}>
+		<Show when={props.entries} keyed>
 			<>
 				<Show when={titles()?.title} fallback={<Title>SolidDocs</Title>}>
 					{(title) => <Title>{`${title()} - SolidDocs`}</Title>}

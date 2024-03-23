@@ -15,6 +15,10 @@ import pkg from "@vinxi/plugin-mdx";
 const { default: vinxiMdx } = pkg;
 import tree from "./.solid/tree";
 import entries from "./.solid/flat-entries";
+import solidstartEntries from "./.solid/solid-start-flat-entries";
+import solidstartTree from "./.solid/solid-router-tree";
+import solidrouterEntries from "./.solid/solid-router-flat-entries";
+import solidrouterTree from "./.solid/solid-start-tree";
 
 function docsTree() {
 	const virtualModuleId = "solid:collection/tree";
@@ -29,7 +33,11 @@ function docsTree() {
 		},
 		async load(id: string) {
 			if (id === resolveVirtualModuleId) {
-				return `export default ${JSON.stringify(tree, null, 2)}`;
+				return `
+				export const coreTree = ${JSON.stringify(tree, null, 2)}
+				export const routerTree = ${JSON.stringify(solidrouterTree, null, 2)}
+				export const startTree = ${JSON.stringify(solidstartEntries, null, 2)}
+				`;
 			}
 		},
 	};
@@ -48,7 +56,11 @@ function docsEntries() {
 		},
 		async load(id: string) {
 			if (id === resolveVirtualModuleId) {
-				return `export default ${JSON.stringify(entries, null, 2)}`;
+				return `
+				export const coreEntries = ${JSON.stringify(entries, null, 2)}
+				export const routerEntries = ${JSON.stringify(solidrouterEntries, null, 2)}
+				export const startEntries = ${JSON.stringify(solidstartEntries, null, 2)}
+				`;
 			}
 		},
 	};

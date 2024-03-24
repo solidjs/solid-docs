@@ -144,7 +144,7 @@ Though it is not a hard requirement, we'd deeply appreciate if you could recomme
 3. Add the important UI translations.
 
 > [!TIP]
-> To save time, you can use chatGPT to translate the the `default.ts` dictionary to the language and adjust based on context.
+> To save time, you can use chatGPT to translate the `default.ts` dictionary to the language and adjust based on context.
 
 #### Adding translations to a supported language
 

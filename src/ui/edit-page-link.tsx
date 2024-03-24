@@ -7,10 +7,10 @@ import { useI18n } from "~/i18n/i18n-context";
 
 export const EditPageLink: Component = () => {
 	const i18n = useI18n();
-	const { pathname } = useLocation();
+	const currentPath = createMemo(()=>useLocation().pathname);
 
 	const srcPath = createMemo(() => {
-		return `https://github.com/solidjs/solid-docs-next/edit/main/src/routes${getEntryFileName(pathname)}.mdx`.replace(
+		return `https://github.com/solidjs/solid-docs-next/edit/main/src/routes${getEntryFileName(currentPath())}.mdx`.replace(
 			"/.mdx",
 			"/index.mdx"
 		);

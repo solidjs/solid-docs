@@ -1,5 +1,5 @@
 import { A } from "~/ui/i18n-anchor";
-import { Show, Suspense } from "solid-js";
+import { Show, Suspense, createMemo } from "solid-js";
 import flatEntries from "solid:collection/entries";
 import { useI18n } from "~/i18n/i18n-context";
 
@@ -14,21 +14,21 @@ type Pagination = {
 	currentIndex: number;
 };
 export function Pagination(props: Pagination) {
-	const previous = () => {
+	const previous = createMemo(() => {
 		if (props.currentIndex > 0) {
 			return props.collection[props.currentIndex - 1];
 		} else {
 			return null;
 		}
-	};
+	});
 
-	const next = () => {
+	const next = createMemo(() => {
 		if (props.currentIndex < props.collection.length) {
 			return props.collection[props.currentIndex + 1];
 		} else {
 			return null;
 		}
-	};
+	});
 
 	const i18n = useI18n();
 

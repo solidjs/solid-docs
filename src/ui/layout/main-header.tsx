@@ -8,6 +8,13 @@ import { MobileNavigation } from "./mobile-navigation";
 import { useMatch } from "@solidjs/router";
 import { SUPPORTED_LOCALES } from "~/i18n/config";
 import { LanguageSelector } from "./language-selector";
+import {
+	RegisterSearchBox,
+	RegisterSearchButton,
+} from "@orama/searchbox/dist/index.js";
+import { OramaClient } from "@oramacloud/client";
+import "@orama/searchbox/dist/index.css";
+import { useThemeContext } from "~/data/theme-provider";
 
 interface Entry {
 	title: string;
@@ -26,6 +33,11 @@ interface NavProps {
 	};
 }
 
+const client = new OramaClient({
+	endpoint: import.meta.env.VITE_ORAMA_ENDPOINT,
+	api_key: import.meta.env.VITE_ORAMA_API_KEY,
+});
+
 export function MainHeader(props: NavProps) {
 	const [isScrolled, setIsScrolled] = createSignal(false);
 	const notSolidCore = useMatch(() => "/:project/*", {
@@ -35,6 +47,8 @@ export function MainHeader(props: NavProps) {
 		locale: SUPPORTED_LOCALES,
 		project: ["solid-router", "solid-start", "solid-metadata"],
 	});
+	const ctx = useThemeContext();
+	const selectedTheme = ctx.selectedTheme;
 
 	if (!isServer) {
 		const onScroll = () => {
@@ -44,6 +58,33 @@ export function MainHeader(props: NavProps) {
 		onMount(() => {
 			onScroll();
 			window.addEventListener("scroll", onScroll, { passive: true });
+
+			RegisterSearchBox({
+				oramaInstance: client,
+				colorScheme: selectedTheme().value,
+				backdrop: true,
+				themeConfig: {
+					light: {},
+					dark: {
+						"--text-color-primary": "#fff",
+						"--background-color-primary": "#040816",
+						"--icon-color-primary": "#fff",
+						"--border-color-accent": "rgb(147 197 253)",
+					},
+				},
+			});
+			RegisterSearchButton({
+				colorScheme: selectedTheme().value,
+				themeConfig: {
+					light: {},
+					dark: {
+						"--search-btn-text-color": "#fff",
+						"--search-btn-text-color-hover": "#fff",
+						"--search-btn-text-color-focus": "#fff",
+						"--search-btn-background-color": "#040816",
+					},
+				},
+			});
 		});
 
 		onCleanup(() => {
@@ -120,6 +161,10 @@ export function MainHeader(props: NavProps) {
 				</ul>
 
 				<div class="lg:order-2 flex basis-0 gap-4 items-center justify-end order-">
+					{/* @ts-ignore */}
+					<orama-searchbox />
+					{/* @ts-ignore */}
+					<orama-search-button />
 					<A
 						href="https://github.com/solidjs/solid"
 						class="group"

@@ -27,7 +27,7 @@ export function getEntryFileName() {
 	const CurrentRouteMetaData = useCurrentRouteMetaData();
 
 	if (CurrentRouteMetaData.isProjectRoot) {
-		return `${pathname}/index`.replace("//", "/") + ".mdx";
+		return `${pathname}/index.mdx`.replace("//", "/");
 	} else {
 		// Trim trailing slash
 		return (pathname.endsWith("/") ? pathname.slice(0, -1) : pathname) + ".mdx";

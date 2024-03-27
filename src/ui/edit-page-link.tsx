@@ -4,10 +4,21 @@ import { pencilSquare } from "solid-heroicons/outline";
 import { useLocation } from "@solidjs/router";
 import { getEntryFileName } from "~/i18n/helpers";
 import { useI18n } from "~/i18n/i18n-context";
+import {getProjectCurrentlyAtRoot} from "~/ui/layout";
 
 export const EditPageLink: Component = () => {
 	const i18n = useI18n();
-	const currentPath = createMemo(()=>useLocation().pathname);
+	const currentPath = createMemo(()=>{
+
+		const pathname = useLocation().pathname;
+
+		const projectCurrentlyAtRoot =  getProjectCurrentlyAtRoot()
+		if (projectCurrentlyAtRoot) {
+			return `${pathname}/index`.replace("//", "/");
+		} else {
+			return pathname;
+		}
+	});
 
 	const srcPath = createMemo(() => {
 		return `https://github.com/solidjs/solid-docs-next/edit/main/src/routes${getEntryFileName(currentPath())}.mdx`.replace(

@@ -24,9 +24,9 @@ export function getValidLocaleFromPathname(pathname: string) {
 
 export function getEntryFileName() {
 	const pathname = useLocation().pathname;
-	const CurrentRouteMetaData = useCurrentRouteMetaData();
+	const currentRouteMetaData = useCurrentRouteMetaData();
 
-	if (CurrentRouteMetaData.isProjectRoot) {
+	if (currentRouteMetaData.isProjectRoot) {
 		return `${pathname}/index.mdx`.replace("//", "/");
 	} else {
 		// Trim trailing slash

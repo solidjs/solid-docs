@@ -36,7 +36,11 @@ interface CurrentRouteMetaData {
 }
 
 export const useCurrentRouteMetaData = (): CurrentRouteMetaData => {
-	const currentPath = useLocation().pathname;
+	let currentPath = useLocation().pathname;
+
+	// Trim trailing slash
+	currentPath = currentPath.endsWith("/") ? currentPath.slice(0, -1) : currentPath;
+
 	const pathParts = currentPath.split("/").filter(Boolean);
 	const projectOrLocale: string = pathParts[0];
 
@@ -48,6 +52,7 @@ export const useCurrentRouteMetaData = (): CurrentRouteMetaData => {
 
 	if (SUPPORTED_LOCALES.includes(projectOrLocale)) {
 		if (pathParts.length > 2) {
+
 			returnObject.isProjectRoot = false;
 		}
 
@@ -55,6 +60,8 @@ export const useCurrentRouteMetaData = (): CurrentRouteMetaData => {
 		checkPathBeyondLocale(pathParts[1] ?? "");
 	} else {
 		if (pathParts.length > 1) {
+			console.log("HERE")
+			
 			returnObject.isProjectRoot = false;
 		}
 
@@ -77,6 +84,8 @@ export const useCurrentRouteMetaData = (): CurrentRouteMetaData => {
 			returnObject.project = "" as ProjectRoots;
 		}
 	}
+
+	console.log(			returnObject		)
 
 	return returnObject;
 };

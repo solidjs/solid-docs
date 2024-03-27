@@ -15,7 +15,8 @@ export const EditPageLink: Component = () => {
 		if (CurrentRouteMetaData.isProjectRoot) {
 			return `${pathname}/index`.replace("//", "/");
 		} else {
-			return pathname;
+			// Trim trailing slash
+			return pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
 		}
 	});
 

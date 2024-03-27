@@ -44,7 +44,7 @@ export const useCurrentRouteMetaData = (): CurrentRouteMetaData => {
 		isProjectRoot: true,
 		locale: "",
 		project: null,
-	};	
+	};
 
 	if (SUPPORTED_LOCALES.includes(projectOrLocale)) {
 		if (pathParts.length > 2) {
@@ -58,13 +58,12 @@ export const useCurrentRouteMetaData = (): CurrentRouteMetaData => {
 			returnObject.isProjectRoot = false;
 		}
 
-		console.log("HERE")
 		checkPathBeyondLocale(pathParts[0] ?? "");
 	}
 
-	function isInProjectEnum (projectPath: ProjectRoots | null): boolean {
+	function isInProjectEnum(projectPath: ProjectRoots | null): boolean {
 		return Object.values(ProjectRoots).includes(projectPath as ProjectRoots);
-	};
+	}
 
 	function checkPathBeyondLocale(path: string) {
 		if (path.length > 0) {
@@ -81,7 +80,6 @@ export const useCurrentRouteMetaData = (): CurrentRouteMetaData => {
 
 	return returnObject;
 };
-
 
 function getDefaultTree(project: (typeof PROJECTS)[number]) {
 	switch (project) {

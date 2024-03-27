@@ -22,7 +22,7 @@ import { PathMatch } from "@solidjs/router/dist/types";
 
 const PROJECTS = ["solid-router", "solid-start", "solid-meta"] as const;
 
-export enum Projects {
+export enum Project {
 	Core = "",
 	Router = "/solid-router",
 	Start = "/solid-start",
@@ -30,7 +30,7 @@ export enum Projects {
 }
 
 interface CurrentRouteMetaData {
-	project: Projects | null;
+	project: Project | null;
 	locale: string;
 	isProjectRoot: boolean;
 }
@@ -68,7 +68,7 @@ export const useCurrentRouteMetaData = (): CurrentRouteMetaData => {
 	}
 
 	function isInProjectEnum(projectPath: string): boolean {
-		return Object.values(Projects).includes(projectPath as Projects);
+		return Object.values(Project).includes(projectPath as Project);
 	}
 
 	function checkPathBeyondLocale(path: string) {
@@ -77,10 +77,10 @@ export const useCurrentRouteMetaData = (): CurrentRouteMetaData => {
 		}
 
 		if (isInProjectEnum(path)) {
-			returnObject.project = path as Projects;
+			returnObject.project = path as Project;
 		} else {
 			returnObject.isProjectRoot = false;
-			returnObject.project = "" as Projects;
+			returnObject.project = "" as Project;
 		}
 	}
 

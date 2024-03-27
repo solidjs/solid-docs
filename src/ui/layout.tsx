@@ -61,7 +61,7 @@ export const useCurrentRouteMetaData = (): CurrentRouteMetaData => {
 		checkPathBeyondLocale(pathParts[0] ?? "");
 	}
 
-	function isInProjectEnum(projectPath: ProjectRoots | null): boolean {
+	function isInProjectEnum(projectPath: string): boolean {
 		return Object.values(ProjectRoots).includes(projectPath as ProjectRoots);
 	}
 
@@ -70,7 +70,7 @@ export const useCurrentRouteMetaData = (): CurrentRouteMetaData => {
 			path = "/" + path;
 		}
 
-		if (isInProjectEnum(path as ProjectRoots | null)) {
+		if (isInProjectEnum(path)) {
 			returnObject.project = path as ProjectRoots;
 		} else {
 			returnObject.isProjectRoot = false;

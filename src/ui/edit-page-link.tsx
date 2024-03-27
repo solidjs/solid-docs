@@ -1,26 +1,14 @@
 import { Component, createMemo } from "solid-js";
 import { Icon } from "solid-heroicons";
 import { pencilSquare } from "solid-heroicons/outline";
-import { useLocation } from "@solidjs/router";
 import { useI18n } from "~/i18n/i18n-context";
-import { useCurrentRouteMetaData } from "~/ui/layout";
+import { getEntryFileName } from "~/i18n/helpers";
 
 export const EditPageLink: Component = () => {
 	const i18n = useI18n();
-	const entryFile = createMemo(() => {
-		const pathname = useLocation().pathname;
-		const CurrentRouteMetaData = useCurrentRouteMetaData();
-
-		if (CurrentRouteMetaData.isProjectRoot) {
-			return `${pathname}/index`.replace("//", "/");
-		} else {
-			// Trim trailing slash
-			return pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
-		}
-	});
 
 	const srcPath = createMemo(() => {
-		return `https://github.com/solidjs/solid-docs-next/edit/main/src/routes${entryFile()}.mdx`;
+		return `https://github.com/solidjs/solid-docs-next/edit/main/src/routes${getEntryFileName()}.mdx`;
 	});
 	return (
 		<a

@@ -2,7 +2,6 @@ import { Component, createMemo } from "solid-js";
 import { Icon } from "solid-heroicons";
 import { pencilSquare } from "solid-heroicons/outline";
 import { useLocation } from "@solidjs/router";
-import { getEntryFileName } from "~/i18n/helpers";
 import { useI18n } from "~/i18n/i18n-context";
 import { useCurrentRouteMetaData } from "~/ui/layout";
 

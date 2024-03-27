@@ -8,7 +8,7 @@ export const PageIssueLink: Component = () => {
 	const i18n = useI18n();
 
 	const srcPath = createMemo(() => {
-		return `https://github.com/solidjs/solid-docs-next/issues/new?assignees=ladybluenotes&labels=improve+documentation%2Cpending+review&projects=&template=CONTENT.yml&title=[Content]:&subject=${getEntryFileName()}.mdx`;
+		return `https://github.com/solidjs/solid-docs-next/issues/new?assignees=ladybluenotes&labels=improve+documentation%2Cpending+review&projects=&template=CONTENT.yml&title=[Content]:&subject=${getEntryFileName()}`;
 	});
 	return (
 		<a

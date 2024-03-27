@@ -8,7 +8,7 @@ export const EditPageLink: Component = () => {
 	const i18n = useI18n();
 
 	const srcPath = createMemo(() => {
-		return `https://github.com/solidjs/solid-docs-next/edit/main/src/routes${getEntryFileName()}.mdx`;
+		return `https://github.com/solidjs/solid-docs-next/edit/main/src/routes${getEntryFileName()}`;
 	});
 	return (
 		<a

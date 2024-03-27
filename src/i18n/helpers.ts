@@ -22,16 +22,15 @@ export function getValidLocaleFromPathname(pathname: string) {
 }
 
 
-
 export function getEntryFileName() {
 	const pathname = useLocation().pathname;
 	const CurrentRouteMetaData = useCurrentRouteMetaData();
 
 	if (CurrentRouteMetaData.isProjectRoot) {
-		return `${pathname}/index`.replace("//", "/");
+		return `${pathname}/index`.replace("//", "/") + ".mdx";
 	} else {
 		// Trim trailing slash
-		return pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+		return (pathname.endsWith("/") ? pathname.slice(0, -1) : pathname) + ".mdx";
 	}
 }
 

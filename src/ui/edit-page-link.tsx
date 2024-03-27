@@ -21,10 +21,7 @@ export const EditPageLink: Component = () => {
 	});
 
 	const srcPath = createMemo(() => {
-		return `https://github.com/solidjs/solid-docs-next/edit/main/src/routes${getEntryFileName(currentPath())}.mdx`.replace(
-			"/.mdx",
-			"/index.mdx"
-		);
+		return `https://github.com/solidjs/solid-docs-next/edit/main/src/routes${currentPath()}.mdx`;
 	});
 	return (
 		<a

@@ -8,7 +8,7 @@ import { useCurrentRouteMetaData } from "~/ui/layout";
 
 export const EditPageLink: Component = () => {
 	const i18n = useI18n();
-	const currentPath = createMemo(() => {
+	const entryFile = createMemo(() => {
 		const pathname = useLocation().pathname;
 		const CurrentRouteMetaData = useCurrentRouteMetaData();
 
@@ -21,7 +21,7 @@ export const EditPageLink: Component = () => {
 	});
 
 	const srcPath = createMemo(() => {
-		return `https://github.com/solidjs/solid-docs-next/edit/main/src/routes${currentPath()}.mdx`;
+		return `https://github.com/solidjs/solid-docs-next/edit/main/src/routes${entryFile()}.mdx`;
 	});
 	return (
 		<a

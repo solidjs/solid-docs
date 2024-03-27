@@ -29,35 +29,59 @@ export enum ProjectRoots {
 	SolidMeta = "/solid-meta",
 }
 
-export const getProjectCurrentlyAtRoot = (): ProjectRoots | null => {
+interface CurrentRouteMetaData {
+	project: ProjectRoots | null;
+	locale: string;
+	isProjectRoot: boolean;
+}
+
+export const useCurrentRouteMetaData = (): CurrentRouteMetaData => {
 	const currentPath = useLocation().pathname;
 	const pathParts = currentPath.split("/").filter(Boolean);
 	const projectOrLocale: string = pathParts[0];
+
+	let returnObject: CurrentRouteMetaData = {
+		isProjectRoot: true,
+		locale: "",
+		project: null,
+	};	
+
+	if (SUPPORTED_LOCALES.includes(projectOrLocale)) {
+		if (pathParts.length > 2) {
+			returnObject.isProjectRoot = false;
+		}
+
+		returnObject.locale = projectOrLocale;
+		checkPathBeyondLocale(pathParts[1] ?? "");
+	} else {
+		if (pathParts.length > 1) {
+			returnObject.isProjectRoot = false;
+		}
+
+		console.log("HERE")
+		checkPathBeyondLocale(pathParts[0] ?? "");
+	}
+
+	function isInProjectEnum (projectPath: ProjectRoots | null): boolean {
+		return Object.values(ProjectRoots).includes(projectPath as ProjectRoots);
+	};
 
 	function checkPathBeyondLocale(path: string) {
 		if (path.length > 0) {
 			path = "/" + path;
 		}
 
-		return Object.values(ProjectRoots).find(
-			(value) => value === path
-		) as ProjectRoots | null;
+		if (isInProjectEnum(path as ProjectRoots | null)) {
+			returnObject.project = path as ProjectRoots;
+		} else {
+			returnObject.isProjectRoot = false;
+			returnObject.project = "" as ProjectRoots;
+		}
 	}
 
-	if (SUPPORTED_LOCALES.includes(projectOrLocale)) {
-		return checkPathBeyondLocale(pathParts[1] ?? "");
-	} else {
-		return checkPathBeyondLocale(pathParts[0] ?? "");
-	}
+	return returnObject;
 };
 
-export const isProjectAtRoot = (): boolean => {
-	const projectCurrentlyAtRoot = getProjectCurrentlyAtRoot();
-
-	return Object.values(ProjectRoots).includes(
-		projectCurrentlyAtRoot as ProjectRoots
-	);
-};
 
 function getDefaultTree(project: (typeof PROJECTS)[number]) {
 	switch (project) {
@@ -185,7 +209,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 					<Show when={entries()}>
 						{(data) => <MainHeader tree={data().tree} />}
 					</Show>
-					<Show when={isProjectAtRoot()} keyed>
+					<Show when={useCurrentRouteMetaData().isProjectRoot} keyed>
 						<Hero />
 					</Show>
 					<div class="relative mx-auto flex max-w-8xl flex-auto justify-center custom-scrollbar pt-10">
@@ -207,7 +231,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 						</Show>
 						<main class="w-full md:max-w-2xl flex-auto px-4 pt-2 md:pb-16 lg:max-w-none prose prose-slate dark:prose-invert dark:text-slate-300">
 							<Show
-								when={!isProjectAtRoot()}
+								when={!useCurrentRouteMetaData().isProjectRoot}
 								keyed
 								fallback={
 									<article class="px-2 md:px-10 expressive-code-overrides overflow-y-auto">

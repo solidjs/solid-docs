@@ -4,15 +4,15 @@ import { pencilSquare } from "solid-heroicons/outline";
 import { useLocation } from "@solidjs/router";
 import { getEntryFileName } from "~/i18n/helpers";
 import { useI18n } from "~/i18n/i18n-context";
-import { isProjectAtRoot } from "~/ui/layout";
+import { useCurrentRouteMetaData } from "~/ui/layout";
 
 export const EditPageLink: Component = () => {
 	const i18n = useI18n();
 	const currentPath = createMemo(() => {
 		const pathname = useLocation().pathname;
-		const isRoot = isProjectAtRoot();
+		const CurrentRouteMetaData = useCurrentRouteMetaData();
 
-		if (isRoot) {
+		if (CurrentRouteMetaData.isProjectRoot) {
 			return `${pathname}/index`.replace("//", "/");
 		} else {
 			return pathname;

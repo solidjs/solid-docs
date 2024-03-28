@@ -157,7 +157,7 @@ You will come across two types of lists in your contributions, ordered and unord
 Here's a breakdown on when to use each one.
 
 Ordered: This is for step-based, how-to content.
-You need an ordered list when the order or hierarchy is imporant.
+You need an ordered list when the order or hierarchy is important.
 
 Unordered: Unordered lists help break up content with non-hierarchical items.
 You will likely use them when writing exceptions and emphasizing important ideas.

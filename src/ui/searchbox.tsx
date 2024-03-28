@@ -20,6 +20,8 @@ export function SearchBox() {
 	if (!isServer) {
 		createEffect(() => {
 			RegisterSearchBox({
+				summaryGeneration: import.meta.env.VITE_ORAMA_SECURE_PROXY,
+				searchMode: "hybrid",
 				oramaInstance: client,
 				colorScheme: selectedTheme().value,
 				backdrop: true,

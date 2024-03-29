@@ -5,6 +5,14 @@ export default {
 	"hero.button.primary": "Get started",
 	"hero.button.secondary": "Join the community",
 
+	// router hero
+	"hero.router.title": "Solid Router",
+	"hero.router.subtitle": "The universal router for SolidJS",
+
+	// start hero
+	"hero.start.title": "SolidStart",
+	"hero.start.subtitle": "The metaframework of the future",
+
 	// main navigation
 	"main.nav.tab.learn": "Learn",
 	"main.nav.tab.reference": "Reference",

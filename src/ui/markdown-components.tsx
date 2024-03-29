@@ -1,5 +1,5 @@
 import { type ParentProps, children, splitProps } from "solid-js";
-import { A } from "@solidjs/router";
+import { A } from "~/ui/i18n-anchor";
 import { isServer } from "solid-js/web";
 import { Callout, CalloutProps } from "~/ui/callout";
 import { TabsCodeBlocks } from "~/ui/tab-code-blocks";
@@ -12,9 +12,7 @@ import { PageIssueLink } from "./page-issue-link";
 const EraserLink = clientOnly(() => import("./eraser-link/index"));
 
 export default {
-	strong: (props: ParentProps) => (
-		<span class="font-semibold leading-relaxed">{props.children}</span>
-	),
+	strong: (props: ParentProps) => <b class="font-semibold">{props.children}</b>,
 	EditPageLink: () => <EditPageLink />,
 	PageIssueLink: () => <PageIssueLink />,
 	Callout: (props: CalloutProps) => (
@@ -58,7 +56,7 @@ export default {
 	h1: (props: ParentProps) => (
 		<h1
 			{...props}
-			class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+			class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 		>
 			{props.children}
 		</h1>
@@ -69,7 +67,7 @@ export default {
 				<hr class="dark:prose-hr:border-slate-800 border-slate-400 my-8" />
 				<h2
 					{...props}
-					class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+					class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 				>
 					{props.children}
 				</h2>
@@ -80,7 +78,7 @@ export default {
 		return (
 			<h3
 				{...props}
-				class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+				class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 			>
 				{props.children}
 			</h3>
@@ -90,7 +88,7 @@ export default {
 		return (
 			<h4
 				{...props}
-				class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+				class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 			>
 				{props.children}
 			</h4>
@@ -100,7 +98,7 @@ export default {
 		return (
 			<h5
 				{...props}
-				class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+				class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 			>
 				{props.children}
 			</h5>
@@ -109,7 +107,7 @@ export default {
 	h6: (props: ParentProps) => (
 		<h6
 			{...props}
-			class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+			class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 		>
 			{props.children}
 		</h6>
@@ -118,9 +116,8 @@ export default {
 		const [, rest] = splitProps(props, ["children"]);
 		const resolved = children(() => props.children);
 		const resolvedArray = resolved.toArray();
-		let extraAttrs = {};
-		if (props.href.startsWith("https://") || props.href.startsWith("http://"))
-			extraAttrs = { target: "_blank", rel: "noopener noreferrer" };
+
+		// Check if the link is a code block
 		if (
 			// Server side
 			(isServer &&
@@ -136,8 +133,8 @@ export default {
 		) {
 			return (
 				<A
-					class="[&>code]:shadow-[0_0_0_1.5px_#2563eb] hover:[&>code]:shadow-[0_0_0_2px_#1e3a8a] dark:[&>code]:shadow-[0_0_0_1.5px_#bae6fd] dark:hover:[&>code]:shadow-[0_0_0_2px_#FFFFFF]"
-					{...extraAttrs}
+					addLocale
+					class="[&>code]:shadow-[0_0_0_1.5px_#2563eb] hover:[&>code]:shadow-[0_0_0_2px_#1e3a8a] dark:[&>code]:shadow-[0_0_0_1.5px_#38bdf8] dark:hover:[&>code]:shadow-[0_0_0_2px_#7dd3fc]"
 					{...rest}
 				>
 					{resolved()}
@@ -146,9 +143,9 @@ export default {
 		} else {
 			return (
 				<A
+					addLocale
+					class={`no-underline shadow-[inset_0_calc(-1*(var(--tw-prose-underline-size,0.5px)+2px))_0_0_var(--tw-prose-underline,theme(colors.blue.400))] hover:[--tw-prose-underline-size:4px] dark:[--tw-prose-background:theme(colors.slate.900)] [--tw-prose-background:theme(colors.slate.50)] dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.blue.500))] dark:hover:[--tw-prose-underline-size:6px] dark:text-blue-300 text-blue-800 font-semibold`}
 					{...rest}
-					class={`no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,theme(colors.blue.400))] hover:[--tw-prose-underline-size:4px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.blue.500))] dark:hover:[--tw-prose-underline-size:6px] dark:text-blue-300 text-blue-800 font-semibold`}
-					{...extraAttrs}
 				>
 					{resolved()}
 				</A>
@@ -189,7 +186,7 @@ export default {
 		return (
 			<pre
 				{...props}
-				class="[&>code]:bg-white dark:[&>code]:bg-slate-950 [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal custom-scroll-bar"
+				class="[&>code]:bg-white dark:[&>code]:!bg-slate-950 [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal custom-scrollbar"
 			>
 				{props.children}
 			</pre>
@@ -198,7 +195,7 @@ export default {
 	code: (props: ParentProps) => {
 		return (
 			<code
-				class="inline-block not-prose font-mono font-medium bg-blue-200 dark:bg-blue-700/60 text-slate-900 dark:text-white px-1.5 py-0.5 rounded-lg text-[0.8em] leading-snug"
+				class="inline-block not-prose !font-mono font-semibold bg-blue-200 dark:bg-slate-600/60 text-slate-900 dark:text-white px-1 py-0.5 rounded-lg text-[0.8em] leading-snug"
 				{...props}
 			>
 				{props.children}

@@ -5,12 +5,15 @@ import fs from "fs";
 
 const generateLinkArray = (routes) => {
 	return routes.reduce((acc, route) => {
-		return [...acc, { url: route, priority: route == "/" ? 1 : 0.7, changefreq: "weekly" }];
+		return [
+			...acc,
+			{ url: route, priority: route == "/" ? 1 : 0.7, changefreq: "weekly" },
+		];
 	}, []);
 };
 
 (async () => {
-	const referencesRoutes = entries.references.map(({ path }) => path);
+	const referencesRoutes = entries.reference.map(({ path }) => path);
 	const learnRoutes = entries.learn.map(({ path }) => path);
 	const links = [
 		...generateLinkArray(learnRoutes),

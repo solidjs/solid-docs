@@ -14,6 +14,8 @@ Using JavaScript's [proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScri
 With stores, you can now target nested properties and elements within these structures to create a dynamic tree of reactive data.
 
 ```jsx
+import { createStore } from "solid-js/store"
+
 // Initialize store
 const [store, setStore] = createStore({
 	userCount: 3,
@@ -40,7 +42,7 @@ const [store, setStore] = createStore({
 })
 ```
 
-## Accessing values
+## Accessing store values
 
 Store properties can be accessed directly from the state proxy through directly referencing the targeted property:
 
@@ -87,14 +89,74 @@ const App = () => {
 }
 ```
 
+When a store is created, it starts with the initial state but does _not_ immediately set up signals to track changes.
+These signals are created **lazily**, meaning they are only formed when accessed within a reactive context.
+
+Once data is used within a reactive context, such as within the return statement of a component function, computed property, or an effect, a signal is created and dependencies are established.
+	
+For example, if you wanted to print out every new user, adding the console log below will not work because it is not within a tracked scope.
+
+
+```tsx ins={9}
+const App = () => {
+	const [store, setStore] = createStore({
+		userCount: 3,
+		users: [ ... ],
+	})
+
+	const addUser = () => { ... }
+
+	console.log(store.users.at(-1)) // This won't work
+
+	return (
+		<div>
+			<h1>Hello, {store.users[0].username}</h1>
+			<p>User count: {store.userCount}</p>
+      <button onClick={addUser}>Add user</button>
+		</div>
+	)
+}
+```
+
+Rather, this would need to be in a tracking scope, like inside a [`createEffect`](/reference/basic-reactivity/create-effect), so that a dependency is established.
+
+```tsx del={9} ins={10-12}
+const App = () => {
+	const [store, setStore] = createStore({
+		userCount: 3,
+		users: [ ... ],
+	})
+
+	const addUser = () => { ... }
+
+	console.log(store.users.at(-1))
+	createEffect(() => {
+		console.log(store.users.at(-1))
+	})
+
+	return (
+		<div>
+			<h1>Hello, {store.users[0].username}</h1>
+			<p>User count: {store.userCount}</p>
+      <button onClick={addUser}>Add user</button>
+		</div>
+	)
+}
+```
+
 ## Modifying store values
 
 Updating values within a store is best accomplished using a setter provided by the `createStore` initialization.
 This setter allows for the modification of a specific key and its associated value, following the format `setStore(key, newValue)`:
 
-```jsx
-setStore("users", (otherUsers) => [
-	...otherUsers,
+```jsx "setStore"
+const [store, setStore] = createStore({
+	userCount: 3,
+	users: [ ... ],
+})
+
+setStore("users", (currentUsers) => [
+	...currentUsers,
 	{
 		id: 3,
 		username: "michael584",
@@ -104,39 +166,50 @@ setStore("users", (otherUsers) => [
 ])
 ```
 
-    <Callout>
-      Separating read and write capabilities to a store presents a valuable debugging advantage.
+The value of `userCount` could also be automatically updated whenever a new user is added to keep it synced with the users array:
 
-It facilitates the tracking and control of which components can access or change store values.
+```tsx ins={11}
+const App = () => {
+	const [store, setStore] = createStore({
+		userCount: 3,
+		users: [ ... ],
+	})
 
-</Callout>
+	const addUser = () => { ... }
 
-When you create a store, it contains the initial state, but _no signals_ are immediately created to track changes to that state.
-These signals are created lazily, meaning they come into existence only when you access the data within a reactive context.
+	createEffect(() => {
+		console.log(store.users.at(-1))
+		setStore("userCount", store.users.length)
+	})
 
-When you use this data within a reactive context, such as in a template or a computed property, that is when the signals are created and dependencies are established.
-
-For example, if you wanted to you wanted to update `store.userCount` with every new user, simply writing `setStore("userCount", store.userCount.length)` would not work.
-Rather, you would have to add this in a tracking scope, such as within a [`createEffect`](/reference/basic-reactivity/create-effect) so that a dependency is established.
-
-```jsx
-createEffect(() => {
-	setStore("usercount", store.userCount.length)
-})
+	return (
+		<div>
+			<h1>Hello, {store.users[0].username}</h1>
+			<p>User count: {store.userCount}</p>
+      <button onClick={addUser}>Add user</button>
+		</div>
+	)
+}
 ```
 
-## Path syntax flexibilty
+<Callout>
+  Separating the read and write capabilities of a store provides a valuable debugging advantage.
+
+	This separation facilitates the tracking and control of the components that are accessing or changing the values.
+</Callout>
+
+## Path syntax flexibility
 
 Modifying a store using this method is referred to as "path syntax."
 In this approach, the initial arguments are used to specify the keys that lead to the target value you want to modify, while the last argument provides the new value.
 
 String keys are used to precisely target particular values with path syntax.
-By specifying these exact key names, you can direclty retrieve the targeted information.
+By specifying these exact key names, you can directly retrieve the targeted information.
 However, path syntax goes beyond string keys and offers more versatility when accessing targeted values.
 
 Instead of employing the use of just string keys, there is the option of using an array of keys.
 This method grants you the ability to select multiple properties within the store, facilitating accessed to nested structures.
-Alternatively, you can use filtering functios to access keys based on dynamic conditions or specific rules.
+Alternatively, you can use filtering functions to access keys based on dynamic conditions or specific rules.
 
 <EraserLink
 	href="https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=M6Y55ScNFDD_2HmRd4OJkQ"
@@ -208,7 +281,7 @@ These functions receive the old value as an argument, allowing you to compute th
 This dynamic approach is particularly useful for complex transformations.
 
 ```jsx
-setStore("users", 3, (loggedIn) => !users[3].loggedIn)
+setStore("users", 3, (loggedIn) => !loggedIn)
 ```
 
 ### Filtering values
@@ -280,7 +353,7 @@ Other collection types, such as JavaScript [Sets](https://developer.mozilla.org/
 ### Data integration with `reconcile`
 
 When new information needs to be merged into an existing store `reconcile` can be useful.
-`reconcile` will determine the differences between new and existing data, initiating updates only when there are _changed_ values which avoids unneccessary updates.
+`reconcile` will determine the differences between new and existing data, initiating updates only when there are _changed_ values which avoids unnecessary updates.
 
 ```jsx
 const { createStore, reconcile } from "solid-js/stores"
@@ -299,7 +372,7 @@ Consequently, only `'koala'` - the new edition - will cause an update.
 
 ## Extracting raw data with `unwrap`
 
-When there is a need for dealing with data outside of a reactive context, the `unwrap` utlity offers a way to transform a store to a standard [object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object).
+When there is a need for dealing with data outside of a reactive context, the `unwrap` utility offers a way to transform a store to a standard [object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object).
 This conversion serves several important purposes.
 
 Firstly, it provides a snapshot of the current state without the processing overhead associated with reactivity.

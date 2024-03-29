@@ -1,0 +1,123 @@
+---
+title: defineConfig
+---
+
+The `defineConfig` helper is from `@solidjs/start/config` and is used within [`app.config.ts`](/solid-start/reference/entrypoints/app-config).
+
+It takes a configuration object with settings for SolidStart, Vite, and Nitro.
+
+## Configuring Vite
+
+SolidStart supports most Vite options, including plugins via the `vite` option:
+
+```tsx
+import { defineConfig } from "@solidjs/start/config";
+
+export default defineConfig({
+	vite: {
+		// vite options
+		plugins: [],
+	},
+});
+```
+
+The `vite` option can also be a function that can be customized for each Vinxi router. 
+
+In SolidStart, 3 routers are used:
+- `server` - server-side routing
+- `client` -  for the client-side routing
+- `server-function` - server functions.
+
+```tsx
+import { defineConfig } from "@solidjs/start/config";
+
+export default defineConfig({
+	vite({ router }) {
+		if (router === "server") {
+		} else if (router === "client") {
+		} else if (router === "server-function") {
+		}
+		return { plugins: [] };
+	},
+});
+```
+
+## Configuring Nitro
+
+SolidStart uses [Nitro](https://nitro.unjs.io/) to run on a number of platforms. 
+The `server` option exposes some Nitro options including the build and deployment presets. 
+An overview of all available presets is available in the [Deploy section of the Nitro documumentation](https://nitro.unjs.io/deploy).
+
+ Some common ones include:
+
+**Servers**
+
+- [Node.js Server](https://nitro.unjs.io/deploy/runtimes/node#handler-advanced) (`node`) (Default)
+- [Deno Server](https://nitro.unjs.io/deploy/runtimes/deno) (`deno_server`)
+
+**Providers**
+
+- [Netlify Functions and Edge](https://nitro.unjs.io/deploy/providers/netlify) (`netlify`, `netlify-edge`)
+- [Vercel Functions and Edge](https://nitro.unjs.io/deploy/providers/vercel) (`vecel`, `vecel-edge`)
+- [AWS Lambda and Lambda@Edge](https://nitro.unjs.io/deploy/providers/aws) (`aws_lambda`)
+- [Cloudflare Workers and Pages](https://nitro.unjs.io/deploy/providers/cloudflare) (`cloudflare`, `cloudflare_pages`, `cloudflare_module`)
+- [Deno Deploy](https://nitro.unjs.io/deploy/providers/deno-deploy) (`deno_deploy`)
+
+**Static Site Generation**
+
+- [Route pre-rendering](/solid-start/building-your-application/route-prerendering)
+
+By passing no arguments, the default will be the Node preset.
+Other presets may be automatically detected by the provider, however, if not, they must be added to the configuration within the `server-preset` option.
+
+For example, using Netlify Edge would look like the following:
+
+```tsx
+import { defineConfig } from "@solidjs/start/config";
+
+export default defineConfig({
+	server: {
+		preset: "netlify_edge",
+	},
+});
+```
+
+#### Special Note
+
+SolidStart uses async local storage. 
+Netlify, Vercel, and Deno should work should support this out of the box but if you're using Cloudflare you will need to specify the following:
+
+```js
+import { defineConfig } from "@solidjs/start/config";
+
+export default defineConfig({
+	server: {
+		preset: "cloudflare_module",
+		rollupConfig: {
+			external: ["__STATIC_CONTENT_MANIFEST", "node:async_hooks"],
+		},
+	},
+});
+```
+
+Within `wrangler.toml` you will need to enable node compatibility:
+
+
+```
+compatibility_flags = [ "nodejs_compat" ]
+```
+
+## Parameters
+
+| Property             | Type                                       | Default                    | Description                                                                                                                                                                  |
+| -------------------- | ------------------------------------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ssr                  | boolean                                    | true                       | Toggle between client and server rendering.                                                                                                                                  |
+| solid                | object                                     |                            | Configuration object for [vite-plugin-solid](https://github.com/solidjs/vite-plugin-solid)                                                                                   |
+| extensions           | string[]                                   | ["js", "jsx", "ts", "tsx"] | Array of file extensions to be treated as routes.                                                                                                                            |
+| server               | object                                     |                            | Nitro server config options                                                                                                                                                  |
+| appRoot              | string                                     | "./src"                    | The path to the root of the application.                                                                                                                                     |
+| routeDir             | string                                     | "./routes"                 | The path to where the routes are located.                                                                                                                                    |
+| middleware           | string                                     |                            | The path to an optional [middleware](/solid-start/advanced/middleware) file.                                                                                                 |
+| devOverlay           | boolean                                    | true                       | Toggle the dev overlay.                                                                                                                                                      |
+| experimental.islands | boolean                                    | false                      | Enable "islands" mode.                                                                                                                                                       |
+| vite                 | `ViteConfig` or `({ router })=>ViteConfig` |                            | [Vite config object](https://vitejs.dev/config/shared-options.html). Can be configured for each `router` which has the string value "server", "client" or "server-function"` |

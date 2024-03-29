@@ -5,35 +5,79 @@
 @import "tailwindcss/utilities";
 @import "./styles/fonts.css";
 
-html {
-	scroll-behavior: smooth;
-	scroll-padding-top: 6rem;
-}
-
 @layer base {
-	.prose h1,
-	.prose h2 {
-		@apply mt-0;
+	html {
+		color-scheme: light;
 	}
 
-	[inert] ::-webkit-scrollbar {
+	html.dark {
+		color-scheme: dark;
+	}
+
+	/** Scroll bar */
+
+	html,
+	.custom-scrollbar {
+		scroll-behavior: smooth;
+		scroll-padding-top: 6rem;
+
+		scrollbar-color: #778292 #e7ecf2;
+		scrollbar-width: thin;
+	}
+	html.dark,
+	html.dark .custom-scrollbar {
+		scrollbar-color: #8a99ae #313c50;
+		scrollbar-width: thin;
+	}
+
+	/**
+	 * Note: Whenever chrome stops supporting custom scrollbars (the `::-webkit-scrollbar-*` selectors)
+	 * remove the following rule and all `::-webkit-scrollbar-*` selectors
+	 * */
+	html.windows:not(.firefox),
+	html.windows.dark:not(.firefox) {
+		scrollbar-width: initial;
+	}
+	html.windows:not(.firefox) .custom-scrollbar,
+	html.windows.dark:not(.firefox) .custom-scrollbar {
+		scrollbar-color: initial;
+		scrollbar-width: initial;
+	}
+
+	html.windows .custom-scrollbar::-webkit-scrollbar-track {
+		@apply bg-transparent;
+	}
+
+	html.windows .custom-scrollbar::-webkit-scrollbar {
+		@apply w-5 h-5 bg-slate-200/80 rounded-xl border-[6px] border-solid border-transparent;
+		background-clip: content-box;
+	}
+	html.windows.dark .custom-scrollbar::-webkit-scrollbar {
+		@apply bg-slate-600/60;
+	}
+
+	html.windows .custom-scrollbar::-webkit-scrollbar-thumb {
+		@apply bg-slate-600/70 rounded-xl border-[6px] border-solid border-transparent;
+		background-clip: content-box;
+	}
+	html.windows.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+		@apply bg-slate-400/90;
+	}
+
+	html.windows .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+		@apply bg-slate-600;
+	}
+	html.windows.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+		@apply bg-slate-200/70;
+	}
+
+	html.windows [inert] ::-webkit-scrollbar {
 		display: none;
 	}
 
-	/* Scroll bar */
-	.custom-scrollbar::-webkit-scrollbar-track {
-		@apply bg-transparent;
-	}
-	.custom-scrollbar::-webkit-scrollbar {
-		@apply w-5 h-5 bg-slate-600/60 rounded-xl border-[6px] border-solid border-transparent;
-		background-clip: content-box;
-	}
-	.custom-scrollbar::-webkit-scrollbar-thumb {
-		@apply bg-slate-400/90 rounded-xl border-[6px] border-solid border-transparent;
-		background-clip: content-box;
-	}
-	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-		@apply bg-slate-200/70;
+	.prose h1,
+	.prose h2 {
+		@apply mt-0;
 	}
 
 	img {
@@ -44,6 +88,17 @@ html {
 @layer components {
 	.shiki.material-theme-ocean {
 		background-color: transparent !important;
+	}
+}
+
+@layer utilities {
+	.heading {
+		@apply shadow-none text-slate-900 dark:text-white !important;
+	}
+
+	.heading:hover::after {
+		@apply opacity-80;
+		content: " #";
 	}
 }
 

@@ -12,13 +12,13 @@ An effect is created using the `createEffect` function.
 This function takes a callback as its argument that runs when the effect is triggered.
 
 ```jsx
-import { createEffect } from "solid-js"
+import { createEffect } from "solid-js";
 
-const [count, setCount] = createSignal(0)
+const [count, setCount] = createSignal(0);
 
 createEffect(() => {
-	console.log(count())
-})
+	console.log(count());
+});
 ```
 
 In this example, an effect is created that logs the current value of `count` to the console.
@@ -37,12 +37,12 @@ After this run, the effect will only be triggered when any of its _dependencies_
 
 ```jsx
 createEffect(() => {
-	console.log("hello") // will run only once
-})
+	console.log("hello"); // will run only once
+});
 
 createEffect(() => {
-	console.log(count()) // will run every time count changes
-})
+	console.log(count()); // will run every time count changes
+});
 ```
 
 Solid automatically tracks the dependencies of an effect, so you do not need to manually specify them.
@@ -54,13 +54,13 @@ When an effect is set to observe a signal, it creates a subscription to it.
 This subscription allows the effect to track the changes in the signal's value, which causes it to observe any changes that may happen and to execute its callback accordingly.
 
 ```jsx
-import { createSignal, createEffect } from "solid-js"
+import { createSignal, createEffect } from "solid-js";
 
-const [count, setCount] = createSignal(0)
+const [count, setCount] = createSignal(0);
 
 createEffect(() => {
-	console.log(count()) // Logs the current value of count whenever it changes
-})
+	console.log(count()); // Logs the current value of count whenever it changes
+});
 ```
 
 ### Managing multiple signals
@@ -74,17 +74,17 @@ The effect will run even if only one of the signals changes, not necessarily all
 This means that the effect will run with the latest values of all of the signals that it is observing.
 
 ```jsx
-import { createSignal, createEffect } from "solid-js"
+import { createSignal, createEffect } from "solid-js";
 
-const [count, setCount] = createSignal(0)
-const [message, setMessage] = createSignal("Hello")
+const [count, setCount] = createSignal(0);
+const [message, setMessage] = createSignal("Hello");
 
 createEffect(() => {
-	console.log(count(), message())
-})
+	console.log(count(), message());
+});
 
-setCount(1) // Output: 1, "Hello"
-setMessage("World") // Output: 1, "World"
+setCount(1); // Output: 1, "Hello"
+setMessage("World"); // Output: 1, "World"
 ```
 
     	<Callout>
@@ -97,14 +97,14 @@ setMessage("World") // Output: 1, "World"
 ### Nested effects
 
 When working with effects, it is possible to nest them within each other.
-This allows each each effect to independently track its own dependencies, without affect the effect that it is nested within.
+This allows each effect to independently track its own dependencies, without affect the effect that it is nested within.
 
 ```jsx
 createEffect(() => {
-	console.log("Outer effect starts")
-	createEffect(() => console.log("Inner effect"))
-	console.log("Outer effect ends")
-})
+	console.log("Outer effect starts");
+	createEffect(() => console.log("Inner effect"));
+	console.log("Outer effect ends");
+});
 ```
 
 The order of execution is important to note.
@@ -113,15 +113,15 @@ Signals that are accessed within an inner effect, will _not_ be registered as de
 When the signal located within the inner effect changes, it will trigger only the _inner effect_ to re-run, not the outer one.
 
 ```jsx
-import { createSignal, createEffect } from "solid-js"
+import { createSignal, createEffect } from "solid-js";
 
-const [count, setCount] = createSignal(0)
+const [count, setCount] = createSignal(0);
 
 createEffect(() => {
-	console.log("Outer effect starts")
-	createEffect(() => console.log(count())) // when count changes, only the this effect will run
-	console.log("Outer effect ends")
-})
+	console.log("Outer effect starts");
+	createEffect(() => console.log(count())); // when count changes, only the this effect will run
+	console.log("Outer effect ends");
+});
 ```
 
 This forces each effect to be independent of each other, which helps to avoid unexpected behaviour.
@@ -137,25 +137,25 @@ This can include running a side effect only once, or cleaning up a task when it 
 
 In situations where you just want to run a side effect **once**, you can use the [`onMount`](/reference/lifecycle/on-mount) function.
 This lifecycle function is similar to an effect, but it does not track any dependencies.
-Rather, once the component has been intialized, the `onMount` callback will be executed and will not run again.
+Rather, once the component has been initialized, the `onMount` callback will be executed and will not run again.
 
 ```jsx
-import { onMount } from "solid-js"
+import { onMount } from "solid-js";
 
 function Component() {
-	const [data, setData] = createSignal(null)
+	const [data, setData] = createSignal(null);
 
 	createEffect(() => {
-		data() // will run every time data changes
-	})
+		data(); // will run every time data changes
+	});
 
 	onMount(async () => {
 		// will run only once, when the component is mounted
-		const fetchedData = await fetch("https://example.com/data")
-		setData(fetchedData)
-	})
+		const fetchedData = await fetch("https://example.com/data");
+		setData(fetchedData);
+	});
 
-	return <div>...</div>
+	return <div>...</div>;
 }
 ```
 
@@ -169,20 +169,20 @@ While `onMount` is useful for running a side effect once, [`onCleanup`](/referen
 `onCleanup` will run whenever the component unmounts, removing any subscriptions that the effect has.
 
 ```jsx
-import { onCleanup } from "solid-js"
+import { onCleanup } from "solid-js";
 
 function App() {
-	const [count, setCount] = createSignal(0)
+	const [count, setCount] = createSignal(0);
 
 	const timer = setInterval(() => {
-		setCount(count() + 1)
-	}, 1000)
+		setCount((prev) => prev + 1);
+	}, 1000);
 
 	onCleanup(() => {
-		clearInterval(timer)
-	})
+		clearInterval(timer);
+	});
 
-	return <div>Count: {count()}</div>
+	return <div>Count: {count()}</div>;
 }
 ```
 

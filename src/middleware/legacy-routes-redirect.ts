@@ -1,12 +1,12 @@
 import { redirect } from "@solidjs/router";
-import { type FetchEvent } from "@solidjs/start/server/types";
+import { type FetchEvent } from "@solidjs/start/server";
 
 /**
  * Redirect Dictionary
  * {origin: destination}
  */
 const LEGACY_ROUTES = {
-	
+
 	// api reference
 	"/references/api-reference/basic-reactivity/createEffect": "/reference/basic-reactivity/create-effect",
 	"/references/api-reference/basic-reactivity/createMemo": "/reference/basic-reactivity/create-memo",
@@ -67,31 +67,43 @@ const LEGACY_ROUTES = {
 	"/references/api-reference/special-jsx-attributes/ref": "/reference/jsx-attributes/ref",
 	"/references/api-reference/special-jsx-attributes/style": "/reference/jsx-attributes/style",
 	"/references/api-reference/special-jsx-attributes/use_": "/reference/jsx-attributes/use",
-	"/references/api-reference/stores/store-utilities": "/reference/stores/store-utilities",
-	"/references/api-reference/stores/using-stores": "/reference/stores/using-stores",
+	"/references/api-reference/stores/store-utilities": "/concepts/stores#store-utilities",
+	"/references/api-reference/stores/using-stores": "/concepts/stores",
 
 	// deployment
 	"/guides/how-to-guides/deployment": "/guides/deploying-your-app",
-	"/guides/how-to-guides/deployment/deploying-to-cloudflare": "/guides/deploying-your-app#cloudflare",
-	"/guides/how-to-guides/deployment/deploying-to-firebase": "/guides/deploying-your-app#firebase",
-	"/guides/how-to-guides/deployment/deploying-to-flightcontrol": "/guides/deploying-your-app#aws-via-flightcontrol",
-	"/guides/how-to-guides/deployment/deploying-to-netlify": "/guides/deploying-your-app#netlify",
-	"/guides/how-to-guides/deployment/deploying-to-railway": "/guides/deploying-your-app#railway",
-	"/guides/how-to-guides/deployment/deploying-to-vercel": "/guides/deploying-your-app#vercel",
+	"/guides/how-to-guides/deployment/deploying-to-cloudflare": "/guides/deployment-options/cloudflare",
+	"/guides/how-to-guides/deployment/deploying-to-firebase": "/guides/deployment-options/firebase",
+	"/guides/how-to-guides/deployment/deploying-to-flightcontrol": "/guides/deployment-options/aws-via-flightcontrol",
+	"/guides/how-to-guides/deployment/deploying-to-netlify": "/guides/deployment-options/netlify",
+	"/guides/how-to-guides/deployment/deploying-to-railway": "/guides/deployment-options/railway",
+	"/guides/how-to-guides/deployment/deploying-to-vercel": "/guides/deployment-options/vercel",
 
 	// styling
 	"/guides/how-to-guides/styling-in-solid": "/guides/styling-your-components",
-	"/guides/how-to-guides/styling-in-solid/sass": "/guides/styling-your-components#sass",
-	"/guides/how-to-guides/styling-in-solid/less": "/guides/styling-your-components#less",
-	"/guides/how-to-guides/styling-in-solid/tailwind-css": "/guides/styling-your-components#tailwindcss",
-	"/guides/how-to-guides/styling-in-solid/css-modules": "/guides/styling-your-components#css-modules",
-	"/guides/how-to-guides/styling-in-solid/unocss": "/guides/styling-your-components#unocss",
-	
+	"/guides/how-to-guides/styling-in-solid/sass": "/guides/styling-components/sass",
+	"/guides/how-to-guides/styling-in-solid/less": "/guides/styling-components/less",
+	"/guides/how-to-guides/styling-in-solid/tailwind-css": "/guides/styling-components/tailwind",
+	"/guides/how-to-guides/styling-in-solid/css-modules": "/guides/styling-components/css-modules",
+	"/guides/how-to-guides/styling-in-solid/unocss": "/guides/styling-components/uno",
+
 	// trailing slash removal
 	"/routing/migration/": "/routing/migration",
 	"/concepts/refs/": "/concepts/refs",
-	"/guides/state-management/": "/guides/state-management"
-	
+	"/guides/state-management/": "/guides/state-management",
+
+	// miscellaneous
+	"/guides/foundations/typescript-for-solid": "/configuration/typescript",
+	"/guides/foundations/understanding-components": "/concepts/components/basics",
+	"/guides/foundations/why-solid": "/#advantages-of-using-solid",
+	"/guides/how-to-guides/routing-in-solid/solid-router": "/routing/installation-and-setup",
+	"/guides/tutorials/getting-started-with-solid/installing-solid": "/quick-start",
+	"/references/concepts/reactivity": "/concepts/intro-to-reactivity",
+	"/references/concepts/reactivity/tracking": "/concepts/intro-to-reactivity#subscribers",
+	"/references/concepts/ssr/async-ssr": "/guides/fetching-data",
+	"/references/concepts/ssr/simple-client-fetching-ssr": "/guides/fetching-data",
+	"/references/concepts/state-management/context": "/guides/complex-state-management#state-sharing"
+
 } as const;
 
 function isLegacyRoute(path: string): path is keyof typeof LEGACY_ROUTES {
@@ -102,6 +114,6 @@ export const handleLegacyRoutes = (event: FetchEvent) => {
 	const { pathname } = new URL(event.request.url);
 
 	if (isLegacyRoute(pathname)) {
-		return redirect(LEGACY_ROUTES[pathname], 308);
+		return redirect(LEGACY_ROUTES[pathname], 301);
 	}
 };

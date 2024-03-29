@@ -5,10 +5,9 @@ order: 4
 
 import { TabsCodeBlocks } from "~/ui/tab-code-blocks";
 
-Solid Router simplifies routing in Solid applications to help developers manage navigation and rendering by defining routes using JSX or objects passed via props.
+[Solid Router](/solid-router) simplifies routing in Solid applications to help developers manage navigation and rendering by defining routes using JSX or objects passed via props.
 
 ## Getting Started
-
 
 **1. Install the Router**
 
@@ -99,7 +98,8 @@ render(() => (
 **5. Create a CatchAll Route (404 page)**
 
 A catchall route can be used for pages not found at any nested level of the router.
-Using `*` and, optionally, a parameter name will retrieve the rest of the path.
+Using `*` will retrieve the rest of the path.
+Optionally, you can also add a parameter name.
 
 ```jsx
 import { render } from "solid-js/web";
@@ -207,16 +207,13 @@ render(() => (
   </Router>
  ), document.getElementById("root"));
 ```
-
 The colon indicates that `id` can be any string, and as long as the URL fits that pattern, the `<User>` component will show.
-
 
 You can then access that `id` from within a route component with [`useParams`](/reference/solid-router/primitives/use-params).
 
-
 **Note on Animation/Transitions**:
 Routes that share the same path will be treated as the same route.
-If you want to force re-render you can wrap your component in a keyed [`<Show>`](/reference/components/show) like:
+If you want to force re-render, you can wrap your component in a keyed [`<Show>`](/reference/components/show):
 
 ```jsx
 <Show when={params.something} keyed>
@@ -226,7 +223,7 @@ If you want to force re-render you can wrap your component in a keyed [`<Show>`]
 
 ### Accessing parameters
 
-In cases where you may need to access a dynamic route's parameters within your components, the `useParams` primitive is available.
+In cases where you may need to access a dynamic route's parameters within your components, the [`useParams`](/solid-router/reference/primitives/use-params) primitive is available.
 Once the parameters have been accessed using `useParams`, they can be used within your component:
 
 ```jsx
@@ -244,7 +241,7 @@ const User = () => {
 };
 ```
 
-This primitive can be especially useful with other Solid primitives, such as [`createResource`](/reference/basic-reactivity/create-resource) and [`createSignal`](/reference/basic-reactivity/create-signal), which can create dynamic behaviors based on the route parameters.
+`useParams` can be especially useful with other Solid primitives, such as [`createResource`](/reference/basic-reactivity/create-resource) and [`createSignal`](/reference/basic-reactivity/create-signal), which can create dynamic behaviors based on the route parameters.
 
 ```jsx
 import { createResource } from "solid-js";
@@ -283,7 +280,7 @@ Every time the `id` parameter changes in this example, the `fetchUser` function 
 ### Validating Routes
 
 Each path parameter can be validated using a `MatchFilter`.
-Instead of checking for the presence of a parameter, this allows for more complex routing descriptions.
+Instead of checking for the presence of a parameter, this allows for more complex routing descriptions:
 
 ```jsx
 import { lazy } from "solid-js";
@@ -310,7 +307,7 @@ render(() => (
 ), document.getElementById("root"));
 ```
 
-Here, the `matchFilters` prop has been added which provides a way to validate the `parent`, `id` and `withHtmlExtension` parameters against the filters defined in `filters`.
+In this example, the `matchFilters` prop provides a way to validate the `parent`, `id` and `withHtmlExtension` parameters against the filters defined in `filters`.
 If the validation fails, the route will not match.
 
 
@@ -369,7 +366,7 @@ Only leaf `<Route>` nodes (the innermost `<Route>` components) are given a route
 </Route>
 ```
 
-The following two route definitions both match the same URL `/users:id` and render the same component:
+The following two route definitions both match the same URL `/users/:id` and render the same component:
 
 ```jsx
 <Route path="/users/:id" component={User} />
@@ -379,12 +376,13 @@ The following two route definitions both match the same URL `/users:id` and rend
 </Route>
 ```
 
-If you want to make the parent its own route, you have to specify it separately.
-These examples will work. They both will match `/users` and `/users/:id`.
+If you want to make the parent its own route, you have to specify it separately:
 
 ```jsx
 <Route path="/users" component={Users} />
 <Route path="/users/:id" component={User} />
+
+// or
 
 <Route path="/users">
   <Route path="/" component={Users} />
@@ -411,8 +409,7 @@ function PageWrapper(props) {
 </Route>;
 ```
 
-The routes are still configured the same, but now the route components will appear inside the parent component where the `props.children` is declared.
-
+The routes are still configured the same, however now their components will appear inside the parent component where the `props.children` is declared.
 
 Routes can also be nested indefinitely.
 This example will only render the route `/layer1/layer2`, which will be nested in 3 divs.
@@ -540,130 +537,4 @@ export default function Users(props) {
 }
 ```
 
-
-
-## Config Based Routing
-
-JSX is not required when defining routes in Solid.
-Instead, you can pass an array of route definitions:
-
-```jsx
-import { lazy } from "solid-js";
-import { render } from "solid-js/web";
-import { Router } from "@solidjs/router";
-
-const routes = [
-  {
-    path: "/users",
-    component: lazy(() => import("/pages/users.js")),
-  },
-  {
-    path: "/users/:id",
-    component: lazy(() => import("/pages/users/[id].js")),
-    children: [
-      {
-        path: "/",
-        component: lazy(() => import("/pages/users/[id]/index.js")),
-      },
-      {
-        path: "/settings",
-        component: lazy(() => import("/pages/users/[id]/settings.js")),
-      },
-      {
-        path: "/*all",
-        component: lazy(() => import("/pages/users/[id]/[...all].js")),
-      },
-    ],
-  },
-  {
-    path: "/",
-    component: lazy(() => import("/pages/index.js")),
-  },
-  {
-    path: "/*all",
-    component: lazy(() => import("/pages/[...all].js")),
-  },
-];
-
-render(() =>
-  <Router>{routes}</Router>,
-  document.getElementById("root")
-);
-```
-
-Additionally, a single route definition object for a single route can be passed:
-
-```jsx
-import { lazy } from "solid-js";
-import { render } from "solid-js/web";
-import { Router } from "@solidjs/router";
-
-const route = {
-  path: "/",
-  component: lazy(() => import("/pages/index.js"))
-};
-
-render(() => <Router>{route}</Router>, document.getElementById("root"));
-```
-
-## Alternative Routers
-
-### Hash Mode Router
-
-By default, Solid Router uses `location.pathname` as the route path.
-If you need, you can switch to hash mode by using `<HashRouter>`.
-
-```jsx
-import { HashRouter } from "@solidjs/router";
-
-<HashRouter />;
-```
-
-### Memory Mode Router
-
-The memory mode router can also be used, if desired, for testing purposes.
-
-```jsx
-import { MemoryRouter } from "@solidjs/router";
-
-<MemoryRouter />;
-```
-
-### SSR Routing
-
-For SSR, the static router can be used directly. Alternatively, the browser router will default to it on the server by passing in the URL.
-
-```jsx
-import { isServer } from "solid-js/web";
-import { Router } from "@solidjs/router";
-
-<Router url={isServer ? req.url : ""} />;
-```
-
-## SPAs in Deployed Environments
-
-When deploying applications dependent on a client-side router without Server Side Rendering, it is essential to manage redirects to the index page. 
-This prevents the CDN or Hosting service from returning 'not found' errors for pages that do not exist.
-
-
-Each provider has a different way of doing this.
-For example, on Netlify you create a `_redirects` file that contains:
-
-```
-/*   /index.html   200
-```
-
-On Vercel you add a rewrites section to your `vercel.json`:
-
-```json
-
-{
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
-}
-```
-
+To learn more about routing your Solid applications, visit the [Solid Router documentation](/solid-router).

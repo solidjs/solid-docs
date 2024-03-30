@@ -1,6 +1,7 @@
 import { useLocation, useMatch } from "@solidjs/router";
 import { SUPPORTED_LOCALES } from "./config";
-import { useCurrentRouteMetaData } from "~/ui/layout";
+import { useCurrentRouteMetaData } from "~/utils/route-metadata-helper";
+
 
 export function getLocaleFromPathname(pathname: string) {
 	return pathname.split("/")[1];

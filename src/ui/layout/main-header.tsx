@@ -64,7 +64,7 @@ export function MainHeader(props: NavProps) {
 		>
 			<div class="grid lg:grid-cols-[1fr,2fr,1fr] grid-cols-2 py-2 px-4 items-center w-full max-w-8xl mx-auto ">
 				<div class="flex justify-start gap-2">
-					<div class="flex md:hidden">
+					<div class="flex lg:hidden">
 						<MobileNavigation tree={props.tree} />
 					</div>
 					<A href="/" aria-label="Home page" addLocale>

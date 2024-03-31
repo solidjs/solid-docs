@@ -46,7 +46,7 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 					{(title) => <Title>{`${title()} - SolidDocs`}</Title>}
 				</Show>
 				<div id="rr" class="flex relative justify-center">
-					<article class="w-fit overflow-hidden px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none">
+					<article class="w-fit overflow-hidden pb-16 lg:px-5 expressive-code-overrides lg:max-w-none">
 						<Show when={titles()?.parent}>
 							{(t) => (
 								<span class="text-sm font-semibold text-blue-700 dark:text-blue-300 my-1">

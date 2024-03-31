@@ -46,7 +46,7 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 					{(title) => <Title>{`${title()} - SolidDocs`}</Title>}
 				</Show>
 				<div id="rr" class="flex relative justify-center">
-					<article class="w-fit overflow-hidden px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none lg:min-w-[65ch]">
+					<article class="w-fit overflow-hidden px-2 pb-16 md:px-10 expressive-code-overrides lg:max-w-none">
 						<Show when={titles()?.parent}>
 							{(t) => (
 								<span class="text-sm font-semibold text-blue-700 dark:text-blue-300 my-1">
@@ -64,7 +64,7 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 						<span class="xl:hidden text-sm -mt-[15px] block">
 							<EditPageLink />
 						</span>
-						<div class="max-w-prose w-full">{props.children}</div>
+						<div class="max-w-2xl w-full">{props.children}</div>
 						<span class="xl:hidden text-sm">
 							<PageIssueLink />
 						</span>

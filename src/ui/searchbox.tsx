@@ -52,8 +52,10 @@ export function SearchBox() {
 
 	return (
 		<>
-			{/* @ts-ignore */}
-			<orama-searchbox />
+			<div class="fixed">
+				{/* @ts-ignore */}
+				<orama-searchbox />
+			</div>
 			{/* @ts-ignore */}
 			<orama-search-button />
 		</>

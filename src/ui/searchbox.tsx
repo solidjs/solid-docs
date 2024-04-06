@@ -21,10 +21,12 @@ export function SearchBox() {
 		createEffect(() => {
 			RegisterSearchBox({
 				summaryGeneration: import.meta.env.VITE_ORAMA_SECURE_PROXY,
-				searchMode: "hybrid",
 				oramaInstance: client,
 				colorScheme: selectedTheme().value,
 				backdrop: true,
+				resultsMap: {
+					description: 'content'
+				},
 				themeConfig: {
 					light: {},
 					dark: {

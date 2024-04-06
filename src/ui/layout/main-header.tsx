@@ -9,6 +9,8 @@ import { useMatch } from "@solidjs/router";
 import { SUPPORTED_LOCALES } from "~/i18n/config";
 import { LanguageSelector } from "./language-selector";
 
+import { SearchBox } from "../searchbox";
+
 interface Entry {
 	title: string;
 	path: string;
@@ -120,6 +122,7 @@ export function MainHeader(props: NavProps) {
 				</ul>
 
 				<div class="lg:order-2 flex basis-0 gap-4 items-center justify-end order-">
+					<SearchBox />
 					<A
 						href="https://github.com/solidjs/solid"
 						class="group"

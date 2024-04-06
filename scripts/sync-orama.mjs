@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { globSync } from "glob";
-import { load } from "cheerio";
+import { generalPurposeCrawler } from "@orama/crawly";
 import "dotenv/config";
 
 const ORAMA_PRIVATE_API_KEY = process.env.ORAMA_PRIVATE_API_KEY;
@@ -8,7 +8,6 @@ const ORAMA_PRIVATE_INDEX_ID = process.env.ORAMA_PRIVATE_INDEX_ID;
 
 const baseURL = new URL("../dist", import.meta.url).pathname;
 const HTMLFiles = globSync("**/*.html", { cwd: baseURL });
-const headers = ["h1", "h2", "h3", "h4", "h5", "h6"];
 
 const pagesToIndex = HTMLFiles.flatMap((file) => {
 	const path = file.replace(/\.html$/, "");
@@ -16,61 +15,10 @@ const pagesToIndex = HTMLFiles.flatMap((file) => {
 		new URL(`../dist/${file}`, import.meta.url),
 		"utf8"
 	);
-	const $ = load(pageContent);
 
-	const results = [];
-	const title = $("h1").first().text().trim();
-	let currentSection = "";
-	let currentContent = "";
-
-	$("*").each(function () {
-		const isHeader = $(this).is(headers.join(", "));
-		if (isHeader) {
-			if (currentSection && currentContent) {
-				results.push({
-					title: title,
-					content: currentContent.trim(),
-					path: getPath(path),
-					category: getCategory(getPath(path)),
-					section: currentSection,
-				});
-			}
-			if (!$(this).is("h1")) {
-				currentSection = $(this)
-					.clone()
-					.children()
-					.remove("script")
-					.end()
-					.text()
-					.trim();
-			}
-			currentContent = "";
-		} else if ($(this).is("p")) {
-			currentContent += `${$(this).clone().children().remove("script").end().text().trim()} `;
-		}
-	});
-
-	if (currentSection && currentContent) {
-		results.push({
-			title: title,
-			content: currentContent.trim(),
-			path: getPath(path),
-			category: getCategory(getPath(path)),
-			section: currentSection,
-		});
-	}
-
-	return results;
+	const productionDocsURL = `https://docs.solidjs.com/${path}`;
+	return generalPurposeCrawler(productionDocsURL, pageContent);
 });
-
-function getPath(path) {
-	return path.endsWith("index") ? path.replace(/index$/, "") : path;
-}
-
-function getCategory(path) {
-	const category = path.split("/")[0];
-	return category === "index" ? "" : category;
-}
 
 async function emptyIndex() {
 	await fetch(

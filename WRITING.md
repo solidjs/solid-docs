@@ -61,14 +61,12 @@ We ask that you use them sparingly.
 1. To use an aside, you must first import the correct component.
 2. Use the following command in your terminal. (Remember to be in the cloned Solid repo directory.)
 
-`import { Aside } from ~/components/configurable/Aside`
-
 3. Once you have the Aside component imported, simply follow the below example for how to add one to your document.
 
 ```
-<Aside>
+<Callout>
     content here
-</Aside>
+</Callout>
 ```
 
 ### Code examples

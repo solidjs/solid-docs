@@ -42,5 +42,54 @@ const User = lazy(() => import("/pages/users/[id].js"));
 <Route path="/users/:id" component={User} load={loadUser} />;
 ```
 
-The return value of the `load` function is passed to the page component when called at anytime other than `preload`.
-This initializes things in there, or alternatively the following new Data APIs can be used:
+## Accessing loaded data in the component
+
+### `props.data`
+
+The return value of the `load` function is passed to the page component as a `data` prop when called at anytime other than `preload`.
+
+```js
+//pages/users/[id].jsx
+export default function User(props) {
+  return <p>{ props.data().name }</p>
+}
+```
+
+### Data APIs
+
+Alternatively, the following new Data APIs can be used:
+
+- [`cache`](https://docs.solidjs.com/solid-router/reference/data-apis/cache)
+- [`createAsync`](https://docs.solidjs.com/solid-router/reference/data-apis/create-async)
+
+```js
+import { lazy } from "solid-js";
+import { Route } from "@solidjs/router";
+import { loadUser } from "./pages/users/[id].data.js";
+
+const User = lazy(() => import("./pages/users/[id].js"));
+
+// Pass it in the route definition
+<Route path="/users/:id" component={User} load={loadUser} />;
+```
+
+```js
+//pages/users/[id].data.js
+
+import { cache } from "@solidjs/router";
+
+export const getUser = cache((id) => { /* do loading */ }, "users");
+export const loadUser = ({ params, location }) => fetchUser(params.id);
+export default loadUser;
+```
+
+```js
+//pages/users/[id].jsx
+
+import { getUser } from "./[id].data.js";
+
+export default function User(props) {
+  const user = createAsync(() => getUser(props.params.id));
+  return <p>{ user().name }</p>
+}
+```

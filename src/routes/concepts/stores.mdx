@@ -3,7 +3,7 @@ title: Stores
 order: 6
 ---
 
-Similar to [signals](/concepts/signals), stores are state management primitive.
+Similar to [signals](/concepts/signals), stores are a state management primitive.
 However, while signals manage a single piece of state, stores create a centralized location to reduce code redundancy.
 Within Solid, these stores can spawn a collection of reactive signals, each corresponding to a particular property which can be useful when working with complex state.
 
@@ -44,7 +44,7 @@ const [store, setStore] = createStore({
 
 ## Accessing store values
 
-Store properties can be accessed directly from the state proxy through directly referencing the targeted property:
+Store properties can be accessed directly from the state proxy by directly referencing the targeted property:
 
 ```jsx
 console.log(store.userCount) // Outputs: 3
@@ -90,9 +90,9 @@ const App = () => {
 ```
 
 When a store is created, it starts with the initial state but does _not_ immediately set up signals to track changes.
-These signals are created **lazily**, meaning they are only formed when accessed within a reactive context.
+These signals are created **lazily**, meaning they are only formed when accessed from within a tracking scope.
 
-Once data is used within a reactive context, such as within the return statement of a component function, computed property, or an effect, a signal is created and dependencies are established.
+Once data is used within a tracking scope, such as within the return statement of a component function, computed property, or an effect, a signal is created and dependencies are established.
 	
 For example, if you wanted to print out every new user, adding the console log below will not work because it is not within a tracked scope.
 
@@ -166,7 +166,7 @@ setStore("users", (currentUsers) => [
 ])
 ```
 
-The value of `userCount` could also be automatically updated whenever a new user is added to keep it synced with the users array:
+The value of `userCount` could also be automatically updated whenever a new user is added to keep it synced with the `users` array:
 
 ```tsx ins={11}
 const App = () => {
@@ -208,7 +208,7 @@ By specifying these exact key names, you can directly retrieve the targeted info
 However, path syntax goes beyond string keys and offers more versatility when accessing targeted values.
 
 Instead of employing the use of just string keys, there is the option of using an array of keys.
-This method grants you the ability to select multiple properties within the store, facilitating accessed to nested structures.
+This method grants you the ability to select multiple properties within the store, facilitating access to nested structures.
 Alternatively, you can use filtering functions to access keys based on dynamic conditions or specific rules.
 
 <EraserLink
@@ -322,7 +322,7 @@ setStore("users", 1, (user) => ({
 
 Rather than directly modifying a store with setters, Solid has the `produce` utility.
 This utility provides a way to work with data as if it were a [mutable](https://developer.mozilla.org/en-US/docs/Glossary/Mutable) JavaScript object.
-`produce` also provides a way to make changes to multiple properties at the same time which eliminates the need for multiple setter calls.
+`produce` also provides a way to make changes to multiple properties at the same time, which eliminates the need for multiple setter calls.
 
 ```jsx
 import { produce } from "solid-js/store"
@@ -347,7 +347,7 @@ While both can be used to modify the state, the key distinction lies in how they
 `produce` allows you to work with a temporary draft of the state, apply the changes, then produce a new [immutable](https://developer.mozilla.org/en-US/docs/Glossary/Immutable) version of the store.
 Comparatively, `setStore` provides a more straightforward way to update the store directly, without creating a new version.
 
-It's important to note, however, `produce` is specifically designed to work with **arrays** and **objects**.
+It's important to note, however, that `produce` is specifically designed to work with **arrays** and **objects**.
 Other collection types, such as JavaScript [Sets](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set) and [Maps](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map), are not compatible with this utility.
 
 ### Data integration with `reconcile`
@@ -372,7 +372,7 @@ Consequently, only `'koala'` - the new edition - will cause an update.
 
 ## Extracting raw data with `unwrap`
 
-When there is a need for dealing with data outside of a reactive context, the `unwrap` utility offers a way to transform a store to a standard [object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object).
+When there is a need for dealing with data outside of a tracking scope, the `unwrap` utility offers a way to transform a store into a standard [object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object).
 This conversion serves several important purposes.
 
 Firstly, it provides a snapshot of the current state without the processing overhead associated with reactivity.

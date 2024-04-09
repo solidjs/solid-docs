@@ -25,7 +25,7 @@ export function SearchBox() {
 				colorScheme: selectedTheme().value,
 				backdrop: true,
 				resultsMap: {
-					description: 'content'
+					description: "content",
 				},
 				themeConfig: {
 					light: {},
@@ -54,7 +54,7 @@ export function SearchBox() {
 
 	return (
 		<>
-			<div class="fixed">
+			<div class="fixed z-10">
 				{/* @ts-ignore */}
 				<orama-searchbox />
 			</div>

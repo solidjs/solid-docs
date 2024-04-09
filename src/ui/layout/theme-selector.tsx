@@ -9,7 +9,7 @@ export const ThemeSelector: Component = () => {
 	const setSelectedTheme = ctx.setSelectedTheme;
 	return (
 		<DropdownMenu.Root gutter={10}>
-			<DropdownMenu.Trigger class="flex h-6 w-6 items-center justify-center rounded-lg shadow-md shadow-black/5 ring-1 ring-black/10 dark:bg-slate-800 dark:ring-inset dark:ring-white/60">
+			<DropdownMenu.Trigger class="flex h-6 w-6 items-center justify-center rounded-lg shadow-md shadow-black/5 ring-1 ring-black/10 dark:bg-slate-800 dark:ring-inset dark:ring-white/60 shrink-0">
 				<Icon
 					class="w-4 h-4 fill-slate-700 dark:fill-slate-200"
 					path={selectedTheme()!.icon}

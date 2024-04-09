@@ -152,7 +152,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 					</Show>
 					<div class="relative mx-auto flex max-w-8xl flex-auto justify-center custom-scrollbar pt-10">
 						<Show when={!props.isError}>
-							<div class="hidden md:relative md:block lg:flex-none ">
+							<div class="hidden md:relative lg:block lg:flex-none">
 								<div class="absolute inset-y-0 right-0 w-[50vw] dark:hidden" />
 								<div class="absolute bottom-0 right-0 top-16 hidden h-12 w-px bg-gradient-to-t from-slate-800 dark:block" />
 								<div class="absolute bottom-0 right-0 top-28 hidden w-px bg-slate-800 dark:block" />
@@ -191,8 +191,8 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 							</Show>
 						</main>
 						<Show when={!props.isError}>
-							<div class="hidden xl:block prose prose-slate dark:prose-invert dark:text-slate-300">
-								<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] overflow-y-auto pr-4 w-64 xl:w-72 custom-scrollbar">
+							<div class="hidden xl:block shrink-0 w-56 2xl:w-72 pr-4 prose prose-slate dark:prose-invert dark:text-slate-300">
+								<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] overflow-y-auto custom-scrollbar">
 									<SidePanel children={resolved()} />
 								</div>
 							</div>

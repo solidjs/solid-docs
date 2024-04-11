@@ -119,7 +119,6 @@ const Provider = (props) => {
 		foo: "bar",
 		obj: true,
 	};
-	const [signal, setSignal] = createSignal("example signal");
 	return (
 		<MyContext.Provider
 			value={{
@@ -218,72 +217,71 @@ export function CounterProvider(props) {
 [Signals](/concepts/signals) offer a way to synchronize and manage data shared across your components using context.
 You can pass a signal directly to the `value` prop of the `Provider` component, and any changes to the signal will be reflected in all components that consume the context.
 
-    	<TabsCodeBlocks>
-    				<div id="App.jsx">
-    				```jsx
-    	import Counter from "./counter";
-    	import { CounterProvider } from "./Context";
-	import { Child } from "./Child";
+<TabsCodeBlocks>
+<div id="App.jsx">
+```jsx
+import Counter from "./counter";
+import { CounterProvider } from "./Context";
+import { Child } from "./Child";
 
-    	export function App() {
-    		return (
-    			<CounterProvider count={1}>
-    				<h1>Welcome to Counter App</h1>
-    				<Child />
-    			</CounterProvider>
-    		)
-    	}
-    	```
-    				</div>
-    <div id="Context.jsx">
-        	```jsx
-    	import { createSignal, createContext, useContext } from "solid-js";
+export function App() {
+	return (
+		<CounterProvider count={1}>
+			<h1>Welcome to Counter App</h1>
+			<Child />
+		</CounterProvider>
+	)
+}
+```
+</div>
+<div id="Context.jsx">
+```jsx
+import { createSignal, createContext, useContext } from "solid-js";
 
-    	const CounterContext = createContext(); // create context
+const CounterContext = createContext(); // create context
 
-    	export function CounterProvider(props) {
-    	const [count, setCount] = createSignal(props.count || 0),
-    		counter = [
-    		count,
-    		{
-    			increment() {
-    			setCount(prev => prev + 1);
-    			},
-    			decrement() {
-    			setCount(prev => prev - 1);
-    			}
-    		}
-    		];
+export function CounterProvider(props) {
+	const [count, setCount] = createSignal(props.count || 0),
+	counter = [
+		count,
+		{
+			increment() {
+			setCount(prev => prev + 1);
+			},
+			decrement() {
+			setCount(prev => prev - 1);
+			}
+		}
+	];
 
-    	return (
-    		<CounterContext.Provider value={counter}>
-    			{props.children}
-    		</CounterContext.Provider>
-    		);
-    	}
+	return (
+		<CounterContext.Provider value={counter}>
+			{props.children}
+		</CounterContext.Provider>
+	);
+}
 
-    	export function useCounter() { return useContext(CounterContext); }
-    	```
-    				</div>
-    <div id="Child.jsx">
-        ```jsx
-    import { useCounter } from "./Context";
+export function useCounter() { return useContext(CounterContext); }
+```
+</div>
+<div id="Child.jsx">
+```jsx
+import { useCounter } from "./Context";
 
-    export function Child(props) {
-    const [count, { increment, decrement }] = useCounter();
+export function Child(props) {
+	const [count, { increment, decrement }] = useCounter();
 
-    return (
-    <>
-    	<div>{count()}</div>
-    	<button onClick={increment}>+</button>
-    	<button onClick={decrement}>-</button>
-    </>
-    );
-    };
-    ```
-    			</div>
-
-    				</TabsCodeBlocks>
+	return (
+	<>
+		<div>{count()}</div>
+		<button onClick={increment}>+</button>
+		<button onClick={decrement}>-</button>
+	</>
+	);
+};
+```
+</div>
+</TabsCodeBlocks>
 
 This offers a way to manage state across your components without having to pass props through intermediate elements.
 

@@ -2,6 +2,8 @@ import { isServer } from "solid-js/web";
 import {
 	RegisterSearchBox,
 	RegisterSearchButton,
+	RegisterSearchBoxProps,
+	RegisterSearchButtonProps,
 } from "@orama/searchbox/dist/index.js";
 import { OramaClient } from "@oramacloud/client";
 import { createEffect } from "solid-js";
@@ -69,12 +71,8 @@ export function SearchBox() {
 declare module "solid-js" {
 	namespace JSX {
 		interface IntrinsicElements {
-			/**
-			 * @todo replace `unknown` with the actual type definitions
-			 * that will be exposed from Orama soon-ish.
-			 */
-			"orama-searchbox": unknown;
-			"orama-search-button": unknown;
+			"orama-searchbox": RegisterSearchBoxProps;
+			"orama-search-button": RegisterSearchButtonProps;
 		}
 	}
 }

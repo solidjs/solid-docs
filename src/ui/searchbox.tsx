@@ -2,6 +2,8 @@ import { isServer } from "solid-js/web";
 import {
 	RegisterSearchBox,
 	RegisterSearchButton,
+	RegisterSearchBoxProps,
+	RegisterSearchButtonProps,
 } from "@orama/searchbox/dist/index.js";
 import { OramaClient } from "@oramacloud/client";
 import { createEffect } from "solid-js";
@@ -19,6 +21,10 @@ export function SearchBox() {
 
 	if (!isServer) {
 		createEffect(() => {
+			/**
+			 * These function calls create/register web components like
+			 * orama-searchbox and orama-search-button at runtime.
+			 */
 			RegisterSearchBox({
 				summaryGeneration: import.meta.env.VITE_ORAMA_SECURE_PROXY,
 				oramaInstance: client,
@@ -55,11 +61,18 @@ export function SearchBox() {
 	return (
 		<>
 			<div class="fixed z-10">
-				{/* @ts-ignore */}
 				<orama-searchbox />
 			</div>
-			{/* @ts-ignore */}
 			<orama-search-button />
 		</>
 	);
+}
+
+declare module "solid-js" {
+	namespace JSX {
+		interface IntrinsicElements {
+			"orama-searchbox": RegisterSearchBoxProps;
+			"orama-search-button": RegisterSearchButtonProps;
+		}
+	}
 }

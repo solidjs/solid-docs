@@ -49,7 +49,7 @@ export default defineConfig({
 })
 ```
 
-Also, add a `test` script calling vitest to `package.json`:
+Also, add a `test` script calling `vitest` to `package.json`:
 
 ```json title="package.json"
   "scripts": {
@@ -57,8 +57,18 @@ Also, add a `test` script calling vitest to `package.json`:
   }
 ```
 
-If you are using typescript, you may want to add `@testing-library/jest-dom` to `tsconfig.json#compilerOptions.types`.
+If you are using typescript, you may want to add `@testing-library/jest-dom` to `tsconfig.json#compilerOptions.types`:
 
+```json5 title="tsconfig.json
+  "compilerOptions": {
+    // ...
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "types": [vite/client", "@testing-library/jest-dom"]
+  }
+```
+
+It is not necessary to add it to `vite.config`, since `vite-plugin-solid` automatically detects and loads it if present.
 
 ## Components testing
 
@@ -74,11 +84,13 @@ import { render } from "@solidjs/testing-library"
 import userEvent from "@testing-library/user-event"
 import { Counter } from './Counter'
 
+const user = userEvent.setup()
+
 test("increments value", async () => {
-  const { queryByRole } = render(() => <Counter />)
-  const counter = queryByRole('button')
+  const { getByRole } = render(() => <Counter />)
+  const counter = getByRole('button')
   expect(counter).toHaveTextContent("1")
-  await userEvent.click(counter)
+  await user.click(counter)
   expect(counter).toHaveTextContent("2")
 })
 ```
@@ -166,6 +178,8 @@ The first and second part depends on if the query should wait for the element to
 - **findBy**: asynchronous, rejected if not found within 1000ms or more than 1 matches, resolves wth element if found
 - **findAllBy**: asynchronous, rejected if not found within 1000ms, resolves with array of one or more element(s)
 
+Use `getAllBy...` if there are multiple elements matching the same query, otherwise use `getBy...`.
+
 If the `location` option is used or the component is based on resources, the router will be lazy-loaded, thus the first query after rendering needs to be `find...`. If it should be tested whether something is not rendered, first find something that will be rendered and then use `query...`; for everything else use `get...`. 
 
 The last part depends on the characteristics of the element you want to select. If possible, try to select for accessible attributes (role, label, placeholder, text, ...):
@@ -225,16 +239,33 @@ expect(await findByText("Article 12345")).toBeInTheDocument()
 
 Many components are not static, but instead change on user interactions. These interactions need to be simulated to test the changes. To simulate user interactions, the creators of testing-library have provided the `@testing-library/user-event` library. It takes care of the usual order of events as they would occur in actual user interactions, e.g. that a `click` is accompanied by `mousemove`, `hover`, `keydown`, `focus`, `keyup`, and `keypress`.
 
-If you want to use fake timers with `vi.useFakeTimers()` in your tests, be sure to set it up:
+The most convenient events are usually `click`, `keyboard` and `pointer` (to simulate touch events). Learn more about them on the [user-event documentation](https://testing-library.com/docs/user-event/intro). If you want to use fake timers with `vi.useFakeTimers()` in your tests, be sure to set it up with an `advanceTimers` option.
 
-```tsx frame="none"
+```tsx title="user-event.test.tsx"
 import { vi } from "vitest"
 
 const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+
+vi.useFakeTimers()
+
+describe("pre-login: sign-in", () => {
+  const { getByRole, getByLabelText } = render(() => <User />)
+  const signUp = getByRole('button', { text: 'Sign-in' })
+  // use convenience API click:
+  user.click(signUp)
+  const name = getByLabelText('Name')
+  // use complex keyboard input:
+  user.keyboard(name, "{Shift}test{Space}{Shift}user")
+  const password = getByLabelText('Password')
+  user.keyboard(name, "secret")
+  const login = getByRole('button', { text: 'Login' })
+  // use touch event
+  user.pointer([
+    { keys: "[TouchA]" target: login },
+    { keys: "[/TouchA]", target: login }
+  ])
+});
 ```
-
-The most convenient events are usually `click`, `keyboard` and `pointer` (to simulate touch events). Learn more about them on the [user-event documentation](https://testing-library.com/docs/user-event/intro).
-
 
 ### Validating assertions
 
@@ -274,9 +305,11 @@ const {
 
 The `container` from the `...renderResults` will contain the targetElement (default is a `<div>`). That and the ability to manipulate the `arg` signal are helpful in testing directives.
 
-If for example there is a [directive that handles the Fullscreen API](https://github.com/solidjs-community/solid-primitives/blob/main/packages/fullscreen/src/index.ts), it could be tested like this:
+If for example there is a directive that handles the Fullscreen API, it could be tested like this:
 
-```ts title="fullscreen.test.ts"
+<TabsCodeBlocks>
+  <div id="fullscreen.test.ts">
+```ts frame="none"
 import { test, expect, vi } from "vitest"
 import { renderDirective } from "@solidjs/testing-library"
 import { createFullScreen } from "./fullscreen"
@@ -289,7 +322,23 @@ test("toggles fullscreen", () => {
   expect(fs).toHaveBeenCalled()
 })
 ```
+  </div>
+  <div id="fullscreen.ts">
+```ts frame="none"
+import { Accessor } from "solid-js"
 
+export const fullscreen = (ref: HTMLElement, active: Accessor<boolean>) =>
+  createEffect(() => {
+    const isActive = document.fullscreenElement === ref
+    if (active() && !isActive) {
+      ref.requestFullScreen().catch(() => {})
+    } else if (!active() && isActive) {
+      document.exitFullScreen()
+    }
+  })
+```
+  </div>
+</TabsCodeBlocks>
 
 ## Primitive testing
 

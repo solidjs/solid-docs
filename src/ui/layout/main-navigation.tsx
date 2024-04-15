@@ -1,6 +1,4 @@
-// @refresh reload
-
-import { For, Show, Suspense } from "solid-js";
+import { For, Show, Suspense, createEffect } from "solid-js";
 import { useLocation } from "@solidjs/router";
 import { Collapsible, Tabs } from "@kobalte/core";
 import { Icon } from "solid-heroicons";
@@ -135,7 +133,7 @@ export function MainNavigation(props: NavProps) {
 
 	return (
 		<Suspense>
-			<Show when={i18n.t} keyed>
+			<Show when={i18n.t}>
 				<nav class="overflow-y-auto custom-scrollbar h-full md:h-[calc(100vh-7rem)] pb-20">
 					<Tabs.Root
 						defaultValue={path().includes("reference") ? "reference" : "learn"}

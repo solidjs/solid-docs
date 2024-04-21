@@ -62,7 +62,7 @@ render(
 
 3. Create a CatchAll Route (404 page)
 
-When pages are not found at any nested level, providing a catchall, or 404 page, provides a fallback option to display to the user.
+When pages are *not* found at any nested level, providing a catchall, or 404 page, provides a fallback option to display to the user.
 The asterisk (`*`) is used, along with optionally specifying a parameter's name, to access the remaining portion of the path.
 
 ```jsx
@@ -91,6 +91,9 @@ render(
 	document.getElementById("app")
 );
 ```
+
+Once the `Router` component is set up with the desired routes, the specified components will render when the user navigates to the corresponding paths.
+For example, when the user navigates to `/users`, the `Users` component will be rendered:
 
 4. Lazy-load route components
 
@@ -124,61 +127,26 @@ render(
 
 ### Configuration-based routing
 
-JSX is not needed to set up routes.
-Routes can be defined as an array of route definitions and passed to the `Router` component:
+To improve the performance of your application, you can use the `lazy` function from Solid to load components only when they are needed.
+This is especially useful for large components that are not needed immediately when the application loads:
 
 ```jsx
-import { lazy } from "solid-js";
-import { render } from "solid-js/web";
-import { Router } from "@solidjs/router";
-
-const routes = [
-	{
-		path: "/users",
-		component: lazy(() => import("/pages/users.js")),
-	},
-	{
-		path: "/users/:id",
-		component: lazy(() => import("/pages/users/[id].js")),
-		children: [
-			{
-				path: "/",
-				component: lazy(() => import("/pages/users/[id]/index.js")),
-			},
-			{
-				path: "/settings",
-				component: lazy(() => import("/pages/users/[id]/settings.js")),
-			},
-			{
-				path: "/*all",
-				component: lazy(() => import("/pages/users/[id]/[...all].js")),
-			},
-		],
-	},
-	{
-		path: "/",
-		component: lazy(() => import("/pages/index.js")),
-	},
-	{
-		path: "/*all",
-		component: lazy(() => import("/pages/[...all].js")),
-	},
-];
-
-render(() => <Router>{routes}</Router>, document.getElementById("app"));
+const ComplexPage = lazy(() => import("./pages/ComplexPage"));
 ```
 
-Additionally, a single route definition object for a single route can be passed:
+The `lazy` function takes a function that returns a promise that resolves to the component.
+When the component is needed, the promise will be resolved and the component will be loaded.
+When using configuration-based routing, you can use the `lazy` function to load components lazily, to improve the performance of your application:
 
 ```jsx
-import { lazy } from "solid-js";
-import { render } from "solid-js/web";
-import { Router } from "@solidjs/router";
-
-const route = {
-	path: "/",
-	component: lazy(() => import("/pages/index.js")),
-};
-
-render(() => <Router>{route}</Router>, document.getElementById("app"));
+const routes = [
+	{
+		path: "/",
+		component: lazy(() => import("./pages/Home")),
+	},
+	{
+		path: "/users",
+		component: lazy(() => import("./pages/Users")),
+	},
+];
 ```

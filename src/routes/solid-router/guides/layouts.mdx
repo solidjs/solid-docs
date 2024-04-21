@@ -1,0 +1,56 @@
+---
+title: "Layouts"
+---
+
+Layouts are a way to define a common structure for your application's pages.
+This can be useful for defining a common header, footer, or other elements that are shared across multiple pages.
+
+## Root-level layout
+
+A root-level layout is an _optional_ wrapper that surrounds all routes within your application. 
+In order to define one, pass the desired layout component to the `root` prop of the `<Router>` component:
+
+```jsx
+import { render } from "solid-js/web";
+import { Router, Route } from "@solidjs/router";
+
+import Home from "./pages/Home";
+
+const Layout = (props) => {
+    return (
+        <>
+            <header>
+                <h1>Site header</h1>
+            </header>
+            {props.children}
+            <footer>
+                <p>&copy; 2024 My Site</p>
+            </footer>
+        </>
+    );
+};
+
+render(
+    () => (
+        <Router root={Layout}>
+            <Route path="/" component={Home} />
+            <Route path="/hello-world" component={<span>Hello world!</span>} />
+
+        </Router>
+    ),
+    document.getElementById("app")
+);
+```
+
+When providing a root-level layout, the `props.children` will contain the content of the current route.
+For example, when navigating to `/hello-world`, the `Hello world!` text will be rendered inside the `Layout` component.
+
+```html title="Output"
+<header>
+    <h1>Site header</h1>
+</header>
+    <span>Hello world!</span>
+<footer>
+    <p>&copy; 2024 My Site</p>
+</footer>
+```

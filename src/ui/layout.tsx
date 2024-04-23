@@ -17,6 +17,8 @@ import {
 	coreEntries,
 	startEntries,
 	routerEntries,
+	metaTree,
+	metaEntries,
 } from "solid:collection";
 import { PathMatch } from "@solidjs/router/dist/types";
 
@@ -28,6 +30,8 @@ function getDefaultTree(project: (typeof PROJECTS)[number]) {
 			return routerTree;
 		case "solid-start":
 			return startTree;
+		case "solid-meta":
+			return metaTree;
 		default:
 			return coreTree;
 	}
@@ -39,6 +43,8 @@ function getDefaultEntries(project: (typeof PROJECTS)[number]) {
 			return routerEntries;
 		case "solid-start":
 			return startEntries;
+		case "solid-meta":
+			return metaEntries;
 		default:
 			return coreEntries;
 	}

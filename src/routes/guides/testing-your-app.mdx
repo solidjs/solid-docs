@@ -1,5 +1,5 @@
 ---
-title: Testing your app
+title: Testing your App
 order: 6
 ---
 
@@ -29,11 +29,11 @@ pnpm i -D vitest jsdom @solidjs/testing-library @testing-library/user-event @tes
 
 ### Package explanations
 
-- `vitest` - testing framework including runner, assertion engine, mocking facilities
-- `jsdom` - virtual DOM to simulate a headless browser environment running in node
-- `@solidjs/testing-library` - testing library to simplify testing components, directives and primitives, with automatic cleanup
-- `@testing-library/user-event` - simulating user events close to reality
-- `@testing-library/jest-dom` - augments expect with helpful matchers
+- [`vitest`](https://vitest.dev) - testing framework including runner, assertion engine, mocking facilities
+- [`jsdom`](https://github.com/jsdom/jsdom) - virtual DOM to simulate a headless browser environment running in node
+- [`@solidjs/testing-library`](https://github.com/solidjs/solid-testing-library/blob/main/README.md) - testing library to simplify testing components, directives and primitives, with automatic cleanup
+- [`@testing-library/user-event`](https://testing-library.com/docs/user-event/intro) - simulating user events close to reality
+- [`@testing-library/jest-dom`](https://testing-library.com/docs/ecosystem-jest-dom) - augments expect with helpful matchers
 
 If the application is using [SolidStart](/solid-start), then also create a `vitest.config.ts` file:
 
@@ -59,16 +59,16 @@ Also, add a `test` script calling `vitest` to `package.json`:
 
 If you are using typescript, you may want to add `@testing-library/jest-dom` to `tsconfig.json#compilerOptions.types`:
 
-```json5 title="tsconfig.json
+```json title="tsconfig.json"
   "compilerOptions": {
     // ...
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
-    "types": [vite/client", "@testing-library/jest-dom"]
+    "types": ["vite/client", "@testing-library/jest-dom"]
   }
 ```
 
-It is not necessary to add it to `vite.config`, since `vite-plugin-solid` automatically detects and loads it if present.
+It is not necessary to add `@testing-library/jest-dom` to the testing options in `vite.config`, since `vite-plugin-solid` automatically detects and loads it if present.
 
 ## Components testing
 
@@ -95,7 +95,7 @@ test("increments value", async () => {
 })
 ```
 
-The render call from `@solidjs/testing-library` is used to render the component and suppy props and context. To interact with it, there is `@testing-library/user-event`. The `expect` function from `vitest` is extended with a `.ToHaveTextContent("content")` matcher from `@testing-library/jest-dom`. Running this test with
+The [render](https://testing-library.com/docs/solid-testing-library/api#render) call from `@solidjs/testing-library` is used to render the component and suppy props and context. To interact with it, there is `@testing-library/user-event`. The `expect` function from `vitest` is extended with a `.ToHaveTextContent("content")` matcher from `@testing-library/jest-dom`. Running this test with
 
 <TabsCodeBlocks>
   <div id="npm">
@@ -178,9 +178,12 @@ The first and second part depends on if the query should wait for the element to
 - **findBy**: asynchronous, rejected if not found within 1000ms or more than 1 matches, resolves wth element if found
 - **findAllBy**: asynchronous, rejected if not found within 1000ms, resolves with array of one or more element(s)
 
-Use `getAllBy...` if there are multiple elements matching the same query, otherwise use `getBy...`.
+By default, you should use a query starting with `get...`. Use `getAllBy...` if there are multiple elements matching the same query, otherwise use `getBy...`.
 
-If the `location` option is used or the component is based on resources, the router will be lazy-loaded, thus the first query after rendering needs to be `find...`. If it should be tested whether something is not rendered, first find something that will be rendered and then use `query...`; for everything else use `get...`. 
+There are two exceptions:
+
+1. if the `location` option is used or the component is based on resources, the router will be lazy-loaded, thus the first query after rendering needs to be `find...`
+2. If it should be tested whether something is *not* rendered, first find something that will be rendered at the same time and then use `query...` to test if the result is null or an empty array.
 
 The last part depends on the characteristics of the element you want to select. If possible, try to select for accessible attributes (role, label, placeholder, text, ...):
 
@@ -393,11 +396,6 @@ return testEffect(done =>
   })
 )
 ```
-
-## Other testing frameworks
-
-Even though it takes much more configuration, it is still possible to test Solid.js applications in [jest](https://dev.to/lexlohr/testing-your-solidjs-code-2gfh) or [other testing libraries](https://dev.to/lexlohr/testing-solidjs-code-beyond-jest-39p).
-
 
 ## Integration/E2E testing
 

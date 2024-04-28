@@ -4,3 +4,66 @@ title: "Search Parameters"
 
 Search parameters are used to pass data to a route using the query string. 
 The query string is the part of the URL that comes after the `?` character and is used to pass key-value pairs to the route.
+
+In Solid Router, these query parameters can be accessed using [`useSearchParams`](/solid-router/reference/primitives/useSearchParams).
+This primitive retrieves a tuple that contains a reactive object that reads the current search parameters and a function to update them.
+
+```jsx {4} 
+import { useSearchParams } from "solid-router";
+
+export const App = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  return (
+    <div>
+        <span>Username: {searchParams.username}</span>
+        <input
+            type="text"
+            onChange={(e) => {
+                e.preventDefault();
+                setSearchParams({ username: e.target.value })
+                }}
+        />
+    </div>  
+  );
+}
+```
+
+The getter, in this case `searchParams`, is used to read the current search parameters.
+`setSearchParams` works as the setter which accepts an *object* whose entries will be merged into the current query.
+
+## Multiple Queries
+
+Since `setSearchParams` accepts an object, you can pass multiple key-value pairs to update multiple search parameters at once.
+
+```jsx
+setSearchParams({
+    username: "john",
+    page: 1
+    })
+```
+
+<Callout title="Empty or null values">
+If the value of a search parameter's key is `undefined`, `null`, or an empty string (`""`), it will be removed from the query string.
+</Callout>
+
+
+## Accessing Query String
+
+If you require accessing the query string directly, you can use the [`useLocation`](/solid-router/reference/primtiives/useLocation) primitive:
+
+```jsx
+import { useLocation } from "solid-router";
+
+export const App = () => {
+  const location = useLocation();
+
+  return (
+    <div>
+        <span>Query String: {location.search}</span>
+    </div>  
+  );
+}
+```
+
+If the URL was `http://localhost:3000/users?username=solidjsfan`, the output would be `Query String: ?username=john&page=1`.

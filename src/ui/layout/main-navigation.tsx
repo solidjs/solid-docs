@@ -25,6 +25,14 @@ interface NavProps {
 	};
 }
 
+// gets an array of entries and orders it alphabeticaly
+const getAlphabeticalyOrderedList = (list: Entry[]) =>
+	list.slice().sort((firstChild, secondChild) => {
+		return firstChild.title
+			.toLowerCase()
+			.localeCompare(secondChild.title.toLowerCase());
+	});
+
 // check if every item on the list has mainNavExclude as true
 const shouldHideNavItem = (list: EntryList["learn" | "reference"]) =>
 	list.filter(({ mainNavExclude }) => mainNavExclude).length === list.length;
@@ -65,6 +73,9 @@ function DirList(props: { list: Entry[]; sortAlphabeticaly?: boolean }) {
 		<For each={props.list}>
 			{(item) => {
 				if (Array.isArray(item.children)) {
+					const itemChildren = props.sortAlphabeticaly
+						? getAlphabeticalyOrderedList(item.children)
+						: item.children;
 					return (
 						<li>
 							<span class="font-semibold text-slate-800 dark:text-slate-100">
@@ -74,19 +85,7 @@ function DirList(props: { list: Entry[]; sortAlphabeticaly?: boolean }) {
 								role="list"
 								class="ml-2 mt-2 space-y-3 border-l-[1px] border-slate-400 dark:border-slate-700 lg:border-slate-400"
 							>
-								<For
-									each={
-										props.sortAlphabeticaly
-											? item.children
-													.slice()
-													.sort((firstChild, secondChild) => {
-														return firstChild.title
-															.toLowerCase()
-															.localeCompare(secondChild.title.toLowerCase());
-													})
-											: item.children
-									}
-								>
+								<For each={itemChildren}>
 									{(child) => {
 										if (
 											Array.isArray(child.children) &&

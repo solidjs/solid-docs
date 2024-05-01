@@ -37,9 +37,10 @@ export function SearchBox() {
 					light: {},
 					dark: {
 						"--text-color-primary": "#fff",
-						"--background-color-primary": "#040816",
+						"--background-color-primary": "#000000",
 						"--icon-color-primary": "#fff",
 						"--border-color-accent": "rgb(147 197 253)",
+						"--backdrop-bg-color": "rgb(19 20 24 / 75%)",
 					},
 				},
 			});

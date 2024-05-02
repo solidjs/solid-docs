@@ -25,6 +25,14 @@ interface NavProps {
 	};
 }
 
+// gets an array of entries and orders it alphabeticaly
+const getAlphabeticalyOrderedList = (list: Entry[]) =>
+	list.slice().sort((firstChild, secondChild) => {
+		return firstChild.title
+			.toLowerCase()
+			.localeCompare(secondChild.title.toLowerCase());
+	});
+
 // check if every item on the list has mainNavExclude as true
 const shouldHideNavItem = (list: EntryList["learn" | "reference"]) =>
 	list.filter(({ mainNavExclude }) => mainNavExclude).length === list.length;
@@ -60,11 +68,14 @@ function ListItemLink(props: { item: Entry }) {
 	);
 }
 
-function DirList(props: { list: Entry[] }) {
+function DirList(props: { list: Entry[]; sortAlphabeticaly?: boolean }) {
 	return (
 		<For each={props.list}>
 			{(item) => {
 				if (Array.isArray(item.children)) {
+					const itemChildren = props.sortAlphabeticaly
+						? getAlphabeticalyOrderedList(item.children)
+						: item.children;
 					return (
 						<li>
 							<span class="font-semibold text-slate-800 dark:text-slate-100">
@@ -74,7 +85,7 @@ function DirList(props: { list: Entry[] }) {
 								role="list"
 								class="ml-2 mt-2 space-y-3 border-l-[1px] border-slate-400 dark:border-slate-700 lg:border-slate-400"
 							>
-								<For each={item.children}>
+								<For each={itemChildren}>
 									{(child) => {
 										if (
 											Array.isArray(child.children) &&
@@ -100,7 +111,10 @@ function DirList(props: { list: Entry[] }) {
 																role="list"
 																class="ml-4 mt-3 space-y-3 border-l-[1px] border-slate-400 dark:border-slate-700 dark:lg:border-slate-700"
 															>
-																<DirList list={child.children} />
+																<DirList
+																	sortAlphabeticaly={props.sortAlphabeticaly}
+																	list={child.children}
+																/>
 															</ul>
 														</Collapsible.Content>
 													</Collapsible.Root>
@@ -171,7 +185,7 @@ export function MainNavigation(props: NavProps) {
 								fallback={<p>{i18n.t("main.nav.no.routes")}</p>}
 							>
 								<ul role="list" class="space-y-3 px-4">
-									<DirList list={reference()} />
+									<DirList sortAlphabeticaly list={reference()} />
 								</ul>
 							</Show>
 						</Tabs.Content>

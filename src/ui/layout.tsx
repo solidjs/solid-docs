@@ -21,6 +21,7 @@ import {
 	metaEntries,
 } from "solid:collection";
 import { PathMatch } from "@solidjs/router/dist/types";
+import { useCurrentRouteMetaData } from "~/utils/route-metadata-helper";
 
 const PROJECTS = ["solid-router", "solid-start", "solid-meta"] as const;
 
@@ -119,18 +120,19 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 
 	// is i18n main
 	// is en project
-	const isI18nOrProject = useMatch(() => "/:localeOrProject/*", {
+	const isProjectContent = useMatch(() => "/:localeOrProject/*", {
 		localeOrProject: [...SUPPORTED_LOCALES, ...PROJECTS],
 	});
 
-	const isCore = useMatch(() => "/*");
-
-	const isRoot = useMatch(() => "/:localeOrProject?", {
-		localeOrProject: [...SUPPORTED_LOCALES, ...PROJECTS],
-	});
+	const isCoreContent = useMatch(() => "/*");
 
 	const entries = createAsync(
-		() => getDocsMetadata(isI18nOrProject(), isTranslatedProject(), isCore()),
+		() =>
+			getDocsMetadata(
+				isProjectContent(),
+				isTranslatedProject(),
+				isCoreContent()
+			),
 		{ deferStream: true }
 	);
 
@@ -153,7 +155,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 					<Show when={entries()}>
 						{(data) => <MainHeader tree={data().tree} />}
 					</Show>
-					<Show when={isRoot()} keyed>
+					<Show when={useCurrentRouteMetaData().isProjectRoot} keyed>
 						<Hero />
 					</Show>
 					<div class="relative mx-auto flex max-w-8xl flex-auto justify-center custom-scrollbar pt-10">
@@ -175,7 +177,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 						</Show>
 						<main class="w-full md:max-w-2xl flex-auto px-4 pt-2 md:pb-16 lg:max-w-none prose prose-slate dark:prose-invert dark:text-slate-300">
 							<Show
-								when={!isRoot()}
+								when={!useCurrentRouteMetaData().isProjectRoot}
 								keyed
 								fallback={
 									<article class="px-2 md:px-10 expressive-code-overrides overflow-y-auto">

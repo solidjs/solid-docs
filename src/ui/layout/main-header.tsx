@@ -9,6 +9,8 @@ import { useMatch } from "@solidjs/router";
 import { SUPPORTED_LOCALES } from "~/i18n/config";
 import { LanguageSelector } from "./language-selector";
 
+import { SearchBox } from "../searchbox";
+
 interface Entry {
 	title: string;
 	path: string;
@@ -29,11 +31,11 @@ interface NavProps {
 export function MainHeader(props: NavProps) {
 	const [isScrolled, setIsScrolled] = createSignal(false);
 	const notSolidCore = useMatch(() => "/:project/*", {
-		project: ["solid-router", "solid-start", "solid-metadata"],
+		project: ["solid-router", "solid-start", "solid-meta"],
 	});
 	const translatedLocale = useMatch(() => "/:locale/:project/*", {
 		locale: SUPPORTED_LOCALES,
-		project: ["solid-router", "solid-start", "solid-metadata"],
+		project: ["solid-router", "solid-start", "solid-meta"],
 	});
 
 	if (!isServer) {
@@ -62,7 +64,7 @@ export function MainHeader(props: NavProps) {
 		>
 			<div class="grid lg:grid-cols-[1fr,2fr,1fr] grid-cols-2 py-2 px-4 items-center w-full max-w-8xl mx-auto ">
 				<div class="flex justify-start gap-2">
-					<div class="flex md:hidden">
+					<div class="flex lg:hidden">
 						<MobileNavigation tree={props.tree} />
 					</div>
 					<A href="/" aria-label="Home page" addLocale>
@@ -105,21 +107,19 @@ export function MainHeader(props: NavProps) {
 						</A>
 					</li>
 					<li>
-						<span class="text-slate-400">
+						<A
+							href="/solid-meta"
+							class="text-slate-900 dark:text-slate-200 px-2"
+							activeClass="border-b-2 border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
+							addLocale
+						>
 							Meta
-							<span>
-								<abbr
-									title="coming soon"
-									class="text-[0.5em] relative -top-2 left-1 no-underline  border py-px px-1 rounded-md  dark:text-slate-200 dark:border-slate-300 text-slate-400 border-slate-400"
-								>
-									soon
-								</abbr>
-							</span>
-						</span>
+						</A>
 					</li>
 				</ul>
 
 				<div class="lg:order-2 flex basis-0 gap-4 items-center justify-end order-">
+					<SearchBox />
 					<A
 						href="https://github.com/solidjs/solid"
 						class="group"

@@ -32,7 +32,7 @@ export const MobileNavigation = (props: NavProps) => {
 			<Dialog.Portal>
 				<div class="fixed inset-0 z-50 flex justify-start">
 					<Dialog.Overlay class="bg-white/10 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:fade-in fixed inset-0 z-50 backdrop-blur-sm transition-all duration-100" />
-					<Dialog.Content class="w-5/6 sm:w-2/3 h-full border-none dark:bg-slate-900 bg-slate-50 z-50 scale-100 border px-3 opacity-100 shadow-lg overflow-y-auto flex flex-col">
+					<Dialog.Content class="w-5/6 max-w-md h-full border-none dark:bg-slate-900 bg-slate-50 z-50 scale-100 border px-3 opacity-100 shadow-lg overflow-y-auto flex flex-col">
 						<Dialog.CloseButton class="sticky top-0 self-end pt-4 mb-3 z-20">
 							<Icon path={xMark} class="w-6 dark:prose-invert prose" />
 						</Dialog.CloseButton>

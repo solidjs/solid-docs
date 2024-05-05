@@ -1,4 +1,12 @@
-import { Component, Index, Show, Suspense, createResource } from "solid-js";
+import {
+	Component,
+	Index,
+	Match,
+	Show,
+	Suspense,
+	Switch,
+	createResource,
+} from "solid-js";
 import { ButtonLink } from "../button-link";
 import { clientOnly } from "@solidjs/start";
 import { counterTxt, snippetLines } from "./hero-code-snippet";
@@ -19,6 +27,7 @@ const TrafficLightsIcon: Component<{ class: string }> = (props) => {
 };
 
 export const Hero: Component = () => {
+	const location = useLocation();
 	const i18n = useI18n();
 	return (
 		<div class="overflow-hidden bg-sky-100/80 border border-sky-200  dark:border-none dark:bg-slate-900 mb-10 ">
@@ -27,7 +36,11 @@ export const Hero: Component = () => {
 					<div class="relative md:text-center lg:text-left">
 						<div class="relative">
 							<h2 class="inline bg-gradient-to-r dark:from-indigo-200 dark:via-blue-400 dark:to-indigo-200 from-blue-700 via-slate-800 to-blue-700 bg-clip-text font-bold text-5xl tracking-tight text-transparent">
-								{i18n.t("hero.title")}
+								<Switch fallback={i18n.t("hero.title")}>
+									<Match when={location.pathname === "/solid-start"}>
+										Start
+									</Match>
+								</Switch>
 							</h2>
 							<p class="mt-3 text-2xl tracking-tight dark:text-slate-300">
 								{i18n.t("hero.subtitle")}

@@ -107,7 +107,7 @@ function MyComponent() {
 ```
 
 When this component is rendered into the DOM, the function body is executed.
-This includes creating the `count` signal and the `console.log(count())` statement, which will log the current value of `count` to the console.
+This includes creating the `count` signal and executing the `console.log(count())` statement, which will log the current value of `count` to the console.
 In addition, the component's JSX is returned, which will be rendered into the DOM.
 
 After the component is rendered, the `console.log` statement will not be executed again, even if the component's state changes.
@@ -121,7 +121,7 @@ In essence, Solid splits the concerns:
 ### Conditional rendering
 
 To display different content based on state or other criteria, you can use conditional rendering.
-Given that the component function is only executed once, conditional statements must be placed within the function body.
+Given that the component function is only executed once, conditional statements must be placed within the return statement.
 This design ensures that conditional paths are clear and immediately understood.
 
 ```tsx
@@ -129,16 +129,12 @@ function MyComponent() {
 	const [count, setCount] = createSignal(0);
 	return (
 		<div>
-			{count() > 5 ? (
-				<div>Count limit reached</div>
-			) : (
-				<>
-					<p>Count: {count()}</p>
-					<button onClick={() => setCount((prev) => prev + 1)}>
-						Increment
-					</button>
-				</>
-			)}
+			<Show when={count() <= 5} fallback={<div>Count limit reached</div>}>
+				<p>Count: {count()}</p>
+				<button onClick={() => setCount((prev) => prev + 1)}>
+					Increment
+				</button>
+			</Show>
 		</div>
 	);
 }

@@ -7,7 +7,7 @@ This writing guide is in-progress, so please be sure to check it often as we adj
 We welcome suggestions and feedback.
 
 Bear in mind that the following is a general guideline, but we will use it as a framework to edit any incoming contributions.
-This is to ensure to that Solid's documents remain consistent in tone, voice, structure, and conventions.
+This is to ensure that Solid's documents remain consistent in tone, voice, structure, and conventions.
 
 ## Visual style
 
@@ -35,7 +35,7 @@ Solid uses Markdown for tables, so here's how to make one.
 1. Start with a vertical line, also called a pipe: `|`.
 2. Insert your first heading and end with another pipe.
 3. Write the next heading and end it with a pipe. Repeat until you have your column headings.
-4. One the line under the first column heading, insert at least three dashes: `---`.
+4. One line under the first column heading, insert at least three dashes: `---`.
 5. Repeat this for all of your headings.
 6. To create the cells, start a new line with a pipe, then insert the content and surround it in spaces, end the cell with a pipe.
 7. To complete the row, create a new cell on the same line.
@@ -61,14 +61,12 @@ We ask that you use them sparingly.
 1. To use an aside, you must first import the correct component.
 2. Use the following command in your terminal. (Remember to be in the cloned Solid repo directory.)
 
-`import { Aside } from ~/components/configurable/Aside`
-
 3. Once you have the Aside component imported, simply follow the below example for how to add one to your document.
 
 ```
-<Aside>
+<Callout>
     content here
-</Aside>
+</Callout>
 ```
 
 ### Code examples
@@ -137,7 +135,7 @@ Here's an example of a Heading 1 (H1) and a Heading 2 (H2) in raw Markdown.
 ## Introduction
 ```
 
-We primarily uses Headings 1 through 3.
+We primarily use Headings 1 through 3.
 However, headings can go up to 6.
 Note we rarely use Headings 5 and 6.
 
@@ -157,7 +155,7 @@ You will come across two types of lists in your contributions, ordered and unord
 Here's a breakdown on when to use each one.
 
 Ordered: This is for step-based, how-to content.
-You need an ordered list when the order or hierarchy is imporant.
+You need an ordered list when the order or hierarchy is important.
 
 Unordered: Unordered lists help break up content with non-hierarchical items.
 You will likely use them when writing exceptions and emphasizing important ideas.

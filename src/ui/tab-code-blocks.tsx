@@ -6,7 +6,7 @@ const isArrayOfElements = (arr: any[]): arr is Element[] => {
 };
 
 /**
- *  This is a code blocks component that can be used to divide code blocks into seperate tabs. Here's an example of how to use it in JSX and mdx:
+ *  This is a code blocks component that can be used to divide code blocks into separate tabs. Here's an example of how to use it in JSX and mdx:
  * @example
  * //jsx
  * <TabsCodeBlocks>

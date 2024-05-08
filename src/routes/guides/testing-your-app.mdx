@@ -3,11 +3,15 @@ title: Testing your App
 order: 6
 ---
 
-This guide should cover the basics of testing a Solid application to inspire confidence during the further development.
+Testing your Solid applications is important to inspiring confidence in your codebase through preventing regressions.
 
-## Set up testing
+## Getting started
 
-The preferred method of testing Solid applications is [vitest](https://vitest.dev). First install the required dependencies:
+### Adding testing packages to your project
+
+The recommended testing testing framework for Solid applications is [vitest](https://vitest.dev). 
+
+To get started with vitest, install the following development dependencies:
 
 <TabsCodeBlocks>
   <div id="npm">
@@ -29,13 +33,13 @@ pnpm i -D vitest jsdom @solidjs/testing-library @testing-library/user-event @tes
 
 ### Package explanations
 
-- [`vitest`](https://vitest.dev) - testing framework including runner, assertion engine, mocking facilities
-- [`jsdom`](https://github.com/jsdom/jsdom) - virtual DOM to simulate a headless browser environment running in node
-- [`@solidjs/testing-library`](https://github.com/solidjs/solid-testing-library/blob/main/README.md) - testing library to simplify testing components, directives and primitives, with automatic cleanup
-- [`@testing-library/user-event`](https://testing-library.com/docs/user-event/intro) - simulating user events close to reality
+- [`vitest`](https://vitest.dev) - testing framework that includes runner, assertion engine, and mocking facilities
+- [`jsdom`](https://github.com/jsdom/jsdom) - a virtual DOM used to simulate a headless browser environment running in node
+- [`@solidjs/testing-library`](https://github.com/solidjs/solid-testing-library/blob/main/README.md) - a library to simplify testing components, directives, and primitives, with automatic cleanup
+- [`@testing-library/user-event`](https://testing-library.com/docs/user-event/intro) - used to simulate user events that are closer to reality
 - [`@testing-library/jest-dom`](https://testing-library.com/docs/ecosystem-jest-dom) - augments expect with helpful matchers
 
-If the application is using [SolidStart](/solid-start), then also create a `vitest.config.ts` file:
+When using [SolidStart](/solid-start), create a `vitest.config.ts` file:
 
 ```ts title="vitest.config.ts"
 import solid from "vite-plugin-solid"
@@ -49,7 +53,7 @@ export default defineConfig({
 })
 ```
 
-Also, add a `test` script calling `vitest` to `package.json`:
+Additionally, in your `package.json` add a `test` script calling `vitest`:
 
 ```json title="package.json"
   "scripts": {
@@ -57,7 +61,8 @@ Also, add a `test` script calling `vitest` to `package.json`:
   }
 ```
 
-If you are using typescript, you may want to add `@testing-library/jest-dom` to `tsconfig.json#compilerOptions.types`:
+<Callout title="Using TypeScript">
+If using typescript, add `@testing-library/jest-dom` to `tsconfig.json#compilerOptions.types`:
 
 ```json title="tsconfig.json"
   "compilerOptions": {
@@ -67,18 +72,26 @@ If you are using typescript, you may want to add `@testing-library/jest-dom` to 
     "types": ["vite/client", "@testing-library/jest-dom"]
   }
 ```
+</Callout>
 
 It is not necessary to add `@testing-library/jest-dom` to the testing options in `vite.config`, since `vite-plugin-solid` automatically detects and loads it if present.
 
+## Writing tests
+
 ## Components testing
 
-Testing components mainly involves three things:
+Testing components involves three main things:
 
 - Rendering the component
 - Interacting with the component
 - Validating assertions
 
-```tsx title="Counter.test.tsx"
+To write tests for your components, create a `[name].test.tsx` file.
+The purpose of this file is to describe the intended behavior from a user's perspective in the form of unit tests:
+
+<TabsCodeBlocks>
+<div id="Counter.test.jsx">
+```jsx frame="none"
 import { test, expect } from "vitest"
 import { render } from "@solidjs/testing-library"
 import userEvent from "@testing-library/user-event"
@@ -94,8 +107,26 @@ test("increments value", async () => {
   expect(counter).toHaveTextContent("2")
 })
 ```
+</div>
+<div id="Counter.jsx">
+```jsx frame="none"
+export const Counter = () => {
+  const [count, setCount] = createSignal(1);
+  return (
+    <button onClick={() => setCount(count() + 1)}>
+      {count()}
+    </button>
+  );
+}
+```
+</div>
+</TabsCodeBlocks>
 
-The [render](https://testing-library.com/docs/solid-testing-library/api#render) call from `@solidjs/testing-library` is used to render the component and suppy props and context. To interact with it, there is `@testing-library/user-event`. The `expect` function from `vitest` is extended with a `.ToHaveTextContent("content")` matcher from `@testing-library/jest-dom`. Running this test with
+In the `test.jsx` file, [the `render` call from `@solidjs/testing-library`](https://testing-library.com/docs/solid-testing-library/api#render) is used to render the component and supply the props and context.
+To mimic a user interaction, `@testing-library/user-event` is used.
+The [`expect` function provided by `vitest`](https://vitest.dev/api/expect.html) is extended with a [`.ToHaveTextContent("content")` matcher from `@testing-library/jest-dom`](https://github.com/testing-library/jest-dom?tab=readme-ov-file#tohavetextcontent) to supply what the expected behavior is for this component.
+
+To run this test, use the following command:
 
 <TabsCodeBlocks>
   <div id="npm">
@@ -115,8 +146,7 @@ pnpm test
   </div>
 </TabsCodeBlocks>
 
-
-yields the following result:
+If running the command is successful, you will get the following result showing whether the tests have passed or failed:
 
 ```ansi frame="none"
 [1;36m[RUN][0;36m v1.4.0[0;8m solid-app/src/components/Counter.test.tsx[0m
@@ -135,7 +165,9 @@ environment 880ms, prepare 212ms)
 
 ### Rendering the component
 
-`render` from `@solidjs/testing-library` sets up a container, renders the component within and registers it for cleanup so that the container will removed after the successful test. It also handles wrapping the component in contexts and set up a router.
+The  `render` function from `@solidjs/testing-library` creates the testing environment within the `test.tsx` file.
+It sets up the container, rendering the component within it, and automatically registers it for clean-up after a successful test.
+Additionally, it manages wrapping the component in contexts as well as setting up a router.
 
 ```tsx frame="none"
 const renderResult = render(
@@ -161,6 +193,8 @@ const {
 
 #### Using the right queries
 
+Queries are helpers used to find elements within a page.
+
 ```
                                           ⎧ Role
                               get ⎫  By   ⎪ DisplayValue
@@ -169,7 +203,7 @@ const {
                                           ⎩ ...
 ```
 
-The first and second part depends on if the query should wait for the element to (not) appear and if it should throw if the element cannot be found:
+The prefix (get/query/find) and middle part (By/AllBy) depend on if the query should wait for the element to (not) appear, if it should throw if the element cannot be found, and how it should handle multiple matches:
 
 - **getBy**: synchronous, throws if not found or more than 1 matches
 - **getAllBy**: synchronous, throws if not found, returns array of matches
@@ -178,29 +212,31 @@ The first and second part depends on if the query should wait for the element to
 - **findBy**: asynchronous, rejected if not found within 1000ms or more than 1 matches, resolves wth element if found
 - **findAllBy**: asynchronous, rejected if not found within 1000ms, resolves with array of one or more element(s)
 
-By default, you should use a query starting with `get...`. Use `getAllBy...` if there are multiple elements matching the same query, otherwise use `getBy...`.
+By default, queries should start with `get...`. 
+If there are multiple elements matching the same query, `getAllBy...` should be used, otherwise use `getBy...`.
 
-There are two exceptions:
+There are two exceptions when you should **not** start with `get...`:
 
-1. if the `location` option is used or the component is based on resources, the router will be lazy-loaded, thus the first query after rendering needs to be `find...`
-2. If it should be tested whether something is *not* rendered, first find something that will be rendered at the same time and then use `query...` to test if the result is null or an empty array.
+1. If the `location` option is used or the component is based on resources, the router will be lazy-loaded; in this case, the first query after rendering needs to be `find...`
+2. When testing something that is *not* rendered, you will need to find something that will be rendered at the same time; after that, use `queryAllBy...` to test if the result is an empty array (`[]`).
 
-The last part depends on the characteristics of the element you want to select. If possible, try to select for accessible attributes (role, label, placeholder, text, ...):
+The query's suffix (Role, LabelText, ...) depends on the characteristics of the element you want to select.
+If possible, try to select for accessible attributes (roughly in the following order):
 
-- **Role**: WAI ARIA landmark roles which are automatically set by semantic elements like `<button>` or otherwise with the `role`-attribute
-- **LabelText**: elements described by a label wrapping the element or is linked with `for`- or `aria-label`-attribute
-- **PlaceholderText**: input elements with a `placeholder`-attribute
-- **Text**: searches the text in all text nodes within the element, even if split over multiple nodes
-- **DisplayValue**: form elements showing the given value
-- **AltText**: images with the alt text
-- **Title**: HTML elements with the `title`-attribute or SVGs with the `<title>`-tag containing the given text
-- **TestId**: queries by the `data-testid`-attribute. You can setup a different attribute via `configure({testIdAttribute: 'data-my-test-attribute'})`
+- **Role**: [WAI ARIA](https://www.w3.org/WAI/standards-guidelines/aria) landmark roles which are automatically set by semantic elements like `<button>` or otherwise use `role` attribute
+- **LabelText**: elements that are described by a label wrapping the element, or by an `aria-label` attribute, or is linked with `for`- or `aria-labelledby` attribute
+- **PlaceholderText**: input elements with a `placeholder` attribute
+- **Text**: searches text within all text nodes in the element, even if split over multiple nodes
+- **DisplayValue**: form elements showing the given value (e.g. select elements)
+- **AltText**: images with alt text
+- **Title**: HTML elements with the `title` attribute or SVGs with the `<title>` tag containing the given text
+- **TestId**: queries by the `data-testid` attribute; a different data attribute can be setup via `configure({testIdAttribute: 'data-my-test-attribute'})`; TestId-queries are *not accessible*, so use them only as a last resort.
 
 For more information, check the [testing-library documentation](https://testing-library.com/docs/queries/about).
 
 #### Testing in context
 
-The component might be reliant on some context. In order to wrap it, use the `wrapper`-option. 
+If a component relies on some context, to wrap it use the `wrapper` option:
 
 ```tsx title="Context.test.tsx"
 import { test, expect } from "vitest"
@@ -215,7 +251,8 @@ test("receives data from context", () => {
 });
 ```
 
-Wrappers can be re-used if they are created externally. For wrappers with different values, a higher-order component creating the required wrappers can make the tests more concise:
+Wrappers can be re-used if they are created externally.
+For wrappers with different values, a higher-order component creating the required wrappers can make the tests more concise:
 
 ```tsx
 const createWrapper = (value) => (props) => 
@@ -223,12 +260,13 @@ const createWrapper = (value) => (props) =>
 ```
 
 <Callout title="Using multiple providers">
-If using multiple providers, [solid-primitives](https://primitives.solidjs.community/) has [`<MultiProvider>`](https://primitives.solidjs.community/package/context#multiprovider) to avoid nesting multiple levels of providers
+If using multiple providers, [solid-primitives has `<MultiProvider>`](https://primitives.solidjs.community/package/context#multiprovider) to avoid nesting multiple levels of providers
 </Callout>
 
 #### Testing routes
 
-For convenience, `render` supports the `location`-option that wraps the rendered component in a router pointing at the given location. Since the `<Router>` component is lazily loaded, the first query after rendering needs to be asynchronous, i.e. `findBy...`:
+For convenience, the `render` function supports the `location` option that wraps the rendered component in a router pointing at the given location.
+Since the `<Router>` component is lazily loaded, the first query after rendering needs to be asynchronous, i.e. `findBy...`:
 
 ```tsx
 const { findByText } = render(
@@ -240,9 +278,19 @@ expect(await findByText("Article 12345")).toBeInTheDocument()
 
 ### Interacting with components
 
-Many components are not static, but instead change on user interactions. These interactions need to be simulated to test the changes. To simulate user interactions, the creators of testing-library have provided the `@testing-library/user-event` library. It takes care of the usual order of events as they would occur in actual user interactions, e.g. that a `click` is accompanied by `mousemove`, `hover`, `keydown`, `focus`, `keyup`, and `keypress`.
+Many components are not static, rather they change based on user interactions.
+To test these changes, these interactions need to be simulated.
+To simulate user interactions, `@testing-library/user-event` library can be used.
+It takes care of the usual order of events as they would occur in actual user interactions.
+For example, this means that a `click` event from the user would be accompanied by `mousemove`, `hover`, `keydown`, `focus`, `keyup`, and `keypress`.
 
-The most convenient events are usually `click`, `keyboard` and `pointer` (to simulate touch events). Learn more about them on the [user-event documentation](https://testing-library.com/docs/user-event/intro). If you want to use fake timers with `vi.useFakeTimers()` in your tests, be sure to set it up with an `advanceTimers` option.
+The most convenient events to test are typically `click`, `keyboard` and `pointer` (to simulate touch events). 
+To dive deeper into these events, you can learn about them in the [`user-event` documentation](https://testing-library.com/docs/user-event/intro).
+
+
+#### Using timers
+
+If you require a fake timer and want to use `vi.useFakeTimers()` in your tests, it must set it up with an `advanceTimers` option:
 
 ```tsx title="user-event.test.tsx"
 import { vi } from "vitest"
@@ -278,19 +326,22 @@ describe("pre-login: sign-in", () => {
 expect(subject)[assertion](value)
 ```
 
-The command supports assertions like `toBe` (reference comparison) and `toEqual` (value comparison) out of the box. For testing inside the DOM, the package `@testing-library/jest-dom` augments it with some helpful additional assertions:
+The command supports assertions like `toBe` (reference comparison) and `toEqual` (value comparison) out of the box.
+For testing inside the DOM, the package `@testing-library/jest-dom` augments it with some helpful additional assertions:
 
-- `.toBeInTheDocument()` - checks if the element actually exists in the DOM
-- `.toBeVisible()` - checks if there is no reason the element should be hidden
-- `.toHaveTextContent(content)` - checks if the text content matches
-- `.toHaveFocus()` - checks if this is the currently focused element
-- `.toHaveAccessibleDescription(description)` - checks accessible description
+- [`.toBeInTheDocument()`](https://github.com/testing-library/jest-dom?tab=readme-ov-file#tobeinthedocument) - checks if the element actually exists in the DOM
+- [`.toBeVisible()`](https://github.com/testing-library/jest-dom?tab=readme-ov-file#tobevisible) - checks if there is no reason the element should be hidden
+- [`.toHaveTextContent(content)`](https://github.com/testing-library/jest-dom?tab=readme-ov-file#tohavetextcontent) - checks if the text content matches
+- [`.toHaveFocus()`](https://github.com/testing-library/jest-dom?tab=readme-ov-file#tohavefocus) - checks if this is the currently focused element
+- [`.toHaveAccessibleDescription(description)`](https://github.com/testing-library/jest-dom?tab=readme-ov-file#tohaveaccessibledescription) - checks accessible description
 - and a [lot more](https://github.com/testing-library/jest-dom?tab=readme-ov-file#custom-matchers).
 
 
 ## Directive testing
 
-[Directives](/reference/jsx-attributes/use) are reusable behavior for elements. As such, they get a reference to the element and the property value given to them as an accessor. To make testing them more concise, our `@solidjs/testing-library` has a renderDirective function:
+[Directives](/reference/jsx-attributes/use) are reusable behaviors for elements.
+They get a reference to the HTML element and the property from the directive prop as an accessor as arguments.
+To make testing them more concise, [`@solidjs/testing-library` has a `renderDirective`](https://testing-library.com/docs/solid-testing-library/api#renderdirective) function:
 
 
 ```ts frame="none"
@@ -306,9 +357,10 @@ const {
 } = renderResult
 ```
 
-The `container` from the `...renderResults` will contain the targetElement (default is a `<div>`). That and the ability to manipulate the `arg` signal are helpful in testing directives.
+In `...renderResults`, the container will contain the `targetElement`, which defaults to a `<div>`.
+This, along with the ability to modify the `arg` signal, are helpful when testing directives.
 
-If for example there is a directive that handles the Fullscreen API, it could be tested like this:
+If, for example, you have a directive that handles the Fullscreen API, you can test it like this:
 
 <TabsCodeBlocks>
   <div id="fullscreen.test.ts">
@@ -343,9 +395,11 @@ export const fullscreen = (ref: HTMLElement, active: Accessor<boolean>) =>
   </div>
 </TabsCodeBlocks>
 
-## Primitive testing
+### Primitive testing
 
-If the reference to the element is not needed, parts of state and logic can be put into reusable hooks or primitives. Since those do not require any elements, using `render` to test them would require a component that otherwise has no use. To circumvent that, there is a `renderHook` utility that simulates such a component without actually rendering anything.
+When the reference to an element is not needed, parts of state and logic can be put into reusable hooks or primitives. 
+Since these do not require elements, there is no need for `render` to test them since it would require a component that has no other use.
+To avoid this, there is a [`renderHook` utility](https://testing-library.com/docs/solid-testing-library/api#renderhook) that simulates a component without actually rendering anything.
 
 ```ts frame="none"
 const renderResult = renderHook(hook, {
@@ -375,11 +429,14 @@ test("increments count", () => {
 ```
 
 
-## Testing effects
+### Testing effects
 
-Since effects may happen asynchronous, it can be difficult to test them. `@solidjs/testing-library` comes with a `testEffect` function that takes another function, which will receive a `done` function that can be called once the tests are over. It returns a promise that is resolved once done is called. Errors that would hit the next boundary are used to reject the returned promise.
+Since effects may happen asynchronously, it can be difficult to test them. 
+[`@solidjs/testing-library` comes with a `testEffect` function](https://testing-library.com/docs/solid-testing-library/api#async-methods) that takes another function that receives a `done` function to be called once tests are over and returns a promise.
+Once `done` is called, the returned promise is resolved.
+Any errors that would hit the next boundary are used to reject the returned promise.
 
-A test using it might look similar to this:
+An example test using `testEffect` may look like this:
 
 ```ts frame="none"
 const [value, setValue] = createSignal(0)
@@ -397,8 +454,9 @@ return testEffect(done =>
 )
 ```
 
-## Integration/E2E testing
 
-Some issues can only be found once the code is running in the environment it is supposed to run in. Since integration and end-to-end tests are agnostic to frameworks, all proven approaches will work equally for Solid.
+### Integration/E2E testing
 
+Some issues can only be found once the code is running in the environment it is supposed to run in. 
+Since integration and end-to-end tests are agnostic to frameworks, all proven approaches will work equally for Solid.
 

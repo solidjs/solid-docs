@@ -16,9 +16,13 @@ export default {
 	"toc.this.page": "Nesta página",
 	"toc.overview": "Sumário",
 	"contribute.title": "Contribua",
-	"contribute.edit": "Edite este artigo.",
-	"contribute.report": "Reporte um erro neste artigo.",
+	"contribute.edit": "Edite este artigo",
+	"contribute.report": "Reporte um erro neste artigo",
+
+	// pagination
+	"pagination.next": "Próximo",
+	"pagination.previous": "Anterior",
 
 	// 404
-	"missing.translation": "Esta seção ainda não foi traduzida.",
+	"missing.translation": "Esta seção ainda não foi traduzida",
 } as const;

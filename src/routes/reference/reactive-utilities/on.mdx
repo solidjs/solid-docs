@@ -7,49 +7,46 @@ function on<T extends Array<() => any> | (() => any), U>(
 	deps: T,
 	fn: (input: T, prevInput: T, prevValue?: U) => U,
 	options: { defer?: boolean } = {}
-): (prevValue?: U) => U | undefined
-
+): (prevValue?: U) => U | undefined;
 ```
 
 `on` is designed to be passed into a computation to make its dependencies explicit.
 If an array of dependencies is passed, `input` and `prevInput` are arrays.
 
 ```ts
-createEffect(on(a, (v) => console.log(v, b())))
+createEffect(on(a, (v) => console.log(v, b())));
 
 // is equivalent to:
 createEffect(() => {
-	const v = a()
-	untrack(() => console.log(v, b()))
-})
+	const v = a();
+	untrack(() => console.log(v, b()));
+});
 ```
 
 You can also not run the computation immediately and instead opt in for it to only run on change by setting the defer option to true.
 
 ```ts
 // doesn't run immediately
-createEffect(on(a, (v) => console.log(v), { defer: true }))
+createEffect(on(a, (v) => console.log(v), { defer: true }));
 
-setA("new") // now it runs
+setA("new"); // now it runs
 ```
 
 ## Using `on` with stores
 
 <Callout>
 	Please note that on stores and mutable, adding or removing a property from the
-	parent object will trigger an effect. See{" "}
-	<a href="/reference/stores/store-utilities#createmutable">
-		createMutable
-	</a>
+	parent object will trigger an effect. See [`createMutable`](/reference/store-utilities/create-mutable)
+
 </Callout>
 
 ```ts
-const [state, setState] = createStore({ a: 1, b: 2 })
+const [state, setState] = createStore({ a: 1, b: 2 });
 
 // this will not work
-createEffect(on(state.a, (v) => console.log(v)))
+createEffect(on(state.a, (v) => console.log(v)));
 
-setState({ a: 3 }) // logs nothing
+setState({ a: 3 }); // logs nothing
 
 // instead, use an arrow function
 createEffect(
@@ -57,9 +54,9 @@ createEffect(
 		() => state.a,
 		(v) => console.log(v)
 	)
-)
+);
 
-setState({ a: 4 }) // logs 4
+setState({ a: 4 }); // logs 4
 ```
 
 ## Arguments and Options

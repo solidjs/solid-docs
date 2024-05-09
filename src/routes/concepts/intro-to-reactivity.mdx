@@ -17,8 +17,8 @@ With Solid, reactivity is the basis of its design, ensuring application's stay u
 
 ```jsx
 function Counter() {
-	const [count, setCount] = createSignal(0)
-	const increment = () => setCount(count() + 1)
+	const [count, setCount] = createSignal(0);
+	const increment = () => setCount((prev) => prev + 1);
 
 	return (
 		<div>
@@ -28,7 +28,7 @@ function Counter() {
 				Increment
 			</button>
 		</div>
-	)
+	);
 }
 ```
 
@@ -49,7 +49,7 @@ They are responsible for storing and managing data, as well as triggering update
 This is done through the use of getters and setters.
 
 ```jsx
-const [count, setCount] = createSignal(0)
+const [count, setCount] = createSignal(0);
 //     ^ getter  ^ setter
 ```
 
@@ -66,11 +66,11 @@ const [count, setCount] = createSignal(0)
   To trigger reactive updates across an application, you call a setter to update the value of a signal.
 
 ```js
-console.log(count()) // `count()` is a getter that returns the current value of `count`, which is `0`.
+console.log(count()); // `count()` is a getter that returns the current value of `count`, which is `0`.
 
-setCount(1) // the setter, `setCount`, updates the value of `count`.
+setCount(1); // the setter, `setCount`, updates the value of `count`.
 
-console.log(count()) // the updated value of `count` is now `1`.
+console.log(count()); // the updated value of `count` is now `1`.
 ```
 
 ### Subscribers
@@ -89,12 +89,12 @@ Subscribers work based on two main actions:
 
 ```jsx
 function Counter() {
-	const [count, setCount] = createSignal(0)
-	const increment = () => setCount(count() + 1)
+	const [count, setCount] = createSignal(0);
+	const increment = () => setCount((prev) => prev + 1);
 
 	createEffect(() => {
-		console.log(count())
-	})
+		console.log(count());
+	});
 	// the `createEffect` will trigger the console log every time `count` changes.
 }
 ```
@@ -116,11 +116,11 @@ When a signal is not accessed within a tracking scope, an update to the signal w
 This happens because if a signal is not being tracked, it is not able to notify any subscribers of the change.
 
 ```jsx
-const [count, setCount] = createSignal(0)
+const [count, setCount] = createSignal(0);
 
-console.log("Count:", count())
+console.log("Count:", count());
 
-setCount(1)
+setCount(1);
 
 // Output: Count: 0
 
@@ -132,13 +132,13 @@ To track a signal, it must be accessed within the scope of a subscriber.
 Reactive primitives, such as [effects](/concepts/effects), can be used to create subscribers.
 
 ```jsx
-const [count, setCount] = createSignal(0)
+const [count, setCount] = createSignal(0);
 
 createEffect(() => {
-	console.log("Count:", count())
-})
+	console.log("Count:", count());
+});
 
-setCount(1)
+setCount(1);
 
 // Output: Count: 0
 //         Count: 1
@@ -151,8 +151,8 @@ JSX creates a tracking scope behind the scenes, which allows signals to be track
 
 ```jsx
 function Counter() {
-	const [count, setCount] = createSignal(0)
-	const increment = () => setCount(count() + 1)
+	const [count, setCount] = createSignal(0);
+	const increment = () => setCount((prev) => prev + 1);
 
 	return (
 		<div>
@@ -162,7 +162,7 @@ function Counter() {
 				Increment
 			</button>
 		</div>
-	)
+	);
 }
 ```
 
@@ -171,24 +171,23 @@ This means that if a signal is accessed outside of the return statement, will ru
 
 ```jsx
 function Counter() {
-	const [count, setCount] = createSignal(0)
-	const increment = () => setCount(count() + 1)
+	const [count, setCount] = createSignal(0);
+	const increment = () => setCount((prev) => prev + 1);
 
-	console.log("Count:", count()) // ❌ not tracked - only runs once during initialization.
+	console.log("Count:", count()); // ❌ not tracked - only runs once during initialization.
 
 	createEffect(() => {
-		console.log(count()) // ✅ will update whenever `count()` changes.
-	})
+		console.log(count()); // ✅ will update whenever `count()` changes.
+	});
 
 	return (
 		<div>
-			<span>Count: {count()}</span>{" "}
-			{/* ✅ will update whenever `count()` changes. */}
+			<span>Count: {count()}</span>{/* ✅ will update whenever `count()` changes. */}
 			<button type="button" onClick={increment}>
 				Increment
 			</button>
 		</div>
-	)
+	);
 }
 ```
 
@@ -210,15 +209,16 @@ This is useful in scenarios where the order of updates is important.
 For example, if a subscriber depends on another signal, it is important that the subscriber is updated after the signal it depends on.
 
 ```jsx
-const [count, setCount] = createSignal(0)
-const [double, setDouble] = createSignal(0)
+const [count, setCount] = createSignal(0);
+const [double, setDouble] = createSignal(0);
 
 createEffect(() => {
-	setDouble(count() * 2)
-})
-// The `double` signal will always be updated after `count` due to synchronous reactivity.
-// This ensures that `double` is always up-to-date with the latest value of `count`.
+	setDouble(count() * 2);
+});
 ```
+
+In this example, the `double` signal will always be updated after `count` due to synchronous reactivity.
+This ensures that `double` is always up-to-date with the latest value of `count`.
 
 ### Asynchronous reactivity
 

@@ -1,0 +1,75 @@
+---
+title: cache
+---
+
+Cache is used to prevent duplicate fetching and to trigger handle refetching.
+It takes a function and returns the same function.
+
+```jsx
+const getUser = cache((id) => {
+  return (await fetch(`/api/users${id}`)).json()
+}, "users") // used as cache key + serialized arguments
+```
+
+It is expected that the arguments to the cache function are serializable.
+
+This cache accomplishes the following:
+
+1. Deduping on the server for the lifetime of the request.
+2. Preloading the cache in the browser - this lasts 10 seconds.
+   When a route is preloaded on hover or when load is called when entering a route it will make sure to dedupe calls.
+3. A reactive refetch mechanism based on key.
+   This prevents routes that are not new from retriggering on action revalidation.
+4. Serve as a back/forward cache for browser navigation for up to 5 minutes.
+   Any user based navigation or link click bypasses it.
+   Upon revalidation or new fetch the cache is updated.
+
+Using it with a load function:
+
+```js
+import { lazy } from "solid-js";
+import { Route } from "@solidjs/router";
+import { getUser } from ... // the cache function
+
+const User = lazy(() => import("./pages/users/[id].js"));
+
+// load function
+function loadUser({params, location}) {
+  void getUser(params.id)
+}
+
+// Pass it in the route definition
+<Route path="/users/:id" component={User} load={loadUser} />;
+```
+
+Inside your page component you:
+
+```jsx
+// pages/users/[id].js
+import { getUser } from ... // the cache function
+
+export default function User(props) {
+  const user = createAsync(() => getUser(props.params.id));
+  return <h1>{user().name}</h1>;
+}
+```
+
+Cached functions provide a few useful methods for getting the key that can be used in cases with invalidation:
+
+```ts
+let id = 5;
+
+getUser.key; // returns "users"
+getUser.keyFor(id); // returns "users[5]"
+```
+
+The cache can be revalidated using the `revalidate` method or the `revalidate` keys that are set on the response from the actions.
+If the whole key is passed, it will invalidate all entries for the cache (ie. `users` in the example above).
+If only a single entry needs to be invalidated, `keyFor` is provided.
+
+<Callout>
+  `cache` can be defined anywhere and then used inside your components with [`createAsync`](/solid-router/reference/data-apis/create-async).
+
+However, using `cache` directly in [`createResource`](/reference/basic-reactivity/create-resource) will not work since the fetcher is not reactive and will not invalidate properly.
+
+</Callout>

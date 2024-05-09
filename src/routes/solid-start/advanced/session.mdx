@@ -1,0 +1,99 @@
+---
+title: "Sessions"
+---
+
+When user information is required, it is usually done by checking the request for information.
+The best way for the client and server to do that is using cookies.
+
+The `Request` object can be used to access the `Cookie` Headers, which can then be parsed to get the value for that specific cookie.
+For example, `"session"` can be used to identify the session.
+Fortunately, Nitro comes ready with helpers that enable this.
+
+For example, if you wanted to use a cookie to identify a user, you can use the `useSession` helper from `vinxi/http`:
+
+```tsx title="/lib/session.ts"
+import { useSession } from "vinxi/http";
+export async function getUser(request: Request) {
+  const session = await useSession({
+    password: process.env.SESSION_SECRET
+  });
+}
+```
+
+The session cookie can be used to get the session data about the request.
+How the session data is stored and retrieved, however, is up to the implementation of the `useSession`.
+
+Typically, `userId` will be saved in the session data and if it is not found, it indicates that the request was not authenticated.
+The `getUser` function returns a `null` when it does not find a user and if a user is found, it will be used to get the user from the database:
+
+```tsx title="/lib/session.ts"
+import { useSession } from "vinxi/http";
+
+export async function getUser(): Promise<User | null> {
+  const session = await useSession({
+    password: process.env.SESSION_SECRET
+  });
+  const userId = session.data.userId;
+  if (!userId) return null;
+  return await store.getUser(userId);
+}
+```
+
+This helper can be used wherever you want to authenticate the request, including in server functions and [API routes](/solid-start/building-your-application/api-routes).
+
+Additionally, you can use it with [`cache`](/solid-router/reference/data-apis/cache) from `solid-router` to make sure that only authenticated users can access the data.
+That way if the user is not authenticated, the request will be redirected to the login page.
+
+```tsx title="/routes/api/store/admin.ts"
+import { cache, createAsync, redirect } from "@solidjs/router";
+
+const getUsers = cache(async (id: string) => {
+  "use server";
+  const user = await getUser();
+  if (!user) throw redirect("/login");
+  return store.getUsers(id, "*");
+});
+
+// page component
+export default function Students() {
+  const users = createAsync(() => getUsers());
+}
+```
+
+This also allows logging in and out of the session in a similar manner:
+
+```tsx title="/routes/session.server.ts"
+import { redirect } from "@solidjs/router";
+import { useSession } from "vinxi/http";
+
+type UserSession = {
+  userId?: number;
+};
+
+function getSession() {
+  return useSession({
+    password: process.env.SESSION_SECRET
+  });
+}
+
+export async function login(formData: FormData) {
+  const username = String(formData.get("username"));
+  const password = String(formData.get("password"));
+  // do validation
+  try {
+    const session = await getSession();
+    const user = await db.user.findUnique({ where: { username } });
+    if (!user || password !== user.password) return new Error("Invalid login");
+    await session.update((d: UserSession) => (d.userId = user!.id));
+  } catch (err) {
+    return err as Error;
+  }
+  throw redirect("/");
+}
+
+export async function logout() {
+  const session = await getSession();
+  await session.update((d: UserSession) => (d.userId = undefined));
+  throw redirect("/login");
+}
+```

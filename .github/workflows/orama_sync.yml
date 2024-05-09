@@ -1,0 +1,30 @@
+name: Sync Orama
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**.mdx"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - uses: pnpm/action-setup@v3
+      with:
+        version: 8
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+        cache: pnpm
+    - name: Install dependencies
+      run: pnpm i
+    - name: Sync Orama
+      run: pnpm sync:orama
+      env:
+        ORAMA_PRIVATE_API_KEY: ${{ secrets.ORAMA_PRIVATE_API_KEY }}
+        ORAMA_PRIVATE_INDEX_ID: ${{ secrets.ORAMA_PRIVATE_INDEX_ID }}

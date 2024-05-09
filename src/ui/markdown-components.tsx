@@ -12,9 +12,7 @@ import { PageIssueLink } from "./page-issue-link";
 const EraserLink = clientOnly(() => import("./eraser-link/index"));
 
 export default {
-	strong: (props: ParentProps) => (
-		<span class="font-semibold leading-relaxed">{props.children}</span>
-	),
+	strong: (props: ParentProps) => <b class="font-semibold">{props.children}</b>,
 	EditPageLink: () => <EditPageLink />,
 	PageIssueLink: () => <PageIssueLink />,
 	Callout: (props: CalloutProps) => (
@@ -58,7 +56,7 @@ export default {
 	h1: (props: ParentProps) => (
 		<h1
 			{...props}
-			class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+			class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 		>
 			{props.children}
 		</h1>
@@ -69,7 +67,7 @@ export default {
 				<hr class="dark:prose-hr:border-slate-800 border-slate-400 my-8" />
 				<h2
 					{...props}
-					class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+					class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 				>
 					{props.children}
 				</h2>
@@ -80,7 +78,7 @@ export default {
 		return (
 			<h3
 				{...props}
-				class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+				class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 			>
 				{props.children}
 			</h3>
@@ -90,7 +88,7 @@ export default {
 		return (
 			<h4
 				{...props}
-				class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+				class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 			>
 				{props.children}
 			</h4>
@@ -100,7 +98,7 @@ export default {
 		return (
 			<h5
 				{...props}
-				class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+				class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 			>
 				{props.children}
 			</h5>
@@ -109,7 +107,7 @@ export default {
 	h6: (props: ParentProps) => (
 		<h6
 			{...props}
-			class="prose-headings:scroll-mt-28 prose-headings:font-display prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+			class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
 		>
 			{props.children}
 		</h6>
@@ -146,7 +144,7 @@ export default {
 			return (
 				<A
 					addLocale
-					class={`no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,theme(colors.blue.400))] hover:[--tw-prose-underline-size:4px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.blue.500))] dark:hover:[--tw-prose-underline-size:6px] dark:text-blue-300 text-blue-800 font-semibold`}
+					class={`no-underline shadow-[inset_0_calc(-1*(var(--tw-prose-underline-size,0.5px)+2px))_0_0_var(--tw-prose-underline,theme(colors.blue.400))] hover:[--tw-prose-underline-size:4px] dark:[--tw-prose-background:theme(colors.slate.900)] [--tw-prose-background:theme(colors.slate.50)] dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.blue.500))] dark:hover:[--tw-prose-underline-size:6px] dark:text-blue-300 text-blue-800 font-semibold`}
 					{...rest}
 				>
 					{resolved()}
@@ -197,7 +195,7 @@ export default {
 	code: (props: ParentProps) => {
 		return (
 			<code
-				class="inline-block not-prose !font-mono font-medium bg-blue-200 dark:bg-slate-600/60 text-slate-900 dark:text-white px-1 py-0.5 rounded-lg text-[0.8em] leading-snug"
+				class="inline-block not-prose !font-mono font-semibold bg-blue-200 dark:bg-slate-600/60 text-slate-900 dark:text-white px-1 py-0.5 rounded-lg text-[0.8em] leading-snug"
 				{...props}
 			>
 				{props.children}

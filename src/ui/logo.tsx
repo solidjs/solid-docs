@@ -1,6 +1,6 @@
 export function Logo(props: { class?: string }) {
 	return (
-		<div class="w-full inline-flex space-x-1 items-center text-primary dark:text-primary-dark py-1">
+		<div class="w-full inline-flex space-x-1 items-center text-primary dark:text-primary-dark py-2">
 			<svg
 				{...props}
 				data-hk="0-0-0-0-0-0-0-0-0-1-0-0-0-0-0-0-0-0-1-1-1-0-1-0"
@@ -87,7 +87,7 @@ export function Logo(props: { class?: string }) {
 					fill="url(#d)"
 				/>
 			</svg>
-			<span class="dark:text-white text-2xl leading-none font-normal inactive font-display">
+			<span class="dark:text-white text-2xl leading-none font-normal inactive md:block hidden">
 				<b>Solid</b> Docs
 			</span>
 		</div>

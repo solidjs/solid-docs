@@ -1,0 +1,230 @@
+---
+title: "Routing"
+---
+
+Routing serves as a key component to web applications.
+Within SolidStart, there are two types:
+- **UI routes** &mdash; define the user interface in your app
+- **[API routes](/solid-start/building-your-application/api-routes)** &mdash; define the serverless functions in your app
+
+To read more about API routes, [see the API Routes section.](/solid-start/building-your-application/api-routes)
+
+## Creating new routes
+
+SolidStart uses file based routing which is a way of defining your routes by creating files and folders in your project.
+This includes your pages and API routes.
+
+SolidStart traverses your `routes` directory, collects all of the routes, and then makes them accessible using the [`<FileRoutes />`](/solid-start/reference/routing/file-routes).
+This component will only include your UI routes, and not your API routes.
+Rather than manually defining each `Route` inside a `Routes` component, `<FileRoutes />` will generate the routes for you based on the file system.
+
+Because `<FileRoutes />` returns a routing config object, you can use it with the router of your choice.
+In this example we use [`solid-router`](/solid-router):
+
+```tsx {7-9} title="app.tsx"
+import { Suspense } from "solid-js";
+import { Router } from "@solidjs/router";
+import { FileRoutes } from "@solidjs/start/router";
+
+export default function App() {
+  return (
+    <Router root={props => <Suspense>{props.children}</Suspense>}>
+      <FileRoutes />
+    </Router>
+  );
+}
+```
+
+This will generate a route for each file in the `routes` directory and its subdirectories.
+
+This means that all you have to do is create a file in your `routes` folder and SolidStart takes care of everything else needed to make that route available to visit in your application!
+
+
+## File based routing
+
+Each file in the `routes` directory is treated as a route.
+To create a new route or page in your application, simply create a new file in the `routes` directory. 
+The file name will be the URL path for the route:
+
+- `example.com/blog` ➜ `/routes/blog.tsx`
+- `example.com/contact` ➜ `/routes/contact.tsx`
+- `example.com/directions` ➜ `/routes/directions.tsx`
+
+
+### Nested routes
+
+If you need nested routes, you can create a directory with the name of the preceding route segment, and create new files in that directory:
+
+- `example.com/blog/article-1` ➜ `/routes/blog/article-1.tsx`
+- `example.com/work/job-1` ➜ `/routes/work/job-1.tsx`
+
+When a file is named `index`, it will be rendered when there are no additional URL route segments being requested for a matching directory:
+
+- `example.com` ➜ `/routes/index.tsx`
+- `example.com/socials` ➜ `/routes/socials/index.tsx`
+
+For a route to be rendered as a page, it should default export a component. 
+This component represents the content that will be rendered when users visit the page:
+
+```tsx filename="routes/index.tsx"
+export default function Index() {
+  return <div>Welcome to my site!</div>;
+}
+```
+
+## Renaming Index
+
+By default, the component that is rendered for a route comes from the default export of the `index.tsx` file in each folder.
+However, this can make it difficult to find the correct `index.tsx` file when searching, since there will be multiple files with that name.
+
+To avoid this, you can rename the `index.tsx` file to the name of the folder it is in and it will be rendered as the default export for that route:
+
+```jsx {2, 4, 6}
+|-- routes/                         // example.com
+    |-- (blog)/
+        |-- (article-1).tsx         // example.com/blog/article-1
+        |-- (article-2).tsx
+    |-- (work)/
+        |-- (job-1).tsx             // example.com/work/job-1
+        |-- (job-2).tsx
+    |-- (socials)/
+        |-- (socials).tsx           // example.com/socials
+```
+
+#### Escaping Nested Routes
+
+When you have a path that is nested but wish for it to have a separate Layout, you can escape the nested route by using the `.` character. 
+This will allow you to create a new route that is not nested under the previous route:
+
+```jsx {6}
+|-- routes/
+    |-- users/
+        |-- index.tsx
+        |-- projects.tsx
+    |-- users.[id].tsx
+```
+
+Additionally, you can incorporate nested layouts of their own:
+
+```tsx {5-7}
+|-- routes/
+    |-- users.tsx/
+        |-- index.tsx
+        |-- projects.tsx
+    |-- users.[id]/
+        |-- index.tsx
+        |-- settings.tsx
+```
+
+### Dynamic routes
+
+Dynamic routes are routes that can match any value for one segment of the route.
+When your URL path contains a dynamic segment, square brackets (`[]`) are used to define the dynamic segment:
+
+- `example.com/users/:id` ➜ `/routes/users/[id].tsx`
+- `example.com/users/:id/:name` ➜ `/routes/users/[id]/[name].tsx`
+- `example.com/*missing` ➜ `/routes/[...missing].tsx`
+
+This allows you to create a single route that can match any value for that segment of the URL path.
+For example, `/users/1` and `/users/2` are both valid routes and rather than defining separate routes for each user, you can use a dynamic route to match any value for the `id` segment.
+
+```tsx {3}
+|-- routes/
+    |-- users/
+        |-- [id].tsx
+```
+
+For example, using `solid-router`, you could use the [`useParams`](/solid-router/reference/primitives/use-params) hook to match the dynamic segment:
+
+```tsx title="routes/users/[id].tsx"
+import { useParams } from "@solidjs/router";
+
+export default function UserPage() {
+  const params = useParams();
+  return <div>User {params.id}</div>;
+}
+```
+
+#### Optional parameter
+
+If you have optional parameters in your route, you can use the double square brackets (`[[id]]`) to define the dynamic segment.
+This will match any number of segments, including none.
+
+```tsx {3}
+|-- routes/
+    |-- users/
+        |-- [[id]].tsx 
+```
+
+In this case, some pages that could be matched include:
+* `/users`
+* `/users/1`
+* `/users/1/2`
+
+#### Catch-all routes
+
+Catch-all routes are a special type of dynamic route that can match any number of segments.
+They are defined using square brackets with `...` before the label for the route (e.g. `[...post]`).
+
+```tsx {4}
+|-- routes/
+    |-- blog/
+        |-- index.tsx
+        |-- [...post].tsx
+```
+
+The value of the catch-all route will be an array of strings, where each string is a segment of the URL path that matched the catch-all route.
+For example, with the route `[...post]`, the value of `post` will be a property on the `params` object that is returned by the `useParams` hook. 
+It will be a string with the value of the dynamic segment.
+
+```tsx title="routes/blog/[...post].tsx"
+import { useParams } from "@solidjs/router";
+
+export default function BlogPage() {
+  const params = useParams();
+  return <div>Blog {params.post}</div>;
+}
+```
+
+## Route Groups
+
+Using route groups, you can organize your routes in a way that makes sense for your application, without affecting the URL structure.
+Since file-based routing is based on the file system, it can be difficult to organize your routes in a way that makes sense for your application.
+
+In SolidStart, route groups are defined by using parenthesis (`()`) surrounding the folder name:
+
+```tsx {2}
+|-- routes/
+    |-- (static)
+        |-- about-us                // example.com/about-us
+            |-- index.tsx
+        |-- contact-us              // example.com/contact-us
+            |-- index.tsx
+```
+
+## Additional Route Config
+
+SolidStart offers a way to add additional route configuration outside of the file system.
+Since SolidStart supports the use of other routers, you can use the `route` export to provided by `<FileRoutes />` to define the route configuration for the router of your choice.
+
+```jsx {3-7}
+import type { RouteSectionProps, RouteDefinition } from "@solidjs/router";
+
+export const route = {
+  load() {
+    // define load function
+  }
+} satisfies RouteDefinition
+
+export default function UsersLayout(props: RouteSectionProps) {
+  return (
+    <div>
+      <h1>Users</h1>
+      {props.children}
+    </div>
+  );
+}
+```
+
+[api-routes]: /core-concepts/api-routes
+[fileroutes]: /api/FileRoutes

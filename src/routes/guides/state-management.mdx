@@ -3,7 +3,6 @@ title: State Management
 order: 2
 ---
 
-
 State management is process of handling and manipulating data that affects the behavior and presentation of a web application.
 To build interactive and dynamic web applications, state management is a critical aspect of development.
 Within Solid, state management is facilitated through the use of reactive primitives.
@@ -11,21 +10,21 @@ Within Solid, state management is facilitated through the use of reactive primit
 These state management concepts will be shown using a basic counter example:
 
 ```jsx
-import { createSignal } from "solid-js"
+import { createSignal } from "solid-js";
 
 function Counter() {
-	const [count, setCount] = createSignal(0)
+	const [count, setCount] = createSignal(0);
 
 	const increment = () => {
-		setCount(count() + 1)
-	}
+		setCount((prev) => prev + 1);
+	};
 
 	return (
 		<>
 			<div>Current count: {count()}</div>
 			<button onClick={increment}>Increment</button>
 		</>
-	)
+	);
 }
 ```
 
@@ -39,7 +38,7 @@ There are 3 elements to state management:
 
 These elements work together to create a "one way data flow".
 When actions modify the state, the view is updated to show the current state to the user.
-One way data flow simplifies the management of data and user interactions, lwhich provides a more predictable and maintainable application.
+One way data flow simplifies the management of data and user interactions, which provides a more predictable and maintainable application.
 
 ## Managing basic state
 
@@ -50,23 +49,23 @@ State is represented by a [signal](/concepts/signals), which is a reactive primi
 To create a piece of state, you use the [`createSignal`](/reference/basic-reactivity/create-signal) function and pass in the initial value of the state:
 
 ```jsx
-import { createSignal } from "solid-js"
+import { createSignal } from "solid-js";
 
-const [count, setCount] = createSignal(0)
+const [count, setCount] = createSignal(0);
 ```
 
 To access the current value of the state, you call the signal's getter function:
 
 ```jsx
-console.log(count()) // 0
+console.log(count()); // 0
 ```
 
 To update the state, you use the signal's setter function:
 
 ```jsx
-setCount(count() + 1)
+setCount((prev) => prev + 1);
 
-console.log(count()) // 1
+console.log(count()); // 1
 ```
 
 With signals, you can create and manage state in a simple and straightforward manner.
@@ -87,7 +86,7 @@ return (
 		<div>Current count: {count()}</div>
 		<button onClick={increment}>Increment</button>
 	</>
-)
+);
 ```
 
 To render the current state of `count`, the JSX expression `{count()}` is used.
@@ -111,19 +110,19 @@ For example, in the `Counter` component, you may want to display the doubled val
 This can be achieved through the use of [effects](/concepts/effects), which are reactive primitives that perform side effects when the state changes:
 
 ```jsx
-import { createSignal, createEffect } from "solid-js"
+import { createSignal, createEffect } from "solid-js";
 
 function Counter() {
-	const [count, setCount] = createSignal(0)
-	const [doubleCount, setDoubleCount] = createSignal(0) // Initialize a new state for doubleCount
+	const [count, setCount] = createSignal(0);
+	const [doubleCount, setDoubleCount] = createSignal(0); // Initialize a new state for doubleCount
 
 	const increment = () => {
-		setCount(count() + 1)
-	}
+		setCount((prev) => prev + 1);
+	};
 
 	createEffect(() => {
-		setDoubleCount(count() * 2) // Update doubleCount whenever count changes
-	})
+		setDoubleCount((prev) => prev * 2); // Update doubleCount whenever count changes
+	});
 
 	return (
 		<>
@@ -131,7 +130,7 @@ function Counter() {
 			<div>Doubled count: {doubleCount()}</div> // Display the doubled count
 			<button onClick={increment}>Increment</button>
 		</>
-	)
+	);
 }
 ```
 
@@ -142,6 +141,16 @@ In the `Counter` component, a `createEffect` function can be used to update the 
 This keeps the `doubleCount` state in sync with the `count` state, and allows the UI to display the doubled value of `count` to the user.
 
 View this example of [`doubleCount` in a `createEffect` in the Solid Playground example](https://playground.solidjs.com/anonymous/b05dddaa-e62a-4c56-b745-5704f3a40194).
+
+<TabsCodeBlocks>
+<div id="First render">
+	```html title="Counter.tsx" Current count: 0 Doubled count: 0 ```
+</div>
+
+<div id="After increment">
+	```html title="Counter.tsx" Current count: 1 Doubled count: 2 ```
+</div>
+</TabsCodeBlocks>
 
 ## Derived state
 
@@ -156,16 +165,16 @@ This approach can be used to simplify the `doubleCount` example above, where the
 import { createSignal } from "solid-js"
 
 function Counter() {
-	const [count, setCount] = createSignal(0)
-	const [doubleCount, setDoubleCount] = createSignal(0)
+	const [count, setCount] = createSignal(0);
+	const [doubleCount, setDoubleCount] = createSignal(0);
 
 	const increment = () => {
-		setCount(count() + 1)
-	}
+		setCount((prev) => prev + 1);
+	};
 
 	createEffect(() => {
-		setDoubleCount(count() * 2) // Update doubleCount whenever count changes
-	})
+		setDoubleCount((prev) => prev * 2); // Update doubleCount whenever count changes
+	});
 
 	const doubleCount = () => count() * 2
 
@@ -175,7 +184,7 @@ function Counter() {
 			<div>Doubled count: {doubleCount()}</div>
 			<button onClick={increment}>Increment</button>
 		</>
-	)
+	);
 }
 ```
 
@@ -229,8 +238,8 @@ function Counter() {
 	const [count, setCount] = createSignal(0)
 
 	const increment = () => {
-		setCount(count() + 1)
-	}
+		setCount((prev) => prev + 1);
+	};
 
 	const doubleCount = () => {
 		console.log('doubleCount called')
@@ -253,7 +262,7 @@ function Counter() {
 			<div>Doubled count: {doubleCountMemo()}</div>
 			<button onClick={increment}>Increment</button>
 		</>
-	)
+	);
 }
 ```
 
@@ -278,16 +287,16 @@ This can keep things synchronized across the [component tree](/concepts/componen
 For example, in the `Counter` component, you may want to display the doubled value of `count` to the user through a separate component:
 
 ```jsx
-import { createSignal, createEffect, createMemo } from "solid-js"
+import { createSignal, createEffect, createMemo } from "solid-js";
 
 function App() {
-	const [count, setCount] = createSignal(0)
-	const [doubleCount, setDoubleCount] = createSignal(0)
-	const squaredCount = createMemo(() => count() * count())
+	const [count, setCount] = createSignal(0);
+	const [doubleCount, setDoubleCount] = createSignal(0);
+	const squaredCount = createMemo(() => count() * count());
 
 	createEffect(() => {
-		setDoubleCount(count() * 2)
-	})
+		setDoubleCount((prev) => prev * 2);
+	});
 
 	return (
 		<>
@@ -298,15 +307,15 @@ function App() {
 				squaredCount={squaredCount()}
 			/>
 		</>
-	)
+	);
 }
 
 function Counter(props) {
 	const increment = () => {
-		props.setCount(props.count() + 1)
-	}
+		props.setCount((prev) => prev + 1);
+	};
 
-	return <button onClick={increment}>Increment</button>
+	return <button onClick={increment}>Increment</button>;
 }
 
 function DisplayCounts(props) {
@@ -316,10 +325,10 @@ function DisplayCounts(props) {
 			<div>Doubled count: {props.doubleCount}</div>
 			<div>Squared count: {props.squaredCount}</div>
 		</div>
-	)
+	);
 }
 
-export default App
+export default App;
 ```
 
 To share the `count` state between the `Counter` and `DisplayCounts` components, you can lift the state up to the `App` component.
@@ -329,10 +338,11 @@ When sharing state between components, you can access the state through [`props`
 Props values that are passed down from the parent component are read-only, which means they cannot be directly modified by the child component.
 However, you can pass down setter functions from the parent component to allow the child component to indirectly modify the parent's state.
 
-    <Callout>
-      To encourage one-way data flow, props are passed as read-only or immutable values from the parent to child components.
+<Callout>
+To encourage one-way data flow, props are passed as read-only or immutable values from the parent to child components.
 
-There are [specific utlity functions for props](/concepts/components/props), however, that offer methods to modify props values.
+There are [specific utility functions for props](/concepts/components/props), however, that offer methods to modify props values.
+
 </Callout>
 
 ## Managing complex state

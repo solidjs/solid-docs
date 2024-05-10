@@ -7,7 +7,16 @@ Testing your Solid applications is important to inspiring confidence in your cod
 
 ## Getting started
 
-### Adding testing packages to your project
+### Testing packages explanations
+
+- [`vitest`](https://vitest.dev) - testing framework that includes runner, assertion engine, and mocking facilities
+- [`jsdom`](https://github.com/jsdom/jsdom) - a virtual DOM used to simulate a headless browser environment running in node
+- [`@solidjs/testing-library`](https://github.com/solidjs/solid-testing-library/blob/main/README.md) - a library to simplify testing components, directives, and primitives, with automatic cleanup
+- [`@testing-library/user-event`](https://testing-library.com/docs/user-event/intro) - used to simulate user events that are closer to reality
+- [`@testing-library/jest-dom`](https://testing-library.com/docs/ecosystem-jest-dom) - augments expect with helpful matchers
+
+
+### Adding testing packages
 
 The recommended testing testing framework for Solid applications is [vitest](https://vitest.dev). 
 
@@ -31,13 +40,32 @@ pnpm i -D vitest jsdom @solidjs/testing-library @testing-library/user-event @tes
   </div>
 </TabsCodeBlocks>
 
-### Package explanations
+### Testing configuration
 
-- [`vitest`](https://vitest.dev) - testing framework that includes runner, assertion engine, and mocking facilities
-- [`jsdom`](https://github.com/jsdom/jsdom) - a virtual DOM used to simulate a headless browser environment running in node
-- [`@solidjs/testing-library`](https://github.com/solidjs/solid-testing-library/blob/main/README.md) - a library to simplify testing components, directives, and primitives, with automatic cleanup
-- [`@testing-library/user-event`](https://testing-library.com/docs/user-event/intro) - used to simulate user events that are closer to reality
-- [`@testing-library/jest-dom`](https://testing-library.com/docs/ecosystem-jest-dom) - augments expect with helpful matchers
+In your `package.json` add a `test` script calling `vitest`:
+
+```json title="package.json"
+  "scripts": {
+    "test": "vitest"
+  }
+```
+
+It is not necessary to add `@testing-library/jest-dom` to the testing options in `vite.config`, since `vite-plugin-solid` automatically detects and loads it if present.
+
+#### TypeScript configuration
+
+If using TypeScript, add `@testing-library/jest-dom` to `tsconfig.json#compilerOptions.types`:
+
+```json title="tsconfig.json"
+  "compilerOptions": {
+    // ...
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "types": ["vite/client", "@testing-library/jest-dom"]
+  }
+```
+
+#### SolidStart configuration
 
 When using [SolidStart](/solid-start), create a `vitest.config.ts` file:
 
@@ -53,32 +81,9 @@ export default defineConfig({
 })
 ```
 
-Additionally, in your `package.json` add a `test` script calling `vitest`:
-
-```json title="package.json"
-  "scripts": {
-    "test": "vitest"
-  }
-```
-
-<Callout title="Using TypeScript">
-If using typescript, add `@testing-library/jest-dom` to `tsconfig.json#compilerOptions.types`:
-
-```json title="tsconfig.json"
-  "compilerOptions": {
-    // ...
-    "jsx": "preserve",
-    "jsxImportSource": "solid-js",
-    "types": ["vite/client", "@testing-library/jest-dom"]
-  }
-```
-</Callout>
-
-It is not necessary to add `@testing-library/jest-dom` to the testing options in `vite.config`, since `vite-plugin-solid` automatically detects and loads it if present.
-
 ## Writing tests
 
-## Components testing
+### Components testing
 
 Testing components involves three main things:
 
@@ -163,7 +168,7 @@ environment 880ms, prepare 212ms)
 
 ```
 
-### Rendering the component
+#### Rendering the component
 
 The  `render` function from `@solidjs/testing-library` creates the testing environment within the `test.tsx` file.
 It sets up the container, rendering the component within it, and automatically registers it for clean-up after a successful test.
@@ -191,7 +196,7 @@ const {
 } = renderResult
 ```
 
-#### Using the right queries
+##### Using the right queries
 
 Queries are helpers used to find elements within a page.
 
@@ -203,7 +208,7 @@ Queries are helpers used to find elements within a page.
                                           ⎩ ...
 ```
 
-The prefix (get/query/find) and middle part (By/AllBy) depend on if the query should wait for the element to (not) appear, if it should throw if the element cannot be found, and how it should handle multiple matches:
+The prefixes (`get`, `query`, and `find`) and the middle portion (`By` and `AllBy`) depend on if the query should wait for an element to appear (or not), whether it should throw an error if the element cannot be found, and how it should handle multiple matches:
 
 - **getBy**: synchronous, throws if not found or more than 1 matches
 - **getAllBy**: synchronous, throws if not found, returns array of matches
@@ -263,7 +268,7 @@ const createWrapper = (value) => (props) =>
 If using multiple providers, [solid-primitives has `<MultiProvider>`](https://primitives.solidjs.community/package/context#multiprovider) to avoid nesting multiple levels of providers
 </Callout>
 
-#### Testing routes
+##### Testing routes
 
 For convenience, the `render` function supports the `location` option that wraps the rendered component in a router pointing at the given location.
 Since the `<Router>` component is lazily loaded, the first query after rendering needs to be asynchronous, i.e. `findBy...`:
@@ -276,7 +281,7 @@ const { findByText } = render(
 expect(await findByText("Article 12345")).toBeInTheDocument()
 ```
 
-### Interacting with components
+#### Interacting with components
 
 Many components are not static, rather they change based on user interactions.
 To test these changes, these interactions need to be simulated.
@@ -288,7 +293,7 @@ The most convenient events to test are typically `click`, `keyboard` and `pointe
 To dive deeper into these events, you can learn about them in the [`user-event` documentation](https://testing-library.com/docs/user-event/intro).
 
 
-#### Using timers
+##### Using timers
 
 If you require a fake timer and want to use `vi.useFakeTimers()` in your tests, it must set it up with an `advanceTimers` option:
 
@@ -318,7 +323,7 @@ describe("pre-login: sign-in", () => {
 });
 ```
 
-### Validating assertions
+#### Validating assertions
 
 `vitest` comes with the `expect` function to facilitate assertions that works like:
 
@@ -337,10 +342,10 @@ For testing inside the DOM, the package `@testing-library/jest-dom` augments it 
 - and a [lot more](https://github.com/testing-library/jest-dom?tab=readme-ov-file#custom-matchers).
 
 
-## Directive testing
+### Directive testing
 
 [Directives](/reference/jsx-attributes/use) are reusable behaviors for elements.
-They get a reference to the HTML element and the property from the directive prop as an accessor as arguments.
+They receive the HTML element they are bound to as their first and an accessor of the directive prop as their second argument.
 To make testing them more concise, [`@solidjs/testing-library` has a `renderDirective`](https://testing-library.com/docs/solid-testing-library/api#renderdirective) function:
 
 
@@ -360,7 +365,7 @@ const {
 In `...renderResults`, the container will contain the `targetElement`, which defaults to a `<div>`.
 This, along with the ability to modify the `arg` signal, are helpful when testing directives.
 
-If, for example, you have a directive that handles the Fullscreen API, you can test it like this:
+If, for example, you have a directive that handles the [Fullscreen API](https://developer.mozilla.org/en-US/docs/Web/API/Fullscreen_API), you can test it like this:
 
 <TabsCodeBlocks>
   <div id="fullscreen.test.ts">

@@ -33,27 +33,9 @@ export function SearchBox() {
 				resultsMap: {
 					description: "content",
 				},
-				themeConfig: {
-					light: {},
-					dark: {
-						"--text-color-primary": "#fff",
-						"--background-color-primary": "#040816",
-						"--icon-color-primary": "#fff",
-						"--border-color-accent": "rgb(147 197 253)",
-					},
-				},
 			});
 			RegisterSearchButton({
 				colorScheme: selectedTheme().value,
-				themeConfig: {
-					light: {},
-					dark: {
-						"--search-btn-text-color": "#fff",
-						"--search-btn-text-color-hover": "#fff",
-						"--search-btn-text-color-focus": "#fff",
-						"--search-btn-background-color": "#040816",
-					},
-				},
 			});
 		});
 	}

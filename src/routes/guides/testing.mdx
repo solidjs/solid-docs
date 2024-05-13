@@ -239,6 +239,43 @@ If possible, try to select for accessible attributes (roughly in the following o
 
 For more information, check the [testing-library documentation](https://testing-library.com/docs/queries/about).
 
+#### Testing through Portal
+
+Solid allows components to break through the DOM tree structure using [`<Portal>`](/reference/components/portal). This mechanism will still work in testing, so the content of the portals will break out of the testing container. In order to test this content, make sure to use the `screen` export to query the contents:
+
+<TabsCodeBlocks>
+<div id="Toast.test.jsx">
+```jsx frame="none"
+import { test, expect } from "vitest"
+import { render, screen } from "@solidjs/testing-library"
+import { Toast } from './Toast'
+
+const user = userEvent.setup()
+
+test("increments value", async () => {
+  const { getByRole } = render(() => <Toast><p>This is a toast</p></Toast>)
+  const toast = screen.getByRole("log")
+  expect(toast).toHaveTextContent("This is a toast")
+})
+```
+</div>
+<div id="Toast.jsx">
+```jsx frame="none"
+import { Portal } from "solid-js/web";
+
+export const Toast = (props) => {
+  return (
+    <Portal>
+      <div class="toast" role={props.role ?? "log"}>
+        {props.children}
+      </div>
+    </Portal>
+  );
+}
+```
+</div>
+</TabsCodeBlocks>
+
 #### Testing in context
 
 If a component relies on some context, to wrap it use the `wrapper` option:

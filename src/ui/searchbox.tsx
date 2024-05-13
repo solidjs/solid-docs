@@ -28,14 +28,27 @@ export function SearchBox() {
 			RegisterSearchBox({
 				summaryGeneration: import.meta.env.VITE_ORAMA_SECURE_PROXY,
 				oramaInstance: client,
-				colorScheme: selectedTheme().value,
+				colorScheme: selectedTheme()?.value || "system",
 				backdrop: true,
 				resultsMap: {
 					description: "content",
 				},
+				themeConfig: {
+					light: {},
+					dark: {
+						"--border-color-accent": "rgb(147 197 253)",
+						"--backdrop-bg-color": "rgb(19 20 24 / 75%)",
+					},
+				},
 			});
 			RegisterSearchButton({
-				colorScheme: selectedTheme().value,
+				colorScheme: selectedTheme()?.value || "system",
+				themeConfig: {
+					light: {},
+					dark: {
+						"--search-btn-background-color": "#040816",
+					},
+				},
 			});
 		});
 	}

@@ -109,42 +109,6 @@ export function MyComponent() {
 }
 ```
 
-## Server actions
-
-Sometimes we need to make sure our action _only_ runs on the server. This is useful for:
-
-- Accessing internal APIs.
-- Proxying external APIs.
-  - To use server secrets.
-  - To reduce the response payload by postprocessing.
-  - To bypass CORS.
-- Running code incompatible with browsers.
-- Or even connecting directly to a database. (Take caution, opinions on if this is a good idea are mixed. You should consider separating your backend and frontend).
-
-To do this, put a `"use server";` directive in your action function:
-
-```tsx twoslash {4}
-import { action, redirect } from "@solidjs/router";
-
-const isAdmin = action(async (formData: FormData) => {
-  "use server";
-  await new Promise((resolve, reject) => setTimeout(resolve, 1000));
-  const username = formData.get("username");
-  if (username === "admin") throw redirect("/admin");
-  return new Error("Invalid username");
-});
-
-export function MyComponent() {
-  return (
-    <form action={isAdmin} method="post">
-      <label for="username">Username:</label>
-      <input type="text" name="username" />
-      <input type="submit" value="submit" />
-    </form>
-  );
-}
-```
-
 ## Error handling
 
 We strongly recommend with actions to "return" errors rather than throwing them. This can help with typing of submissions you'd use with `useSubmission`. This is important especially for handling progressive enhancement where no JS is present in the client so that we can use the error declaratively to render the updated page on the server.

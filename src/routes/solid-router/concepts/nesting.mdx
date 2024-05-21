@@ -1,0 +1,83 @@
+---
+title: Nesting Routes
+---
+
+Nested routes are a way to create a hierarchy of routes in your application.
+This is useful for creating a [layout](/solid-router/concepts/layouts) that is consistent across multiple pages, or for creating a relationship between pages that are related to each other.
+
+In Solid Router, the following two route definitions have the same result:
+
+```jsx
+<Route path="/users/:id" component={User} />
+
+// is equivalent to
+
+<Route path="/users">
+	<Route path="/:id" component={User} />
+</Route>
+```
+
+In both cases, the `User` component will render when the URL is `/users/:id`.
+The difference, however, is that in the first case, `/users/:id` is the only route, and in the second case, `/users` is also a route.
+
+**Note:** visit the [config-based nesting](#config-based-nesting) section for more information on how to nest routes using the configuration-based approach.
+
+## Limitations
+
+When nesting routes, only the innermost `Route` component will become its own route.
+For example, if you were to nest a route, only the innermost route will become its own route, even if the parent routes are also specified and provided with a component:
+
+```jsx
+<Route path="/users" component={Users}>
+	<Route path="/:id" component={User} />
+</Route>
+```
+
+For a parent route to become its own route, it must be specified separately. This can be done by explicitly defining the parent route as well as the nested route:
+
+```jsx
+<Route path="/users" component={Users} />
+<Route path="/users/:id" component={User} />
+```
+
+Another way to achieve the same result is to nest the routes and explicitly define the parent route through the use of an empty path, and then specify the nested route:
+
+```jsx
+<Route path="/users">
+  <Route path="/" component={Users} />
+  <Route path="/:id" component={User} />
+</Route>
+```
+
+In both cases, the `Users` component will render when the URL is `/users`, and the `User` component will render when the URL is `/users/:id`.
+
+## Config-based nesting
+
+When using configuration-based routing, nesting can be achieved through passing your route defitions into the `children` property of a parent route definition object:
+
+```jsx
+import { render } from "solid-js/web";
+import { Router } from "@solidjs/router";
+
+const routes = {
+	path: "/",
+	component: lazy(() => import("/routes/index.js")),
+	children: [
+		{
+			path: "/users",
+			component: lazy(() => import("/routes/users.js")),
+			children: [
+				{
+					path: "/:id",
+					component: lazy(() => import("/routes/user.js")),
+				},
+			],
+		},
+	],
+};
+
+render(() => <Router>{routes}</Router>, document.getElementById("app"));
+```
+
+In this example, when you navigate to `/users/:id`, the `User` component will render.
+Similarly, when you navigate to `/users`, the `Users` component will render.

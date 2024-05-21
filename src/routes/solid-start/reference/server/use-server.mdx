@@ -2,7 +2,7 @@
 title: '"use server"'
 ---
 
-`"use server"`  will enable actions in the server environment only (i.e. console logging, etc.).
+`"use server"` will enable functions that only run on the server.
 
 ```tsx
 const logHello = async (message: string) => {
@@ -13,7 +13,7 @@ const logHello = async (message: string) => {
 
 ## Basic usage
 
-When using `"use server"`, regardless of whether rendering is happening on the server or in the browser, the functions it apply to will only run on the server.
+When using `"use server"`, regardless of whether server rendering is enabled, the functions it apply to will only run on the server.
 
 To do this, compilation is used to transform the `"use server"` function into an RPC call to the server.
 
@@ -38,7 +38,34 @@ const logHello = async (message: string) => {
 logHello("Hello");
 ```
 
-In both of these examples, the `logHello` function, it would only show in the server console regardless of whether rendering was on the server or in the browser
+In both of these examples, the `logHello` function, it would only show in the server console regardless of whether rendering was on the server or in the browser.
+
+## Usage with Data APIs
+
+Server functions can be used for fetching data and performing actions on the server. 
+The following examples show how to use server functions alongside solid-router's data APIs.
+
+```tsx {3}
+const getUser = cache((id) => {
+  "use server";
+  return db.getUser(id);
+}, "users");
+
+const updateUser = action(async (id, data) => {
+  "use server"
+  await db.setUser(id, data);
+  throw redirect("/", { revalidate: getUser.keyFor(id) });
+});
+
+```
+
+When `getUser` or `updateUser` are invoked on the client, an http request will be made to the server, which calls the corresponding server function.
+
+## Single-flight actions
+
+In the above example, when the `updateUser` action is called, a redirect is thrown on the server. 
+Solid Start can handle this redirect on the server instead of propagating it to the client. 
+The data for the redirected page is fetched and streamed to the client in the same http request as the `updateUser` action, rather than the client requiring a separate http request for the redirected page.
 
 ## Serialization
 

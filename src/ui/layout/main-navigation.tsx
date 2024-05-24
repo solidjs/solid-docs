@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createEffect } from "solid-js";
+import { For, Show, Suspense, createEffect, createSignal } from "solid-js";
 import { useLocation } from "@solidjs/router";
 import { Collapsible, Tabs } from "@kobalte/core";
 import { Icon } from "solid-heroicons";
@@ -136,32 +136,60 @@ function DirList(props: { list: Entry[]; sortAlphabeticaly?: boolean }) {
 	);
 }
 
+type Tab = "learn" | "reference";
+
+const useSelectedTab = () => {
+
+	const loc = useLocation();
+	const path = () => loc.pathname;
+	const initialTab = path().includes("reference") ? "reference" : "learn";
+
+	const [selectedTab, setSelectedTab] = createSignal<Tab>(initialTab);
+
+	createEffect((previousTab) => {
+		if(path().includes("reference") && previousTab !== "reference"){
+			setSelectedTab("reference");
+		}else if( previousTab !== "learn"){
+			setSelectedTab("learn");
+		}
+	}, initialTab);
+
+	return { selectedTab, setSelectedTab
+
+	};
+};
+
 export function MainNavigation(props: NavProps) {
 	const i18n = useI18n();
 
 	const learn = () => props.tree.learn;
 	const reference = () => props.tree.reference;
 
-	const loc = useLocation();
-	const path = () => loc.pathname;
+	const {selectedTab, setSelectedTab} = useSelectedTab();
 
 	return (
 		<Suspense>
 			<Show when={i18n.t}>
 				<nav class="overflow-y-auto custom-scrollbar h-full md:h-[calc(100vh-7rem)] pb-20">
 					<Tabs.Root
-						defaultValue={path().includes("reference") ? "reference" : "learn"}
+						value={selectedTab()}
 					>
 						<Tabs.List class="sticky top-0 grid grid-cols-2 w-full z-10 md:dark:bg-slate-900 md:bg-slate-50">
 							<Tabs.Trigger
 								value="learn"
 								class="inline-block py-3 outline-none hover:bg-blue-500/30 dark:hover:bg-blue-300/20 dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:font-bold font-medium"
+								onClick={() => {
+									setSelectedTab("learn");
+								}}
 							>
 								{i18n.t("main.nav.tab.learn")}
 							</Tabs.Trigger>
 							<Tabs.Trigger
 								value="reference"
 								class="inline-block py-3 outline-none hover:bg-blue-500/30 dark:hover:bg-blue-300/20 dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:font-bold font-medium"
+								onClick={() => {
+									setSelectedTab("reference");
+								}}
 							>
 								{i18n.t("main.nav.tab.reference")}
 							</Tabs.Trigger>

@@ -4,12 +4,13 @@ title: cache
 
 ## `cache`
 
-`cache` is a [higher-order function](https://en.wikipedia.org/wiki/Higher-order_function) that creates a function with the same signature as the function you passed to it.
-When you call the created function with a given set of arguments for the first time, your original function is run and its return value is both stored in a cache and returned to the caller of the created function.
-When you call the created function with the same arguments again before the cache becomes stale, your original function is not re-run—you instead immediately receive the previous return value stored in the cache.
-A common use case is to wrap network calls so that duplicate fetches for the same data in quick succession can be avoided.
+`cache` is a [higher-order function](https://en.wikipedia.org/wiki/Higher-order_function) that creates a function with the same signature as the function passed to it.
+When created function is called with a given set of arguments for the first time, the original function is run and its return value is both stored in a cache and returned to the caller of the created function.
+When the created function is called with the same arguments before the cache becomes stale, the original function is not re-run — instead, it will receive the previous return value stored in the cache.
 
-This cache accomplishes the following:
+As an example, wrapping network calls with `cache` can help prevent duplicate fetches of identical data from occurring in quick succession.
+
+`cache` accomplishes the following:
 
 1. Deduping on the server for the lifetime of the request.
 2. Preloading the cache in the browser - this lasts 10 seconds.
@@ -30,8 +31,16 @@ This cache accomplishes the following:
 ### Return Value
 
 The return value is a `CachedFunction`, a function that has the same signature as the function you passed to `cache`.
-This cached function stores the return value (using the cache key as described above) and temporarily avoids re-running the passed function again for the same set of arguments under most circumstances, even if you call the created function multiple times.
-The returned function also has `key` and `keyFor` properties, described below.
+This cached function stores the return value using the cache key. 
+Under most circumstances, this temporarily prevents the passed function from running with the same arguments, even if the created function is called repeatedly.
+### `.key` and `.keyFor`
+
+Cached functions provide `.key` and `.keyFor`, which are useful when retrieving the keys used in cases involving invalidation:
+
+```ts
+let id = 5;
+getUser.key; // returns "users"
+getUser.keyFor(id); // returns "users[5]"
 
 ### Examples
 
@@ -85,9 +94,6 @@ However, using `cache` directly in [`createResource`](/reference/basic-reactivit
 
 </Callout>
 
-### `CachedFunction.keyFor` and `CachedFunction.key`
-
-Cached functions provide a property and method useful for getting the key that can be used in cases with invalidation:
 
 ```ts
 let id = 5;

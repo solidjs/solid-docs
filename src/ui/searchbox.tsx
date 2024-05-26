@@ -2,6 +2,8 @@ import { isServer } from "solid-js/web";
 import {
 	RegisterSearchBox,
 	RegisterSearchButton,
+	RegisterSearchBoxProps,
+	RegisterSearchButtonProps,
 } from "@orama/searchbox/dist/index.js";
 import { OramaClient } from "@oramacloud/client";
 import { createEffect } from "solid-js";
@@ -19,32 +21,31 @@ export function SearchBox() {
 
 	if (!isServer) {
 		createEffect(() => {
+			/**
+			 * These function calls create/register web components like
+			 * orama-searchbox and orama-search-button at runtime.
+			 */
 			RegisterSearchBox({
 				summaryGeneration: import.meta.env.VITE_ORAMA_SECURE_PROXY,
 				oramaInstance: client,
-				colorScheme: selectedTheme().value,
+				colorScheme: selectedTheme()?.value || "system",
 				backdrop: true,
 				resultsMap: {
-					description: 'content'
+					description: "content",
 				},
 				themeConfig: {
 					light: {},
 					dark: {
-						"--text-color-primary": "#fff",
-						"--background-color-primary": "#040816",
-						"--icon-color-primary": "#fff",
 						"--border-color-accent": "rgb(147 197 253)",
+						"--backdrop-bg-color": "rgb(19 20 24 / 75%)",
 					},
 				},
 			});
 			RegisterSearchButton({
-				colorScheme: selectedTheme().value,
+				colorScheme: selectedTheme()?.value || "system",
 				themeConfig: {
 					light: {},
 					dark: {
-						"--search-btn-text-color": "#fff",
-						"--search-btn-text-color-hover": "#fff",
-						"--search-btn-text-color-focus": "#fff",
 						"--search-btn-background-color": "#040816",
 					},
 				},
@@ -54,12 +55,19 @@ export function SearchBox() {
 
 	return (
 		<>
-			<div class="fixed">
-				{/* @ts-ignore */}
+			<div class="fixed z-10">
 				<orama-searchbox />
 			</div>
-			{/* @ts-ignore */}
 			<orama-search-button />
 		</>
 	);
+}
+
+declare module "solid-js" {
+	namespace JSX {
+		interface IntrinsicElements {
+			"orama-searchbox": RegisterSearchBoxProps;
+			"orama-search-button": RegisterSearchButtonProps;
+		}
+	}
 }

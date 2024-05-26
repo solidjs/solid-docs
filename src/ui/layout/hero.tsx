@@ -2,16 +2,14 @@ import {
 	Component,
 	Index,
 	Match,
-	Show,
 	Suspense,
 	Switch,
-	createResource,
+	createMemo,
 } from "solid-js";
 import { ButtonLink } from "../button-link";
 import { clientOnly } from "@solidjs/start";
 import { counterTxt, snippetLines } from "./hero-code-snippet";
 import { useLocation } from "@solidjs/router";
-import { getValidLocaleFromPathname } from "~/i18n/helpers";
 import { useI18n } from "~/i18n/i18n-context";
 
 const RenderedCode = clientOnly(() => import("./hero-code-snippet"));
@@ -28,6 +26,15 @@ const TrafficLightsIcon: Component<{ class: string }> = (props) => {
 
 export const Hero: Component = () => {
 	const location = useLocation();
+	const buttonHref = createMemo(() => {
+		if (location.pathname === "/solid-start")
+			return "solid-start/getting-started";
+		if (location.pathname === "/solid-router")
+			return "solid-router/getting-started/installation-and-setup";
+		if (location.pathname === "/solid-meta")
+			return "solid-meta/getting-started/installation-and-setup";
+		return "/quick-start";
+	});
 	const i18n = useI18n();
 	return (
 		<div class="overflow-hidden bg-sky-100/80 border border-sky-200  dark:border-none dark:bg-slate-900 mb-10 ">
@@ -46,7 +53,7 @@ export const Hero: Component = () => {
 								{i18n.t("hero.subtitle")}
 							</p>
 							<div class="mt-8 flex gap-4 md:justify-center lg:justify-start">
-								<ButtonLink href="/quick-start" variant="primary" addLocale>
+								<ButtonLink href={buttonHref()} variant="primary" addLocale>
 									{i18n.t("hero.button.primary")}
 								</ButtonLink>
 								<ButtonLink

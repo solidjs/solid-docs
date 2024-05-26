@@ -17,7 +17,14 @@ const pagesToIndex = HTMLFiles.flatMap((file) => {
 	);
 
 	const productionDocsURL = `https://docs.solidjs.com/${path}`;
-	return generalPurposeCrawler(productionDocsURL, pageContent);
+
+	return {
+		...generalPurposeCrawler(productionDocsURL, pageContent, {
+			parseCodeBlocks: false,
+		})[0],
+		contentWithCode: generalPurposeCrawler(productionDocsURL, pageContent)?.[0]
+			?.content,
+	};
 });
 
 async function emptyIndex() {
@@ -45,9 +52,6 @@ async function upsertFreshData() {
 
 	for (let i = 0; i < batches.length; i++) {
 		const batch = batches[i];
-		console.log(
-			`Upserting batch ${i + 1}/${batches.length} with ${batch.length} items`
-		);
 
 		await fetch(
 			`https://api.oramasearch.com/api/v1/webhooks/${ORAMA_PRIVATE_INDEX_ID}/notify`,

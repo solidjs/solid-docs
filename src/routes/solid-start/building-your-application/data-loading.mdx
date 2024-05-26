@@ -1,5 +1,5 @@
 ---
-title: "Data Loading"
+title: "Data loading"
 ---
 
 SolidStart aims to make it easy to load data from your data sources to keep your UI updated with your data.
@@ -15,7 +15,7 @@ It takes an async function and returns a [signal](/reference/basic-reactivity/cr
 ```tsx {6-9}
 import { For, createResource } from "solid-js";
 
-type Users = { name: string; house: string };
+type User = { name: string; house: string };
 
 export default function Page() {
 	const [users] = createResource(async () => {
@@ -23,14 +23,14 @@ export default function Page() {
 		return (await response.json()) as User[];
 	});
 
-	return <ul>{users() && users()!.map((user) => <li>{user.name}</li>)}</ul>;
+  	return <For each={users()}>{(user) => <li>{user.name}</li>}</For>;
 }
 ```
 
 When fetching inside components, you can encounter unnecessary waterfalls, especially when nested under lazy loaded sections.
 To solve this, it can be valuable to introduce a hoist and cache mechanism.
 
-Using a library like [Tanstack Query](https://tanstack.com/query/latest) can help with this.\_createMdxContent
+Using a library like [Tanstack Query](https://tanstack.com/query/latest) can help with this.
 
 for the example below we will be using the data in APIs in [`solid-router`](/solid-router)
 
@@ -52,9 +52,9 @@ export const route = {
 };
 
 export default function Page() {
-	const students = createAsync(() => getUsers());
+	const users = createAsync(() => getUsers());
 
-	return <ul>{users() && users()!.map((user) => <li>{user.name}</li>)}</ul>;
+	return <For each={users()}>{(user) => <li>{user.name}</li>}</For>;
 }
 ```
 
@@ -65,7 +65,7 @@ With this method, however, there are some caveats to be aware of:
    If the data needs a refresh, the [`refetch`](/guides/fetching-data#refetch) function returned in the `createResource` can be used.
 2. Before the route is rendered, the `load` function is called.
    It does not share the same `context` as the route.
-   The context tree that is exposed to the `load` function is anything above the `Routes` component.
+   The context tree that is exposed to the `load` function is anything above the `Page` component.
 3. On both the server and the client, the `load` function is called.
    The resources can avoid refetching if they serialized their data in the server render.
    The server-side render will only wait for the resources to fetch and serialize if the resource signals are accessed under a `Suspense` boundary.
@@ -94,8 +94,8 @@ export const route = {
 };
 
 export default function Page() {
-	const students = createAsync(() => getUsers());
+	const users = createAsync(() => getUsers());
 
-	return <ul>{users() && users()!.map((user) => <li>{user.name}</li>)}</ul>;
+	return <For each={users()}>{(user) => <li>{user.name}</li>}</For>;
 }
 ```

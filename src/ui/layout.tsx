@@ -17,8 +17,11 @@ import {
 	coreEntries,
 	startEntries,
 	routerEntries,
+	metaTree,
+	metaEntries,
 } from "solid:collection";
 import { PathMatch } from "@solidjs/router/dist/types";
+import { useCurrentRouteMetaData } from "~/utils/route-metadata-helper";
 
 const PROJECTS = ["solid-router", "solid-start", "solid-meta"] as const;
 
@@ -28,6 +31,8 @@ function getDefaultTree(project: (typeof PROJECTS)[number]) {
 			return routerTree;
 		case "solid-start":
 			return startTree;
+		case "solid-meta":
+			return metaTree;
 		default:
 			return coreTree;
 	}
@@ -39,6 +44,8 @@ function getDefaultEntries(project: (typeof PROJECTS)[number]) {
 			return routerEntries;
 		case "solid-start":
 			return startEntries;
+		case "solid-meta":
+			return metaEntries;
 		default:
 			return coreEntries;
 	}
@@ -113,18 +120,19 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 
 	// is i18n main
 	// is en project
-	const isI18nOrProject = useMatch(() => "/:localeOrProject/*", {
+	const isProjectContent = useMatch(() => "/:localeOrProject/*", {
 		localeOrProject: [...SUPPORTED_LOCALES, ...PROJECTS],
 	});
 
-	const isCore = useMatch(() => "/*");
-
-	const isRoot = useMatch(() => "/:localeOrProject?", {
-		localeOrProject: [...SUPPORTED_LOCALES, ...PROJECTS],
-	});
+	const isCoreContent = useMatch(() => "/*");
 
 	const entries = createAsync(
-		() => getDocsMetadata(isI18nOrProject(), isTranslatedProject(), isCore()),
+		() =>
+			getDocsMetadata(
+				isProjectContent(),
+				isTranslatedProject(),
+				isCoreContent()
+			),
 		{ deferStream: true }
 	);
 
@@ -147,12 +155,12 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 					<Show when={entries()}>
 						{(data) => <MainHeader tree={data().tree} />}
 					</Show>
-					<Show when={isRoot()} keyed>
+					<Show when={useCurrentRouteMetaData().isProjectRoot} keyed>
 						<Hero />
 					</Show>
 					<div class="relative mx-auto flex max-w-8xl flex-auto justify-center custom-scrollbar pt-10">
 						<Show when={!props.isError}>
-							<div class="hidden md:relative md:block lg:flex-none ">
+							<div class="hidden md:relative lg:block lg:flex-none">
 								<div class="absolute inset-y-0 right-0 w-[50vw] dark:hidden" />
 								<div class="absolute bottom-0 right-0 top-16 hidden h-12 w-px bg-gradient-to-t from-slate-800 dark:block" />
 								<div class="absolute bottom-0 right-0 top-28 hidden w-px bg-slate-800 dark:block" />
@@ -169,7 +177,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 						</Show>
 						<main class="w-full md:max-w-2xl flex-auto px-4 pt-2 md:pb-16 lg:max-w-none prose prose-slate dark:prose-invert dark:text-slate-300">
 							<Show
-								when={!isRoot()}
+								when={!useCurrentRouteMetaData().isProjectRoot}
 								keyed
 								fallback={
 									<article class="px-2 md:px-10 expressive-code-overrides overflow-y-auto">
@@ -191,8 +199,8 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 							</Show>
 						</main>
 						<Show when={!props.isError}>
-							<div class="hidden xl:block prose prose-slate dark:prose-invert dark:text-slate-300">
-								<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] overflow-y-auto pr-4 w-64 xl:w-72 custom-scrollbar">
+							<div class="hidden xl:block shrink-0 w-56 2xl:w-72 pr-4 prose prose-slate dark:prose-invert dark:text-slate-300">
+								<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] overflow-y-auto custom-scrollbar">
 									<SidePanel children={resolved()} />
 								</div>
 							</div>

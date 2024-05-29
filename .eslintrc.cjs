@@ -26,7 +26,7 @@ module.exports = {
 	},
 	plugins: ["@typescript-eslint", "solid"],
 	rules: {
-		indent: ["warning", "tab"],
+		indent: ["warn", "tab"],
 		quotes: ["error", "double"],
 		semi: "warn",
 	},

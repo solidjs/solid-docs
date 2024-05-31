@@ -1,7 +1,7 @@
 export default {
 	// hero
-	"hero.title": "UIs sin esfuerzo con precisión reactiva.",
-	"hero.subtitle": "SolidJS es un moderno framework de Javascript para la web actual.",
+	"hero.title": "UIs sin esfuerzo, con precisión reactiva.",
+	"hero.subtitle": "SolidJS es un moderno framework de Javascript para la web de hoy.",
 	"hero.button.primary": "Comenzar ahora",
 	"hero.button.secondary": "Unirse a la comunidad",
 
@@ -19,7 +19,7 @@ export default {
 	"main.nav.section.basic.reactivity": "Reactividad básica",
 	"main.nav.section.component.apis": "APIs de componentes",
 	"main.nav.section.jsx.attributes": "Atributos de JSX",
-	"main.nav.section.lifecycle": "Ciclos de vida",
+	"main.nav.section.lifecycle": "Ciclo de vida",
 	"main.nav.section.reactive.utilities": "Utilidades reactivas",
 	"main.nav.section.rendering": "Renderizado",
 	"main.nav.section.secondary.primitives": "Primitivas secundarias",

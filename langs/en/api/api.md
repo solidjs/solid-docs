@@ -2350,12 +2350,57 @@ function handler(itemId, e) {
 ```
 
 Events are never rebound and the bindings are not reactive, as it is expensive to attach and detach listeners.
-Since event handlers are called like any other function each time an event fires, there is no need for reactivity; shortcut your handler if desired.
+Since event handlers are called like any other function each time an event fires, there is no need for reactivity.
 
-```jsx
-// if defined, call it; otherwise don't.
-<div onClick={() => props.handleClick?.()} />
+The handler can be constructed to run different code based on the current state of your app. 
+For example, using a closure, the handler below takes different actions depending on application state,
+
+```tsx
+function Example() {
+  const [state, setState] = useSignal(0);
+  function handler() {
+    if (state() % 2 === 0) {
+      // do something
+      return;
+    }
+
+    // do something else
+  }
+
+  return (
+    <>
+      <button onClick={() => setState((s) => s + 1)}>Increment</button>
+      <button onClick={handler}>Do something depending on app state</button>
+    </>
+  )
 ```
+
+When passing a handler as a prop to a component, it may be necessary to check the type of the passed in value given Solid's support for tuples as event handler values,
+
+```tsx
+export function Option(
+  props: VoidProps<{
+    text: string;
+    onClick: JSX.HTMLElementTags["button"]["onClick"];
+  }>,
+) {
+  const clickHandler: JSX.EventHandlerUnion<HTMLButtonElement, MouseEvent> = (
+    e,
+  ) => {
+    if (!props.onClick) return;
+    if (typeof props.onClick === "function") return props.onClick(e);
+    props.onClick[0](props.onClick[1], e);
+  };
+
+  return (
+    <button onClick={clickHandler}>
+      {props.text}
+    </button>
+  );
+}
+```
+
+Alternatively, consider using a helper such as [`combineProps`](https://github.com/solidjs-community/solid-primitives/tree/main/packages/props#combineProps).
 
 Note that `onChange` and `onInput` work according to their native behavior. `onInput` will fire immediately after the value has changed; for `<input>` fields, `onChange` will only fire after the field loses focus.
 

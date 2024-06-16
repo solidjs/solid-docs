@@ -30,7 +30,7 @@ To create an action, use the `action` function from the `@solidjs/router` packag
 This function takes an asynchronous function as an argument and returns a new function that can be used to submit data.
 
 ```tsx
-import { action, useAction } from "@solidjs/router";
+import { action } from "@solidjs/router";
 
 const echo = action(async (message: string) => {
   // Simulates an asynchronous operation, such as an API call
@@ -48,8 +48,13 @@ Typically, route actions are used with some sort of solution like fetch or Graph
 To use the action, you can call it from within a component using `useAction`.
 This returns a function that can be called with the necessary arguments to trigger the action.
 
-```tsx
-import { useAction } from "@solidjs/router";
+```tsx {1,8,9,10,11,12}
+import { action, useAction } from "@solidjs/router";
+
+const echo = action(async (message: string) => {
+  await new Promise((resolve, reject) => setTimeout(resolve, 1000));
+  console.log(message);
+});
 
 export function MyComponent() {
   const myEcho = useAction(echo);
@@ -69,7 +74,7 @@ Anything returned from an action can be accessed using the reactive `action.resu
 
 To access the action's result, you must pass the action to `useSubmission`:
 
-```tsx {8,14}
+```tsx {1,10,16}
 import { action, useAction, useSubmission } from "@solidjs/router";
 
 const echo = action(async (message: string) => {

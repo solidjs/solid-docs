@@ -12,16 +12,16 @@ async function getPrivatePosts() {
 	if(!user) {
 		return null  // or throw an error
 	}
-	
+
 	return db.getPosts({ userId: user.id, private: true })
 }
 ```
 
-The `getUser` function can be [implemented using sessions](https://docs.solidjs.com/solid-start/advanced/session).
+The `getUser` function can be [implemented using sessions](/solid-start/advanced/session).
 
 ## Protected Routes
 
-Routes can be protected by checking the user or session object during data fetching. 
+Routes can be protected by checking the user or session object during data fetching.
 This example uses [Solid Router](/solid-router).
 
 ```tsx
@@ -29,18 +29,16 @@ const getPrivatePosts = cache(async function() {
 	"use server"
 	const user = await getUser()
 	if(!user) {
-		throw redirect("/login"); 
+		throw redirect("/login");
 	}
-	
+
 	return db.getPosts({ userId: user.id, private: true })
 })
 
-export const route = {
-  load() {
-    void getPrivatePosts()
-  }
-} satisfies RouteDefinition
+export default function Page() {
+	const posts = createAsync(() => getPrivatePosts());
+}
 ```
 
-Once the user hits this route, the router will immediately attempt to fetch `getPrivatePosts` data. 
+Once the user hits this route, the router will attempt to fetch `getPrivatePosts` data.
 If the user is not signed in, `getPrivatePosts` will throw and the router will redirect to the login page.

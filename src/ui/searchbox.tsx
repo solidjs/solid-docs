@@ -28,7 +28,7 @@ export function SearchBox() {
 			RegisterSearchBox({
 				summaryGeneration: import.meta.env.VITE_ORAMA_SECURE_PROXY,
 				oramaInstance: client,
-				colorScheme: selectedTheme().value,
+				colorScheme: selectedTheme()?.value || "system",
 				backdrop: true,
 				resultsMap: {
 					description: "content",
@@ -36,21 +36,17 @@ export function SearchBox() {
 				themeConfig: {
 					light: {},
 					dark: {
-						"--text-color-primary": "#fff",
-						"--background-color-primary": "#040816",
-						"--icon-color-primary": "#fff",
 						"--border-color-accent": "rgb(147 197 253)",
+						"--backdrop-bg-color": "rgb(19 20 24 / 75%)",
 					},
 				},
+				searchMode: 'hybrid'
 			});
 			RegisterSearchButton({
-				colorScheme: selectedTheme().value,
+				colorScheme: selectedTheme()?.value || "system",
 				themeConfig: {
 					light: {},
 					dark: {
-						"--search-btn-text-color": "#fff",
-						"--search-btn-text-color-hover": "#fff",
-						"--search-btn-text-color-focus": "#fff",
 						"--search-btn-background-color": "#040816",
 					},
 				},

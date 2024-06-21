@@ -1,4 +1,4 @@
-import { For, Show, Suspense, createEffect } from "solid-js";
+import { For, Show, Suspense, createEffect, createSignal } from "solid-js";
 import { useLocation } from "@solidjs/router";
 import { Collapsible, Tabs } from "@kobalte/core";
 import { Icon } from "solid-heroicons";
@@ -24,6 +24,14 @@ interface NavProps {
 		reference: Entry[];
 	};
 }
+
+// gets an array of entries and orders it alphabeticaly
+const getAlphabeticalyOrderedList = (list: Entry[]) =>
+	list.slice().sort((firstChild, secondChild) => {
+		return firstChild.title
+			.toLowerCase()
+			.localeCompare(secondChild.title.toLowerCase());
+	});
 
 // check if every item on the list has mainNavExclude as true
 const shouldHideNavItem = (list: EntryList["learn" | "reference"]) =>
@@ -60,11 +68,14 @@ function ListItemLink(props: { item: Entry }) {
 	);
 }
 
-function DirList(props: { list: Entry[] }) {
+function DirList(props: { list: Entry[]; sortAlphabeticaly?: boolean }) {
 	return (
 		<For each={props.list}>
 			{(item) => {
 				if (Array.isArray(item.children)) {
+					const itemChildren = props.sortAlphabeticaly
+						? getAlphabeticalyOrderedList(item.children)
+						: item.children;
 					return (
 						<li>
 							<span class="font-semibold text-slate-800 dark:text-slate-100">
@@ -74,7 +85,7 @@ function DirList(props: { list: Entry[] }) {
 								role="list"
 								class="ml-2 mt-2 space-y-3 border-l-[1px] border-slate-400 dark:border-slate-700 lg:border-slate-400"
 							>
-								<For each={item.children}>
+								<For each={itemChildren}>
 									{(child) => {
 										if (
 											Array.isArray(child.children) &&
@@ -100,7 +111,10 @@ function DirList(props: { list: Entry[] }) {
 																role="list"
 																class="ml-4 mt-3 space-y-3 border-l-[1px] border-slate-400 dark:border-slate-700 dark:lg:border-slate-700"
 															>
-																<DirList list={child.children} />
+																<DirList
+																	sortAlphabeticaly={props.sortAlphabeticaly}
+																	list={child.children}
+																/>
 															</ul>
 														</Collapsible.Content>
 													</Collapsible.Root>
@@ -122,32 +136,60 @@ function DirList(props: { list: Entry[] }) {
 	);
 }
 
+type Tab = "learn" | "reference";
+
+const useSelectedTab = () => {
+
+	const loc = useLocation();
+	const path = () => loc.pathname;
+	const initialTab = path().includes("reference") ? "reference" : "learn";
+
+	const [selectedTab, setSelectedTab] = createSignal<Tab>(initialTab);
+
+	createEffect((previousTab) => {
+		if(path().includes("reference") && previousTab !== "reference"){
+			setSelectedTab("reference");
+		}else if( previousTab !== "learn"){
+			setSelectedTab("learn");
+		}
+	}, initialTab);
+
+	return { selectedTab, setSelectedTab
+
+	};
+};
+
 export function MainNavigation(props: NavProps) {
 	const i18n = useI18n();
 
 	const learn = () => props.tree.learn;
 	const reference = () => props.tree.reference;
 
-	const loc = useLocation();
-	const path = () => loc.pathname;
+	const {selectedTab, setSelectedTab} = useSelectedTab();
 
 	return (
 		<Suspense>
 			<Show when={i18n.t}>
 				<nav class="overflow-y-auto custom-scrollbar h-full md:h-[calc(100vh-7rem)] pb-20">
 					<Tabs.Root
-						defaultValue={path().includes("reference") ? "reference" : "learn"}
+						value={selectedTab()}
 					>
 						<Tabs.List class="sticky top-0 grid grid-cols-2 w-full z-10 md:dark:bg-slate-900 md:bg-slate-50">
 							<Tabs.Trigger
 								value="learn"
 								class="inline-block py-3 outline-none hover:bg-blue-500/30 dark:hover:bg-blue-300/20 dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:font-bold font-medium"
+								onClick={() => {
+									setSelectedTab("learn");
+								}}
 							>
 								{i18n.t("main.nav.tab.learn")}
 							</Tabs.Trigger>
 							<Tabs.Trigger
 								value="reference"
 								class="inline-block py-3 outline-none hover:bg-blue-500/30 dark:hover:bg-blue-300/20 dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:font-bold font-medium"
+								onClick={() => {
+									setSelectedTab("reference");
+								}}
 							>
 								{i18n.t("main.nav.tab.reference")}
 							</Tabs.Trigger>
@@ -171,7 +213,7 @@ export function MainNavigation(props: NavProps) {
 								fallback={<p>{i18n.t("main.nav.no.routes")}</p>}
 							>
 								<ul role="list" class="space-y-3 px-4">
-									<DirList list={reference()} />
+									<DirList sortAlphabeticaly list={reference()} />
 								</ul>
 							</Show>
 						</Tabs.Content>

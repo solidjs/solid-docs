@@ -19,6 +19,7 @@ export const logos: { [key: string]: { file: string; style?: string } } = {
 	cssmodules: { file: "css-modules.svg", style: "invert" },
 	macaron: { file: "macaron.svg" },
 	tailwind: { file: "tailwind.svg" },
+	stormkit: { file: "stormkit.svg" },
 	uno: { file: "uno.svg" },
 };
 

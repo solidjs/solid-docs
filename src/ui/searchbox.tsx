@@ -40,6 +40,7 @@ export function SearchBox() {
 						"--backdrop-bg-color": "rgb(19 20 24 / 75%)",
 					},
 				},
+				searchMode: 'hybrid'
 			});
 			RegisterSearchButton({
 				colorScheme: selectedTheme()?.value || "system",

@@ -7,14 +7,76 @@ mainNavExclude: true
 import { TabsCodeBlocks } from "~/ui/tab-code-blocks";
 
 
-[Zerops](https://zerops.io) is a dev-first cloud platform that can be used to deploy both Static and SSR Solid Node.js App. For additional one to one support, details and features, you can join [Zerops Discord server](https://discord.gg/xxzmJSDKPT) and [visit the Zerops website](https://zerops.io).
+[Zerops](https://zerops.io) is a dev-first cloud platform that can be used to deploy both Static and SSR Solid Node.js App. For additional one to one support, details and features, you can join [Zerops Discord server](https://discord.gg/xxzmJSDKPT) and [visit the Zerops Docs](https://docs.zerops.io).
 
 Deploy and test Zerops Solid recipes with one click: 
-- [Solid Node.js](https://app.zerops.io/recipe/solidjs-nodejs) 
-- [Solid Static](https://app.zerops.io/recipe/solidjs-static)
+- [Solid Node.js](https://app.zerops.io/recipe/solidjs-nodejs) - [Source Repository](https://github.com/zeropsio/recipe-solidjs-nodejs)
+- [Solid Static](https://app.zerops.io/recipe/solidjs-static) - [Source Repository](https://github.com/zeropsio/recipe-solidjs-static)
+
+
+## Project Import
+Note: Make sure the project has `zerops.yml` in the root.
+
+Go to your [zerops dashboard](https://app.zerops.io/dashboard/projects) and then click on your profile icon if you are a new user
+
 
 ## Using the Zerops web interface
+**Note**:
+1. Go to [Zerops website](https://zerops.io) and navigate to the header and click on sign up using github, gitlab or your email then you will see a dashbord(welcome screen for a new user) with one click deploy buttons and project creation button(for old users who already have projects ~ check your sidebar make sure you have full mode on instead of compact mode) with a textarea create a new project.
+2. Now It'll redirect you to a page where you can choose a service.
+
+For **SSR (Server-Side Rendering)**:
+
+1. Choose `Node.js` and select `version 20`.
+2. Scroll down and change the hostname to your preference.
+3. Scroll down and click on the "Add New Node.js" button.
+
+Set up the `zerops.yml` file in the root of your SSR project.
+```yaml
+zerops:
+  - setup: app
+    build:
+      base: nodejs@20
+      buildCommands:
+        - pnpm i
+        - pnpm build
+      deployFiles:
+        - .output
+        - node_modules
+        - public
+        - package.json
+    run:
+      base: nodejs@20
+      ports:
+        - port: 3000
+          httpSupport: true
+      start: pnpm start
+```
+
+For **SSG (Static Site Generation)**:
+
+1. Choose Static.
+2. Scroll down and change the hostname to your preference.
+3. Scroll down and click on "Add New Static" button.
+
+Set up the `zerops.yml` file in the root of your static project
+```yaml
+zerops:
+  - setup: app
+    build:
+      base: nodejs@20
+      buildCommands:
+        - pnpm i
+        - pnpm build
+      deployFiles:
+        - dist/~
+    run:
+      base: static
+```
 
 
+ push the changes to your GitHub repository.
+
+Go to your service 
 
 ## Using the Zerops CLI (zCLI)

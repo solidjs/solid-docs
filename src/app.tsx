@@ -31,11 +31,10 @@ export default function App() {
 							<I18nProvider>
 								<MetaProvider>
 									<Title>Solid Docs</Title>
-									<Meta property="og:description" content="Docs for Solid"/>
+									<Meta property="og:description" content="" />
 									<Meta property="og:title" content="Solid Docs" />
 									<OpenGraph origin="">
 										<DynamicImage>
-											{/* <div></div> */}
 											<div
 												style={{
 													width: "100%",
@@ -44,7 +43,8 @@ export default function App() {
 													"align-items": "center",
 													"justify-content": "center",
 													"font-size": "128px",
-													"background": "rgb(15 23 42)",
+													background: "rgb(15 23 42)",
+													color: "rgb(203 213 225)",
 												}}
 											>
 												Solid Docs

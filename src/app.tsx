@@ -29,16 +29,17 @@ export default function App() {
 					<Router
 						root={(props) => {
 							const routeMetadata = useCurrentRouteMetaData();
-							const w = (routeMetadata.project
-								?.replace("/", "")
-								.split("-")[1] ?? "Core")
+							const w =
+								routeMetadata.project?.replace("/", "").split("-")[1] ?? "Core";
 							const name = w.charAt(0).toUpperCase() + w.slice(1);
 							return (
 								<I18nProvider>
 									<MetaProvider>
 										<Title>Solid Docs</Title>
-										<Meta property="og:description" content="" />
+										<Meta property="og:description" content="Docs for the Solid web framework" />
 										<Meta property="og:title" content="Solid Docs" />
+										<Meta property="og:type" content="article" />
+										<Meta property="article:section" content={name} />
 										<OpenGraph origin="">
 											<DynamicImage>
 												<div

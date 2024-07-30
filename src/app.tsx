@@ -3,7 +3,7 @@ import { Router } from "@solidjs/router";
 import { FileRoutes } from "@solidjs/start/router";
 import { MDXProvider } from "solid-mdx";
 import { ErrorBoundary, Suspense, createEffect } from "solid-js";
-import { MetaProvider, Title } from "@solidjs/meta";
+import { Meta, MetaProvider, Title } from "@solidjs/meta";
 import Md from "~/ui/markdown-components";
 import { Layout } from "~/ui/layout";
 import { ThemeProvider, useThemeContext } from "./data/theme-provider";
@@ -31,6 +31,8 @@ export default function App() {
 							<I18nProvider>
 								<MetaProvider>
 									<Title>Solid Docs</Title>
+									<Meta property="og:description" content="Docs for Solid"/>
+									<Meta property="og:title" content="Solid Docs" />
 									<OpenGraph origin="">
 										<DynamicImage>
 											{/* <div></div> */}

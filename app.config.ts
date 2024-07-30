@@ -21,6 +21,7 @@ import solidMetaEntries from "./.solid/solid-meta-flat-entries";
 import solidrouterTree from "./.solid/solid-router-tree";
 import solidStartTree from "./.solid/solid-start-tree";
 import solidMetaTree from "./.solid/solid-meta-tree";
+import { vitePlugin as OGPlugin } from "@solid-mediakit/og/unplugin";
 
 function docsData() {
 	const virtualModuleId = "solid:collection";
@@ -64,6 +65,7 @@ export default defineConfig({
 	extensions: ["mdx", "md", "tsx"],
 	vite: () => ({
 		plugins: [
+			OGPlugin(),
 			docsData(),
 			vinxiMdx.withImports({})({
 				define: {

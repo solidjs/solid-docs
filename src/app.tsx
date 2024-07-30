@@ -10,6 +10,7 @@ import { ThemeProvider, useThemeContext } from "./data/theme-provider";
 import { I18nProvider } from "@kobalte/core";
 import { NotFound } from "./ui/not-found";
 import "~/styles.css";
+import { DynamicImage, OpenGraph } from "@solid-mediakit/og";
 
 export default function App() {
 	return (
@@ -30,6 +31,24 @@ export default function App() {
 							<I18nProvider>
 								<MetaProvider>
 									<Title>Solid Docs</Title>
+									<OpenGraph origin="">
+										<DynamicImage>
+											{/* <div></div> */}
+											<div
+												style={{
+													width: "100%",
+													height: "100%",
+													display: "flex",
+													"align-items": "center",
+													"justify-content": "center",
+													"font-size": "128px",
+													"background": "rgb(15 23 42)",
+												}}
+											>
+												Solid Docs
+											</div>
+										</DynamicImage>
+									</OpenGraph>
 									<ErrorBoundary fallback={<NotFound />}>
 										<Layout>
 											<MDXProvider components={Md}>

@@ -100,7 +100,7 @@ The purpose of this file is to describe the intended behavior from a user's pers
 import { test, expect } from "vitest"
 import { render } from "@solidjs/testing-library"
 import userEvent from "@testing-library/user-event"
-import { Counter } from './Counter'
+import { Counter } from "./Counter"
 
 const user = userEvent.setup()
 
@@ -248,7 +248,7 @@ Solid allows components to break through the DOM tree structure using [`<Portal>
 ```jsx frame="none"
 import { test, expect } from "vitest"
 import { render, screen } from "@solidjs/testing-library"
-import { Toast } from './Toast'
+import { Toast } from "./Toast"
 
 test("increments value", async () => {
   render(() => <Toast><p>This is a toast</p></Toast>)
@@ -493,6 +493,94 @@ return testEffect(done =>
   })
 )
 ```
+
+### Benchmarks
+
+While Solid offers performance simplified, it is good to validate if that promise can be kept.
+Vitest offers an experimental `bench` function to run benchmarks and compare the results inside the same `describe` block;
+for example if you had a `<List>` flow component similar to `<For>`, you could benchmark it like this:
+
+
+```jsx title="list.bench.jsx"
+describe('list rendering', () => {
+  const ITEMS = 1000
+  const renderedFor = new Set()
+  const listFor = Array.from({ length: ITEMS }, (_, i) => i)
+  bench('For', () => new Promise((resolve) => {
+    const ItemFor = (props) => {
+      onMount(() => {
+        renderedFor.add(props.number)
+        if (renderedFor.size === ITEMS) { resolve() }
+      })
+      return <span>{props.number}</span>
+    }
+    render(() => <For each={listFor}>
+      {(item) => <ItemFor number={item} />}
+    </For>)
+  }))
+
+  const renderedList = new Set()
+  const listList = Array.from({ length: ITEMS }, (_, i) => i)
+  bench('List', () => new Promise((resolve) => {
+    const ItemList = (props) => {
+      onMount(() => {
+        renderedList.add(props.number)
+        if (renderedList.size === ITEMS) { resolve() }
+      })
+      return <span>{props.number}</span>
+    }
+    render(() => <List each={listList}>
+      {(item) => <ItemList number={item} />}
+    </List>)
+  }))
+})
+```
+
+Running `[npm|pnpm|yarn] test bench` will then execute the benchmark function:
+
+```ansi frame="none"
+[1;36m[RUN][0;36m v1.4.0[0;8m solid-app/src/components/[0m
+
+[0;32m ✓ [0;8msrc/components/list.bench.jsx [0;31m(2)[0;8m 1364ms
+[0;32m   ✓ [0;8mbenchmark[0;31m (2)[0;8m 1360ms
+[1;37m     name       hz      min      max     mean      p75      p99     p995     p999      rme  samples
+[1;32m   · [0;37mFor   [0;36m60.5492  11.2355  47.9164  16.5155  15.4180  47.9164  47.9164  47.9164  [0;37m±13.60%       31   [0;32mfastest
+[1;32m   · [0;37mList  [0;36m49.7725  16.5441  69.3559  20.0914  18.0349  69.3559  69.3559  69.3559  [0;37m±21.37%       25  
+
+[1;36m[BENCH][0;36m Summary
+
+[0;37mFor - src/components/list.bench.tsx > benchmark
+[0;32m    1.22x[0;8m faster than[0;37m List
+```
+
+Please keep in mind that it is very difficult to create meaningful benchmarks.
+The numbers should always be taken with a grain of salt, but can still indicate performance degradations if compared between versions.
+
+
+### Test coverage
+
+While coverage numbers can be misleading, they are used by many projects as a rough measurement of code quality.
+Vitest supports coverage collection. To use it, it needs an extra package:
+
+<TabsCodeBlocks>
+  <div id="npm">
+```bash frame="none"
+npm i -D @vitest/coverage-v8
+```
+  </div>
+  <div id="yarn">
+```bash frame="none"
+yarn add -D @vitest/coverage-v8
+```
+  </div>
+  <div id="pnpm">
+```bash frame="none"
+pnpm i -D @vitest/coverage-v8
+```
+  </div>
+</TabsCodeBlocks>
+
+Also, you need to [set up vitest's coverage feature](https://vitest.dev/guide/coverage.html).
 
 
 ### Integration/E2E testing

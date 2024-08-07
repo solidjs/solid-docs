@@ -6,17 +6,27 @@ import {
 	createEffect,
 	children,
 	createMemo,
+	ParentProps,
 } from "solid-js";
 import { useLocation } from "@solidjs/router";
-import { Title } from "@solidjs/meta";
+import { Meta, Title } from "@solidjs/meta";
 import type { coreEntries } from "solid:collection";
 import { Pagination } from "~/ui/pagination";
 import { EditPageLink } from "./edit-page-link";
 import { PageIssueLink } from "./page-issue-link";
-import { DynamicImage, OpenGraph } from "@solid-mediakit/og";
+import { DynamicImage } from "@solid-mediakit/og";
 
 export const [trackHeading, setTrackHeading] = createSignal("");
-
+const OpenGraph = (props: ParentProps<{ origin: string }>) => {
+	const child = children(() => props.children);
+	const url = createMemo(() => child()?.toString());
+	return (
+		<>
+			<Meta property="og:image" content={props.origin + url()} />
+			<Meta property="twitter:card" content={props.origin + url()} />
+		</>
+	);
+};
 interface DocsLayoutProps {
 	entries: typeof coreEntries;
 	children: JSX.Element;
@@ -53,9 +63,8 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 		// @ts-expect-error
 		(articleElements()![1]?.innerText as string)?.replace("\n", "")
 	);
-
 	// .replace("\n", "")
-	createEffect(() => console.log(contentPreview()));
+	// createEffect(() => console.log(contentPreview()));
 	return (
 		<>
 			<OpenGraph origin="">

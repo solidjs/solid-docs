@@ -23,7 +23,11 @@ const OpenGraph = (props: ParentProps<{ origin: string }>) => {
 	return (
 		<>
 			<Meta property="og:image" content={props.origin + url()} />
-			<Meta property="twitter:card" content={props.origin + url()} />
+			<Meta name="twitter:card" content="summary_large_image" />
+			<Meta
+				name="twitter:image:src"
+				content={props.origin + url()}
+			/>
 		</>
 	);
 };

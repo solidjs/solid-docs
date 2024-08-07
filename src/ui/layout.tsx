@@ -1,4 +1,9 @@
-import { ParentComponent, Show, children, Suspense } from "solid-js";
+import {
+	ParentComponent,
+	Show,
+	children,
+	Suspense,
+} from "solid-js";
 
 import { MainNavigation } from "~/ui/layout/main-navigation";
 import { MainHeader } from "./layout/main-header";

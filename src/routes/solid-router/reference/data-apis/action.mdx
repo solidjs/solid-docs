@@ -1,3 +1,4 @@
+
 ---
 title: action
 ---
@@ -99,4 +100,70 @@ type Submission<T, U> = {
 
 const submissions = useSubmissions(action, (input) => filter(input));
 const submission = useSubmission(action, (input) => filter(input));
+```
+##  Revalidate cached functions
+
+###  Revalidate all (default)
+By default all cached function will be revalidated wether the action does not return or return a "normal" response.
+```jsx
+
+const deleteTodo = action(async (formData: FormData) => {
+  const id = Number(formData.get("id"))
+  await api.deleteTodo(id)
+  // return new  Response("success",  {  status:  200  });
+  // ...
+})
+```
+
+### Revalidate specific cached keys
+
+By returning a response with solid router's `json` or `reload` helpers you can pass a key / keys to the revalidate prop as the second argument of solid's router json response helper.  You can either pass as string directly or use the cached functions `key` or `keyFor` props
+
+```jsx
+import { action, json } from "@solidjs/router"
+
+const deleteTodo = action(async (formData: FormData) => {
+  const id = Number(formData.get("id"))
+  await api.deleteTodo(id)
+  return json(
+  `deleted ${id}`,
+  { revalidate: ["getAllTodos",getTodos.key, getTodoByID.keyFor(id)]}
+  )
+  //or
+  return reload({ revalidate: ["getAllTodos",getTodos.key, getTodoByID.keyFor(id)]})
+})
+```
+
+### No revalidation
+To opt out of any revalidation you can pass any string to revalidate which is not a key of any cached function.
+```jsx
+const deleteTodo = action(async (formData: FormData) => {
+  const id = Number(formData.get("id"))
+  await api.deleteTodo(id)
+  return json(`deleted ${id}`,{ revalidate: "nothing" })
+  //or
+  return reload({ revalidate: "nothing" })
+})
+```
+
+###  Revalidate without action
+Cached functions can also be revalidated by the  `revalidate` helper.
+```jsx
+revalidate([getTodos.key, getTodoByID.keyFor(id)])
+```
+This is also great if you want to set your own "refresh" interval e.g. poll data every 30 seconds .
+
+```jsx
+export default function TodoLayout(){
+	
+	const todos = createAsync(() => getTodos())
+	
+	onMount(() => {
+		//30 second polling
+		const interval = setInterval(() => revalidate(getTodos.key),1000 * 30)
+		onCleanup(() => clearInterval(interval))
+	})
+	
+	...
+}
 ```

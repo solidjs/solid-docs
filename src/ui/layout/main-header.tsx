@@ -1,4 +1,4 @@
-import { Show, createSignal, onCleanup, onMount } from "solid-js";
+import { Show, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { A } from "~/ui/i18n-anchor";
 import { isServer } from "solid-js/web";
 
@@ -10,6 +10,7 @@ import { SUPPORTED_LOCALES } from "~/i18n/config";
 import { LanguageSelector } from "./language-selector";
 
 import { SearchBox } from "../searchbox";
+import { useCurrentRouteMetaData } from "~/utils/route-metadata-helper";
 
 interface Entry {
 	title: string;
@@ -52,6 +53,10 @@ export function MainHeader(props: NavProps) {
 			window.removeEventListener("scroll", onScroll);
 		});
 	}
+
+	const currentRouteMetaData = createMemo(() => {
+		return useCurrentRouteMetaData();
+	});
 
 	return (
 		<header
@@ -121,7 +126,7 @@ export function MainHeader(props: NavProps) {
 				<div class="lg:order-2 flex basis-0 gap-4 items-center justify-end order-">
 					<SearchBox />
 					<A
-						href="https://github.com/solidjs/solid"
+						href={`https://github.com/solidjs${currentRouteMetaData().project ? currentRouteMetaData().project : "/solid"}`}
 						class="group"
 						aria-label="GitHub"
 						target="_blank"

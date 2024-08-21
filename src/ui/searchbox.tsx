@@ -6,7 +6,7 @@ import {
 	RegisterSearchButtonProps,
 } from "@orama/searchbox/dist/index.js";
 import { OramaClient } from "@oramacloud/client";
-import { createEffect } from "solid-js";
+import { createEffect, onCleanup, onMount } from "solid-js";
 import { useThemeContext } from "~/data/theme-provider";
 import "@orama/searchbox/dist/index.css";
 
@@ -20,6 +20,24 @@ export function SearchBox() {
 	const selectedTheme = ctx.selectedTheme;
 
 	if (!isServer) {
+		const onSearchBoxOpen = (e: Event) => {
+			/**
+			 * These will prevent the default behavior of the browser
+			 * when the user presses Ctrl + K.
+			 */
+			if (e instanceof KeyboardEvent && e.ctrlKey && e.key === "k") {
+				e.preventDefault();
+			}
+		};
+
+		onMount(() => {
+			window.addEventListener("keydown", onSearchBoxOpen);
+		});
+
+		onCleanup(() => {
+			window.removeEventListener("keydown", onSearchBoxOpen);
+		});
+
 		createEffect(() => {
 			/**
 			 * These function calls create/register web components like

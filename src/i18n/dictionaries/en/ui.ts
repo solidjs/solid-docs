@@ -2,6 +2,7 @@ export default {
 	// hero
 	"hero.title": "Effortless UIs with Reactive Precision.",
 	"hero.subtitle": "Solid is a modern JavaScript framework for today's web.",
+	"hero.subtitle.start": "Fine-grained reactivity goes fullstack.",
 	"hero.button.primary": "Get started",
 	"hero.button.secondary": "Join the community",
 

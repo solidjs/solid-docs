@@ -2,100 +2,222 @@
 title: "Data loading"
 ---
 
-SolidStart aims to make it easy to load data from your data sources to keep your UI updated with your data.
-For most of your data requirements, routes will likely be used to decide what data to load.
-SolidStart includes nested routing to help structure your application's UI in a hierarchical way, so that you can share layouts.
+Efficient data loading is crucial for creating responsive web applications. SolidStart offers several approaches to fetch and manage data, achieves good performance and developer experience. This guide explores built-in primitives like `createAsync` and `createResource`, as well as integration with third-party libraries, to help you implement effective data loading strategies in your SolidStart projects.
 
-## Data loading on the client
+## Using `createAsync` primitive
 
-Solid provides a way to load data from your data sources using the [`createResource` primitive](/reference/basic-reactivity/create-resource).
-It takes an async function and returns a [signal](/reference/basic-reactivity/create-signal) from it.
-`createResource` integrates with [`Suspense`](/reference/components/suspense) and [`ErrorBoundary`](/reference/components/error-boundary) to help manage lifecycle and error states.
+[`createAsync`](/solid-router/reference/data-apis/create-async) takes an asynchronous function (known as a fetcher function) and returns a signal that tracks the result of the fetcher function.
 
-```tsx {6-9}
-import { For, createResource } from "solid-js";
+```tsx title="/routes/users/[id].tsx"
+import { cache, createAsync, useParams } from "@solidjs/router";
 
-type User = { name: string; house: string };
+type User = { name: string };
+
+const getUser = cache(async (id: string) => {
+	const result = await fetch(`https://my-api.com/users/${id}`);
+	const user = (await result.json()) as User;
+	return user;
+}, "user");
 
 export default function Page() {
-	const [users] = createResource(async () => {
-		const response = await fetch("https://example.com/users");
-		return (await response.json()) as User[];
+	const params = useParams();
+
+	const user = createAsync(() => getUser(params.id));
+
+	return <div>{user()?.name}</div>;
+}
+```
+
+Wrapping the fetcher function with [`cache`](/solid-router/reference/data-apis/cache) makes sure it's not called multiple times with the same arguments. The second argument of cache is a string that uniquely describes the type of data it's fetching, in this case "user".
+
+### Preloading data
+
+You can use the [`load`](/solid-router/reference/load-functions/load) function to preload a resource:
+
+```tsx title="/routes/users/[id].tsx" {5} {16-18}
+import {
+	cache,
+	createAsync,
+	useParams,
+	type RouteDefinition,
+} from "@solidjs/router";
+
+type User = { name: string };
+
+const getUser = cache(async (id: string) => {
+	const result = await fetch(`https://my-api.com/users/${id}`);
+	const user = (await result.json()) as User;
+	return user;
+}, "user");
+
+export const route = {
+	load: ({ params }) => getUser(params.id),
+} as RouteDefinition;
+
+export default function Page() {
+	const params = useParams();
+
+	const user = createAsync(() => getUser(params.id));
+
+	return <div>{user()?.name}</div>;
+}
+```
+
+The `load` function runs in parallel with route loading. This happens when:
+
+1. A user visits the route for the first time
+2. A user hovers over a link to the route
+
+In our example, we call `getUser` inside the `load` function. Because we use `cache`, the result is stored and becomes immediately available for future use.
+
+### Server-only fetcher functions
+
+Fetcher functions can be server-only. Simply add [`"use server"`](/solid-start/reference/server/use-server) to the first line of a function to ensure it runs exclusively on the server. This feature allows for safe database operations within the function.
+
+```tsx title="/routes/users/[id].tsx" {7} {10-12}
+import {
+	cache,
+	createAsync,
+	useParams,
+	type RouteDefinition,
+} from "@solidjs/router";
+import { db } from "~/db";
+
+const getUser = cache(async (id: string) => {
+	"use server";
+	const user = await db.user.findUnique({ id });
+	return user;
+}, "user");
+
+export const route = {
+	load: ({ params }) => getUser(params.id),
+} as RouteDefinition;
+
+export default function Page() {
+	const params = useParams();
+
+	const user = createAsync(() => getUser(params.id));
+
+	return <div>{user()?.name}</div>;
+}
+```
+
+## Using `createResource` primitive
+
+[`createResource`](/reference/basic-reactivity/create-resource) is similar to `createAsync`, but with some key differences. It accepts a fetcher function and returns an array instead of a single value.
+
+Here's the basic structure:
+
+```tsx
+const [data, { mutate, refetch }] = createResource(fetcherFn);
+```
+
+The returned array contains a signal (`data`) with the fetcher function's result, and an object with two methods:
+	- `mutate`: Directly updates the `data` signal (it works like any other signal setter)
+	- `refetch`: Reruns the fetcher function
+
+```tsx title="/routes/users/[id].tsx"
+import { createResource } from "solid-js";
+import { useParams } from "@solidjs/router";
+
+type User = { name: string };
+
+export default function Page() {
+	const params = useParams();
+
+	const [user] = createResource(async () => {
+		const result = await fetch(`https://my-api.com/users/${params.id}`);
+		const user = (await result.json()) as User;
+		return user;
 	});
 
-  	return <For each={users()}>{(user) => <li>{user.name}</li>}</For>;
+	return <div>{user()?.name}</div>;
 }
 ```
 
-When fetching inside components, you can encounter unnecessary waterfalls, especially when nested under lazy loaded sections.
-To solve this, it can be valuable to introduce a hoist and cache mechanism.
+`createResource` integrates with [`Suspense`](/reference/components/suspense) for managing loading states and works with [`ErrorBoundary`](/reference/components/error-boundary) for handling errors.
 
-Using a library like [Tanstack Query](https://tanstack.com/query/latest) can help with this.
+```tsx title="/routes/users/[id].tsx" {1} {16-26}
+import { createResource, ErrorBoundary, Suspense } from "solid-js";
+import { useParams } from "@solidjs/router";
 
-for the example below we will be using the data in APIs in [`solid-router`](/solid-router)
-
-Using some of the features of `solid-router`, we can create a cache for our data:
-
-```tsx title="/routes/users.tsx" {6, 9, 12}
-import { For } from "solid-js";
-import { createAsync, cache } from "@solidjs/router";
-
-type User = { name: string; email: string };
-
-const getUsers = cache(async () => {
-	const response = await fetch("https://example.com/users");
-	return (await response.json()) as User[];
-}, "users");
-
-export const route = {
-	load: () => getUsers(),
-};
+type User = { name: string };
 
 export default function Page() {
-	const users = createAsync(() => getUsers());
+	const params = useParams();
 
-	return <For each={users()}>{(user) => <li>{user.name}</li>}</For>;
+	const [user] = createResource(async () => {
+		const result = await fetch(`https://my-api.com/users/${params.id}`);
+		const user = (await result.json()) as User;
+		return user;
+	});
+
+	return (
+		<div>
+			{/* An error while fetching will be caught by the ErrorBoundary */}
+			<ErrorBoundary fallback={<div>Something went wrong!</div>}>
+				{/* Suspense will trigger a loading state while the data is being fetched */}
+				<Suspense fallback={<div>Loading...</div>}>
+					<div>{user()?.name}</div>
+				</Suspense>
+			</ErrorBoundary>
+		</div>
+	);
 }
 ```
 
-With this method, however, there are some caveats to be aware of:
+`createResource` cannot be used directly with the `cache` function.
 
-1. The [`load`](/solid-router/reference/load-functions/load) function is called **once** per route, which is the first time the user comes to that route.
-   Following that, the fine-grained resources that remain alive synchronize with state/url changes to refetch data when needed.
-   If the data needs a refresh, the [`refetch`](/guides/fetching-data#refetch) function returned in the `createResource` can be used.
-2. Before the route is rendered, the `load` function is called.
-   It does not share the same `context` as the route.
-   The context tree that is exposed to the `load` function is anything above the `Page` component.
-3. On both the server and the client, the `load` function is called.
-   The resources can avoid refetching if they serialized their data in the server render.
-   The server-side render will only wait for the resources to fetch and serialize if the resource signals are accessed under a `Suspense` boundary.
+## Using Tanstack Query
 
-### Data loading always on the server
+You can fetch data using data fetching libraries such as Tanstack Query. Tanstack Query provide its own APIs for caching, revalidating, and mutating data.
 
-An advantage of being a full-stack JavaScript framework is that it is easy to write data loading code that can run both on the server and client.
-SolidStart offers a way to do that and more.
-Through the `"use server"` comment you can tell the bundler to create an RPC and not include the code in the clients bundle.
-This lets you write code that only runs on the server without needing to create an API route for it.
-For example, it could be database access or internal APIs, or when you sit within your function and need to use your server.
+```tsx title="/routes/users/[id].tsx"
+import { ErrorBoundary, Suspense } from "solid-js";
+import { useParams } from "@solidjs/router";
+import { createQuery } from "@tanstack/solid-query";
 
-```tsx title="/routes/users.tsx" {7}
-import { For } from "solid-js";
-import { createAsync, cache } from "@solidjs/router";
-
-type User = { name: string; email: string };
-
-const getUsers = cache(async () => {
-	"use server";
-	return store.users.list();
-}, "users");
-
-export const route = {
-	load: () => getUsers(),
-};
+type User = { name: string };
 
 export default function Page() {
-	const users = createAsync(() => getUsers());
+	const params = useParams();
 
-	return <For each={users()}>{(user) => <li>{user.name}</li>}</For>;
+	const userQuery = createQuery(() => ({
+		queryKey: ["user", params.id],
+		queryFn: async (id) => {
+			const result = await fetch(`https://my-api.com/users/${id}`);
+			const user = (await result.json()) as User;
+			return user;
+		},
+	}));
+
+	return (
+		<div>
+			{/* An error while fetching will be caught by the ErrorBoundary */}
+			<ErrorBoundary fallback={<div>Something went wrong!</div>}>
+				{/* Suspense will trigger a loading state while the data is being fetched */}
+				<Suspense fallback={<div>Loading...</div>}>
+					<div>{userQuery.data?.name}</div>
+				</Suspense>
+			</ErrorBoundary>
+		</div>
+	);
 }
 ```
+
+## Choosing the right data loading method
+
+Each data loading approach in SolidStart has its strengths. Here's a guide to help you choose the best method for your needs:
+### `createAsync` vs `createResource` 
+
+These primitives are closely related, with `createAsync` being a thin wrapper around `createResource`. `createAsync` integrates with the `cache` function, which can optimize performance by storing results for reuse. On the other hand, `createResource` provides `refetch` and `mutate` functions, offering more granular control over data management.
+
+### Lazy loading considerations 
+
+When using `createResource` in lazy-loaded components, you might encounter "waterfalls" that slow down your application. Third-party libraries like Tanstack Query can help mitigate this with hoist and cache mechanisms.
+
+### Tanstack Query: A Powerful Alternative 
+
+Consider Tanstack Query if you need advanced features like automatic background refetching or infinite queries. It's particularly appealing if you're already familiar with it from other projects. However, keep in mind that it will increase your bundle size slightly.
+
+Ultimately, your choice should align with your project's complexity, performance requirements, and your team's expertise. Consider starting with built-in methods for smaller projects and exploring third-party options as your needs grow more complex.

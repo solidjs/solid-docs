@@ -81,7 +81,7 @@ To avoid this, you can rename the `index.tsx` file to the name of the folder it 
 
 This way, it will be treated as the default export for that route:
 
-```jsx {2, 4, 6}
+```jsx {9}
 |-- routes/                       // example.com
     |-- blog/
         |-- article-1.tsx         // example.com/blog/article-1
@@ -152,7 +152,7 @@ export default function UserPage() {
 #### Optional parameter
 
 If you have optional parameters in your route, you can use the double square brackets (`[[id]]`) to define the dynamic segment.
-This will match any number of segments, including none.
+This will match a route with or without a parameter.
 
 ```tsx {3}
 |-- routes/
@@ -163,7 +163,7 @@ This will match any number of segments, including none.
 In this case, some pages that could be matched include:
 * `/users`
 * `/users/1`
-* `/users/1/2`
+* `/users/abc`
 
 #### Catch-all routes
 
@@ -177,9 +177,9 @@ They are defined using square brackets with `...` before the label for the route
         |-- [...post].tsx
 ```
 
-The value of the catch-all route will be an array of strings, where each string is a segment of the URL path that matched the catch-all route.
-For example, with the route `[...post]`, the value of `post` will be a property on the `params` object that is returned by the `useParams` hook. 
-It will be a string with the value of the dynamic segment.
+A catch-all route will have one parameter which is a forward-slash delimited string of all the URL segments after the last valid segment.
+For example, with the route `[..post]` and a URL path of `/post/foo` the `params` object returned from the `useParams` primitive will have a `post` property with the value of `foo`.
+For a URL path of `/post/foo/baz` it will be `foo/baz`.
 
 ```tsx title="routes/blog/[...post].tsx"
 import { useParams } from "@solidjs/router";

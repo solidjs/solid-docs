@@ -1,8 +1,7 @@
 export default {
 	//hero
 	"hero.title": "UIs com Fine-Grained Reactivity, sem esforço.",
-	"hero.subtitle":
-		"SolidJS é um framework JavaScript moderno para a web atual.",
+	"hero.subtitle": "Solid é um framework JavaScript moderno para a web atual.",
 	"hero.button.primary": "Comece agora",
 	"hero.button.secondary": "Junte-se à comunidade",
 

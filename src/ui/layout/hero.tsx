@@ -9,7 +9,7 @@ import {
 import { ButtonLink } from "../button-link";
 import { clientOnly } from "@solidjs/start";
 import { counterTxt, snippetLines } from "./hero-code-snippet";
-import { useLocation } from "@solidjs/router";
+import { useLocation, useMatch } from "@solidjs/router";
 import { useI18n } from "~/i18n/i18n-context";
 
 const RenderedCode = clientOnly(() => import("./hero-code-snippet"));
@@ -26,6 +26,10 @@ const TrafficLightsIcon: Component<{ class: string }> = (props) => {
 
 export const Hero: Component = () => {
 	const location = useLocation();
+	const isStart = useMatch(() => "/solid-start/*");
+	const isRouter = useMatch(() => "/solid-router/*");
+	const isMeta = useMatch(() => "/solid-meta/*");
+
 	const buttonHref = createMemo(() => {
 		if (location.pathname === "/solid-start")
 			return "solid-start/getting-started";
@@ -44,13 +48,23 @@ export const Hero: Component = () => {
 						<div class="relative">
 							<h2 class="inline bg-gradient-to-r dark:from-indigo-200 dark:via-blue-400 dark:to-indigo-200 from-blue-700 via-slate-800 to-blue-700 bg-clip-text font-bold text-5xl tracking-tight text-transparent">
 								<Switch fallback={i18n.t("hero.title")}>
-									<Match when={location.pathname === "/solid-start"}>
-										Start
+									<Match when={isStart()?.path}>
+										Solid<span class="font-thin">Start</span>
+									</Match>
+									<Match when={isRouter()?.path}>
+										<span class="font-thin">Solid-</span>Router
+									</Match>
+									<Match when={isMeta()?.path}>
+										<span class="font-thin">Solid-</span>Meta
 									</Match>
 								</Switch>
 							</h2>
 							<p class="mt-3 text-2xl tracking-tight dark:text-slate-300">
-								{i18n.t("hero.subtitle")}
+								<Switch fallback={i18n.t("hero.subtitle")}>
+									<Match when={isStart()?.path}>
+										{i18n.t("hero.subtitle.start")}
+									</Match>
+								</Switch>
 							</p>
 							<div class="mt-8 flex gap-4 md:justify-center lg:justify-start">
 								<ButtonLink href={buttonHref()} variant="primary" addLocale>

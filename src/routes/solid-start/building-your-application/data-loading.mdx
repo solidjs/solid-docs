@@ -11,7 +11,7 @@ Efficient data loading is crucial for creating responsive web applications. Soli
 ```tsx title="/routes/users/[id].tsx"
 import { cache, createAsync, useParams } from "@solidjs/router";
 
-type User = { name: string };
+type User = { id: string; name: string };
 
 const getUser = cache(async (id: string) => {
 	const result = await fetch(`https://my-api.com/users/${id}`);
@@ -21,14 +21,12 @@ const getUser = cache(async (id: string) => {
 
 export default function Page() {
 	const params = useParams();
-
 	const user = createAsync(() => getUser(params.id));
-
 	return <div>{user()?.name}</div>;
 }
 ```
 
-Wrapping the fetcher function with [`cache`](/solid-router/reference/data-apis/cache) makes sure it's not called multiple times with the same arguments. The second argument of cache is a string that uniquely describes the type of data it's fetching, in this case "user".
+Wrapping the fetcher function with [`cache`](/solid-router/reference/data-apis/cache) makes sure it's not called multiple times with the same argument(s). The second argument of cache is a string that uniquely describes the type of data it's fetching, in this case "user". When used with `createAsync`, `cache` will return a previously computed value if it was already computed for the given argument(s), improving performance and reducing unnecessary API calls.
 
 ### Preloading data
 
@@ -42,7 +40,7 @@ import {
 	type RouteDefinition,
 } from "@solidjs/router";
 
-type User = { name: string };
+type User = { id: string; name: string };
 
 const getUser = cache(async (id: string) => {
 	const result = await fetch(`https://my-api.com/users/${id}`);
@@ -56,9 +54,7 @@ export const route = {
 
 export default function Page() {
 	const params = useParams();
-
 	const user = createAsync(() => getUser(params.id));
-
 	return <div>{user()?.name}</div>;
 }
 ```
@@ -95,12 +91,60 @@ export const route = {
 
 export default function Page() {
 	const params = useParams();
-
 	const user = createAsync(() => getUser(params.id));
-
 	return <div>{user()?.name}</div>;
 }
 ```
+
+### Actions and automatic rerunning
+
+One key advantage of `createAsync` is its integration with actions. When an action runs within a component where `createAsync` is used, the `createAsync` fetcher function will automatically rerun. This behavior ensures that your data stays up-to-date after mutations.
+
+For example:
+
+```tsx title="/routes/users/[id].tsx" {3} {16-19} {30-37}
+import {
+	action,
+	cache,
+	createAsync,
+	useParams,
+	type RouteDefinition,
+} from "@solidjs/router";
+import { db } from "~/db";
+
+const getUser = cache(async (id: string) => {
+	"use server";
+	const user = await db.user.findUnique({ id });
+	return user;
+}, "user");
+
+const updateUser = action(async (formData: FormData) => {
+	"use server";
+	const name = formData.get("name") as string;
+	await db.user.findUniqueAndUpdate({ id }, { name });
+});
+
+export const route = {
+	load: ({ params }) => getUser(params.id),
+} as RouteDefinition;
+
+export default function Page() {
+	const params = useParams();
+	const user = createAsync(() => getUser(params.id));
+	return (
+		<div>
+			<h1>{user()?.name}</h1>
+			<form action={updateUser} method="post">
+				<label for="name">Name:</label>
+				<input id="name" type="text" name="name" />
+				<button>Update Name</button>
+			</form>
+		</div>
+	);
+}
+```
+
+In this example, when the form is submitted and the `updateUser` action runs, the `createAsync` callback will automatically rerun, fetching the updated user data.
 
 ## Using `createResource` primitive
 
@@ -120,38 +164,34 @@ The returned array contains a signal (`data`) with the fetcher function's result
 import { createResource } from "solid-js";
 import { useParams } from "@solidjs/router";
 
-type User = { name: string };
+type User = { id: string; name: string };
 
 export default function Page() {
 	const params = useParams();
-
 	const [user] = createResource(async () => {
 		const result = await fetch(`https://my-api.com/users/${params.id}`);
 		const user = (await result.json()) as User;
 		return user;
 	});
-
 	return <div>{user()?.name}</div>;
 }
 ```
 
 `createResource` integrates with [`Suspense`](/reference/components/suspense) for managing loading states and works with [`ErrorBoundary`](/reference/components/error-boundary) for handling errors.
 
-```tsx title="/routes/users/[id].tsx" {1} {16-26}
+```tsx title="/routes/users/[id].tsx" {1} {14-22}
 import { createResource, ErrorBoundary, Suspense } from "solid-js";
 import { useParams } from "@solidjs/router";
 
-type User = { name: string };
+type User = { id: string; name: string };
 
 export default function Page() {
 	const params = useParams();
-
 	const [user] = createResource(async () => {
 		const result = await fetch(`https://my-api.com/users/${params.id}`);
 		const user = (await result.json()) as User;
 		return user;
 	});
-
 	return (
 		<div>
 			{/* An error while fetching will be caught by the ErrorBoundary */}
@@ -177,11 +217,10 @@ import { ErrorBoundary, Suspense } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { createQuery } from "@tanstack/solid-query";
 
-type User = { name: string };
+type User = { id: string; name: string };
 
 export default function Page() {
 	const params = useParams();
-
 	const userQuery = createQuery(() => ({
 		queryKey: ["user", params.id],
 		queryFn: async (id) => {
@@ -190,7 +229,6 @@ export default function Page() {
 			return user;
 		},
 	}));
-
 	return (
 		<div>
 			{/* An error while fetching will be caught by the ErrorBoundary */}
@@ -208,9 +246,27 @@ export default function Page() {
 ## Choosing the right data loading method
 
 Each data loading approach in SolidStart has its strengths. Here's a guide to help you choose the best method for your needs:
+
 ### `createAsync` vs `createResource` 
 
-These primitives are closely related, with `createAsync` being a thin wrapper around `createResource`. `createAsync` integrates with the `cache` function, which can optimize performance by storing results for reuse. On the other hand, `createResource` provides `refetch` and `mutate` functions, offering more granular control over data management.
+These primitives are closely related, with `createAsync` being a thin wrapper around `createResource`. Key differences include:
+
+- `createAsync` integrates with the `cache` function, optimizing performance by storing results for reuse.
+- `createAsync` automatically reruns when actions are triggered in the same component.
+- `createResource` provides `refetch` and `mutate` functions, offering more granular control over data management.
+- `createResource` doesn't have built-in integration with actions or `cache`.
+
+Choose `createAsync` when you need automatic data refreshing after actions. Opt for `createResource` when you require more manual control over data fetching and updates.
+
+### Relationship between `createAsync`, `cache`, and actions
+
+`createAsync`, when used in combination with `cache` and actions, provides a powerful and convenient way to manage data in your application:
+
+- `createAsync` automatically reruns when actions are triggered, ensuring data stays fresh.
+- `cache` prevents unnecessary recomputation by storing and reusing results.
+- Actions can invalidate cached data, triggering a refresh when needed.
+
+This relationship doesn't exist for `createResource`. You would typically choose `createAsync` when you have one or more actions on a given route that could change the route data, and you want the route data to automatically update when those actions are triggered. This setup often provides a better developer experience for managing route data that's subject to mutations.
 
 ### Lazy loading considerations 
 

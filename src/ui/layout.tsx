@@ -136,8 +136,6 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 		{ deferStream: true }
 	);
 
-	const resolved = children(() => props.children);
-
 	return (
 		<Suspense>
 			<PageStateProvider>
@@ -181,16 +179,16 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 								keyed
 								fallback={
 									<article class="px-2 md:px-10 expressive-code-overrides overflow-y-auto">
-										{resolved()}
+										{props.children}
 									</article>
 								}
 							>
-								<Show when={!props.isError} fallback={<>{resolved()}</>}>
+								<Show when={!props.isError} fallback={<>{props.children}</>}>
 									<Suspense>
 										<Show when={entries()}>
 											{(data) => (
 												<DocsLayout entries={data().entries}>
-													{resolved()}
+													{props.children}
 												</DocsLayout>
 											)}
 										</Show>
@@ -201,7 +199,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 						<Show when={!props.isError}>
 							<div class="hidden xl:block shrink-0 w-56 2xl:w-72 pr-4 prose prose-slate dark:prose-invert dark:text-slate-300">
 								<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] overflow-y-auto custom-scrollbar">
-									<SidePanel children={resolved()} />
+									<SidePanel children={props.children} />
 								</div>
 							</div>
 						</Show>

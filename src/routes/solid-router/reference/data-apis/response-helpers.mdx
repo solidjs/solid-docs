@@ -5,11 +5,12 @@ title: Response helpers
 ## Redirect
 
 Signature: `redirect(path, options)`
-Redirects to the next route
+
+Redirects to the next route.
 
 ```js
 const getUser = cache(() => {
-  const user = await api.getCurrentUser()
+  const user = await api.getCurrentUser();
   if (!user) throw redirect("/login");
   return user;
 })
@@ -19,16 +20,34 @@ const getUser = cache(() => {
 
 Signature: `reload(options)`
 
-Reloads the data on the current page
+Reloads the data at the given cache key on the current route.
 
 ```js
 const getTodo = cache(async (id: number) => {
-	const todo = await fetchTodo(id);
-	return todo;
+  const todo = await fetchTodo(id);
+  return todo;
 }, "todo");
 
 const updateTodo = action(async (todo: Todo) => {
-	await updateTodo(todo.id, todo);
-	reload({ revalidate: getTodo.keyFor(id) });
+	await putTodo(todo.id, todo);
+	return reload({ revalidate: getTodo.keyFor(id) });
+});
+```
+
+## Json
+
+Signature: `json(data, options)`
+
+Returns JSON data from an action while also providing options for controlling revalidation of cache data on the route.
+
+```js
+const getTodo = cache(async (id: number) => {
+  const todo = await fetchTodo(id);
+  return todo;
+}, "todo");
+
+const getCompletedTodos = action(async () => {
+  const completedTodos = await fetchTodo({ status: 'complete' });
+  return json(completedTodos, { revalidate: getTodo.keyFor(id) });
 });
 ```

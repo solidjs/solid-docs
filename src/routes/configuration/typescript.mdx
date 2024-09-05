@@ -660,7 +660,7 @@ The following alternative also works when using `Show`:
 
 ### Custom event handlers
 
-To handle custom events in Solid, you can use the attributes `on:___` and `oncapture:___`.
+To handle custom events in Solid, you can use the attribute `on:___`.
 Typing these events requires an extension of Solid's JSX namespace.
 
 ```tsx
@@ -678,9 +678,6 @@ declare module "solid-js" {
 		interface CustomEvents {
 			Name: NameEvent; // Matches `on:Name`
 		}
-		interface CustomCaptureEvents {
-			Name: NameEvent; // Matches `oncapture:Name`
-		}
 	}
 }
 
@@ -688,11 +685,29 @@ declare module "solid-js" {
 <div on:Name={(event) => console.log("name is", event.detail.name)} />;
 ```
 
+<Callout>New in v1.9.0</Callout>
+
+It is now possible to use the intersection `EventListenerObject & AddEventListenerOptions` to provide listener options as follows:
+
+```tsx
+import type { JSX } from "solid-js"
+
+const handler: JSX.EventHandlerWithOptions<HTMLDivElement, Event> =  {
+	once: true,
+	handleEvent: (event) => {
+		console.log("will fire only once");
+	},
+}
+
+// Usage
+<div on:click={handler} />;
+```
+
 <Callout>
 **Note**:
 By default, using native events like `mousemove` with the `on` prefix — for example, `<div on:mousemove={e => {}} />` —  will trigger a TypeScript error.
 This occurs because these native events are not part of Solid's custom event type definitions.
-To solve this, `CustomEvents` and `CustomCaptureEvents` interfaces can be extended to include events from the `HTMLElementEventMap`:
+To solve this, the `CustomEvents` interface can be extended to include events from the `HTMLElementEventMap`:
 
 To include all native events:
 
@@ -700,7 +715,6 @@ To include all native events:
 declare module "solid-js" {
 	namespace JSX {
 		interface CustomEvents extends HTMLElementEventMap {}
-		interface CustomCaptureEvents extends HTMLElementEventMap {}
 	}
 }
 ```

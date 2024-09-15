@@ -7,3 +7,10 @@ interface ImportMetaEnv {
 interface ImportMeta {
 	readonly env: ImportMetaEnv;
 }
+
+declare namespace NodeJS {
+	interface ProcessEnv {
+		readonly ORAMA_PRIVATE_API_KEY: string;
+		readonly ORAMA_PRIVATE_INDEX_ID: string;
+	}
+}

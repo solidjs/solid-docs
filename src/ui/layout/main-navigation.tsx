@@ -1,5 +1,5 @@
-import { For, Show, Suspense, createEffect, createSignal } from "solid-js";
-import { useLocation } from "@solidjs/router";
+import { For, Show, Suspense, createSignal } from "solid-js";
+import { useBeforeLeave, useLocation, useMatch } from "@solidjs/router";
 import { Collapsible, Tabs } from "@kobalte/core";
 import { Icon } from "solid-heroicons";
 import { chevronDown } from "solid-heroicons/solid";
@@ -137,33 +137,32 @@ function DirList(props: { list: Entry[]; sortAlphabeticaly?: boolean }) {
 	);
 }
 
-type Tab = "learn" | "reference";
-
-const useSelectedTab = () => {
-	const loc = useLocation();
-	const path = () => loc.pathname;
-	const initialTab = path().includes("reference") ? "reference" : "learn";
-
-	const [selectedTab, setSelectedTab] = createSignal<Tab>(initialTab);
-
-	createEffect((previousTab) => {
-		if (path().includes("reference") && previousTab !== "reference") {
-			setSelectedTab("reference");
-		} else if (previousTab !== "learn") {
-			setSelectedTab("learn");
-		}
-	}, initialTab);
-
-	return { selectedTab, setSelectedTab };
-};
-
 export function MainNavigation(props: NavProps) {
 	const i18n = useI18n();
 
 	const learn = () => props.tree.learn;
 	const reference = () => props.tree.reference;
 
-	const { selectedTab, setSelectedTab } = useSelectedTab();
+	const isReference = useMatch(() => "/:project?/reference/*?", {
+		project: ["solid-router", "solid-meta", "solid-start"],
+	});
+
+	const initialTab = () => (isReference() ? "reference" : "learn");
+
+	const [selectedTab, setSelectedTab] = createSignal(initialTab());
+
+	/**
+	 * Re-syncs the selected tab with the chosen route.
+	 */
+	useBeforeLeave(({ to }) => {
+		if (typeof to === "number") return;
+
+		if (to.includes("reference")) {
+			setSelectedTab("reference");
+		} else if (to.includes("learn")) {
+			setSelectedTab("learn");
+		}
+	});
 
 	return (
 		<Suspense>

@@ -190,7 +190,7 @@ export function Search() {
 								<p class="!mb-3 !mt-4 text-center text-sm">
             Believe this query should return results?{" "}
 									<A
-										href={`https://github.com/solidjs/solid-docs-next/issues/new?title=[Search]+Missing+results+for+query+%22${encodeURIComponent(searchTerm())}%22`}
+										href={`https://github.com/solidjs/solid-docs/issues/new?title=[Search]+Missing+results+for+query+%22${encodeURIComponent(searchTerm())}%22`}
 										target="_blank"
 										class="text-blue-400 font-bold"
 									>

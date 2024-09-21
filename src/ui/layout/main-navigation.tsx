@@ -42,7 +42,7 @@ function ListItemLink(props: { item: Entry }) {
 	const linkStyles = () =>
 		location.pathname === props.item.path.replace(/\\/g, "/")
 			? "font-semibold text-blue-700 before:bg-blue-700 dark:before:bg-blue-200 dark:text-blue-300 before:block"
-			: "text-slate-700 before:hidden before:bg-blue-600 before:dark:bg-blue-200 hover:text-blue-700 hover:font-bold hover:before:block dark:text-slate-300 ";
+			: "text-slate-700 before:hidden before:bg-blue-600 before:dark:bg-blue-200 hover:text-blue-700 hover:before:block dark:text-slate-300 ";
 	return (
 		<Show when={!props.item.mainNavExclude}>
 			<li class="relative">

@@ -143,7 +143,7 @@ export function Search() {
 								value={searchTerm()}
 								class="px-9 w-full rounded border border-blue-100 bg-white dark:bg-slate-800 py-2 ring-2 ring-blue-400 focus-visible:border focus-visible:border-blue-400 focus-visible:ring-2 focus:outline-none"
 								onInput={(e) =>
-									startTransition(() => 
+									startTransition(() =>
 										setSearchTerm((e.target as HTMLInputElement).value)
 									)
 								}
@@ -190,7 +190,7 @@ export function Search() {
 								<p class="!mb-3 !mt-4 text-center text-sm">
             Believe this query should return results?{" "}
 									<A
-										href={`https://github.com/solidjs/solid-docs-next/issues/new?title=[Search]+Missing+results+for+query+%22${searchTerm()}%22`}
+										href={`https://github.com/solidjs/solid-docs/issues/new?title=[Search]+Missing+results+for+query+%22${encodeURIComponent(searchTerm())}%22`}
 										target="_blank"
 										class="text-blue-400 font-bold"
 									>
@@ -219,7 +219,7 @@ export function Search() {
 															<Dialog.CloseButton
 																as={A}
 																href={hit.document.path}
-																classList={{"pl-4 rounded-md block p-2 text-sm": true, 
+																classList={{"pl-4 rounded-md block p-2 text-sm": true,
 																	"bg-blue-100 dark:bg-slate-700": itemIndex === active(),
 																}}
 																onMouseMove={() => setActive(itemIndex)}

@@ -49,7 +49,7 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (
 		}
 
 		const headings = document.querySelectorAll("main h2, main h3");
-		const sections: any = [];
+		const sections: unknown[] = [];
 
 		if (headings) {
 			headings.forEach((heading) => {
@@ -96,7 +96,7 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (
 				<li class="pl-0 mt-0 mb-0">
 					<span>
 						<a
-							href={`#_top`}
+							href="#_top"
 							classList={{
 								"dark:text-slate-300": currentSection() !== "",
 								"text-blue-800 dark:text-blue-300 font-bold hover:text-slate-700 dark:hover:text-slate-200":

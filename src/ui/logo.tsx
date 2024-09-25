@@ -1,5 +1,5 @@
 import { useMatch } from "@solidjs/router";
-import { Match, Show, Switch } from "solid-js";
+import { Match, Switch } from "solid-js";
 
 const SolidLogo = (props: { class?: string }) => (
 	<svg

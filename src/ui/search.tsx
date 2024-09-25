@@ -8,18 +8,15 @@ import {
 	startTransition,
 	onCleanup,
 	createMemo,
-	isDev,
 } from "solid-js";
 import { Dialog } from "@kobalte/core/dialog";
 import { A, createAsync, useNavigate, usePreloadRoute } from "@solidjs/router";
 import { createList } from "solid-list";
 import { createMarker, makeSearchRegex } from "@solid-primitives/marker";
 
-let client;
-
-if (import.meta.env.VITE_ORAMA_ENDPOINT) {
-	client = new OramaClient({
-		endpoint: import.meta.env.VITE_ORAMA_ENDPOINT,
+function getOramaClient(oramaEndpoint: string) {
+	return new OramaClient({
+		endpoint: oramaEndpoint,
 		api_key: import.meta.env.VITE_ORAMA_API_KEY,
 	});
 }
@@ -37,8 +34,11 @@ type OramaDocument = {
 	title: string;
 };
 
+const client = getOramaClient(import.meta.env.VITE_ORAMA_ENDPOINT);
+
 export function Search() {
-	if (!import.meta.env.VITE_ORAMA_ENDPOINT) return null;
+	// eslint-disable-next-line solid/components-return-once
+	if (!client) return null;
 
 	const navigate = useNavigate();
 	const preload = usePreloadRoute();

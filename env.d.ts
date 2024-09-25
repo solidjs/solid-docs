@@ -14,3 +14,9 @@ declare namespace NodeJS {
 		readonly ORAMA_PRIVATE_INDEX_ID: string;
 	}
 }
+
+declare module "solid:collection" {
+	// eslint-disable-next-line
+	const component: any;
+	export default component;
+}

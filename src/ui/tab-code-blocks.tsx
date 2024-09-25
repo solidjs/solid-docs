@@ -1,7 +1,7 @@
 import { Index, JSX, createSignal, onMount } from "solid-js";
 
 // Check if children are elements
-const isArrayOfElements = (arr: any[]): arr is Element[] => {
+const isArrayOfElements = (arr: unknown[]): arr is Element[] => {
 	return arr.every((item) => item instanceof Element);
 };
 
@@ -42,7 +42,7 @@ export const TabsCodeBlocks = (props: Props) => {
 	const [activeTab, setActiveTab] = createSignal(0);
 
 	onMount(() => {
-		let children = props.children;
+		const children = props.children;
 
 		// Check if children are an array
 		if (!Array.isArray(children))
@@ -72,7 +72,7 @@ export const TabsCodeBlocks = (props: Props) => {
 								"px-5 py-1 relative top-0.5 transition-colors duration-300":
 									true,
 							}}
-							onclick={() => setActiveTab(idx)}
+							onClick={() => setActiveTab(idx)}
 						>
 							{tab().id}
 						</button>

@@ -172,7 +172,7 @@ export function MainNavigation(props: NavProps) {
 						<Tabs.List class="sticky top-0 grid grid-cols-2 w-full z-10 md:dark:bg-slate-900 md:bg-slate-50">
 							<Tabs.Trigger
 								value="learn"
-								class="inline-block py-3 outline-none hover:bg-blue-500/30 dark:hover:bg-blue-300/20 dark:focus-visible:bg-blue-800 dark:text-slate-100 font-medium"
+								class="inline-block py-3 outline-none hover:bg-blue-500/30 focus-visible:bg-blue-500/40 dark:hover:bg-blue-300/20 dark:focus-visible:bg-blue-800 dark:text-slate-100 font-medium"
 								onClick={() => {
 									setSelectedTab("learn");
 								}}
@@ -181,7 +181,7 @@ export function MainNavigation(props: NavProps) {
 							</Tabs.Trigger>
 							<Tabs.Trigger
 								value="reference"
-								class="inline-block py-3 outline-none hover:bg-blue-500/30 dark:hover:bg-blue-300/20 dark:focus-visible:bg-blue-800 dark:text-slate-100 font-medium"
+								class="inline-block py-3 outline-none hover:bg-blue-500/30 focus-visible:bg-blue-500/40 dark:hover:bg-blue-300/20 dark:focus-visible:bg-blue-800 dark:text-slate-100 font-medium"
 								onClick={() => {
 									setSelectedTab("reference");
 								}}

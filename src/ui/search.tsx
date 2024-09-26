@@ -14,11 +14,16 @@ import { A, createAsync, useNavigate, usePreloadRoute } from "@solidjs/router";
 import { createList } from "solid-list";
 import { createMarker, makeSearchRegex } from "@solid-primitives/marker";
 
-function getOramaClient(oramaEndpoint: string) {
-	return new OramaClient({
-		endpoint: oramaEndpoint,
-		api_key: import.meta.env.VITE_ORAMA_API_KEY,
-	});
+function getOramaClient({
+	endpoint,
+	api_key,
+}: Record<"endpoint" | "api_key", string | null>) {
+	return endpoint && api_key
+		? new OramaClient({
+				endpoint,
+				api_key,
+			})
+		: null;
 }
 
 type OramaResult = {
@@ -34,7 +39,10 @@ type OramaDocument = {
 	title: string;
 };
 
-const client = getOramaClient(import.meta.env.VITE_ORAMA_ENDPOINT);
+const client = getOramaClient({
+	endpoint: import.meta.env.VITE_ORAMA_ENDPOINT ?? null,
+	api_key: import.meta.env.VITE_ORAMA_API_KEY ?? null,
+});
 
 export function Search() {
 	// eslint-disable-next-line solid/components-return-once

@@ -25,7 +25,7 @@ export const useCurrentRouteMetaData = (): CurrentRouteMetaData => {
 	const pathParts = currentPath.split("/").filter(Boolean);
 	const projectOrLocale: string = pathParts[0];
 
-	let returnObject: CurrentRouteMetaData = {
+	const returnObject: CurrentRouteMetaData = {
 		isProjectRoot: true,
 		locale: "",
 		project: null,

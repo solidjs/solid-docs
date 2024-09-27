@@ -12,7 +12,7 @@ export const PageIssueLink: Component = () => {
 	});
 	return (
 		<a
-			class="flex no-underline hover:font-bold hover:text-blue-700 dark:hover:text-blue-300 dark:text-slate-300 "
+			class="flex no-underline hover:text-blue-700 dark:hover:text-blue-300 dark:text-slate-300 "
 			href={srcPath()}
 		>
 			<Icon class="mr-1 w-[16px]" path={exclamationTriangle} />

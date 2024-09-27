@@ -1,5 +1,5 @@
-import { For, Show, Suspense, createEffect, createSignal } from "solid-js";
-import { useLocation } from "@solidjs/router";
+import { For, Show, Suspense, createSignal } from "solid-js";
+import { useBeforeLeave, useLocation, useMatch } from "@solidjs/router";
 import { Collapsible, Tabs } from "@kobalte/core";
 import { Icon } from "solid-heroicons";
 import { chevronDown } from "solid-heroicons/solid";
@@ -38,33 +38,34 @@ const shouldHideNavItem = (list: EntryList["learn" | "reference"]) =>
 	list.filter(({ mainNavExclude }) => mainNavExclude).length === list.length;
 
 function ListItemLink(props: { item: Entry }) {
-	if (props.item.mainNavExclude) return null;
 	const location = useLocation();
 	const linkStyles = () =>
 		location.pathname === props.item.path.replace(/\\/g, "/")
 			? "font-semibold text-blue-700 before:bg-blue-700 dark:before:bg-blue-200 dark:text-blue-300 before:block"
-			: "text-slate-700 before:hidden before:bg-blue-600 before:dark:bg-blue-200 hover:text-blue-700 hover:font-bold hover:before:block dark:text-slate-300 ";
+			: "text-slate-700 before:hidden before:bg-blue-600 before:dark:bg-blue-200 hover:text-blue-700 hover:before:block dark:text-slate-300 ";
 	return (
-		<li class="relative">
-			<Dynamic
-				component={props.item.isTranslated ? A : "a"}
-				onClick={() => setIsOpen(false)}
-				href={props.item.path}
-				class={`hover:text-blue-700 dark:hover:text-blue-300 block w-full lg:text-sm pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full ${linkStyles()}`}
-			>
-				{props.item.title}
-				<Show when={!props.item.isTranslated}>
-					<span>
-						<abbr
-							title="english"
-							class="text-[0.7em] relative -top-2 left-2 no-underline  text-neutral-400 "
-						>
-							EN
-						</abbr>
-					</span>
-				</Show>
-			</Dynamic>
-		</li>
+		<Show when={!props.item.mainNavExclude}>
+			<li class="relative">
+				<Dynamic
+					component={props.item.isTranslated ? A : "a"}
+					onClick={() => setIsOpen(false)}
+					href={props.item.path}
+					class={`hover:text-blue-700 dark:hover:text-blue-300 block w-full lg:text-sm pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full ${linkStyles()}`}
+				>
+					{props.item.title}
+					<Show when={!props.item.isTranslated}>
+						<span>
+							<abbr
+								title="english"
+								class="text-[0.7em] relative -top-2 left-2 no-underline  text-neutral-400 "
+							>
+								EN
+							</abbr>
+						</span>
+					</Show>
+				</Dynamic>
+			</li>
+		</Show>
 	);
 }
 
@@ -136,48 +137,42 @@ function DirList(props: { list: Entry[]; sortAlphabeticaly?: boolean }) {
 	);
 }
 
-type Tab = "learn" | "reference";
-
-const useSelectedTab = () => {
-
-	const loc = useLocation();
-	const path = () => loc.pathname;
-	const initialTab = path().includes("reference") ? "reference" : "learn";
-
-	const [selectedTab, setSelectedTab] = createSignal<Tab>(initialTab);
-
-	createEffect((previousTab) => {
-		if(path().includes("reference") && previousTab !== "reference"){
-			setSelectedTab("reference");
-		}else if( previousTab !== "learn"){
-			setSelectedTab("learn");
-		}
-	}, initialTab);
-
-	return { selectedTab, setSelectedTab
-
-	};
-};
-
 export function MainNavigation(props: NavProps) {
 	const i18n = useI18n();
 
 	const learn = () => props.tree.learn;
 	const reference = () => props.tree.reference;
 
-	const {selectedTab, setSelectedTab} = useSelectedTab();
+	const isReference = useMatch(() => "/:project?/reference/*?", {
+		project: ["solid-router", "solid-meta", "solid-start"],
+	});
+
+	const initialTab = () => (isReference() ? "reference" : "learn");
+
+	const [selectedTab, setSelectedTab] = createSignal(initialTab());
+
+	/**
+	 * Re-syncs the selected tab with the chosen route.
+	 */
+	useBeforeLeave(({ to }) => {
+		if (typeof to === "number") return;
+
+		if (to.includes("reference")) {
+			setSelectedTab("reference");
+		} else if (to.includes("learn")) {
+			setSelectedTab("learn");
+		}
+	});
 
 	return (
 		<Suspense>
 			<Show when={i18n.t}>
 				<nav class="overflow-y-auto custom-scrollbar h-full md:h-[calc(100vh-7rem)] pb-20">
-					<Tabs.Root
-						value={selectedTab()}
-					>
+					<Tabs.Root value={selectedTab()}>
 						<Tabs.List class="sticky top-0 grid grid-cols-2 w-full z-10 md:dark:bg-slate-900 md:bg-slate-50">
 							<Tabs.Trigger
 								value="learn"
-								class="inline-block py-3 outline-none hover:bg-blue-500/30 dark:hover:bg-blue-300/20 dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:font-bold font-medium"
+								class="inline-block py-3 outline-none hover:bg-blue-500/30 focus-visible:bg-blue-500/40 dark:hover:bg-blue-300/20 dark:focus-visible:bg-blue-800 dark:text-slate-100 font-medium"
 								onClick={() => {
 									setSelectedTab("learn");
 								}}
@@ -186,7 +181,7 @@ export function MainNavigation(props: NavProps) {
 							</Tabs.Trigger>
 							<Tabs.Trigger
 								value="reference"
-								class="inline-block py-3 outline-none hover:bg-blue-500/30 dark:hover:bg-blue-300/20 dark:focus-visible:bg-blue-800 dark:text-slate-100 hover:font-bold font-medium"
+								class="inline-block py-3 outline-none hover:bg-blue-500/30 focus-visible:bg-blue-500/40 dark:hover:bg-blue-300/20 dark:focus-visible:bg-blue-800 dark:text-slate-100 font-medium"
 								onClick={() => {
 									setSelectedTab("reference");
 								}}

@@ -6,7 +6,6 @@ title: cache
 When this newly created function is called for the first time with a specific set of arguments, the original function is run, and its return value is stored in a cache and returned to the caller of the created function.
 The next time the created function is called with the same arguments (as long as the cache is still valid), it will return the cached value instead of re-executing the original function.
 
-   
 <Callout>
 `cache` can be defined anywhere and then used inside your components with [`createAsync`](/solid-router/reference/data-apis/create-async).
 
@@ -18,8 +17,11 @@ However, using `cache` directly in [`createResource`](/reference/basic-reactivit
 
 ```js
 const getUser = cache(
-  (id, options = {}) => fetch(`/api/users/${id}?summary=${options.summary || false}`).then(r => r.json()),
-  "usersById"
+	(id, options = {}) =>
+		fetch(`/api/users/${id}?summary=${options.summary || false}`).then((r) =>
+			r.json()
+		),
+	"usersById"
 );
 
 getUser(123); // Causes a GET request to /api/users/123?summary=false
@@ -28,9 +30,9 @@ getUser(123, { summary: true }); // Causes a GET request to /api/users/123?summa
 setTimeout(() => getUser(123, { summary: true }), 999000); // Eventually causes another GET request to /api/users/123?summary=true
 ```
 
-### With load functions
+### With preload functions
 
-Using it with a [load function](https://docs.solidjs.com/solid-router/reference/load-functions/load):
+Using it with a [preload function](/solid-router/reference/preload-functions/preload):
 
 ```js
 import { lazy } from "solid-js";
@@ -39,13 +41,13 @@ import { getUser } from ... // the cache function
 
 const User = lazy(() => import("./pages/users/[id].js"));
 
-// load function
-function loadUser({params, location}) {
+// preload function
+function preloadUser({params, location}) {
   void getUser(params.id)
 }
 
 // Pass it in the route definition
-<Route path="/users/:id" component={User} load={loadUser} />;
+<Route path="/users/:id" component={User} preload={preloadUser} />;
 ```
 
 ### Inside a route's component
@@ -62,13 +64,13 @@ export default function User(props) {
 }
 ```
 
-## Cach function capabilities
+## Cache function capabilities
 
 `cache` accomplishes the following:
 
 1. Deduping on the server for the lifetime of the request.
-2. Preloading the cache in the browser - this lasts 10 seconds.
-   When a route is preloaded on hover or when load is called when entering a route it will make sure to dedupe calls.
+2. Preloading the cache in the browser - this lasts 5 seconds.
+   When a route is preloaded on hover or when preload is called when entering a route it will make sure to dedupe calls.
 3. A reactive refetch mechanism based on key.
    This prevents routes that are not new from retriggering on action revalidation.
 4. Serve as a back/forward cache for browser navigation for up to 5 minutes.
@@ -77,24 +79,24 @@ export default function User(props) {
 
 ## Cache keys
 
-To ensure that the cache keys are consistent and unique, arguments are deterministically serialized using JSON.stringify. 
-Before serialization, key/value pairs in objects are sorted so that the order of properties does not affect the serialization. 
+To ensure that the cache keys are consistent and unique, arguments are deterministically serialized using JSON.stringify.
+Before serialization, key/value pairs in objects are sorted so that the order of properties does not affect the serialization.
 For instance, both `{ name: 'Ryan', awesome: true }` and `{ awesome: true, name: 'Ryan' }` will serialize to the same string so that they produce the same cache key.
 
 ## Return value
 
 The return value is a `CachedFunction`, a function that has the same signature as the function you passed to `cache`.
-This cached function stores the return value using the cache key. 
+This cached function stores the return value using the cache key.
 Under most circumstances, this temporarily prevents the passed function from running with the same arguments, even if the created function is called repeatedly.
 
 ## Arguments
 
-| argument | type | description |
-| -------- | ---- | ----------- |
-| `fn` | `(...args: any) => any` | A function whose return value you'd like to be cached. |
-| `name`* | string | Any arbitrary string that you'd like to use as the rest of the cache key. |
+| argument | type                    | description                                                               |
+| -------- | ----------------------- | ------------------------------------------------------------------------- |
+| `fn`     | `(...args: any) => any` | A function whose return value you'd like to be cached.                    |
+| `name`\* | string                  | Any arbitrary string that you'd like to use as the rest of the cache key. |
 
-*Since the internal cache is shared by all the functions using `cache`, the string should be unique for each function passed to `cache`.
+\*Since the internal cache is shared by all the functions using `cache`, the string should be unique for each function passed to `cache`.
 If the same key is used with multiple functions, one function might return the cached result of the other.
 
 ## Methods

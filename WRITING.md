@@ -27,11 +27,13 @@ But beyond just your written content, there are several other things to consider
 #### Tables
 
 Though not used all that often, tables are an important tool for several reasons:
+
 - They break up text.
 - They offer clear information to the reader.
 - They are easy to look through and understand.
 
 Solid uses Markdown for tables, so here's how to make one.
+
 1. Start with a vertical line, also called a pipe: `|`.
 2. Insert your first heading and end with another pipe.
 3. Write the next heading and end it with a pipe. Repeat until you have your column headings.
@@ -87,10 +89,10 @@ Start with three back ticks, ```, write your code, then close the block with thr
 
 Here's an example in raw Markdown:
 
-```
+````
 ```bash
 npm install
-``````
+````
 
 Code examples are vital to providing users with quick tips on how to use Solid.
 Knowing when to use inline code versus code blocks can further the understanding of the readers and users alike.
@@ -130,7 +132,7 @@ For each additional hash, you go down one heading level.
 Here's an example of a Heading 1 (H1) and a Heading 2 (H2) in raw Markdown.
 
 ```
-# SolidJS documentation
+# Solid documentation
 
 ## Introduction
 ```
@@ -174,9 +176,9 @@ We would prefer you to keep page linking in mind while you're working on your co
 The following two points are what you should pay attention to:
 
 1. Interlink when you refer to a topic that has its own page.
-This makes it possible for the user to easily seek additional information.
+   This makes it possible for the user to easily seek additional information.
 2. Be descriptive with the linked text.
-Do not use "click here" or any variation therein, as this is not a best practice for accessibility.
+   Do not use "click here" or any variation therein, as this is not a best practice for accessibility.
 
 Links are written in Markdown.
 Here's an example of what that looks like:
@@ -229,7 +231,7 @@ When writing steps in a how-to section, please start sentences with a verb.
 ### Accessible
 
 Accessibility has taken a front seat in most aspects of technology in recent years, including documentation.
-Solid should be accessible to anyone who wishes to use it, meaning that your writing has to meet some basic standards. 
+Solid should be accessible to anyone who wishes to use it, meaning that your writing has to meet some basic standards.
 
 Some accessibility comes down to visual style, as we discussed.
 However, it goes hand-in-hand with inclusiveness (which we'll get to next), so there is some overlap between the two.
@@ -302,16 +304,16 @@ This is a list of Solid-specific words and what they mean. In the second column,
 
 These are technical; use them with the default assumption that the reader doesn't know what they mean.
 
-| Terms to use | Terms not to use | Definition |
-| --- | --- | --- |
-| Computation, reactive computation | *Not to be confused with*: computed | A scope that automatically reruns when its dependencies change (it doesn't necessarily _have_ dependencies). |
-| Core primitive | API function | A primitive provided by the Solid core library; this typically provides reactive behaviors but not necessarily ( `createContext` does not). |
-| Custom primitive | hook | A primitive created outside of the Solid core library; i.e., a function that provides a composable piece of functionality. |
-| Ownership, owns | | A one-to-many relationship between computations; if a computation "owns" one or more other computations, all its owned computations are cleaned up when it is cleaned up. |
-| Primitive | Hook | A function that serves as a building block of reactivity or behavior. usually begins with `create` or `use`. |
-| Reactive value | Signal (don't use to describe a general reactive value) | A value that can be tracked (includes signals, memos, properties of `props` and stores). |
-| Reactivity | | A system for writing expressions or behaviors that depend on certain values and execute when those values change. |
-| Root | | A computation that has no owner. created by `createRoot`. |
-| Scope | *Not to be confused with:* root, effect (specific kinds of scopes) | A body of a function (a chunk of code). |
-| Solid | SolidJS (unless outside the community/internal writings) | A JavaScript framework made up of a library (providing primitives and UI utilities) and a compiler (allowing you to write in JSX). Its differentiating feature is its reactivity system. |
-| Tracking scope | Tracking context, reactive context, reactive scope, reactive root | A scope that, when run, Solid automatically tracks all read signals |
+| Terms to use                      | Terms not to use                                                   | Definition                                                                                                                                                                               |
+| --------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Computation, reactive computation | _Not to be confused with_: computed                                | A scope that automatically reruns when its dependencies change (it doesn't necessarily _have_ dependencies).                                                                             |
+| Core primitive                    | API function                                                       | A primitive provided by the Solid core library; this typically provides reactive behaviors but not necessarily ( `createContext` does not).                                              |
+| Custom primitive                  | hook                                                               | A primitive created outside of the Solid core library; i.e., a function that provides a composable piece of functionality.                                                               |
+| Ownership, owns                   |                                                                    | A one-to-many relationship between computations; if a computation "owns" one or more other computations, all its owned computations are cleaned up when it is cleaned up.                |
+| Primitive                         | Hook                                                               | A function that serves as a building block of reactivity or behavior. usually begins with `create` or `use`.                                                                             |
+| Reactive value                    | Signal (don't use to describe a general reactive value)            | A value that can be tracked (includes signals, memos, properties of `props` and stores).                                                                                                 |
+| Reactivity                        |                                                                    | A system for writing expressions or behaviors that depend on certain values and execute when those values change.                                                                        |
+| Root                              |                                                                    | A computation that has no owner. created by `createRoot`.                                                                                                                                |
+| Scope                             | _Not to be confused with:_ root, effect (specific kinds of scopes) | A body of a function (a chunk of code).                                                                                                                                                  |
+| Solid                             | SolidJS (unless outside the community/internal writings)           | A JavaScript framework made up of a library (providing primitives and UI utilities) and a compiler (allowing you to write in JSX). Its differentiating feature is its reactivity system. |
+| Tracking scope                    | Tracking context, reactive context, reactive scope, reactive root  | A scope that, when run, Solid automatically tracks all read signals                                                                                                                      |

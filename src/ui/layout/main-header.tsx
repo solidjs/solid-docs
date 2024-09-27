@@ -1,4 +1,4 @@
-import { Show, createSignal, onCleanup, onMount } from "solid-js";
+import { Show, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { A } from "~/ui/i18n-anchor";
 import { isServer } from "solid-js/web";
 
@@ -9,7 +9,8 @@ import { useMatch } from "@solidjs/router";
 import { SUPPORTED_LOCALES } from "~/i18n/config";
 import { LanguageSelector } from "./language-selector";
 
-import { SearchBox } from "../searchbox";
+import { Search } from "../search";
+import { useCurrentRouteMetaData } from "~/utils/route-metadata-helper";
 
 interface Entry {
 	title: string;
@@ -18,8 +19,6 @@ interface Entry {
 	mainNavExclude: boolean;
 	isTranslated?: boolean;
 }
-
-type EntryList = { learn: Entry[]; reference: Entry[] };
 
 interface NavProps {
 	tree: {
@@ -53,6 +52,10 @@ export function MainHeader(props: NavProps) {
 		});
 	}
 
+	const currentRouteMetaData = createMemo(() => {
+		return useCurrentRouteMetaData();
+	});
+
 	return (
 		<header
 			class="sticky top-0 z-50 flex items-center justify-between bg-blue-50/80 shadow-md shadow-slate-900/5 transition duration-500 dark:shadow-none backdrop-blur"
@@ -76,7 +79,7 @@ export function MainHeader(props: NavProps) {
 					<li>
 						<A
 							href="/"
-							class={`text-slate-900 dark:text-slate-200 relative overflow-hidden drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] px-2 `}
+							class="text-slate-900 dark:text-slate-200 relative overflow-hidden drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] px-2"
 							classList={{
 								"border-b-2 border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250":
 									!notSolidCore() && !translatedLocale(),
@@ -119,15 +122,15 @@ export function MainHeader(props: NavProps) {
 				</ul>
 
 				<div class="lg:order-2 flex basis-0 gap-4 items-center justify-end order-">
-					<SearchBox />
+					<Search />
 					<A
-						href="https://github.com/solidjs/solid"
+						href={`https://github.com/solidjs${currentRouteMetaData().project ? currentRouteMetaData().project : "/solid"}`}
 						class="group"
 						aria-label="GitHub"
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						<GitHubIcon class="h-6 w-6 fill-slate-800 dark:fill-slate-200 group-hover:dark:fill-white dark:group-hover:fill-slate-300" />
+						<GitHubIcon class="h-6 w-6 fill-slate-800 dark:fill-slate-200 dark:group-hover:fill-slate-300" />
 					</A>
 					<A
 						href="https://discord.com/invite/solidjs"
@@ -136,7 +139,7 @@ export function MainHeader(props: NavProps) {
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						<DiscordIcon class="h-6 w-6 fill-slate-800 dark:fill-slate-200 group-hover:dark:fill-white dark:group-hover:fill-slate-300" />
+						<DiscordIcon class="h-6 w-6 fill-slate-800 dark:fill-slate-200 dark:group-hover:fill-slate-300" />
 					</A>
 					<ThemeSelector />
 					<Show when={SUPPORTED_LOCALES.length > 0}>

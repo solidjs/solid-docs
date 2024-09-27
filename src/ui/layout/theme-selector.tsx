@@ -37,7 +37,7 @@ export const ThemeSelector: Component = () => {
 								}}
 							>
 								<Icon
-									class={`h-6 w-6 mr-2 rounded-md bg-white p-1 shadow ring-1 ring-slate-900/5 dark:bg-slate-700 dark:ring-inset dark:ring-white/5 `}
+									class="h-6 w-6 mr-2 rounded-md bg-white p-1 shadow ring-1 ring-slate-900/5 dark:bg-slate-700 dark:ring-inset dark:ring-white/5"
 									classList={{
 										"fill-slate-800 dark:fill-white":
 											selectedTheme()!.name === theme.name,

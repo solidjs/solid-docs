@@ -36,8 +36,8 @@ function getCookie(name: string, cookieString: string) {
 const ThemeCtx = createContext<ThemeContext>();
 const getUserTheme = () => {
 	if (isServer) {
-		const e = getRequestEvent();
-		return getCookie("theme", e?.request.headers.get("cookie")!);
+		const e = getRequestEvent()!;
+		return getCookie("theme", e.request.headers.get("cookie")!);
 	}
 	return getCookie("theme", document.cookie);
 };
@@ -70,7 +70,7 @@ export const ThemeProvider = (props: ParentProps) => {
 	});
 	createEffect(() => {
 		if (selectedTheme()?.value)
-			document.cookie = `theme=${selectedTheme().value};path=/;max-age=${60 * 60 * 24 * 365}`;
+			document.cookie = `theme=${selectedTheme()!.value};path=/;max-age=${60 * 60 * 24 * 365}`;
 	});
 	return (
 		<ThemeCtx.Provider

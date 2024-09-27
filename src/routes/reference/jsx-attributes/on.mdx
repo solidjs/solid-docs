@@ -1,0 +1,35 @@
+---
+title: on:*
+order: 4
+---
+
+For events with capital letters, listener options, or if you need to attach event handlers directly to a DOM element instead of optimized delegating via the document, use `on:*` in place of `on*`.
+
+```tsx
+<div on:DOMContentLoaded={(e) => console.log("Welcome!")} />
+```
+
+This directly attaches an event handler (via [`addEventListener`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener)) to the `div`.
+
+<Callout>New in v1.9.0</Callout>
+
+An aditional special syntax that allows full control of [`capture`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#capture), [`passive`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#passive), [`once`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#once) and [`signal`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#signal) is an intersection or combination of `EventListenerObject` & `AddEventListenerOptions`, as follows:
+
+```tsx
+const handler = {
+	handleEvent(e) {
+		console.log(e)
+	},
+	once:true,
+	passive:false,
+	capture:true
+}
+
+<div on:wheel={handler} />
+
+// or inline
+
+<div on:click={{passive:true, handleEvent(e) => console.log("Weeeee!")}} />
+```
+
+This new syntax replaces the now deprecated `oncapture:` and it's future proof for any posible new event listener options.

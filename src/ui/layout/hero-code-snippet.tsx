@@ -6,31 +6,19 @@ export const counterTxt = `import { createSignal } from "solid-js";
 function Counter() {
 	const [count, setCount] = createSignal(0);
 
-	setInterval(() => setCount((prev) => prev + 1), 1000);
-
 	return (
-		<div>
-			<p>Count: {count()}</p>
-		</div>
+		<button
+		  onClick={() => setCount((n) => n + 1)}
+		>
+		  Count: {count()}
+		</button>
 	);
 }`;
 
 export const snippetLines = counterTxt.split("\n");
 
 const renderCode = async () => {
-	const code = `import { createSignal } from "solid-js";
-
-function Counter() {
-	const [count, setCount] = createSignal(0);
-
-	setInterval(() => setCount((prev) => prev + 1), 1000);
-
-	return (
-		<div>
-			<p>Count: {count()}</p>
-		</div>
-	);
-}`.trim();
+	const code = counterTxt.trim();
 	return codeToHtml(code, {
 		lang: "tsx",
 		theme: "material-theme-ocean",
@@ -40,5 +28,6 @@ function Counter() {
 export default function CodeSnippet() {
 	const [code] = createResource(renderCode);
 
+	// eslint-disable-next-line solid/no-innerhtml
 	return <div innerHTML={code()} />;
 }

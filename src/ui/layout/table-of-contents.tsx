@@ -9,7 +9,7 @@ import {
 	type ResolvedChildren,
 } from "solid-js";
 import { useLocation } from "@solidjs/router";
-import { usePageState } from "~/data/page-state";
+import { ParentSection, usePageState } from "~/data/page-state";
 import { useI18n } from "~/i18n/i18n-context";
 
 export const TableOfContents: Component<{ children: ResolvedChildren }> = (
@@ -49,7 +49,7 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (
 		}
 
 		const headings = document.querySelectorAll("main h2, main h3");
-		const sections: any = [];
+		const sections: ParentSection[] = [];
 
 		if (headings) {
 			headings.forEach((heading) => {
@@ -96,13 +96,13 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (
 				<li class="pl-0 mt-0 mb-0">
 					<span>
 						<a
-							href={`#_top`}
+							href="#_top"
 							classList={{
 								"dark:text-slate-300": currentSection() !== "",
 								"text-blue-800 dark:text-blue-300 font-bold hover:text-slate-700 dark:hover:text-slate-200":
 									currentSection() === "",
 							}}
-							class="no-underline hover:font-bold hover:text-slate-800"
+							class="no-underline hover:text-slate-800"
 						>
 							{i18n.t("toc.overview")}
 						</a>
@@ -119,7 +119,7 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (
 										"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-bold":
 											currentSection() === section().id,
 									}}
-									class="no-underline hover:font-bold hover:text-slate-700 dark:hover:text-blue-300"
+									class="no-underline hover:text-slate-700 dark:hover:text-blue-300"
 								>
 									{section().text}
 								</a>
@@ -140,7 +140,7 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (
 														"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-bold":
 															currentSection() === subSection().id,
 													}}
-													class="no-underline hover:font-bold hover:text-blue-700 dark:hover:text-blue-300"
+													class="no-underline hover:text-blue-700 dark:hover:text-blue-300"
 												>
 													{subSection().text}
 												</a>

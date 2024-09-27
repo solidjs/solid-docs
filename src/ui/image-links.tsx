@@ -1,4 +1,4 @@
-import { ParentComponent, Show } from "solid-js";
+import { ParentComponent, Show, untrack } from "solid-js";
 import { A } from "~/ui/i18n-anchor";
 
 /**
@@ -13,6 +13,7 @@ export const logos: { [key: string]: { file: string; style?: string } } = {
 	netlify: { file: "netlify.svg" },
 	railway: { file: "railway.svg" },
 	vercel: { file: "vercel.svg" },
+	zerops: { file: "zerops.svg" },
 	sass: { file: "sass.svg" },
 	less: { file: "less.svg" },
 	cssmodules: { file: "css-modules.svg", style: "invert" },
@@ -29,7 +30,8 @@ export type ImageLinksProps = {
 };
 
 export const ImageLinks: ParentComponent<ImageLinksProps> = (props) => {
-	const { file, style } = logos[props.logo];
+	const logoImage = untrack(() => props.logo);
+	const { file, style } = logos[logoImage];
 
 	return (
 		<div class="group relative rounded-xl  dark:border-blue-800 dark:bg-transparent">

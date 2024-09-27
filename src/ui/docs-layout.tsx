@@ -1,12 +1,10 @@
-import { createSignal, Show, onMount, JSX } from "solid-js";
-import { useLocation, useMatch } from "@solidjs/router";
+import { Show, onMount, JSX } from "solid-js";
+import { useLocation } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { coreEntries } from "solid:collection";
 import { Pagination } from "~/ui/pagination";
 import { EditPageLink } from "./edit-page-link";
 import { PageIssueLink } from "./page-issue-link";
-
-export const [trackHeading, setTrackHeading] = createSignal("");
 
 interface DocsLayoutProps {
 	entries: typeof coreEntries;

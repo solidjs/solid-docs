@@ -20,8 +20,8 @@ export default function App() {
 				createEffect(() => {
 					const html = document.documentElement;
 					html.classList.remove("light", "dark");
-					html.classList.add(ctx.selectedTheme().value);
-					html.dataset.theme = ctx.selectedTheme().theme;
+					html.classList.add(ctx.selectedTheme()!.value);
+					html.dataset.theme = ctx.selectedTheme()!.theme;
 				});
 
 				return (

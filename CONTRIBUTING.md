@@ -131,20 +131,16 @@ Though it is not a hard requirement, we'd deeply appreciate if you could recomme
 
 #### Adding support to a new language
 
-1. Create a dictionary file in `src/i18n/dictionaries`. The name should follow our locale convention.
+1. Create a dictionary file in `src/i18n/dictionaries/{locale}/ui.ts`. The name should follow our locale convention.
 
-   - language (ISO 639-1 - set 1): https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
+  - language (ISO 639-1 - set 1): https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
+  - country code(optional) (ISO 3166-1 alpha-2): https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+  - E.g.: Canadian French would be: `fr-ca` 
 
-- country code (ISO 3166-1 alpha-2): https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
-
-- E.g.: Canadian French would be: `fr-ca`
-
-2. Add it to the barrel file: `src/i18n/dictionaries/index.ts`. So it will be identified by the routing system.
-
-3. Add the important UI translations.
-
-> [!TIP]
-> To save time, you can use chatGPT to translate the `default.ts` dictionary to the language and adjust based on context.
+2. Add the `import` and language information to the objects in the barrel file: `./src/i18n/dictionaries/index.ts`. So it will be identified by the routing system, and an entry its added to the language dropdown.
+3. Add the language to the `array` in `./scripts/collections/index.mjs` so internal files are created.
+4. Add the important UI translations to `./src/i18n/dictionaries/{locale}/ui.ts` 
+5. Add at least the index page `./src/routes/{locale}/index.mdx`, so others and yourself could see things in action.
 
 #### Adding translations to a supported language
 

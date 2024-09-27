@@ -36,7 +36,17 @@ export default function App() {
 }
 ```
 
-This will generate a route for each file in the `routes` directory and its subdirectories.
+The `<Router />` component expects a `root` prop which functions as the root layout of your entire app.
+You will want to make sure `props.children` is wrapped in `<Suspense />` because each component will be lazy loaded automatically for you. Without this you may see some unexpected hydration errors.
+
+`<FileRoutes />` will generate a route for each file in the `routes` directory and its subdirectories. For a route to be rendered as a page, it must default export a component.
+This component represents the content that will be rendered when users visit the page:
+
+```tsx filename="routes/index.tsx"
+export default function Index() {
+	return <div>Welcome to my site!</div>;
+}
+```
 
 This means that all you have to do is create a file in your `routes` folder and SolidStart takes care of everything else needed to make that route available to visit in your application!
 
@@ -62,14 +72,41 @@ When a file is named `index`, it will be rendered when there are no additional U
 - `example.com` ➜ `/routes/index.tsx`
 - `example.com/socials` ➜ `/routes/socials/index.tsx`
 
-For a route to be rendered as a page, it must default export a component.
-This component represents the content that will be rendered when users visit the page:
+### Nested layouts
 
-```tsx filename="routes/index.tsx"
-export default function Index() {
-	return <div>Welcome to my site!</div>;
+If you want to create nested layouts you can create a file with the same name as a route folder.
+
+```jsx {2}
+|-- routes/   
+    |-- blog.tsx                   // layout file
+    |-- blog/
+        |-- article-1.tsx         // example.com/blog/article-1
+        |-- article-2.tsx        // example.com/blog/article-2
+```
+
+In this case the `blog.tsx` file will act as a layout for the articles in the `blog` folder. You can reference the child content
+by using `props.children` in the layout.
+
+<TabsCodeBlocks>
+  <div id="ts">
+```tsx filename="routes/blog.tsx" title="blog.tsx"
+import { RouteSectionProps } from "@solidjs/router";
+
+export default function BlogLayout(props: RouteSectionProps) {
+	return <div>{props.childen}</div>;
 }
 ```
+   </div>
+   <div id="js">
+ ```jsx filename="routes/blog.jsx" title="blog.tsx"
+export default function BlogLayout(props) {
+	return <div>{props.childen}</div>;
+}
+```
+    </div>
+</TabsCodeBlocks>
+
+**Note**: Creating a `blog/index.tsx` or `blog/(blogIndex).tsx` is not the same as it would only be used for the index route.
 
 ## Renaming Index
 
@@ -98,12 +135,12 @@ When you have a path that is nested but wish for it to have a separate Layout, y
 This will allow you to create a new route that is not nested under the previous route:
 
 ```jsx {5-6}
-|-- routes/
+|-- routes/                       // example.com
     |-- users/
-        |-- index.tsx
-        |-- projects.tsx
+        |-- index.tsx            // example.com/users
+        |-- projects.tsx         // example.com/projects
     |-- users(details)/
-        |-- [id].tsx
+        |-- [id].tsx            // example.com/users/1
 ```
 
 Additionally, you can incorporate nested layouts of their own:
@@ -211,6 +248,8 @@ In SolidStart, route groups are defined by using parenthesis (`()`) surrounding 
 SolidStart offers a way to add additional route configuration outside of the file system.
 Since SolidStart supports the use of other routers, you can use the `route` export provided by `<FileRoutes />` to define the route configuration for the router of your choice.
 
+<TabsCodeBlocks>
+  <div id="ts">
 ```jsx {3-7}
 import type { RouteSectionProps, RouteDefinition } from "@solidjs/router";
 
@@ -229,6 +268,28 @@ export default function UsersLayout(props: RouteSectionProps) {
   );
 }
 ```
+   </div>
+   <div id="js">
+```jsx {3-7}
+
+export const route = {
+  preload() {
+    // define preload function
+  }
+};
+
+export default function UsersLayout(props) {
+  return (
+    <div>
+      <h1>Users</h1>
+      {props.children}
+    </div>
+  );
+}
+```
+    </div>
+</TabsCodeBlocks>
+
 
 [api-routes]: /core-concepts/api-routes
 [fileroutes]: /api/FileRoutes

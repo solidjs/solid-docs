@@ -1,4 +1,5 @@
-import { ParentProps, createSignal } from "solid-js";
+/* eslint-disable solid/reactivity */
+import { ParentProps, Show, createSignal } from "solid-js";
 import "./eraser-link.css";
 
 const ERASER_TRACKING_PARAMS = "";
@@ -28,15 +29,14 @@ const getEraserLinkData = (href: string): EraserLinkData | null => {
 	};
 };
 
-const EraserLink = ({
-	linkData,
-	children,
-}: ParentProps<{
-	linkData: EraserLinkData;
-}>) => {
-	const workspaceUrl = `https://app.eraser.io/workspace/${linkData.workspaceId}`;
-	const elementParams = linkData.elementsId
-		? `elements=${linkData.elementsId}`
+const EraserLink = (
+	props: ParentProps<{
+		linkData: EraserLinkData;
+	}>
+) => {
+	const workspaceUrl = `https://app.eraser.io/workspace/${props.linkData.workspaceId}`;
+	const elementParams = props.linkData.elementsId
+		? `elements=${props.linkData.elementsId}`
 		: "";
 
 	const linkUrl = elementParams
@@ -46,22 +46,38 @@ const EraserLink = ({
 	const [isLoaded, setIsLoaded] = createSignal(false);
 
 	// if there are no children or this was a right click-copy as markdown embed.
-	if (
-		children === undefined ||
-		(Array.isArray(children) && children[0] === "View on Eraser")
-	) {
-		const imageUrl = elementParams
-			? `${workspaceUrl}/preview?${elementParams}&type=embed`
-			: `${workspaceUrl}/preview`;
-
-		return (
+	return (
+		<Show
+			when={
+				props.children === undefined ||
+				(Array.isArray(props.children) &&
+					props.children[0] === "View on Eraser")
+			}
+			fallback={
+				<a
+					href={linkUrl}
+					class="dark:text-solid-darklink break-normal text-solid-lightlink duration-100 ease-in font-semibold leading-normal transition hover:underline"
+					rel="noopener noreferrer"
+				>
+					{props.children}
+				</a>
+			}
+		>
 			<a
 				href={linkUrl}
 				class="relative inline-block"
 				target="_blank"
 				rel="noopener noreferrer"
 			>
-				<img src={imageUrl} alt={""} onLoad={() => setIsLoaded(true)} />
+				<img
+					src={
+						elementParams
+							? `${workspaceUrl}/preview?${elementParams}&type=embed`
+							: `${workspaceUrl}/preview`
+					}
+					alt={""}
+					onLoad={() => setIsLoaded(true)}
+				/>
 				{isLoaded() ? (
 					<div class="eraserLinkContainer">
 						<img
@@ -72,31 +88,29 @@ const EraserLink = ({
 					</div>
 				) : null}
 			</a>
-		);
-	}
-	return (
-		<a
-			href={linkUrl}
-			class="dark:text-solid-darklink break-normal text-solid-lightlink duration-100 ease-in font-semibold leading-normal transition hover:underline"
-			rel="noopener noreferrer"
-		>
-			{children}
-		</a>
+		</Show>
 	);
 };
 
 export default function EraserOrAnchor(props: ParentProps<{ href: string }>) {
 	const eraserLinkData = getEraserLinkData(props.href);
-	if (eraserLinkData) {
-		return <EraserLink linkData={eraserLinkData}>{props.children}</EraserLink>;
-	}
+
 	return (
-		<a
-			{...props}
-			class="dark:text-solid-darklink break-normal text-solid-lightlink duration-100 ease-in font-semibold leading-normal transition hover:underline"
-			rel="noopener noreferrer"
+		<Show
+			when={eraserLinkData}
+			fallback={
+				<a
+					{...props}
+					class="dark:text-solid-darklink break-normal text-solid-lightlink duration-100 ease-in font-semibold leading-normal transition hover:underline"
+					rel="noopener noreferrer"
+				>
+					{props.children}
+				</a>
+			}
 		>
-			{props.children}
-		</a>
+			{(eraserLinkData) => (
+				<EraserLink linkData={eraserLinkData()}>{props.children}</EraserLink>
+			)}
+		</Show>
 	);
 }

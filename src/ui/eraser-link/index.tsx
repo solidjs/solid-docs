@@ -97,7 +97,7 @@ export default function EraserOrAnchor(props: ParentProps<{ href: string }>) {
 
 	return (
 		<Show
-			when={eraserLinkData !== null}
+			when={eraserLinkData}
 			fallback={
 				<a
 					{...props}
@@ -108,7 +108,9 @@ export default function EraserOrAnchor(props: ParentProps<{ href: string }>) {
 				</a>
 			}
 		>
-			<EraserLink linkData={eraserLinkData}>{props.children}</EraserLink>
+			{(eraserLinkData) => (
+				<EraserLink linkData={eraserLinkData()}>{props.children}</EraserLink>
+			)}
 		</Show>
 	);
 }

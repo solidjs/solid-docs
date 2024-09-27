@@ -9,7 +9,7 @@ import {
 	type ResolvedChildren,
 } from "solid-js";
 import { useLocation } from "@solidjs/router";
-import { usePageState } from "~/data/page-state";
+import { ParentSection, usePageState } from "~/data/page-state";
 import { useI18n } from "~/i18n/i18n-context";
 
 export const TableOfContents: Component<{ children: ResolvedChildren }> = (
@@ -49,7 +49,7 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (
 		}
 
 		const headings = document.querySelectorAll("main h2, main h3");
-		const sections: unknown[] = [];
+		const sections: ParentSection[] = [];
 
 		if (headings) {
 			headings.forEach((heading) => {

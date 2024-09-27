@@ -67,7 +67,7 @@ export default defineConfig({
 			docsData(),
 			vinxiMdx.withImports({})({
 				define: {
-					"import.meta.env": `'import.meta.env'`,
+					"import.meta.env": "'import.meta.env'",
 				},
 				jsx: true,
 				jsxImportSource: "solid-js",

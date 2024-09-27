@@ -28,15 +28,12 @@ const getEraserLinkData = (href: string): EraserLinkData | null => {
 	};
 };
 
-const EraserLink = ({
-	linkData,
-	children,
-}: ParentProps<{
+const EraserLink = (props: ParentProps<{
 	linkData: EraserLinkData;
 }>) => {
-	const workspaceUrl = `https://app.eraser.io/workspace/${linkData.workspaceId}`;
-	const elementParams = linkData.elementsId
-		? `elements=${linkData.elementsId}`
+	const workspaceUrl = `https://app.eraser.io/workspace/${props.linkData.workspaceId}`;
+	const elementParams = props.linkData.elementsId
+		? `elements=${props.linkData.elementsId}`
 		: "";
 
 	const linkUrl = elementParams
@@ -47,8 +44,8 @@ const EraserLink = ({
 
 	// if there are no children or this was a right click-copy as markdown embed.
 	if (
-		children === undefined ||
-		(Array.isArray(children) && children[0] === "View on Eraser")
+		props.children === undefined ||
+		(Array.isArray(props.children) && props.children[0] === "View on Eraser")
 	) {
 		const imageUrl = elementParams
 			? `${workspaceUrl}/preview?${elementParams}&type=embed`
@@ -80,7 +77,7 @@ const EraserLink = ({
 			class="dark:text-solid-darklink break-normal text-solid-lightlink duration-100 ease-in font-semibold leading-normal transition hover:underline"
 			rel="noopener noreferrer"
 		>
-			{children}
+			{props.children}
 		</a>
 	);
 };

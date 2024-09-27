@@ -58,6 +58,7 @@ export default defineConfig({
 			crawlLinks: true,
 			autoSubfolderIndex: false,
 			failOnError: true,
+			// eslint-disable-next-line no-useless-escape
 			ignore: [/\{\getPath}/, /.*?emojiSvg\(.*/],
 		},
 	},

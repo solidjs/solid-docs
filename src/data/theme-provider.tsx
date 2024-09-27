@@ -36,8 +36,8 @@ function getCookie(name: string, cookieString: string) {
 const ThemeCtx = createContext<ThemeContext>();
 const getUserTheme = () => {
 	if (isServer) {
-		const e = getRequestEvent();
-		return getCookie("theme", e?.request.headers.get("cookie")!);
+		const e = getRequestEvent()!;
+		return getCookie("theme", e.request.headers.get("cookie")!);
 	}
 	return getCookie("theme", document.cookie);
 };

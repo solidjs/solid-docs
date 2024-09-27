@@ -28,5 +28,6 @@ const renderCode = async () => {
 export default function CodeSnippet() {
 	const [code] = createResource(renderCode);
 
+	// eslint-disable-next-line solid/no-innerhtml
 	return <div innerHTML={code()} />;
 }

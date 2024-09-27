@@ -1,5 +1,5 @@
-import { createEffect, createContext, ParentProps, useContext } from "solid-js";
-import { SetStoreFunction, StoreSetter, createStore } from "solid-js/store";
+import { createContext, ParentProps, useContext } from "solid-js";
+import { SetStoreFunction, createStore } from "solid-js/store";
 
 type ChildSection = {
 	text: string | undefined;

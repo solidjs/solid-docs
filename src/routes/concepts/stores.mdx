@@ -198,6 +198,33 @@ Separating the read and write capabilities of a store provides a valuable debugg
 
 This separation facilitates the tracking and control of the components that are accessing or changing the values.
 </Callout>
+<Callout type="advanced">
+  A little hidden feature of stores is that you can also create nested stores to help with setting nested properties.
+
+```jsx
+  const [store, setStore] = createStore({
+    userCount: 3,
+    users: [ ... ],
+  })
+
+  const [users, setUsers] = createStore(store.users)
+
+  setUsers((currentUsers) => [
+    ...currentUsers,
+    {
+      id: 3,
+      username: "michael584",
+      location: "Nigeria",
+      loggedIn: false,
+    },
+  ])
+
+```
+  Changes made through `setUsers` will update the `store.users` property and reading `users` from this derived store will also be in sync with the values from `store.users`.
+
+  Note that the above relies on `store.users` to be set already in the existing store.
+
+</Callout>
 
 ## Path syntax flexibility
 
@@ -260,9 +287,11 @@ setStore("users", [1, 3], "loggedIn", false)
 ```
 
     <Callout>
-    If your *store* is array, you can specify a range of indices using an object with `from` and `to` keys.
+    If your *store* is an array, you can specify a range of indices using an object with `from` and `to` keys.
 
 ```jsx
+const [store, setStore] = createStore([]) // A store that is an array
+...
 setStore({ from: 1, to: store.length - 1 }, "loggedIn", false)
 ```
 

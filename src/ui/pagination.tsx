@@ -1,13 +1,13 @@
 import { A } from "~/ui/i18n-anchor";
 import { Show, Suspense, createMemo } from "solid-js";
-import flatEntries from "solid:collection/entries";
+import { coreEntries } from "solid:collection";
 import { useI18n } from "~/i18n/i18n-context";
 
 /**
  * temporary until we have proper types inside collections
  */
-type ReferenceCollection = (typeof flatEntries)["references"];
-type LearnCollection = (typeof flatEntries)["learn"];
+type ReferenceCollection = (typeof coreEntries)["reference"];
+type LearnCollection = (typeof coreEntries)["learn"];
 
 type Pagination = {
 	collection: ReferenceCollection | LearnCollection;

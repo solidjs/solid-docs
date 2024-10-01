@@ -58,6 +58,7 @@ export default defineConfig({
 			crawlLinks: true,
 			autoSubfolderIndex: false,
 			failOnError: true,
+			// eslint-disable-next-line no-useless-escape
 			ignore: [/\{\getPath}/, /.*?emojiSvg\(.*/],
 		},
 	},
@@ -67,7 +68,7 @@ export default defineConfig({
 			docsData(),
 			vinxiMdx.withImports({})({
 				define: {
-					"import.meta.env": `'import.meta.env'`,
+					"import.meta.env": "'import.meta.env'",
 				},
 				jsx: true,
 				jsxImportSource: "solid-js",

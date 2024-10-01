@@ -1,4 +1,4 @@
-import matter, { GrayMatterFile } from "gray-matter";
+import { GrayMatterFile } from "gray-matter";
 
 export type Section = {
 	type: "section";

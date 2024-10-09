@@ -1,0 +1,42 @@
+---
+title: useSubmission
+---
+
+Are used to injecting the optimistic updates while actions are in flight. They either return a single Submission(latest) or all that match with an optional filter function.
+
+```tsx title="component.tsx" {4,8}
+import { useSubmission } from "@solidjs/router";
+
+function Component() {
+  const addSubmission = useSubmission(postNameAction);
+
+    return (
+        <>
+        <form action={postNameAction} method="post" class="max-w-md">
+            <input type="text" name="name" />
+            <button type="submit">
+                {addSubmission.pending ? "Adding..." : "Add"}
+            </button>
+        </form>
+        <>
+    )
+}
+```
+
+```tsx
+const submissions = useSubmissions(action, (input) => filter(input));
+const submission = useSubmission(action, (input) => filter(input));
+```
+
+## Type definition
+
+```tsx title="@solidjs/router"
+type Submission<T, U> = {
+  readonly input: T;
+  readonly result?: U;
+  readonly pending: boolean;
+  readonly url: string;
+  clear: () => void;
+  retry: () => void;
+};
+```

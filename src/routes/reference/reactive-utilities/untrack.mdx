@@ -2,11 +2,49 @@
 title: untrack
 ---
 
-```ts
+Ignores tracking any of the dependencies in the executing code block and returns the value. This helper is useful when a certain `prop` will never update and thus it is ok to use it outside of the reactive context.
+
+```tsx title="component.tsx"
 import { untrack } from "solid-js"
 
-function untrack<T>(fn: () => T): T
+export function Component(props) {
+    const value = untrack(() => props.value)
 
+    return <div>{value}</div>
+    }
+}
 ```
 
-Ignores tracking any of the dependencies in the executing code block and returns the value.
+## Initial and Default Values
+
+It is not necessary to manually untrack values that are suppose to serve as a default or initial value to a signal. Even with the linter configured to enforce tracking, the linter will accept it when a `prop` is prefixed with `default` or `initial` as it is a common pattern to use them as such.
+
+<TabsCodeBlocks>
+<div id="initialValue">
+
+```tsx title="component.tsx" {4}
+import { createSignal } from "solid-js"
+
+export function Component(props) {
+    const [name, setName] = createSignal(props.initialName)
+
+    return <div>{name()}</div>
+    }
+}
+```
+</div>
+
+<div id="defaultValue">
+
+```tsx title="component.tsx" {4}
+import { createSignal } from "solid-js"
+
+export function Component(props) {
+    const [name, setName] = createSignal(props.defaultName)
+
+    return <div>{name()}</div>
+    }
+}
+```
+</div>
+</TabsCodeBlocks>

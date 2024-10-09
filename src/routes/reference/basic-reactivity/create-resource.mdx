@@ -2,56 +2,6 @@
 title: createResource
 ---
 
-This creates a signal that returns the result of an async request.
-
-```ts
-import { createResource } from "solid-js"
-import type { ResourceReturn, ResourceOptions } from "solid-js"
-
-type ResourceReturn<T> = [
-	{
-		(): T | undefined
-		state: "unresolved" | "pending" | "ready" | "refreshing" | "errored"
-		loading: boolean
-		error: any
-		latest: T | undefined
-	},
-	{
-		mutate: (v: T | undefined) => T | undefined
-		refetch: (info: unknown) => Promise<T> | T
-	}
-]
-
-type ResourceOptions<T, S = unknown> = {
-	initialValue?: T
-	name?: string
-	deferStream?: boolean
-	ssrLoadFrom?: "initial" | "server"
-	storage?: (
-		init: T | undefined
-	) => [Accessor<T | undefined>, Setter<T | undefined>]
-	onHydrated?: (k: S | undefined, info: { value: T | undefined }) => void
-}
-
-function createResource<T, U = true>(
-	fetcher: (
-		k: U,
-		info: { value: T | undefined; refetching: boolean | unknown }
-	) => T | Promise<T>,
-	options?: ResourceOptions<T, U>
-): ResourceReturn<T>
-
-function createResource<T, U>(
-	source: U | false | null | (() => U | false | null),
-	fetcher: (
-		k: U,
-		info: { value: T | undefined; refetching: boolean | unknown }
-	) => T | Promise<T>,
-	options?: ResourceOptions<T, U>
-): ResourceReturn<T>
-
-```
-
 `createResource` takes an asynchronous fetcher function and returns a signal that is updated with the resulting data when the fetcher completes.
 
 There are two ways to use `createResource`: you can pass the fetcher function as the sole argument, or you can additionally pass a source signal as the first argument. 
@@ -196,3 +146,55 @@ The `createResource` function takes an optional third argument, an options objec
 | onHydrated   | `function`              | `undefined`    | A callback that is called when the resource is hydrated.                                                                                                      |
 | ssrLoadFrom  | `"server" \| "initial"` | `"server"`     | The source of the initial value for SSR. If set to `"initial"`, the resource will use the `initialValue` option instead of the value returned by the fetcher. |
 | storage      | `function`              | `createSignal` | A function that returns a signal. This can be used to create a custom storage for the resource. This is still experimental                                    |
+
+## Note for TypeScript users
+
+The function and type definitions for `createResource` are as follows:
+
+```tsx
+import { createResource } from "solid-js"
+import type { ResourceReturn, ResourceOptions } from "solid-js"
+
+type ResourceReturn<T> = [
+	{
+		(): T | undefined
+		state: "unresolved" | "pending" | "ready" | "refreshing" | "errored"
+		loading: boolean
+		error: any
+		latest: T | undefined
+	},
+	{
+		mutate: (v: T | undefined) => T | undefined
+		refetch: (info: unknown) => Promise<T> | T
+	}
+]
+
+type ResourceOptions<T, S = unknown> = {
+	initialValue?: T
+	name?: string
+	deferStream?: boolean
+	ssrLoadFrom?: "initial" | "server"
+	storage?: (
+		init: T | undefined
+	) => [Accessor<T | undefined>, Setter<T | undefined>]
+	onHydrated?: (k: S | undefined, info: { value: T | undefined }) => void
+}
+
+function createResource<T, U = true>(
+	fetcher: (
+		k: U,
+		info: { value: T | undefined; refetching: boolean | unknown }
+	) => T | Promise<T>,
+	options?: ResourceOptions<T, U>
+): ResourceReturn<T>
+
+function createResource<T, U>(
+	source: U | false | null | (() => U | false | null),
+	fetcher: (
+		k: U,
+		info: { value: T | undefined; refetching: boolean | unknown }
+	) => T | Promise<T>,
+	options?: ResourceOptions<T, U>
+): ResourceReturn<T>
+
+```

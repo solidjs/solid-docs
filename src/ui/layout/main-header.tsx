@@ -20,8 +20,6 @@ interface Entry {
 	isTranslated?: boolean;
 }
 
-type EntryList = { learn: Entry[]; reference: Entry[] };
-
 interface NavProps {
 	tree: {
 		learn: Entry[];
@@ -132,7 +130,7 @@ export function MainHeader(props: NavProps) {
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						<GitHubIcon class="h-6 w-6 fill-slate-800 dark:fill-slate-200 group-hover:dark:fill-white dark:group-hover:fill-slate-300" />
+						<GitHubIcon class="h-6 w-6 fill-slate-800 dark:fill-slate-200 dark:group-hover:fill-slate-300" />
 					</A>
 					<A
 						href="https://discord.com/invite/solidjs"
@@ -141,7 +139,7 @@ export function MainHeader(props: NavProps) {
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						<DiscordIcon class="h-6 w-6 fill-slate-800 dark:fill-slate-200 group-hover:dark:fill-white dark:group-hover:fill-slate-300" />
+						<DiscordIcon class="h-6 w-6 fill-slate-800 dark:fill-slate-200 dark:group-hover:fill-slate-300" />
 					</A>
 					<ThemeSelector />
 					<Show when={SUPPORTED_LOCALES.length > 0}>

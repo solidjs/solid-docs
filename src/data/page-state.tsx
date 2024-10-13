@@ -1,17 +1,17 @@
-import { createEffect, createContext, ParentProps, useContext } from "solid-js";
-import { SetStoreFunction, StoreSetter, createStore } from "solid-js/store";
+import { createContext, ParentProps, useContext } from "solid-js";
+import { SetStoreFunction, createStore } from "solid-js/store";
 
-type ChildSection = {
-	text: string | undefined;
+export type ChildSection = {
+	text?: string | null;
 	id: string;
 	level: number;
 };
 
-type ParentSection = {
-	text: string | undefined;
+export type ParentSection = {
+	text?: string | null;
 	id: string;
 	level: number;
-	children: ChildSection[] | [];
+	children: ChildSection[];
 };
 
 type PageStateStore = {

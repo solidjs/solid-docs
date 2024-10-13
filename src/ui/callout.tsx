@@ -1,6 +1,6 @@
 import { Alert } from "@kobalte/core";
 import { Icon } from "solid-heroicons";
-import { mergeProps, type JSXElement, Show } from "solid-js";
+import { mergeProps, type JSX, Show, untrack } from "solid-js";
 import {
 	lightBulb,
 	exclamationCircle,
@@ -60,7 +60,7 @@ const icons = {
 
 export type CalloutProps = {
 	title?: string;
-	children: JSXElement;
+	children: JSX.Element;
 	type?: keyof typeof styles;
 };
 
@@ -70,7 +70,9 @@ export function Callout(props: CalloutProps) {
 		props
 	);
 
-	let IconComponent = icons[mergedProps.type];
+	const iconType = untrack(() => mergedProps.type);
+
+	const IconComponent = icons[iconType];
 
 	return (
 		<Alert.Root
@@ -78,7 +80,7 @@ export function Callout(props: CalloutProps) {
 				styles[mergedProps.type].container
 			}`}
 		>
-			<IconComponent class={`h-6 w-8 pt-1 flex-none`} />
+			<IconComponent class="h-6 w-8 pt-1 flex-none" />
 			<div class={`m-0 pb-1 px-4 w-full ${styles[mergedProps.type].title}`}>
 				<Show
 					when={props.title}

@@ -12,8 +12,6 @@ interface Entry {
 	isTranslated?: boolean;
 }
 
-type EntryList = { learn: Entry[]; reference: Entry[] };
-
 interface NavProps {
 	tree: {
 		learn: Entry[];

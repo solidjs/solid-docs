@@ -4,6 +4,7 @@ title: "Routing"
 
 Routing serves as a key component to web applications.
 Within SolidStart, there are two types:
+
 - **UI routes** &mdash; define the user interface in your app
 - **[API routes](/solid-start/building-your-application/api-routes)** &mdash; define the serverless functions in your app
 
@@ -27,29 +28,37 @@ import { Router } from "@solidjs/router";
 import { FileRoutes } from "@solidjs/start/router";
 
 export default function App() {
-  return (
-    <Router root={props => <Suspense>{props.children}</Suspense>}>
-      <FileRoutes />
-    </Router>
-  );
+	return (
+		<Router root={(props) => <Suspense>{props.children}</Suspense>}>
+			<FileRoutes />
+		</Router>
+	);
 }
 ```
 
-This will generate a route for each file in the `routes` directory and its subdirectories.
+The `<Router />` component expects a `root` prop which functions as the root layout of your entire app.
+You will want to make sure `props.children` is wrapped in `<Suspense />` because each component will be lazy loaded automatically for you. Without this you may see some unexpected hydration errors.
+
+`<FileRoutes />` will generate a route for each file in the `routes` directory and its subdirectories. For a route to be rendered as a page, it must default export a component.
+This component represents the content that will be rendered when users visit the page:
+
+```tsx filename="routes/index.tsx"
+export default function Index() {
+	return <div>Welcome to my site!</div>;
+}
+```
 
 This means that all you have to do is create a file in your `routes` folder and SolidStart takes care of everything else needed to make that route available to visit in your application!
-
 
 ## File based routing
 
 Each file in the `routes` directory is treated as a route.
-To create a new route or page in your application, simply create a new file in the `routes` directory. 
+To create a new route or page in your application, simply create a new file in the `routes` directory.
 The file name will be the URL path for the route:
 
 - `example.com/blog` ➜ `/routes/blog.tsx`
 - `example.com/contact` ➜ `/routes/contact.tsx`
 - `example.com/directions` ➜ `/routes/directions.tsx`
-
 
 ### Nested routes
 
@@ -63,21 +72,48 @@ When a file is named `index`, it will be rendered when there are no additional U
 - `example.com` ➜ `/routes/index.tsx`
 - `example.com/socials` ➜ `/routes/socials/index.tsx`
 
-For a route to be rendered as a page, it must default export a component. 
-This component represents the content that will be rendered when users visit the page:
+### Nested layouts
 
-```tsx filename="routes/index.tsx"
-export default function Index() {
-  return <div>Welcome to my site!</div>;
+If you want to create nested layouts you can create a file with the same name as a route folder.
+
+```jsx {2}
+|-- routes/   
+    |-- blog.tsx                   // layout file
+    |-- blog/
+        |-- article-1.tsx         // example.com/blog/article-1
+        |-- article-2.tsx        // example.com/blog/article-2
+```
+
+In this case the `blog.tsx` file will act as a layout for the articles in the `blog` folder. You can reference the child content
+by using `props.children` in the layout.
+
+<TabsCodeBlocks>
+  <div id="ts">
+```tsx filename="routes/blog.tsx" title="blog.tsx"
+import { RouteSectionProps } from "@solidjs/router";
+
+export default function BlogLayout(props: RouteSectionProps) {
+	return <div>{props.children}</div>;
 }
 ```
+   </div>
+   <div id="js">
+ ```jsx filename="routes/blog.jsx" title="blog.tsx"
+export default function BlogLayout(props) {
+	return <div>{props.children}</div>;
+}
+```
+    </div>
+</TabsCodeBlocks>
+
+**Note**: Creating a `blog/index.tsx` or `blog/(blogIndex).tsx` is not the same as it would only be used for the index route.
 
 ## Renaming Index
 
 By default, the component that is rendered for a route comes from the default export of the `index.tsx` file in each folder.
 However, this can make it difficult to find the correct `index.tsx` file when searching, since there will be multiple files with that name.
 
-To avoid this, you can rename the `index.tsx` file to the name of the folder it is in, enclosed in parenthesis. 
+To avoid this, you can rename the `index.tsx` file to the name of the folder it is in, enclosed in parenthesis.
 
 This way, it will be treated as the default export for that route:
 
@@ -99,12 +135,12 @@ When you have a path that is nested but wish for it to have a separate Layout, y
 This will allow you to create a new route that is not nested under the previous route:
 
 ```jsx {5-6}
-|-- routes/
+|-- routes/                       // example.com
     |-- users/
-        |-- index.tsx
-        |-- projects.tsx
+        |-- index.tsx            // example.com/users
+        |-- projects.tsx         // example.com/projects
     |-- users(details)/
-        |-- [id].tsx
+        |-- [id].tsx            // example.com/users/1
 ```
 
 Additionally, you can incorporate nested layouts of their own:
@@ -144,8 +180,8 @@ For example, using `solid-router`, you could use the [`useParams`](/solid-router
 import { useParams } from "@solidjs/router";
 
 export default function UserPage() {
-  const params = useParams();
-  return <div>User {params.id}</div>;
+	const params = useParams();
+	return <div>User {params.id}</div>;
 }
 ```
 
@@ -157,13 +193,14 @@ This will match a route with or without a parameter.
 ```tsx {3}
 |-- routes/
     |-- users/
-        |-- [[id]].tsx 
+        |-- [[id]].tsx
 ```
 
 In this case, some pages that could be matched include:
-* `/users`
-* `/users/1`
-* `/users/abc`
+
+- `/users`
+- `/users/1`
+- `/users/abc`
 
 #### Catch-all routes
 
@@ -178,15 +215,15 @@ They are defined using square brackets with `...` before the label for the route
 ```
 
 A catch-all route will have one parameter which is a forward-slash delimited string of all the URL segments after the last valid segment.
-For example, with the route `[..post]` and a URL path of `/post/foo` the `params` object returned from the `useParams` primitive will have a `post` property with the value of `foo`.
-For a URL path of `/post/foo/baz` it will be `foo/baz`.
+For example, with the route `[...post]` and a URL path of `/post/foo` the `params` object returned from the `useParams` primitive will have a `post` property with the value of `post/foo`.
+For a URL path of `/post/foo/baz` it will be `post/foo/baz`.
 
 ```tsx title="routes/blog/[...post].tsx"
 import { useParams } from "@solidjs/router";
 
 export default function BlogPage() {
-  const params = useParams();
-  return <div>Blog {params.post}</div>;
+	const params = useParams();
+	return <div>Blog {params.post}</div>;
 }
 ```
 
@@ -211,12 +248,14 @@ In SolidStart, route groups are defined by using parenthesis (`()`) surrounding 
 SolidStart offers a way to add additional route configuration outside of the file system.
 Since SolidStart supports the use of other routers, you can use the `route` export provided by `<FileRoutes />` to define the route configuration for the router of your choice.
 
+<TabsCodeBlocks>
+  <div id="ts">
 ```jsx {3-7}
 import type { RouteSectionProps, RouteDefinition } from "@solidjs/router";
 
 export const route = {
-  load() {
-    // define load function
+  preload() {
+    // define preload function
   }
 } satisfies RouteDefinition
 
@@ -229,6 +268,28 @@ export default function UsersLayout(props: RouteSectionProps) {
   );
 }
 ```
+   </div>
+   <div id="js">
+```jsx {3-7}
+
+export const route = {
+  preload() {
+    // define preload function
+  }
+};
+
+export default function UsersLayout(props) {
+  return (
+    <div>
+      <h1>Users</h1>
+      {props.children}
+    </div>
+  );
+}
+```
+    </div>
+</TabsCodeBlocks>
+
 
 [api-routes]: /core-concepts/api-routes
 [fileroutes]: /api/FileRoutes

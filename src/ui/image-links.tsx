@@ -20,6 +20,7 @@ export const logos: { [key: string]: { file: string; style?: string } } = {
 	macaron: { file: "macaron.svg" },
 	tailwind: { file: "tailwind.svg" },
 	stormkit: { file: "stormkit.svg" },
+	sst: { file: "sst.svg" },
 	uno: { file: "uno.svg" },
 };
 

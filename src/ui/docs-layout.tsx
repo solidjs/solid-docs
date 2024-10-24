@@ -14,14 +14,13 @@ interface DocsLayoutProps {
 export const DocsLayout = (props: DocsLayoutProps) => {
 	const location = useLocation();
 
-	const lastSegmentPath = () => location.pathname.split("/").reverse()[0];
 	const collection = () =>
 		location.pathname.includes("/reference/")
 			? props.entries.reference
 			: props.entries.learn;
 
 	const entryIndex = () =>
-		collection()!.findIndex((element) => lastSegmentPath() === element.slug);
+		collection()!.findIndex((element) => location.pathname === element.path);
 
 	const titles = () => {
 		const fullEntry = collection

@@ -39,6 +39,33 @@ const postNameAction = action(() => {
 
 ```
 
+## Filtering Submissions
+
+As an optional second parameter, the `useSubmission` helper can receive a filter function to only return the submission that matches the condition.
+The filter receives the submitted dated as a parameter and should return a boolean value.
+E.g.: action below will only submit if the name is "solid".
+
+```tsx title="component.tsx" {4-8}
+import { useSubmission } from "@solidjs/router";
+
+function Component() {
+  const submission = useSubmission(postNameAction, ([formData]) => {
+    const name = formData.get("name") ?? "";
+
+    return name === "solid";
+  });
+
+    return (
+      <form action={postNameAction} method="post">
+          <input type="text" name="name" />
+          <button type="submit">
+              {submission.pending ? "Adding..." : "Add"}
+          </button>
+      </form>
+    )
+}
+```
+
 ## Optimistic Updates
 
 When the form is submitted, the `submission` object will be updated with the new value and the `pending` property will be set to `true`.
@@ -146,17 +173,4 @@ function Component() {
       </>
     )
 }
-```
-
-## Type Definition
-
-```tsx title="@solidjs/router"
-type Submission<T, U> = {
-  readonly input: T;
-  readonly result?: U;
-  readonly pending: boolean;
-  readonly url: string;
-  clear: () => void;
-  retry: () => void;
-};
 ```

@@ -24,11 +24,21 @@ export async function buildFileTree(entry = COLLECTIONS_ROOT) {
 				})
 			);
 
+			const children = entryPath.includes("/reference/")
+				? nested
+						.filter(Boolean)
+						.sort((firstChild, secondChild) =>
+							firstChild.title
+								.toLowerCase()
+								.localeCompare(secondChild.title.toLowerCase())
+						)
+				: nested.filter(Boolean);
+
 			return {
 				type: "section",
 				title: info.title,
 				pages: info.pages,
-				children: nested.filter(Boolean),
+				children,
 			};
 		} else if (!entryPath.includes("data.json")) {
 			const file = await fs.readFile(entryPath, "utf-8");

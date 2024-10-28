@@ -1,0 +1,590 @@
+---
+title: "Data Fetching and Mutation"
+---
+
+This is a comprehensive guide for implementing data fetching and mutations in SolidStart using the Solid Router's data APIs. We will explore all the utilities and enhancements provided out of the box in SolidStart and Solid Router for an ergonomic and optimal data management experience.
+
+## Data Fetching
+
+### Defining queries
+
+You can define data queries by wrapping your function with [`cache`](/solid-router/reference/data-apis/cache). `cache` accepts an async function to fetch data as the first argument, and a key to identify the query as the second.
+
+```tsx {4-12} 
+import { cache } from "@solidjs/router"
+import { storage } from "~/lib/db"
+
+const getTodos = cache(async () => {
+  "use server"
+
+  const todos = await storage.getItem("todos:data")
+  
+  if(!todos) return []
+  
+  return todos
+}, "todos")
+
+```
+
+Being a full-stack framework, SolidStart supports data fetching **directly on the server** using [server functions](/solid-start/reference/server/use-server). You can directly query your database or external APIs from server functions.
+
+### Consuming queries
+
+To consume the data fetched from your query in components, you can use the [`createAsync`](/solid-router/reference/data-apis/create-async) primitive from the router.
+
+```tsx {1, 16} 
+import { action, cache, createAsync } from "@solidjs/router"
+import { For, Show } from "solid-js"
+import { storage } from "~/lib/db"
+
+const getTodos = cache(async () => {
+  "use server"
+
+  const todos = await storage.getItem("todos:data")
+  
+  if(!todos) return []
+  
+  return todos
+}, "todos")
+
+export default function TodoApp() {
+  const todos = createAsync(() => getTodos())
+
+  return (
+    <div>
+      <Show
+        when={todos()?.length}
+        fallback={<p>No todos found</p>}
+      >
+        <ul>
+          <For each={todos()!}>
+            {todo => <li>{todo.title}</li>}
+          </For>
+        </ul>
+        <p>{todos()!.length} todos found</p>
+      </Show>
+    </div>
+  )
+}
+```
+
+`createAsync` returns an **async signal** with the data returned from the query.
+
+### Preloading queries
+
+Fetching data directly inside components like this can lead to a waterfall since pages are lazily loaded. It can also waterfall if the component is rendered conditionally. This can be addressed by preloading the query in `route.preload` like this.
+
+
+```tsx {5, 19-23} 
+import { 
+  action, 
+  cache, 
+  createAsync,
+  type RouteDefinition
+} from "@solidjs/router"
+import { storage } from "~/lib/db"
+
+const getTodos = cache(async () => {
+  "use server"
+
+  const todos = await storage.getItem("todos:data")
+  
+  if(!todos) return []
+  
+  return todos
+}, "todos")
+
+export const route = {
+  preload() {
+    getTodos()
+  },
+} satisfies RouteDefinition
+
+export default function TodoApp() {
+  const todos = createAsync(() => getTodos())
+
+  return <div>...</div>
+}
+```
+
+Preloading leverages the dedupiung [capabilities](/solid-router/reference/data-apis/cache#cache-function-capabilities) of `cache`, ensuring that the query only runs once and the **result can be reused for 5 seconds**.
+
+### Deeply nested data
+
+If the data returned is a **complex object or array**, you might want to use [`createAsyncStore`](/solid-router/reference/data-apis/create-async-store) instead.
+
+
+```tsx {4, 9} 
+import {
+  action,
+  cache,
+  createAsyncStore,
+  type RouteDefinition
+} from "@solidjs/router"
+
+export default function TodoApp() {
+  const todos = createAsyncStore(() => getTodos())
+
+  return (
+    <div>
+      <Show
+        when={todos()?.length}
+        fallback={<p>No todos found</p>}
+      >
+        <ul>
+          <For each={todos()!}>
+            {todo => <li>{todo.title}</li>}
+          </For>
+        </ul>
+        <p>{todos()!.length} todos</p>
+      </Show>
+    </div>
+  )
+}
+```
+
+### Loading and error states
+
+To show loading and error states, you can wrap the part of the UI that reads from async signals with [`Suspense`](/reference/components/suspense) and [`ErrorBoundary`](/reference/components/error-boundary) respectively.
+
+```tsx {1, 8-9} 
+import { For, Show, Suspense, ErrorBoundary } from "solid-js"
+
+export default function TodoApp() {
+  const todos = createAsyncStore(() => getTodos())
+
+  return (
+  <div>
+    <ErrorBoundary fallback={<p>Something went wrong!</p>}>
+      <Suspense fallback={<p>Loading todos...</p>}>
+        <Show
+          when={todos()?.length}
+          fallback={<p>No todos found</p>}
+        >
+          <ul>
+            <For each={todos()!}>
+              {todo => <li>{todo.title}</li>}
+            </For>
+          </ul>
+          <p>{todos()!.length} todos</p>
+        </Show>
+      </Suspense>
+    </ErrorBoundary>
+  </div>
+  )
+}
+```
+If there is no Suspense boundary present, nothing will be rendered on the page until all async signals resolve with a value.
+
+### Protected data and redirects
+
+`cache` functions can throw or return a redirect if, for example, the user doesn't have authorization to access data.
+
+```tsx {1, 9} 
+import { cache, redirect } from "@solidjs/router"
+import { useSession } from "vinxi/http"
+import { storage } from "~/lib/db"
+
+const getTodos = cache(async () => {
+  "use server"
+
+  const session = await useSession()
+  if (!session.data.userId) throw redirect("/sign-in")
+
+  const todos = await storage.getItem("todos:data")
+  
+  if(!todos) return []
+  
+  return todos
+}, "todos")
+```
+
+Protected data fetching eliminates the need to protect routes or components directly. All auth rules can be implemented simply at the data layer.
+
+## Data Mutation
+
+### Defining actions
+
+You can define an action by wrapping your function with [`action`](/solid-router/reference/data-apis/action). `action` accepts an async function to mutate data as the first argument, and an optional name as the second argument. The second argument is necesarry when using action with the `<form>` or `<button>` tag during SSR.
+
+```tsx {1, 4-14} 
+import { action } from "@solidjs/router"
+import { storage } from "~/lib/db"
+
+const addTodo = action(async (formData: FormData) => {
+  "use server"
+
+  const title = formData.get("title")
+
+  const todos = await storage.getItem("todos:data")
+
+  const newTodo = { id: uuid(), title, completed: false }
+
+  await storage.setItem("todos:data", [ ...todos, newTodo ])
+}, "add-todo")
+```
+
+Similar to queries, actions can also be server functions with direct access to server resources like database and external APIs.
+
+### Invoking actions
+
+There are two ways to invoke an action.
+
+#### Form Actions
+
+An action can be directly passed to the `action` property of a `<form>` tag. The action will receive a web standard `FormData` object as its input.
+
+```tsx {4, 18} 
+import { action } from "@solidjs/router"
+import { storage } from "~/lib/db"
+
+const addTodo = action(async (formData: FormData) => {
+  "use server"
+
+  const title = formData.get("title")
+
+  const todos = await storage.getItem("todos:data")
+
+  const newTodo = { id: uuid(), title, completed: false }
+
+  await storage.setItem("todos:data", [ ...todos, newTodo ])
+}, "add-todo")
+
+function AddTodo() {
+  return (
+    <form action={addTodo} method="post">
+      <input
+        name="title"
+        placeholder="What needs to be done?"
+        autofocus
+      />
+    </form>
+  )
+}
+```
+
+This approach supports **progressive enhancement**, i.e., works with JavaScript turned off, provided that the form was rendered on the server. You can also add an `onSubmit` handler for client-side logic when JavaScript is turned on, like validation or clearing the inputs.
+
+```tsx {7, 12-15, 20} 
+import { action } from "@solidjs/router"
+import { storage } from "~/lib/db"
+
+const addTodo = action(async (formData: FormData) => {...}, "add-todo")
+
+function AddTodo() {
+  let inputRef!: HTMLInputElement
+  return (
+    <form
+      action={addTodo}
+      method="post"
+      onSubmit={(e) => {
+        if (!inputRef.value.trim()) e.preventDefault()
+        setTimeout(() => (inputRef.value = ""))
+      }}
+    >
+      <input
+        name="title"
+        placeholder="What needs to be done?"
+        ref={inputRef}
+        autofocus
+      />
+    </form>
+  )
+}
+```
+Calling `e.preventDefault()` will prevent running the action.
+
+You can find more information about invoking actions with progressive enhancement [here](/solid-router/reference/data-apis/action).
+{/* 
+Actions can be bound with an additional value using `.with()`. This value becomes the first argument to the action, and the form data becomes the second. This is a convenient way to pass additional values into the action without resorting to creating hidden inputs manually.
+
+```tsx {4, 22} 
+import { action } from "@solidjs/router"
+import { storage } from "~/lib/db"
+
+const editTodo = action(async (id: number, formData: FormData) => {
+  "use server"
+
+  const title = formData.get("title")
+  const todos = await storage.getItem("todos:data")
+
+  await storage.setItem(
+    "todos:data",
+    todos.map((todo) => {
+      if (todo.id === id) todo.title = title
+      return todo
+    })
+  )
+})
+
+function EditTodo(props: { todo: Todo }) {
+  let inputRef!: HTMLInputElement
+  return (
+    <form action={editTodo.with(props.todo.id)} method="post">
+      <input
+        name="title"
+        class="edit"
+        value={props.todo.title}
+      />
+    </form>
+  )
+}
+```
+
+Actions can also be bound to submit buttons inside forms using `<button formAction>`. This is helpful when the same form data can be submitted form multiple actions.
+
+```tsx {4, 11, 27, 31} 
+import { action } from "@solidjs/router"
+import { storage } from "~/lib/db"
+
+const removeTodo = action(async (id: number) => {
+  "use server"
+
+  const todos = await storage.getItem("todos:data")
+  await storage.setItem("todos:data", todos.filter((todo) => todo.id !== id))
+})
+
+const toggleTodo = action(async (id: number) => {
+  "use server"
+
+  const todos = await storage.getItem("todos:data")
+  await storage.setItem(
+    "todos:data",
+    todos.map((todo) => {
+      if (todo.id === id) todo.completed = !todo.completed
+      return todo
+    })
+  )
+})
+
+function DeleteTodo(props: { todo: Todo }) {
+  return (
+    <form method="post">
+      <button formAction={toggleTodo.with(props.todo.id)}>
+        {props.todo.completed ? <CompleteIcon /> : <IncompleteIcon />}
+      </button>
+      <label>{props.todo.title}</label>
+      <button formAction={removeTodo.with(props.todo.id)}>X</button>
+    </form>
+  )
+}
+```
+ */}
+#### `useAction` hook
+
+If progressive enhancement is not a priority, or the action can't be invoked from a form submission, you can use the `useAction` hook to invoke the action directly in JavaScript.
+
+```tsx {8-9, 13, 17} 
+import { action, useAction } from "@solidjs/router"
+
+const removeTodo = action(async (id: number) => {...})
+
+const toggleTodo = action(async (id: number) => {...})
+
+function DeleteTodo(props: { todo: Todo }) {
+  const removeAction = useAction(removeTodo)
+  const toggleAction = useAction(toggleTodo)
+
+  return (
+    <div>
+      <button onClick={() => toggleAction(props.todo.id)}>
+        {props.todo.completed ? <CompleteIcon /> : <IncompleteIcon />}
+      </button>
+      <label>{props.todo.title}</label>
+      <button onClick={() => removeAction(props.todo.id)}>X</button>
+    </div>
+  )
+}
+```
+
+### Revalidating and redirecting
+
+The most important behavior of actions is their ability to **refetch queries automatically**. This behavior can also be customized declaratively using redirects and cache keys, or imperatively by returning new data. Actions stream back the updated data to the client in the same HTTP request.
+
+#### Default behavior
+
+Invoking an action will [revalidate all](/solid-router/reference/data-apis/action#revalidate-all-default) the queries on the current page by default. When JavaScript is turned off, invoking an action will reload the page. This default behavior ensures that users always see updated data without any extra work from you.
+
+#### Redirecting
+
+After an action completes, you can redirect the user to a different page. 
+
+```ts {11}
+const addBoard = action(async (formData: FormData) => {
+  "use server"
+
+  const userId = await getAuthUser()
+
+  const name = formData.get("name")
+  const color = formData.get("color")
+
+  const board = await db.board.create({ data: { userId, name, color } })
+
+  throw redirect(`/board/${board.id}`)
+}, "add-board")
+```
+
+This action redirects the client to the new page, while also fetching the data for the next page and streaming it to the client as it's available. It uses the next page's `preload` function to determine what data to fetch and stream.
+
+#### Key-based revalidation
+
+Instead of revalidating all the queries, you can declare which queries you want revalidated after an action using keys.
+
+```ts { 1, 9, 11 }
+import { cache, action, reload } from "@solidjs/router"
+import { storage } from "~/lib/db"
+
+const getTodos = cache(async () => {...}, "todos")
+
+const addTodo = action(async (formData: FormData) => {
+  "use server"
+  ...
+  return reload({ revalidate: "todos" })
+  // or
+  return reload({ revalidate: getTodos.key })
+}, "add-todo")
+```
+
+You can use one of many response helpers to revalidate data as shown [here](/solid-router/reference/data-apis/action#revalidate-specific-cached-keys).
+
+#### Single-flight actions
+
+Most routers and data APIs similar to SolidStart require multiple round trips to the server to refetch data after a successful action. SolidStart implments single-flight actions, which eliminate a lot of network latency and client-server waterfalls by refetching data on the server and streaming back the data in the same HTTP request as the action itself. The only requirement is that actions and queries should be server functions.
+
+#### Manual revalidation
+
+In some situations you might be able to update the query data on the client without refetching after an action. You can implement this using the `onComplete` hook on the action.
+
+```ts
+import { cache, action, reload } from "@solidjs/router"
+import { storage } from "~/lib/db"
+
+const getTodos = cache(async () => {...}, "todos")
+
+const addTodo = action(async (formData: FormData) => {
+  "use server"
+
+  const title = formData.get("title")
+  const todos = await storage.getItem("todos:data")
+  const newTodo = { id: uuid(), title, completed: false }
+  await storage.setItem("todos:data", [ ...todos, newTodo ])
+
+  return json(newTodo, { revalidate: [] })
+}, {
+  name: "add-todo",
+  onComplete(submission) {
+    if (!(submission.result instanceof Error)) {
+      const key = getTodos.key
+      const todos = cache.get(key);
+      const newTodo = submission.result
+      cache.set(key, [...todos, newTodo]);
+      submission.clear();
+      revalidate(key, false);
+    }
+  }
+})
+```
+
+Revalidating cache manually like this is an advanced optimization technique with a lot of trade-offs. You should rely on the default revalidation behavior most of the time.
+
+### Pending, error, and optimistic UI
+
+To indicate pending and error states, you can use the `useSubmission` hook by passing the action as input:
+
+```tsx {1, 7, 15, 17-20} 
+import { action, useSubmission } from "@solidjs/router"
+import { storage } from "~/lib/db"
+
+const addTodo = action(async (formData: FormData) => {...}, "add-todo")
+
+function AddTodo() {
+  const addTodoSubmission = useSubmission(addTodo)
+
+  return (
+    <form action={addTodo} method="post">
+      <input
+        name="title"
+        placeholder="What needs to be done?"
+        autofocus
+        disabled={addTodoSubmission.pending}
+      />
+      <Show when={addTodoSubmission.error}>
+        <span>Error adding todo: {addTodoSubmission.error.message}</span>
+        <button onClick={() => addTodoSubmission.retry()}>Try again</button>
+      </Show>
+    </form>
+  )
+}
+```
+
+The submission object comes with a handful of useful information and methods about the action submission.
+
+`useSubmission` only returns the last submission that was made for the action. You can also get a list of all submissions made using the `useSubmissions` hook. This is helpful when implementing optimistic UI.
+
+```tsx {10, 16, 23-25, 27} 
+import { action, cache, createAsync, useSubmissions } from "@solidjs/router"
+import { For, Show } from "solid-js"
+import { storage } from "~/lib/db"
+
+const getTodos = cache(async () => {...}, "todos")
+const addTodo = action(async (formData: FormData) => {...}, "add-todo")
+
+export default function TodoApp() {
+  const todos = createAsync(() => getTodos())
+  const addTodoSubmissions = useSubmissions(addTodo)
+
+  return (
+    <div>
+      <form action={addTodo} method="post">...</form>
+      <Show
+        when={todos()?.length || addTodoSubmissions.length}
+        fallback={<p>No todos found</p>}
+      >
+        <ul>
+          <For each={todos()!}>
+            {todo => <li>{todo.title}</li>}
+          </For>
+          <For each={addTodoSubmissions}>
+            {submission => <li>{submission.input[0].get("title")}</li>}
+          </For>
+        </ul>
+        <p>{todos()!.length + addTodoSubmissions.length} todos found</p>
+      </Show>
+    </div>
+  )
+}
+```
+
+Both hooks accept a second argument to filter the submissions based on input:
+
+```tsx {11-14} 
+import { action, useSubmission } from "@solidjs/router"
+import { For } from "solid-js"
+
+const toggleTodo = action(async (id: number) => {...}, "toggle-todo")
+
+export default function TodoApp() {
+  return (
+    ...
+    <For each={todos()!}>
+      {todo => {
+        const togglingTodo = useSubmission(
+          toggleTodo,
+          (input) => input[0] == todo.id
+        )
+
+        return <li classList={{ pending: togglingTodo.pending }}>
+          {todo.title}
+        </li>
+      }}
+    </For>
+    ...
+  )
+}
+```
+
+## Samples
+
+- [TodoMVC](https://github.com/solidjs/solid-start/tree/main/examples/todomvc) - classic TodoMVC implementation using an [unstorage](https://unstorage.unjs.io/) KV store. Demonstrates most features described here to an intermediate level.
+
+- [Strello](https://github.com/solidjs-community/strello) - Trello clone built with [Prisma](https://www.prisma.io/) and [Turso](https://turso.tech/). Demonstrates everything described here, along with an advanced approach to fine-grained optimistic updates.

@@ -8,13 +8,13 @@ This is a comprehensive guide for implementing data fetching and mutations in So
 
 ### Defining queries
 
-You can define data queries by wrapping your function with [`cache`](/solid-router/reference/data-apis/cache). `cache` accepts an async function to fetch data as the first argument, and a key to identify the query as the second.
+You can define data queries by wrapping your function with [`query`](/solid-router/reference/data-apis/query). `query` accepts an async function to fetch data as the first argument, and a key to identify the query as the second.
 
 ```tsx {4-12} 
-import { cache } from "@solidjs/router"
+import { query } from "@solidjs/router"
 import { storage } from "~/lib/db"
 
-const getTodos = cache(async () => {
+const getTodos = query(async () => {
   "use server"
 
   const todos = await storage.getItem("todos:data")
@@ -33,11 +33,11 @@ Being a full-stack framework, SolidStart supports data fetching **directly on th
 To consume the data fetched from your query in components, you can use the [`createAsync`](/solid-router/reference/data-apis/create-async) primitive from the router.
 
 ```tsx {1, 16} 
-import { action, cache, createAsync } from "@solidjs/router"
+import { action, query, createAsync } from "@solidjs/router"
 import { For, Show } from "solid-js"
 import { storage } from "~/lib/db"
 
-const getTodos = cache(async () => {
+const getTodos = query(async () => {
   "use server"
 
   const todos = await storage.getItem("todos:data")
@@ -78,13 +78,13 @@ Fetching data directly inside components like this can lead to a waterfall since
 ```tsx {5, 19-23} 
 import { 
   action, 
-  cache, 
+  query, 
   createAsync,
   type RouteDefinition
 } from "@solidjs/router"
 import { storage } from "~/lib/db"
 
-const getTodos = cache(async () => {
+const getTodos = query(async () => {
   "use server"
 
   const todos = await storage.getItem("todos:data")
@@ -107,7 +107,7 @@ export default function TodoApp() {
 }
 ```
 
-Preloading leverages the dedupiung [capabilities](/solid-router/reference/data-apis/cache#cache-function-capabilities) of `cache`, ensuring that the query only runs once and the **result can be reused for 5 seconds**.
+Preloading leverages the dedupiung [capabilities](/solid-router/reference/data-apis/query#query-function-capabilities) of `query`, ensuring that the query only runs once and the **result can be reused for 5 seconds**.
 
 ### Deeply nested data
 
@@ -117,7 +117,7 @@ If the data returned is a **complex object or array**, you might want to use [`c
 ```tsx {4, 9} 
 import {
   action,
-  cache,
+  query,
   createAsyncStore,
   type RouteDefinition
 } from "@solidjs/router"
@@ -178,14 +178,14 @@ If there is no Suspense boundary present, nothing will be rendered on the page u
 
 ### Protected data and redirects
 
-`cache` functions can throw or return a redirect if, for example, the user doesn't have authorization to access data.
+`query` functions can throw or return a redirect if, for example, the user doesn't have authorization to access data.
 
 ```tsx {1, 9} 
-import { cache, redirect } from "@solidjs/router"
+import { query, redirect } from "@solidjs/router"
 import { useSession } from "vinxi/http"
 import { storage } from "~/lib/db"
 
-const getTodos = cache(async () => {
+const getTodos = query(async () => {
   "use server"
 
   const session = await useSession()
@@ -399,7 +399,7 @@ function DeleteTodo(props: { todo: Todo }) {
 
 ### Revalidating and redirecting
 
-The most important behavior of actions is their ability to **refetch queries automatically**. This behavior can also be customized declaratively using redirects and cache keys, or imperatively by returning new data. Actions stream back the updated data to the client in the same HTTP request.
+The most important behavior of actions is their ability to **refetch queries automatically**. This behavior can also be customized declaratively using redirects and query keys, or imperatively by returning new data. Actions stream back the updated data to the client in the same HTTP request.
 
 #### Default behavior
 
@@ -431,10 +431,10 @@ This action redirects the client to the new page, while also fetching the data f
 Instead of revalidating all the queries, you can declare which queries you want revalidated after an action using keys.
 
 ```ts { 1, 9, 11 }
-import { cache, action, reload } from "@solidjs/router"
+import { query, action, reload } from "@solidjs/router"
 import { storage } from "~/lib/db"
 
-const getTodos = cache(async () => {...}, "todos")
+const getTodos = query(async () => {...}, "todos")
 
 const addTodo = action(async (formData: FormData) => {
   "use server"
@@ -456,10 +456,10 @@ Most routers and data APIs similar to SolidStart require multiple round trips to
 In some situations you might be able to update the query data on the client without refetching after an action. You can implement this using the `onComplete` hook on the action.
 
 ```ts
-import { cache, action, reload } from "@solidjs/router"
+import { query, action, reload } from "@solidjs/router"
 import { storage } from "~/lib/db"
 
-const getTodos = cache(async () => {...}, "todos")
+const getTodos = query(async () => {...}, "todos")
 
 const addTodo = action(async (formData: FormData) => {
   "use server"
@@ -475,9 +475,9 @@ const addTodo = action(async (formData: FormData) => {
   onComplete(submission) {
     if (!(submission.result instanceof Error)) {
       const key = getTodos.key
-      const todos = cache.get(key);
+      const todos = query.get(key);
       const newTodo = submission.result
-      cache.set(key, [...todos, newTodo]);
+      query.set(key, [...todos, newTodo]);
       submission.clear();
       revalidate(key, false);
     }
@@ -485,7 +485,7 @@ const addTodo = action(async (formData: FormData) => {
 })
 ```
 
-Revalidating cache manually like this is an advanced optimization technique with a lot of trade-offs. You should rely on the default revalidation behavior most of the time.
+Revalidating query manually like this is an advanced optimization technique with a lot of trade-offs. You should rely on the default revalidation behavior most of the time.
 
 ### Pending, error, and optimistic UI
 
@@ -522,11 +522,11 @@ The submission object comes with a handful of useful information and methods abo
 `useSubmission` only returns the last submission that was made for the action. You can also get a list of all submissions made using the `useSubmissions` hook. This is helpful when implementing optimistic UI.
 
 ```tsx {10, 16, 23-25, 27} 
-import { action, cache, createAsync, useSubmissions } from "@solidjs/router"
+import { action, query, createAsync, useSubmissions } from "@solidjs/router"
 import { For, Show } from "solid-js"
 import { storage } from "~/lib/db"
 
-const getTodos = cache(async () => {...}, "todos")
+const getTodos = query(async () => {...}, "todos")
 const addTodo = action(async (formData: FormData) => {...}, "add-todo")
 
 export default function TodoApp() {

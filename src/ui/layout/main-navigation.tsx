@@ -53,7 +53,8 @@ function ListItemLink(props: { item: Entry }) {
 					href={props.item.path}
 					class={`hover:text-blue-700 dark:hover:text-blue-300 block w-full lg:text-sm pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full ${linkStyles()}`}
 				>
-					{props.item.title} {props.item.isDeprecated && "(deprecated)"}
+					{props.item.title}
+					<Show when={props.item.isDeprecated}> (deprecated)</Show>
 					<Show when={!props.item.isTranslated}>
 						<span>
 							<abbr

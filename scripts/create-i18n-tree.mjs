@@ -70,9 +70,12 @@ export async function createI18nTree(entryList, locale, project = "") {
 			);
 
 			if (existsSync(i18nEntryPath + ".mdx")) {
-				const { title } = await getFrontMatterData(i18nEntryPath + ".mdx");
+				const { title, isDeprecated } = await getFrontMatterData(
+					i18nEntryPath + ".mdx"
+				);
 				entries.push({
 					...entry,
+					isDeprecated,
 					isTranslated: true,
 					title,
 					path: `/${locale}${entry.path}`,

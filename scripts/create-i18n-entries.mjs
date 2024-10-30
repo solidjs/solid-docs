@@ -40,12 +40,15 @@ async function buildSectionList(entryList = [], locale, project = "") {
 		);
 
 		if (existsSync(i18nEntryPath + ".mdx")) {
-			const { title } = await getFrontMatterData(i18nEntryPath + ".mdx");
+			const { title, isDeprecated } = await getFrontMatterData(
+				i18nEntryPath + ".mdx"
+			);
 
 			sectionList.push({
 				...entry,
 				path: path.join(locale, entry.path),
 				title,
+				isDeprecated,
 				isTranslated: true,
 			});
 		} else {

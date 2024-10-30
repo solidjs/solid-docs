@@ -1,20 +1,15 @@
 ---
-title: cache
-isDeprecated: true
+title: query
 ---
 
-<Callout type="caution" title="Deprecation Warning">
-This API is deprecated since `v0.15.0` of Solid-Router. Use [query](/solid-router/reference/data-apis/query) instead. It will be removed in an upcoming release.
-</Callout>
-
-`cache` is a [higher-order function](https://en.wikipedia.org/wiki/Higher-order_function) designed to create a new function with the same signature as the function passed to it.
+`query` is a [higher-order function](https://en.wikipedia.org/wiki/Higher-order_function) designed to create a new function with the same signature as the function passed to it.
 When this newly created function is called for the first time with a specific set of arguments, the original function is run, and its return value is stored in a cache and returned to the caller of the created function.
 The next time the created function is called with the same arguments (as long as the cache is still valid), it will return the cached value instead of re-executing the original function.
 
 <Callout>
-`cache` can be defined anywhere and then used inside your components with [`createAsync`](/solid-router/reference/data-apis/create-async).
+`query` can be defined anywhere and then used inside your components with [`createAsync`](/solid-router/reference/data-apis/create-async).
 
-However, using `cache` directly in [`createResource`](/reference/basic-reactivity/create-resource) will not work since the fetcher is not reactive and will not invalidate properly.
+However, using `query` directly in [`createResource`](/reference/basic-reactivity/create-resource) will not work since the fetcher is not reactive and will not invalidate properly.
 
 </Callout>
 
@@ -69,22 +64,22 @@ export default function User(props) {
 }
 ```
 
-## Cache function capabilities
+## Query Function Capabilities
 
-`cache` accomplishes the following:
+`query` accomplishes the following:
 
 1. Deduping on the server for the lifetime of the request.
-2. Preloading the cache in the browser - this lasts 5 seconds.
+2. It fills a preload cache in the browser - this lasts 5 seconds.
    When a route is preloaded on hover or when preload is called when entering a route it will make sure to dedupe calls.
 3. A reactive refetch mechanism based on key.
    This prevents routes that are not new from retriggering on action revalidation.
 4. Serve as a back/forward cache for browser navigation for up to 5 minutes.
-   Any user based navigation or link click bypasses it.
-   Upon revalidation or new fetch the cache is updated.
+   Any user based navigation or link click bypasses this cache.
+   Revalidation or new fetch updates the cache.
 
-## Cache keys
+## Cache Keys
 
-To ensure that the cache keys are consistent and unique, arguments are deterministically serialized using JSON.stringify.
+To ensure that the cache keys are consistent and unique, arguments are deterministically serialized using `JSON.stringify`.
 Before serialization, key/value pairs in objects are sorted so that the order of properties does not affect the serialization.
 For instance, both `{ name: 'Ryan', awesome: true }` and `{ awesome: true, name: 'Ryan' }` will serialize to the same string so that they produce the same cache key.
 
@@ -101,14 +96,14 @@ Under most circumstances, this temporarily prevents the passed function from run
 | `fn`     | `(...args: any) => any` | A function whose return value you'd like to be cached.                    |
 | `name`\* | string                  | Any arbitrary string that you'd like to use as the rest of the cache key. |
 
-\*Since the internal cache is shared by all the functions using `cache`, the string should be unique for each function passed to `cache`.
+\*Since the internal cache is shared by all the functions using `query`, the string should be unique for each function passed to `query`.
 If the same key is used with multiple functions, one function might return the cached result of the other.
 
 ## Methods
 
 ### `.key` and `.keyFor`
 
-Cached functions provide `.key` and `.keyFor`, are useful when retrieving the keys used in cases involving invalidation:
+Query functions provide `.key` and `.keyFor`, are useful when retrieving the keys used in cases involving invalidation:
 
 ```ts
 let id = 5;
@@ -118,7 +113,7 @@ getUser.keyFor(id); // returns "users[5]"
 
 ### `revalidate`
 
-The cache can be revalidated using the `revalidate` method or the `revalidate` keys that are set on the response from the actions.
+The `query` can be revalidated using the `revalidate` method or the `revalidate` keys that are set on the response from the actions.
 If the entire key is passed, it will invalidate all entries for the cache (ie. `users` in the example above).
 If only a single entry needs to be invalidated, `keyFor` is provided.
 To revalidate everything in the cache, pass `undefined` as the key.

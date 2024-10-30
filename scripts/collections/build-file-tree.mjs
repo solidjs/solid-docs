@@ -44,7 +44,7 @@ export async function buildFileTree(entry = COLLECTIONS_ROOT) {
 			const file = await fs.readFile(entryPath, "utf-8");
 			const parentSection = await getDirData(path.resolve(parentSegment));
 
-			const { title, mainNavExclude } = matter(file).data;
+			const { title, mainNavExclude, isDeprecated } = matter(file).data;
 
 			/**
 			 * @todo
@@ -63,6 +63,7 @@ export async function buildFileTree(entry = COLLECTIONS_ROOT) {
 				parent: parentSection.title,
 				title,
 				mainNavExclude,
+				isDeprecated,
 				isTranslated: true,
 			};
 		} else {

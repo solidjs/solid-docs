@@ -1,88 +1,54 @@
+import { Index, Show, createEffect, createSignal, on } from "solid-js";
 import {
-	Component,
-	Index,
-	Show,
-	createEffect,
-	onCleanup,
-	createSignal,
-	onMount,
-	type ResolvedChildren,
-} from "solid-js";
-import { useLocation } from "@solidjs/router";
-import { ParentSection, usePageState } from "~/data/page-state";
+	useCurrentPageData,
+	TableOfContentsItem,
+} from "@kobalte/solidbase/client";
+import { createEventListener } from "@solid-primitives/event-listener";
+import { isServer } from "solid-js/web";
+
 import { useI18n } from "~/i18n/i18n-context";
 
-export const TableOfContents: Component<{ children: ResolvedChildren }> = (
-	props
-) => {
-	const location = useLocation();
-	const { setPageSections, pageSections } = usePageState();
-	const [currentSection, setCurrentSection] = createSignal("");
+export const TableOfContents = () => {
+	const data = useCurrentPageData();
+	const toc = () => data().toc;
+
 	const i18n = useI18n();
 
-	const onScroll = () => {
-		const headings = document.querySelectorAll("main h2, main h3");
-		let currentSection = "";
-		headings.forEach((heading) => {
-			if (heading.getBoundingClientRect().top < 300) {
-				currentSection = heading.id;
-			}
-		});
-		setCurrentSection(currentSection);
-	};
+	const [currentSection, setCurrentSection] = createSignal<string>();
 
-	createEffect(() => {
-		window.addEventListener("scroll", onScroll);
-		onCleanup(() => {
-			window.removeEventListener("scroll", onScroll);
-		});
-	});
+	const [headingElements, setHeadingElements] = createSignal<
+		Array<{ href: string; el?: HTMLElement }>
+	>([]);
 
-	function getHeaders(children: ResolvedChildren) {
-		if (children) {
-			if (!Array.isArray(children)) return;
-			const firstElement = children.find(
-				(child) => child instanceof HTMLElement
-			) as HTMLElement | null;
-			// if any of the child elements are not connected to the DOM the page contents haven't mounted yet
-			if (firstElement && !firstElement.isConnected) return;
-		}
+	createEffect(
+		on(toc, (toc) => {
+			if (!toc) return [];
+			setHeadingElements(
+				toc
+					.map(flattenData)
+					.flat()
+					.map((href) => {
+						const el = document.getElementById(href.slice(1)) ?? undefined;
 
-		const headings = document.querySelectorAll("main h2, main h3");
-		const sections: ParentSection[] = [];
+						return { href, el };
+					})
+			);
+		})
+	);
 
-		if (headings) {
-			headings.forEach((heading) => {
-				if (heading.tagName === "H2") {
-					sections.push({
-						text: heading.textContent,
-						id: heading.id,
-						level: 2,
-						children: [],
-					});
-				} else if (heading.tagName === "H3") {
-					sections[sections.length - 1].children.push({
-						text: heading.textContent,
-						id: heading.id,
-						level: 3,
-					});
+	if (!isServer)
+		createEventListener(window, "scroll", () => {
+			let current;
+
+			for (const heading of headingElements()) {
+				if (!heading.el) continue;
+				if (heading.el.getBoundingClientRect().top < 300) {
+					current = heading.href;
 				}
-			});
-		}
+			}
 
-		setPageSections({
-			path: location.pathname,
-			sections: sections,
+			setCurrentSection(current);
 		});
-	}
-
-	createEffect(() => getHeaders(props.children));
-
-	onMount(() => {
-		document.addEventListener("docs-layout-mounted", () =>
-			getHeaders(props.children)
-		);
-	});
 
 	return (
 		<aside aria-label="table of contents" class="w-full pt-5">
@@ -98,9 +64,9 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (
 						<a
 							href="#_top"
 							classList={{
-								"dark:text-slate-300": currentSection() !== "",
+								"dark:text-slate-300": currentSection() !== undefined,
 								"text-blue-800 dark:text-blue-300 font-bold hover:text-slate-700 dark:hover:text-slate-200":
-									currentSection() === "",
+									currentSection() === undefined,
 							}}
 							class="no-underline hover:text-slate-800"
 						>
@@ -108,20 +74,20 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (
 						</a>
 					</span>
 				</li>
-				<Index each={pageSections.sections}>
+				<Index each={toc()}>
 					{(section) => (
 						<li class="pl-0 pt-0 space-y-2">
 							<span>
 								<a
-									href={`#${section().id}`}
+									href={section().href}
 									classList={{
-										"dark:text-slate-300": currentSection() !== section().id,
+										"dark:text-slate-300": currentSection() !== section().href,
 										"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-bold":
-											currentSection() === section().id,
+											currentSection() === section().href,
 									}}
 									class="no-underline hover:text-slate-700 dark:hover:text-blue-300"
 								>
-									{section().text}
+									{section().title}
 								</a>
 							</span>
 							<Show when={section().children.length !== 0}>
@@ -133,16 +99,16 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (
 										{(subSection) => (
 											<li>
 												<a
-													href={`#${subSection().id}`}
+													href={subSection().href}
 													classList={{
 														"dark:text-slate-300":
-															currentSection() !== subSection().id,
+															currentSection() !== subSection().href,
 														"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-bold":
-															currentSection() === subSection().id,
+															currentSection() === subSection().href,
 													}}
 													class="no-underline hover:text-blue-700 dark:hover:text-blue-300"
 												>
-													{subSection().text}
+													{subSection().title}
 												</a>
 											</li>
 										)}
@@ -156,3 +122,9 @@ export const TableOfContents: Component<{ children: ResolvedChildren }> = (
 		</aside>
 	);
 };
+
+function flattenData(data: TableOfContentsItem): Array<string> {
+	return [data?.href, ...(data?.children ?? []).flatMap(flattenData)].filter(
+		Boolean
+	);
+}

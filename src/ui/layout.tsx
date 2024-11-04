@@ -66,8 +66,6 @@ const getDocsMetadata = cache(
 		isI18nOrProject: PathMatch | undefined,
 		isCore: PathMatch | undefined
 	) => {
-		"use server";
-
 		if (!isFirstMatch && !isI18nOrProject)
 			return {
 				tree: coreTree,

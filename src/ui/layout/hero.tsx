@@ -7,12 +7,11 @@ import {
 	createMemo,
 } from "solid-js";
 import { ButtonLink } from "../button-link";
-import { clientOnly } from "@solidjs/start";
 import { counterTxt, snippetLines } from "./hero-code-snippet";
 import { useLocation, useMatch } from "@solidjs/router";
 import { useI18n } from "~/i18n/i18n-context";
-
-const RenderedCode = clientOnly(() => import("./hero-code-snippet"));
+import RenderedCode from "./hero-code-snippet";
+import { NoHydration } from "solid-js/web";
 
 const TrafficLightsIcon: Component<{ class: string }> = (props) => {
 	return (
@@ -113,13 +112,9 @@ export const Hero: Component = () => {
 												snippetLines.length + 5
 											}em] text-white custom-scrollbar`}
 										>
-											<Suspense
-												fallback={
-													<pre class="text-slate-300">{counterTxt}</pre>
-												}
-											>
+											<NoHydration>
 												<RenderedCode />
-											</Suspense>
+											</NoHydration>
 										</div>
 									</div>
 								</div>

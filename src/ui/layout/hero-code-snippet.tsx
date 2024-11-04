@@ -1,5 +1,5 @@
-import { codeToHtml } from "shiki";
 import { createResource } from "solid-js";
+import { isServer } from "solid-js/web";
 
 export const counterTxt = `import { createSignal } from "solid-js";
 
@@ -18,15 +18,20 @@ function Counter() {
 export const snippetLines = counterTxt.split("\n");
 
 const renderCode = async () => {
-	const code = counterTxt.trim();
-	return codeToHtml(code, {
-		lang: "tsx",
-		theme: "material-theme-ocean",
-	});
+	if (isServer) {
+		const { codeToHtml } = await import("shiki");
+		const code = counterTxt.trim();
+		return codeToHtml(code, {
+			lang: "tsx",
+			theme: "material-theme-ocean",
+		});
+	} else return "";
 };
 
+const renderPromise = renderCode();
+
 export default function CodeSnippet() {
-	const [code] = createResource(renderCode);
+	const [code] = createResource(() => renderPromise);
 
 	// eslint-disable-next-line solid/no-innerhtml
 	return <div innerHTML={code()} />;

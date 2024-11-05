@@ -1,4 +1,5 @@
 import { defineConfig } from "@solidjs/start/config";
+
 import { createWithSolidBase, defineTheme } from "../../src/config";
 
 import tree from "./.solid/tree";

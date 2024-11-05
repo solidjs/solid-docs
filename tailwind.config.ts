@@ -7,7 +7,7 @@ export default {
 		"./src/**/*.{js,jsx,ts,tsx,md,mdx}",
 		"./content/**/*.{js,jsx,ts,tsx,md,mdx}",
 	],
-	darkMode: "class",
+	darkMode: ["selector", "[data-theme='dark']"],
 	theme: {
 		fontSize: {
 			xs: ["0.75rem", { lineHeight: "1rem" }],
@@ -27,7 +27,7 @@ export default {
 		extend: {
 			fontFamily: {
 				sans: "var(--font-geist)",
-				display: ["var(--font-geist)", { fontFeatureSettings: "\"ss01\"" }],
+				display: ["var(--font-geist)", { fontFeatureSettings: '"ss01"' }],
 				mono: "var(--font-geist-mono)",
 			},
 			maxWidth: {

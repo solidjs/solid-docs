@@ -68,7 +68,7 @@ export default defineConfig(
 			markdown: {
 				expressiveCode: {
 					themes: ["min-light", "material-theme-ocean"],
-					themeCssSelector: (theme) => `[data-theme="${theme.name}"]`,
+					themeCssSelector: (theme) => `[data-theme="${theme.type}"]`,
 				},
 			},
 		}

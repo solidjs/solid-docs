@@ -112,9 +112,7 @@ export const Hero: Component = () => {
 												snippetLines.length + 5
 											}em] text-white custom-scrollbar`}
 										>
-											<NoHydration>
-												<RenderedCode />
-											</NoHydration>
+											<RenderedCode />
 										</div>
 									</div>
 								</div>

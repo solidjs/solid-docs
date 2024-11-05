@@ -71,6 +71,9 @@ export default defineConfig(
 					themes: ["min-light", "material-theme-ocean"],
 					themeCssSelector: (theme) => `[data-theme="${theme.type}"]`,
 				},
+				toc: {
+					minDepth: 2,
+				},
 			},
 		}
 	)

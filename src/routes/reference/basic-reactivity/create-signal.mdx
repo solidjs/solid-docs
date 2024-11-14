@@ -3,7 +3,7 @@ title: createSignal
 ---
 
 Signals are the most basic reactive primitive. 
-They track a single value (which can be any JavaScript object) that changes over time.
+They track a single value (which can be a value of any type) that changes over time.
 
 ```tsx
 import { createSignal } from "solid-js"
@@ -39,7 +39,7 @@ Calling the getter (e.g., `count()` or `ready()`) returns the current value of t
 Crucial to automatic dependency tracking, calling the getter within a tracking scope causes the calling function to depend on this Signal, so that function will rerun if the Signal gets updated.
 
 Calling the setter (e.g., `setCount(nextCount)` or `setReady(nextReady)`) sets the Signal's value and updates the Signal (triggering dependents to rerun) if the value actually changed (see details below). 
-The setter takes either the new value for the signal or a function that maps the last value of the signal to a new value as its only argument. 
+The setter takes either the new value for the signal or a function that maps the latest value of the signal to a new value as its only argument. 
 The updated value is also returned by the setter. As an example:
 
 ```tsx
@@ -102,7 +102,7 @@ const [count, setCount] = createSignal(0, {
 })
 ```
 
-Here's are some examples of this option in use:
+Here are some examples of this option in use:
 
 ```tsx
 // use { equals: false } to allow modifying object in-place;
@@ -115,7 +115,7 @@ setObject((current) => {
 	return current
 })
 
-// use { equals: false } signal as trigger without value:
+// use { equals: false } to create a signal that acts as a trigger without storing a value:
 const [depend, rerun] = createSignal(undefined, { equals: false })
 // now calling depend() in a tracking scope
 // makes that scope rerun whenever rerun() gets called

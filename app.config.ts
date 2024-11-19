@@ -1,6 +1,6 @@
 import { defineConfig } from "@solidjs/start/config";
 
-import { createWithSolidBase, defineTheme } from "../../src/config";
+import { createWithSolidBase, defineTheme } from "@kobalte/solidbase/config";
 
 import tree from "./.solid/tree";
 import entries from "./.solid/flat-entries";

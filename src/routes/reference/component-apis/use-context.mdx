@@ -2,15 +2,8 @@
 title: useContext
 ---
 
-```ts
-import { useContext } from "solid-js"
-import type { Context } from "solid-js"
-
-function useContext<T>(context: Context<T>): T
-
-```
-
 Used to grab context within a context provider scope to allow for deep passing of props without having to pass them through each Component function.
+It's therefore used in conjunction with [`createContext`](/reference/component-apis/create-context) to consume the data from a Provider scope and thus avoid passing data through intermediate components (prop drilling).
 
 ```ts
 const [state, { increment, decrement }] = useContext(CounterContext)
@@ -20,14 +13,26 @@ const [state, { increment, decrement }] = useContext(CounterContext)
 
 It is often a good idea to wrap `useContext` in a function like so:
 
-```ts
+```ts title="/context/counter-component.tsx"
 function useCounterContext() {
 	const context = useContext(CounterContext)
+
 	if (!context) {
 		throw new Error("useCounterContext: cannot find a CounterContext")
 	}
+
 	return context
 }
 ```
 
-See the API reference of [createContext](/reference/component-apis/create-context) for the explanation of what this solves.
+See the API reference of [createContext](/reference/component-apis/create-context) the API on how to generate a Provider scope.
+And check the [Context concepts](/concepts/context) for more information on how to architecture your contexts.
+
+## Type signature
+
+```ts
+import { type Context } from "solid-js"
+
+function useContext<T>(context: Context<T>): T
+
+```

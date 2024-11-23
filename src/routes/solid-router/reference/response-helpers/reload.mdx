@@ -1,0 +1,30 @@
+---
+title: reload
+---
+
+Reload is a response helper built on top of [revalidate](/solid-router/response-helpers/revalidate).
+It will receive a cache key, or an array of cache keys, to invalidate those queries, and cause them to fire again.
+
+```ts title="/actions/update-todo.ts"{4}
+import { action, reload } from "@solidjs/router";
+import { putTodo, getTodo } from "../db";
+
+const updateTodo = action(async (todo: Todo) => {
+	await putTodo(todo.id, todo);
+	
+    return reload({ revalidate: getTodo.keyFor(id) });
+});
+```
+
+The code snippet above uses the cache-key from a user-defined query (`getTodo`). 
+To better understand how queries work, check the [query](/solid-router/reference/data-apis/query) documentation.
+
+## TypeScript Signature
+
+```ts
+interface ResponseOptions {
+  revalidate?: string | string[];
+}
+
+reload(opt?: ResponseOptions): CustomResponse<never>;
+```

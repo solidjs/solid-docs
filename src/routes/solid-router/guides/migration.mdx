@@ -26,7 +26,7 @@ Removing the second way to define route components to reduce confusion and edge 
 ## `data` functions & `useRouteData`
 
 `data` functions & `useRouteData` have been replaced by a load mechanism.
-This allows link hover preloads, since the load function can be run as much as wanted without worrying about reactivity.
+This allows link hover preloads, since the preload function can be run as much as wanted without worrying about reactivity.
 
 This supports deduping/cache APIs which give more control over how things are cached.
 It also addresses TypeScript issues with getting the right types in the Component without `typeof` checks.
@@ -39,15 +39,15 @@ import { Route } from "@solidjs/router";
 
 const User = lazy(() => import("./pages/users/[id].js"));
 
-// load function
-function loadUser({ params, location }) {
+// preload function
+function preloadUser({ params, location }) {
 	const [user] = createResource(() => params.id, fetchUser);
 	return user;
 }
 
 // Pass it in the route definition
 <Router preload={false}>
-	<Route path="/users/:id" component={User} load={loadUser} />
+	<Route path="/users/:id" component={User} preload={preloadUser} />
 </Router>;
 ```
 

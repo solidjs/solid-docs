@@ -35,7 +35,7 @@ That being said the old pattern can be reproduced by turning off preloads at the
 
 ```js
 import { lazy } from "solid-js";
-import { Route } from "@solidjs/router";
+import { Router, Route } from "@solidjs/router";
 
 const User = lazy(() => import("./pages/users/[id].js"));
 
@@ -54,13 +54,16 @@ function preloadUser({ params, location }) {
 And then in your component taking the page props and putting them in a Context.
 
 ```js
+import { createContext, useContext } from "solid-js";
+
+const UserContext = createContext();
+
 function User(props) {
-	<UserContext.Provider value={props.data}>
-		{/* my component content  */}
+	<UserContext.Provider value={props.data()}>
+		{/* my component content that includes <UserDetails /> in any depth  */}
 	</UserContext.Provider>;
 }
 
-// Somewhere else
 function UserDetails() {
 	const user = useContext(UserContext);
 	// render stuff

@@ -3,6 +3,8 @@ title: createEffect
 ---
 
 ```tsx
+import { createEffect } from "solid-js"
+
 function createEffect<T>(fn: (v: T) => T, value?: T): void
 
 ```
@@ -31,10 +33,10 @@ This is useful for memoizing values that are expensive to compute. For example:
 const [a, setA] = createSignal(initialValue)
 
 // effect that depends on signal `a`
-createEffect((prevA) => {
-	// do something with `a` and `prevA`
+createEffect((prevSum) => {
+	// do something with `a` and `prevSum`
 	const sum = a() + b()
-	if (sum !== prevA) console.log("sum changed to", sum)
+	if (sum !== prevSum) console.log("sum changed to", sum)
 	return sum
 }, 0)
 // ^ the initial value of the effect is 0
@@ -71,7 +73,7 @@ queueMicrotask(() => {
 // goodbye
 ```
 
-This delay in first execution is useful because it means an effect defined in a component scope runs after the JSX returned by the component gets added the DOM.
+This delay in first execution is useful because it means an effect defined in a component scope runs after the JSX returned by the component gets added to the DOM.
 In particular, [refs](/reference/jsx-attributes/ref) will already be set.
 Thus you can use an effect to manipulate the DOM manually, call vanilla JS libraries, or other side effects.
 

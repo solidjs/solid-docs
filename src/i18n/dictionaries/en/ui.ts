@@ -1,7 +1,8 @@
 export default {
 	// hero
 	"hero.title": "Effortless UIs with Reactive Precision.",
-	"hero.subtitle": "SolidJS is a modern JavaScript framework for today's web.",
+	"hero.subtitle": "Solid is a modern JavaScript framework for today's web.",
+	"hero.subtitle.start": "Fine-grained reactivity goes fullstack.",
 	"hero.button.primary": "Get started",
 	"hero.button.secondary": "Join the community",
 
@@ -27,7 +28,7 @@ export default {
 	"main.nav.section.solid.router": "Solid-Router",
 	"main.nav.section.solid.router.components": "Components",
 	"main.nav.section.solid.router.data.apis": "Data APIs",
-	"main.nav.section.solid.router.load.functions": "Load Functions",
+	"main.nav.section.solid.router.preload.functions": "Preload Functions",
 	"main.nav.section.solid.router.primitives": "Primitives",
 	"main.nav.no.routes": "No routes found",
 

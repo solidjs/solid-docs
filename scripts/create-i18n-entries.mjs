@@ -1,7 +1,7 @@
 import { existsSync } from "fs";
 import path from "path";
 import { COLLECTIONS_ROOT } from "./collections/index.mjs";
-import { getFrontMatterData } from "./collections/utils/get-frontamtter.mjs";
+import { getFrontMatterData } from "./collections/utils/get-frontmatter.mjs";
 /**
  * @typedef {Object} DocsEntry
  * @property {string} type - The type of reference.
@@ -40,12 +40,15 @@ async function buildSectionList(entryList = [], locale, project = "") {
 		);
 
 		if (existsSync(i18nEntryPath + ".mdx")) {
-			const { title } = await getFrontMatterData(i18nEntryPath + ".mdx");
+			const { title, isDeprecated } = await getFrontMatterData(
+				i18nEntryPath + ".mdx"
+			);
 
 			sectionList.push({
 				...entry,
 				path: path.join(locale, entry.path),
 				title,
+				isDeprecated,
 				isTranslated: true,
 			});
 		} else {

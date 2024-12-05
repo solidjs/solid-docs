@@ -1,5 +1,5 @@
 ---
-title: Fetching Data
+title: Fetching data
 order: 3
 ---
 
@@ -22,7 +22,7 @@ These properties can be used to conditionally render JSX based on the current re
 
 The fetcher function that is created makes a call to get a user, which is then passed in as an argument to `createResource`.
 
-The signal returned from the `createResource` provides the properties that help can assist with conditional rendering based on the current reactive state:
+The signal returned from the `createResource` provides the properties that can assist with conditional rendering based on the current reactive state:
 * `state`: The current status of the operation (`unresolved`, `pending`, `ready`, `refreshing`, or `errored`).
 * `loading`: Indicates that the operation is currently in progress via a `boolean`.
 * `error`: If the operation fails for any reason, this property will contain information about this error.
@@ -34,8 +34,7 @@ When there is a change in the source signal, an internal fetch process is trigge
 ```jsx
 import { createSignal, createResource, Switch, Match, Show } from "solid-js";
 
-const fetchUser = async (id) =>
- {
+const fetchUser = async (id) => {
   const response = await fetch(`https://swapi.dev/api/people/${id}/`);
   return response.json();
 }
@@ -57,13 +56,12 @@ function App() {
       </Show>
       <Switch>
         <Match when={user.error}>
-          <span>Error: {error()}</span>
+          <span>Error: {user.error}</span>
         </Match>
         <Match when={user()}>
           <div>{JSON.stringify(user())}</div>
         </Match>
       </Switch>
-
     </div>
   );
 }
@@ -73,7 +71,7 @@ Whenever the signal value, `userId`, changes, the internal fetch method `fetchUs
 The properties of the `user` resource allow for conditional rendering based on the different states of the fetch process.
 
 The `Switch/Match` construct provides one way to manage these conditions.
-When the fetch succeeds and user data is retrieved, the `user(`) condition becomes active, and its related block executes.
+When the fetch succeeds and user data is retrieved, the `user()` condition becomes active, and its related block executes.
 However, if there's an error while fetching, the `user.error` block becomes `true`, leading to its corresponding `Match` block being shown.
 
 In addition to the `error` property, the `loading` property offers a way to display a loading state to the user during the fetch operation.
@@ -91,7 +89,7 @@ import { createSignal, createResource, Switch, Match, Suspense } from "solid-js"
 const fetchUser = async (id) => {
   const response = await fetch(`https://swapi.dev/api/people/${id}/`);
   return response.json();
- }
+}
 
 function App() {
   const [userId, setUserId] = createSignal();
@@ -106,10 +104,9 @@ function App() {
       onInput={(e) => setUserId(e.currentTarget.value)}
     />
       <Suspense fallback={<div>Loading...</div>}>
-
         <Switch>
           <Match when={user.error}>
-            <span>Error: {error()}</span>
+            <span>Error: {user.error.message}</span>
           </Match>
           <Match when={user()}>
             <div>{JSON.stringify(user())}</div>
@@ -143,7 +140,7 @@ This functionality is particularly valuable in applications like task lists.
 For example, when users input a new task and click the `Add` button, the list will refresh immediately, regardless of the ongoing data communication with the server.
 
 ```jsx
-import { For, createResource } from 'solid-js';
+import { For, createResource } from "solid-js"
 
 function TodoList() {
   const [tasks, { mutate }] = createResource(fetchTasksFromServer);
@@ -152,15 +149,19 @@ function TodoList() {
     <>
       <ul>
         <For each={tasks()}>
-          {task => (
+          {(task) => (
             <li>{task.name}</li>
           )}
         </For>
       </ul>
-      <button onClick={() => {
-        mutate((todos) => [...todos, "do new task"]) // add todo for user
-        // make a call to send to database
-      }}>Add Task</button>
+      <button
+        onClick={() => {
+          mutate((todos) => [...todos, "do new task"]); // add todo for user
+          // make a call to send to database
+        }}
+      >
+        Add Task
+      </button>
     </>
   );
 }
@@ -172,7 +173,7 @@ When real-time feedback is necessary, the `refetch` method can be used to reload
 This method can be particularly useful when data is constantly evolving, such as with real-time financial applications.
 
 ```jsx
-import { createResource, onCleanUp } from 'solid-js';
+import { createResource, onCleanup } from "solid-js"
 
 function StockPriceTicker() {
   const [prices, { refetch }] = createResource(fetchStockPrices);
@@ -180,6 +181,6 @@ function StockPriceTicker() {
   const timer = setInterval(() => {
     refetch()
   }, 1000);
-  onCleanUp(() => clearInterval(timer))
+  onCleanup(() => clearInterval(timer))
 }
 ```

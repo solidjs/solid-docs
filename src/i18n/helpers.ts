@@ -1,5 +1,6 @@
-import { useMatch } from "@solidjs/router";
+import { useLocation } from "@solidjs/router";
 import { SUPPORTED_LOCALES } from "./config";
+import { useCurrentRouteMetaData } from "~/utils/route-metadata-helper";
 
 export function getLocaleFromPathname(pathname: string) {
 	return pathname.split("/")[1];
@@ -8,9 +9,6 @@ export function getLocaleFromPathname(pathname: string) {
 export function isValidLocale(
 	locale: string
 ): locale is (typeof SUPPORTED_LOCALES)[number] {
-	// TS is being annoying.
-	// we are actually narrowing string here.
-	// @ts-ignore
 	return SUPPORTED_LOCALES.includes(locale);
 }
 
@@ -20,13 +18,15 @@ export function getValidLocaleFromPathname(pathname: string) {
 	return isValidLocale(locale) ? locale : null;
 }
 
-export function getEntryFileName(pathname: string) {
-	const locale = getValidLocaleFromPathname(pathname);
+export function getEntryFileName() {
+	const pathname = useLocation().pathname;
+	const currentRouteMetaData = useCurrentRouteMetaData();
 
-	if (locale) {
-		return pathname.endsWith(locale) ? `${pathname}/index` : pathname;
+	if (currentRouteMetaData.isProjectRoot) {
+		return `${pathname}/index.mdx`.replace("//", "/");
 	} else {
-		return pathname !== "/" ? pathname : "/index";
+		// Trim trailing slash
+		return (pathname.endsWith("/") ? pathname.slice(0, -1) : pathname) + ".mdx";
 	}
 }
 

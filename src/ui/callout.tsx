@@ -1,9 +1,10 @@
 import { Alert } from "@kobalte/core";
 import { Icon } from "solid-heroicons";
-import { mergeProps, type JSXElement, Show } from "solid-js";
+import { mergeProps, type JSX, Show, untrack } from "solid-js";
 import {
 	lightBulb,
-	exclamationCircle,
+	exclamationTriangle,
+	xCircle,
 	puzzlePiece,
 	bookOpen,
 } from "solid-heroicons/solid";
@@ -29,6 +30,11 @@ const styles = {
 			"bg-amber-400/30 border-amber-600 dark:border-amber-400 dark:bg-amber-400/20 dark:border-amber-600",
 		title: "text-amber-900 dark:text-amber-400",
 	},
+	danger: {
+		container:
+			"bg-red-400/30 border-red-600 dark:border-red-400 dark:bg-red-400/20 dark:border-red-600",
+		title: "text-red-900 dark:text-red-400",
+	},
 };
 
 const icons = {
@@ -52,15 +58,21 @@ const icons = {
 	),
 	caution: (props: { class?: string }) => (
 		<Icon
-			path={exclamationCircle}
+			path={exclamationTriangle}
 			class={`${props.class} fill-amber-500 dark:fill-amber-400`}
+		/>
+	),
+	danger: (props: { class?: string }) => (
+		<Icon
+			path={xCircle}
+			class={`${props.class} fill-red-500 dark:fill-red-400`}
 		/>
 	),
 };
 
 export type CalloutProps = {
 	title?: string;
-	children: JSXElement;
+	children: JSX.Element;
 	type?: keyof typeof styles;
 };
 
@@ -70,7 +82,9 @@ export function Callout(props: CalloutProps) {
 		props
 	);
 
-	let IconComponent = icons[mergedProps.type];
+	const iconType = untrack(() => mergedProps.type);
+
+	const IconComponent = icons[iconType];
 
 	return (
 		<Alert.Root
@@ -78,7 +92,7 @@ export function Callout(props: CalloutProps) {
 				styles[mergedProps.type].container
 			}`}
 		>
-			<IconComponent class={`h-6 w-8 pt-1 flex-none`} />
+			<IconComponent class="h-6 w-8 pt-1 flex-none" />
 			<div class={`m-0 pb-1 px-4 w-full ${styles[mergedProps.type].title}`}>
 				<Show
 					when={props.title}

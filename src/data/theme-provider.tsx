@@ -22,8 +22,8 @@ export interface Theme {
 	theme: string;
 }
 type ThemeContext = {
-	selectedTheme: Accessor<Theme>;
-	setSelectedTheme: Setter<Theme>;
+	selectedTheme: Accessor<Theme | undefined>;
+	setSelectedTheme: Setter<Theme | undefined>;
 	themes: Theme[];
 };
 
@@ -36,8 +36,8 @@ function getCookie(name: string, cookieString: string) {
 const ThemeCtx = createContext<ThemeContext>();
 const getUserTheme = () => {
 	if (isServer) {
-		const e = getRequestEvent();
-		return getCookie("theme", e?.request.headers.get("cookie")!);
+		const e = getRequestEvent()!;
+		return getCookie("theme", e.request.headers.get("cookie")!);
 	}
 	return getCookie("theme", document.cookie);
 };
@@ -60,8 +60,8 @@ export const ThemeProvider = (props: ParentProps) => {
 	];
 	const themeName = getUserTheme();
 	const theme = themes.find((t) => t.value == themeName);
-	const [selectedTheme, setSelectedTheme] = createSignal<Theme>(
-		theme ?? themes[0]
+	const [selectedTheme, setSelectedTheme] = createSignal<Theme | undefined>(
+		theme
 	);
 	onMount(() => {
 		// If the user has no theme cookie, set to their system theme on mount
@@ -69,7 +69,8 @@ export const ThemeProvider = (props: ParentProps) => {
 		setSelectedTheme(themes[2]);
 	});
 	createEffect(() => {
-		document.cookie = `theme=${selectedTheme().value};path=/;max-age=${60 * 60 * 24 * 365}`;
+		if (selectedTheme()?.value)
+			document.cookie = `theme=${selectedTheme()!.value};path=/;max-age=${60 * 60 * 24 * 365}`;
 	});
 	return (
 		<ThemeCtx.Provider

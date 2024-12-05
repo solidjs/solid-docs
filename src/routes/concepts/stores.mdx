@@ -3,13 +3,14 @@ title: Stores
 order: 6
 ---
 
-Similar to [signals](/concepts/signals), stores are state management primitive.
+Similar to [signals](/concepts/signals), stores are a state management primitive.
 However, while signals manage a single piece of state, stores create a centralized location to reduce code redundancy.
 Within Solid, these stores can spawn a collection of reactive signals, each corresponding to a particular property which can be useful when working with complex state.
 
 ## Creating a store
 
-Stores were intentionally designed to manage data structures like objects and arrays but are capable of handling other data types, such as strings and numbers.
+Stores can manage many data types, including: objects, arrays, strings, and numbers.
+
 Using JavaScript's [proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) mechanism, reactivity extends beyond just the top-level objects or arrays.
 With stores, you can now target nested properties and elements within these structures to create a dynamic tree of reactive data.
 
@@ -33,7 +34,7 @@ const [store, setStore] = createStore({
 			loggedIn: true,
 		},
 		{
-			id: 1,
+			id: 2,
 			username: "johny123",
 			location: "India",
 			loggedIn: true,
@@ -197,6 +198,33 @@ Separating the read and write capabilities of a store provides a valuable debugg
 
 This separation facilitates the tracking and control of the components that are accessing or changing the values.
 </Callout>
+<Callout type="advanced">
+  A little hidden feature of stores is that you can also create nested stores to help with setting nested properties.
+
+```jsx
+  const [store, setStore] = createStore({
+    userCount: 3,
+    users: [ ... ],
+  })
+
+  const [users, setUsers] = createStore(store.users)
+
+  setUsers((currentUsers) => [
+    ...currentUsers,
+    {
+      id: 3,
+      username: "michael584",
+      location: "Nigeria",
+      loggedIn: false,
+    },
+  ])
+
+```
+  Changes made through `setUsers` will update the `store.users` property and reading `users` from this derived store will also be in sync with the values from `store.users`.
+
+  Note that the above relies on `store.users` to be set already in the existing store.
+
+</Callout>
 
 ## Path syntax flexibility
 
@@ -208,7 +236,7 @@ By specifying these exact key names, you can directly retrieve the targeted info
 However, path syntax goes beyond string keys and offers more versatility when accessing targeted values.
 
 Instead of employing the use of just string keys, there is the option of using an array of keys.
-This method grants you the ability to select multiple properties within the store, facilitating accessed to nested structures.
+This method grants you the ability to select multiple properties within the store, facilitating access to nested structures.
 Alternatively, you can use filtering functions to access keys based on dynamic conditions or specific rules.
 
 <EraserLink
@@ -251,7 +279,7 @@ setStore("users", store.users.length, {
 
 ### Range specification
 
-With path syntax, you can specify a range of indices to update or modify to target a subset of the elements within the array for modification.
+With path syntax, you can target a subset of elements to update or modify by specifying a range of indices.
 You can do this using an array of values:
 
 ```jsx
@@ -259,10 +287,12 @@ setStore("users", [1, 3], "loggedIn", false)
 ```
 
     <Callout>
-    If your *store* is array, you can specify a range of indices using an object with `from` and `to` keys.
+    If your *store* is an array, you can specify a range of indices using an object with `from` and `to` keys.
 
 ```jsx
-setStore({ from: 1, to: store.length }, "loggedIn", false)
+const [store, setStore] = createStore([]) // A store that is an array
+...
+setStore({ from: 1, to: store.length - 1 }, "loggedIn", false)
 ```
 
 In addition to this, including the `by` key, can help you perform iterative updates within an array, which can be useful when you want to update elements at regular intervals.
@@ -281,7 +311,7 @@ These functions receive the old value as an argument, allowing you to compute th
 This dynamic approach is particularly useful for complex transformations.
 
 ```jsx
-setStore("users", 3, (loggedIn) => !loggedIn)
+setStore("users", 3, "loggedIn" , (loggedIn) => !loggedIn)
 ```
 
 ### Filtering values
@@ -310,9 +340,9 @@ setStore("users", 0, {
 
 // is equivalent to
 
-setStore("users", 1, (user) => ({
+setStore("users", 0, (user) => ({
 	...user,
-	id: 69420,
+	id: 109,
 }))
 ```
 
@@ -353,7 +383,7 @@ Other collection types, such as JavaScript [Sets](https://developer.mozilla.org/
 ### Data integration with `reconcile`
 
 When new information needs to be merged into an existing store `reconcile` can be useful.
-`reconcile` will determine the differences between new and existing data, initiating updates only when there are _changed_ values which avoids unnecessary updates.
+`reconcile` will determine the differences between new and existing data and initiate updates only when there are _changed_ values, thereby avoiding unnecessary updates.
 
 ```jsx
 const { createStore, reconcile } from "solid-js/stores"
@@ -370,7 +400,7 @@ setData('animals', reconcile(newData))
 In this example, the store will look for the differences between the existing and incoming data sets.
 Consequently, only `'koala'` - the new edition - will cause an update.
 
-## Extracting raw data with `unwrap`
+### Extracting raw data with `unwrap`
 
 When there is a need for dealing with data outside of a reactive context, the `unwrap` utility offers a way to transform a store to a standard [object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object).
 This conversion serves several important purposes.

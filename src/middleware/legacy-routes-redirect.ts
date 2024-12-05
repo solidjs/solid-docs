@@ -61,7 +61,8 @@ const LEGACY_ROUTES = {
 	"/references/api-reference/special-jsx-attributes/classList": "/reference/jsx-attributes/classlist",
 	"/references/api-reference/special-jsx-attributes/innerHTML-or-textContent": "/reference/jsx-attributes/innerhtml-or-textcontent",
 	"/references/api-reference/special-jsx-attributes/on_": "/reference/jsx-attributes/on_",
-	"/references/api-reference/special-jsx-attributes/on_-and-oncapture_": "/reference/jsx-attributes/on-and-oncapture",
+	"/references/api-reference/special-jsx-attributes/on_-and-oncapture_": "/reference/jsx-attributes/on",
+
 	"/references/api-reference/special-jsx-attributes/once": "/reference/jsx-attributes/once",
 	"/references/api-reference/special-jsx-attributes/prop_": "/reference/jsx-attributes/prop",
 	"/references/api-reference/special-jsx-attributes/ref": "/reference/jsx-attributes/ref",
@@ -102,7 +103,10 @@ const LEGACY_ROUTES = {
 	"/references/concepts/reactivity/tracking": "/concepts/intro-to-reactivity#subscribers",
 	"/references/concepts/ssr/async-ssr": "/guides/fetching-data",
 	"/references/concepts/ssr/simple-client-fetching-ssr": "/guides/fetching-data",
-	"/references/concepts/state-management/context": "/guides/complex-state-management#state-sharing"
+	"/references/concepts/state-management/context": "/guides/complex-state-management#state-sharing",
+
+	// solid-docs-next moves/new location for old pages/solid api updates
+	"/reference/jsx-attributes/on-and-oncapture": "/reference/jsx-attributes/on",
 
 } as const;
 

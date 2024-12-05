@@ -1,0 +1,176 @@
+---
+title: useSubmission
+---
+
+This helper is used to handle form submissions and can provide optimistic updates while actions are in flight as well as pending state feedback.
+This method will return a single (latest) value while its sibling, [`useSubmissions`](/solid-router/reference/data-apis/use-submissions), will return all values submitted while the component is active. With an optional second parameter for a filter function.
+
+It's important to note that `useSubmission` requires the form method to be **post** otherwise it will trigger a browser navigation and will not work.
+
+```tsx title="component.tsx" {4,8}
+import { useSubmission } from "@solidjs/router";
+
+function Component() {
+  const submission = useSubmission(postNameAction);
+
+    return (
+      <form action={postNameAction} method="post">
+          <input type="text" name="name" />
+          <button type="submit">
+              {submission.pending ? "Adding..." : "Add"}
+          </button>
+      </form>
+    )
+}
+```
+
+## Creating the action
+
+The Action which will trigger the submission should be created with the [`action()`](/solid-router/reference/data-apis/action) helper and, when in a [SolidStart](/solid-start) app, it is recommended to leverage the `"use server"` directive to leverage the caching and RPC capabilities from the server-side.
+
+```tsx title="/component.tsx" {1,3-4}
+import { action } from "@solidjs/router";
+
+const postNameAction = action(() => {
+  "use server";
+  /*... logic ...*/ 
+  return { data: "Hello SolidStart" };
+})
+
+```
+
+## Filtering Submissions
+
+As an optional second parameter, the `useSubmission` helper can receive a filter function to only return the submission that matches the condition.
+The filter receives the submitted dated as a parameter and should return a boolean value.
+E.g.: action below will only submit if the name is "solid".
+
+```tsx title="component.tsx" {4-8}
+import { useSubmission } from "@solidjs/router";
+
+function Component() {
+  const submission = useSubmission(postNameAction, ([formData]) => {
+    const name = formData.get("name") ?? "";
+
+    return name === "solid";
+  });
+
+    return (
+      <form action={postNameAction} method="post">
+          <input type="text" name="name" />
+          <button type="submit">
+              {submission.pending ? "Adding..." : "Add"}
+          </button>
+      </form>
+    )
+}
+```
+
+## Optimistic Updates
+
+When the form is submitted, the `submission` object will be updated with the new value and the `pending` property will be set to `true`.
+This allows you to provide feedback to the user that the action is in progress.
+Once the action is complete, the `pending` property will be set to `false` and the `result` property will be updated with final value.
+
+
+<TabsCodeBlocks>
+<div id="ts">
+```tsx title="component.tsx" {5,9-11}
+import { Show } from "solid-js";
+import { useSubmission } from "@solidjs/router";
+
+function Component() {
+  const submission = useSubmission(postNameAction);
+
+    return (
+      <>
+        <Show when={submission.input?.[0].get("name")}>
+          {(name) => <div>Optimistic: {name() as string}</div>}
+        </Show>
+
+        <Show when={submission.result?.name}>
+          {(name) => <div>Result: {name()}</div>}
+        </Show>
+
+        <form method="post" action={sendData}>
+          <input type="text" name="name" required />
+          <button type="submit" disabled={submission.pending}>
+            {submission.pending ? "Submitting" : "Submit"}
+          </button>
+        </form>
+      </>
+    )
+}
+```
+</div>
+<div id="js">
+```tsx title="component.jsx" {5,9-11}
+import { Show } from "solid-js";
+import { useSubmission } from "@solidjs/router";
+
+function Component() {
+  const submission = useSubmission(postNameAction);
+
+    return (
+      <>
+        <Show when={submission.input?.[0].get("name")}>
+          {(name) => <div>Optimistic: {name()}</div>}
+        </Show>
+
+        <Show when={submission.result?.name}>
+          {(name) => <div>Result: {name()}</div>}
+        </Show>
+
+        <form method="post" action={sendData}>
+          <input type="text" name="name" required />
+          <button type="submit" disabled={submission.pending}>
+            {submission.pending ? "Submitting" : "Submit"}
+          </button>
+        </form>
+      </>
+    )
+}
+```
+</div>
+</TabsCodeBlocks>
+
+## Error Handling
+
+If the action fails, the `submission` object will be updated with the error and the `pending` property will be set to `false`.
+This allows you to provide feedback to the user that the action has failed. Additionally, the return type of `useSubmission` will have a new key `error` that will contain the error object thrown by the submission handler.
+
+At this stage, you can also use the `retry()` method to attempt the action again or the `clear()` to wipe the filled data in the platform.
+
+```tsx title="component.tsx" {12-18}
+import { Show } from "solid-js";
+import { useSubmission } from "@solidjs/router";
+
+function Component() {
+  const submission = useSubmission(postNameAction);
+
+    return (
+      <>
+        <Show when={submission.error}>
+          {(error) => (
+            <div>
+              <p>Error: {error.message}</p>
+              <button onClick={() => submission.clear()}>
+                Clear
+              </button>
+              <button onClick={async () => submission.retry()}>
+               Retry
+              </button>
+            </div>
+          )}
+        </Show>
+
+        <form method="post" action={sendData}>
+          <input type="text" name="name" required />
+          <button type="submit" disabled={submission.pending}>
+            {submission.pending ? "Submitting" : "Submit"}
+          </button>
+        </form>
+      </>
+    )
+}
+```

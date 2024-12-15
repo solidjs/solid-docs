@@ -1,8 +1,11 @@
----
-title: "Middleware"
----
 
-Middlewares may be included by passing file you specify in your start config.
+# Middleware
+
+You can customize the request and response lifecycle by using middleware. Middleware allows you to intercept HTTP requests before they are processed by your application and manipulate them if needed.
+
+## Configuration
+
+Start by specifying a middleware file in your project’s start configuration.
 
 ```js
 import { defineConfig } from "@solidjs/start/config";
@@ -12,7 +15,11 @@ export default defineConfig({
 });
 ```
 
-Inside the middleware file, you can export a `createMiddleware` function.
+In the code above, the middleware key in the configuration is pointing to a file (middleware.ts) where you will define your custom middleware functions.
+
+## Creating Middleware
+
+Inside your middleware file, you can define middleware behavior by exporting a createMiddleware function. This function lets you hook into the request lifecycle and perform actions at different stages.
 
 ```tsx
 import { createMiddleware } from "@solidjs/start/middleware";
@@ -20,10 +27,93 @@ import { createMiddleware } from "@solidjs/start/middleware";
 export default createMiddleware({
   onRequest: [
     event => {
-      console.log("GLOBAL", event.request.url);
+      console.log("GLOBAL", event.request.url); // Logs the URL of each incoming request
     }
   ]
 });
 ```
 
-Middleware supports 2 lifecycles: `onRequest` and `onBeforeResponse`. If you return a value from middleware it will respond with that, otherwise it will run the next one in the chain.
+In this example, the createMiddleware function is used to create middleware with a lifecycle hook: onRequest. The onRequest hook runs when a request is first received, allowing you to inspect or manipulate the request before it is processed further.
+
+## Lifecycles
+
+SolidJS Start provides two lifecycle hooks for middleware:
+
+`onRequest`: This hook is triggered as soon as a request is received. You can use it to log data, check authentication, modify the request, etc.
+
+`onBeforeResponse`: This hook runs before the final response is sent to the client. You can use it to modify or finalize the response, such as adding headers, modifying the body, etc.
+
+## Returning from Middleware
+
+In middleware, if you return a value, it will immediately send a response back to the client. If you don’t return anything, the middleware will pass control to the next middleware in the chain (if any) or continue processing the request as usual.
+
+For example, returning a response directly in middleware might look like this:
+
+```tsx
+export default createMiddleware({
+  onRequest: [
+    event => {
+      // Return a custom response directly from middleware
+      return new Response("Hello from middleware", { status: 200 });
+    }
+  ]
+});
+```
+
+## Basic Auth Example
+
+A common use case of middleware is implementing authentication checks. Below is a simple example demonstrating how to create a basic auth middleware. Both `onRequest` and `onBeforeResponse` are utilized to illustrate their unique positions in the lifecycle. 
+
+Please note that this is mostly dummy code and is not a complete or secure implementation.
+
+```tsx
+import { createMiddleware } from "@solidjs/start/middleware";
+
+export default createMiddleware({
+  // This hook runs when a request is received.
+  onRequest: [
+    event => {
+      // Simple auth check: look for an "Authorization" header
+      const authHeader = event.request.headers.get("Authorization");
+      
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        // If no auth header, return a 401 Unauthorized response.
+        return new Response("Unauthorized", { status: 401 });
+      }
+
+      // Extract the token from the header
+      const token = authHeader.split(" ")[1];
+
+      // Simulate a simple token check (in a real app, you would check the token here)
+      if (token !== "valid-token") {
+        // Invalid token
+        return new Response("Forbidden", { status: 403 });
+      }
+
+      // If valid token, continue processing the request.
+      console.log("Authenticated request to:", event.request.url);
+    }
+  ],
+
+  // This hook runs just before sending the response.
+  onBeforeResponse: [
+    event => {
+      // You can manipulate the response before it's sent to the client.
+      // For example, adding custom headers or logging.
+      const response = event.response;
+      response.headers.set("X-Authenticated", "true"); // Add a custom header
+      console.log("Response modified before sending to client.");
+      
+      return response;
+    }
+  ]
+});
+```
+
+### How it Works:
+
+#### `onRequest`: 
+This hook performs a basic authentication check. It looks for an `Authorization` header and checks whether it contains a valid token. If the token is missing or invalid, it returns a `401 Unauthorized` or `403 Forbidden` response. If the token is valid, the request continues to the next middleware or handler.
+
+#### `onBeforeResponse`:
+This hook runs just before the response is sent to the client. In this case, it adds a custom header `X-Authenticated: true` to the response to indicate that the request was authenticated. You could also use this hook to log response data or modify the response body.

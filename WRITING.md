@@ -281,7 +281,7 @@ That usually comes about in certain turns of phrase.
 Alternatives to ableist words will go a long way to ensuring our documentation meets the needs of more people.
 
 Similarly, we should not use divisive terms to get our point across.
-That means steering clear of socially- and racially-charged language for concepts, such as "blacklist" or "first-class."
+That means steering clear of socially- and racially-charged language for concepts, such as "first-class."
 
 We have chosen to use American English in our documentation, so please remember that especially with spelling.
 

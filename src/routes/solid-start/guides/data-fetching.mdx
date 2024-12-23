@@ -25,6 +25,8 @@ export default function Page() {
 }
 ```
 
+In this example, we created a [`query`](https://docs.solidjs.com/solid-router/reference/data-apis/query) and [`createAsync`](https://docs.solidjs.com/solid-router/reference/data-apis/create-async) primitive to access the query data inside our component.
+
 ## Reference
 
 - Solid Router [`query`](https://docs.solidjs.com/solid-router/reference/data-apis/query)
@@ -36,9 +38,13 @@ export default function Page() {
 
 ## How to show loading UI
 
-To show a loading UI while data is fetching, you can use [Solid `<Suspense>`](https://docs.solidjs.com/reference/components/suspense):
+To show a loading UI while data is loading, you can use [Solid `<Suspense>`](https://docs.solidjs.com/reference/components/suspense):
 
-```tsx {1} {14} {16} title="src/routes/index.tsx"
+1. Import `Suspense` from `solid-js`
+2. Wrap the data rendering in `<Suspense>`
+3. Provide a fallback component that will be displayed while the data is loading using the `fallback` prop
+
+```tsx {1} {13} {15} title="src/routes/index.tsx"
 import { Suspense, For } from "solid-js";
 import { query, createAsync } from "@solidjs/router";
 
@@ -51,7 +57,6 @@ export default function Page() {
 	const posts = createAsync(() => getPosts());
 	return (
 		<ul>
-			{/* Show a fallback while the data is fetching. */}
 			<Suspense fallback={<div>Loading...</div>}>
 				<For each={posts()}>{(post) => <li>{post.title}</li>}</For>
 			</Suspense>
@@ -62,9 +67,13 @@ export default function Page() {
 
 ## How to handle errors
 
-To show a fallback in case data fetching fails, you can use [Solid `<ErrorBoundary>`](https://docs.solidjs.com/reference/components/error-boundary) .
+To show a fallback UI in case data fetching fails, you can use [Solid `<ErrorBoundary>`](https://docs.solidjs.com/reference/components/error-boundary):
 
-```tsx {1} {14} {18} title="src/routes/index.tsx"
+1. Import `ErrorBoundary` from `solid-js`.
+2. Wrap the data rendering in `<ErrorBoundary>`
+3. Provide a fallback component that will be displayed if an error occurs using the `fallback` prop.
+
+```tsx {1} {13} {17} title="src/routes/index.tsx"
 import { ErrorBoundary, Suspense, For } from "solid-js";
 import { query, createAsync } from "@solidjs/router";
 
@@ -77,7 +86,6 @@ export default function Page() {
 	const posts = createAsync(() => getPosts());
 	return (
 		<ul>
-			{/* Show a fallback while the data is fetching. */}
 			<ErrorBoundary fallback={<div>Something went wrong!</div>}>
 				<Suspense fallback={<div>Loading...</div>}>
 					<For each={posts()}>{(post) => <li>{post.title}</li>}</For>
@@ -90,7 +98,11 @@ export default function Page() {
 
 ## How to preload data
 
-To optimize data fetching during user navigation, you can [`preload`](https://docs.solidjs.com/solid-router/reference/preload-functions/preload) to preload a query:
+To optimize data fetching during user navigation, you can use [`preload`](https://docs.solidjs.com/solid-router/reference/preload-functions/preload) to preload a query:
+
+1. Export a `route` object with a `preload` function
+2. Run your query inside the `preload` function
+3. Use the query as usual in your component
 
 ```tsx {2} {9-11} title="src/routes/index.tsx"
 import { ErrorBoundary } from "solid-js";
@@ -119,7 +131,7 @@ export default function Page() {
 
 ## How to create parameterized queries
 
-To create a query that accept parameters, you can pass any number of arguments to your query function:
+To create a query that accepts parameters, you can pass any number of arguments to your query function:
 
 ```tsx {9-10} {15} {19-20} title="src/routes/posts/[id]/index.tsx"
 import { ErrorBoundary } from "solid-js";
@@ -152,20 +164,20 @@ export default function Page() {
 }
 ```
 
+In this example, we used [`useParams`](https://docs.solidjs.com/solid-router/reference/primitives/use-params) to get the `id` path parameter and passed it to the `getPost` query to get the data for that specific post.
+
 ## How to directly use database or an ORM
 
-To directly use your database or ORM in a query, add [`"use server"`](https://docs.solidjs.com/solid-start/reference/server/use-server) to your query function:
+To directly use your database or ORM in a query, you should make the query server-only so your database credentials are not exposed to the client. You can do that by adding [`"use server"`](https://docs.solidjs.com/solid-start/reference/server/use-server) to the first line of your query function:
 
-```tsx {7} title="src/routes/index.tsx"
+```tsx {3} {6-7} title="src/routes/index.tsx"
 import { For, ErrorBoundary } from "solid-js";
 import { query, createAsync, type RouteDefinition } from "@solidjs/router";
 import { db } from "~/lib/db";
 
-// This query only executes on the server
 const getPosts = query(async () => {
 	"use server";
-	const posts = await db.from("posts").select();
-	return await posts.json();
+	return await db.from("posts").select();
 }, "posts");
 
 export const route = {
@@ -196,7 +208,6 @@ export default function Page() {
 		const posts = await fetch("https://my-api.com/blog");
 		return await posts.json();
 	});
-
 	return (
 		<ul>
 			<ErrorBoundary fallback={<div>Something went wrong!</div>}>
@@ -209,36 +220,6 @@ export default function Page() {
 }
 ```
 
-## When to use Tanstack Query
-
-Consider [Tanstack Query](https://tanstack.com/query/latest) if you need advanced features like automatic background re-fetching or infinite queries. It's particularly appealing if you're already familiar with it from other projects. However, keep in mind that it will increase your bundle size slightly.
-
-Here is a basic example of using Tanstack Query:
-
-```tsx title="src/routes/posts/[id]/index.tsx"
-import { ErrorBoundary, Suspense } from "solid-js";
-import { useParams } from "@solidjs/router";
-import { createQuery } from "@tanstack/solid-query";
-
-export default function Page() {
-	const params = useParams();
-	const postQuery = createQuery(() => ({
-		queryKey: ["posts", params.id],
-		queryFn: async (id: string) => {
-			const post = await fetch(`https://my-api.com/posts/${id}`);
-			return await post.json();
-		},
-		throwOnError: true,
-	}));
-
-	return (
-		<div>
-			<ErrorBoundary fallback={<div>Something went wrong!</div>}>
-				<Suspense fallback={<div>Loading...</div>}>
-					<div>{postQuery.data?.name}</div>
-				</Suspense>
-			</ErrorBoundary>
-		</div>
-	);
-}
-```
+<Callout type="info">
+    [Tanstack Query](https://tanstack.com/query/latest/docs/framework/solid/overview) can be used for more advanced features such as automatic background re-fetching or infinite queries.
+</Callout>

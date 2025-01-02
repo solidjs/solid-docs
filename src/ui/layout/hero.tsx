@@ -104,8 +104,9 @@ export const Hero: Component = () => {
 											</Index>
 										</div>
 										<div
-											class={`flex overflow-x-auto px-4 min-h-[${snippetLines.length + 5
-												}em] text-white custom-scrollbar`}
+											class={`flex overflow-x-auto px-4 min-h-[${
+												snippetLines.length + 5
+											}em] text-white custom-scrollbar`}
 										>
 											<Suspense
 												fallback={

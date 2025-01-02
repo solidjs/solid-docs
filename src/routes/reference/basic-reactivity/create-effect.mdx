@@ -3,10 +3,9 @@ title: createEffect
 ---
 
 ```tsx
-import { createEffect } from "solid-js"
+import { createEffect } from "solid-js";
 
-function createEffect<T>(fn: (v: T) => T, value?: T): void
-
+function createEffect<T>(fn: (v: T) => T, value?: T): void;
 ```
 
 Effects are a general way to make arbitrary code ("side effects") run whenever dependencies change, e.g., to modify the DOM manually.
@@ -15,10 +14,10 @@ Effects are a general way to make arbitrary code ("side effects") run whenever d
 For example:
 
 ```tsx
-const [a, setA] = createSignal(initialValue)
+const [a, setA] = createSignal(initialValue);
 
 // effect that depends on signal `a`
-createEffect(() => doSideEffect(a()))
+createEffect(() => doSideEffect(a()));
 ```
 
 The effect will run whenever `a` changes value.
@@ -30,15 +29,15 @@ The effect callback can return a value, which will be passed as the `prev` argum
 This is useful for memoizing values that are expensive to compute. For example:
 
 ```tsx
-const [a, setA] = createSignal(initialValue)
+const [a, setA] = createSignal(initialValue);
 
 // effect that depends on signal `a`
 createEffect((prevSum) => {
 	// do something with `a` and `prevSum`
-	const sum = a() + b()
-	if (sum !== prevSum) console.log("sum changed to", sum)
-	return sum
-}, 0)
+	const sum = a() + b();
+	if (sum !== prevSum) console.log("sum changed to", sum);
+	return sum;
+}, 0);
 // ^ the initial value of the effect is 0
 ```
 
@@ -50,21 +49,21 @@ If you want to wait for the first execution to occur, use [queueMicrotask](https
 
 ```tsx
 // assume this code is in a component function, so is part of a rendering phase
-const [count, setCount] = createSignal(0)
+const [count, setCount] = createSignal(0);
 
 // this effect prints count at the beginning and when it changes
-createEffect(() => console.log("count =", count()))
+createEffect(() => console.log("count =", count()));
 // effect won't run yet
-console.log("hello")
-setCount(1) // effect still won't run yet
-setCount(2) // effect still won't run yet
+console.log("hello");
+setCount(1); // effect still won't run yet
+setCount(2); // effect still won't run yet
 
 queueMicrotask(() => {
 	// now `count = 2` will print
-	console.log("microtask")
-	setCount(3) // immediately prints `count = 3`
-	console.log("goodbye")
-})
+	console.log("microtask");
+	setCount(3); // immediately prints `count = 3`
+	console.log("goodbye");
+});
 
 // --- overall output: ---
 // hello
@@ -91,11 +90,11 @@ For example:
 ```tsx
 // listen to event dynamically given by eventName signal
 createEffect(() => {
-	const event = eventName()
-	const callback = (e) => console.log(e)
-	ref.addEventListener(event, callback)
-	onCleanup(() => ref.removeEventListener(event, callback))
-})
+	const event = eventName();
+	const callback = (e) => console.log(e);
+	ref.addEventListener(event, callback);
+	onCleanup(() => ref.removeEventListener(event, callback));
+});
 ```
 
 ## Arguments

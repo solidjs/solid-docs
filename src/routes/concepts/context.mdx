@@ -23,25 +23,23 @@ This function has a `Provider` property that wraps the component tree you want t
 
 <TabsCodeBlocks>
 <div id="/context/create.js">
+
 ```jsx
 import { createContext } from "solid-js";
 
 const MyContext = createContext();
+```
 
-````
 </div>
 <div id="/context/component.jsx">
+
 ```jsx
 import { MyContext } from "./create";
 
-export function Provider (props) {
-	return (
-		<MyContext.Provider>
-			{props.children}
-		</MyContext.Provider>
-	)
-};
-````
+export function Provider(props) {
+	return <MyContext.Provider>{props.children}</MyContext.Provider>;
+}
+```
 
 </div>
 </TabsCodeBlocks>
@@ -162,6 +160,7 @@ You can pass a signal directly to the `value` prop of the `Provider` component, 
 
 <TabsCodeBlocks>
 <div id="App.jsx">
+
 ```jsx
 import { CounterProvider } from "./Context";
 import { Child } from "./Child";
@@ -172,11 +171,13 @@ export function App() {
 			<h1>Welcome to Counter App</h1>
 			<Child />
 		</CounterProvider>
-	)
+	);
 }
 ```
+
 </div>
 <div id="Context.jsx">
+
 ```jsx
 import { createSignal, useContext } from "solid-js";
 
@@ -186,43 +187,45 @@ export function CounterProvider(props) {
 		count,
 		{
 			increment() {
-			setCount(prev => prev + 1);
+				setCount((prev) => prev + 1);
 			},
 			decrement() {
-			setCount(prev => prev - 1);
-			}
-		}
+				setCount((prev) => prev - 1);
+			},
+		},
 	];
 
-    return (
-    	<CounterContext.Provider value={counter}>
-    		{props.children}
-    	</CounterContext.Provider>
-    );
-
+	return (
+		<CounterContext.Provider value={counter}>
+			{props.children}
+		</CounterContext.Provider>
+	);
 }
 
-export function useCounter() { return useContext(CounterContext); }
+export function useCounter() {
+	return useContext(CounterContext);
+}
 ```
+
 </div>
 <div id="Child.jsx">
+
 ```tsx title="/context/counter-component.tsx"
 import { useCounter } from "./Context";
 
 export function Child(props) {
 	const [count, { increment, decrement }] = useCounter();
 
-    return (
-    <>
-    	<div>{count()}</div>
-    	<button onClick={increment}>+</button>
-    	<button onClick={decrement}>-</button>
-    </>
-    );
+	return (
+		<>
+			<div>{count()}</div>
+			<button onClick={increment}>+</button>
+			<button onClick={decrement}>-</button>
+		</>
+	);
+}
+```
 
-};
-
-````
 </div>
 </TabsCodeBlocks>
 
@@ -239,21 +242,21 @@ To solve this issue, a default value can be specified when creating a context ob
 import { useContext } from "solid-js";
 
 function useMyContext() {
-  const value = useContext(MyContext);
+	const value = useContext(MyContext);
 
-  if (!value) {
-    throw new Error("Missing context Provider");
-  }
+	if (!value) {
+		throw new Error("Missing context Provider");
+	}
 
-  return value;
+	return value;
 }
 
 function Child() {
-  const value = useMyContext();
+	const value = useMyContext();
 
-  return <div>{value}</div>;
+	return <div>{value}</div>;
 }
-````
+```
 
 ## Common issues with `createContext` and `useContext`
 

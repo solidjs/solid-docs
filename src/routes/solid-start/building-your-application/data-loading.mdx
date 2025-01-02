@@ -14,6 +14,7 @@ It takes an async function and returns a [signal](/reference/basic-reactivity/cr
 
 <TabsCodeBlocks>
 <div id="ts">
+
 ```tsx {6-9} title="/src/routes/users.tsx"
 import { For, createResource } from "solid-js";
 
@@ -25,25 +26,25 @@ export default function Page() {
 		return (await response.json()) as User[];
 	});
 
-    return <For each={users()}>{(user) => <li>{user.name}</li>}</For>;
-
+	return <For each={users()}>{(user) => <li>{user.name}</li>}</For>;
 }
+```
 
-````
 </div>
 <div id="js">
+
 ```tsx {4-7} title="/src/routes/users.jsx"
 import { For, createResource } from "solid-js";
 
 export default function Page() {
 	const [users] = createResource(async () => {
 		const response = await fetch("https://example.com/users");
-		return (await response.json());
+		return await response.json();
 	});
 
 	return <For each={users()}>{(user) => <li>{user.name}</li>}</For>;
 }
-````
+```
 
 </div>
 </TabsCodeBlocks>
@@ -56,6 +57,7 @@ Using some of the features of `solid-router`, we can create a cache for our data
 
 <TabsCodeBlocks>
 <div id="ts">
+
 ```tsx title="/routes/users.tsx" {6, 9, 12}
 import { For } from "solid-js";
 import { createAsync, query } from "@solidjs/router";
@@ -63,32 +65,8 @@ import { createAsync, query } from "@solidjs/router";
 type User = { name: string; email: string };
 
 const getUsers = query(async () => {
-const response = await fetch("https://example.com/users");
-return (await response.json()) as User[];
-}, "users");
-
-export const route = {
-	preload: () => getUsers(),
-};
-
-export default function Page() {
-	const users = createAsync(() => getUsers());
-
-    return <For each={users()}>{(user) => <li>{user.name}</li>}</For>;
-
-}
-
-````
-</div>
-
-<div id="js">
-```tsx title="/routes/users.jsx" {4, 7, 10}
-import { For } from "solid-js";
-import { createAsync, query } from "@solidjs/router";
-
-const getUsers = query(async () => {
 	const response = await fetch("https://example.com/users");
-	return (await response.json());
+	return (await response.json()) as User[];
 }, "users");
 
 export const route = {
@@ -100,7 +78,31 @@ export default function Page() {
 
 	return <For each={users()}>{(user) => <li>{user.name}</li>}</For>;
 }
-````
+```
+
+</div>
+
+<div id="js">
+
+```tsx title="/routes/users.jsx" {4, 7, 10}
+import { For } from "solid-js";
+import { createAsync, query } from "@solidjs/router";
+
+const getUsers = query(async () => {
+	const response = await fetch("https://example.com/users");
+	return await response.json();
+}, "users");
+
+export const route = {
+	preload: () => getUsers(),
+};
+
+export default function Page() {
+	const users = createAsync(() => getUsers());
+
+	return <For each={users()}>{(user) => <li>{user.name}</li>}</For>;
+}
+```
 
 </div>
 </TabsCodeBlocks>
@@ -127,6 +129,7 @@ For example, it could be database access or internal APIs, or when you sit withi
 
 <TabsCodeBlocks>
 <div id="ts">
+
 ```tsx title="/routes/users.tsx" {7}
 import { For } from "solid-js";
 import { createAsync, query } from "@solidjs/router";
@@ -134,8 +137,8 @@ import { createAsync, query } from "@solidjs/router";
 type User = { name: string; email: string };
 
 const getUsers = query(async () => {
-"use server";
-return store.users.list();
+	"use server";
+	return store.users.list();
 }, "users");
 
 export const route = {
@@ -145,15 +148,14 @@ export const route = {
 export default function Page() {
 	const users = createAsync(() => getUsers());
 
-    return <For each={users()}>{(user) => <li>{user.name}</li>}</For>;
-
+	return <For each={users()}>{(user) => <li>{user.name}</li>}</For>;
 }
+```
 
-````
 </div>
 
-
 <div id="js">
+
 ```tsx title="/routes/users.jsx" {5}
 import { For } from "solid-js";
 import { createAsync, query } from "@solidjs/router";
@@ -172,7 +174,8 @@ export default function Page() {
 
 	return <For each={users()}>{(user) => <li>{user.name}</li>}</For>;
 }
-````
+```
 
 </div>
 </TabsCodeBlocks>
+```

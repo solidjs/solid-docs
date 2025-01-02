@@ -99,9 +99,7 @@ export const Hero: Component = () => {
 										>
 											<Index each={snippetLines}>
 												{(_, index) => (
-													<pre class="pb-px">
-														{(index + 1).toString().padStart(2, "0")}
-													</pre>
+													<pre>{(index + 1).toString().padStart(2, "0")}</pre>
 												)}
 											</Index>
 										</div>

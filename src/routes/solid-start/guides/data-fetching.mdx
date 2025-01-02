@@ -1,0 +1,218 @@
+---
+title: "Data Fetching"
+---
+
+This guide will walk you through the basics of data fetching in SolidStart, providing practical examples and best practices.
+
+Here's a minimal example of data fetching in SolidStart:
+
+```tsx title="src/routes/index.tsx"
+import { For } from "solid-js";
+import { query, createAsync } from "@solidjs/router";
+
+const getPosts = query(async () => {
+	const posts = await fetch("https://my-api.com/posts");
+	return await posts.json();
+}, "posts");
+
+export default function Page() {
+	const posts = createAsync(() => getPosts());
+	return (
+		<ul>
+			<For each={posts()}>{(post) => <li>{post.title}</li>}</For>
+		</ul>
+	);
+}
+```
+
+In this example, a [`query`](/solid-router/reference/data-apis/query) is created. In order to access it's data within the component, the [`createAsync`](/solid-router/reference/data-apis/create-async) primitive was used.
+
+## Showing loading UI
+
+To display a loading UI while data is being fetched, you can use [Solid `<Suspense>`](/reference/components/suspense):
+
+1. Import `Suspense` from `solid-js`
+2. Wrap the data rendering in `<Suspense>`
+3. Provide a fallback component that will be displayed while the data is loading using the `fallback` prop
+
+```tsx {13} {15} title="src/routes/index.tsx"
+import { Suspense, For } from "solid-js";
+import { query, createAsync } from "@solidjs/router";
+
+const getPosts = query(async () => {
+	const posts = await fetch("https://my-api.com/posts");
+	return await posts.json();
+}, "posts");
+
+export default function Page() {
+	const posts = createAsync(() => getPosts());
+	return (
+		<ul>
+			<Suspense fallback={<div>Loading...</div>}>
+				<For each={posts()}>{(post) => <li>{post.title}</li>}</For>
+			</Suspense>
+		</ul>
+	);
+}
+```
+
+## Handling errors
+
+If the data fetching fails, a fallback UI can be displayed using an [`<ErrorBoundary>`](/reference/components/error-boundary):
+
+1. Import `ErrorBoundary` from `solid-js`.
+2. Wrap the data rendering in `<ErrorBoundary>`
+3. Provide a fallback component that will be displayed if an error occurs using the `fallback` prop.
+
+```tsx {13} {17} title="src/routes/index.tsx"
+import { ErrorBoundary, Suspense, For } from "solid-js";
+import { query, createAsync } from "@solidjs/router";
+
+const getPosts = query(async () => {
+	const posts = await fetch("https://my-api.com/posts");
+	return await posts.json();
+}, "posts");
+
+export default function Page() {
+	const posts = createAsync(() => getPosts());
+	return (
+		<ul>
+			<ErrorBoundary fallback={<div>Something went wrong!</div>}>
+				<Suspense fallback={<div>Loading...</div>}>
+					<For each={posts()}>{(post) => <li>{post.title}</li>}</For>
+				</Suspense>
+			</ErrorBoundary>
+		</ul>
+	);
+}
+```
+
+## Preloading data
+
+Data fetching can be optimized during user navigation by preloading the data with the [`preload`](/solid-router/reference/preload-functions/preload) function:
+
+1. Export a `route` object with a `preload` function
+2. Run your query inside the `preload` function
+3. Use the query as usual in your component
+
+```tsx {9-11} title="src/routes/index.tsx"
+import { ErrorBoundary } from "solid-js";
+import { query, createAsync, type RouteDefinition } from "@solidjs/router";
+
+const getPosts = query(async () => {
+	const posts = await fetch("https://my-api.com/posts");
+	return await posts.json();
+}, "posts");
+
+export const route = {
+	preload: () => getPosts(),
+} satisfies RouteDefinition;
+
+export default function Page() {
+	const post = createAsync(() => getPosts());
+	return (
+		<div>
+			<ErrorBoundary fallback={<div>Something went wrong!</div>}>
+				<h1>{post().title}</h1>
+			</ErrorBoundary>
+		</div>
+	);
+}
+```
+
+## Passing parameters to queries
+
+When creating a query that accepts parameters, you can define your query function to take any number of arguments:
+
+```tsx {9-10} {15} {19-20} title="src/routes/posts/[id]/index.tsx"
+import { ErrorBoundary } from "solid-js";
+import {
+	query,
+	createAsync,
+	useParams,
+	type RouteDefinition,
+} from "@solidjs/router";
+
+const getPost = query(async (id: string) => {
+	const post = await fetch(`https://my-api.com/posts/${id}`);
+	return await post.json();
+}, "post");
+
+export const route = {
+	preload: ({ params }) => getPost(params.id),
+} satisfies RouteDefinition;
+
+export default function Page() {
+	const params = useParams();
+	const post = createAsync(() => getPost(params.id));
+	return (
+		<div>
+			<ErrorBoundary fallback={<div>Something went wrong!</div>}>
+				<h1>{post().title}</h1>
+			</ErrorBoundary>
+		</div>
+	);
+}
+```
+
+In this example, [`useParams`](/solid-router/reference/primitives/use-params) was used to get the `id` path parameter. You can then pass it to the `getPost` query to get the data for that specific post.
+
+## Using a database or an ORM
+
+To safely interact with your database or ORM in a query, ensure the query is server-only to prevent exposing your database credentials to the client. You can do this by adding [`"use server"`](/solid-start/reference/server/use-server) as the first line of your query function:
+
+```tsx {6-7} title="src/routes/index.tsx"
+import { For, ErrorBoundary } from "solid-js";
+import { query, createAsync, type RouteDefinition } from "@solidjs/router";
+import { db } from "~/lib/db";
+
+const getPosts = query(async () => {
+	"use server";
+	return await db.from("posts").select();
+}, "posts");
+
+export const route = {
+	preload: () => getPosts(),
+} satisfies RouteDefinition;
+
+export default function Page() {
+	const posts = createAsync(() => getPosts());
+	return (
+		<ul>
+			<ErrorBoundary fallback={<div>Something went wrong!</div>}>
+				<For each={posts()}>{(post) => <li>{post.title}</li>}</For>
+			</ErrorBoundary>
+		</ul>
+	);
+}
+```
+
+## Fetching data on the client
+
+When you only need to fetch data on the client side, you can use the [`createResource`](/reference/basic-reactivity/create-resource) primitive:
+
+```tsx {4-7} title="src/routes/index.tsx"
+import { createResource, ErrorBoundary, Suspense, For } from "solid-js";
+
+export default function Page() {
+	const [posts] = createResource(async () => {
+		const posts = await fetch("https://my-api.com/posts");
+		return await posts.json();
+	});
+	return (
+		<ul>
+			<ErrorBoundary fallback={<div>Something went wrong!</div>}>
+				<Suspense fallback={<div>Loading...</div>}>
+					<For each={posts()}>{(post) => <li>{post.title}</li>}</For>
+				</Suspense>
+			</ErrorBoundary>
+		</ul>
+	);
+}
+```
+
+You can [read more about `createResource` here](/reference/basic-reactivity/create-resource).
+
+<Callout type="info" title="Advanced Data Handling">
+	For advanced features like automatic background re-fetching or infinite queries, you can use [Tanstack Query.](https://tanstack.com/query/latest/docs/framework/solid/overview)
+</Callout>

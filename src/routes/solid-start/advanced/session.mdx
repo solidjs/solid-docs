@@ -14,9 +14,9 @@ For example, if you wanted to use a cookie to identify a user, you can use the `
 ```tsx title="/lib/session.ts"
 import { useSession } from "vinxi/http";
 export async function getUser(request: Request) {
-  const session = await useSession({
-    password: process.env.SESSION_SECRET
-  });
+	const session = await useSession({
+		password: process.env.SESSION_SECRET,
+	});
 }
 ```
 
@@ -30,12 +30,12 @@ The `getUser` function returns a `null` when it does not find a user and if a us
 import { useSession } from "vinxi/http";
 
 export async function getUser(): Promise<User | null> {
-  const session = await useSession({
-    password: process.env.SESSION_SECRET
-  });
-  const userId = session.data.userId;
-  if (!userId) return null;
-  return await store.getUser(userId);
+	const session = await useSession({
+		password: process.env.SESSION_SECRET,
+	});
+	const userId = session.data.userId;
+	if (!userId) return null;
+	return await store.getUser(userId);
 }
 ```
 
@@ -48,15 +48,15 @@ That way if the user is not authenticated, the request will be redirected to the
 import { query, createAsync, redirect } from "@solidjs/router";
 
 const getUsers = query(async (id: string) => {
-  "use server";
-  const user = await getUser();
-  if (!user) throw redirect("/login");
-  return store.getUsers(id, "*");
+	"use server";
+	const user = await getUser();
+	if (!user) throw redirect("/login");
+	return store.getUsers(id, "*");
 }, "users");
 
 // page component
 export default function Users() {
-  const users = createAsync(() => getUsers());
+	const users = createAsync(() => getUsers());
 }
 ```
 
@@ -67,33 +67,33 @@ import { redirect } from "@solidjs/router";
 import { useSession } from "vinxi/http";
 
 type UserSession = {
-  userId?: number;
+	userId?: number;
 };
 
 function getSession() {
-  return useSession({
-    password: process.env.SESSION_SECRET
-  });
+	return useSession({
+		password: process.env.SESSION_SECRET,
+	});
 }
 
 export async function login(formData: FormData) {
-  const username = String(formData.get("username"));
-  const password = String(formData.get("password"));
-  // do validation
-  try {
-    const session = await getSession();
-    const user = await db.user.findUnique({ where: { username } });
-    if (!user || password !== user.password) return new Error("Invalid login");
-    await session.update((d: UserSession) => (d.userId = user!.id));
-  } catch (err) {
-    return err as Error;
-  }
-  throw redirect("/");
+	const username = String(formData.get("username"));
+	const password = String(formData.get("password"));
+	// do validation
+	try {
+		const session = await getSession();
+		const user = await db.user.findUnique({ where: { username } });
+		if (!user || password !== user.password) return new Error("Invalid login");
+		await session.update((d: UserSession) => (d.userId = user!.id));
+	} catch (err) {
+		return err as Error;
+	}
+	throw redirect("/");
 }
 
 export async function logout() {
-  const session = await getSession();
-  await session.update((d: UserSession) => (d.userId = undefined));
-  throw redirect("/login");
+	const session = await getSession();
+	await session.update((d: UserSession) => (d.userId = undefined));
+	throw redirect("/login");
 }
 ```

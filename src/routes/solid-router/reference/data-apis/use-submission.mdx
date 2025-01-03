@@ -11,16 +11,14 @@ It's important to note that `useSubmission` requires the form method to be **pos
 import { useSubmission } from "@solidjs/router";
 
 function Component() {
-  const submission = useSubmission(postNameAction);
+	const submission = useSubmission(postNameAction);
 
-    return (
-      <form action={postNameAction} method="post">
-          <input type="text" name="name" />
-          <button type="submit">
-              {submission.pending ? "Adding..." : "Add"}
-          </button>
-      </form>
-    )
+	return (
+		<form action={postNameAction} method="post">
+			<input type="text" name="name" />
+			<button type="submit">{submission.pending ? "Adding..." : "Add"}</button>
+		</form>
+	);
 }
 ```
 
@@ -32,11 +30,10 @@ The Action which will trigger the submission should be created with the [`action
 import { action } from "@solidjs/router";
 
 const postNameAction = action(() => {
-  "use server";
-  /*... logic ...*/ 
-  return { data: "Hello SolidStart" };
-})
-
+	"use server";
+	/*... logic ...*/
+	return { data: "Hello SolidStart" };
+});
 ```
 
 ## Filtering Submissions
@@ -49,20 +46,18 @@ E.g.: action below will only submit if the name is "solid".
 import { useSubmission } from "@solidjs/router";
 
 function Component() {
-  const submission = useSubmission(postNameAction, ([formData]) => {
-    const name = formData.get("name") ?? "";
+	const submission = useSubmission(postNameAction, ([formData]) => {
+		const name = formData.get("name") ?? "";
 
-    return name === "solid";
-  });
+		return name === "solid";
+	});
 
-    return (
-      <form action={postNameAction} method="post">
-          <input type="text" name="name" />
-          <button type="submit">
-              {submission.pending ? "Adding..." : "Add"}
-          </button>
-      </form>
-    )
+	return (
+		<form action={postNameAction} method="post">
+			<input type="text" name="name" />
+			<button type="submit">{submission.pending ? "Adding..." : "Add"}</button>
+		</form>
+	);
 }
 ```
 
@@ -72,7 +67,6 @@ When the form is submitted, the `submission` object will be updated with the new
 This allows you to provide feedback to the user that the action is in progress.
 Once the action is complete, the `pending` property will be set to `false` and the `result` property will be updated with final value.
 
-
 <TabsCodeBlocks>
 <div id="ts">
 ```tsx title="component.tsx" {5,9-11}
@@ -80,7 +74,7 @@ import { Show } from "solid-js";
 import { useSubmission } from "@solidjs/router";
 
 function Component() {
-  const submission = useSubmission(postNameAction);
+const submission = useSubmission(postNameAction);
 
     return (
       <>
@@ -100,8 +94,10 @@ function Component() {
         </form>
       </>
     )
+
 }
-```
+
+````
 </div>
 <div id="js">
 ```tsx title="component.jsx" {5,9-11}
@@ -130,7 +126,8 @@ function Component() {
       </>
     )
 }
-```
+````
+
 </div>
 </TabsCodeBlocks>
 
@@ -146,31 +143,27 @@ import { Show } from "solid-js";
 import { useSubmission } from "@solidjs/router";
 
 function Component() {
-  const submission = useSubmission(postNameAction);
+	const submission = useSubmission(postNameAction);
 
-    return (
-      <>
-        <Show when={submission.error}>
-          {(error) => (
-            <div>
-              <p>Error: {error.message}</p>
-              <button onClick={() => submission.clear()}>
-                Clear
-              </button>
-              <button onClick={async () => submission.retry()}>
-               Retry
-              </button>
-            </div>
-          )}
-        </Show>
+	return (
+		<>
+			<Show when={submission.error}>
+				{(error) => (
+					<div>
+						<p>Error: {error.message}</p>
+						<button onClick={() => submission.clear()}>Clear</button>
+						<button onClick={async () => submission.retry()}>Retry</button>
+					</div>
+				)}
+			</Show>
 
-        <form method="post" action={sendData}>
-          <input type="text" name="name" required />
-          <button type="submit" disabled={submission.pending}>
-            {submission.pending ? "Submitting" : "Submit"}
-          </button>
-        </form>
-      </>
-    )
+			<form method="post" action={sendData}>
+				<input type="text" name="name" required />
+				<button type="submit" disabled={submission.pending}>
+					{submission.pending ? "Submitting" : "Submit"}
+				</button>
+			</form>
+		</>
+	);
 }
 ```

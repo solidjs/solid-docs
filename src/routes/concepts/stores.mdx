@@ -15,7 +15,7 @@ Using JavaScript's [proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScri
 With stores, you can now target nested properties and elements within these structures to create a dynamic tree of reactive data.
 
 ```jsx
-import { createStore } from "solid-js/store"
+import { createStore } from "solid-js/store";
 
 // Initialize store
 const [store, setStore] = createStore({
@@ -40,7 +40,7 @@ const [store, setStore] = createStore({
 			loggedIn: true,
 		},
 	],
-})
+});
 ```
 
 ## Accessing store values
@@ -48,7 +48,7 @@ const [store, setStore] = createStore({
 Store properties can be accessed directly from the state proxy through directly referencing the targeted property:
 
 ```jsx
-console.log(store.userCount) // Outputs: 3
+console.log(store.userCount); // Outputs: 3
 ```
 
 Accessing stores within a tracking scope follows a similar pattern to signals.
@@ -57,7 +57,7 @@ This provides access to the store's value directly within a tracking scope:
 
 ```jsx
 const App = () => {
-	const [mySignal, setMySignal] = createSignal("This is a signal.")
+	const [mySignal, setMySignal] = createSignal("This is a signal.");
 	const [store, setStore] = createStore({
 		userCount: 3,
 		users: [
@@ -80,23 +80,21 @@ const App = () => {
 				loggedIn: true,
 			},
 		],
-	})
+	});
 	return (
 		<div>
 			<h1>Hello, {store.users[0].username}</h1> {/* Accessing a store value */}
 			<span>{mySignal()}</span> {/* Accessing a signal */}
 		</div>
-	)
-}
+	);
+};
 ```
 
 When a store is created, it starts with the initial state but does _not_ immediately set up signals to track changes.
 These signals are created **lazily**, meaning they are only formed when accessed within a reactive context.
 
 Once data is used within a reactive context, such as within the return statement of a component function, computed property, or an effect, a signal is created and dependencies are established.
-	
 For example, if you wanted to print out every new user, adding the console log below will not work because it is not within a tracked scope.
-
 
 ```tsx ins={9}
 const App = () => {
@@ -197,6 +195,7 @@ const App = () => {
 Separating the read and write capabilities of a store provides a valuable debugging advantage.
 
 This separation facilitates the tracking and control of the components that are accessing or changing the values.
+
 </Callout>
 <Callout type="advanced">
   A little hidden feature of stores is that you can also create nested stores to help with setting nested properties.
@@ -220,9 +219,10 @@ This separation facilitates the tracking and control of the components that are 
   ])
 
 ```
-  Changes made through `setUsers` will update the `store.users` property and reading `users` from this derived store will also be in sync with the values from `store.users`.
 
-  Note that the above relies on `store.users` to be set already in the existing store.
+Changes made through `setUsers` will update the `store.users` property and reading `users` from this derived store will also be in sync with the values from `store.users`.
+
+Note that the above relies on `store.users` to be set already in the existing store.
 
 </Callout>
 
@@ -265,7 +265,7 @@ setStore("users", (otherUsers) => [
 		location: "Nigeria",
 		loggedIn: false,
 	},
-])
+]);
 
 // can become
 
@@ -274,7 +274,7 @@ setStore("users", store.users.length, {
 	username: "michael584",
 	location: "Nigeria",
 	loggedIn: false,
-})
+});
 ```
 
 ### Range specification
@@ -283,7 +283,7 @@ With path syntax, you can target a subset of elements to update or modify by spe
 You can do this using an array of values:
 
 ```jsx
-setStore("users", [1, 3], "loggedIn", false)
+setStore("users", [1, 3], "loggedIn", false);
 ```
 
     <Callout>
@@ -299,7 +299,7 @@ In addition to this, including the `by` key, can help you perform iterative upda
 This key defines the step size for index increments, similar to a [`for` loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for):
 
 ```jsx
-setStore({ from: 0, to: store.length, by: 2 }, "loggedIn", false)
+setStore({ from: 0, to: store.length, by: 2 }, "loggedIn", false);
 ```
 
     </Callout>
@@ -311,7 +311,7 @@ These functions receive the old value as an argument, allowing you to compute th
 This dynamic approach is particularly useful for complex transformations.
 
 ```jsx
-setStore("users", 3, "loggedIn" , (loggedIn) => !loggedIn)
+setStore("users", 3, "loggedIn", (loggedIn) => !loggedIn);
 ```
 
 ### Filtering values
@@ -321,7 +321,7 @@ This function will act as a filter, allowing you to select elements that satisfy
 It receives the old value and index as arguments, providing the flexibility to make conditional updates.
 
 ```jsx
-setStore("users", (user) => user.username.startsWith("t"), "loggedIn", false)
+setStore("users", (user) => user.username.startsWith("t"), "loggedIn", false);
 ```
 
 In addition to [`.startsWith`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith), you can use other array methods like [`.find`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find) to filter for the values that you need.
@@ -336,14 +336,14 @@ What this means, is that you can directly make the change to the store _without_
 ```jsx
 setStore("users", 0, {
 	id: 109,
-})
+});
 
 // is equivalent to
 
 setStore("users", 0, (user) => ({
 	...user,
 	id: 109,
-}))
+}));
 ```
 
 ## Store utilities
@@ -355,21 +355,21 @@ This utility provides a way to work with data as if it were a [mutable](https://
 `produce` also provides a way to make changes to multiple properties at the same time which eliminates the need for multiple setter calls.
 
 ```jsx
-import { produce } from "solid-js/store"
+import { produce } from "solid-js/store";
 
 // without produce
-setStore("users", 0, "username", "newUsername")
-setStore("users", 0, "location", "newLocation")
+setStore("users", 0, "username", "newUsername");
+setStore("users", 0, "location", "newLocation");
 
 // with produce
 setStore(
 	"users",
 	0,
 	produce((user) => {
-		user.username = "newUsername"
-		user.location = "newLocation"
+		user.username = "newUsername";
+		user.location = "newLocation";
 	})
-)
+);
 ```
 
 `produce` and `setStore` do have distinct functionalities.
@@ -411,13 +411,13 @@ Additionally, `unwrap` provides a means to interface with third-party libraries 
 This utility acts as a bridge to facilitate smooth integrations with external components and simplifies the incorporation of stores into various applications and workflows.
 
 ```jsx
-import { createStore, unwrap } from "solid-js/store"
+import { createStore, unwrap } from "solid-js/store";
 
 const [data, setData] = createStore({
 	animals: ["cat", "dog", "bird", "gorilla"],
-})
+});
 
-const rawData = unwrap(data)
+const rawData = unwrap(data);
 ```
 
 To learn more about how to use Stores in practice, visit the [guide on complex state management](/guides/complex-state-management).

@@ -3,42 +3,40 @@ title: renderToStream
 ---
 
 ```ts
-import { renderToStream } from "solid-js/web"
+import { renderToStream } from "solid-js/web";
 
 function renderToStream<T>(
 	fn: () => T,
 	options?: {
-		nonce?: string
-		renderId?: string
-		onCompleteShell?: () => void
-		onCompleteAll?: () => void
+		nonce?: string;
+		renderId?: string;
+		onCompleteShell?: () => void;
+		onCompleteAll?: () => void;
 	}
 ): {
-	pipe: (writable: { write: (v: string) => void }) => void
-	pipeTo: (writable: WritableStream) => void
-}
-
+	pipe: (writable: { write: (v: string) => void }) => void;
+	pipeTo: (writable: WritableStream) => void;
+};
 ```
 
-This method renders to a stream. 
+This method renders to a stream.
 It renders the content synchronously including any Suspense fallback placeholders, and then continues to stream the data and HTML from any async resource as it completes.
 
 ```ts
 // node
-renderToStream(App).pipe(res)
+renderToStream(App).pipe(res);
 
 // web stream
-const { readable, writable } = new TransformStream()
-renderToStream(App).pipeTo(writable)
+const { readable, writable } = new TransformStream();
+renderToStream(App).pipeTo(writable);
 ```
 
-`onCompleteShell` fires when synchronous rendering is complete before writing the first flush to the stream out to the browser. 
-`onCompleteAll` is called when all server Suspense boundaries have settled. 
+`onCompleteShell` fires when synchronous rendering is complete before writing the first flush to the stream out to the browser.
+`onCompleteAll` is called when all server Suspense boundaries have settled.
 `renderId` is used to namespace renders when having multiple top level roots.
 
 <Callout>
-	This API replaces the previous pipeToWritable and pipeToNodeWritable
-	APIs.
+	This API replaces the previous pipeToWritable and pipeToNodeWritable APIs.
 </Callout>
 
 ## Options

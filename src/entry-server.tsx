@@ -4,9 +4,7 @@ export default createHandler(() => (
 	<StartServer
 		document={({ assets, children, scripts }) => {
 			return (
-				<html
-					lang="en"
-				>
+				<html lang="en">
 					<head>
 						<meta charset="utf-8" />
 						<meta
@@ -19,7 +17,9 @@ export default createHandler(() => (
 							href="/favicon.svg"
 							type="image/svg+xml"
 						/>
-						<script> {`
+						<script>
+							{" "}
+							{`
 							function getCookie(name, cookieString) {
 								if (!name || !cookieString) return "system";
 								const match = cookieString.match(new RegExp(\`\\\\W?\${name}=(?<theme>\\\\w+)\`));

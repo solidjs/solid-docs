@@ -237,10 +237,13 @@ export default function Page() {
 ```
 
 <Callout type="info" title="Multiple Submissions">
-	If you want to display optimistic UI for multiple concurrent submissions, you can use the [`useSubmissions`](/solid-router/reference/data-apis/use-submissions) primitive.
+	If you want to display optimistic UI for multiple concurrent submissions, you
+	can use the
+	[`useSubmissions`](/solid-router/reference/data-apis/use-submissions)
+	primitive.
 </Callout>
 
-## Calling an action programmatically 
+## Calling an action programmatically
 
 If you don't want to use a `<form>` element, you can use the `useAction` primitive to programmatically call an action:
 
@@ -267,6 +270,36 @@ export default function Page() {
 			<input value={title()} onInput={(e) => setTitle(e.target.value)} />
 			<button onClick={() => addPostAction(title())}>Add Post</button>
 		</div>
+	);
+}
+```
+
+## Redirecting
+
+If you would like to redirect the user to a different route after the completion of an action, you can use the `redirect` helper:
+
+1. Import `redirect` from `@solidjs/router`
+2. Call `redirect` with the route you want to navigate to and throw the response
+
+```tsx {10} title="src/routes/index.tsx"
+import { action, redirect } from "@solidjs/router";
+
+const addPost = action(async (formData: FormData) => {
+	const title = formData.get("title");
+	const response = await fetch("https://my-api.com/posts", {
+		method: "POST",
+		body: JSON.stringify({ title }),
+	});
+	const post = await response.json();
+	throw redirect(`/posts/${post.id}`);
+}, "addPost");
+
+export default function Page() {
+	return (
+		<form action={addPost} method="post">
+			<input name="title" />
+			<button>Add Post</button>
+		</form>
 	);
 }
 ```

@@ -2,28 +2,227 @@
 title: "Middleware"
 ---
 
-Middlewares may be included by passing file you specify in your start config.
+Middleware is a function that intercepts HTTP requests and responses. It allows you to modify the response by rewriting, redirecting, modifying the request or response headers, or responding directly.
 
-```js
-import { defineConfig } from "@solidjs/start/config";
+Middleware also allows you to set and share request-specific information across pages or API routes by mutating a `locals` object that is available anywhere in the server.
 
-export default defineConfig({
-  middleware: "./src/middleware.ts"
-});
-```
+## Event handlers
 
-Inside the middleware file, you can export a `createMiddleware` function.
+Middleware operates through two main lifecycle events that give you precise control over when your middleware code executes: `onRequest` and `onBeforeResponse`.
 
-```tsx
+### `onRequest`
+
+The `onRequest` event fires at the beginning of the request lifecycle, before your application code runs. This is your opportunity to:
+
+- Perform early redirects
+- Store request-specific data in `event.locals` for later use
+- Add or modify request headers
+
+### `onBeforeResponse`
+
+The `onBeforeResponse` event fires after your application code has generated a response but before it's sent to the client. This is where you can:
+
+- Modify response headers
+- Log response metrics
+
+## Storing data in `event.locals`
+
+`event.locals` is an object that can be manipulated inside a middleware.
+
+This `locals` object is forwarded across the request handling process and is available anywhere in the server (e.g. API routes, server-only queries and actions) through the [`getRequestEvent`](https://docs.solidjs.com/reference/server-utilities/get-request-event) function. This is useful for storing request-specific data across the server.
+
+You can store any type of data inside `locals`: strings, objects, and even functions and maps.
+
+```ts
 import { createMiddleware } from "@solidjs/start/middleware";
 
 export default createMiddleware({
-  onRequest: [
-    event => {
-      console.log("GLOBAL", event.request.url);
-    }
-  ]
+	onRequest: (event) => {
+		event.locals.user = {
+			name: "Ariana Grande",
+		};
+
+		event.locals.sayHello = () => {
+			return "Hello, " + event.locals.user.name;
+		};
+	},
 });
 ```
 
-Middleware supports 2 lifecycles: `onRequest` and `onBeforeResponse`. If you return a value from middleware it will respond with that, otherwise it will run the next one in the chain.
+Then you can use this information anywhere in the server with `getRequestEvent`:
+
+```ts title="src/routes/index.tsx"
+import { getRequestEvent } from "solid-js/web";
+import { query, createAsync } from "@solidjs/router";
+
+const getUser = query(async () => {
+  "use server";
+  const event = getRequestEvent();
+  return {
+    name: event?.locals?.user?.name,
+    greeting: event?.locals?.sayHello(),
+  };
+}, "user");
+
+export default function Page() {
+  const user = createAsync(() => getUser());
+
+  return (
+    <div>
+      <p>Name: {user()?.name}</p>
+      <button onClick={() => alert(user()?.greeting)}>Say Hello</button>
+    </div>
+  );
+}
+```
+
+<Callout type="note">
+	The value of `locals` cannot be changed during runtime. Overriding locals
+	risks erasing all user-stored information. SolidStart performs checks and will
+	throw an error if `locals` are modified.
+</Callout>
+
+## Working with headers
+
+The request or response headers are accessible through the `event.(request|response).headers` object, which follows the standard Web API interface. You can use the native `Headers` methods to read or modify headers.
+
+```ts
+import { createMiddleware } from "@solidjs/start/middleware";
+
+export default createMiddleware({
+	onRequest: (event) => {
+		// Read a request header
+		const userAgent = event.request.headers.get("user-agent");
+
+		// Set a new request and response header
+		event.request.headers.set("x-custom-request-header", "hello");
+		event.request.headers.set("x-custom-respnose-header1", "hello");
+	},
+	onBeforeResponse: (event) => {
+		// Set a new response header
+		event.response.headers.set("x-custom-respnose-header2", "hello");
+	},
+});
+```
+
+### CORS
+
+You can configure CORS headers in middleware to allow cross-origin request.
+
+```ts
+import { createMiddleware } from "@solidjs/start/middleware";
+import { json } from "@solidjs/router";
+
+const trustedOrigins = ["https://my-app.com", "https://another-app.com"];
+
+export default createMiddleware({
+	onRequest: (event) => {
+		event.response.headers.set("Vary", "Origin, Access-Control-Request-Method");
+
+		const origin = event.request.headers.get("origin") ?? "";
+		const isAllowedOrigin = trustedOrigins.includes(origin);
+
+		const { pathname } = new URL(event.request.url);
+		const isApiRequest = pathname.startsWith("/api");
+
+		// Only configure CORS for API routes
+		if (isAllowedOrigin && isApiRequest) {
+			// Handle preflight requests
+			if (
+				event.request.method === "OPTIONS" &&
+				!!event.request.headers.get("Access-Control-Request-Method")
+			) {
+				return json(null, {
+					headers: {
+						"Access-Control-Allow-Origin": origin,
+						"Access-Control-Allow-Methods": "POST, PUT, DELETE",
+						"Access-Control-Allow-Headers": "Content-Type, Authorization",
+					},
+				});
+			}
+
+			// Handle normal requests
+			event.response.headers.set("Access-Control-Allow-Origin", origin);
+		}
+	},
+});
+```
+
+## Using cookies
+
+Cookies are regular headers. On a request, they are stored in the `Cookie` header. On a response they are in the `Set-Cookie` header.
+
+Vinxi provides helpers to work with cookies more easily.
+
+```ts
+import { createMiddleware } from "@solidjs/start/middleware";
+import { getCookie, setCookie } from "vinxi/http";
+
+export default createMiddleware({
+	onRequest: (event) => {
+		// Get a cookie
+		const theme = getCookie(event.nativeEvent, "theme");
+
+		// Set a new cookie
+		setCookie("affiliate", "my-affiliate-id");
+	},
+});
+```
+
+You can [read more about Vinxi helpers here](https://vinxi.vercel.app/api/server/cookies.html).
+
+## Chaining middlewares
+
+Both `onRequest` and `onBeforeResponse` event handlers can accept an array of middleware functions. In this case, all middleware will be executed in order.
+
+```ts
+import { createMiddleware } from "@solidjs/start/middleware";
+import { type FetchEvent } from "@solidjs/start/server";
+
+function middleware1(event: FetchEvent) {
+	event.request.headers.set("x-custom-header1", "hello-from-middleware1");
+}
+
+function middleware2(event: FetchEvent) {
+	event.request.headers.set("x-custom-header2", "hello-from-middleware2");
+}
+
+export default createMiddleware({
+	onRequest: [middleware1, middleware2],
+});
+```
+
+## Redirects
+
+Solid-Router provides a `redirect` helper that can be used to redirect the user to a different URL within a middleware.
+
+```ts
+import { createMiddleware } from "@solidjs/start/middleware";
+import { redirect } from "@solidjs/router";
+
+const REDIRECT_MAP: Record<string, string> = {
+	"/signup": "/auth/signup",
+	"/login": "/auth/login",
+};
+
+export default createMiddleware({
+	onRequest: (event) => {
+		const { pathname } = new URL(event.request.url);
+
+		if (pathname in REDIRECT_MAP) {
+			return redirect(REDIRECT_MAP[pathname], 301);
+		}
+	},
+});
+```
+
+## Common Pitfalls
+
+### Authentication and Authorization
+
+Although using middleware for authentication and authorization is a common practice in many web frameworks, it is not advisable to use SolidStart middleware for these purposes.
+
+This is because SolidStart middleware is not guaranteed to run on every single request.
+
+For optimal security, all checks should be performed as close to your data source as possible.
+

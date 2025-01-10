@@ -35,31 +35,31 @@ export default function Page() {
 
 When invoked in a form, the action automatically receives the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData/FormData) object. You can extract the field data using the native `FormData` methods.
 
-If your action accepts typed data, you can use the `with` method to pass custom data to the action:
+### Passing additional arguments
+
+When you need to pass additional arguments to your action, you can use the `with` method:
 
 ```tsx {14} title="src/routes/index.tsx"
-import { createSignal } from "solid-js";
 import { action } from "@solidjs/router";
 
-const addPost = action(async (title: string) => {
+const addPost = action(async (userId: number, formData: FormData) => {
+	const title = formData.get("title");
 	await fetch("https://my-api.com/posts", {
 		method: "POST",
-		body: JSON.stringify({ title }),
+		body: JSON.stringify({ userId, title }),
 	});
 }, "addPost");
 
 export default function Page() {
-	const [title, setTitle] = createSignal("");
+	const userId = 1;
 	return (
-		<form action={addPost.with(title())} method="post">
-			<input value={title()} onChange={(e) => setTitle(e.target.value)} />
+		<form action={addPost.with(userId)} method="post">
+			<input name="title" />
 			<button>Add Post</button>
 		</form>
 	);
 }
 ```
-
-Note that the action takes a `string` as its first parameter rather than a `FormData`.
 
 ## Showing pending UI
 

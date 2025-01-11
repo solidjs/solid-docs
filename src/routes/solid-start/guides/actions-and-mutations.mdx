@@ -6,11 +6,12 @@ This guide provides practical examples of using actions to mutate data in SolidS
 
 ## Handling form submission
 
-SolidStart extends the HTML [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form) element to allow actions to be invoked with the `action` prop. You can use it to handle form submissions:
+To handle [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form) submissions with an action:
 
-1. Create an action and assign it a unique name.
+1. Make sure the action has a unique name.
 2. Pass the action to the `<form>` element using the `action` prop.
-3. Ensure the `<form>` element uses the `post` method for submission.
+3. Make sure the `<form>` element uses the `post` method for submission.
+4. Use the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData/FormData) object in the action to extract field data using the navite `FormData` methods.
 
 ```tsx {3-9} {13} title="src/routes/index.tsx"
 import { action } from "@solidjs/router";
@@ -32,8 +33,6 @@ export default function Page() {
 	);
 }
 ```
-
-When invoked in a form, the action automatically receives the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData/FormData) object, allowing you to extract field data using native `FormData` methods.
 
 ## Passing additional arguments
 
@@ -63,11 +62,10 @@ export default function Page() {
 
 ## Showing pending UI
 
-To display a pending UI while the action is executing:
+To display a pending UI during action execution:
 
 1. Import [`useSubmission`](/solid-router/reference/data-apis/use-submission) from `@solidjs/router`.
-2. Call `useSubmission` with your action.
-3. Use the `pending` property returned by `useSubmission` to display the pending state.
+2. Call `useSubmission` with your action, and use the returned `pending` property to display pending UI.
 
 ```tsx {12} {16-18} title="src/routes/index.tsx"
 import { action, useSubmission } from "@solidjs/router";
@@ -95,11 +93,10 @@ export default function Page() {
 
 ## Handling errors
 
-If an error occurs within an action, the error can be accessed using the [`useSubmission`](/solid-router/reference/data-apis/use-submission) primitive:
+To handle errors that occur within an action:
 
-1. Import `useSubmission` from `@solidjs/router`.
-2. Call `useSubmission` with your action.
-3. Use the `error` property returned by `useSubmission` to display the error message.
+1. Import [`useSubmission`](/solid-router/reference/data-apis/use-submission) from `@solidjs/router`.
+2. Call `useSubmission` with your action, and use the returned `error` property to handle the error.
 
 ```tsx {13} {16-18} title="src/routes/index.tsx"
 import { Show } from "solid-js";
@@ -129,12 +126,11 @@ export default function Page() {
 
 ## Validating form fields
 
-To validate form fields before submission:
+To validate form fields in an action:
 
 1. Add validation logic in your action and return validation errors if the data is invalid.
 2. Import [`useSubmission`](/solid-router/reference/data-apis/use-submission) from `@solidjs/router`.
-3. Call `useSubmission` with your action.
-4. Use the `result` property returned by `useSubmission` to display the validation errors.
+3. Call `useSubmission` with your action, and use the returned `result` property to handle the errors.
 
 ```tsx {6-10} {17} {22-24} title="src/routes/index.tsx"
 import { Show } from "solid-js";
@@ -167,37 +163,12 @@ export default function Page() {
 }
 ```
 
-## Using a database or an ORM
-
-To safely interact with your database or ORM in an action, ensure it is server-only by adding [`"use server"`](/solid-start/reference/server/use-server) as the first line of your action:
-
-```tsx {5} title="src/routes/index.tsx"
-import { action } from "@solidjs/router";
-import { db } from "~/lib/db";
-
-const addPost = action(async (formData: FormData) => {
-	"use server";
-	const title = formData.get("title");
-	await db.insert("posts").values({ title });
-}, "addPost");
-
-export default function Page() {
-	return (
-		<form action={addPost} method="post">
-			<input name="title" />
-			<button>Add Post</button>
-		</form>
-	);
-}
-```
-
 ## Showing optimistic UI
 
 To update the UI before the server responds:
 
 1. Import [`useSubmission`](/solid-router/reference/data-apis/use-submission) from `@solidjs/router`.
-2. Call `useSubmission` with your action.
-3. Use the `pending` and `input` properties to display optimistic UI.
+2. Call `useSubmission` with your action, and use the returned `pending` and `input` properties to display optimistic UI.
 
 ```tsx {19} {28-30} title="src/routes/index.tsx"
 import { For, Show } from "solid-js";
@@ -237,48 +208,16 @@ export default function Page() {
 ```
 
 <Callout type="info" title="Multiple Submissions">
-	If you want to display optimistic UI for multiple concurrent submissions, you
-	can use the
-	[`useSubmissions`](/solid-router/reference/data-apis/use-submissions)
-	primitive.
+
+If you want to display optimistic UI for multiple concurrent submissions, you can use the [`useSubmissions`](/solid-router/reference/data-apis/use-submissions) primitive.
+
 </Callout>
-
-## Invoking an action programmatically
-
-If you prefer not to use a <form> element, you can programmatically invoke an action using the `useAction` primitive:
-
-1. Import `useAction` from `@solidjs/router`.
-2. Call `useAction` with your action.
-3. Use the returned function to trigger the action.
-
-```tsx {13} {17} title="src/routes/index.tsx"
-import { createSignal } from "solid-js";
-import { action, useAction } from "@solidjs/router";
-
-const addPost = action(async (title: string) => {
-	await fetch("https://my-api.com/posts", {
-		method: "POST",
-		body: JSON.stringify({ title }),
-	});
-}, "addPost");
-
-export default function Page() {
-	const [title, setTitle] = createSignal("");
-	const addPostAction = useAction(addPost);
-	return (
-		<div>
-			<input value={title()} onInput={(e) => setTitle(e.target.value)} />
-			<button onClick={() => addPostAction(title())}>Add Post</button>
-		</div>
-	);
-}
-```
 
 ## Redirecting
 
-To redirect users after an action completes, use the [`redirect`](/solid-router/reference/response-helpers/redirect) helper:
+To redirect users to a different route within an action:
 
-1. Import `redirect` from `@solidjs/router`.
+1. Import [`redirect`](/solid-router/reference/response-helpers/redirect) from `@solidjs/router`.
 2. Call `redirect` with the route you want to navigate to, and throw its response.
 
 ```tsx {10} title="src/routes/index.tsx"
@@ -300,6 +239,60 @@ export default function Page() {
 			<input name="title" />
 			<button>Add Post</button>
 		</form>
+	);
+}
+```
+
+## Using a database or an ORM
+
+To safely interact with your database or ORM in an action, ensure it's server-only by adding [`"use server"`](/solid-start/reference/server/use-server) as the first line of your action:
+
+```tsx {5} title="src/routes/index.tsx"
+import { action } from "@solidjs/router";
+import { db } from "~/lib/db";
+
+const addPost = action(async (formData: FormData) => {
+	"use server";
+	const title = formData.get("title");
+	await db.insert("posts").values({ title });
+}, "addPost");
+
+export default function Page() {
+	return (
+		<form action={addPost} method="post">
+			<input name="title" />
+			<button>Add Post</button>
+		</form>
+	);
+}
+```
+
+## Invoking an action programmatically
+
+To programmatically invoke an action:
+
+1. Import `useAction` from `@solidjs/router`.
+2. Call `useAction` with your action, and use the returned function to invoke the action.
+
+```tsx {13} {17} title="src/routes/index.tsx"
+import { createSignal } from "solid-js";
+import { action, useAction } from "@solidjs/router";
+
+const addPost = action(async (title: string) => {
+	await fetch("https://my-api.com/posts", {
+		method: "POST",
+		body: JSON.stringify({ title }),
+	});
+}, "addPost");
+
+export default function Page() {
+	const [title, setTitle] = createSignal("");
+	const addPostAction = useAction(addPost);
+	return (
+		<div>
+			<input value={title()} onInput={(e) => setTitle(e.target.value)} />
+			<button onClick={() => addPostAction(title())}>Add Post</button>
+		</div>
 	);
 }
 ```

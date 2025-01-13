@@ -98,7 +98,7 @@ export function Callout(props: CalloutProps) {
 					when={props.title}
 					fallback={
 						<span class="capitalize font-semibold text-xl">
-							{props.type || "Info"}:{" "}
+							{props.type || "Info"}
 						</span>
 					}
 				>

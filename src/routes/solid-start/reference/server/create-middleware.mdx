@@ -2,25 +2,22 @@
 title: createMiddleware
 ---
 
-`createMiddleware` returns a specification that SolidStart uses to determine when middleware runs during the request lifecycle. See [Middleware](/solid-start/advanced/middleware) to learn more about middleware.
+`createMiddleware` creates a configuration object that determines when middleware are executed during the request lifecycle. Learn more about middleware in the [Middleware documentation](/solid-start/advanced/middleware).
 
-## Parameters
+`createMiddleware` creates a configuration object that determines when middleware runs during the request lifecycle.
 
-`createMiddleware` takes an object with the following keys:
+There are two lifecycle events available: `onRequest` and `onBeforeResponse`.
 
-- `onRequest` (optional): A function or an array of functions that run before the application processes the request.
-- `onBeforeResponse` (optional): A function or an array of functions that run after the application has processed the request but before the response is sent to the client.
+Passing a middleware or an array middleware to them registers the middleware to run on a specific point in the request lifecycle.
 
-## Returns
-
-`createMiddleware` returns an object that defines when middleware runs during the request lifecycle.
-
-## Example
+`onRequest` triggers when a request comes to the application. The middlewares assigned to it run before the route handlers process the request.
+`onBeforeResponse` triggers when a request is processed through route handler but the response hasn't sent to the client.
 
 ```ts
 import { createMiddleware } from "@solidjs/start/middleware";
+import { type FetchEvent } from "@solidjs/start/server";
 
-const middlewareSpec = createMiddleware({
+const middlewareConfig = createMiddleware({
 	onRequest: (event) => {
 		console.log("Request received:", event.request.url);
 	},
@@ -29,3 +26,15 @@ const middlewareSpec = createMiddleware({
 	},
 });
 ```
+
+## Parameters
+
+`createMiddleware` takes an object with the following keys:
+
+- `onRequest` (optional): A function or an array of functions that are executed at the beginning of the request lifecycle, before the request is handled by the route handler.
+- `onBeforeResponse` (optional): A function or an array of functions that are executed at the end of the request lifecycle, after the route handler has processed the request, but before the response is sent to the client.
+
+## Returns
+
+`createMiddleware` returns an object that defines when middleware runs during the request lifecycle.
+`createMiddleware` returns a configuration object that defines middleware behavior.

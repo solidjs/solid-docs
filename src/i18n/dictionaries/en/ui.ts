@@ -25,7 +25,7 @@ export default {
 	"main.nav.section.rendering": "Rendering",
 	"main.nav.section.secondary.primitives": "Secondary Primitives",
 	"main.nav.section.stores": "Stores",
-	"main.nav.section.solid.router": "Solid-Router",
+	"main.nav.section.solid.router": "Solid Router",
 	"main.nav.section.solid.router.components": "Components",
 	"main.nav.section.solid.router.data.apis": "Data APIs",
 	"main.nav.section.solid.router.preload.functions": "Preload Functions",

@@ -49,7 +49,7 @@ export const Hero: Component = () => {
 										Solid<span class="font-thin">Start</span>
 									</Match>
 									<Match when={isRouter()?.path}>
-										<span class="font-thin">Solid-</span>Router
+										<span class="font-thin">Solid </span>Router
 									</Match>
 									<Match when={isMeta()?.path}>
 										<span class="font-thin">Solid-</span>Meta

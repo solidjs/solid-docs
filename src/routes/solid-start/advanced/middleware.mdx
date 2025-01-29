@@ -86,9 +86,23 @@ This is the ideal place to:
 In web applications, there's often a need to share request-specific data across different parts of the server-side code.
 This data might include user authentication status, trace IDs for debugging, or client metadata (e.g., user agent, geolocation).
 
-The `event.locals` object provides a temporary, request-scoped storage layer to address this need.
-Data stored within it is only available during the processing of a single HTTP request and is automatically cleared afterward.
-`event.locals` is a plain JavaScript object and can hold any JavaScript value.
+The `event.locals` is a plain JavaScript object that can hold any JavaScript value.
+This object provides a temporary, request-scoped storage layer to address this need.
+Any data stored within it is only available during the processing of a single HTTP request and is automatically cleared afterward.
+
+```ts
+import { createMiddleware } from "@solidjs/start/middleware";
+
+export default createMiddleware({
+	onRequest: (event) => {
+		event.locals.user = {
+			name: "John Wick",
+		};
+		event.locals.sayHello = () => {
+			return "Hello, " + event.locals.user.name;
+		};
+	},
+});
 
 Within middleware, `event.locals` can be accessed and modified directly.
 Other server-side contexts must use the [`getRequestEvent`](/reference/server-utilities/get-request-event) function to access the `event.locals` object.

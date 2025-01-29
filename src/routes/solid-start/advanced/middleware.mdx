@@ -21,7 +21,7 @@ While middleware is powerful, certain tasks are better handled in other parts of
 - **Authorization:** Middleware does _not_ run on every request, especially during client-side navigations.
   Relying on middleware for authorization would create a significant security vulnerability.
   As a result, authorization checks should be performed as close to the data source as possible.
- This means it within API routes, server-only queries/actions, or other server-side utilities.
+  This means it within API routes, server-only queries/actions, or other server-side utilities.
 - **Heavy computation or long-running processes:** Middleware should be lightweight and execute quickly to avoid impacting performance.
   CPU-intensive tasks, long-running processes, or blocking operations (like complex calculations or external API calls) are best handled by dedicated route handlers, server-side utilities, or background jobs.
 - **Database operations:** Performing direct database queries within middleware can lead to performance bottlenecks and make your application harder to maintain.
@@ -103,9 +103,11 @@ export default createMiddleware({
 		};
 	},
 });
+```
 
 Within middleware, `event.locals` can be accessed and modified directly.
 Other server-side contexts must use the [`getRequestEvent`](/reference/server-utilities/get-request-event) function to access the `event.locals` object.
+
 ```tsx title="src/routes/index.tsx"
 import { getRequestEvent } from "solid-js/web";
 import { query, createAsync } from "@solidjs/router";
@@ -140,33 +142,9 @@ These follow the [standard Web API `Headers`](https://developer.mozilla.org/en-U
 import { createMiddleware } from "@solidjs/start/middleware";
 
 export default createMiddleware({
-      onRequest: (event) => {	
-            // Reading client metadata for later use
-            const userAgent = event.request.headers.get("user-agent");
-            // Adding custom headers to request/response
-		event.request.headers.set("x-custom-request-header", "hello");
-		event.response.headers.set("x-custom-response-header1", "hello");
-	},
-	onBeforeResponse: (event) => {
-		// Finalizing response headers before sending to client
-		event.response.headers.set("x-custom-response-header2", "hello");
-	},
-});
-
-<Callout type="info" title="Note">
-
-Headers set in `onRequest` are applied **before** the route handler processes the request, allowing downstream middleware or route handlers to override them.
-Headers set in `onBeforeResponse` are applied **after** the route handler and are finalized for the client.
-
-</Callout>
-
-import { createMiddleware } from "@solidjs/start/middleware";
-
-export default createMiddleware({
 	onRequest: (event) => {
 		// Reading client metadata for later use
 		const userAgent = event.request.headers.get("user-agent");
-
 		// Adding custom headers to request/response
 		event.request.headers.set("x-custom-request-header", "hello");
 		event.response.headers.set("x-custom-response-header1", "hello");
@@ -177,6 +155,13 @@ export default createMiddleware({
 	},
 });
 ```
+
+<Callout type="info" title="Note">
+
+Headers set in `onRequest` are applied **before** the route handler processes the request, allowing downstream middleware or route handlers to override them.
+Headers set in `onBeforeResponse` are applied **after** the route handler and are finalized for the client.
+
+</Callout>
 
 ## Cookies
 
@@ -216,24 +201,14 @@ export default createMiddleware({
 		return new Response("Unauthorized", { status: 401 });
 	},
 });
+```
+
 <Callout type="info" title="Note">
 
 Only [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) objects can be returned from middleware functions.
 Returning any other value will result in an error.
 
 </Callout>
-
-```ts
-import { createMiddleware } from "@solidjs/start/middleware";
-
-export default createMiddleware({
-	onRequest: () => {
-		return new Response("Unauthorized", { status: 401 });
-	},
-});
-```
-
-This example returns a "401 Unauthorized" response with the text "Unauthorized" as the body, preventing further execution of middleware or route handlers.
 
 ### Redirects
 

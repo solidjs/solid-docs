@@ -134,7 +134,24 @@ export default function Page() {
 ## Headers
 
 Request and response headers can be accessed and modified using the `event.request.headers` and `event.response.headers` objects.
-These follow the standard Web API [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) interface, exposing built-in methods for reading/updating headers.
+These follow the [standard Web API `Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) interface, exposing built-in methods for reading/updating headers.
+
+```ts
+import { createMiddleware } from "@solidjs/start/middleware";
+
+export default createMiddleware({
+      onRequest: (event) => {	
+            // Reading client metadata for later use
+            const userAgent = event.request.headers.get("user-agent");
+            // Adding custom headers to request/response
+		event.request.headers.set("x-custom-request-header", "hello");
+		event.response.headers.set("x-custom-response-header1", "hello");
+	},
+	onBeforeResponse: (event) => {
+		// Finalizing response headers before sending to client
+		event.response.headers.set("x-custom-response-header2", "hello");
+	},
+});
 
 <Callout type="info" title="Note">
 

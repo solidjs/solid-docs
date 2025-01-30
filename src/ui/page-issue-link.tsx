@@ -12,7 +12,7 @@ export const PageIssueLink: Component = () => {
 	});
 	return (
 		<a
-			class="flex no-underline hover:text-blue-700 dark:hover:text-blue-300 dark:text-slate-300 "
+			class="flex no-underline hover:text-blue-700 dark:hover:text-blue-300 dark:text-slate-300"
 			href={srcPath()}
 			target="_blank"
 		>

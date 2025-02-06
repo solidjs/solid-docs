@@ -2,68 +2,136 @@
 title: "Navigation"
 ---
 
-Once your routes have been created within an application, [anchor tags](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a) can be used to help users navigate between different views or pages.
+SolidStart provides several ways to manage navigation between routes:
 
-```jsx {4-5}
-const App = (props) => (
-	<>
+- Using the native [`<a>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a).
+- Using the [`<A>` component](/solid-router/reference/components/a).
+- Using the [`useNavigate` primitive](/solid-router/reference/primitives/use-navigate).
+- Using the [`redirect` function](/solid-router/reference/response-helpers/redirect).
+
+This page provides an overview of these options.
+
+## `<a>` element
+
+The standard HTML `<a>` element is the most basic way to create links.
+In SolidStart, clicking an `<a>` element triggers [soft navigation](/solid-router/reference/components/a#soft-navigation).
+
+```tsx
+function Navbar() {
+	return (
 		<nav>
-			<a href="/users">Users</a>
 			<a href="/">Home</a>
+			<a href="/login">Login</a>
 		</nav>
-		<h1>My Site with lots of pages</h1>
-		{props.children}
-	</>
-);
+	);
+}
 ```
 
 ## `<A>` component
 
-While you can use the native HTML anchor tag, Solid Router does provide a [`<A>`](/solid-router/reference/components/a) component. 
-While similar to an anchor tag, the `<A>` component supports automatically applying the base URL path and relative paths.
+The `<A>` component extends the native `<a>` element.
+It automatically handles the router's base URL and supports relative paths.
 
-```jsx {4-5}
-const App = (props) => (
-	<>
-    <nav>
-        <A href="/">Home</A>
-        <A href="/users">Users</A>
-    </nav>
-    <h1>My Site with lots of pages</h1>
-    {props.children}
-	</>
-);
+```tsx
+import { A } from "@solidjs/router";
+
+function DashboardPage() {
+	return (
+		<main>
+			{/* This is a relative path that, from /dashboard, links to /dashboard/users */}
+			<A href="users">Users</A>
+		</main>
+	);
+}
 ```
 
-### Styling links
+<Callout type="info" title="Note">
 
-In addition, the `<A>` component also provides an `activeClass` and `inactiveClass` prop.
-This prop accepts a string that, when provided, will apply the specified class to the anchor tag based on the current route.
-If the current route matches the `href` prop, the `activeClass` class will be applied, otherwise the `inactiveClass` class will be applied.
+`<A>` can only be used within a component that is rendered by a [`<Route>`](/solid-router/reference/components/route).
 
-```jsx
-<A href="/users" activeClass="underlined" inactiveClass="default">
-	Users
-</A>
+</Callout>
+
+See the [`<A>` API reference](/solid-router/reference/components/a) for more information.
+
+### Styling
+
+The `<A>` component provides `activeClass` and `inactiveClass` props to style links based on their active state.
+These props apply corresponding CSS classes to the link.
+If these props are omitted, the classes `active` and `inactive` are used by default.
+
+A link is considered active if the current route matches the link's `href` or is a descendant of it.
+For example, a link with `href="/dashboard"` is active when the current route is `/dashboard`, `/dashboard/users`, or `/dashboard/users/1/profile`.
+
+The `end` prop modifies this behavior.
+`end={true}` requires an exact match between the link's `href` and the current route for the link to be considered active.
+This is particularly useful for root route links (`href="/"`), which would otherwise match all routes.
+
+```tsx
+import { A } from "@solidjs/router";
+
+function Navbar() {
+	return (
+		<nav>
+			<A href="/" end={true}>
+				Home
+			</A>
+			<A
+				href="/login"
+				activeClass="text-blue-900"
+				inactiveClass="text-blue-500"
+			>
+				Login
+			</A>
+		</nav>
+	);
+}
 ```
 
-### Matching routes
+## `useNavigate` primitive
 
-By default, matching using the `<A>` component will include locations that are _descendants_ of the specified route. 
-This would include `/users`, `/users/1`, `/users/1/posts`, etc. if `/users` is the specified route.
+The `useNavigate` primitive allows for programmatically navigating to a specified route.
 
-```jsx
-// Will match /users and /users/1
-<A href="/users">
-    Users
-</A>
+```tsx
+import { useNavigate } from "@solidjs/router";
+
+function LoginPage() {
+	const navigate = useNavigate();
+
+	return (
+		<button
+			onClick={() => {
+				// Perform login logic here ...
+				navigate("/dashboard", { replace: true });
+			}}
+		>
+			Login
+		</button>
+	);
+}
 ```
-To match the exact route only, you can use the `end` prop:
 
-```jsx
-// Will match /users/1 only
-<A href="/users/1" end>
-    User 1
-</A>
+This example redirects the user to `/dashboard` after login.
+The `replace: true` option effectively removes the login page from the browser's history stack by replacing it with the `/dashboard` route, preventing the user from returning to it with the back button.
+
+<Callout type="info" title="Note">
+
+`useNavigate` can only be used within a component that is rendered by a `<Route>`.
+
+</Callout>
+
+See the [`useNavigate` API reference](/solid-router/reference/primitives/use-navigate) for more information.
+
+## `redirect` function
+
+The `redirect` function returns a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object that allows navigation to a specified route within a [query](/solid-router/reference/data-apis/query) or [action](/solid-router/reference/data-apis/action).
+
+```tsx
+import { action, redirect } from "@solidjs/router";
+
+const logout = action(async () => {
+	localStorage.remove("token");
+	throw redirect("/");
+});
 ```
 
+See the [`redirect` API reference](/solid-router/reference/response-helpers/redirect) for more information.

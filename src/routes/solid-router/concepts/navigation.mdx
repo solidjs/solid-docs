@@ -2,7 +2,7 @@
 title: "Navigation"
 ---
 
-SolidStart provides several ways to manage navigation between routes:
+Solid Router provides several ways to navigate between routes:
 
 - Using the native [`<a>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a).
 - Using the [`<A>` component](/solid-router/reference/components/a).
@@ -15,7 +15,6 @@ This page provides an overview of these options.
 
 The standard HTML `<a>` element is the universal way to create links in an application.
 In SolidStart, the `<a>` element triggers [soft navigation](/solid-router/reference/components/a#soft-navigation).
-
 
 ```tsx
 function Navbar() {
@@ -38,6 +37,9 @@ import { A } from "@solidjs/router";
 function DashboardPage() {
 	return (
 		<main>
+			<nav>
+				<A href="/">Home</a>
+			</nav>
 			{/* This is a relative path that, from /dashboard, links to /dashboard/users */}
 			<A href="users">Users</A>
 		</main>
@@ -45,26 +47,19 @@ function DashboardPage() {
 }
 ```
 
-<Callout type="info" title="Note">
-
-`<A>` can only be used within a component that is rendered by a [`<Route>`](/solid-router/reference/components/route).
-
-</Callout>
-
 See the [`<A>` API reference](/solid-router/reference/components/a) for more information.
 
 ### Styling
 
-The `<A>` component allows you to style links based on their active state using the `activeClass` and `inactiveClass` props. 
-When provided, these props apply the corresponding CSS classes to the link. 
+The `<A>` component allows you to style links based on their active state using the `activeClass` and `inactiveClass` props.
+When provided, these props apply the corresponding CSS classes to the link.
 If omitted, the default classes `active` and `inactive` are used.
 
-
-A link is considered active if the current route matches the link's `href` or is a descendant of it.
+By default, a link is considered active when the current route matches the link's `href` or any of its descendant routes.
 For example, a link with `href="/dashboard"` is active when the current route is `/dashboard`, `/dashboard/users`, or `/dashboard/users/1/profile`.
 
 To match an exact route, the prop `end` can be used.
-When `true`,  it ensures that the link is only considered active if the `href` exactly matches the current route. 
+When `true`, it ensures that the link is only considered active if the `href` exactly matches the current route.
 This is useful for root route links (href="/"), which might otherwise match all routes.
 
 ```tsx
@@ -101,7 +96,7 @@ function LoginPage() {
 	return (
 		<button
 			onClick={() => {
-				// Perform login logic here ...
+				// Login logic
 				navigate("/dashboard", { replace: true });
 			}}
 		>
@@ -111,10 +106,9 @@ function LoginPage() {
 }
 ```
 
-This example redirects the user to `/dashboard` after login. 
-By using `replace: true`, the login page is removed from the browser's history stack and replaced with the `/dashboard` route. 
+This example redirects the user to `/dashboard` after login.
+By using `replace: true`, the login page is removed from the browser's history stack and replaced with the `/dashboard` route.
 This prevents the user from navigating back to the login page using the back button.
-
 
 See the [`useNavigate` API reference](/solid-router/reference/primitives/use-navigate) for more information.
 

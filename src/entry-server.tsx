@@ -18,7 +18,6 @@ export default createHandler(() => (
 							type="image/svg+xml"
 						/>
 						<script>
-							{" "}
 							{`
 							function getCookie(name, cookieString) {
 								if (!name || !cookieString) return "system";

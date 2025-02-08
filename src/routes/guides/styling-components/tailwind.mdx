@@ -4,78 +4,61 @@ order: 5
 mainNavExclude: true
 ---
 
-[Tailwind CSS](https://tailwindcss.com/) is an on-demand utility CSS library that integrates seamlessly with Solid as a built-in PostCSS plugin.
+[Tailwind CSS](https://tailwindcss.com/) is an on-demand utility CSS library that integrates seamlessly with Solid as a built-in Vite plugin. For **Tailwind CSS v3** refer to [TailwindCSS v3](/guides/styling-components/tailwind-v3).
 
 ## Installation
 
-1. Install Tailwind CSS as a development dependency:
+1. Install Tailwind CSS as a dependency:
 
 <TabsCodeBlocks>
 <div id="npm">
 ```bash frame="none"
-npm i --save-dev tailwindcss postcss autoprefixer
+npm i tailwindcss @tailwindcss/vite
 ```
 </div>
 
 <div id="yarn">
 ```bash frame="none"
-yarn add --dev tailwindcss postcss autoprefixer
+yarn add tailwindcss @tailwindcss/vite
 ```
 </div>
 
 <div id="pnpm">
 ```bash frame="none"
-pnpm add --save-dev tailwindcss postcss autoprefixer
+pnpm add tailwindcss @tailwindcss/vite
 ```
 </div>
 
 <div id="bun">
 ```bash frame="none"
-bun add --save-dev tailwindcss postcss autoprefixer
+bun add tailwindcss @tailwindcss/vite
 ```
 </div>
 </TabsCodeBlocks>
 
-2. Next, run the init command to generate both `tailwind.config.js` and `postcss.config.js`.
-
-<TabsCodeBlocks>
-<div id="npm">
-```bash frame="none"
-npx tailwindcss init -p
-```
-</div>
-
-<div id="yarn">
-```bash frame="none"
-yarn dlx tailwindcss init -p
-```
-</div>
-
-<div id="pnpm">
-```bash frame="none"
-pnpm dlx tailwindcss init -p
-```
-</div>
-
-<div id="bun">
-```bash frame="none"
-bunx tailwindcss init -p
-```
-</div>
-</TabsCodeBlocks>
-
-3. Since TailwindCSS is configuration-driven, after initializing, a `tailwind.config.js` file will be created at the root of your project directory:
+2. Add the @tailwindcss/vite plugin to your SolidJS Vite configuration.
 
 ```js
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-	content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
-	theme: {
-		extend: {},
+/* vite.config.js */
+import { defineConfig } from 'vite';
+import solidPlugin from 'vite-plugin-solid';
+import tailwindcss from '@tailwindcss/vite';
+
+export default defineConfig({
+	plugins: [
+		tailwindcss(),
+		solidPlugin(),
+	],
+	server: {
+		port: 3000,
 	},
-	plugins: [],
-};
+	build: {
+		target: 'esnext',
+	},
+});
 ```
+
+As of Tailwind CSS v4, **tailwind.config.js** is no longer required.
 
 For a deeper dive into configuration, you can check out the [Tailwind Official Documentation](https://tailwindcss.com/docs/configuration).
 
@@ -84,12 +67,10 @@ For a deeper dive into configuration, you can check out the [Tailwind Official D
 In your `src/index.css` file, add the following Tailwind directives:
 
 ```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 ```
 
-These directives inform PostCSS that you're using Tailwind and establish the order of the directives. You can append custom CSS below these directives.
+These directives ensure that Tailwind CSS is properly initialized and establish the correct order for utilities. You can append custom CSS below these directives.
 
 ## Import TailwindCSS
 

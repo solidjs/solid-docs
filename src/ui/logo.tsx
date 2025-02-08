@@ -385,7 +385,7 @@ export function Logo(props: { class?: string }) {
 					<>
 						<SolidLogo />
 						<span class="dark:text-white text-2xl leading-none font-normal inactive md:block hidden">
-							Solid-<b>Router</b>
+							Solid <b>Router</b>
 						</span>
 					</>
 				</Match>

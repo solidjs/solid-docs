@@ -6,20 +6,19 @@ Actions are data mutations that can trigger invalidations and further routing.
 A list of prebuilt response helpers can be found below.
 
 ```jsx
-import { action, revalidate, redirect } from "@solidjs/router"
+import { action, revalidate, redirect } from "@solidjs/router";
 
 // anywhere
 const myAction = action(async (data) => {
-  await doMutation(data);
-  throw redirect("/", { revalidate: getUser.keyFor(data.id) }); // throw a response to do a redirect
+	await doMutation(data);
+	throw redirect("/", { revalidate: getUser.keyFor(data.id) }); // throw a response to do a redirect
 });
 
 // in component
-<form action={myAction} method="post" />
+<form action={myAction} method="post" />;
 
 //or
-<button type="submit" formaction={myAction}></button>
-
+<button type="submit" formaction={myAction}></button>;
 ```
 
 Actions only work with **post** requests.
@@ -31,32 +30,30 @@ The `with` method works similar to [`bind`](https://developer.mozilla.org/en-US/
 
 Without `with`:
 
-```jsx
+```tsx
 const deleteTodo = action(async (formData: FormData) => {
-  const id = Number(formData.get("id"))
-  await api.deleteTodo(id)
-})
+	const id = Number(formData.get("id"));
+	await api.deleteTodo(id);
+});
 
 <form action={deleteTodo} method="post">
-  <input type="hidden" name="id" value={todo.id} />
-  <button type="submit">Delete</button>
-</form>
-
+	<input type="hidden" name="id" value={todo.id} />
+	<button type="submit">Delete</button>
+</form>;
 ```
 
 Using `with`:
 
-```jsx del={5,6} ins={7}
+```tsx del={5,6} ins={7}
 const deleteTodo = action(async (id: number) => {
-  await api.deleteTodo(id)
-})
+	await api.deleteTodo(id);
+});
 
 <form action={deleteTodo} method="post">
   <input type="hidden" name="id" value={todo.id} />
 <form action={deleteTodo.with(todo.id)} method="post">
-  <button type="submit">Delete</button>
-</form>
-
+	<button type="submit">Delete</button>
+</form>;
 ```
 
 ## Notes of `<form>` implementation and SSR
@@ -89,19 +86,18 @@ However, even when used with server functions, such as with [SolidStart](https:/
 These functions are used when incorporating optimistic updates during ongoing actions.
 They provide either a singular Submission (the latest one), or a collection of Submissions that match, with an optional filtering function.
 
-```jsx
+```tsx
 type Submission<T, U> = {
-  input: T;
-  result: U;
-  error: any;
-  pending: boolean
-  clear: () => {}
-  retry: () => {}
-}
+	input: T;
+	result: U;
+	error: any;
+	pending: boolean;
+	clear: () => {};
+	retry: () => {};
+};
 
 const submissions = useSubmissions(action, (input) => filter(input));
 const submission = useSubmission(action, (input) => filter(input));
-
 ```
 
 ## Revalidate cached functions
@@ -110,14 +106,13 @@ const submission = useSubmission(action, (input) => filter(input));
 
 By default all cached functions will be revalidated wether the action does not return or return a "normal" response.
 
-```jsx
-
+```tsx
 const deleteTodo = action(async (formData: FormData) => {
-  const id = Number(formData.get("id"))
-  await api.deleteTodo(id)
-  // ...
-  return new  Response("success",  {  status:  200  });
-})
+	const id = Number(formData.get("id"));
+	await api.deleteTodo(id);
+	// ...
+	return new Response("success", { status: 200 });
+});
 ```
 
 ### Revalidate specific cached keys
@@ -125,45 +120,46 @@ const deleteTodo = action(async (formData: FormData) => {
 By returning a response with solid-router's `json`, `reload` or `redirect` helpers you can pass a key / keys to the revalidate prop as the second argument of the json response helper.
 You can either pass as `string` directly or use the cached functions `key` or `keyFor` props.
 
-```jsx
-import { action, json, reload, redirect } from "@solidjs/router"
+```tsx
+import { action, json, reload, redirect } from "@solidjs/router";
 
 const deleteTodo = action(async (formData: FormData) => {
-  const id = Number(formData.get("id"))
-  await api.deleteTodo(id)
-  return json(
-  { deleted: id },
-  { revalidate: ["getAllTodos", getTodos.key, getTodoByID.keyFor(id)]}
-  )
+	const id = Number(formData.get("id"));
+	await api.deleteTodo(id);
+	return json(
+		{ deleted: id },
+		{ revalidate: ["getAllTodos", getTodos.key, getTodoByID.keyFor(id)] }
+	);
 
-  //or
-  return reload({ revalidate: ["getAllTodos", getTodos.key, getTodoByID.keyFor(id)]})
+	//or
+	return reload({
+		revalidate: ["getAllTodos", getTodos.key, getTodoByID.keyFor(id)],
+	});
 
-  //or
-  return redirect("/", { revalidate: ["getAllTodos", getTodos.key, getTodoByID.keyFor(id)]})
-
-})
-
+	//or
+	return redirect("/", {
+		revalidate: ["getAllTodos", getTodos.key, getTodoByID.keyFor(id)],
+	});
+});
 ```
 
 ## Prevent revalidation
 
 To opt out of any revalidation you can pass any `string` to revalidate which is not a key of any cached function.
 
-```jsx
+```tsx
 const deleteTodo = action(async (formData: FormData) => {
-  const id = Number(formData.get("id"))
-  await api.deleteTodo(id)
-  // returns a `json` without revalidating the action.
-  return json(`deleted ${id}`,{ revalidate: "nothing" })
+	const id = Number(formData.get("id"));
+	await api.deleteTodo(id);
+	// returns a `json` without revalidating the action.
+	return json(`deleted ${id}`, { revalidate: "nothing" });
 
-  // or reload the route without revalidating the request.
-  return reload({ revalidate: "nothing" })
+	// or reload the route without revalidating the request.
+	return reload({ revalidate: "nothing" });
 
- // or redirect without revalidating
- return redirect("/", { revalidate: "nothing" })
-})
-
+	// or redirect without revalidating
+	return redirect("/", { revalidate: "nothing" });
+});
 ```
 
 ### Revalidate without action

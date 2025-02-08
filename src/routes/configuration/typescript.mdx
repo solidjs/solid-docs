@@ -54,19 +54,32 @@ Transitioning from JavaScript to TypeScript in a Solid project offers the benefi
 
 <TabsCodeBlocks>
 <div id="npm">
+
 ```bash frame="none"
 npm i --save-dev typescript
 ```
+
 </div>
+<div id="yarn">
 
-<div id="yarn">```bash frame="none" yarn add --dev typescript ```</div>
+```bash frame="none"
+yarn add --dev typescript
+```
 
-<div id="pnpm">```bash frame="none" pnpm add --save-dev typescript ```</div>
+</div>
+<div id="pnpm">
 
+```bash frame="none"
+pnpm add --save-dev typescript
+```
+
+</div>
 <div id="bun">
+
 ```bash frame="none"
 bun add --save-dev typescript
 ```
+
 </div>
 </TabsCodeBlocks>
 
@@ -74,19 +87,32 @@ bun add --save-dev typescript
 
 <TabsCodeBlocks>
 <div id="npm">
+
 ```bash frame="none"
 npx tsc --init
 ```
+
 </div>
+<div id="yarn">
 
-<div id="yarn">```bash frame="none" yarn dlx tsc --init ```</div>
+```bash frame="none"
+yarn dlx tsc --init
+```
 
-<div id="pnpm">```bash frame="none" pnpm tsc --init ```</div>
+</div>
+<div id="pnpm">
 
+```bash frame="none"
+pnpm tsc --init
+```
+
+</div>
 <div id="bun">
+
 ```bash frame="none"
 bunx tsc --init
 ```
+
 </div>
 </TabsCodeBlocks>
 
@@ -112,7 +138,7 @@ bunx tsc --init
 
 4. Create a TypeScript or `.tsx` file to test the setup.
 
-```typescript
+```tsx
 import { type Component } from "solid-js";
 
 const MyTsComponent: Component = () => {
@@ -121,7 +147,7 @@ const MyTsComponent: Component = () => {
 			<h1>This is a TypeScript component</h1>
 		</div>
 	);
-}
+};
 
 export default MyTsComponent;
 ```
@@ -142,6 +168,7 @@ function MyJsComponent() {
 ```
 
 <Callout>
+
 If you wish to change the entry point file from `index.jsx` to `index.tsx`, you need to modify the `src` attribute in `<script>` to look like the following:
 
 ```html
@@ -178,7 +205,7 @@ const [count, setCount] = createSignal<number>();
 Here, `createSignal` has the return type `Signal<number | undefined>`, which corresponds to the type passed into it, and `undefined` as it was uninitialized.
 This resolves to a getter-setter [tuple](https://www.typescriptlang.org/docs/handbook/2/objects.html#tuple-types), both of which are generically typed:
 
-```typescript
+```ts
 import type { Signal, Accessor, Setter } from "solid-js";
 type Signal<T> = [get: Accessor<T>, set: Setter<T>];
 ```
@@ -190,7 +217,7 @@ Since the signal was not initialized, its initial state is `undefined`, therefor
 The corresponding setter, `setCount`, has a more complex type:
 
 ```ts
-Setter<number | undefined>.
+Setter<number | undefined>;
 ```
 
 Essentially, this type means that the function can accept either a direct number or another function as its input.
@@ -302,8 +329,8 @@ By default, components in Solid use the generic `Component<P>` type, where `P` r
 import type { Component } from "solid-js";
 
 const MyComponent: Component<MyProps> = (props) => {
-    ...
-}
+	// ...
+};
 ```
 
 A `JSX.Element` denotes anything renderable by Solid, which could be a DOM node, array of JSX elements, or functions yielding `JSX.Element`.
@@ -378,13 +405,19 @@ Any function that takes props and returns a JSX.Element qualifies as a valid com
 
 ```tsx
 // arrow function
-const MyComponent = (props: MyProps): JSX.Element => { ... }
+const MyComponent = (props: MyProps): JSX.Element => {
+	/* ... */
+};
 
 // function declaration
-function MyComponent(props: MyProps): JSX.Element { ... }
+function MyComponent(props: MyProps): JSX.Element {
+	/* ... */
+}
 
 // component which takes no props
-function MyComponent(): JSX.Element { ... }
+function MyComponent(): JSX.Element {
+	/* ... */
+}
 ```
 
 It is worth noting that the `Component` types **cannot be used to create generic components**.
@@ -405,9 +438,9 @@ function MyGenericComponent<T>(props: MyProps<T>): JSX.Element {
 ```
 
 <Callout>
-	Each `Component` type has a corresponding `Props` type that defines the shape
-	of its properties. These `Props` types also accept the same generic types as
-	their associated `Component` types.
+
+Each `Component` type has a corresponding `Props` type that defines the shape of its properties. These `Props` types also accept the same generic types as their associated `Component` types.
+
 </Callout>
 
 ### Event handling
@@ -419,16 +452,16 @@ Here, `TElement` refers to the type of the element the event is linked to.
 `TEvent` will indicate the type of the event itself which can serve as an alternative to `(event: TEvent) => void` in the code.
 This approach guarantees accurate typing for `currentTarget` and `target` within the event object while also eliminating the need for inline event handlers.
 
-```typescript
-import type { JSX } from "solid-js"
+```tsx
+import type { JSX } from "solid-js";
 
 // Defining an event handler using the `EventHandler` type:
 const onInput: JSX.EventHandler<HTMLInputElement, InputEvent> = (event) => {
-	console.log("Input changed to", event.currentTarget.value)
-}
+	console.log("Input changed to", event.currentTarget.value);
+};
 
 // Then attach handler to an input element:
-<input onInput={onInput} />
+<input onInput={onInput} />;
 ```
 
 #### Inline handlers
@@ -473,20 +506,20 @@ In a TypeScript environment, particularly with strict `null` checks enabled, typ
 
 A safe approach in TypeScript is to acknowledge that `divRef` may initially be `undefined` and to implement checks when accessing it:
 
-```ts
-let divRef: HTMLDivElement | undefined
+```tsx
+let divRef: HTMLDivElement | undefined;
 // This would be flagged as an error during compilation
-divRef.focus()
+divRef.focus();
 onMount(() => {
-	if (!divRef) return
-	divRef.focus()
-})
-return <div ref={divRef}>...</div>
+	if (!divRef) return;
+	divRef.focus();
+});
+return <div ref={divRef}>...</div>;
 ```
 
 Within the scope of the `onMount` function, which runs after rendering, you can use a non-`null` assertion (indicated by the exclamation mark `!`):
 
-```typescript
+```tsx
 onMount(() => {
 	divRef!.focus();
 });
@@ -494,26 +527,22 @@ onMount(() => {
 
 Another approach is to bypass `null` during the assignment phase and then apply a definite assignment assertion within the `ref` attribute:
 
-```typescript
-let divRef: HTMLDivElement
+```tsx
+let divRef: HTMLDivElement;
 // Compilation error as expected
-divRef.focus()
+divRef.focus();
 onMount(() => {
-	divRef.focus()
-})
-return <div ref={divRef!}>...</div>
+	divRef.focus();
+});
+return <div ref={divRef!}>...</div>;
 ```
 
 In this case, using `divRef!` within the `ref` attribute signals to TypeScript that `divRef` will receive an assignment after this stage, which is more in line with how Solid works.
 
 <Callout>
-	While TypeScript does catch incorrect usage of refs that occur before their
-	JSX block definition, it currently does not identify undefined variables
-	within certain nested functions in Solid. Therefore, additional care is needed
-	when using `ref`s in functions such as
-	[`createMemo`](/reference/basic-reactivity/create-memo),
-	[`createRenderEffect`](/reference/secondary-primitives/create-render-effect),
-	and [`createComputed`](/reference/secondary-primitives/create-computed).
+
+While TypeScript does catch incorrect usage of refs that occur before their JSX block definition, it currently does not identify undefined variables within certain nested functions in Solid. Therefore, additional care is needed when using `ref`s in functions such as [`createMemo`](/reference/basic-reactivity/create-memo), [`createRenderEffect`](/reference/secondary-primitives/create-render-effect), and [`createComputed`](/reference/secondary-primitives/create-computed).
+
 </Callout>
 
 Finally, a riskier approach involves using the definite assignment assertion right at the point of variable initialization.
@@ -671,27 +700,32 @@ declare module "solid-js" {
 <div on:Name={(event) => console.log("name is", event.detail.name)} />;
 ```
 
-<Callout>New in v1.9.0</Callout>
+<Callout>
+
+New in v1.9.0
+
+</Callout>
 
 It is now possible to use the intersection `EventListenerObject & AddEventListenerOptions` to provide listener options as follows:
 
 ```tsx
-import type { JSX } from "solid-js"
+import type { JSX } from "solid-js";
 
-const handler: JSX.EventHandlerWithOptions<HTMLDivElement, Event> =  {
+const handler: JSX.EventHandlerWithOptions<HTMLDivElement, Event> = {
 	once: true,
 	handleEvent: (event) => {
 		console.log("will fire only once");
 	},
-}
+};
 
 // Usage
 <div on:click={handler} />;
 ```
 
 <Callout>
+
 **Note**:
-By default, using native events like `mousemove` with the `on` prefix — for example, `<div on:mousemove={e => {}} />` —  will trigger a TypeScript error.
+By default, using native events like `mousemove` with the `on` prefix — for example, `<div on:mousemove={e => {}} />` — will trigger a TypeScript error.
 This occurs because these native events are not part of Solid's custom event type definitions.
 To solve this, the `CustomEvents` interface can be extended to include events from the `HTMLElementEventMap`:
 
@@ -741,8 +775,12 @@ declare module "solid-js" {
 }
 
 // Usage
-<Input prop:name={name()} prop:count={count()}/>
-<my-web-component attr:name={name()} attr:count={count()} bool:disabled={true}/>
+<Input prop:name={name()} prop:count={count()} />;
+<my-web-component
+  attr:name={name()}
+  attr:count={count()}
+  bool:disabled={true}
+/>;
 ```
 
 #### Custom directives
@@ -821,13 +859,13 @@ declare module "solid-js" {
 While the `Directives` interface can limit the value type passed via JSX attribute to the directive, the `DirectiveFunctions` interface ensures that both element and value align with the expected types, as shown below:
 
 ```tsx
-{/* This is correct */}
-<input use:model={createSignal('')} />
+// This is correct
+<input use:model={createSignal("")} />;
 
-{/* These will result in a type error */}
-<input use:model />
-<input use:model={7} />
-<div use:model={createSignal('')} />
+// These will result in a type error
+<input use:model />;
+<input use:model={7} />;
+<div use:model={createSignal("")} />;
 ```
 
 ##### Addressing import issues with directives
@@ -844,9 +882,9 @@ Including a statement in the importing module ensures TypeScript keeps the direc
 [Tree-shaking](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking) tools usually omit this code from the final bundle.
 
 ```tsx
-import { directive } from "./directives.js"
+import { directive } from "./directives.js";
 
-directive // prevents TypeScript's tree-shaking
+directive; // prevents TypeScript's tree-shaking
 
-<div use:directive />
+<div use:directive />;
 ```

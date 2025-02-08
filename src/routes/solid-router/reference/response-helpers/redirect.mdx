@@ -15,8 +15,10 @@ Other useful redirect codes:
 | `308` | Permanent redirect |
 
 <Callout type="tip" name="Redirect Methods">
-	307 and 308 won't allow the browser to change the method of the request. If
-	you want to change the method, you should use 301 or 302.
+
+307 and 308 won't allow the browser to change the method of the request.
+If you want to change the method, you should use 301 or 302.
+
 </Callout>
 
 A common use-case for throwing a redirect is when a user is not authenticated and needs to be sent to the login page or another public route.
@@ -25,13 +27,13 @@ A common use-case for throwing a redirect is when a user is not authenticated an
 import { query, redirect } from "@solidjs/router";
 import { getCurrentUser } from "../auth";
 
-const getUser = query(() => {
-  const user = await getCurrentUser();
+const getUser = query(async () => {
+	const user = await getCurrentUser();
 
-  if (!user) throw redirect("/login");
+	if (!user) throw redirect("/login");
 
-  return user;
-}, "get-user")
+	return user;
+}, "get-user");
 ```
 
 ## Single-Flight Mutations
@@ -63,10 +65,12 @@ When returning from a nested method, the parent method will continue to execute,
 
 ### TypeScript Signature
 
-```typescript
-interface ResponseOptions & Omit<ResponseInit, "body"> {
-  revalidate?: string | string[];
-} | number
+```ts
+type ResponseOptions =
+	| (Omit<ResponseInit, "body"> & {
+			revalidate?: string | string[];
+	  })
+	| number;
 
 function redirect(url: string, opts = 302): CustomResponse<never>;
 ```

@@ -36,16 +36,21 @@ resource will trigger the nested suspense boundary:
 
 ```jsx
 const MyComponent = () => {
-	const [title] = createResource(async () => { /* fetcher code here */ })
-	const [data] = createResource(async () => { /* fetcher code here */ })
-	<Suspense>
-		<h1>{title()}</h1>
+	const [title] = createResource(async () => {
+		/* fetcher code here */
+	});
+	const [data] = createResource(async () => {
+		/* fetcher code here */
+	});
+	return (
 		<Suspense>
-			<DataComponent>{data()}</DataComponent>
+			<h1>{title()}</h1>
+			<Suspense>
+				<DataComponent>{data()}</DataComponent>
+			</Suspense>
 		</Suspense>
-	</Suspense>
-}
-
+	);
+};
 ```
 
 ## The purpose of {"<Suspense>"}
@@ -131,10 +136,11 @@ const MyComponentWithSuspenseAndShow = () => {
 In this code, we don't create _any_ DOM nodes inside {"<Suspense>"} before the resource resolves, so it is pretty much the same as the second example where we only used `<Show>`.
 
 <Callout>
-	Suspense is triggered by reading a resource inside the {"<Suspense>"}{" "}
-	boundary. Components wrapped with suspense still run fully, just as they would
-	without suspense. However, code wrapped in `onMount` and `createEffect` only
-	run after the resource resolves.
+
+Suspense is triggered by reading a resource inside the {"<Suspense>"} boundary.
+Components wrapped with suspense still run fully, just as they would without suspense.
+However, code wrapped in `onMount` and `createEffect` only run after the resource resolves.
+
 </Callout>
 
 ## Props

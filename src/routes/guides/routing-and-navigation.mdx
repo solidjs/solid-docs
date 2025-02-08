@@ -15,19 +15,32 @@ This package is not included by default.
 
 <TabsCodeBlocks>
 <div id="npm">
+
 ```bash frame="none"
 npm install @solidjs/router
 ```
+
 </div>
+<div id="yarn">
 
-<div id="yarn">```bash frame="none" yarn add @solidjs/router ```</div>
+```bash frame="none"
+yarn add @solidjs/router
+```
 
-<div id="pnpm">```bash frame="none" pnpm add @solidjs/router ```</div>
+</div>
+<div id="pnpm">
 
+```bash frame="none"
+pnpm add @solidjs/router
+```
+
+</div>
 <div id="bun">
+
 ```bash frame="none"
 bun add @solidjs/router
 ```
+
 </div>
 </TabsCodeBlocks>
 
@@ -226,7 +239,7 @@ If you want to force re-render, you can wrap your component in a keyed [`<Show>`
 
 ```jsx
 <Show when={params.something} keyed>
-    <MyComponent>
+	<MyComponent />
 </Show>
 ```
 
@@ -288,7 +301,7 @@ Every time the `id` parameter changes in this example, the `fetchUser` function 
 Each path parameter can be validated using a `MatchFilter`.
 Instead of checking for the presence of a parameter, this allows for more complex routing descriptions:
 
-```jsx
+```tsx
 import { lazy } from "solid-js";
 import { render } from "solid-js/web";
 import { Router, Route } from "@solidjs/router";
@@ -297,20 +310,23 @@ import type { SegmentValidators } from "./types";
 const User = lazy(() => import("./pages/User"));
 
 const filters: MatchFilters = {
-  parent: ["mom", "dad"], // allow enum values
-  id: /^\d+$/, // only allow numbers
-  withHtmlExtension: (v: string) => v.length > 5 && v.endsWith(".html"), // only `*.html` extensions wanted
+	parent: ["mom", "dad"], // allow enum values
+	id: /^\d+$/, // only allow numbers
+	withHtmlExtension: (v: string) => v.length > 5 && v.endsWith(".html"), // only `*.html` extensions wanted
 };
 
-render(() => (
-  <Router>
-    <Route
-      path="/users/:parent/:id/:withHtmlExtension"
-      component={User}
-      matchFilters={filters}
-    />
-  </Router>
-), document.getElementById("root"));
+render(
+	() => (
+		<Router>
+			<Route
+				path="/users/:parent/:id/:withHtmlExtension"
+				component={User}
+				matchFilters={filters}
+			/>
+		</Router>
+	),
+	document.getElementById("root")
+);
 ```
 
 In this example, the `matchFilters` prop provides a way to validate the `parent`, `id` and `withHtmlExtension` parameters against the filters defined in `filters`.
@@ -374,25 +390,25 @@ Only leaf `<Route>` nodes (the innermost `<Route>` components) are given a route
 The following two route definitions both match the same URL `/users/:id` and render the same component:
 
 ```jsx
-<Route path="/users/:id" component={User} />
+<Route path="/users/:id" component={User} />;
 
 <Route path="/users">
-  <Route path="/:id" component={User} />
-</Route>
+	<Route path="/:id" component={User} />
+</Route>;
 ```
 
 If you want to make the parent its own route, you have to specify it separately:
 
 ```jsx
-<Route path="/users" component={Users} />
-<Route path="/users/:id" component={User} />
+<Route path="/users" component={Users} />;
+<Route path="/users/:id" component={User} />;
 
 // or
 
 <Route path="/users">
-  <Route path="/" component={Users} />
-  <Route path="/:id" component={User} />
-</Route>
+	<Route path="/" component={Users} />
+	<Route path="/:id" component={User} />
+</Route>;
 ```
 
 You can also take advantage of nesting by using `props.children` passed to the route component.
@@ -484,8 +500,9 @@ The value of a preload function is passed to the page component when called at a
 This means you can initialize the page, or use [Data APIs](/solid-router/reference/data-apis/create-async).
 
 <Callout>
-	To prevent a fetch from happening more than once, or to trigger a refetch, you
-	can use the [`cache` function](/solid-router/reference/data-apis/cache).
+
+To prevent a fetch from happening more than once, or to trigger a refetch, you can use the [`cache` function](/solid-router/reference/data-apis/cache).
+
 </Callout>
 
 ```jsx title="index.jsx"

@@ -7,6 +7,7 @@ When this newly created function is called for the first time with a specific se
 The next time the created function is called with the same arguments (as long as the cache is still valid), it will return the cached value instead of re-executing the original function.
 
 <Callout>
+
 `query` can be defined anywhere and then used inside your components with [`createAsync`](/solid-router/reference/data-apis/create-async).
 
 However, using `query` directly in [`createResource`](/reference/basic-reactivity/create-resource) will not work since the fetcher is not reactive and will not invalidate properly.
@@ -34,16 +35,16 @@ setTimeout(() => getUser(123, { summary: true }), 999000); // Eventually causes 
 
 Using it with a [preload function](/solid-router/reference/preload-functions/preload):
 
-```js
+```tsx
 import { lazy } from "solid-js";
 import { Route } from "@solidjs/router";
-import { getUser } from ... // the cache function
+import { getUser } from "./getUser";
 
 const User = lazy(() => import("./pages/users/[id].js"));
 
 // preload function
-function preloadUser({params, location}) {
-  void getUser(params.id)
+function preloadUser({ params, location }) {
+	void getUser(params.id);
 }
 
 // Pass it in the route definition
@@ -56,11 +57,11 @@ Using it inside a route's component:
 
 ```jsx
 // pages/users/[id].js
-import { getUser } from ... // the cache function
+import { getUser } from "./getUser";
 
 export default function User(props) {
-  const user = createAsync(() => getUser(props.params.id));
-  return <h1>{user().name}</h1>;
+	const user = createAsync(() => getUser(props.params.id));
+	return <h1>{user().name}</h1>;
 }
 ```
 

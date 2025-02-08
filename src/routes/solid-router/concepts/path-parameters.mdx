@@ -14,6 +14,7 @@ The colon `:` is used to denote a parameter, and `id` is the name of the paramet
 When a URL matches this route, the `User` component will be rendered.
 
 <Callout title="Animations & Transitions">
+
 Routes that share the same path match will be treated as the same route.
 If a force re-render is needed, you can wrap your component in a keyed [`Show`](/reference/components/show) component:
 
@@ -46,7 +47,7 @@ function User() {
 Each path parameter can be validated using the `MatchFilter` on the `Route` component.
 Rather than checking for the presence of a parameter manually, you can use a `MatchFilter` to ensure that the parameter is in the correct format.
 
-```jsx
+```tsx
 import { lazy } from "solid-js";
 import { render } from "solid-js/web";
 import { Router, Route } from "@solidjs/router";
@@ -54,21 +55,23 @@ import { Router, Route } from "@solidjs/router";
 const User = import("./pages/User");
 
 const filters = {
-  parent: ["mom", "dad"], // allow enum values
-  id: /^\d+$/, // only allow numbers
-  withHtmlExtension: (v: string) => v.length > 5 && v.endsWith(".html"), // we want an `*.html` extension
+	parent: ["mom", "dad"], // allow enum values
+	id: /^\d+$/, // only allow numbers
+	withHtmlExtension: (v: string) => v.length > 5 && v.endsWith(".html"), // we want an `*.html` extension
 };
 
-render(() => (
-  <Router>
-    <Route
-      path="/users/:parent/:id/:withHtmlExtension"
-      component={User}
-      matchFilters={filters}
-    />
-  </Router>
-), document.getElementById("app"));
-
+render(
+	() => (
+		<Router>
+			<Route
+				path="/users/:parent/:id/:withHtmlExtension"
+				component={User}
+				matchFilters={filters}
+			/>
+		</Router>
+	),
+	document.getElementById("app")
+);
 ```
 
 Here, the `matchFilter` prop validates the `parent`, `id`, and `withHtmlExtension` parameters against the specified filters defined in the `filters` object.

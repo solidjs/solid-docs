@@ -96,51 +96,59 @@ These signals are created **lazily**, meaning they are only formed when accessed
 Once data is used within a reactive context, such as within the return statement of a component function, computed property, or an effect, a signal is created and dependencies are established.
 For example, if you wanted to print out every new user, adding the console log below will not work because it is not within a tracked scope.
 
-```tsx ins={9}
+```tsx ins={13}
 const App = () => {
 	const [store, setStore] = createStore({
 		userCount: 3,
-		users: [ ... ],
-	})
+		users: [
+			/* ... */
+		],
+	});
 
-	const addUser = () => { ... }
+	const addUser = () => {
+		/* ... */
+	};
 
-	console.log(store.users.at(-1)) // This won't work
+	console.log(store.users.at(-1)); // This won't work
 
 	return (
 		<div>
 			<h1>Hello, {store.users[0].username}</h1>
 			<p>User count: {store.userCount}</p>
-      <button onClick={addUser}>Add user</button>
+			<button onClick={addUser}>Add user</button>
 		</div>
-	)
-}
+	);
+};
 ```
 
 Rather, this would need to be in a tracking scope, like inside a [`createEffect`](/reference/basic-reactivity/create-effect), so that a dependency is established.
 
-```tsx del={9} ins={10-12}
+```tsx del={13} ins={14-16}
 const App = () => {
 	const [store, setStore] = createStore({
 		userCount: 3,
-		users: [ ... ],
-	})
+		users: [
+			/* ... */
+		],
+	});
 
-	const addUser = () => { ... }
+	const addUser = () => {
+		/* ... */
+	};
 
-	console.log(store.users.at(-1))
+	console.log(store.users.at(-1));
 	createEffect(() => {
-		console.log(store.users.at(-1))
-	})
+		console.log(store.users.at(-1));
+	});
 
 	return (
 		<div>
 			<h1>Hello, {store.users[0].username}</h1>
 			<p>User count: {store.userCount}</p>
-      <button onClick={addUser}>Add user</button>
+			<button onClick={addUser}>Add user</button>
 		</div>
-	)
-}
+	);
+};
 ```
 
 ## Modifying store values
@@ -151,8 +159,10 @@ This setter allows for the modification of a specific key and its associated val
 ```jsx "setStore"
 const [store, setStore] = createStore({
 	userCount: 3,
-	users: [ ... ],
-})
+	users: [
+		/* ... */
+	],
+});
 
 setStore("users", (currentUsers) => [
 	...currentUsers,
@@ -162,62 +172,70 @@ setStore("users", (currentUsers) => [
 		location: "Nigeria",
 		loggedIn: false,
 	},
-])
+]);
 ```
 
 The value of `userCount` could also be automatically updated whenever a new user is added to keep it synced with the users array:
 
-```tsx ins={11}
+```tsx ins={15}
 const App = () => {
 	const [store, setStore] = createStore({
 		userCount: 3,
-		users: [ ... ],
-	})
+		users: [
+			/* ... */
+		],
+	});
 
-	const addUser = () => { ... }
+	const addUser = () => {
+		/* ... */
+	};
 
 	createEffect(() => {
-		console.log(store.users.at(-1))
-		setStore("userCount", store.users.length)
-	})
+		console.log(store.users.at(-1));
+		setStore("userCount", store.users.length);
+	});
 
 	return (
 		<div>
 			<h1>Hello, {store.users[0].username}</h1>
 			<p>User count: {store.userCount}</p>
-      <button onClick={addUser}>Add user</button>
+			<button onClick={addUser}>Add user</button>
 		</div>
-	)
-}
+	);
+};
 ```
 
 <Callout>
+
 Separating the read and write capabilities of a store provides a valuable debugging advantage.
 
 This separation facilitates the tracking and control of the components that are accessing or changing the values.
 
 </Callout>
+
 <Callout type="advanced">
-  A little hidden feature of stores is that you can also create nested stores to help with setting nested properties.
+
+A little hidden feature of stores is that you can also create nested stores to help with setting nested properties.
 
 ```jsx
-  const [store, setStore] = createStore({
-    userCount: 3,
-    users: [ ... ],
-  })
+const [store, setStore] = createStore({
+	userCount: 3,
+	users: [
+		/* ... */
+	],
+});
 
-  const [users, setUsers] = createStore(store.users)
+const [users, setUsers] = createStore(store.users);
 
-  setUsers((currentUsers) => [
-    ...currentUsers,
-    {
-      id: 3,
-      username: "michael584",
-      location: "Nigeria",
-      loggedIn: false,
-    },
-  ])
-
+setUsers((currentUsers) => [
+	...currentUsers,
+	{
+		id: 3,
+		username: "michael584",
+		location: "Nigeria",
+		loggedIn: false,
+	},
+]);
 ```
 
 Changes made through `setUsers` will update the `store.users` property and reading `users` from this derived store will also be in sync with the values from `store.users`.
@@ -286,13 +304,14 @@ You can do this using an array of values:
 setStore("users", [1, 3], "loggedIn", false);
 ```
 
-    <Callout>
-    If your *store* is an array, you can specify a range of indices using an object with `from` and `to` keys.
+<Callout>
+
+If your _store_ is an array, you can specify a range of indices using an object with `from` and `to` keys.
 
 ```jsx
-const [store, setStore] = createStore([]) // A store that is an array
-...
-setStore({ from: 1, to: store.length - 1 }, "loggedIn", false)
+const [store, setStore] = createStore([]); // A store that is an array
+// ...
+setStore({ from: 1, to: store.length - 1 }, "loggedIn", false);
 ```
 
 In addition to this, including the `by` key, can help you perform iterative updates within an array, which can be useful when you want to update elements at regular intervals.
@@ -302,7 +321,7 @@ This key defines the step size for index increments, similar to a [`for` loop](h
 setStore({ from: 0, to: store.length, by: 2 }, "loggedIn", false);
 ```
 
-    </Callout>
+</Callout>
 
 ### Dynamic value assignment
 
@@ -386,15 +405,14 @@ When new information needs to be merged into an existing store `reconcile` can b
 `reconcile` will determine the differences between new and existing data and initiate updates only when there are _changed_ values, thereby avoiding unnecessary updates.
 
 ```jsx
-const { createStore, reconcile } from "solid-js/stores"
+import { createStore, reconcile } from "solid-js/stores";
 
 const [data, setData] = createStore({
-	animals: ['cat', 'dog', 'bird', 'gorilla']
-})
+	animals: ["cat", "dog", "bird", "gorilla"],
+});
 
-const newData = getNewData() // eg. contains ['cat', 'dog', 'bird', 'gorilla', 'koala']
-setData('animals', reconcile(newData))
-
+const newData = getNewData(); // eg. contains ['cat', 'dog', 'bird', 'gorilla', 'koala']
+setData("animals", reconcile(newData));
 ```
 
 In this example, the store will look for the differences between the existing and incoming data sets.

@@ -22,18 +22,27 @@ The recommended testing testing framework for Solid applications is [vitest](htt
 To get started with vitest, install the following development dependencies:
 
 <TabsCodeBlocks>
-	<div id="npm">
-		```bash frame="none" npm i -D vitest jsdom @solidjs/testing-library
-		@testing-library/user-event @testing-library/jest-dom ```
-	</div>
-	<div id="yarn">
-		```bash frame="none" yarn add -D vitest jsdom @solidjs/testing-library
-		@testing-library/user-event @testing-library/jest-dom ```
-	</div>
-	<div id="pnpm">
-		```bash frame="none" pnpm i -D vitest jsdom @solidjs/testing-library
-		@testing-library/user-event @testing-library/jest-dom ```
-	</div>
+<div id="npm">
+
+```bash frame="none"
+npm i -D vitest jsdom @solidjs/testing-library @testing-library/user-event @testing-library/jest-dom
+```
+
+</div>
+<div id="yarn">
+
+```bash frame="none"
+yarn add -D vitest jsdom @solidjs/testing-library @testing-library/user-event @testing-library/jest-dom
+```
+
+</div>
+<div id="pnpm">
+
+```bash frame="none"
+pnpm i -D vitest jsdom @solidjs/testing-library @testing-library/user-event @testing-library/jest-dom
+```
+
+</div>
 </TabsCodeBlocks>
 
 ### Testing configuration
@@ -41,9 +50,9 @@ To get started with vitest, install the following development dependencies:
 In your `package.json` add a `test` script calling `vitest`:
 
 ```json title="package.json"
-  "scripts": {
-    "test": "vitest"
-  }
+"scripts": {
+  "test": "vitest"
+}
 ```
 
 It is not necessary to add `@testing-library/jest-dom` to the testing options in `vite.config`, since `vite-plugin-solid` automatically detects and loads it if present.
@@ -53,12 +62,12 @@ It is not necessary to add `@testing-library/jest-dom` to the testing options in
 If using TypeScript, add `@testing-library/jest-dom` to `tsconfig.json#compilerOptions.types`:
 
 ```json title="tsconfig.json"
-  "compilerOptions": {
-    // ...
-    "jsx": "preserve",
-    "jsxImportSource": "solid-js",
-    "types": ["vite/client", "@testing-library/jest-dom"]
-  }
+"compilerOptions": {
+  // ...
+  "jsx": "preserve",
+  "jsxImportSource": "solid-js",
+  "types": ["vite/client", "@testing-library/jest-dom"]
+}
 ```
 
 #### SolidStart configuration
@@ -92,35 +101,33 @@ The purpose of this file is to describe the intended behavior from a user's pers
 
 <TabsCodeBlocks>
 <div id="Counter.test.jsx">
-```jsx frame="none"
-import { test, expect } from "vitest"
-import { render } from "@solidjs/testing-library"
-import userEvent from "@testing-library/user-event"
-import { Counter } from "./Counter"
 
-const user = userEvent.setup()
+```jsx frame="none"
+import { test, expect } from "vitest";
+import { render } from "@solidjs/testing-library";
+import userEvent from "@testing-library/user-event";
+import { Counter } from "./Counter";
+
+const user = userEvent.setup();
 
 test("increments value", async () => {
-const { getByRole } = render(() => <Counter />)
-const counter = getByRole('button')
-expect(counter).toHaveTextContent("1")
-await user.click(counter)
-expect(counter).toHaveTextContent("2")
-})
+	const { getByRole } = render(() => <Counter />);
+	const counter = getByRole("button");
+	expect(counter).toHaveTextContent("1");
+	await user.click(counter);
+	expect(counter).toHaveTextContent("2");
+});
+```
 
-````
 </div>
 <div id="Counter.jsx">
+
 ```jsx frame="none"
 export const Counter = () => {
-  const [count, setCount] = createSignal(1);
-  return (
-    <button onClick={() => setCount(count() + 1)}>
-      {count()}
-    </button>
-  );
-}
-````
+	const [count, setCount] = createSignal(1);
+	return <button onClick={() => setCount(count() + 1)}>{count()}</button>;
+};
+```
 
 </div>
 </TabsCodeBlocks>
@@ -132,9 +139,27 @@ The [`expect` function provided by `vitest`](https://vitest.dev/api/expect.html)
 To run this test, use the following command:
 
 <TabsCodeBlocks>
-	<div id="npm">```bash frame="none" npm test ```</div>
-	<div id="yarn">```bash frame="none" yarn test ```</div>
-	<div id="pnpm">```bash frame="none" pnpm test ```</div>
+<div id="npm">
+
+```bash frame="none"
+npm test
+```
+
+</div>
+<div id="yarn">
+
+```bash frame="none"
+yarn test
+```
+
+</div>
+<div id="pnpm">
+
+```bash frame="none"
+pnpm test
+```
+
+</div>
 </TabsCodeBlocks>
 
 If running the command is successful, you will get the following result showing whether the tests have passed or failed:
@@ -232,33 +257,39 @@ Solid allows components to break through the DOM tree structure using [`<Portal>
 
 <TabsCodeBlocks>
 <div id="Toast.test.jsx">
+
 ```jsx frame="none"
-import { test, expect } from "vitest"
-import { render, screen } from "@solidjs/testing-library"
-import { Toast } from "./Toast"
+import { test, expect } from "vitest";
+import { render, screen } from "@solidjs/testing-library";
+import { Toast } from "./Toast";
 
 test("increments value", async () => {
-render(() => <Toast><p>This is a toast</p></Toast>)
-const toast = screen.getByRole("log")
-expect(toast).toHaveTextContent("This is a toast")
-})
+	render(() => (
+		<Toast>
+			<p>This is a toast</p>
+		</Toast>
+	));
+	const toast = screen.getByRole("log");
+	expect(toast).toHaveTextContent("This is a toast");
+});
+```
 
-````
 </div>
 <div id="Toast.jsx">
+
 ```jsx frame="none"
 import { Portal } from "solid-js/web";
 
 export const Toast = (props) => {
-  return (
-    <Portal>
-      <div class="toast" role={props.role ?? "log"}>
-        {props.children}
-      </div>
-    </Portal>
-  );
-}
-````
+	return (
+		<Portal>
+			<div class="toast" role={props.role ?? "log"}>
+				{props.children}
+			</div>
+		</Portal>
+	);
+};
+```
 
 </div>
 </TabsCodeBlocks>
@@ -290,7 +321,9 @@ const createWrapper = (value) => (props) => (
 ```
 
 <Callout title="Using multiple providers">
+
 If using multiple providers, [solid-primitives has `<MultiProvider>`](https://primitives.solidjs.community/package/context#multiprovider) to avoid nesting multiple levels of providers
+
 </Callout>
 
 ##### Testing routes
@@ -322,28 +355,28 @@ To dive deeper into these events, you can learn about them in the [`user-event` 
 If you require a fake timer and want to use `vi.useFakeTimers()` in your tests, it must set it up with an `advanceTimers` option:
 
 ```tsx title="user-event.test.tsx"
-import { vi } from "vitest"
+import { vi, describe } from "vitest";
 
-const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
 
-vi.useFakeTimers()
+vi.useFakeTimers();
 
 describe("pre-login: sign-in", () => {
-  const { getByRole, getByLabelText } = render(() => <User />)
-  const signUp = getByRole('button', { text: 'Sign-in' })
-  // use convenience API click:
-  user.click(signUp)
-  const name = getByLabelText('Name')
-  // use complex keyboard input:
-  user.keyboard(name, "{Shift}test{Space}{Shift}user")
-  const password = getByLabelText('Password')
-  user.keyboard(name, "secret")
-  const login = getByRole('button', { text: 'Login' })
-  // use touch event
-  user.pointer([
-    { keys: "[TouchA]" target: login },
-    { keys: "[/TouchA]", target: login }
-  ])
+	const { getByRole, getByLabelText } = render(() => <User />);
+	const signUp = getByRole("button", { text: "Sign-in" });
+	// use convenience API click:
+	user.click(signUp);
+	const name = getByLabelText("Name");
+	// use complex keyboard input:
+	user.keyboard(name, "{Shift}test{Space}{Shift}user");
+	const password = getByLabelText("Password");
+	user.keyboard(name, "secret");
+	const login = getByRole("button", { text: "Login" });
+	// use touch event
+	user.pointer([
+		{ keys: "[TouchA]", target: login },
+		{ keys: "[/TouchA]", target: login },
+	]);
 });
 ```
 
@@ -390,23 +423,25 @@ This, along with the ability to modify the `arg` signal, are helpful when testin
 If, for example, you have a directive that handles the [Fullscreen API](https://developer.mozilla.org/en-US/docs/Web/API/Fullscreen_API), you can test it like this:
 
 <TabsCodeBlocks>
-  <div id="fullscreen.test.ts">
+<div id="fullscreen.test.ts">
+
 ```ts frame="none"
-import { test, expect, vi } from "vitest"
-import { renderDirective } from "@solidjs/testing-library"
-import { createFullScreen } from "./fullscreen"
+import { test, expect, vi } from "vitest";
+import { renderDirective } from "@solidjs/testing-library";
+import { createFullScreen } from "./fullscreen";
 
 test("toggles fullscreen", () => {
-const targetElement = document.createElement("div")
-const fs = vi.spyOn(targetElement, "fullscreen")
-const [setArg, container] = renderDirective(createFullScreen, false)
-setArg(true)
-expect(fs).toHaveBeenCalled()
-})
+	const targetElement = document.createElement("div");
+	const fs = vi.spyOn(targetElement, "fullscreen");
+	const [setArg, container] = renderDirective(createFullScreen, false);
+	setArg(true);
+	expect(fs).toHaveBeenCalled();
+});
+```
 
-````
-  </div>
-  <div id="fullscreen.ts">
+</div>
+<div id="fullscreen.ts">
+  
 ```ts frame="none"
 import { Accessor } from "solid-js"
 
@@ -419,9 +454,9 @@ export const fullscreen = (ref: HTMLElement, active: Accessor<boolean>) =>
       document.exitFullScreen()
     }
   })
-````
+```
 
-  </div>
+</div>
 </TabsCodeBlocks>
 
 ### Primitive testing
@@ -561,9 +596,27 @@ While coverage numbers can be misleading, they are used by many projects as a ro
 Vitest supports coverage collection. To use it, it needs an extra package:
 
 <TabsCodeBlocks>
-	<div id="npm">```bash frame="none" npm i -D @vitest/coverage-v8 ```</div>
-	<div id="yarn">```bash frame="none" yarn add -D @vitest/coverage-v8 ```</div>
-	<div id="pnpm">```bash frame="none" pnpm i -D @vitest/coverage-v8 ```</div>
+<div id="npm">
+
+```bash frame="none"
+npm i -D @vitest/coverage-v8
+```
+
+</div>
+<div id="yarn">
+
+```bash frame="none"
+yarn add -D @vitest/coverage-v8
+```
+
+</div>
+<div id="pnpm">
+
+```bash frame="none"
+pnpm i -D @vitest/coverage-v8
+```
+
+</div>
 </TabsCodeBlocks>
 
 Also, you need to [set up vitest's coverage feature](https://vitest.dev/guide/coverage.html).

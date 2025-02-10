@@ -6,7 +6,6 @@ import { Hero } from "./layout/hero";
 import { cache, createAsync, useMatch } from "@solidjs/router";
 import { DocsLayout } from "./docs-layout";
 import { PageStateProvider } from "~/data/page-state";
-import { Alert } from "@kobalte/core";
 import { SidePanel } from "./layout/side-panel";
 import { SUPPORTED_LOCALES } from "~/i18n/config";
 import { getValidLocaleFromPathname } from "~/i18n/helpers";

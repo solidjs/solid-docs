@@ -2,98 +2,145 @@
 title: "Sessions"
 ---
 
-When user information is required, it is usually done by checking the request for information.
-The best way for the client and server to do that is using cookies.
+Sessions allow web applications to maintain state between user requests.
+Because HTTP is stateless, each request is treated independently.
+Sessions solve this by enabling the server to recognize a series of requests as coming from the same user.
+This is useful for tracking user authentication and preferences.
 
-The `Request` object can be used to access the `Cookie` Headers, which can then be parsed to get the value for that specific cookie.
-For example, `"session"` can be used to identify the session.
-Fortunately, Nitro comes ready with helpers that enable this.
+This page provides an overview of working with sessions in SolidStart.
 
-For example, if you wanted to use a cookie to identify a user, you can use the `useSession` helper from `vinxi/http`:
+## How sessions work
 
-```tsx title="/lib/session.ts"
+A session typically involves:
+
+1. **Session creation**: When tracking is needed (e.g., upon login or first visit), the server creates a session.
+   This involves:
+   - Generating a unique **session ID**.
+   - Storing the session data _encrypted and signed_ within a cookie.
+2. **Session cookie transmission**: The server sends a `Set-Cookie` HTTP header.
+   This instructs the browser to store the session cookie.
+3. **Subsequent requests**: The browser automatically includes the session cookie in the `Cookie` HTTP header for requests to the server.
+4. **Session retrieval and data access**: For each request, the server:
+   - Checks for the session cookie.
+   - Retrieves session data from the cookie.
+   - Decrypts and verifies the signature of the session data.
+   - Application code can access and use this data.
+5. **Session expiration and destruction**: Sessions typically expire after a time or upon user logout.
+   Destruction involves instructing the browser to delete the session cookie (e.g., setting an expired `Set-Cookie`).
+
+Most of these steps are automatically managed by [session helpers](#session-helpers).
+
+### Database sessions
+
+For larger applications or when more robust session management is required, SolidStart also supports storing session data in a database.
+
+This approach is similar to the cookie-based approach, but with some key differences:
+
+1. A session ID is generated.
+2. The session data is stored in the database, associated with the session ID.
+3. Only the session ID is stored in the cookie.
+4. The session data is retrieved from the database using the session ID.
+5. Upon expiration, in addition to the session cookie, the database record containing the session data is also removed.
+
+Note that managing interactions with the database is not directly supported by SolidStart; you will need to implement this yourself.
+
+## Session helpers
+
+[Vinxi](https://vinxi.vercel.app), the underlying server toolkit powering SolidStart, provides helpers to simplify working with sessions.
+
+Here's an overview of the key session helpers:
+
+- [`useSession`](https://vinxi.vercel.app/api/server/session.html#usesession): Initializes a session or retrieves the existing session and returns a session object.
+- [`getSession`](https://vinxi.vercel.app/api/server/session.html#getsession): Retrieves the current session or initializes a new session.
+- [`updateSession`](https://vinxi.vercel.app/api/server/session.html#updatesession): Updates data within the current session.
+- [`clearSession`](https://vinxi.vercel.app/api/server/session.html#clearsession): Clears the current session.
+
+These helpers only work in server-side contexts, such as within server functions and API routes.
+This is because session management requires access to server-side resources and the ability to get and set HTTP headers.
+
+For more information, see the [Cookies documentation in Vinxi](https://vinxi.vercel.app/api/server/session.html).
+
+## Creating a session
+
+The `useSession` helper is the primary way to create and manage sessions.
+It provides a comprehensive interface for all session operations.
+
+```ts title="src/lib/session.ts"
 import { useSession } from "vinxi/http";
-export async function getUser(request: Request) {
-  const session = await useSession({
-    password: process.env.SESSION_SECRET
-  });
-}
-```
 
-The session cookie can be used to get the session data about the request.
-How the session data is stored and retrieved, however, is up to the implementation of the `useSession`.
-
-Typically, `userId` will be saved in the session data and if it is not found, it indicates that the request was not authenticated.
-The `getUser` function returns a `null` when it does not find a user and if a user is found, it will be used to get the user from the database:
-
-```tsx title="/lib/session.ts"
-import { useSession } from "vinxi/http";
-
-export async function getUser(): Promise<User | null> {
-  const session = await useSession({
-    password: process.env.SESSION_SECRET
-  });
-  const userId = session.data.userId;
-  if (!userId) return null;
-  return await store.getUser(userId);
-}
-```
-
-This helper can be used wherever you want to authenticate the request, including in server functions and [API routes](/solid-start/building-your-application/api-routes).
-
-Additionally, you can use it with [`cache`](/solid-router/reference/data-apis/cache) from `solid-router` to make sure that only authenticated users can access the data.
-That way if the user is not authenticated, the request will be redirected to the login page.
-
-```tsx title="/routes/api/store/admin.ts"
-import { query, createAsync, redirect } from "@solidjs/router";
-
-const getUsers = query(async (id: string) => {
-  "use server";
-  const user = await getUser();
-  if (!user) throw redirect("/login");
-  return store.getUsers(id, "*");
-}, "users");
-
-// page component
-export default function Users() {
-  const users = createAsync(() => getUsers());
-}
-```
-
-This also allows logging in and out of the session in a similar manner:
-
-```tsx title="/routes/session.server.ts"
-import { redirect } from "@solidjs/router";
-import { useSession } from "vinxi/http";
-
-type UserSession = {
-  userId?: number;
+type SessionData = {
+	theme: "light" | "dark";
 };
 
-function getSession() {
-  return useSession({
-    password: process.env.SESSION_SECRET
-  });
-}
+export async function useThemeSession() {
+	"use server";
+	const session = await useSession<SessionData>({
+		password: process.env.SESSION_SECRET as string,
+		name: "theme",
+	});
 
-export async function login(formData: FormData) {
-  const username = String(formData.get("username"));
-  const password = String(formData.get("password"));
-  // do validation
-  try {
-    const session = await getSession();
-    const user = await db.user.findUnique({ where: { username } });
-    if (!user || password !== user.password) return new Error("Invalid login");
-    await session.update((d: UserSession) => (d.userId = user!.id));
-  } catch (err) {
-    return err as Error;
-  }
-  throw redirect("/");
-}
+	// Initialize the session if it doesn't have a value
+	if (!session.data.theme) {
+		await session.update({
+			theme: "light",
+		});
+	}
 
-export async function logout() {
-  const session = await getSession();
-  await session.update((d: UserSession) => (d.userId = undefined));
-  throw redirect("/login");
+	// Return the session manager for later use
+	return session;
+}
+```
+
+In this example, the `useThemeSession` server function creates a session that stores a user's theme preference.
+
+`useSession` requires a strong password for encrypting and signing the session cookie.
+This password must be at least 32 characters long and should be kept highly secure.
+It is strongly recommended to store this password in an environment variable, as shown in the example above, rather than hardcoding it in your source code.
+
+You can generate a suitable password using a command like this:
+
+```sh frame="none"
+openssl rand -base64 32
+```
+
+`useSession` adds a `Set-Cookie` HTTP header to the current server response.
+By default, the cookie is named `h3`, but can be customized with the `name` option, as we did in the example above.
+
+## Getting session data
+
+The `useSession` helper provides access to the session data through the `data` property.
+
+```ts title="src/lib/session.ts"
+export async function getThemeSession() {
+	"use server";
+	const session = await useThemeSession();
+
+	return session.data.theme;
+}
+```
+
+## Updating session data
+
+The `useSession` helper provides an `update` method to modify session data.
+
+```ts title="src/lib/session.ts"
+export async function updateThemeSession(data: SessionData) {
+	"use server";
+	const session = await useThemeSession();
+
+	await session.update(data);
+}
+```
+
+## Clearing a session
+
+The `useSession` helper provides a `clear` method to destory the session.
+
+```ts title="src/lib/session.ts"
+export async function clearThemeSession() {
+	"use server";
+	const session = await useThemeSession();
+
+	await session.clear();
 }
 ```

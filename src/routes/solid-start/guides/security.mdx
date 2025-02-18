@@ -28,7 +28,9 @@ This can also be achieved through an `onRequest` [middleware](/solid-start/refer
 
 ## Cross Site Scripting (XSS)
 
-SolidStart doesn't have any built-in protection against XSS attacks.
-Though HTML is escapbed by default when transforming JSX, it is still reliant on other security measuers (such as `Content-Security-Policy`) to prevent XSS attacks.
+SolidStart automatically escape inserts and attributes in HTML. 
+The exception is when HTML is inserted via the `innerHTML` property, which bypasses the escaping.
+Additionally, it's important to note that `<noscript>` are also outside of the purview of SolidStart, since those tags and its contents are evaluated even without JavaScript.
+It is important to sanitize any strings in attributes, especially when inside `<noscript>` tags.
 
-Make sure to sanitize attributes (even in `<noscript>` tags) and avoid injecting HTML into your page as much as possible.
+As a rule-of-thumb it is recommended to avoid injecting HTML into your page as much as possible, make sure the contents of `<noscript>` are properly sanitized, and add a strict Content Security Policy to your application.

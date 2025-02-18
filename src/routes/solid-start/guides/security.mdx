@@ -1,0 +1,34 @@
+---
+title: Security
+---
+
+As a non-opinionated framework, SolidStart doesn't enforce any security practices, though it enables enables developers to implement them as needed.
+It is important to know what are the requirements for your own app and implement the fitting security measures.
+If at any point you are unsure about the security of your app, or how to achieve something within the constraints of SolidStart reach us on [Discord](https://discord.gg/solidjs).
+
+Below you will find a few notes on how to establish some measures.
+
+## Security Headers
+
+Through the use of a [middleware](/solid-start/reference/server/create-middleware#example) it is possible to tab into the `onRequest` event handlers and make sure every request going through your servers have the proper security headers set.
+With this, it is possible to setup headers like `Content-Security-Policy`, `X-Frame-Options`, `X-XSS-Protection`, `X-Content-Type-Options`, among others.
+
+### Nonces
+
+When using `Content-Security-Policy` it is possible to use nonces to allow inline scripts and styles to be executed.
+SolidStart enables that smoothly in the [`entry-server.tsx`](/solid-start/reference/entrypoints/entry-server).
+
+By passing generating the `nonce` within a middleware and storing it in the `request.locals` object, it is possible to use it in the `entry-server.tsx` to generate the `Content-Security-Policy` header.
+
+## Cross Request Forgery (CSRF)
+
+There are multiple ways to add CSRF Protection to your SolidStart app.
+The quickest and most common way is to check the `request.referrer` header when the HTTP method is `POST`, `PUT`, `PATCH` or `DELETE`.
+This can also be achieved through an `onRequest` [middleware](/solid-start/reference/server/create-middleware#example).
+
+## Cross Site Scripting (XSS)
+
+SolidStart doesn't have any built-in protection against XSS attacks.
+Though HTML is escapbed by default when transforming JSX, it is still reliant on other security measuers (such as `Content-Security-Policy`) to prevent XSS attacks.
+
+Make sure to sanitize attributes (even in `<noscript>` tags) and avoid injecting HTML into your page as much as possible.

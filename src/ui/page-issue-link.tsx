@@ -9,16 +9,17 @@ export const PageIssueLink: Component = () => {
 
 	const srcPath = createMemo(() => {
 		return (
-			`https://github.com/solidjs/solid-docs-next/issues/new` +
-			`?assignees=ladybluenotes` +
-			`&labels=improve+documentation%2Cpending+review` +
-			`&projects=` +
-			`&template=CONTENT.yml` +
-			`&title=[Content]:` +
+			"https://github.com/solidjs/solid-docs-next/issues/new" +
+			"?assignees=ladybluenotes" +
+			"&labels=improve+documentation%2Cpending+review" +
+			"&projects=" +
+			"&template=CONTENT.yml" +
+			"&title=[Content]:" +
 			`&subject=${getEntryFileName()}` +
 			`&page=${window.location.href}`
 		);
 	});
+
 	return (
 		<a
 			class="flex no-underline hover:text-blue-700 dark:hover:text-blue-300 dark:text-slate-300"

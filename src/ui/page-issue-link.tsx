@@ -9,14 +9,14 @@ export const PageIssueLink: Component = () => {
 
 	const srcPath = createMemo(() => {
 		return (
-			"https://github.com/solidjs/solid-docs-next/issues/new" +
-			"?assignees=ladybluenotes" +
-			"&labels=improve+documentation%2Cpending+review" +
-			"&projects=" +
-			"&template=CONTENT.yml" +
-			"&title=[Content]:" +
-			"&subject=${getEntryFileName()}" +
-			"&page=${window.location.href}"
+			`https://github.com/solidjs/solid-docs-next/issues/new` +
+			`?assignees=ladybluenotes` +
+			`&labels=improve+documentation%2Cpending+review` +
+			`&projects=` +
+			`&template=CONTENT.yml` +
+			`&title=[Content]:` +
+			`&subject=${getEntryFileName()}` +
+			`&page=${window.location.href}`
 		);
 	});
 	return (

@@ -52,6 +52,9 @@ jobs:
   lint:
     needs: setup
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -69,5 +72,9 @@ jobs:
           key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
       - name: ESLint check
         run: pnpm check:lint
-      - name: Prettier check
+      - name: Format files
         run: pnpm format
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "ci: Format files"

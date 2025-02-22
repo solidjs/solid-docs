@@ -131,7 +131,7 @@ bunx tsc --init
 ```typescript
 import { type Component } from "solid-js";
 
-const MyTsComponent(): Component = () => {
+const MyTsComponent: Component = () => {
 	return (
 		<div>
 			<h1>This is a TypeScript component</h1>
@@ -444,7 +444,7 @@ const onInput: JSX.EventHandler<HTMLInputElement, InputEvent> = (event) => {
 }
 
 // Then attach handler to an input element:
-;<input onInput={onInput} />
+<input onInput={onInput} />
 ```
 
 #### Inline handlers
@@ -584,12 +584,14 @@ return <div>{user()?.name}</div>;
 
 return (
 	<div>
-		<Show when={user()}>{(nonNullishUser) => nonNullishUser().name}</Show>
+		<Show when={user()}>{(nonNullishUser) => <>
+			{nonNullishUser().name}
+		</>}</Show>
 	</div>
 );
 ```
 
-This approach is similar using the keyed option, but offers an accessor to prevent the recreation of children each time the `when` value changes.
+This approach is similar to using the keyed option, but offers an accessor to prevent the recreation of children each time the `when` value changes.
 
 ```tsx
 return (
@@ -750,12 +752,15 @@ declare module "solid-js" {
       count: number;
       name: string;
     }
+    interface ExplicitBoolAttributes {
+      disabled: boolean;
+    }
   }
 }
 
 // Usage
 <Input prop:name={name()} prop:count={count()}/>
-<my-web-component attr:name={name()} attr:count={count()}/>
+<my-web-component attr:name={name()} attr:count={count()} bool:disabled={true}/>
 ```
 
 #### Custom directives

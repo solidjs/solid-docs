@@ -273,7 +273,7 @@ async function fetchUser(id) {
 
 const User = () => {
 	const params = useParams();
-	const [data] = createResource(params.id, fetchUser); // Pass the id parameter to createResource
+	const [data] = createResource(() => params.id, fetchUser); // Pass the id parameter to createResource
 
 	return (
 		<div>
@@ -362,7 +362,7 @@ Wildcard tokens **must** be the last part of the path; `foo/*any/bar` will not c
 ### Multiple paths
 
 The `Routes` component also supports defining multiple paths using an array.
-This allows avoids a route rerendering when switching between two or more locations that it matches:
+This avoids a route rerendering when switching between two or more locations that it matches:
 
 ```jsx
 // Navigating from "/login" to "/register" will not cause the component to re-render
@@ -463,7 +463,7 @@ function preloadUser({ params, location }) {
 The preload function is then passed in the `<Route>` definition:
 
 ```jsx
-<Route path="/users/:id" component={User} preload={loadUser} />
+<Route path="/users/:id" component={User} preload={preloadUser} />
 ```
 
 ---
@@ -486,14 +486,14 @@ export function preloadUser({ params, location, intent }) {
 
 `preloadUser` is passed an object which contains `params`, `location` and `intent`.
 
-Please note that while it is best practice to write these files as `[id].data.js`, you can still write `route.data.js`.
+Please note that while it is best practice to name these files as `[id].data.js`, you can still name them as `route.data.js`.
 
 The value of a preload function is passed to the page component when called at any time other than "preload".
 This means you can initialize the page, or use [Data APIs](/solid-router/reference/data-apis/create-async).
 
 :::info
 	To prevent a fetch from happening more than once, or to trigger a refetch, you
-	can use the [`cache` function](/solid-router/reference/data-apis/cache).
+	can use the [`query` function](/solid-router/reference/data-apis/query).
 :::
 
 ```jsx title="index.jsx"

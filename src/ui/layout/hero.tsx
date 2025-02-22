@@ -43,7 +43,7 @@ export const Hero: Component = () => {
 										Solid<span class="font-thin">Start</span>
 									</Match>
 									<Match when={isRouter()?.path}>
-										<span class="font-thin">Solid-</span>Router
+										<span class="font-thin">Solid </span>Router
 									</Match>
 									<Match when={isMeta()?.path}>
 										<span class="font-thin">Solid-</span>Meta
@@ -93,9 +93,7 @@ export const Hero: Component = () => {
 										>
 											<Index each={snippetLines}>
 												{(_, index) => (
-													<pre class="pb-px">
-														{(index + 1).toString().padStart(2, "0")}
-													</pre>
+													<pre>{(index + 1).toString().padStart(2, "0")}</pre>
 												)}
 											</Index>
 										</div>

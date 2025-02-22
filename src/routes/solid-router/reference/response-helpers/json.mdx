@@ -1,0 +1,30 @@
+---
+title: json
+---
+
+Returns JSON data from an action while also providing options for controlling revalidation of cache data on the route.
+
+```ts title="/actions/get-completed-todos.ts" {7}
+import { action, json } from "@solidjs/router";
+import { fetchTodo } from "../fetchers";
+
+const getCompletedTodos = action(async () => {
+  const completedTodos = await fetchTodo({ status: 'complete' });
+
+  return json(completedTodos, { revalidate: getTodo.keyFor(id) });
+});
+```
+
+Also read [action](/solid-router/reference/data-apis/action) and [revalidate](/solid-router/reference/response-helpers/revalidate).
+
+## Type Signature
+
+```typescript
+interface ResponseOptions & Omit<ResponseInit, "body"> {
+  revalidate?: string | string[];
+}
+
+json<T>(data: T, opt?: ResponseOptions): CustomResponse<T>;
+``` 
+
+The `ResponseOptions` extens the types from the native [`ResponseInit`](https://developer.mozilla.org/en-US/docs/Web/API/Response/Response#options) interface.

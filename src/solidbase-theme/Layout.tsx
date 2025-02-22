@@ -1,5 +1,5 @@
 import { RouteSectionProps } from "@solidjs/router";
-import { createEffect, ErrorBoundary } from "solid-js";
+import { createEffect } from "solid-js";
 import { getTheme } from "@kobalte/solidbase/client";
 
 import { Layout } from "~/ui/layout";

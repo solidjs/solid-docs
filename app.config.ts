@@ -48,7 +48,7 @@ export default defineConfig(
 			ssr: true,
 			middleware: "src/middleware/index.ts",
 			server: {
-				preset: "node-server",
+				preset: "netlify",
 				prerender: {
 					crawlLinks: true,
 					autoSubfolderIndex: false,

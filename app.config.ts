@@ -16,7 +16,7 @@ function docsData() {
 	const resolveVirtualModuleId = "\0" + virtualModuleId;
 
 	return {
-		name: "solid:collection",
+		name: virtualModuleId,
 		resolveId(id: string) {
 			if (id === virtualModuleId) {
 				return resolveVirtualModuleId;
@@ -42,13 +42,13 @@ function docsData() {
 const theme = defineTheme({
 	componentsPath: import.meta.resolve("./src/solidbase-theme"),
 });
-
 export default defineConfig(
 	createWithSolidBase(theme)(
 		{
+			ssr: true,
 			middleware: "src/middleware/index.ts",
 			server: {
-				preset: "netlify",
+				preset: "node-server",
 				prerender: {
 					crawlLinks: true,
 					autoSubfolderIndex: false,
@@ -57,9 +57,8 @@ export default defineConfig(
 					ignore: [/\{\getPath}/, /.*?emojiSvg\(.*/],
 				},
 			},
-			extensions: ["mdx", "md", "tsx"],
 			vite: {
-				plugins: [docsData()],
+				plugins: [docsData(), heroCodeSnippet()],
 			},
 		},
 		{
@@ -78,3 +77,35 @@ export default defineConfig(
 		}
 	)
 );
+
+import { readFile } from "node:fs/promises";
+import { codeToHtml } from "shiki";
+
+function heroCodeSnippet() {
+	const virtualModuleId = "solid:hero-code-snippet";
+	const resolveVirtualModuleId = "\0" + virtualModuleId;
+
+	return {
+		name: virtualModuleId,
+		resolveId(id: string) {
+			if (id === virtualModuleId) {
+				return resolveVirtualModuleId;
+			}
+		},
+		async load(id: string) {
+			if (id === resolveVirtualModuleId) {
+				const snippet = await readFile(
+					"./src/ui/layout/hero-code-snippet.code.tsx",
+					"utf-8"
+				);
+
+				const highlightedCode = await codeToHtml(snippet.trim(), {
+					lang: "tsx",
+					theme: "material-theme-ocean",
+				});
+
+				return `export const highlightedCode = \`${highlightedCode}\``;
+			}
+		},
+	};
+}

@@ -1,17 +1,9 @@
-import {
-	Component,
-	Index,
-	Match,
-	Suspense,
-	Switch,
-	createMemo,
-} from "solid-js";
+import { Component, Index, Match, Switch, createMemo } from "solid-js";
 import { ButtonLink } from "../button-link";
-import { counterTxt, snippetLines } from "./hero-code-snippet";
+import { snippetLines } from "./hero-code-snippet";
 import { useLocation, useMatch } from "@solidjs/router";
 import { useI18n } from "~/i18n/i18n-context";
 import RenderedCode from "./hero-code-snippet";
-import { NoHydration } from "solid-js/web";
 
 const TrafficLightsIcon: Component<{ class: string }> = (props) => {
 	return (

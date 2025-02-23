@@ -27,7 +27,6 @@ import {
 } from "solid:collection";
 import { PathMatch } from "@solidjs/router";
 import { useCurrentRouteMetaData } from "~/utils/route-metadata-helper";
-import { Title } from "@solidjs/meta";
 
 const PROJECTS = ["solid-router", "solid-start", "solid-meta"] as const;
 

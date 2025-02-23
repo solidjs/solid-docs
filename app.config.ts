@@ -94,7 +94,7 @@ function heroCodeSnippet() {
 		async load(id: string) {
 			if (id === resolveVirtualModuleId) {
 				const snippet = await readFile(
-					"./src/ui/layout/hero-code-snippet.code.tsx",
+					"./src/ui/layout/hero-code-snippet.code",
 					"utf-8"
 				);
 

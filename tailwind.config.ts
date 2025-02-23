@@ -27,7 +27,7 @@ export default {
 		extend: {
 			fontFamily: {
 				sans: "var(--font-geist)",
-				display: ["var(--font-geist)", { fontFeatureSettings: '"ss01"' }],
+				display: ["var(--font-geist)", { fontFeatureSettings: "'ss01'" }],
 				mono: "var(--font-geist-mono)",
 			},
 			maxWidth: {

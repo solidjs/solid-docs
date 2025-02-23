@@ -1,11 +1,17 @@
-import { ParentComponent, Show, children, Suspense } from "solid-js";
+import {
+	ParentComponent,
+	Show,
+	children,
+	Suspense,
+	createEffect,
+} from "solid-js";
+import { useCurrentPageData } from "@kobalte/solidbase/client";
 
 import { MainNavigation } from "~/ui/layout/main-navigation";
 import { MainHeader } from "./layout/main-header";
 import { Hero } from "./layout/hero";
 import { cache, createAsync, useMatch } from "@solidjs/router";
 import { DocsLayout } from "./docs-layout";
-import { Alert } from "@kobalte/core";
 import { SidePanel } from "./layout/side-panel";
 import { SUPPORTED_LOCALES } from "~/i18n/config";
 import { getValidLocaleFromPathname } from "~/i18n/helpers";
@@ -21,6 +27,7 @@ import {
 } from "solid:collection";
 import { PathMatch } from "@solidjs/router";
 import { useCurrentRouteMetaData } from "~/utils/route-metadata-helper";
+import { Title } from "@solidjs/meta";
 
 const PROJECTS = ["solid-router", "solid-start", "solid-meta"] as const;
 
@@ -134,6 +141,8 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 	);
 
 	const resolved = children(() => props.children);
+	const sbPageData = useCurrentPageData();
+	createEffect(() => console.log(sbPageData()));
 
 	return (
 		<div class="relative dark:bg-slate-900 bg-slate-50">

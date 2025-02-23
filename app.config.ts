@@ -63,8 +63,7 @@ export default defineConfig(
 		},
 		{
 			title: "Solid Docs",
-			editPath:
-				"https://github.com/solidjs/solid-docs-next/edit/main/src/routes/:path",
+			editPath: "https://github.com/solidjs/solid-docs/edit/main/:path",
 			markdown: {
 				expressiveCode: {
 					themes: ["min-light", "material-theme-ocean"],

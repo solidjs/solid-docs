@@ -1,25 +1,18 @@
 import { RouteSectionProps } from "@solidjs/router";
-import { createEffect } from "solid-js";
-import { getTheme } from "@kobalte/solidbase/client";
+import { ErrorBoundary } from "solid-js";
 
 import { Layout } from "~/ui/layout";
 import { NotFound } from "~/ui/not-found";
+import { I18nProvider } from "~/i18n/i18n-context";
+import { Title } from "@solidjs/meta";
 
 export default function (props: RouteSectionProps) {
-	createEffect(() => {
-		const html = document.documentElement;
-		html.classList.remove("light", "dark");
-		html.classList.add(getTheme());
-	});
-
 	return (
-		<ErrorBoundary
-			fallback={(e) => {
-				console.error(e);
-				return <NotFound />;
-			}}
-		>
-			<Layout>{props.children}</Layout>
-		</ErrorBoundary>
+		<I18nProvider>
+			<Title>Solid Docs</Title>
+			<ErrorBoundary fallback={() => <NotFound />}>
+				<Layout>{props.children}</Layout>
+			</ErrorBoundary>
+		</I18nProvider>
 	);
 }

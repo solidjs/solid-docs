@@ -1,7 +1,7 @@
 import { Index, Show, createEffect, createSignal, on } from "solid-js";
 import {
 	useCurrentPageData,
-	TableOfContentsItem,
+	TableOfContentsItemData,
 } from "@kobalte/solidbase/client";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { isServer } from "solid-js/web";
@@ -123,7 +123,7 @@ export const TableOfContents = () => {
 	);
 };
 
-function flattenData(data: TableOfContentsItem): Array<string> {
+function flattenData(data: TableOfContentsItemData): Array<string> {
 	return [data?.href, ...(data?.children ?? []).flatMap(flattenData)].filter(
 		Boolean
 	);

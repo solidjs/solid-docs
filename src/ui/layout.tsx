@@ -1,20 +1,4 @@
-import {
-	ParentComponent,
-	Show,
-	children,
-	Suspense,
-	createEffect,
-} from "solid-js";
-import { useCurrentPageData } from "@kobalte/solidbase/client";
-
-import { MainNavigation } from "~/ui/layout/main-navigation";
-import { MainHeader } from "./layout/main-header";
-import { Hero } from "./layout/hero";
-import { cache, createAsync, useMatch } from "@solidjs/router";
-import { DocsLayout } from "./docs-layout";
-import { SidePanel } from "./layout/side-panel";
-import { SUPPORTED_LOCALES } from "~/i18n/config";
-import { getValidLocaleFromPathname } from "~/i18n/helpers";
+import { ParentComponent, Show, Suspense } from "solid-js";
 import {
 	coreTree,
 	routerTree,
@@ -26,6 +10,15 @@ import {
 	metaEntries,
 } from "solid:collection";
 import { PathMatch } from "@solidjs/router";
+
+import { MainNavigation } from "~/ui/layout/main-navigation";
+import { MainHeader } from "./layout/main-header";
+import { Hero } from "./layout/hero";
+import { query, createAsync, useMatch } from "@solidjs/router";
+import { DocsLayout } from "./docs-layout";
+import { SidePanel } from "./layout/side-panel";
+import { SUPPORTED_LOCALES } from "~/i18n/config";
+import { getValidLocaleFromPathname } from "~/i18n/helpers";
 import { useCurrentRouteMetaData } from "~/utils/route-metadata-helper";
 
 const PROJECTS = ["solid-router", "solid-start", "solid-meta"] as const;
@@ -65,7 +58,7 @@ const getProjectFromUrl = (path: string) => {
 	return null;
 };
 
-const getDocsMetadata = cache(
+const getDocsMetadata = query(
 	async (
 		isFirstMatch: PathMatch | undefined,
 		isI18nOrProject: PathMatch | undefined,
@@ -139,10 +132,6 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 		{ deferStream: true }
 	);
 
-	const resolved = children(() => props.children);
-	const sbPageData = useCurrentPageData();
-	createEffect(() => console.log(sbPageData()));
-
 	return (
 		<div class="relative dark:bg-slate-900 bg-slate-50">
 			<Show when={entries()}>
@@ -174,16 +163,16 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 						keyed
 						fallback={
 							<article class="px-2 md:px-10 expressive-code-overrides overflow-y-auto">
-								{resolved()}
+								{props.children}
 							</article>
 						}
 					>
-						<Show when={!props.isError} fallback={<>{resolved()}</>}>
+						<Show when={!props.isError} fallback={<>{props.children}</>}>
 							<Suspense>
 								<Show when={entries()}>
 									{(data) => (
 										<DocsLayout entries={data().entries}>
-											{resolved()}
+											{props.children}
 										</DocsLayout>
 									)}
 								</Show>
@@ -194,7 +183,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 				<Show when={!props.isError}>
 					<div class="hidden xl:block shrink-0 w-56 2xl:w-72 pr-4 prose prose-slate dark:prose-invert dark:text-slate-300">
 						<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] overflow-y-auto custom-scrollbar">
-							<SidePanel children={resolved()} />
+							<SidePanel />
 						</div>
 					</div>
 				</Show>

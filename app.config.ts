@@ -68,6 +68,7 @@ export default defineConfig(
 				expressiveCode: {
 					themes: ["min-light", "material-theme-ocean"],
 					themeCssSelector: (theme) => `[data-theme="${theme.type}"]`,
+					frames: false,
 				},
 				toc: {
 					minDepth: 2,

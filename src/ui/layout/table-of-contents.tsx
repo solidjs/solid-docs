@@ -10,7 +10,7 @@ import { useI18n } from "~/i18n/i18n-context";
 
 export const TableOfContents = () => {
 	const data = useCurrentPageData();
-	const toc = () => data().toc;
+	const toc = () => data()?.toc;
 
 	const i18n = useI18n();
 

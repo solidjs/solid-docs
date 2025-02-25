@@ -10,7 +10,7 @@ export const EditPageLink: Component = () => {
 	const data = useCurrentPageData();
 
 	return (
-		<Show when={data().editLink}>
+		<Show when={data()?.editLink}>
 			{(editLink) => (
 				<a
 					class="flex no-underline hover:text-blue-700 dark:hover:text-blue-300 dark:text-slate-300 "

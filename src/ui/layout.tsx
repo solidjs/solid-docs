@@ -1,14 +1,4 @@
-import { ParentComponent, Show, children, Suspense } from "solid-js";
-
-import { MainNavigation } from "~/ui/layout/main-navigation";
-import { MainHeader } from "./layout/main-header";
-import { Hero } from "./layout/hero";
-import { cache, createAsync, useMatch } from "@solidjs/router";
-import { DocsLayout } from "./docs-layout";
-import { PageStateProvider } from "~/data/page-state";
-import { SidePanel } from "./layout/side-panel";
-import { SUPPORTED_LOCALES } from "~/i18n/config";
-import { getValidLocaleFromPathname } from "~/i18n/helpers";
+import { ParentComponent, Show, Suspense } from "solid-js";
 import {
 	coreTree,
 	routerTree,
@@ -19,7 +9,16 @@ import {
 	metaTree,
 	metaEntries,
 } from "solid:collection";
-import { PathMatch } from "@solidjs/router/dist/types";
+import { PathMatch } from "@solidjs/router";
+
+import { MainNavigation } from "~/ui/layout/main-navigation";
+import { MainHeader } from "./layout/main-header";
+import { Hero } from "./layout/hero";
+import { query, createAsync, useMatch } from "@solidjs/router";
+import { DocsLayout } from "./docs-layout";
+import { SidePanel } from "./layout/side-panel";
+import { SUPPORTED_LOCALES } from "~/i18n/config";
+import { getValidLocaleFromPathname } from "~/i18n/helpers";
 import { useCurrentRouteMetaData } from "~/utils/route-metadata-helper";
 
 const PROJECTS = ["solid-router", "solid-start", "solid-meta"] as const;
@@ -59,14 +58,12 @@ const getProjectFromUrl = (path: string) => {
 	return null;
 };
 
-const getDocsMetadata = cache(
+const getDocsMetadata = query(
 	async (
 		isFirstMatch: PathMatch | undefined,
 		isI18nOrProject: PathMatch | undefined,
 		isCore: PathMatch | undefined
 	) => {
-		"use server";
-
 		if (!isFirstMatch && !isI18nOrProject)
 			return {
 				tree: coreTree,
@@ -135,68 +132,62 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 		{ deferStream: true }
 	);
 
-	const resolved = children(() => props.children);
-
 	return (
-		<Suspense>
-			<PageStateProvider>
-				<div class="relative dark:bg-slate-900 bg-slate-50">
-					<Show when={entries()}>
-						{(data) => <MainHeader tree={data().tree} />}
-					</Show>
-					<Show when={useCurrentRouteMetaData().isProjectRoot} keyed>
-						<Hero />
-					</Show>
-					<div class="relative mx-auto flex max-w-8xl flex-auto justify-center custom-scrollbar pt-10">
-						<Show when={!props.isError}>
-							<div class="hidden md:relative lg:block lg:flex-none">
-								<div class="absolute inset-y-0 right-0 w-[50vw] dark:hidden" />
-								<div class="absolute bottom-0 right-0 top-16 hidden h-12 w-px bg-gradient-to-t from-slate-800 dark:block" />
-								<div class="absolute bottom-0 right-0 top-28 hidden w-px bg-slate-800 dark:block" />
-								<Suspense>
-									<Show when={entries()}>
-										{(data) => (
-											<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] w-64 pl-0.5 pr-2 xl:w-72">
-												<MainNavigation tree={data().tree} />
-											</div>
-										)}
-									</Show>
-								</Suspense>
-							</div>
-						</Show>
-						<main class="w-full md:max-w-2xl flex-auto px-4 pt-2 md:pb-16 lg:max-w-none prose prose-slate dark:prose-invert dark:text-slate-300">
-							<Show
-								when={!useCurrentRouteMetaData().isProjectRoot}
-								keyed
-								fallback={
-									<article class="px-2 md:px-10 expressive-code-overrides overflow-y-auto">
-										{resolved()}
-									</article>
-								}
-							>
-								<Show when={!props.isError} fallback={<>{resolved()}</>}>
-									<Suspense>
-										<Show when={entries()}>
-											{(data) => (
-												<DocsLayout entries={data().entries}>
-													{resolved()}
-												</DocsLayout>
-											)}
-										</Show>
-									</Suspense>
-								</Show>
+		<div class="relative dark:bg-slate-900 bg-slate-50">
+			<Show when={entries()}>
+				{(data) => <MainHeader tree={data().tree} />}
+			</Show>
+			<Show when={useCurrentRouteMetaData().isProjectRoot} keyed>
+				<Hero />
+			</Show>
+			<div class="relative mx-auto flex max-w-8xl flex-auto justify-center custom-scrollbar pt-10">
+				<Show when={!props.isError}>
+					<div class="hidden md:relative lg:block lg:flex-none">
+						<div class="absolute inset-y-0 right-0 w-[50vw] dark:hidden" />
+						<div class="absolute bottom-0 right-0 top-16 hidden h-12 w-px bg-gradient-to-t from-slate-800 dark:block" />
+						<div class="absolute bottom-0 right-0 top-28 hidden w-px bg-slate-800 dark:block" />
+						<Suspense>
+							<Show when={entries()}>
+								{(data) => (
+									<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] w-64 pl-0.5 pr-2 xl:w-72">
+										<MainNavigation tree={data().tree} />
+									</div>
+								)}
 							</Show>
-						</main>
-						<Show when={!props.isError}>
-							<div class="hidden xl:block shrink-0 w-56 2xl:w-72 pr-4 prose prose-slate dark:prose-invert dark:text-slate-300">
-								<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] overflow-y-auto custom-scrollbar">
-									<SidePanel children={resolved()} />
-								</div>
-							</div>
-						</Show>
+						</Suspense>
 					</div>
-				</div>
-			</PageStateProvider>
-		</Suspense>
+				</Show>
+				<main class="w-full md:max-w-2xl flex-auto px-4 pt-2 md:pb-16 lg:max-w-none prose prose-slate dark:prose-invert dark:text-slate-300">
+					<Show
+						when={!useCurrentRouteMetaData().isProjectRoot}
+						keyed
+						fallback={
+							<article class="px-2 md:px-10 expressive-code-overrides overflow-y-auto">
+								{props.children}
+							</article>
+						}
+					>
+						<Show when={!props.isError} fallback={<>{props.children}</>}>
+							<Suspense>
+								<Show when={entries()}>
+									{(data) => (
+										<DocsLayout entries={data().entries}>
+											{props.children}
+										</DocsLayout>
+									)}
+								</Show>
+							</Suspense>
+						</Show>
+					</Show>
+				</main>
+				<Show when={!props.isError}>
+					<div class="hidden xl:block shrink-0 w-56 2xl:w-72 pr-4 prose prose-slate dark:prose-invert dark:text-slate-300">
+						<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] overflow-y-auto custom-scrollbar">
+							<SidePanel />
+						</div>
+					</div>
+				</Show>
+			</div>
+		</div>
 	);
 };

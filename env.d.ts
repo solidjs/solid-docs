@@ -20,3 +20,7 @@ declare module "solid:collection" {
 	const component: any;
 	export default component;
 }
+
+declare module "solid:hero-code-snippet" {
+	export const highlightedCode: string;
+}

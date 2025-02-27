@@ -3,38 +3,51 @@ title: <ErrorBoundary>
 order: 5
 ---
 
-Catches uncaught errors and renders fallback content.
+The `<ErrorBoundary>` component catches errors that occur during the rendering or updating of its children, and shows a fallback UI instead.
+That includes:
 
-```tsx
-import { ErrorBoundary } from "solid-js"
-import type { JSX } from "solid-js"
+- Errors that occur while rendering JSX.
+- Errors that occur within `createEffect`, `createMemo`, and other state management primitives.
+- Errors that occur within `createResource` and other asynchronous state management or data-fetching primitives.
 
-function ErrorBoundary(props: {
-	fallback: JSX.Element | ((err: any, reset: () => void) => JSX.Element)
-	children: JSX.Element
-}): () => JSX.Element
-```
+However, errors occurring outside the rendering process are **not** captured by error boundaries.
+For instance:
 
-Here's an example of how to use it:
-
-```tsx
-<ErrorBoundary fallback={<div>Something went terribly wrong</div>}>
-	<MyComp />
-</ErrorBoundary>
-```
-
-If you want to customize the error message, you can pass a function as the `fallback` prop. The function will be called with the error and a `reset` function. The `reset` function will reset the error boundary and re-render the children.
-
-```tsx
-<ErrorBoundary
-	fallback={(err, reset) => <div onClick={reset}>Error: {err.toString()}</div>}
->
-	<MyComp />
-</ErrorBoundary>
-```
+- Errors that occur inside event handlers.
+- Errors that occur after a `setTimeout`.
 
 ## Props
 
-| Name       | Type                                                            | Description                                             |
-| :--------- | :-------------------------------------------------------------- | :------------------------------------------------------ |
-| `fallback` | `JSX.Element \| ((err: any, reset: () => void) => JSX.Element)` | The fallback content to render when an error is caught. |
+### `fallback`
+
+**Type**: `JSX.Element | ((err: any, reset: () => void) => JSX.Element)`
+
+The content to display when an error occurs.
+If `fallback` is a function, it receives two parameters:
+
+- `err`: The caught error object.
+- `reset`: A function that forces the `<ErrorBoundary>` to re-render its children and clear the error state.
+
+It's important to note that errors occurring within the fallback itself are not caught by the same `<ErrorBoundary>`, and will propagate to any parent error boundaries.
+
+## Example
+
+```tsx
+import { ErrorBoundary } from "solid-js";
+import { ErrorProne } from "./components";
+
+function Example() {
+	return (
+		<ErrorBoundary
+			fallback={(error, reset) => (
+				<div>
+					<p>{error.message}</p>
+					<button onClick={reset}>Try Again</button>
+				</div>
+			)}
+		>
+			<ErrorProne />
+		</ErrorBoundary>
+	);
+}
+```

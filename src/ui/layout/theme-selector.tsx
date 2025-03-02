@@ -99,7 +99,7 @@ function RefreshOnMount(props: ComponentProps<"div">) {
 	});
 
 	return (
-		<Show when={refresh()} fallback={<div {...props}>{resolved()}</div>} keyed>
+		<Show when={refresh()} fallback={<div {...props}><div>{resolved()}</div></div>} keyed>
 			<div {...props}>{resolved()}</div>
 		</Show>
 	);

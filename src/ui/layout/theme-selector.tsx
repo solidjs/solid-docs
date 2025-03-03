@@ -90,8 +90,6 @@ export const ThemeSelector: Component = () => {
 };
 
 function RefreshOnMount(props: ComponentProps<"div">) {
-	const resolved = children(() => props.children);
-
 	// incorrect value on server with no runtime, refresh on mount to update possibly incorrect label
 	const [refresh, setRefresh] = createSignal(false);
 	onMount(() => {
@@ -99,8 +97,8 @@ function RefreshOnMount(props: ComponentProps<"div">) {
 	});
 
 	return (
-		<Show when={refresh()} fallback={<div {...props}><div>{resolved()}</div></div>} keyed>
-			<div {...props}>{resolved()}</div>
+		<Show when={refresh()} fallback={<div {...props}><div>{props.children}</div></div>} keyed>
+			<div {...props}>{props.children}</div>
 		</Show>
 	);
 }

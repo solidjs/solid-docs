@@ -10,7 +10,7 @@ on:
       - main
 
 jobs:
-  setup:
+  typecheck:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -18,11 +18,7 @@ jobs:
 
       - name: Install tools & dependencies
         uses: ./.github/actions/install
-
-  typecheck:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
+        
       - name: Generate virtual modules
         run: pnpm sync
 
@@ -30,8 +26,13 @@ jobs:
         run: pnpm check:types
 
   lint:
-    needs: setup
     runs-on: ubuntu-latest
     steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install tools & dependencies
+        uses: ./.github/actions/install
+        
       - name: ESLint check
         run: pnpm check:lint

@@ -10,18 +10,18 @@ Some reasons for wanting API Routes include:
 - Writing webhooks or auth callback handlers for OAuth.
 - Having URLs not serving HTML, but other kinds of documents like PDFs or images.
 
-For these use cases, SolidStart provides a way to write these routes in a way that is easy to understand and maintain. 
+For these use cases, SolidStart provides a way to write these routes in a way that is easy to understand and maintain.
 API routes are just similar to other routes and follow the same filename conventions as [UI Routes](/solid-start/building-your-application/routing).
 
 The difference between API routes and UI routes is in what you should export from the file.
-UI routes export a default Solid component, while API Routes do not. 
+UI routes export a default Solid component, while API Routes do not.
 Rather, they export functions that are named after the HTTP method that they handle.
 
-<Callout>
+:::info
 API routes are prioritized over page route alternatives.
 If you want to have them overlap at the same path remember to use `Accept` headers.
 Returning without a response in a `GET` route will fallback to page route handling.
-</Callout>
+:::
 
 ## Writing an API route
 
@@ -46,13 +46,13 @@ export function DELETE() {
 }
 ```
 
-API routes get passed an `APIEvent` object as their first argument. 
+API routes get passed an `APIEvent` object as their first argument.
 This object contains:
 - `request`: [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) object representing the request sent by the client.
 - `params`: Object that contains the dynamic route parameters. For example, if the route is `/api/users/:id`, and the request is made to `/api/users/123`, then `params` will be `{ id: 123 }`.
 - `fetch`: An internal `fetch` function that can be used to make requests to other API routes without worrying about the `origin` of the URL.
 
-An API route is expected to return JSON or a `Response` object. 
+An API route is expected to return JSON or a `Response` object.
 In order to handle all methods, you can define a handler function that binds multiple methods to it:
 
 ```tsx title="routes/api/all.ts"
@@ -70,7 +70,7 @@ An example of an API route that returns products from a certain category and bra
 ```tsx title="routes/api/product/[category]/[brand].ts"
 import type { APIEvent } from "@solidjs/start/server";
 import store from "./store";
- 
+
 export async function GET({ params }: APIEvent) {
   console.log(`Category: ${params.category}, Brand: ${params.brand}`);
   const products = await store.getProducts(params.category, params.brand);
@@ -110,7 +110,7 @@ For more information on how to use cookies for secure session management, read t
 
 ## Exposing a GraphQL API
 
-SolidStart makes it easy to [implement a GraphQL API](https://graphql.org/). 
+SolidStart makes it easy to [implement a GraphQL API](https://graphql.org/).
 GraphQL is a query language for APIs and a runtime for executing those queries by using a type system you define for your data.
 
 To implement a GraphQL API, you need to define a schema and resolvers.

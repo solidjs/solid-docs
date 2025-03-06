@@ -1,18 +1,7 @@
 import { defineConfig } from "@solidjs/start/config";
-import remarkFrontmatter from "remark-frontmatter";
-import rehypeRaw from "rehype-raw";
-import { nodeTypes } from "@mdx-js/mdx";
-import remarkGfm from "remark-gfm";
-import remarkExpressiveCode, {
-	ExpressiveCodeTheme,
-} from "remark-expressive-code";
-import rehypeSlug from "rehype-slug";
-import rehypeAutoLinkHeadings from "rehype-autolink-headings";
 
-// @ts-expect-error missing types
-import pkg from "@vinxi/plugin-mdx";
+import { createWithSolidBase, defineTheme } from "@kobalte/solidbase/config";
 
-const { default: vinxiMdx } = pkg;
 import tree from "./.solid/tree";
 import entries from "./.solid/flat-entries";
 import solidstartEntries from "./.solid/solid-start-flat-entries";
@@ -27,7 +16,7 @@ function docsData() {
 	const resolveVirtualModuleId = "\0" + virtualModuleId;
 
 	return {
-		name: "solid:collection",
+		name: virtualModuleId,
 		resolveId(id: string) {
 			if (id === virtualModuleId) {
 				return resolveVirtualModuleId;
@@ -50,61 +39,75 @@ function docsData() {
 	};
 }
 
-export default defineConfig({
-	middleware: "src/middleware/index.ts",
-	server: {
-		preset: "netlify",
-		prerender: {
-			crawlLinks: true,
-			autoSubfolderIndex: false,
-			failOnError: true,
-			// eslint-disable-next-line no-useless-escape
-			ignore: [/\{\getPath}/, /.*?emojiSvg\(.*/],
-		},
-	},
-	extensions: ["mdx", "md", "tsx"],
-	vite: () => ({
-		plugins: [
-			docsData(),
-			vinxiMdx.withImports({})({
-				define: {
-					"import.meta.env": "'import.meta.env'",
-				},
-				jsx: true,
-				jsxImportSource: "solid-js",
-				providerImportSource: "solid-mdx",
-				rehypePlugins: [
-					[
-						rehypeRaw,
-						{
-							passThrough: nodeTypes,
-						},
-					],
-					[rehypeSlug],
-					[
-						rehypeAutoLinkHeadings,
-						{
-							behavior: "wrap",
-							properties: {
-								className: "heading",
-							},
-						},
-					],
-				],
-				remarkPlugins: [
-					remarkFrontmatter,
-					remarkGfm,
-					[
-						remarkExpressiveCode,
-						{
-							themes: ["min-light", "material-theme-ocean"],
-							themeCSSSelector: (theme: ExpressiveCodeTheme) =>
-								`[data-theme="${theme.name}"]`,
-						},
-					],
-				],
-			}),
-			{ enforce: "pre" },
-		],
-	}),
+const theme = defineTheme({
+	componentsPath: import.meta.resolve("./src/solidbase-theme"),
 });
+export default defineConfig(
+	createWithSolidBase(theme)(
+		{
+			ssr: true,
+			middleware: "src/middleware/index.ts",
+			server: {
+				preset: "netlify",
+				prerender: {
+					crawlLinks: true,
+					autoSubfolderIndex: false,
+					failOnError: true,
+					// eslint-disable-next-line no-useless-escape
+					ignore: [/\{\getPath}/, /.*?emojiSvg\(.*/],
+				},
+			},
+			vite: {
+				plugins: [docsData(), heroCodeSnippet()],
+			},
+		},
+		{
+			title: "Solid Docs",
+			description:
+				"Documentation for SolidJS, the signals-powered UI framework",
+			editPath: "https://github.com/solidjs/solid-docs/edit/main/:path",
+			markdown: {
+				expressiveCode: {
+					themes: ["min-light", "material-theme-ocean"],
+					themeCssSelector: (theme) => `[data-theme="${theme.type}"]`,
+					frames: false,
+				},
+				toc: {
+					minDepth: 2,
+				},
+			},
+		}
+	)
+);
+
+import { readFile } from "node:fs/promises";
+import { codeToHtml } from "shiki";
+
+function heroCodeSnippet() {
+	const virtualModuleId = "solid:hero-code-snippet";
+	const resolveVirtualModuleId = "\0" + virtualModuleId;
+
+	return {
+		name: virtualModuleId,
+		resolveId(id: string) {
+			if (id === virtualModuleId) {
+				return resolveVirtualModuleId;
+			}
+		},
+		async load(id: string) {
+			if (id === resolveVirtualModuleId) {
+				const snippet = await readFile(
+					"./src/ui/layout/hero-code-snippet.code",
+					"utf-8"
+				);
+
+				const highlightedCode = await codeToHtml(snippet.trim(), {
+					lang: "tsx",
+					theme: "material-theme-ocean",
+				});
+
+				return `export const highlightedCode = \`${highlightedCode}\``;
+			}
+		},
+	};
+}

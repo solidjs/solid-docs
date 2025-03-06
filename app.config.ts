@@ -63,6 +63,8 @@ export default defineConfig(
 		},
 		{
 			title: "Solid Docs",
+			description:
+				"Documentation for SolidJS, the signals-powered UI framework",
 			editPath: "https://github.com/solidjs/solid-docs/edit/main/:path",
 			markdown: {
 				expressiveCode: {

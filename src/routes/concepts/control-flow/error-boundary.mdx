@@ -3,26 +3,39 @@ title: "Error boundary"
 order: 5
 ---
 
-`<ErrorBoundary>` is a component that can be used to catch errors thrown by child components.
-When encountering an error, this component will render a fallback UI instead of the problematic child component(s).
+By default, if part of an application throws an error during rendering, the entire application can crash, resulting in Solid removing its UI from the screen.
+Error boundaries provide a way to catch these errors and prevent the entire app from crashing.
 
-```jsx
+The [`<ErrorBoundary>`](/reference/components/error-boundary) component is used to create an error boundary.
+It catches any error that occurs during the rendering or updating of its children.
+However, an important note is that errors occurring outside the rendering process, such as in event handlers or after a `setTimeout`, are _not_ caught by error boundaries.
+
+The `fallback` prop can be used to display a user-friendly error message or notification when an error occurs.
+If a function is passed to `fallback`, it will receive the error object as well as a `reset` function.
+The `reset` function forces the `<ErrorBoundary>` to re-render its children and reset the error state, providing users with a way to recover from the error.
+
+```tsx
 import { ErrorBoundary } from "solid-js";
+import { Header, ErrorProne } from "./components";
 
-<ErrorBoundary fallback={(err) => <div>Error: {err.message}</div>}>
-	<ProblematicComponent />
-</ErrorBoundary>
+function App() {
+	return (
+		<div>
+			<Header />
+			<ErrorBoundary
+				fallback={(error, reset) => (
+					<div>
+						<p>Something went wrong: {error.message}</p>
+						<button onClick={reset}>Try Again</button>
+					</div>
+				)}
+			>
+				<ErrorProne />
+			</ErrorBoundary>
+		</div>
+	);
+}
 ```
 
-`<ErrorBoundary>` accepts a `fallback` prop that can be used to render a custom error message, or to provide a friendly notification to the user.
-This prop accepts a function that receives the caught error as an argument, providing a flexible way to handle different error scenarios.
-
-<EraserLink
-	href="https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=aSw5yYrSY22mI_YqoZlpGQ"
-	preview="https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9/preview?elements=aSw5yYrSY22mI_YqoZlpGQ&type=embed"
-/>
-
-By wrapping parts of your application in `<ErrorBoundary>`, you can prevent the entire application from crashing when an error occurs due to a single component.
-
-When an error is encountered, the `<ErrorBoundary>` component will catch the error and render the fallback UI instead of the problematic component(s).
-This way, even when a component fails, the user has a controlled UI response instead of a broken interface.
+In this example, when the `ErrorProne` component throws an error, the `<ErrorBoundary>` catches it, preventing it from affecting the rest of the application.
+Instead, it displays the error message passed to the fallback prop.

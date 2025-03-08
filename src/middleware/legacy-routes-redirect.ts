@@ -59,7 +59,7 @@ const LEGACY_ROUTES = {
 	"/references/api-reference/secondary-primitives/createSelector": "/reference/secondary-primitives/create-selector",
 	"/references/api-reference/special-jsx-attributes/attr_": "/reference/jsx-attributes/attr",
 	"/references/api-reference/special-jsx-attributes/classList": "/reference/jsx-attributes/classlist",
-	"/references/api-reference/special-jsx-attributes/innerHTML-or-textContent": "/reference/jsx-attributes/innerhtml-or-textcontent",
+	"/references/api-reference/special-jsx-attributes/innerHTML-or-textContent": "/reference/jsx-attributes/innerhtml",
 	"/references/api-reference/special-jsx-attributes/on_": "/reference/jsx-attributes/on_",
 	"/references/api-reference/special-jsx-attributes/on_-and-oncapture_": "/reference/jsx-attributes/on",
 

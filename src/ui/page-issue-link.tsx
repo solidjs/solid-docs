@@ -3,8 +3,10 @@ import { Icon } from "solid-heroicons";
 import { exclamationTriangle } from "solid-heroicons/outline";
 import { useI18n } from "~/i18n/i18n-context";
 import { getEntryFileName } from "~/i18n/helpers";
+import { useLocation } from "@solidjs/router";
 
 export const PageIssueLink: Component = () => {
+	const location = useLocation();
 	const i18n = useI18n();
 
 	const srcPath = createMemo(() => {
@@ -16,7 +18,7 @@ export const PageIssueLink: Component = () => {
 			"&template=CONTENT.yml" +
 			"&title=[Content]:" +
 			`&subject=${getEntryFileName()}` +
-			`&page=${window.location.href}`
+			`&page=${`https://docs.solidjs.com${location.pathname}`}`
 		);
 	});
 

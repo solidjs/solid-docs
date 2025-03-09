@@ -1,4 +1,11 @@
-import { children, Component, ComponentProps, createSignal, JSX, onMount, Show } from "solid-js";
+import {
+	Component,
+	ComponentProps,
+	createSignal,
+	JSX,
+	onMount,
+	Show,
+} from "solid-js";
 import { computerDesktop, moon, sun } from "solid-heroicons/solid";
 import { Select } from "@kobalte/core/select";
 import {
@@ -59,16 +66,17 @@ export const ThemeSelector: Component = () => {
 							class="inline-block h-6 w-6 mr-2 rounded-md bg-white p-1 shadow ring-1 ring-slate-900/5 dark:bg-slate-700 dark:ring-inset dark:ring-white/5 fill-slate-700 dark:fill-slate-200 kb-selected:fill-slate-800 kb-selected:dark:fill-white"
 							path={props.item.rawValue.icon}
 						/>
-						<span
-							class="prose prose-slate text-sm group-hover:dark:text-white text-slate-700 dark:text-slate-300 kb-selected:text-blue-500 kb-selected:group-hover:dark:text-white"
-						>
+						<span class="prose prose-slate text-sm group-hover:dark:text-white text-slate-700 dark:text-slate-300 kb-selected:text-blue-500 kb-selected:group-hover:dark:text-white">
 							{props.item.rawValue.label}
 						</span>
 					</Select.ItemLabel>
 				</Select.Item>
 			)}
 		>
-			<Select.Trigger class="flex h-6 w-6 items-center justify-center rounded-lg shadow-md shadow-black/5 ring-1 ring-black/10 dark:bg-slate-800 dark:ring-inset dark:ring-white/60 shrink-0" aria-label="Change theme mode">
+			<Select.Trigger
+				class="flex h-6 w-6 items-center justify-center rounded-lg shadow-md shadow-black/5 ring-1 ring-black/10 dark:bg-slate-800 dark:ring-inset dark:ring-white/60 shrink-0"
+				aria-label="Change theme mode"
+			>
 				<Select.Value<ThemeOption>>
 					{(state) => (
 						<RefreshOnMount aria-label={state.selectedOption().label}>
@@ -97,7 +105,15 @@ function RefreshOnMount(props: ComponentProps<"div">) {
 	});
 
 	return (
-		<Show when={refresh()} fallback={<div {...props}><div>{props.children}</div></div>} keyed>
+		<Show
+			when={refresh()}
+			fallback={
+				<div {...props}>
+					<div>{props.children}</div>
+				</div>
+			}
+			keyed
+		>
 			<div {...props}>{props.children}</div>
 		</Show>
 	);

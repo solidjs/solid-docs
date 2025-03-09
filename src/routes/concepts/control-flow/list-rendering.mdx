@@ -30,18 +30,19 @@ Between the `<For>` tags, the component requires a [callback function](https://d
 This structure resembles the callback used within JavaScript's [`map`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) method, providing a familiar pattern to follow.
 
 The function receives two arguments:
+
 - `item`: represents the current item in the data collection that is being rendered over.
 - `index`: the current item's index within the collection.
 
 You can access the current `item` and `index` to dynamically set attributes or content of the JSX elements.
-Index is a [*signal*](/concepts/signals) and must be called as a function to retrieve its value.
+Index is a [_signal_](/concepts/signals) and must be called as a function to retrieve its value.
 
 ```jsx
 <For each={data()}>
 	{(item, index) => (
 		<li
 			style={{
-				color: index() % 2 === 0 ? "red" : "blue"
+				color: index() % 2 === 0 ? "red" : "blue",
 			}}
 		>
 			{item.name}
@@ -72,7 +73,7 @@ This is because `<Index>` is more concerned with the **index** of the elements i
 Because of this, the `item` is a signal, allowing the _content_ at each index to change without a re-render while the index remains fixed.
 
 ```jsx
-import { Index } from "solid-js"
+import { Index } from "solid-js";
 
 <Index each={data()}>
 	{(item, index) => (
@@ -80,12 +81,12 @@ import { Index } from "solid-js"
 			{item().name} - {item().completed}
 		</li>
 	)}
-</Index>
+</Index>;
 ```
 
 ## `<Index>` vs `<For>`
 
-`<For>` is designed to be used when the *order* and *length* of the list may change frequently.
+`<For>` is designed to be used when the _order_ and _length_ of the list may change frequently.
 When the list value changes in `<For>`, the entire list is re-rendered.
 However, if the array undergoes a change, such as an element shifting position, `<For>` will manage this by simply **moving** the corresponding DOM node and **updating** the index.
 
@@ -99,14 +100,14 @@ For example, when creating a list of static elements, such as a list of links, `
 This is because it will only modify the indexes of the elements in the list, rather than re-rendering the entire list.
 
 ```jsx
-import { createSignal, For } from "solid-js"
+import { createSignal, For } from "solid-js";
 
 function StringList() {
-	const [items, setItems] = createSignal(["Item 1", "Item 2", "Item 3"])
+	const [items, setItems] = createSignal(["Item 1", "Item 2", "Item 3"]);
 
 	return (
 		<ul>
-			<input 
+			<input
 				type="text"
 				onInput={(e) => {
 					// add the new item to the list
@@ -114,13 +115,13 @@ function StringList() {
 			/>
 			<For each={items()}>
 				{(item, index) => (
-					<li> 
+					<li>
 						{item} - {index()}
 					</li>
 				)}
 			</For>
 		</ul>
-	)
+	);
 }
 ```
 
@@ -129,11 +130,11 @@ If you were using `<For>`, the entire list would be re-rendered when a value cha
 `<Index>`, instead, will update the content at the specified index, while the rest of the list remains unchanged.
 
 ```jsx
-import { createSignal, Index } from "solid-js"
+import { createSignal, Index } from "solid-js";
 
 function FormList() {
-	const [inputs, setInputs] = createSignal(['input1','input2','input3'])
-	return(
+	const [inputs, setInputs] = createSignal(["input1", "input2", "input3"]);
+	return (
 		<form>
 			<Index each={inputs()}>
 				{(input, index) => (
@@ -147,6 +148,6 @@ function FormList() {
 				)}
 			</Index>
 		</form>
-	)
+	);
 }
 ```

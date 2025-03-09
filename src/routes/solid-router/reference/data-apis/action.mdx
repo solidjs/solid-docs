@@ -83,7 +83,6 @@ This is how router context is created.
 // in component
 const submit = useAction(myAction);
 submit(...args);
-
 ```
 
 The outside of a form context can use custom data instead of `formData`.
@@ -111,9 +110,10 @@ const submission = useSubmission(action, (input) => filter(input));
 
 ```
 
-##  Revalidate cached functions
+## Revalidate cached functions
 
-###  Revalidate all (default)
+### Revalidate all (default)
+
 By default all cached functions will be revalidated wether the action does not return or return a "normal" response.
 
 ```jsx
@@ -153,6 +153,7 @@ const deleteTodo = action(async (formData: FormData) => {
 ```
 
 ## Prevent revalidation
+
 To opt out of any revalidation you can pass any `string` to revalidate which is not a key of any cached function.
 
 ```jsx
@@ -171,29 +172,26 @@ const deleteTodo = action(async (formData: FormData) => {
 
 ```
 
-###  Revalidate without action
+### Revalidate without action
 
-Cached functions can also be revalidated by the  `revalidate` helper.
+Cached functions can also be revalidated by the `revalidate` helper.
 
 ```jsx
-revalidate([getTodos.key, getTodoByID.keyFor(id)])
-
+revalidate([getTodos.key, getTodoByID.keyFor(id)]);
 ```
 
 This is also great if you want to set your own "refresh" interval e.g. poll data every 30 seconds.
 
 ```jsx
-export default function TodoLayout(){
-	
-	const todos = createAsync(() => getTodos())
-	
+export default function TodoLayout() {
+	const todos = createAsync(() => getTodos());
+
 	onMount(() => {
 		//30 second polling
-		const interval = setInterval(() => revalidate(getTodos.key),1000 * 30)
-		onCleanup(() => clearInterval(interval))
-	})
-	
+		const interval = setInterval(() => revalidate(getTodos.key), 1000 * 30);
+		onCleanup(() => clearInterval(interval));
+	});
+
 	// ...
 }
-
 ```

@@ -122,7 +122,6 @@ export const a = (props: ParentProps & { href: string }) => {
 			resolvedArray[0] instanceof Element &&
 			resolvedArray[0].nodeName === "CODE")
 	) {
-		// eslint-disable-next-line solid/components-return-once
 		return (
 			<A
 				addLocale
@@ -133,7 +132,6 @@ export const a = (props: ParentProps & { href: string }) => {
 			</A>
 		);
 	} else {
-		// eslint-disable-next-line solid/components-return-once
 		return (
 			<A
 				addLocale

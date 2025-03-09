@@ -4,6 +4,7 @@ title: "API routes"
 
 While Server Functions can be a good way to write server-side code for data needed by your UI, sometimes you need to expose API routes.
 Some reasons for wanting API Routes include:
+
 - There are additional clients that want to share this logic.
 - Exposing a GraphQL or tRPC endpoint.
 - Exposing a public-facing REST API.
@@ -30,24 +31,25 @@ While you can name this directory anything, it is common to name it `api` to ind
 
 ```tsx title="routes/api/test.ts"
 export function GET() {
-  // ...
+	// ...
 }
 
 export function POST() {
-  // ...
+	// ...
 }
 
 export function PATCH() {
-  // ...
+	// ...
 }
 
 export function DELETE() {
-  // ...
+	// ...
 }
 ```
 
 API routes get passed an `APIEvent` object as their first argument.
 This object contains:
+
 - `request`: [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) object representing the request sent by the client.
 - `params`: Object that contains the dynamic route parameters. For example, if the route is `/api/users/:id`, and the request is made to `/api/users/123`, then `params` will be `{ id: 123 }`.
 - `fetch`: An internal `fetch` function that can be used to make requests to other API routes without worrying about the `origin` of the URL.
@@ -57,7 +59,7 @@ In order to handle all methods, you can define a handler function that binds mul
 
 ```tsx title="routes/api/all.ts"
 async function handler() {
-  // ...
+	// ...
 }
 
 export const GET = handler;
@@ -72,9 +74,9 @@ import type { APIEvent } from "@solidjs/start/server";
 import store from "./store";
 
 export async function GET({ params }: APIEvent) {
-  console.log(`Category: ${params.category}, Brand: ${params.brand}`);
-  const products = await store.getProducts(params.category, params.brand);
-  return products;
+	console.log(`Category: ${params.category}, Brand: ${params.brand}`);
+	const products = await store.getProducts(params.category, params.brand);
+	return products;
 }
 ```
 
@@ -93,15 +95,15 @@ import { getCookie } from "vinxi/http";
 import store from "./store";
 
 export async function GET(event: APIEvent) {
-  const userId = getCookie("userId");
-  if (!userId) {
-    return new Response("Not logged in", { status: 401 });
-  }
-  const user = await store.getUser(event.params.userId);
-  if (user.id !== userId) {
-    return new Response("Not authorized", { status: 403 });
-  }
-  return user;
+	const userId = getCookie("userId");
+	if (!userId) {
+		return new Response("Not logged in", { status: 401 });
+	}
+	const user = await store.getUser(event.params.userId);
+	if (user.id !== userId) {
+		return new Response("Not authorized", { status: 403 });
+	}
+	return user;
 }
 ```
 
@@ -137,26 +139,26 @@ const schema = buildSchema(`
 
 // Define GraphQL Resolvers
 const rootValue = {
-  hello: () => {
-    return {
-      message: "Hello World"
-    };
-  },
-  goodbye: () => {
-    return "Goodbye";
-  }
+	hello: () => {
+		return {
+			message: "Hello World",
+		};
+	},
+	goodbye: () => {
+		return "Goodbye";
+	},
 };
 
 // request handler
 const handler = async (event: APIEvent) => {
-  // get request body
-  const body = await new Response(event.request.body).json();
+	// get request body
+	const body = await new Response(event.request.body).json();
 
-  // pass query and save results
-  const result = await graphql({ rootValue, schema, source: body.query });
+	// pass query and save results
+	const result = await graphql({ rootValue, schema, source: body.query });
 
-  // send query result
-  return result;
+	// send query result
+	return result;
 };
 
 export const GET = handler;
@@ -179,9 +181,9 @@ import { string } from "valibot";
 const t = initTRPC.create();
 
 export const appRouter = t.router({
-  hello: t.procedure.input(wrap(string())).query(({ input }) => {
-    return `hello ${input ?? "world"}`;
-  })
+	hello: t.procedure.input(wrap(string())).query(({ input }) => {
+		return `hello ${input ?? "world"}`;
+	}),
 });
 
 export type AppRouter = typeof appRouter;
@@ -194,7 +196,10 @@ import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client";
 import type { AppRouter } from "./router";
 
 export const client = createTRPCProxyClient<AppRouter>({
-  links: [loggerLink(), httpBatchLink({ url: "http://localhost:3000/api/trpc" })]
+	links: [
+		loggerLink(),
+		httpBatchLink({ url: "http://localhost:3000/api/trpc" }),
+	],
 });
 ```
 
@@ -206,12 +211,12 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter } from "~/lib/router";
 
 const handler = (event: APIEvent) =>
-  fetchRequestHandler({
-    endpoint: "/api/trpc",
-    req: event.request,
-    router: appRouter,
-    createContext: () => ({})
-  });
+	fetchRequestHandler({
+		endpoint: "/api/trpc",
+		req: event.request,
+		router: appRouter,
+		createContext: () => ({}),
+	});
 
 export const GET = handler;
 

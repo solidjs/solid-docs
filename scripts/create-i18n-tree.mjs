@@ -2,6 +2,7 @@ import { existsSync } from "fs";
 import path from "path";
 import { COLLECTIONS_ROOT } from "./collections/index.mjs";
 import { getFrontMatterData } from "./collections/utils/get-frontmatter.mjs";
+import { cwd } from "process";
 
 /**
  * @typedef {Object} Leaf
@@ -31,6 +32,8 @@ import { getFrontMatterData } from "./collections/utils/get-frontmatter.mjs";
  *
  * @param {Branch["children"]} children
  */
+
+// eslint-disable-next-line
 function traverseTree(children) {
 	for (const child of children) {
 		if (child.type === "section") {
@@ -62,7 +65,7 @@ export async function createI18nTree(entryList, locale, project = "") {
 			});
 		} else {
 			const i18nEntryPath = path.join(
-				process.cwd(),
+				cwd(),
 				COLLECTIONS_ROOT,
 				project,
 				locale,

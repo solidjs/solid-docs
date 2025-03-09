@@ -1,4 +1,5 @@
 import { defineConfig } from "@solidjs/start/config";
+import eslint from "vite-plugin-eslint";
 
 import { createWithSolidBase, defineTheme } from "@kobalte/solidbase/config";
 
@@ -58,7 +59,7 @@ export default defineConfig(
 				},
 			},
 			vite: {
-				plugins: [docsData(), heroCodeSnippet()],
+				plugins: [docsData(), heroCodeSnippet(), eslint()],
 			},
 		},
 		{

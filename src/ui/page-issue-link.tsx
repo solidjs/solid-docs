@@ -1,4 +1,4 @@
-import { Component, createMemo } from "solid-js";
+import { Component, createMemo, createSignal, onMount } from "solid-js";
 import { Icon } from "solid-heroicons";
 import { exclamationTriangle } from "solid-heroicons/outline";
 import { useI18n } from "~/i18n/i18n-context";
@@ -6,6 +6,10 @@ import { getEntryFileName } from "~/i18n/helpers";
 
 export const PageIssueLink: Component = () => {
 	const i18n = useI18n();
+
+	const [mounted, setMounted] = createSignal(false);
+	
+	onMount(() => setMounted(true));
 
 	const srcPath = createMemo(() => {
 		return (
@@ -16,7 +20,7 @@ export const PageIssueLink: Component = () => {
 			"&template=CONTENT.yml" +
 			"&title=[Content]:" +
 			`&subject=${getEntryFileName()}` +
-			`&page=${window.location.href}`
+			`&page=${mounted() ? window.location.href : ""}`
 		);
 	});
 

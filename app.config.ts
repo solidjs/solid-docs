@@ -68,14 +68,10 @@ export default defineConfig(
 			editPath: "https://github.com/solidjs/solid-docs/edit/main/:path",
 			markdown: {
 				expressiveCode: {
+					twoSlash: false,
 					themes: ["min-light", "material-theme-ocean"],
 					themeCssSelector: (theme) => `[data-theme="${theme.type}"]`,
 					frames: false,
-					styleOverrides: {
-						twoSlash: {
-							cursorColor: "var(--twoslash-cursor)"
-						}
-					}
 				},
 				toc: {
 					minDepth: 2,

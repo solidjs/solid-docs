@@ -69,9 +69,8 @@ export default defineConfig(
 			editPath: "https://github.com/solidjs/solid-docs/edit/main/:path",
 			markdown: {
 				expressiveCode: {
-					themes: ["min-light", "material-theme-ocean"],
+					themes: ["github-light-default", "material-theme-ocean"],
 					themeCssSelector: (theme) => `[data-theme="${theme.type}"]`,
-					frames: false,
 				},
 				toc: {
 					minDepth: 2,

@@ -2,8 +2,7 @@
 title: createSignal
 ---
 
-Signals are the most basic reactive primitive.
-They track a single value (which can be a value of any type) that changes over time.
+Signals are the most basic reactive primitive. They track a single value (which can be a value of any type) that changes over time.
 
 ```tsx
 import { createSignal } from "solid-js";
@@ -24,9 +23,7 @@ type Accessor<T> = () => T;
 type Setter<T> = (v: T | ((prev?: T) => T)) => T;
 ```
 
-The Signal's value starts out equal to the passed first argument `initialValue` (or undefined if there are no arguments).
-The `createSignal` function returns a pair of functions as a two-element array: a getter (or accessor) and a setter.
-In typical use, you would destructure this array into a named Signal like so:
+The Signal's value starts out equal to the passed first argument `initialValue` (or undefined if there are no arguments). The `createSignal` function returns a pair of functions as a two-element array: a getter (or accessor) and a setter. In typical use, you would destructure this array into a named Signal like so:
 
 ```tsx
 const [count, setCount] = createSignal(0);
@@ -37,9 +34,7 @@ Calling the getter (e.g., `count()` or `ready()`) returns the current value of t
 
 Crucial to automatic dependency tracking, calling the getter within a tracking scope causes the calling function to depend on this Signal, so that function will rerun if the Signal gets updated.
 
-Calling the setter (e.g., `setCount(nextCount)` or `setReady(nextReady)`) sets the Signal's value and updates the Signal (triggering dependents to rerun) if the value actually changed (see details below).
-The setter takes either the new value for the signal or a function that maps the previous value of the signal to a new value as its only argument.
-The updated value is also returned by the setter. As an example:
+Calling the setter (e.g., `setCount(nextCount)` or `setReady(nextReady)`) sets the Signal's value and updates the Signal (triggering dependents to rerun) if the value actually changed (see details below). The setter takes either the new value for the signal or a function that maps the previous value of the signal to a new value as its only argument. The updated value is also returned by the setter. As an example:
 
 ```tsx
 // read signal's current value, and
@@ -62,37 +57,33 @@ const newCount = setCount((prev) => prev + 1);
 ```
 
 :::info
+ 
 If you want to store a function in a Signal you must use the function form:
 
-    ```tsx
-    setValue(() => myFunction);
-    ```
+```tsx
+setValue(() => myFunction);
+```
 
-    However, functions are not treated specially as the `initialValue` argument to `createSignal`, so you can pass a
-    function initial value as is:
+However, functions are not treated specially as the `initialValue` argument to `createSignal`, so you can pass a
+function initial value as is:
 
-    ```tsx
-    const [func, setFunc] = createSignal(myFunction);
-    ```
+```tsx
+const [func, setFunc] = createSignal(myFunction);
+```
 
 :::
 
 ## Options
 
-| Name       | Type                                       | Default | Description                                                                                                                                                                                                                                                         |
-| ---------- | ------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `equals`   | `false \| ((prev: T, next: T) => boolean)` | `===`   | A function that determines whether the Signal's value has changed. If the function returns true, the Signal's value will not be updated and dependents will not rerun. If the function returns false, the Signal's value will be updated and dependents will rerun. |
-| `name`     | `string`                                   |         | A name for the Signal. This is useful for debugging.                                                                                                                                                                                                                |
-| `internal` | `boolean`                                  | `false` | If true, the Signal will not be accessible in the devtools.                                                                                                                                                                                                         |
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `equals` | `false \| ((prev: T, next: T) => boolean)` | `===` | A function that determines whether the Signal's value has changed. If the function returns true, the Signal's value will not be updated and dependents will not rerun. If the function returns false, the Signal's value will be updated and dependents will rerun. |
+| `name` | `string` |  | A name for the Signal. This is useful for debugging. |
+| `internal` | `boolean` | `false` | If true, the Signal will not be accessible in the devtools. |
 
 ### `equals`
 
-The `equals` option can be used to customize the equality check used to determine whether the Signal's value has changed.
-By default, the equality check is a strict equality check (`===`).
-If you want to use a different equality check, you can pass a custom function as the `equals` option.
-The custom function will be called with the previous and next values of the Signal as arguments.
-If the function returns true, the Signal's value will not be updated and dependents will not rerun.
-If the function returns false, the Signal's value will be updated and dependents will rerun.
+The `equals` option can be used to customize the equality check used to determine whether the Signal's value has changed. By default, the equality check is a strict equality check (`===`). If you want to use a different equality check, you can pass a custom function as the `equals` option. The custom function will be called with the previous and next values of the Signal as arguments. If the function returns true, the Signal's value will not be updated and dependents will not rerun. If the function returns false, the Signal's value will be updated and dependents will rerun.
 
 ```tsx
 const [count, setCount] = createSignal(0, {
@@ -129,8 +120,7 @@ setMyString("stranger"); // considered different and will cause updates
 
 ### `name`
 
-The `name` option can be used to give the Signal a name.
-This is useful for debugging. The name will be displayed in the devtools.
+The `name` option can be used to give the Signal a name. This is useful for debugging. The name will be displayed in the devtools.
 
 ```tsx
 const [count, setCount] = createSignal(0, { name: "count" });
@@ -138,8 +128,7 @@ const [count, setCount] = createSignal(0, { name: "count" });
 
 ### `internal`
 
-The `internal` option can be used to hide the Signal from the devtools.
-This is useful for Signals that are used internally by a component and should not be exposed to the user.
+The `internal` option can be used to hide the Signal from the devtools. This is useful for Signals that are used internally by a component and should not be exposed to the user.
 
 ```tsx
 const [count, setCount] = createSignal(0, { internal: true });

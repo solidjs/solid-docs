@@ -2,11 +2,10 @@
 title: query
 ---
 
-`query` is a [higher-order function](https://en.wikipedia.org/wiki/Higher-order_function) designed to create a new function with the same signature as the function passed to it.
-When this newly created function is called for the first time with a specific set of arguments, the original function is run, and its return value is stored in a cache and returned to the caller of the created function.
-The next time the created function is called with the same arguments (as long as the cache is still valid), it will return the cached value instead of re-executing the original function.
+`query` is a [higher-order function](https://en.wikipedia.org/wiki/Higher-order_function) designed to create a new function with the same signature as the function passed to it. When this newly created function is called for the first time with a specific set of arguments, the original function is run, and its return value is stored in a cache and returned to the caller of the created function. The next time the created function is called with the same arguments (as long as the cache is still valid), it will return the cached value instead of re-executing the original function.
 
-:::info
+:::info 
+
 `query` can be defined anywhere and then used inside your components with [`createAsync`](/solid-router/reference/data-apis/create-async).
 
 However, using `query` directly in [`createResource`](/reference/basic-reactivity/create-resource) will not work since the fetcher is not reactive and will not invalidate properly.
@@ -69,35 +68,26 @@ export default function User(props) {
 `query` accomplishes the following:
 
 1. Deduping on the server for the lifetime of the request.
-2. It fills a preload cache in the browser - this lasts 5 seconds.
-   When a route is preloaded on hover or when preload is called when entering a route it will make sure to dedupe calls.
-3. A reactive refetch mechanism based on key.
-   This prevents routes that are not new from retriggering on action revalidation.
-4. Serve as a back/forward cache for browser navigation for up to 5 minutes.
-   Any user based navigation or link click bypasses this cache.
-   Revalidation or new fetch updates the cache.
+2. It fills a preload cache in the browser - this lasts 5 seconds. When a route is preloaded on hover or when preload is called when entering a route it will make sure to dedupe calls.
+3. A reactive refetch mechanism based on key. This prevents routes that are not new from retriggering on action revalidation.
+4. Serve as a back/forward cache for browser navigation for up to 5 minutes. Any user based navigation or link click bypasses this cache. Revalidation or new fetch updates the cache.
 
 ## Cache Keys
 
-To ensure that the cache keys are consistent and unique, arguments are deterministically serialized using `JSON.stringify`.
-Before serialization, key/value pairs in objects are sorted so that the order of properties does not affect the serialization.
-For instance, both `{ name: 'Ryan', awesome: true }` and `{ awesome: true, name: 'Ryan' }` will serialize to the same string so that they produce the same cache key.
+To ensure that the cache keys are consistent and unique, arguments are deterministically serialized using `JSON.stringify`. Before serialization, key/value pairs in objects are sorted so that the order of properties does not affect the serialization. For instance, both `{ name: 'Ryan', awesome: true }` and `{ awesome: true, name: 'Ryan' }` will serialize to the same string so that they produce the same cache key.
 
 ## Return value
 
-The return value is a `CachedFunction`, a function that has the same signature as the function you passed to `query`.
-This cached function stores the return value using the cache key.
-Under most circumstances, this temporarily prevents the passed function from running with the same arguments, even if the created function is called repeatedly.
+The return value is a `CachedFunction`, a function that has the same signature as the function you passed to `query`. This cached function stores the return value using the cache key. Under most circumstances, this temporarily prevents the passed function from running with the same arguments, even if the created function is called repeatedly.
 
 ## Arguments
 
-| argument | type                    | description                                                               |
-| -------- | ----------------------- | ------------------------------------------------------------------------- |
-| `fn`     | `(...args: any) => any` | A function whose return value you'd like to be cached.                    |
-| `name`\* | string                  | Any arbitrary string that you'd like to use as the rest of the cache key. |
+| argument | type | description |
+| --- | --- | --- |
+| `fn` | `(...args: any) => any` | A function whose return value you'd like to be cached. |
+| `name`\* | string | Any arbitrary string that you'd like to use as the rest of the cache key. |
 
-\*Since the internal cache is shared by all the functions using `query`, the string should be unique for each function passed to `query`.
-If the same key is used with multiple functions, one function might return the cached result of the other.
+\*Since the internal cache is shared by all the functions using `query`, the string should be unique for each function passed to `query`. If the same key is used with multiple functions, one function might return the cached result of the other.
 
 ## Methods
 
@@ -113,7 +103,4 @@ getUser.keyFor(id); // returns "users[5]"
 
 ### `revalidate`
 
-The `query` can be revalidated using the `revalidate` method or the `revalidate` keys that are set on the response from the actions.
-If the entire key is passed, it will invalidate all entries for the cache (ie. `users` in the example above).
-If only a single entry needs to be invalidated, `keyFor` is provided.
-To revalidate everything in the cache, pass `undefined` as the key.
+The `query` can be revalidated using the `revalidate` method or the `revalidate` keys that are set on the response from the actions. If the entire key is passed, it will invalidate all entries for the cache (ie. `users` in the example above). If only a single entry needs to be invalidated, `keyFor` is provided. To revalidate everything in the cache, pass `undefined` as the key.

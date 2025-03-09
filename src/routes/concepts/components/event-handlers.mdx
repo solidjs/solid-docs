@@ -10,8 +10,7 @@ Solid provides two ways to add event listeners to the browser:
 - [`on:__`](/reference/jsx-attributes/on): adds an event listener to the `element`. This is also known as a _native event_.
 - [`on__`](/reference/jsx-attributes/on_): adds an event listener to the `document` and dispatches it to the `element`. This can be referred to as a _delegated event_.
 
-Delegated events flow through the [_component tree_](/concepts/components/basics#component-trees), and save some resources by performing better on commonly used events.
-Native events, however, flow through the _DOM tree_, and provide more control over the behavior of the event.
+Delegated events flow through the [_component tree_](/concepts/components/basics#component-trees), and save some resources by performing better on commonly used events. Native events, however, flow through the _DOM tree_, and provide more control over the behavior of the event.
 
 ## Using events
 
@@ -25,15 +24,13 @@ To add an event handler, prefix the event name with either `on` or `on:`, and as
 <div on:scroll={handleScroll}>... very long text ...</div>
 ```
 
-Delegated events are **not case sensitive**, therefore using delegated event handlers in Solid can be written using camelCase or all lowercase.
-Note that while delegated events can be written both ways, native events _are_ case sensitive.
+Delegated events are **not case sensitive**, therefore using delegated event handlers in Solid can be written using camelCase or all lowercase. Note that while delegated events can be written both ways, native events _are_ case sensitive.
 
 ```tsx
 <button onclick={handleClick}>Click me</button>
 ```
 
-For any other events, such as custom events or events you wish _not_ to be delegated, the `on:` attribute will add an event listener as-is.
-This is what makes the event listener case sensitive.
+For any other events, such as custom events or events you wish _not_ to be delegated, the `on:` attribute will add an event listener as-is. This is what makes the event listener case sensitive.
 
 ```tsx
 <button on:Custom-Event={handleClick}>Click me</button>
@@ -43,8 +40,7 @@ For typing standard or custom events using `on:`, the TypeScript page has a sect
 
 ## Binding events
 
-To optimize event handlers, you can pass an array as the event handler, replacing the function.
-When doing this, the second item passed into the array is supplied as the handler's first argument:
+To optimize event handlers, you can pass an array as the event handler, replacing the function. When doing this, the second item passed into the array is supplied as the handler's first argument:
 
 ```tsx
 const handler = (data, event) => {
@@ -60,15 +56,11 @@ By binding events in this way, Solid avoids the overhead of using JavaScript's [
 
 ### Dynamic handlers
 
-An event handler does not form part of the reactive system.
-If you were to pass the handler as a signal, it will not respond to the changes of that signal.
-In other words, events do not dynamically update, and the bindings are not reactive.
-This is because attaching and detaching listeners is a resource-intensive task.
+An event handler does not form part of the reactive system. If you were to pass the handler as a signal, it will not respond to the changes of that signal. In other words, events do not dynamically update, and the bindings are not reactive. This is because attaching and detaching listeners is a resource-intensive task.
 
 Since event handlers are called like a standard function, you can design them to call a reactive source, if needed.
 
-In the following example, `handleClick` represents a prop that has the flexibility to adopt any function.
-As a result, there is no requirement for these functions to be reactive.
+In the following example, `handleClick` represents a prop that has the flexibility to adopt any function. As a result, there is no requirement for these functions to be reactive.
 
 ```tsx
 <div onClick={() => props.handleClick?.()} />
@@ -76,14 +68,11 @@ As a result, there is no requirement for these functions to be reactive.
 
 ## Event delegation
 
-Instead of attaching event listeners to every individual element, Solid uses _synthetic event delegation_, through the [`on__`](/reference/jsx-attributes/on_) form .
-In this method event listeners are attached to the `document` element, and dispatch events to the relevant elements as they bubble up.
+Instead of attaching event listeners to every individual element, Solid uses _synthetic event delegation_, through the [`on__`](/reference/jsx-attributes/on_) form . In this method event listeners are attached to the `document` element, and dispatch events to the relevant elements as they bubble up.
 
-By keeping the number of event listeners to a minimum, events can be captured more effectively.
-This is especially useful when working with a large number of elements, such as in a table or list.
+By keeping the number of event listeners to a minimum, events can be captured more effectively. This is especially useful when working with a large number of elements, such as in a table or list.
 
-Supported events such as `click`, `input` and `keydown` are just a few examples that are optimized in this way.
-To view the full list see the [references below](#list-of-delegated-events).
+Supported events such as `click`, `input` and `keydown` are just a few examples that are optimized in this way. To view the full list see the [references below](#list-of-delegated-events).
 
 If you need to attach an event listener to an element that is not supported by Solid's event delegation, such as a custom event in a [custom element](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements), you can use the [`on:__`](/reference/jsx-attributes/on) form.
 
@@ -95,14 +84,11 @@ If you need to attach an event listener to an element that is not supported by S
 
 While delegated events provide some performance enhancements, there are tradeoffs.
 
-Event delegation is designed for event propagation through the JSX Tree, rather than the DOM Tree.
-This can differ from the previous expectations of how events work and flow.
+Event delegation is designed for event propagation through the JSX Tree, rather than the DOM Tree. This can differ from the previous expectations of how events work and flow.
 
 Some things to keep in mind include:
 
-- Delegated event listeners are added _once_ per event type and handle all future events of that type.
-  This means that delegated event listeners remain active even if the element that added them and its handler is removed.
-  For example, if a `div` listens for `mousemove` and is later removed, the `mousemove` events will still be dispatched to the `document` in case a different element is also listening for mouse moves.
+- Delegated event listeners are added _once_ per event type and handle all future events of that type. This means that delegated event listeners remain active even if the element that added them and its handler is removed. For example, if a `div` listens for `mousemove` and is later removed, the `mousemove` events will still be dispatched to the `document` in case a different element is also listening for mouse moves.
 
 ```tsx
 <div onMouseMove={handleCustomEvent} />
@@ -110,8 +96,7 @@ Some things to keep in mind include:
 
 :::tip[Occasional Events]
 
-Rather than using delegated events for events that happen infrequently, **native events** are a better solution.
-Since these events happen in specific circumstances, they do not benefit from the performance improvements you get with event delegation.
+Rather than using delegated events for events that happen infrequently, **native events** are a better solution. Since these events happen in specific circumstances, they do not benefit from the performance improvements you get with event delegation.
 
 ```tsx
 <div on:mousemove={handleCustomEvent} />
@@ -121,9 +106,7 @@ Since these events happen in specific circumstances, they do not benefit from th
 
 - `event.stopPropagation()` does not work as expected since events are attached to the `document` rather than the `element`.
 
-  With cases like this, a native event is recommended.
-  As an example, using a native event would stop the following event from reaching the `div native` handler, which is _not_ the case for delegated events.
-  You can [view this example in the Solid Playground](https://playground.solidjs.com/anonymous/c5346f84-01e4-4080-8ace-4443ffd0bb10).
+  With cases like this, a native event is recommended. As an example, using a native event would stop the following event from reaching the `div native` handler, which is _not_ the case for delegated events. You can [view this example in the Solid Playground](https://playground.solidjs.com/anonymous/c5346f84-01e4-4080-8ace-4443ffd0bb10).
 
 ```tsx
 onMount(() => {
@@ -171,8 +154,7 @@ button
 
 [See how this solution differs in the Solid Playground](https://playground.solidjs.com/anonymous/9e2deddc-2e83-4ac2-8ee0-49c7c3a45d11).
 
-- [Portals](/concepts/control-flow/portal) propagate events following the _component tree_ and not the _DOM tree_, making them easier to use.
-  This means when a `Portal` gets attached to the `body`, any events will propagate up to the `container`.
+- [Portals](/concepts/control-flow/portal) propagate events following the _component tree_ and not the _DOM tree_, making them easier to use. This means when a `Portal` gets attached to the `body`, any events will propagate up to the `container`.
 
 ```tsx
 <div class="container" onInput={() => console.log("portal key press")}>

@@ -8,12 +8,9 @@ import { batch } from "solid-js";
 function batch<T>(fn: () => T): T;
 ```
 
-`batch` is a low-level API that batches updates together.
-More precisely, `batch(fn)` holds the execution of downstream computations during the `fn` block, executing them all together once the block `fn` returns.
-Thus, instead of a downstream computation executing after every dependency update, it will update just once at the end of the batch.
+`batch` is a low-level API that batches updates together. More precisely, `batch(fn)` holds the execution of downstream computations during the `fn` block, executing them all together once the block `fn` returns. Thus, instead of a downstream computation executing after every dependency update, it will update just once at the end of the batch.
 
-Batching improves performance by avoiding unnecessary recalculation.
-Suppose you have a downstream memo `down` that depends on multiple upstream signals `up1`, `up2`, and `up3`:
+Batching improves performance by avoiding unnecessary recalculation. Suppose you have a downstream memo `down` that depends on multiple upstream signals `up1`, `up2`, and `up3`:
 
 ```ts
 import { createSignal, createMemo, createEffect } from "solid-js";
@@ -43,11 +40,7 @@ batch(() => {
 }); // recomputes down, outputs 30
 ```
 
-The impact is even more dramatic if you have _m_ downstream computations (memos, effects, etc.) that each depends on _n_ upstream signals.
-Without batching, modifying all _n_ upstream signals would cause _m n_ updates to the downstream computations.
-With batching, modifying all _n_ upstream signals would cause _m_ updates to the downstream computations.
-Given that each update takes at least _n_ time (just to read the upstream signals), this cost savings can be significant.
-Batching is also especially helpful when the downstream effects include DOM updates, which can be expensive.
+The impact is even more dramatic if you have _m_ downstream computations (memos, effects, etc.) that each depends on _n_ upstream signals. Without batching, modifying all _n_ upstream signals would cause _m n_ updates to the downstream computations. With batching, modifying all _n_ upstream signals would cause _m_ updates to the downstream computations. Given that each update takes at least _n_ time (just to read the upstream signals), this cost savings can be significant. Batching is also especially helpful when the downstream effects include DOM updates, which can be expensive.
 
 Solid uses `batch` internally to automatically batch updates for you in a few cases:
 
@@ -55,9 +48,7 @@ Solid uses `batch` internally to automatically batch updates for you in a few ca
 - Within the [setter of a store](/reference/store-utilities/create-store#setter) (which can update several properties at once)
 - Within array methods (e.g. `Array.prototype.splice`) of a [mutable store](/reference/store-utilities/create-mutable) (which can update several elements at once)
 
-These save you from having to use `batch` yourself in many cases.
-For the most part, automatic batching should be transparent to you, because accessing a signal or memo will cause it to update if it is out of date (as of Solid 1.4).
-For example:
+These save you from having to use `batch` yourself in many cases. For the most part, automatic batching should be transparent to you, because accessing a signal or memo will cause it to update if it is out of date (as of Solid 1.4). For example:
 
 ```ts
 batch(() => {
@@ -71,6 +62,4 @@ batch(() => {
 }); // recomputes down, outputs 36
 ```
 
-You can think of `batch(fn)` as setting a global "batch mode" variable, calling the function `fn`, and then restoring the global variable to its previous value.
-This means that you can nest `batch` calls, and they will form one big batch.
-It also means that, if `fn` is asynchronous, only the updates before the first `await` will be batched.
+You can think of `batch(fn)` as setting a global "batch mode" variable, calling the function `fn`, and then restoring the global variable to its previous value. This means that you can nest `batch` calls, and they will form one big batch. It also means that, if `fn` is asynchronous, only the updates before the first `await` will be batched.

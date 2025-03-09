@@ -3,16 +3,13 @@ title: Stores
 order: 6
 ---
 
-Similar to [signals](/concepts/signals), stores are a state management primitive.
-However, while signals manage a single piece of state, stores create a centralized location to reduce code redundancy.
-Within Solid, these stores can spawn a collection of reactive signals, each corresponding to a particular property which can be useful when working with complex state.
+Similar to [signals](/concepts/signals), stores are a state management primitive. However, while signals manage a single piece of state, stores create a centralized location to reduce code redundancy. Within Solid, these stores can spawn a collection of reactive signals, each corresponding to a particular property which can be useful when working with complex state.
 
 ## Creating a store
 
 Stores can manage many data types, including: objects, arrays, strings, and numbers.
 
-Using JavaScript's [proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) mechanism, reactivity extends beyond just the top-level objects or arrays.
-With stores, you can now target nested properties and elements within these structures to create a dynamic tree of reactive data.
+Using JavaScript's [proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) mechanism, reactivity extends beyond just the top-level objects or arrays. With stores, you can now target nested properties and elements within these structures to create a dynamic tree of reactive data.
 
 ```jsx
 import { createStore } from "solid-js/store";
@@ -51,9 +48,7 @@ Store properties can be accessed directly from the state proxy through directly 
 console.log(store.userCount); // Outputs: 3
 ```
 
-Accessing stores within a tracking scope follows a similar pattern to signals.
-While signals are created using the [`createSignal`](/reference/basic-reactivity/create-signal) function and require calling the signal function to access their values, store values can be directly accessed without a function call.
-This provides access to the store's value directly within a tracking scope:
+Accessing stores within a tracking scope follows a similar pattern to signals. While signals are created using the [`createSignal`](/reference/basic-reactivity/create-signal) function and require calling the signal function to access their values, store values can be directly accessed without a function call. This provides access to the store's value directly within a tracking scope:
 
 ```jsx
 const App = () => {
@@ -90,8 +85,7 @@ const App = () => {
 };
 ```
 
-When a store is created, it starts with the initial state but does _not_ immediately set up signals to track changes.
-These signals are created **lazily**, meaning they are only formed when accessed within a reactive context.
+When a store is created, it starts with the initial state but does _not_ immediately set up signals to track changes. These signals are created **lazily**, meaning they are only formed when accessed within a reactive context.
 
 Once data is used within a reactive context, such as within the return statement of a component function, computed property, or an effect, a signal is created and dependencies are established.
 
@@ -146,8 +140,7 @@ const App = () => {
 
 ## Modifying store values
 
-Updating values within a store is best accomplished using a setter provided by the `createStore` initialization.
-This setter allows for the modification of a specific key and its associated value, following the format `setStore(key, newValue)`:
+Updating values within a store is best accomplished using a setter provided by the `createStore` initialization. This setter allows for the modification of a specific key and its associated value, following the format `setStore(key, newValue)`:
 
 ```jsx "setStore"
 const [store, setStore] = createStore({
@@ -192,12 +185,16 @@ const App = () => {
 }
 ```
 
-:::info
+:::info 
+
 Separating the read and write capabilities of a store provides a valuable debugging advantage.
 
 This separation facilitates the tracking and control of the components that are accessing or changing the values.
-:::
-:::advanced
+
+::: 
+
+:::advanced 
+
 A little hidden feature of stores is that you can also create nested stores to help with setting nested properties.
 
 ```jsx
@@ -228,16 +225,11 @@ Note that the above relies on `store.users` to be set already in the existing st
 
 ## Path syntax flexibility
 
-Modifying a store using this method is referred to as "path syntax."
-In this approach, the initial arguments are used to specify the keys that lead to the target value you want to modify, while the last argument provides the new value.
+Modifying a store using this method is referred to as "path syntax." In this approach, the initial arguments are used to specify the keys that lead to the target value you want to modify, while the last argument provides the new value.
 
-String keys are used to precisely target particular values with path syntax.
-By specifying these exact key names, you can directly retrieve the targeted information.
-However, path syntax goes beyond string keys and offers more versatility when accessing targeted values.
+String keys are used to precisely target particular values with path syntax. By specifying these exact key names, you can directly retrieve the targeted information. However, path syntax goes beyond string keys and offers more versatility when accessing targeted values.
 
-Instead of employing the use of just string keys, there is the option of using an array of keys.
-This method grants you the ability to select multiple properties within the store, facilitating access to nested structures.
-Alternatively, you can use filtering functions to access keys based on dynamic conditions or specific rules.
+Instead of employing the use of just string keys, there is the option of using an array of keys. This method grants you the ability to select multiple properties within the store, facilitating access to nested structures. Alternatively, you can use filtering functions to access keys based on dynamic conditions or specific rules.
 
 <EraserLink
 	href="https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=M6Y55ScNFDD_2HmRd4OJkQ"
@@ -248,13 +240,11 @@ The flexibility in path syntax makes for efficient navigation, retrieval, and mo
 
 ## Modifying values in arrays
 
-Path syntax provides a convenient way to modify arrays, making it easier to access and update their elements.
-Instead of relying on discovering individual indices, path syntax introduces several powerful techniques for array manipulation.
+Path syntax provides a convenient way to modify arrays, making it easier to access and update their elements. Instead of relying on discovering individual indices, path syntax introduces several powerful techniques for array manipulation.
 
 ### Appending new values
 
-To append a new element to an array within a store, you specify the target array and set the index to the desired position.
-For example, if you wanted to append the new element to the end of the array, you would set the index to `array.length`:
+To append a new element to an array within a store, you specify the target array and set the index to the desired position. For example, if you wanted to append the new element to the end of the array, you would set the index to `array.length`:
 
 ```jsx
 setStore("users", (otherUsers) => [
@@ -279,12 +269,9 @@ setStore("users", store.users.length, {
 
 ### Modifying multiple elements
 
-With path syntax, you can target a subset of elements of an array,
-or properties of an object, by specifying an array or range of indices.
+With path syntax, you can target a subset of elements of an array, or properties of an object, by specifying an array or range of indices.
 
-The most general form is to specify an array of values.
-For example, if `store.users` is an array of objects,
-you can set the `loggedIn` property of several indices at once like so:
+The most general form is to specify an array of values. For example, if `store.users` is an array of objects, you can set the `loggedIn` property of several indices at once like so:
 
 ```jsx
 setStore("users", [2, 7, 10], "loggedIn", false);
@@ -294,9 +281,7 @@ setStore("users", 7, "loggedIn", false);
 setStore("users", 10, "loggedIn", false);
 ```
 
-This array syntax also works for object property names.
-For example, if `store.users` is an object mapping usernames to objects,
-you can set the `loggedIn` property of several users at once like so:
+This array syntax also works for object property names. For example, if `store.users` is an object mapping usernames to objects, you can set the `loggedIn` property of several users at once like so:
 
 ```jsx
 setStore("users", ["me", "you"], "loggedIn", false);
@@ -305,10 +290,7 @@ setStore("users", ["me"], "loggedIn", false);
 setStore("users", ["you"], "loggedIn", false);
 ```
 
-For arrays specifically, you can specify a range of indices via an object
-with `from` and `to` keys (both of which are inclusive).
-For example, assuming `store.users` is an array again,
-you can set the `loggedIn` state for all users except index 0 as follows:
+For arrays specifically, you can specify a range of indices via an object with `from` and `to` keys (both of which are inclusive). For example, assuming `store.users` is an array again, you can set the `loggedIn` state for all users except index 0 as follows:
 
 ```jsx
 setStore("users", { from: 1, to: store.users.length - 1 }, "loggedIn", false);
@@ -318,9 +300,7 @@ for (let i = 1; i <= store.users.length - 1; i++) {
 }
 ```
 
-You can also include a `by` key in a range object to specify a step size,
-and thereby update a regular subset of elements.
-For example, you can set the `loggedIn` state for even-indexed users like so:
+You can also include a `by` key in a range object to specify a step size, and thereby update a regular subset of elements. For example, you can set the `loggedIn` state for even-indexed users like so:
 
 ```jsx
 setStore(
@@ -335,16 +315,11 @@ for (let i = 1; i <= store.users.length - 1; i += 2) {
 }
 ```
 
-Multi-setter syntax differs from the "equivalent" code in one key way:
-a single store setter call automatically gets wrapped in a
-[`batch`](/reference/reactive-utilities/batch), so all the elements update
-at once before any downstream effects are triggered.
+Multi-setter syntax differs from the "equivalent" code in one key way: a single store setter call automatically gets wrapped in a [`batch`](/reference/reactive-utilities/batch), so all the elements update at once before any downstream effects are triggered.
 
 ### Dynamic value assignment
 
-Path syntax also provides a way to set values within an array using functions instead of static values.
-These functions receive the old value as an argument, allowing you to compute the new value based on the existing one.
-This dynamic approach is particularly useful for complex transformations.
+Path syntax also provides a way to set values within an array using functions instead of static values. These functions receive the old value as an argument, allowing you to compute the new value based on the existing one. This dynamic approach is particularly useful for complex transformations.
 
 ```jsx
 setStore("users", 3, "loggedIn", (loggedIn) => !loggedIn);
@@ -352,9 +327,7 @@ setStore("users", 3, "loggedIn", (loggedIn) => !loggedIn);
 
 ### Filtering values
 
-In scenarios where you want to update elements in an array based on a specific condition, you can pass a function as an argument.
-This function will act as a filter, allowing you to select elements that satisfy the condition.
-It receives the old value and index as arguments, providing the flexibility to make conditional updates.
+In scenarios where you want to update elements in an array based on a specific condition, you can pass a function as an argument. This function will act as a filter, allowing you to select elements that satisfy the condition. It receives the old value and index as arguments, providing the flexibility to make conditional updates.
 
 ```jsx
 setStore("users", (user) => user.username.startsWith("t"), "loggedIn", false);
@@ -364,8 +337,7 @@ In addition to [`.startsWith`](https://developer.mozilla.org/en-US/docs/Web/Java
 
 ## Modifying objects
 
-When using store setters to modify objects, if a new value is an object, it will be shallow merged with the existing value.
-What this refers to is that the properties of the existing object will be combined with the properties of the "new" object you are setting, updating any overlapping properties with the values from the new object.
+When using store setters to modify objects, if a new value is an object, it will be shallow merged with the existing value. What this refers to is that the properties of the existing object will be combined with the properties of the "new" object you are setting, updating any overlapping properties with the values from the new object.
 
 What this means, is that you can directly make the change to the store _without_ spreading out properties of the existing user object.
 
@@ -386,9 +358,7 @@ setStore("users", 0, (user) => ({
 
 ### Store updates with `produce`
 
-Rather than directly modifying a store with setters, Solid has the `produce` utility.
-This utility provides a way to work with data as if it were a [mutable](https://developer.mozilla.org/en-US/docs/Glossary/Mutable) JavaScript object.
-`produce` also provides a way to make changes to multiple properties at the same time which eliminates the need for multiple setter calls.
+Rather than directly modifying a store with setters, Solid has the `produce` utility. This utility provides a way to work with data as if it were a [mutable](https://developer.mozilla.org/en-US/docs/Glossary/Mutable) JavaScript object. `produce` also provides a way to make changes to multiple properties at the same time which eliminates the need for multiple setter calls.
 
 ```jsx
 import { produce } from "solid-js/store";
@@ -408,18 +378,13 @@ setStore(
 );
 ```
 
-`produce` and `setStore` do have distinct functionalities.
-While both can be used to modify the state, the key distinction lies in how they handle data.
-`produce` allows you to work with a temporary draft of the state, apply the changes, then produce a new [immutable](https://developer.mozilla.org/en-US/docs/Glossary/Immutable) version of the store.
-Comparatively, `setStore` provides a more straightforward way to update the store directly, without creating a new version.
+`produce` and `setStore` do have distinct functionalities. While both can be used to modify the state, the key distinction lies in how they handle data. `produce` allows you to work with a temporary draft of the state, apply the changes, then produce a new [immutable](https://developer.mozilla.org/en-US/docs/Glossary/Immutable) version of the store. Comparatively, `setStore` provides a more straightforward way to update the store directly, without creating a new version.
 
-It's important to note, however, `produce` is specifically designed to work with **arrays** and **objects**.
-Other collection types, such as JavaScript [Sets](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set) and [Maps](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map), are not compatible with this utility.
+It's important to note, however, `produce` is specifically designed to work with **arrays** and **objects**. Other collection types, such as JavaScript [Sets](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set) and [Maps](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map), are not compatible with this utility.
 
 ### Data integration with `reconcile`
 
-When new information needs to be merged into an existing store `reconcile` can be useful.
-`reconcile` will determine the differences between new and existing data and initiate updates only when there are _changed_ values, thereby avoiding unnecessary updates.
+When new information needs to be merged into an existing store `reconcile` can be useful. `reconcile` will determine the differences between new and existing data and initiate updates only when there are _changed_ values, thereby avoiding unnecessary updates.
 
 ```jsx
 const { createStore, reconcile } from "solid-js/stores"
@@ -433,18 +398,13 @@ setData('animals', reconcile(newData))
 
 ```
 
-In this example, the store will look for the differences between the existing and incoming data sets.
-Consequently, only `'koala'` - the new edition - will cause an update.
+In this example, the store will look for the differences between the existing and incoming data sets. Consequently, only `'koala'` - the new edition - will cause an update.
 
 ### Extracting raw data with `unwrap`
 
-When there is a need for dealing with data outside of a reactive context, the `unwrap` utility offers a way to transform a store to a standard [object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object).
-This conversion serves several important purposes.
+When there is a need for dealing with data outside of a reactive context, the `unwrap` utility offers a way to transform a store to a standard [object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object). This conversion serves several important purposes.
 
-Firstly, it provides a snapshot of the current state without the processing overhead associated with reactivity.
-This can be useful in situations where an unaltered, non-reactive view of the data is needed.
-Additionally, `unwrap` provides a means to interface with third-party libraries or tools that anticipate regular JavaScript objects.
-This utility acts as a bridge to facilitate smooth integrations with external components and simplifies the incorporation of stores into various applications and workflows.
+Firstly, it provides a snapshot of the current state without the processing overhead associated with reactivity. This can be useful in situations where an unaltered, non-reactive view of the data is needed. Additionally, `unwrap` provides a means to interface with third-party libraries or tools that anticipate regular JavaScript objects. This utility acts as a bridge to facilitate smooth integrations with external components and simplifies the incorporation of stores into various applications and workflows.
 
 ```jsx
 import { createStore, unwrap } from "solid-js/store";

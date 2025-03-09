@@ -71,6 +71,11 @@ export default defineConfig(
 					themes: ["min-light", "material-theme-ocean"],
 					themeCssSelector: (theme) => `[data-theme="${theme.type}"]`,
 					frames: false,
+					styleOverrides: {
+						twoSlash: {
+							cursorColor: "var(--twoslash-cursor)"
+						}
+					}
 				},
 				toc: {
 					minDepth: 2,

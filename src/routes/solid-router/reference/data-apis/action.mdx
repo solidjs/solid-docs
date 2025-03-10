@@ -2,8 +2,7 @@
 title: action
 ---
 
-Actions are data mutations that can trigger invalidations and further routing.
-A list of prebuilt response helpers can be found below.
+Actions are data mutations that can trigger invalidations and further routing. A list of prebuilt response helpers can be found below.
 
 ```jsx
 import { action, revalidate, redirect } from "@solidjs/router"
@@ -22,12 +21,9 @@ const myAction = action(async (data) => {
 
 ```
 
-Actions only work with **post** requests.
-This means forms require `method="post"`.
+Actions only work with **post** requests. This means forms require `method="post"`.
 
-A `with` method can be used when typed data is required.
-This removes the need to use `FormData` or other additional hidden fields.
-The `with` method works similar to [`bind`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_objects/Function/bind), which applies the arguments in order.
+A `with` method can be used when typed data is required. This removes the need to use `FormData` or other additional hidden fields. The `with` method works similar to [`bind`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_objects/Function/bind), which applies the arguments in order.
 
 Without `with`:
 
@@ -67,8 +63,7 @@ In [SolidStart](/solid-start) apps, it's recommended to use the [`"use server"`]
 
 ## Notes of `<form>` implementation and SSR
 
-This requires stable references because a string can only be serialized as an attribute, and it is crucial for consistency across SSR. where these references must align.
-The solution is to provide a unique name.
+This requires stable references because a string can only be serialized as an attribute, and it is crucial for consistency across SSR. where these references must align. The solution is to provide a unique name.
 
 ```jsx
 const myAction = action(async (args) => {}, "my-action");
@@ -76,25 +71,21 @@ const myAction = action(async (args) => {}, "my-action");
 
 ## `useAction`
 
-Instead of forms, actions can directly be wrapped in a `useAction` primitive.
-This is how router context is created.
+Instead of forms, actions can directly be wrapped in a `useAction` primitive. This is how router context is created.
 
 ```jsx
 // in component
 const submit = useAction(myAction);
 submit(...args);
-
 ```
 
-The outside of a form context can use custom data instead of `formData`.
-These helpers preserve types.
+The outside of a form context can use custom data instead of `formData`. These helpers preserve types.
 
 However, even when used with server functions, such as with [SolidStart](https://start.solidjs.com/getting-started/what-is-solidstart), this requires client-side JavaScript and is not progressively enhanceable like forms are.
 
 ## `useSubmission`/`useSubmissions`
 
-These functions are used when incorporating optimistic updates during ongoing actions.
-They provide either a singular Submission (the latest one), or a collection of Submissions that match, with an optional filtering function.
+These functions are used when incorporating optimistic updates during ongoing actions. They provide either a singular Submission (the latest one), or a collection of Submissions that match, with an optional filtering function.
 
 ```jsx
 type Submission<T, U> = {
@@ -111,9 +102,10 @@ const submission = useSubmission(action, (input) => filter(input));
 
 ```
 
-##  Revalidate cached functions
+## Revalidate cached functions
 
-###  Revalidate all (default)
+### Revalidate all (default)
+
 By default all cached functions will be revalidated wether the action does not return or return a "normal" response.
 
 ```jsx
@@ -128,8 +120,7 @@ const deleteTodo = action(async (formData: FormData) => {
 
 ### Revalidate specific cached keys
 
-By returning a response with solid-router's `json`, `reload` or `redirect` helpers you can pass a key / keys to the revalidate prop as the second argument of the json response helper.
-You can either pass as `string` directly or use the cached functions `key` or `keyFor` props.
+By returning a response with solid-router's `json`, `reload` or `redirect` helpers you can pass a key / keys to the revalidate prop as the second argument of the json response helper. You can either pass as `string` directly or use the cached functions `key` or `keyFor` props.
 
 ```jsx
 import { action, json, reload, redirect } from "@solidjs/router"
@@ -153,6 +144,7 @@ const deleteTodo = action(async (formData: FormData) => {
 ```
 
 ## Prevent revalidation
+
 To opt out of any revalidation you can pass any `string` to revalidate which is not a key of any cached function.
 
 ```jsx
@@ -171,29 +163,26 @@ const deleteTodo = action(async (formData: FormData) => {
 
 ```
 
-###  Revalidate without action
+### Revalidate without action
 
-Cached functions can also be revalidated by the  `revalidate` helper.
+Cached functions can also be revalidated by the `revalidate` helper.
 
 ```jsx
-revalidate([getTodos.key, getTodoByID.keyFor(id)])
-
+revalidate([getTodos.key, getTodoByID.keyFor(id)]);
 ```
 
 This is also great if you want to set your own "refresh" interval e.g. poll data every 30 seconds.
 
 ```jsx
-export default function TodoLayout(){
-	
-	const todos = createAsync(() => getTodos())
-	
+export default function TodoLayout() {
+	const todos = createAsync(() => getTodos());
+
 	onMount(() => {
 		//30 second polling
-		const interval = setInterval(() => revalidate(getTodos.key),1000 * 30)
-		onCleanup(() => clearInterval(interval))
-	})
-	
+		const interval = setInterval(() => revalidate(getTodos.key), 1000 * 30);
+		onCleanup(() => clearInterval(interval));
+	});
+
 	// ...
 }
-
 ```

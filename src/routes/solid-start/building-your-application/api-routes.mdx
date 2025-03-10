@@ -2,62 +2,57 @@
 title: "API routes"
 ---
 
-While Server Functions can be a good way to write server-side code for data needed by your UI, sometimes you need to expose API routes.
-Some reasons for wanting API Routes include:
+While Server Functions can be a good way to write server-side code for data needed by your UI, sometimes you need to expose API routes. Some reasons for wanting API Routes include:
+
 - There are additional clients that want to share this logic.
 - Exposing a GraphQL or tRPC endpoint.
 - Exposing a public-facing REST API.
 - Writing webhooks or auth callback handlers for OAuth.
 - Having URLs not serving HTML, but other kinds of documents like PDFs or images.
 
-For these use cases, SolidStart provides a way to write these routes in a way that is easy to understand and maintain.
-API routes are just similar to other routes and follow the same filename conventions as [UI Routes](/solid-start/building-your-application/routing).
+For these use cases, SolidStart provides a way to write these routes in a way that is easy to understand and maintain. API routes are just similar to other routes and follow the same filename conventions as [UI Routes](/solid-start/building-your-application/routing).
 
-The difference between API routes and UI routes is in what you should export from the file.
-UI routes export a default Solid component, while API Routes do not.
-Rather, they export functions that are named after the HTTP method that they handle.
+The difference between API routes and UI routes is in what you should export from the file. UI routes export a default Solid component, while API Routes do not. Rather, they export functions that are named after the HTTP method that they handle.
 
-:::info
-API routes are prioritized over page route alternatives.
-If you want to have them overlap at the same path remember to use `Accept` headers.
-Returning without a response in a `GET` route will fallback to page route handling.
+:::info 
+
+API routes are prioritized over page route alternatives. If you want to have them overlap at the same path remember to use `Accept` headers. Returning without a response in a `GET` route will fallback to page route handling. 
+
 :::
 
 ## Writing an API route
 
-To write an API route, you can create a file in a directory.
-While you can name this directory anything, it is common to name it `api` to indicate that the routes in this directory are for handling API requests:
+To write an API route, you can create a file in a directory. While you can name this directory anything, it is common to name it `api` to indicate that the routes in this directory are for handling API requests:
 
 ```tsx title="routes/api/test.ts"
 export function GET() {
-  // ...
+	// ...
 }
 
 export function POST() {
-  // ...
+	// ...
 }
 
 export function PATCH() {
-  // ...
+	// ...
 }
 
 export function DELETE() {
-  // ...
+	// ...
 }
 ```
 
-API routes get passed an `APIEvent` object as their first argument.
-This object contains:
+API routes get passed an `APIEvent` object as their first argument. This object contains:
+
 - `request`: [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) object representing the request sent by the client.
 - `params`: Object that contains the dynamic route parameters. For example, if the route is `/api/users/:id`, and the request is made to `/api/users/123`, then `params` will be `{ id: 123 }`.
 - `fetch`: An internal `fetch` function that can be used to make requests to other API routes without worrying about the `origin` of the URL.
 
-An API route is expected to return JSON or a `Response` object.
-In order to handle all methods, you can define a handler function that binds multiple methods to it:
+An API route is expected to return JSON or a `Response` object. In order to handle all methods, you can define a handler function that binds multiple methods to it:
 
 ```tsx title="routes/api/all.ts"
 async function handler() {
-  // ...
+	// ...
 }
 
 export const GET = handler;
@@ -72,20 +67,17 @@ import type { APIEvent } from "@solidjs/start/server";
 import store from "./store";
 
 export async function GET({ params }: APIEvent) {
-  console.log(`Category: ${params.category}, Brand: ${params.brand}`);
-  const products = await store.getProducts(params.category, params.brand);
-  return products;
+	console.log(`Category: ${params.category}, Brand: ${params.brand}`);
+	const products = await store.getProducts(params.category, params.brand);
+	return products;
 }
 ```
 
 ## Session management
 
-Since HTTP is a stateless protocol, you need to manage the state of the session on the server.
-For example, if you want to know who the user is, the most secure way of doing this is through the use of HTTP-only cookies.
-Cookies are a way to store data in the user's browser that persist in the browser between requests.
+Since HTTP is a stateless protocol, you need to manage the state of the session on the server. For example, if you want to know who the user is, the most secure way of doing this is through the use of HTTP-only cookies. Cookies are a way to store data in the user's browser that persist in the browser between requests.
 
-The user's request is exposed through the `Request` object.
-Through parsing the [`Cookie`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cookie) header, the cookies can be accessed and any helpers from `vinxi/http` can be used to make that a bit easier.
+The user's request is exposed through the `Request` object. Through parsing the [`Cookie`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cookie) header, the cookies can be accessed and any helpers from `vinxi/http` can be used to make that a bit easier.
 
 ```tsx
 import type { APIEvent } from "@solidjs/start/server";
@@ -93,31 +85,27 @@ import { getCookie } from "vinxi/http";
 import store from "./store";
 
 export async function GET(event: APIEvent) {
-  const userId = getCookie("userId");
-  if (!userId) {
-    return new Response("Not logged in", { status: 401 });
-  }
-  const user = await store.getUser(event.params.userId);
-  if (user.id !== userId) {
-    return new Response("Not authorized", { status: 403 });
-  }
-  return user;
+	const userId = getCookie("userId");
+	if (!userId) {
+		return new Response("Not logged in", { status: 401 });
+	}
+	const user = await store.getUser(event.params.userId);
+	if (user.id !== userId) {
+		return new Response("Not authorized", { status: 403 });
+	}
+	return user;
 }
 ```
 
-In this example, you can see that the `userId` is read from the cookie and then used to look up the user in the store.
-For more information on how to use cookies for secure session management, read the [session documentation](/solid-start/advanced/session).
+In this example, you can see that the `userId` is read from the cookie and then used to look up the user in the store. For more information on how to use cookies for secure session management, read the [session documentation](/solid-start/advanced/session).
 
 ## Exposing a GraphQL API
 
-SolidStart makes it easy to [implement a GraphQL API](https://graphql.org/).
-GraphQL is a query language for APIs and a runtime for executing those queries by using a type system you define for your data.
+SolidStart makes it easy to [implement a GraphQL API](https://graphql.org/). GraphQL is a query language for APIs and a runtime for executing those queries by using a type system you define for your data.
 
-To implement a GraphQL API, you need to define a schema and resolvers.
-The `graphql` function takes a GraphQL schema and returns a function that can be used as an API route handler.
+To implement a GraphQL API, you need to define a schema and resolvers. The `graphql` function takes a GraphQL schema and returns a function that can be used as an API route handler.
 
-First, to implement a GraphQL API, install the `graphql` library.
-Following that, you can implement your schema and resolvers in a file and then export a handler function that will be used as the API route:
+First, to implement a GraphQL API, install the `graphql` library. Following that, you can implement your schema and resolvers in a file and then export a handler function that will be used as the API route:
 
 ```tsx title="routes/graphql.ts"
 import { buildSchema, graphql } from "graphql";
@@ -137,26 +125,26 @@ const schema = buildSchema(`
 
 // Define GraphQL Resolvers
 const rootValue = {
-  hello: () => {
-    return {
-      message: "Hello World"
-    };
-  },
-  goodbye: () => {
-    return "Goodbye";
-  }
+	hello: () => {
+		return {
+			message: "Hello World",
+		};
+	},
+	goodbye: () => {
+		return "Goodbye";
+	},
 };
 
 // request handler
 const handler = async (event: APIEvent) => {
-  // get request body
-  const body = await new Response(event.request.body).json();
+	// get request body
+	const body = await new Response(event.request.body).json();
 
-  // pass query and save results
-  const result = await graphql({ rootValue, schema, source: body.query });
+	// pass query and save results
+	const result = await graphql({ rootValue, schema, source: body.query });
 
-  // send query result
-  return result;
+	// send query result
+	return result;
 };
 
 export const GET = handler;
@@ -168,8 +156,7 @@ export const POST = handler;
 
 [tRPC](https://trpc.io/) is a modern TypeScript-first API framework that is designed to be easy to use and understand.
 
-To expose a tRPC server route, you need to write your router.
-Once you have written your router, you can put it in a separate file so that you can export the type for your client.
+To expose a tRPC server route, you need to write your router. Once you have written your router, you can put it in a separate file so that you can export the type for your client.
 
 ```tsx title="lib/router.ts"
 import { initTRPC } from "@trpc/server";
@@ -179,9 +166,9 @@ import { string } from "valibot";
 const t = initTRPC.create();
 
 export const appRouter = t.router({
-  hello: t.procedure.input(wrap(string())).query(({ input }) => {
-    return `hello ${input ?? "world"}`;
-  })
+	hello: t.procedure.input(wrap(string())).query(({ input }) => {
+		return `hello ${input ?? "world"}`;
+	}),
 });
 
 export type AppRouter = typeof appRouter;
@@ -194,7 +181,10 @@ import { createTRPCProxyClient, httpBatchLink, loggerLink } from "@trpc/client";
 import type { AppRouter } from "./router";
 
 export const client = createTRPCProxyClient<AppRouter>({
-  links: [loggerLink(), httpBatchLink({ url: "http://localhost:3000/api/trpc" })]
+	links: [
+		loggerLink(),
+		httpBatchLink({ url: "http://localhost:3000/api/trpc" }),
+	],
 });
 ```
 
@@ -206,12 +196,12 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter } from "~/lib/router";
 
 const handler = (event: APIEvent) =>
-  fetchRequestHandler({
-    endpoint: "/api/trpc",
-    req: event.request,
-    router: appRouter,
-    createContext: () => ({})
-  });
+	fetchRequestHandler({
+		endpoint: "/api/trpc",
+		req: event.request,
+		router: appRouter,
+		createContext: () => ({}),
+	});
 
 export const GET = handler;
 

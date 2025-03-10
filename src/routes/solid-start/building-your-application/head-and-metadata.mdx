@@ -2,14 +2,9 @@
 title: "Head and metadata"
 ---
 
-SolidStart does not come with a metadata library.
-In cases where you want to customize the content in the `head` of your `document`, you can use the `@solidjs/meta` library.
+SolidStart does not come with a metadata library. In cases where you want to customize the content in the `head` of your `document`, you can use the `@solidjs/meta` library.
 
-<div id="npm">
-```bash frame="none"
-npm i @solidjs/meta
-```
-</div>
+<div id="npm">```bash frame="none" npm i @solidjs/meta ```</div>
 
 The common elements used in the [`head`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/head) are:
 
@@ -26,17 +21,16 @@ When applying metadata to a specific route, you can use the `Title`:
 import { Title } from "@solidjs/meta";
 
 export default function About() {
-  return (
-    <>
-      <Title>About</Title>
-      <h1>About</h1>
-    </>
-  );
+	return (
+		<>
+			<Title>About</Title>
+			<h1>About</h1>
+		</>
+	);
 }
 ```
 
-These tags will be applied for that specific route only and will be removed from `document.head` once a user navigates away from the page. 
-`routeData` can also be used here to create titles and SEO metadata that is specific to the dynamic parts of the route.
+These tags will be applied for that specific route only and will be removed from `document.head` once a user navigates away from the page. `routeData` can also be used here to create titles and SEO metadata that is specific to the dynamic parts of the route.
 
 ## Adding a site suffix in Title
 
@@ -44,7 +38,7 @@ Custom components can be created to wrap the `Title` component to add a site-spe
 
 ```tsx {2}
 export default function MySiteTitle(props) {
-  return <Title>{props.children} | My Site</Title>;
+	return <Title>{props.children} | My Site</Title>;
 }
 ```
 
@@ -52,12 +46,12 @@ export default function MySiteTitle(props) {
 import MySiteTitle from "~/components/MySiteTitle";
 
 export default function About() {
-  return (
-    <>
-      <MySiteTitle>About</MySiteTitle>
-      <h1>About</h1>
-    </>
-  );
+	return (
+		<>
+			<MySiteTitle>About</MySiteTitle>
+			<h1>About</h1>
+		</>
+	);
 }
 ```
 
@@ -71,68 +65,53 @@ import { RouteSectionProps } from "@solidjs/router";
 import { createResource, Show } from "solid-js";
 
 export default function User(props: RouteSectionProps) {
-  const [user] = createResource(() => fetchUser(props.params.id));
+	const [user] = createResource(() => fetchUser(props.params.id));
 
-  return (
-    <Show when={user()}>
-      <Title>{user()?.name}</Title>
-      <h1>{user()?.name}</h1>
-    </Show>
-  );
+	return (
+		<Show when={user()}>
+			<Title>{user()?.name}</Title>
+			<h1>{user()?.name}</h1>
+		</Show>
+	);
 }
 ```
 
-For this example, `routeData` can be used to retrieve the user's name from the `id` in `/users/:id` and use it in the `Title` component.
-Similarly, other information can be used to build up other tags for SEO.
+For this example, `routeData` can be used to retrieve the user's name from the `id` in `/users/:id` and use it in the `Title` component. Similarly, other information can be used to build up other tags for SEO.
 
 ## Adding SEO tags
 
-SEO tags like `og:title`, `og:description`, `og:image`, use the `Meta` component.
-Since these tags may want to be used across multiple routes, they can be added inside the `Head` of the `root.tsx` file.
+SEO tags like `og:title`, `og:description`, `og:image`, use the `Meta` component. Since these tags may want to be used across multiple routes, they can be added inside the `Head` of the `root.tsx` file.
 
 ```tsx { 5-15 }
 export default function Root() {
-  return (
-    <Html lang="en">
-      <Head>
-        <Meta
-          property="og:image"
-          content="https://example.com/image.jpg"
-        />
-        <Meta
-          property="og:image:alt"
-          content="Welcome to my site"
-        />
-        <Meta property="og:image:width" content="1200" />
-        <Meta property="og:image:height" content="600" />
-        <Meta property="og:site_name" content="GitHub" />
-      </Head>
-    </Html>
-  );
+	return (
+		<Html lang="en">
+			<Head>
+				<Meta property="og:image" content="https://example.com/image.jpg" />
+				<Meta property="og:image:alt" content="Welcome to my site" />
+				<Meta property="og:image:width" content="1200" />
+				<Meta property="og:image:height" content="600" />
+				<Meta property="og:site_name" content="GitHub" />
+			</Head>
+		</Html>
+	);
 }
 ```
 
-If you need to add route-specific information inside your route, much like the `Title` component, you can use the `Meta` component within the desired route.
-This overrides the `Meta` tags used within the `Head` component.
+If you need to add route-specific information inside your route, much like the `Title` component, you can use the `Meta` component within the desired route. This overrides the `Meta` tags used within the `Head` component.
 
 ```tsx
 import MySiteTitle from "~/components/MySiteTitle";
 
 export default function About() {
-  return (
-    <>
-      <MySiteTitle>About</MySiteTitle>
-      <Meta name="description" content="This is my content tag." />
-      <Meta
-        property="og:title"
-        content="Welcome to my site!"
-      />
-      <Meta
-        property="og:description"
-        content="A website"
-      />
-      <h1>About</h1>
-    </>
-  );
+	return (
+		<>
+			<MySiteTitle>About</MySiteTitle>
+			<Meta name="description" content="This is my content tag." />
+			<Meta property="og:title" content="Welcome to my site!" />
+			<Meta property="og:description" content="A website" />
+			<h1>About</h1>
+		</>
+	);
 }
 ```

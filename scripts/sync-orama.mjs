@@ -2,9 +2,10 @@ import { readFileSync } from "node:fs";
 import { globSync } from "glob";
 import { generalPurposeCrawler } from "@orama/crawly";
 import "dotenv/config";
+import { env } from "process";
 
-const ORAMA_PRIVATE_API_KEY = process.env.ORAMA_PRIVATE_API_KEY;
-const ORAMA_PRIVATE_INDEX_ID = process.env.ORAMA_PRIVATE_INDEX_ID;
+const ORAMA_PRIVATE_API_KEY = env.ORAMA_PRIVATE_API_KEY;
+const ORAMA_PRIVATE_INDEX_ID = env.ORAMA_PRIVATE_INDEX_ID;
 
 const baseURL = new URL("../dist", import.meta.url).pathname;
 const HTMLFiles = globSync("**/*.html", { cwd: baseURL });

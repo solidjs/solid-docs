@@ -2,70 +2,37 @@ name: 🔍 Lint / Type Checks
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
-  setup:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "pnpm"
-      - run: pnpm i
-      - uses: actions/cache/save@v4
-        with:
-          path: |
-            node_modules
-            ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-
   typecheck:
-    needs: setup
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "pnpm"
-      - uses: actions/cache/restore@v4
-        with:
-          path: |
-            node_modules
-            ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install tools & dependencies
+        uses: ./.github/actions/install
+
       - name: Generate virtual modules
         run: pnpm sync
+
       - name: TypeScript check
         run: pnpm check:types
 
   lint:
-    needs: setup
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "pnpm"
-      - uses: actions/cache/restore@v4
-        with:
-          path: |
-            node_modules
-            ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install tools & dependencies
+        uses: ./.github/actions/install
+
       - name: ESLint check
         run: pnpm check:lint

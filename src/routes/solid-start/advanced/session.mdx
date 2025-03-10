@@ -2,23 +2,29 @@
 title: "Sessions"
 ---
 
-Sessions allow web applications to maintain state between user requests. Since HTTP is stateless, each request is treated independently. Sessions address this by allowing the server to recognize multiple requests from the same user, which is helpful for tracking authentication and preferences.
+Sessions allow web applications to maintain state between user requests.
+Since HTTP is stateless, each request is treated independently.
+Sessions address this by allowing the server to recognize multiple requests from the same user, which is helpful for tracking authentication and preferences.
 
 ## How sessions work
 
 A session typically involves:
 
-1. **Session creation**: When tracking is needed (e.g., upon login or first visit), the server creates a session. This involves generating a unique **session ID** and storing the session data, _encrypted and signed_, within a cookie.
-2. **Session cookie transmission**: The server sends a `Set-Cookie` HTTP header. This instructs the browser to store the session cookie.
+1. **Session creation**: When tracking is needed (e.g., upon login or first visit), the server creates a session.
+   This involves generating a unique **session ID** and storing the session data, _encrypted and signed_, within a cookie.
+2. **Session cookie transmission**: The server sends a `Set-Cookie` HTTP header.
+   This instructs the browser to store the session cookie.
 3. **Subsequent requests**: The browser automatically includes the session cookie in the `Cookie` HTTP header for requests to the server.
 4. **Session retrieval and data access**: For each request, the server checks for the session cookie, retrieves the session data if a cookie is present, then decrypts and verifies the signature of the session data for the application to access and use this data.
-5. **Session expiration and destruction**: Sessions typically expire after a period of time or upon user sign-out and the data is removed. This is done by setting a `Max-Age` attribute on the cookie or by sending a `Set-Cookie` HTTP header with an expired date.
+5. **Session expiration and destruction**: Sessions typically expire after a period of time or upon user sign-out and the data is removed.
+   This is done by setting a `Max-Age` attribute on the cookie or by sending a `Set-Cookie` HTTP header with an expired date.
 
 Most of these steps are automatically managed by the [session helpers](#session-helpers).
 
 ### Database sessions
 
-For larger applications or when more robust session management is required, SolidStart also supports storing session data in a database. This approach is similar to the cookie-based approach, but with some key differences:
+For larger applications or when more robust session management is required, SolidStart also supports storing session data in a database.
+This approach is similar to the cookie-based approach, but with some key differences:
 
 - The session data is stored in the database, associated with the session ID.
 - Only the session ID is stored in the cookie, not the session data.
@@ -29,20 +35,23 @@ SolidStart does not automatically handle interactions with a database; you need 
 
 ## Session helpers
 
-[Vinxi](https://vinxi.vercel.app), the underlying server toolkit powering SolidStart, provides helpers to simplify working with sessions. It provides a few key session helpers:
+[Vinxi](https://vinxi.vercel.app), the underlying server toolkit powering SolidStart, provides helpers to simplify working with sessions.
+It provides a few key session helpers:
 
 - [`useSession`](https://vinxi.vercel.app/api/server/session.html#usesession): Initializes a session or retrieves the existing session and returns a session object.
 - [`getSession`](https://vinxi.vercel.app/api/server/session.html#getsession): Retrieves the current session or initializes a new session.
 - [`updateSession`](https://vinxi.vercel.app/api/server/session.html#updatesession): Updates data within the current session.
 - [`clearSession`](https://vinxi.vercel.app/api/server/session.html#clearsession): Clears the current session.
 
-These helpers work _only_ in server-side contexts, such as within server functions and API routes. This is because session management requires access to server-side resources as well as the ability to get and set HTTP headers.
+These helpers work _only_ in server-side contexts, such as within server functions and API routes.
+This is because session management requires access to server-side resources as well as the ability to get and set HTTP headers.
 
 For more information, see the [Cookies documentation in the Vinxi docs](https://vinxi.vercel.app/api/server/session.html).
 
 ## Creating a session
 
-The `useSession` helper is the primary way to create and manage sessions. It provides a comprehensive interface for all session operations.
+The `useSession` helper is the primary way to create and manage sessions.
+It provides a comprehensive interface for all session operations.
 
 ```ts title="src/lib/session.ts"
 import { useSession } from "vinxi/http";
@@ -70,7 +79,9 @@ export async function useThemeSession() {
 
 In this example, the `useThemeSession` server function creates a session that stores a user's theme preference.
 
-`useSession` requires a strong password for encrypting and signing the session cookie. This password must be at least 32 characters long and should be kept highly secure. It is strongly recommended to store this password in a [private environment variable](/configuration/environment-variables#private-environment-variables), as shown in the example above, rather than hardcoding it in your source code.
+`useSession` requires a strong password for encrypting and signing the session cookie.
+This password must be at least 32 characters long and should be kept highly secure.
+It is strongly recommended to store this password in a [private environment variable](/configuration/environment-variables#private-environment-variables), as shown in the example above, rather than hardcoding it in your source code.
 
 A password can be generated using the following command:
 
@@ -78,7 +89,8 @@ A password can be generated using the following command:
 openssl rand -base64 32
 ```
 
-`useSession` adds a `Set-Cookie` HTTP header to the current server response. By default, the cookie is named `h3`, but can be customized with the `name` option, as shown in the example above.
+`useSession` adds a `Set-Cookie` HTTP header to the current server response.
+By default, the cookie is named `h3`, but can be customized with the `name` option, as shown in the example above.
 
 ## Getting the session data
 

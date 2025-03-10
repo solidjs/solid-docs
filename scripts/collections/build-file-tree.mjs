@@ -3,7 +3,6 @@ import matter from "gray-matter";
 import fs from "fs/promises";
 import { getDirData } from "./utils/get-dir-data.mjs";
 import { COLLECTIONS_ROOT } from "./index.mjs";
-import { cwd } from "process";
 
 /**
  *
@@ -11,7 +10,7 @@ import { cwd } from "process";
  * @returns
  */
 export async function buildFileTree(entry = COLLECTIONS_ROOT) {
-	const entryPath = path.resolve(cwd(), entry);
+	const entryPath = path.resolve(process.cwd(), entry);
 	const parentSegment = path.parse(entryPath).dir;
 	try {
 		const stats = await fs.stat(entryPath);
@@ -57,8 +56,7 @@ export async function buildFileTree(entry = COLLECTIONS_ROOT) {
 				path:
 					"/" +
 					path
-						.relative(path.join(cwd(), COLLECTIONS_ROOT), entryPath)
-						// eslint-disable-next-line
+						.relative(path.join(process.cwd(), COLLECTIONS_ROOT), entryPath)
 						.replace(/\index\.mdx?/, "")
 						.replace(/\.mdx?/, ""),
 				slug: path.basename(entryPath, path.extname(entryPath)),

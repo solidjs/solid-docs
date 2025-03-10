@@ -2,12 +2,12 @@
 title: useSubmissions
 ---
 
-This helper is used to handle form submissions and can provide optimistic updates while actions are in flight as well as pending state feedback. This method will return an iterable of all submitted actions while its component is mounted. With an optional second parameter for a filter function.
+This helper is used to handle form submissions and can provide optimistic updates while actions are in flight as well as pending state feedback.
+This method will return an iterable of all submitted actions while its component is mounted. With an optional second parameter for a filter function.
 
 <Callout type="tip">
-	If you only care for the latest submission, you can use the
-	[`useSubmission`](/solid-router/reference/data-apis/use-submission) helper.
-</Callout>
+If you only care for the latest submission, you can use the [`useSubmission`](/solid-router/reference/data-apis/use-submission) helper.
+ </Callout>
 
 It's important to note that it requires the form method to be **post** otherwise it will trigger a browser navigation and will not work.
 
@@ -46,11 +46,14 @@ function Component() {
 
 To trigger a submission, [actions](https://docs.solidjs.com/) can be used.
 
+
 </Callout>
 
 ## Filtering Submissions
 
-As an optional second parameter, the `useSubmissions` helper can receive a filter function to only return the submission that matches the condition. The filter receives the submitted dated as a parameter and should return a boolean value. E.g.: action below will only submit if the name is "solid".
+As an optional second parameter, the `useSubmissions` helper can receive a filter function to only return the submission that matches the condition.
+The filter receives the submitted dated as a parameter and should return a boolean value.
+E.g.: action below will only submit if the name is "solid".
 
 ```tsx title="component.tsx" {4-8}
 import { useSubmissions } from "@solidjs/router";
@@ -87,7 +90,10 @@ function Component() {
 
 ## Optimistic Updates
 
-When the form is submitted, the `submission` object will be updated with the new value and the `pending` property will be set to `true`. This allows you to provide feedback to the user that the action is in progress. Once the action is complete, the `pending` property will be set to `false` and the `result` property will be updated with final value.
+When the form is submitted, the `submission` object will be updated with the new value and the `pending` property will be set to `true`.
+This allows you to provide feedback to the user that the action is in progress.
+Once the action is complete, the `pending` property will be set to `false` and the `result` property will be updated with final value.
+
 
 <TabsCodeBlocks>
 <div id="ts">
@@ -95,7 +101,8 @@ When the form is submitted, the `submission` object will be updated with the new
 import { Show } from "solid-js";
 import { useSubmissions } from "@solidjs/router";
 
-function Component() { const submissions = useSubmissions(postNameAction);
+function Component() {
+  const submissions = useSubmissions(postNameAction);
 
     return (
       <form method="post" action={postNameAction}>
@@ -117,10 +124,8 @@ function Component() { const submissions = useSubmissions(postNameAction);
         <button type="submit">{submissions.pending ? "sending" : "send"}</button>
       </form>
     )
-
 }
-
-````
+```
 </div>
 <div id="js">
 ```tsx title="component.jsx" {5,12-19}
@@ -151,14 +156,14 @@ function Component() {
       </form>
     )
 }
-````
-
+```
 </div>
 </TabsCodeBlocks>
 
 ## Error Handling
 
-If the action fails, the `submission` object will be updated with the error and the `pending` property will be set to `false`. This allows you to provide feedback to the user that the action has failed. Additionally, the return type of `useSubmission` will have a new key `error` that will contain the error object thrown by the submission handler.
+If the action fails, the `submission` object will be updated with the error and the `pending` property will be set to `false`.
+This allows you to provide feedback to the user that the action has failed. Additionally, the return type of `useSubmission` will have a new key `error` that will contain the error object thrown by the submission handler.
 
 At this stage, you can also use the `retry()` method to attempt the action again or the `clear()` to wipe the filled data in the platform.
 
@@ -167,28 +172,26 @@ import { Show } from "solid-js";
 import { useSubmissions } from "@solidjs/router";
 
 function Component() {
-	const submissions = useSubmissions(postNameAction);
+  const submissions = useSubmissions(postNameAction);
 
-	return (
-		<form method="post" action={postNameAction}>
-			<ul>
-				<For each={Array.from(submissions.entries())}>
-					{([attempt, data]) => (
-						<Show when={data.error}>
-							<li>
-								<p>
-									Backend {attempt}: {data.error.message}
-								</p>
-								<button onClick={() => data.retry()}>retry</button>
-								<button onClick={() => data.clear()}>clear</button>
-							</li>
-						</Show>
-					)}
-				</For>
-			</ul>
-			<input name="name" type="text" required autocomplete="off" />
-			<button type="submit">{submissions.pending ? "sending" : "send"}</button>
-		</form>
-	);
+    return (
+      <form method="post" action={postNameAction}>
+        <ul>
+          <For each={Array.from(submissions.entries())}>
+            {([attempt, data]) => (
+              <Show when={data.error}>
+                <li>
+                  <p>Backend {attempt}: {data.error.message}</p>
+                  <button onClick={() => data.retry()}>retry</button>
+                  <button onClick={() => data.clear()}>clear</button>
+                </li>
+              </Show>
+            )}
+          </For>
+        </ul>
+        <input name="name" type="text" required autocomplete="off" />
+        <button type="submit">{submissions.pending ? "sending" : "send"}</button>
+      </form>
+    )
 }
 ```

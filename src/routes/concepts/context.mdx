@@ -7,15 +7,19 @@ Context provides a way to pass data through the component tree without having to
 
 ## When to use context
 
-When you have a large [component tree](/concepts/components/basics#component-trees) that requires state to be shared, context can be used. Context can be employed to avoid [prop drilling](/concepts/components/props#prop-drilling), which is the practice of passing props through intermediate elements without using them directly.
+When you have a large [component tree](/concepts/components/basics#component-trees) that requires state to be shared, context can be used.
+Context can be employed to avoid [prop drilling](/concepts/components/props#prop-drilling), which is the practice of passing props through intermediate elements without using them directly.
 
-If you want to avoid passing some props through a few layers, when applicable, adjusting your component hierarchy may be an easier solution. [Signals](/concepts/signals) are often the simplest solution since they can be imported directly into the components that need them.
+If you want to avoid passing some props through a few layers, when applicable, adjusting your component hierarchy may be an easier solution.
+[Signals](/concepts/signals) are often the simplest solution since they can be imported directly into the components that need them.
 
-Context, however, is designed to share data that is global to an application or for information that is regularly accessed by multiple components in an application's component tree. This offers a way to access state across an application without passing props through intermediate layers or importing them directly into components.
+Context, however, is designed to share data that is global to an application or for information that is regularly accessed by multiple components in an application's component tree.
+This offers a way to access state across an application without passing props through intermediate layers or importing them directly into components.
 
 ## Creating context
 
-Context is created using the [`createContext`](/reference/component-apis/create-context) function. This function has a `Provider` property that wraps the component tree you want to provide context to.
+Context is created using the [`createContext`](/reference/component-apis/create-context) function.
+This function has a `Provider` property that wraps the component tree you want to provide context to.
 
 <TabsCodeBlocks>
 <div id="/context/create.js">
@@ -23,8 +27,7 @@ Context is created using the [`createContext`](/reference/component-apis/create-
 import { createContext } from "solid-js";
 
 const MyContext = createContext();
-
-````
+```
 </div>
 <div id="/context/component.jsx">
 ```jsx
@@ -37,14 +40,14 @@ export function Provider (props) {
 		</MyContext.Provider>
 	)
 };
-````
-
+```
 </div>
 </TabsCodeBlocks>
 
 ## Providing context to children
 
-To pass a value to the `Provider`, you use the `value` prop which can take in any value, including [signals](#updating-context-values). Once a value is passed to the `Provider`, it is available to all components that are descendants of the `Provider`.
+To pass a value to the `Provider`, you use the `value` prop which can take in any value, including [signals](#updating-context-values).
+Once a value is passed to the `Provider`, it is available to all components that are descendants of the `Provider`.
 
 When passing a single value, it can be directly passed to the `value` prop:
 
@@ -58,26 +61,32 @@ const Provider = (props) => (
 ```
 
 <Callout type="tip" title="Complex Types">
-	When passing multiple values (as an `array` or `object`), it is recommended to
-	use a [store](/reference/component-apis/create-context#usage).
+When passing multiple values (as an `array` or `object`), it is recommended to use a [store](/reference/component-apis/create-context#usage).
 </Callout>
 
 ## Consuming context
 
-Once the values are available to all the components in the context's component tree, they can be accessed using the [`useContext`](/reference/component-apis/use-context) utility. This utility takes in the context object and returns the value(s) passed to the `Provider`:
+Once the values are available to all the components in the context's component tree, they can be accessed using the [`useContext`](/reference/component-apis/use-context) utility.
+This utility takes in the context object and returns the value(s) passed to the `Provider`:
 
 ```jsx title="/context/component.jsx"
 import { createContext, useContext } from "solid-js";
 import { MyContext } from "./create";
 
 const Provider = (props) => (
-	<MyContext.Provider value="new value">{props.children}</MyContext.Provider>
+	<MyContext.Provider value="new value">
+		{props.children}
+	</MyContext.Provider>
 );
 
 const Child = () => {
 	const value = useContext(MyContext);
 
-	return <span>{value}</span>;
+	return (
+		<span>
+			{value}
+		</span>
+	);
 };
 
 export const App = () => (
@@ -89,9 +98,11 @@ export const App = () => (
 
 ## Customizing Context Utilities
 
-When an application contains multiple context objects, it can be difficult to keep track of which context object is being used. To solve this issue, you can create a custom utilities to create a more readable way to access the context values.
+When an application contains multiple context objects, it can be difficult to keep track of which context object is being used.
+To solve this issue, you can create a custom utilities to create a more readable way to access the context values.
 
-For example, when wrapping a component tree, you may want to create a custom `Provider` component that can be used to wrap the component tree. This also provides you with the option of re-using the `Provider` component in other parts of your application, if needed.
+For example, when wrapping a component tree, you may want to create a custom `Provider` component that can be used to wrap the component tree.
+This also provides you with the option of re-using the `Provider` component in other parts of your application, if needed.
 
 ```jsx
 import { createSignal, createContext, useContext } from "solid-js";
@@ -121,7 +132,8 @@ export function App() {
 }
 ```
 
-Similarly, you can create a custom utility to access the context values. Instead of importing `useContext` and passing in the context object on each component that you're using it in, creating a customized utility can make it easier to access the values you need:
+Similarly, you can create a custom utility to access the context values.
+Instead of importing `useContext` and passing in the context object on each component that you're using it in, creating a customized utility can make it easier to access the values you need:
 
 ```jsx
 export function useCounter() {
@@ -146,7 +158,8 @@ export function CounterProvider(props) {
 
 ## Updating Context Values
 
-[Signals](/concepts/signals) offer a way to synchronize and manage data shared across your components using context. You can pass a signal directly to the `value` prop of the `Provider` component, and any changes to the signal will be reflected in all components that consume the context.
+[Signals](/concepts/signals) offer a way to synchronize and manage data shared across your components using context.
+You can pass a signal directly to the `value` prop of the `Provider` component, and any changes to the signal will be reflected in all components that consume the context.
 
 <TabsCodeBlocks>
 <div id="App.jsx">
@@ -182,12 +195,11 @@ export function CounterProvider(props) {
 		}
 	];
 
-    return (
-    	<CounterContext.Provider value={counter}>
-    		{props.children}
-    	</CounterContext.Provider>
-    );
-
+	return (
+		<CounterContext.Provider value={counter}>
+			{props.children}
+		</CounterContext.Provider>
+	);
 }
 
 export function useCounter() { return useContext(CounterContext); }
@@ -200,17 +212,15 @@ import { useCounter } from "./Context";
 export function Child(props) {
 	const [count, { increment, decrement }] = useCounter();
 
-    return (
-    <>
-    	<div>{count()}</div>
-    	<button onClick={increment}>+</button>
-    	<button onClick={decrement}>-</button>
-    </>
-    );
-
+	return (
+	<>
+		<div>{count()}</div>
+		<button onClick={increment}>+</button>
+		<button onClick={decrement}>-</button>
+	</>
+	);
 };
-
-````
+```
 </div>
 </TabsCodeBlocks>
 
@@ -241,27 +251,32 @@ function Child() {
 
   return <div>{value}</div>;
 }
-````
+```
 
 ## Common issues with `createContext` and `useContext`
 
 If no default value is passed to `createContext`, it is possible for `useContext` to return `undefined`.
 
 <Callout type="info" title="More on default values">
-	Read more about default values in the
-	[`createContext`](/reference/component-apis/create-context) entry.
+Read more about default values in the [`createContext`](/reference/component-apis/create-context) entry.
 </Callout>
 
-Because of this, if an initial value was not passed to `createContext`, the TS type signature of `useContext` will indicate that the value returned might be `undefined` (as mentioned above). This can be quite annoying when you want to use the context inside a component, and particularly when immediately destructuring the context. Additionally, if you use `useContext` and it returns `undefined` (which is often, but not always, the result of a bug), the error message thrown at runtime can be confusing.
+Because of this, if an initial value was not passed to `createContext`, the TS type signature of `useContext` will indicate that
+the value returned might be `undefined` (as mentioned above). 
+This can be quite annoying when you want to use the context inside a component, and particularly when immediately destructuring the context. 
+Additionally, if you use `useContext` and it returns `undefined` (which is often, but not always, the result of a bug), the error message thrown at runtime can be confusing.
 
-The most common solution for it is to wrap all uses of `useContext` in a function that will explicitly throw a helpful error if the context is `undefined`. This also serves to narrow the type returned, so TS doesn't complain. As an example:
+The most common solution for it is to wrap all uses of `useContext` in a function that will explicitly throw a helpful error if the context is `undefined`. 
+This also serves to narrow the type returned, so TS doesn't complain. 
+As an example:
 
 ```ts title="/context/counter-component.tsx"
 function useCounterContext() {
-	const context = useContext(CounterContext);
+	const context = useContext(CounterContext)
 	if (!context) {
-		throw new Error("can't find CounterContext");
+		throw new Error("can't find CounterContext")
 	}
-	return context;
+	return context
 }
 ```
+

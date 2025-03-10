@@ -2,19 +2,20 @@
 title: redirect
 ---
 
-Redirects to the next route. When done over a server RPC (Remote Procedure Call), the redirect will be done through the server. By default the status code of a `redirect()` is `302 - FOUND`, also known as a temporary redirect.
+Redirects to the next route.
+When done over a server RPC (Remote Procedure Call), the redirect will be done through the server.
+By default the status code of a `redirect()` is `302 - FOUND`, also known as a temporary redirect.
 
 Other useful redirect codes:
 
-| Code  | Description        |
-| ----- | ------------------ |
-| `301` | Moved Permanently  |
+| Code | Description |
+| ---- | ----------- |
+| `301` | Moved Permanently |
 | `307` | Temporary Redirect |
 | `308` | Permanent redirect |
 
 <Callout type="tip" name="Redirect Methods">
-	307 and 308 won't allow the browser to change the method of the request. If
-	you want to change the method, you should use 301 or 302.
+307 and 308 won't allow the browser to change the method of the request. If you want to change the method, you should use 301 or 302.
 </Callout>
 
 A common use-case for throwing a redirect is when a user is not authenticated and needs to be sent to the login page or another public route.
@@ -25,16 +26,17 @@ import { getCurrentUser } from "../auth";
 
 const getUser = query(() => {
   const user = await getCurrentUser();
-
+  
   if (!user) throw redirect("/login");
-
+  
   return user;
 }, "get-user")
 ```
 
 ## Single-Flight Mutations
 
-When using `redirect` during a Server Action, the redirect will be done through the server. The response value will automatically send data for the destination route, avoiding a subsequent roundtrip to load the data from the target route.
+When using `redirect` during a Server Action, the redirect will be done through the server.
+The response value will automatically send data for the destination route, avoiding a subsequent roundtrip to load the data from the target route.
 
 This is useful when redirecting the user to a different route once a mutation is done.
 
@@ -42,17 +44,19 @@ This is useful when redirecting the user to a different route once a mutation is
 import { action, redirect } from "@solidjs/router";
 
 const addUser = action(async (user: User) => {
-	await postUser(user);
-
-	return redirect("/users");
+  await postUser(user);
+  
+  return redirect("/users");
 });
 ```
 
-The `addUser` action will redirect the user to the `/users` route once the user has been added to the database. The response from the form action will send the updated data for the `/users` route without the developer needing to revalidate or reload.
+The `addUser` action will redirect the user to the `/users` route once the user has been added to the database.
+The response from the form action will send the updated data for the `/users` route without the developer needing to revalidate or reload.
 
 ## Throw vs Return
 
-Both `throw` and `return` can be used to redirect the user to a different route. For general usage `throw` is recommended as it immediately stops the execution of the current action and redirects the user.
+Both `throw` and `return` can be used to redirect the user to a different route.
+For general usage `throw` is recommended as it immediately stops the execution of the current action and redirects the user.
 
 When returning from a nested method, the parent method will continue to execute, which can lead to unexpected behavior.
 
@@ -64,6 +68,6 @@ interface ResponseOptions & Omit<ResponseInit, "body"> {
 } | number
 
 function redirect(url: string, opts = 302): CustomResponse<never>;
-```
+``` 
 
 The `ResponseOptions` extens the types from the native [`ResponseInit`](https://developer.mozilla.org/en-US/docs/Web/API/Response/Response#options) interface.

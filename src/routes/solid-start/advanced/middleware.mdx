@@ -2,7 +2,8 @@
 title: "Middleware"
 ---
 
-Middleware intercepts HTTP requests and responses to perform tasks like authentication, redirection, logging, and more. It also enables sharing request-scoped data across the application using the `event.locals` object.
+Middleware intercepts HTTP requests and responses to perform tasks like authentication, redirection, logging, and more.
+It also enables sharing request-scoped data across the application using the `event.locals` object.
 
 ## Common use cases
 
@@ -17,13 +18,19 @@ Here are some common use cases for middleware:
 
 While middleware is powerful, certain tasks are better handled in other parts of your application for performance, maintainability, or security reasons:
 
-- **Authorization:** Middleware does _not_ run on every request, especially during client-side navigations. Relying on it for authorization would create a significant security vulnerability. As a result, authorization checks should be performed as close to the data source as possible. This means it within API routes, server-only queries/actions, or other server-side utilities.
-- **Heavy computation or long-running processes:** Middleware should be lightweight and execute quickly to avoid impacting performance. CPU-intensive tasks, long-running processes, or blocking operations (e.g., complex calculations, external API calls) are best handled by dedicated route handlers, server-side utilities, or background jobs.
-- **Database operations:** Performing direct database queries within middleware can lead to performance bottlenecks and make your application harder to maintain. Database interactions should be handled by server-side utilities or route handlers, which will create better management of database connections and handling of potential errors.
+- **Authorization:** Middleware does _not_ run on every request, especially during client-side navigations.
+  Relying on it for authorization would create a significant security vulnerability.
+  As a result, authorization checks should be performed as close to the data source as possible.
+  This means it within API routes, server-only queries/actions, or other server-side utilities.
+- **Heavy computation or long-running processes:** Middleware should be lightweight and execute quickly to avoid impacting performance.
+  CPU-intensive tasks, long-running processes, or blocking operations (e.g., complex calculations, external API calls) are best handled by dedicated route handlers, server-side utilities, or background jobs.
+- **Database operations:** Performing direct database queries within middleware can lead to performance bottlenecks and make your application harder to maintain.
+  Database interactions should be handled by server-side utilities or route handlers, which will create better management of database connections and handling of potential errors.
 
 ## Basic usage
 
-Middleware is configured by exporting a configuration object from a dedicated file (e.g., `src/middleware/index.ts`). This object, created using the [`createMiddleware`](/solid-start/reference/server/create-middleware) function, defines when middleware functions execute throughout the request lifecycle.
+Middleware is configured by exporting a configuration object from a dedicated file (e.g., `src/middleware/index.ts`).
+This object, created using the [`createMiddleware`](/solid-start/reference/server/create-middleware) function, defines when middleware functions execute throughout the request lifecycle.
 
 ```ts title="src/middleware/index.ts"
 import { createMiddleware } from "@solidjs/start/middleware";
@@ -58,7 +65,8 @@ A middleware function executes at specific points in the request lifecycle, usin
 
 ### `onRequest`
 
-The `onRequest` event is triggered at the beginning of the request lifecycle, before the request is handled by the route handler. This is the ideal place to:
+The `onRequest` event is triggered at the beginning of the request lifecycle, before the request is handled by the route handler.
+This is the ideal place to:
 
 - Store request-scoped data in `event.locals` for use in later middleware functions or route handlers.
 - Set or modify request headers.
@@ -66,7 +74,8 @@ The `onRequest` event is triggered at the beginning of the request lifecycle, be
 
 ### `onBeforeResponse`
 
-The `onBeforeResponse` event is triggered after a request has been processed by the route handler but before the response is sent to the client. This is the ideal place to:
+The `onBeforeResponse` event is triggered after a request has been processed by the route handler but before the response is sent to the client.
+This is the ideal place to:
 
 - Set or modify response headers.
 - Log response metrics or perform other post-processing tasks.
@@ -74,9 +83,12 @@ The `onBeforeResponse` event is triggered after a request has been processed by 
 
 ## Locals
 
-In web applications, there's often a need to share request-specific data across different parts of the server-side code. This data might include user authentication status, trace IDs for debugging, or client metadata (e.g., user agent, geolocation).
+In web applications, there's often a need to share request-specific data across different parts of the server-side code.
+This data might include user authentication status, trace IDs for debugging, or client metadata (e.g., user agent, geolocation).
 
-The `event.locals` is a plain JavaScript object that can hold any JavaScript value. This object provides a temporary, request-scoped storage layer to address this need. Any data stored within it is only available during the processing of a single HTTP request and is automatically cleared afterward.
+The `event.locals` is a plain JavaScript object that can hold any JavaScript value.
+This object provides a temporary, request-scoped storage layer to address this need.
+Any data stored within it is only available during the processing of a single HTTP request and is automatically cleared afterward.
 
 ```ts
 import { createMiddleware } from "@solidjs/start/middleware";
@@ -93,7 +105,8 @@ export default createMiddleware({
 });
 ```
 
-Within middleware, `event.locals` can be accessed and modified directly. Other server-side contexts must use the [`getRequestEvent`](/reference/server-utilities/get-request-event) function to access the `event.locals` object.
+Within middleware, `event.locals` can be accessed and modified directly.
+Other server-side contexts must use the [`getRequestEvent`](/reference/server-utilities/get-request-event) function to access the `event.locals` object.
 
 ```tsx title="src/routes/index.tsx"
 import { getRequestEvent } from "solid-js/web";
@@ -122,7 +135,8 @@ export default function Page() {
 
 ## Headers
 
-Request and response headers can be accessed and modified using the `event.request.headers` and `event.response.headers` objects. These follow the [standard Web API `Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) interface, exposing built-in methods for reading/updating headers.
+Request and response headers can be accessed and modified using the `event.request.headers` and `event.response.headers` objects.
+These follow the [standard Web API `Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) interface, exposing built-in methods for reading/updating headers.
 
 ```ts
 import { createMiddleware } from "@solidjs/start/middleware";
@@ -142,11 +156,14 @@ export default createMiddleware({
 });
 ```
 
-Headers set in `onRequest` are applied **before** the route handler processes the request, allowing downstream middleware or route handlers to override them. Headers set in `onBeforeResponse` are applied **after** the route handler and are finalized for the client.
+Headers set in `onRequest` are applied **before** the route handler processes the request, allowing downstream middleware or route handlers to override them.
+Headers set in `onBeforeResponse` are applied **after** the route handler and are finalized for the client.
 
 ## Cookies
 
-HTTP cookies are accessible through the `Cookie` request header and `Set-Cookie` response header. While these headers can be manipulated directly, [Vinxi](https://vinxi.vercel.app), the underlying server toolkit powering SolidStart, provides helpers to simplify cookie management. See the [Vinxi Cookies documentation](https://vinxi.vercel.app/api/server/cookies.html) for more information.
+HTTP cookies are accessible through the `Cookie` request header and `Set-Cookie` response header.
+While these headers can be manipulated directly, [Vinxi](https://vinxi.vercel.app), the underlying server toolkit powering SolidStart, provides helpers to simplify cookie management.
+See the [Vinxi Cookies documentation](https://vinxi.vercel.app/api/server/cookies.html) for more information.
 
 ```ts
 import { createMiddleware } from "@solidjs/start/middleware";
@@ -169,7 +186,8 @@ export default createMiddleware({
 
 ## Custom responses
 
-Returning a value from a middleware function immediately terminates the request processing pipeline and sends the returned value as the response to the client. This means no further middleware functions or route handlers will be executed.
+Returning a value from a middleware function immediately terminates the request processing pipeline and sends the returned value as the response to the client.
+This means no further middleware functions or route handlers will be executed.
 
 ```ts
 import { createMiddleware } from "@solidjs/start/middleware";
@@ -181,7 +199,8 @@ export default createMiddleware({
 });
 ```
 
-Only [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) objects can be returned from middleware functions. Returning any other value will result in an error.
+Only [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) objects can be returned from middleware functions.
+Returning any other value will result in an error.
 
 ### Redirects
 
@@ -208,7 +227,9 @@ export default createMiddleware({
 });
 ```
 
-This example checks the requested path and returns a redirect response if it matches a predefined path. The 301 status code indicates a permanent redirect. Other redirect status codes (e.g., 302, 307) are available as needed.
+This example checks the requested path and returns a redirect response if it matches a predefined path.
+The 301 status code indicates a permanent redirect.
+Other redirect status codes (e.g., 302, 307) are available as needed.
 
 ### JSON responses
 
@@ -231,7 +252,9 @@ export default createMiddleware({
 
 ## Chaining middleware functions
 
-`onRequest` and `onBeforeResponse` options in `createMiddleware` can accept either a single function or an array of middleware functions. When an array is provided, these functions execute sequentially within the same lifecycle event. This enables composing smaller, more-focused middleware functions, rather than handling all logic in a single, large middleware function.
+`onRequest` and `onBeforeResponse` options in `createMiddleware` can accept either a single function or an array of middleware functions.
+When an array is provided, these functions execute sequentially within the same lifecycle event.
+This enables composing smaller, more-focused middleware functions, rather than handling all logic in a single, large middleware function.
 
 ```ts
 import { createMiddleware } from "@solidjs/start/middleware";
@@ -250,4 +273,6 @@ export default createMiddleware({
 });
 ```
 
-The order of middleware functions in the array determines their execution order. Dependent middleware functions should be placed after the middleware functions they rely on. For example, authentication middleware should typically run before logging middleware.
+The order of middleware functions in the array determines their execution order.
+Dependent middleware functions should be placed after the middleware functions they rely on.
+For example, authentication middleware should typically run before logging middleware.

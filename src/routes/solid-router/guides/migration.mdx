@@ -2,25 +2,34 @@
 title: Migration from v0.9.x
 ---
 
-v0.10.0 brings some big changes to support the future of routing including Islands/Partial Hydration hybrid solutions. Most notably there is no Context API available in non-hydrating parts of the application.
+v0.10.0 brings some big changes to support the future of routing including Islands/Partial Hydration hybrid solutions.
+Most notably there is no Context API available in non-hydrating parts of the application.
 
 The biggest changes are around _removed APIs_ that need to be replaced.
 
 ## `<Outlet>`, `<Routes>`, `useRoutes`
 
-These components are no longer present in the new router version. Instead, `props.children` is passed into the page components in the place of outlets. This keeps the outlet directly passed from its page and avoids trying to use context across Islands boundaries. Similarly, nested `<Routes>` components cause waterfalls and are `<Outlets>` themselves thus sharing the same concerns.
+These components are no longer present in the new router version. Instead, `props.children` is passed into the page components in the place of outlets.
+This keeps the outlet directly passed from its page and avoids trying to use context across Islands boundaries.
+Similarly, nested `<Routes>` components cause waterfalls and are `<Outlets>` themselves thus sharing the same concerns.
 
-With no `<Routes>` means the `<Router>` API has changed. The `<Router>` component acts as the `<Routes>` component now and its children must now be `<Route>` components. The top-level layout should go in the root prop of the router [as shown here](/solid-router/concepts/layouts#root-level-layouts).
+With no `<Routes>` means the `<Router>` API has changed.
+The `<Router>` component acts as the `<Routes>` component now and its children must now be `<Route>` components.
+The top-level layout should go in the root prop of the router [as shown here](/solid-router/concepts/layouts#root-level-layouts).
 
 ## `element` prop removed from `Route`
 
-Related without Outlet component it has to be passed in manually. At which point the `element` prop has less value. Removing the second way to define route components to reduce confusion and edge cases.
+Related without Outlet component it has to be passed in manually.
+At which point the `element` prop has less value.
+Removing the second way to define route components to reduce confusion and edge cases.
 
 ## `data` functions & `useRouteData`
 
-`data` functions & `useRouteData` have been replaced by a load mechanism. This allows link hover preloads, since the preload function can be run as much as wanted without worrying about reactivity.
+`data` functions & `useRouteData` have been replaced by a load mechanism.
+This allows link hover preloads, since the preload function can be run as much as wanted without worrying about reactivity.
 
-This supports deduping/cache APIs which give more control over how things are cached. It also addresses TypeScript issues with getting the right types in the Component without `typeof` checks.
+This supports deduping/cache APIs which give more control over how things are cached.
+It also addresses TypeScript issues with getting the right types in the Component without `typeof` checks.
 
 That being said the old pattern can be reproduced by turning off preloads at the router level and then injecting your own Context:
 

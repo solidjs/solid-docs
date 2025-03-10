@@ -3,46 +3,49 @@ title: renderToStream
 ---
 
 ```ts
-import { renderToStream } from "solid-js/web";
+import { renderToStream } from "solid-js/web"
 
 function renderToStream<T>(
 	fn: () => T,
 	options?: {
-		nonce?: string;
-		renderId?: string;
-		onCompleteShell?: () => void;
-		onCompleteAll?: () => void;
+		nonce?: string
+		renderId?: string
+		onCompleteShell?: () => void
+		onCompleteAll?: () => void
 	}
 ): {
-	pipe: (writable: { write: (v: string) => void }) => void;
-	pipeTo: (writable: WritableStream) => void;
-};
+	pipe: (writable: { write: (v: string) => void }) => void
+	pipeTo: (writable: WritableStream) => void
+}
+
 ```
 
-This method renders to a stream. It renders the content synchronously including any Suspense fallback placeholders, and then continues to stream the data and HTML from any async resource as it completes.
+This method renders to a stream.
+It renders the content synchronously including any Suspense fallback placeholders, and then continues to stream the data and HTML from any async resource as it completes.
 
 ```ts
 // node
-renderToStream(App).pipe(res);
+renderToStream(App).pipe(res)
 
 // web stream
-const { readable, writable } = new TransformStream();
-renderToStream(App).pipeTo(writable);
+const { readable, writable } = new TransformStream()
+renderToStream(App).pipeTo(writable)
 ```
 
-`onCompleteShell` fires when synchronous rendering is complete before writing the first flush to the stream out to the browser. `onCompleteAll` is called when all server Suspense boundaries have settled. `renderId` is used to namespace renders when having multiple top level roots.
+`onCompleteShell` fires when synchronous rendering is complete before writing the first flush to the stream out to the browser.
+`onCompleteAll` is called when all server Suspense boundaries have settled.
+`renderId` is used to namespace renders when having multiple top level roots.
 
-:::info 
-
-This API replaces the previous pipeToWritable and pipeToNodeWritable APIs. 
-
+:::info
+	This API replaces the previous pipeToWritable and pipeToNodeWritable
+	APIs.
 :::
 
 ## Options
 
-| Name | Type | Description |
-| --- | --- | --- |
-| nonce | string | The nonce to use for inline scripts. |
-| renderId | string | The id to use for this render. |
-| onCompleteShell | () => void | A callback that fires when the shell is complete. |
-| onCompleteAll | () => void | A callback that fires when all Suspense boundaries have settled. |
+| Name            | Type       | Description                                                      |
+| --------------- | ---------- | ---------------------------------------------------------------- |
+| nonce           | string     | The nonce to use for inline scripts.                             |
+| renderId        | string     | The id to use for this render.                                   |
+| onCompleteShell | () => void | A callback that fires when the shell is complete.                |
+| onCompleteAll   | () => void | A callback that fires when all Suspense boundaries have settled. |

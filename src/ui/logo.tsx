@@ -102,7 +102,7 @@ const SolidStartLogo = () => (
 		<g clip-path="url(#clip0_0_3)">
 			<mask
 				id="mask0_0_3"
-				style={{ "mask-type": "luminance" }}
+				style={{"mask-type":"luminance"}}
 				maskUnits="userSpaceOnUse"
 				x="246"
 				y="369"
@@ -122,7 +122,7 @@ const SolidStartLogo = () => (
 			</g>
 			<mask
 				id="mask1_0_3"
-				style={{ "mask-type": "luminance" }}
+				style={{"mask-type":"luminance"}}
 				maskUnits="userSpaceOnUse"
 				x="77"
 				y="241"
@@ -142,7 +142,7 @@ const SolidStartLogo = () => (
 			</g>
 			<mask
 				id="mask2_0_3"
-				style={{ "mask-type": "luminance" }}
+				style={{"mask-type":"luminance"}}
 				maskUnits="userSpaceOnUse"
 				x="375"
 				y="167"
@@ -162,7 +162,7 @@ const SolidStartLogo = () => (
 			</g>
 			<mask
 				id="mask3_0_3"
-				style={{ "mask-type": "luminance" }}
+				style={{"mask-type":"luminance"}}
 				maskUnits="userSpaceOnUse"
 				x="199"
 				y="35"
@@ -182,7 +182,7 @@ const SolidStartLogo = () => (
 			</g>
 			<mask
 				id="mask4_0_3"
-				style={{ "mask-type": "luminance" }}
+				style={{"mask-type":"luminance"}}
 				maskUnits="userSpaceOnUse"
 				x="32"
 				y="245"
@@ -202,7 +202,7 @@ const SolidStartLogo = () => (
 			</g>
 			<mask
 				id="mask5_0_3"
-				style={{ "mask-type": "luminance" }}
+				style={{"mask-type":"luminance"}}
 				maskUnits="userSpaceOnUse"
 				x="154"
 				y="39"
@@ -222,7 +222,7 @@ const SolidStartLogo = () => (
 			</g>
 			<mask
 				id="mask6_0_3"
-				style={{ "mask-type": "luminance" }}
+				style={{"mask-type":"luminance"}}
 				maskUnits="userSpaceOnUse"
 				x="118"
 				y="106"
@@ -242,7 +242,7 @@ const SolidStartLogo = () => (
 			</g>
 			<mask
 				id="mask7_0_3"
-				style={{ "mask-type": "luminance" }}
+				style={{"mask-type":"luminance"}}
 				maskUnits="userSpaceOnUse"
 				x="108"
 				y="110"

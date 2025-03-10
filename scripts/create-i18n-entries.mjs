@@ -2,8 +2,6 @@ import { existsSync } from "fs";
 import path from "path";
 import { COLLECTIONS_ROOT } from "./collections/index.mjs";
 import { getFrontMatterData } from "./collections/utils/get-frontmatter.mjs";
-import { cwd } from "process";
-
 /**
  * @typedef {Object} DocsEntry
  * @property {string} type - The type of reference.
@@ -34,7 +32,7 @@ async function buildSectionList(entryList = [], locale, project = "") {
 			? entry.path + "index"
 			: entry.path;
 		const i18nEntryPath = path.join(
-			cwd(),
+			process.cwd(),
 			COLLECTIONS_ROOT,
 			project,
 			locale,

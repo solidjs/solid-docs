@@ -2,7 +2,6 @@ import fs from "fs/promises";
 import path from "path";
 import { sectionData } from "../schemas.mjs";
 import { languages } from "../index.mjs";
-import { cwd } from "process";
 
 /**
  *
@@ -18,7 +17,7 @@ function formatDirPath(path) {
 	return path;
 }
 
-export async function getDirData(dirPath = cwd()) {
+export async function getDirData(dirPath = process.cwd()) {
 	const dir = formatDirPath(dirPath);
 	try {
 		const data = JSON.parse(

@@ -21,7 +21,8 @@ export default [
 	...compat.extends(
 		"eslint:recommended",
 		"plugin:@typescript-eslint/recommended",
-		"plugin:solid/typescript"
+		"plugin:solid/typescript",
+		"plugin:mdx/recommended",
 	),
 	{
 		plugins: {
@@ -37,7 +38,6 @@ export default [
 			ecmaVersion: "latest",
 			sourceType: "script",
 		},
-
 		rules: {
 			"@typescript-eslint/no-unused-vars": [
 				"error",
@@ -54,8 +54,25 @@ export default [
 		},
 	},
 	{
+		files: ["**/*.mdx"],
+		extends: ["plugin:mdx/recommended"],
+		settings: {
+			"mdx/code-blocks": true,
+		},
+		extensions: ["mdx"],
+		overrides: [
+			{
+				files: ["*.mdx"],
+				extends: ["plugin:mdx/overrides"],
+			},
+			{
+				files: "**/*.mdx",
+				extends: "plugin:mdx/code-blocks",
+			},
+		],
+	},
+	{
 		files: ["**/.eslintrc.{js,cjs}"],
-
 		languageOptions: {
 			globals: {
 				...globals.node,

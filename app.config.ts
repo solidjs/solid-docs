@@ -71,6 +71,12 @@ export default defineConfig(
 				expressiveCode: {
 					themes: ["github-light-default", "material-theme-ocean"],
 					themeCssSelector: (theme) => `[data-theme="${theme.type}"]`,
+					frames: false,
+					styleOverrides: {
+						twoSlash: {
+							cursorColor: "var(--twoslash-cursor)",
+						},
+					},
 				},
 				toc: {
 					minDepth: 2,

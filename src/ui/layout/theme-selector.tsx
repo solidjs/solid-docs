@@ -1,4 +1,11 @@
-import { children, Component, ComponentProps, createSignal, JSX, onMount, Show } from "solid-js";
+import {
+	Component,
+	ComponentProps,
+	createSignal,
+	JSX,
+	onMount,
+	Show,
+} from "solid-js";
 import { computerDesktop, moon, sun } from "solid-heroicons/solid";
 import { Select } from "@kobalte/core/select";
 import {

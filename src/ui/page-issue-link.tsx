@@ -1,4 +1,4 @@
-import { Component, createMemo, createSignal, onMount } from "solid-js";
+import { Component, createMemo } from "solid-js";
 import { Icon } from "solid-heroicons";
 import { exclamationTriangle } from "solid-heroicons/outline";
 import { useI18n } from "~/i18n/i18n-context";

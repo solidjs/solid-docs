@@ -40,30 +40,35 @@ const styles = {
 const icons = {
 	tip: (props: { class?: string }) => (
 		<Icon
+			aria-hidden="true"
 			path={lightBulb}
 			class={`${props.class} fill-violet-900 dark:fill-violet-300`}
 		/>
 	),
 	info: (props: { class?: string }) => (
 		<Icon
+			aria-hidden="true"
 			path={bookOpen}
 			class={`${props.class} fill-emerald-800 dark:fill-emerald-300`}
 		/>
 	),
 	advanced: (props: { class?: string }) => (
 		<Icon
+			aria-hidden="true"
 			path={puzzlePiece}
 			class={`${props.class} fill-blue-700 dark:fill-blue-300`}
 		/>
 	),
 	caution: (props: { class?: string }) => (
 		<Icon
+			aria-hidden="true"
 			path={exclamationTriangle}
 			class={`${props.class} fill-amber-500 dark:fill-amber-400`}
 		/>
 	),
 	danger: (props: { class?: string }) => (
 		<Icon
+			aria-hidden="true"
 			path={xCircle}
 			class={`${props.class} fill-red-500 dark:fill-red-400`}
 		/>

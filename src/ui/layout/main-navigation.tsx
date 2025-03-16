@@ -105,6 +105,7 @@ function DirList(props: { list: Entry[]; sortAlphabeticaly?: boolean }) {
 																{child.title}
 															</span>
 															<Icon
+																aria-hidden="true"
 																path={chevronDown}
 																class="h-4 my-auto transition-transform  kb-group-closed:rotate-180"
 															/>

@@ -10,7 +10,7 @@ import { SUPPORTED_LOCALES } from "~/i18n/config";
 import { LanguageSelector } from "./language-selector";
 
 import { useCurrentRouteMetaData } from "~/utils/route-metadata-helper";
-import { clientOnly } from "node_modules/@solidjs/start/dist";
+import { clientOnly } from "@solidjs/start";
 
 const ClientSearch = clientOnly(() =>
 	import("../search").then((m) => ({ default: m.Search }))

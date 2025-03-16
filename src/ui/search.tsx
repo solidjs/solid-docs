@@ -6,13 +6,14 @@ import {
 	For,
 	Suspense,
 	startTransition,
-	onCleanup,
 	createMemo,
 } from "solid-js";
 import { Dialog } from "@kobalte/core/dialog";
 import { A, createAsync, useNavigate, usePreloadRoute } from "@solidjs/router";
 import { createList } from "solid-list";
 import { createMarker, makeSearchRegex } from "@solid-primitives/marker";
+import { createEventListener } from "@solid-primitives/event-listener";
+import { isAppleDevice } from "@solid-primitives/platform";
 
 function getOramaClient({
 	endpoint,
@@ -104,18 +105,11 @@ export function Search() {
 		preload(new URL(path, "https://docs.solidjs.com"), { preloadData: true });
 	});
 
-	createEffect(() => {
-		const handleKeyDown = (e: KeyboardEvent) => {
-			if (e.metaKey && e.key === "k") {
-				e.preventDefault();
-				setOpen((open) => !open);
-			}
-		};
-
-		window.addEventListener("keydown", handleKeyDown);
-		onCleanup(() => {
-			window.removeEventListener("keydown", handleKeyDown);
-		});
+	createEventListener(window, "keydown", (e: KeyboardEvent) => {
+		if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+			e.preventDefault();
+			setOpen((open) => !open);
+		}
 	});
 
 	const regex = createMemo(() => makeSearchRegex(searchTerm()));
@@ -139,19 +133,23 @@ export function Search() {
 				setOpen(open);
 			}}
 		>
-			<Dialog.Trigger class="items-center rounded-lg md:border border-black/10 dark:border-white/60 dark:bg-slate-800 md:px-2 md:py-1.5 flex">
+			<Dialog.Trigger
+				aria-keyshortcuts={isAppleDevice ? "Meta+K" : "Control+K"}
+				class="items-center rounded-lg md:border border-black/10 dark:border-white/60 dark:bg-slate-800 md:px-2 md:py-1.5 flex"
+			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					fill="currentColor"
 					viewBox="0 0 256 256"
+					aria-hidden="true"
 					class="size-6 md:size-4"
 				>
 					<path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
 				</svg>
 				<span class="hidden md:block ml-1 text-sm">Search</span>
 				<kbd class="hidden md:block ml-2 min-w-6 rounded border border-black/5 px-1 pb-px pt-1 text-center font-mono text-xs dark:bg-slate-700">
-					<span>⌘</span>
-					<span class="ml-0.5">K</span>
+					<kbd>{isAppleDevice ? "⌘" : "Ctrl"}</kbd>
+					<kbd class="ml-0.5">K</kbd>
 				</kbd>
 			</Dialog.Trigger>
 			<Dialog.Portal>

@@ -1,4 +1,4 @@
-import { Component, createMemo, createSignal, onMount } from "solid-js";
+import { Component, createMemo } from "solid-js";
 import { Icon } from "solid-heroicons";
 import { exclamationTriangle } from "solid-heroicons/outline";
 import { useI18n } from "~/i18n/i18n-context";
@@ -18,7 +18,7 @@ export const PageIssueLink: Component = () => {
 			"&template=CONTENT.yml" +
 			"&title=[Content]:" +
 			`&subject=${getEntryFileName()}` +
-			`&page=${`https://docs.solidjs.com/${location.pathname}`}`
+			`&page=https://docs.solidjs.com${location.pathname}`
 		);
 	});
 
@@ -28,7 +28,11 @@ export const PageIssueLink: Component = () => {
 			href={srcPath()}
 			target="_blank"
 		>
-			<Icon class="mr-1 w-[16px]" path={exclamationTriangle} />
+			<Icon
+				aria-hidden="true"
+				class="mr-1 w-[16px]"
+				path={exclamationTriangle}
+			/>
 			{i18n.t("contribute.report")}
 		</a>
 	);

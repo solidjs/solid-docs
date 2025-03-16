@@ -17,7 +17,7 @@ export const EditPageLink: Component = () => {
 					href={editLink()}
 					target="_blank"
 				>
-					<Icon class="mr-1 w-[16px]" path={pencilSquare} />
+					<Icon aria-hidden="true" class="mr-1 w-[16px]" path={pencilSquare} />
 					{i18n.t("contribute.edit")}
 				</a>
 			)}

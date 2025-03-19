@@ -65,7 +65,7 @@ export const DirectiveContainer = (
 
 		if (!props.title) return tabs();
 
-		const [openTab, setOpenTab] = makePersisted(createSignal(tabNames![0]!), {
+		const [openTab, setOpenTab] = makePersisted(createSignal(tabNames[0]!), {
 			name: `tab-group:${props.title}`,
 			sync: messageSync(new BroadcastChannel("tab-group")),
 		});

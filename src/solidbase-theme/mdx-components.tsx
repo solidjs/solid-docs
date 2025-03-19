@@ -1,20 +1,81 @@
-import { type ParentProps, children, splitProps } from "solid-js";
+import {
+	Accessor,
+	For,
+	type ParentProps,
+	children,
+	createSignal,
+	splitProps,
+} from "solid-js";
 import { isServer } from "solid-js/web";
 
 import { A } from "~/ui/i18n-anchor";
 import { clientOnly } from "@solidjs/start";
 import { Callout } from "~/ui/callout";
+import { Tabs, TabList, TabPanel, Tab } from "~/ui/tabs";
+import { makePersisted, messageSync } from "@solid-primitives/storage";
 
 export { EditPageLink } from "../ui/edit-page-link";
 export { PageIssueLink } from "../ui/page-issue-link";
 export { Callout } from "~/ui/callout";
-export { TabsCodeBlocks } from "~/ui/tab-code-blocks";
 export { QuickLinks } from "~/ui/quick-links";
 export { ImageLinks } from "~/ui/image-links";
 
 const EraserLinkImpl = clientOnly(() => import("../ui/eraser-link"));
 
-export const DirectiveContainer = Callout;
+export const DirectiveContainer = (
+	props: {
+		type: "info" | "tip" | "danger" | "caution" | "tab-group" | "tab";
+		title?: string;
+		codeGroup?: string;
+		tabNames?: string;
+	} & ParentProps
+) => {
+	const _children = children(() => props.children).toArray();
+
+	if (props.type === "tab") {
+		return _children;
+	}
+
+	if (props.type === "tab-group") {
+		const tabNames = props.tabNames?.split("\0") ?? [];
+
+		const tabs = (value?: Accessor<string>, onChange?: (s: string) => void) => (
+			<Tabs>
+				<TabList>
+					<For each={tabNames}>
+						{(title) => (
+							<Tab
+								value={title}
+								class="px-5 py-1 relative top-0.5 transition-colors duration-300 aria-selected:font-bold aria-selected:dark:text-slate-300 aria-selected:text-blue-500 aria-selected:border-b-2 aria-selected:border-blue-400"
+							>
+								{title}
+							</Tab>
+						)}
+					</For>
+				</TabList>
+				<For each={tabNames}>
+					{(title, idx) => (
+						<TabPanel value={title} forceMount={true}>
+							{_children[idx()]}
+						</TabPanel>
+					)}
+				</For>
+			</Tabs>
+		);
+
+		if (!props.title) return tabs();
+
+		const [openTab, setOpenTab] = makePersisted(createSignal(tabNames![0]!), {
+			name: `tab-group:${props.title}`,
+			sync: messageSync(new BroadcastChannel("tab-group")),
+		});
+
+		return tabs(openTab, setOpenTab);
+	}
+
+	return <Callout type={props.type} children={props.children} />;
+};
+
 export const strong = (props: ParentProps) => (
 	<b class="font-semibold">{props.children}</b>
 );

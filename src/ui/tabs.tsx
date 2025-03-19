@@ -1,3 +1,4 @@
+import { type PolymorphicProps } from "@kobalte/core";
 import {
 	Tabs as KobalteTabs,
 	type TabsRootProps as KobalteTabsRootProps,
@@ -5,17 +6,20 @@ import {
 	type TabsTriggerProps as KobalteTabsTriggerProps,
 	type TabsContentProps as KobalteTabsContentProps,
 } from "@kobalte/core/tabs";
-import { ComponentProps } from "solid-js";
 
-export type TabsProps = ComponentProps<"div"> &
-	Omit<KobalteTabsRootProps, "as">;
+export type TabsProps = PolymorphicProps<
+	"div",
+	Omit<KobalteTabsRootProps, "as">
+>;
 
 export function Tabs(props: TabsProps) {
 	return <KobalteTabs {...props} />;
 }
 
-export type TabListProps = ComponentProps<"div"> &
-	Omit<KobalteTabsListProps, "as">;
+export type TabListProps = PolymorphicProps<
+	"div",
+	Omit<KobalteTabsListProps, "as">
+>;
 
 export function TabList(props: TabListProps) {
 	return (
@@ -23,8 +27,10 @@ export function TabList(props: TabListProps) {
 	);
 }
 
-export type TabProps = ComponentProps<"button"> &
-	Omit<KobalteTabsTriggerProps, "as">;
+export type TabProps = PolymorphicProps<
+	"button",
+	Omit<KobalteTabsTriggerProps, "as">
+>;
 
 export function Tab(props: TabProps) {
 	return (
@@ -35,8 +41,10 @@ export function Tab(props: TabProps) {
 	);
 }
 
-export type TabPanelProps = ComponentProps<"div"> &
-	Omit<KobalteTabsContentProps, "id">;
+export type TabPanelProps = PolymorphicProps<
+	"div",
+	Omit<KobalteTabsContentProps, "id">
+>;
 
 export function TabPanel(props: TabPanelProps) {
 	return (

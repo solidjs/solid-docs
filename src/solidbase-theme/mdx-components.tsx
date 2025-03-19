@@ -1,8 +1,12 @@
 import {
 	Accessor,
 	For,
+	Match,
 	type ParentProps,
+	Show,
+	Switch,
 	children,
+	createMemo,
 	createSignal,
 	splitProps,
 } from "solid-js";
@@ -22,9 +26,11 @@ export { ImageLinks } from "~/ui/image-links";
 
 const EraserLinkImpl = clientOnly(() => import("../ui/eraser-link"));
 
+type CalloutType = "info" | "tip" | "danger" | "caution";
+
 export const DirectiveContainer = (
 	props: {
-		type: "info" | "tip" | "danger" | "caution" | "tab-group" | "tab";
+		type: "tab-group" | "tab" | CalloutType;
 		title?: string;
 		codeGroup?: string;
 		tabNames?: string;
@@ -32,48 +38,56 @@ export const DirectiveContainer = (
 ) => {
 	const _children = children(() => props.children).toArray();
 
-	if (props.type === "tab") {
-		return _children;
-	}
+	const tabNames = createMemo(() => props.tabNames?.split("\0") ?? []);
 
-	if (props.type === "tab-group") {
-		const tabNames = props.tabNames?.split("\0") ?? [];
-
-		const tabs = (value?: Accessor<string>, onChange?: (s: string) => void) => (
-			<Tabs>
-				<TabList>
-					<For each={tabNames}>
-						{(title) => (
-							<Tab
-								value={title}
-								class="px-5 py-1 relative top-0.5 transition-colors duration-300 aria-selected:font-bold aria-selected:dark:text-slate-300 aria-selected:text-blue-500 aria-selected:border-b-2 aria-selected:border-blue-400"
-							>
-								{title}
-							</Tab>
-						)}
-					</For>
-				</TabList>
-				<For each={tabNames}>
-					{(title, idx) => (
-						<TabPanel value={title} forceMount={true}>
-							{_children[idx()]}
-						</TabPanel>
+	const tabs = (value?: Accessor<string>, onChange?: (s: string) => void) => (
+		<Tabs value={value?.()} onChange={onChange}>
+			<TabList>
+				<For each={tabNames()}>
+					{(title) => (
+						<Tab
+							value={title}
+							class="px-5 py-1 relative top-0.5 transition-colors duration-300 aria-selected:font-bold aria-selected:dark:text-slate-300 aria-selected:text-blue-500 aria-selected:border-b-2 aria-selected:border-blue-400"
+						>
+							{title}
+						</Tab>
 					)}
 				</For>
-			</Tabs>
-		);
+			</TabList>
+			<For each={tabNames()}>
+				{(title, idx) => (
+					<TabPanel value={title} forceMount={true}>
+						{_children[idx()]}
+					</TabPanel>
+				)}
+			</For>
+		</Tabs>
+	);
 
-		if (!props.title) return tabs();
-
-		const [openTab, setOpenTab] = makePersisted(createSignal(tabNames[0]!), {
+	const tabsWithPersistence = () => {
+		// eslint-disable-next-line solid/reactivity
+		const [openTab, setOpenTab] = makePersisted(createSignal(tabNames()[0]), {
 			name: `tab-group:${props.title}`,
 			sync: messageSync(new BroadcastChannel("tab-group")),
 		});
 
 		return tabs(openTab, setOpenTab);
-	}
+	};
 
-	return <Callout type={props.type} children={props.children} />;
+	return (
+		<Switch
+			fallback={
+				<Callout type={props.type as CalloutType} children={props.children} />
+			}
+		>
+			<Match when={props.type === "tab"}>{_children}</Match>
+			<Match when={props.type === "tab-group"}>
+				<Show when={props.title} fallback={tabs()}>
+					{tabsWithPersistence()}
+				</Show>
+			</Match>
+		</Switch>
+	);
 };
 
 export const strong = (props: ParentProps) => (

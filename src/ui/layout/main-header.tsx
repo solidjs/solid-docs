@@ -9,8 +9,12 @@ import { useMatch } from "@solidjs/router";
 import { SUPPORTED_LOCALES } from "~/i18n/config";
 import { LanguageSelector } from "./language-selector";
 
-import { Search } from "../search";
 import { useCurrentRouteMetaData } from "~/utils/route-metadata-helper";
+import { clientOnly } from "@solidjs/start";
+
+const ClientSearch = clientOnly(() =>
+	import("../search").then((m) => ({ default: m.Search }))
+);
 
 interface Entry {
 	title: string;
@@ -122,7 +126,7 @@ export function MainHeader(props: NavProps) {
 				</ul>
 
 				<div class="lg:order-2 flex basis-0 gap-4 items-center justify-end order-">
-					<Search />
+					<ClientSearch />
 					<A
 						href={`https://github.com/solidjs${currentRouteMetaData().project ? currentRouteMetaData().project : "/solid"}`}
 						class="group"

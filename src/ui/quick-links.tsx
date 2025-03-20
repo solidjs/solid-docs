@@ -30,7 +30,11 @@ export const QuickLinks: ParentComponent<QuickLinksProps> = (props) => {
 			<div class="absolute -inset-px rounded-xl border-2 border-transparent opacity-0 [background:linear-gradient(var(--quick-links-hover-bg,theme(colors.sky.200)),var(--quick-links-hover-bg,theme(colors.sky.200)))_padding-box,linear-gradient(to_top,theme(colors.indigo.400),theme(colors.cyan.400),theme(colors.sky.500))_border-box] group-hover:opacity-100 dark:[--quick-links-hover-bg:theme(colors.slate.800)]" />
 			<div class="relative overflow-hidden rounded-xl px-5 py-4">
 				<div class="flex items-center">
-					<Icon path={icons[props.icon as keyof typeof icons]} class="h-7 w-7 fill-blue-500" />
+					<Icon
+						aria-hidden="true"
+						path={icons[props.icon as keyof typeof icons]}
+						class="h-7 w-7 fill-blue-500"
+					/>
 					<div class="text-xl text-slate-900 dark:text-white capitalize no-underline pl-3">
 						<Show
 							when={isExternalURL(props.href)}

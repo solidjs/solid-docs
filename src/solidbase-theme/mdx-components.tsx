@@ -1,13 +1,10 @@
 import {
-	Accessor,
 	For,
 	Match,
 	type ParentProps,
-	Show,
 	Switch,
 	children,
 	createMemo,
-	createSignal,
 	splitProps,
 } from "solid-js";
 import { isServer } from "solid-js/web";
@@ -16,7 +13,6 @@ import { A } from "~/ui/i18n-anchor";
 import { clientOnly } from "@solidjs/start";
 import { Callout } from "~/ui/callout";
 import { Tabs, TabList, TabPanel, Tab } from "~/ui/tabs";
-import { makePersisted, messageSync } from "@solid-primitives/storage";
 
 export { EditPageLink } from "../ui/edit-page-link";
 export { PageIssueLink } from "../ui/page-issue-link";
@@ -37,42 +33,7 @@ export const DirectiveContainer = (
 	} & ParentProps
 ) => {
 	const _children = children(() => props.children).toArray();
-
 	const tabNames = createMemo(() => props.tabNames?.split("\0") ?? []);
-
-	const tabs = (value?: Accessor<string>, onChange?: (s: string) => void) => (
-		<Tabs value={value?.()} onChange={onChange}>
-			<TabList>
-				<For each={tabNames()}>
-					{(title) => (
-						<Tab
-							value={title}
-							class="px-5 py-1 relative top-0.5 transition-colors duration-300 aria-selected:font-bold aria-selected:dark:text-slate-300 aria-selected:text-blue-500 aria-selected:border-b-2 aria-selected:border-blue-400"
-						>
-							{title}
-						</Tab>
-					)}
-				</For>
-			</TabList>
-			<For each={tabNames()}>
-				{(title, idx) => (
-					<TabPanel value={title} forceMount={true}>
-						{_children[idx()]}
-					</TabPanel>
-				)}
-			</For>
-		</Tabs>
-	);
-
-	const tabsWithPersistence = () => {
-		// eslint-disable-next-line solid/reactivity
-		const [openTab, setOpenTab] = makePersisted(createSignal(tabNames()[0]), {
-			name: `tab-group:${props.title}`,
-			sync: messageSync(new BroadcastChannel("tab-group")),
-		});
-
-		return tabs(openTab, setOpenTab);
-	};
 
 	return (
 		<Switch
@@ -82,9 +43,20 @@ export const DirectiveContainer = (
 		>
 			<Match when={props.type === "tab"}>{_children}</Match>
 			<Match when={props.type === "tab-group"}>
-				<Show when={props.title} fallback={tabs()}>
-					{tabsWithPersistence()}
-				</Show>
+				<Tabs>
+					<TabList>
+						<For each={tabNames()}>
+							{(title) => <Tab value={title}>{title}</Tab>}
+						</For>
+					</TabList>
+					<For each={tabNames()}>
+						{(title, idx) => (
+							<TabPanel value={title} forceMount={true}>
+								{_children[idx()]}
+							</TabPanel>
+						)}
+					</For>
+				</Tabs>
 			</Match>
 		</Switch>
 	);

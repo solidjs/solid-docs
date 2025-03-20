@@ -98,7 +98,7 @@ export default defineConfig(
 							"install-local": "pnpm i",
 							run: "pnpm :content",
 							exec: "pnpx :content",
-							create: "pnpm init :content",
+							create: "pnpm create :content",
 						},
 						yarn: {
 							install: "yarn add :content",
@@ -115,8 +115,8 @@ export default defineConfig(
 							"install-global": "bun i :content -g",
 							"install-local": "bun i",
 							run: "bun :content",
-              exec: "bunx :content",
-              create: "bun create :content",
+							exec: "bunx :content",
+							create: "bun create :content",
 						},
 						deno: {
 							install: "deno add npm::content",
@@ -124,7 +124,7 @@ export default defineConfig(
 							"install-global": "deno add npm::content -g",
 							"install-local": "deno i",
 							run: "deno run :content",
-							"exec": "dpx :content",
+							exec: "dpx :content",
 							create: "deno run -A npm::content",
 						},
 					},

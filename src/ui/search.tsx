@@ -80,6 +80,7 @@ export function Search() {
 			);
 			setActive(0);
 			setResultRefs([]);
+			console.log({groupedHits})
 			return groupedHits;
 		},
 		{ initialValue: {} }

@@ -1,20 +1,67 @@
-import { type ParentProps, children, splitProps } from "solid-js";
+import {
+	For,
+	Match,
+	type ParentProps,
+	Switch,
+	children,
+	createMemo,
+	splitProps,
+} from "solid-js";
 import { isServer } from "solid-js/web";
 
 import { A } from "~/ui/i18n-anchor";
 import { clientOnly } from "@solidjs/start";
 import { Callout } from "~/ui/callout";
+import { Tabs, TabList, TabPanel, Tab } from "~/ui/tabs";
 
 export { EditPageLink } from "../ui/edit-page-link";
 export { PageIssueLink } from "../ui/page-issue-link";
 export { Callout } from "~/ui/callout";
-export { TabsCodeBlocks } from "~/ui/tab-code-blocks";
 export { QuickLinks } from "~/ui/quick-links";
 export { ImageLinks } from "~/ui/image-links";
 
 const EraserLinkImpl = clientOnly(() => import("../ui/eraser-link"));
 
-export const DirectiveContainer = Callout;
+type CalloutType = "info" | "tip" | "danger" | "caution";
+
+export const DirectiveContainer = (
+	props: {
+		type: "tab-group" | "tab" | CalloutType;
+		title?: string;
+		codeGroup?: string;
+		tabNames?: string;
+	} & ParentProps
+) => {
+	const _children = children(() => props.children).toArray();
+	const tabNames = createMemo(() => props.tabNames?.split("\0") ?? []);
+
+	return (
+		<Switch
+			fallback={
+				<Callout type={props.type as CalloutType} children={props.children} />
+			}
+		>
+			<Match when={props.type === "tab"}>{_children}</Match>
+			<Match when={props.type === "tab-group"}>
+				<Tabs>
+					<TabList>
+						<For each={tabNames()}>
+							{(title) => <Tab value={title}>{title}</Tab>}
+						</For>
+					</TabList>
+					<For each={tabNames()}>
+						{(title, idx) => (
+							<TabPanel value={title} forceMount={true}>
+								{_children[idx()]}
+							</TabPanel>
+						)}
+					</For>
+				</Tabs>
+			</Match>
+		</Switch>
+	);
+};
+
 export const strong = (props: ParentProps) => (
 	<b class="font-semibold">{props.children}</b>
 );

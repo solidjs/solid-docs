@@ -114,7 +114,7 @@ export default defineConfig(
 							"install-dev": "bun i :content -d",
 							"install-global": "bun i :content -g",
 							"install-local": "bun i",
-							run: "bun :content",
+							run: "bun run :content",
 							exec: "bunx :content",
 							create: "bun create :content",
 						},

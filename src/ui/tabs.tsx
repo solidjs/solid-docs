@@ -23,11 +23,8 @@ export type TabListProps = PolymorphicProps<
 
 export function TabList(props: TabListProps) {
 	return (
-		<div class="overflow-x-auto custom-scrollbar grid">
-			<KobalteTabs.List
-				{...props}
-				class="flex mb-2 border-b-2 border-slate-800"
-			/>
+		<div class="overflow-x-auto custom-scrollbar mb-2 flex">
+			<KobalteTabs.List {...props} class="flex border-b-2 border-slate-800" />
 		</div>
 	);
 }

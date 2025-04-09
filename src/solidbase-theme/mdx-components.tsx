@@ -38,7 +38,7 @@ export const DirectiveContainer = (
 	return (
 		<Switch
 			fallback={
-				<Callout type={props.type as CalloutType} children={props.children} />
+				<Callout type={props.type as CalloutType} children={_children} />
 			}
 		>
 			<Match when={props.type === "tab"}>{_children}</Match>

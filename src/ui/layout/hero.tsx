@@ -1,15 +1,9 @@
-import {
-	Component,
-	Index,
-	Match,
-	Suspense,
-	Switch,
-	createMemo,
-} from "solid-js";
+import { Component, Index, Match, Switch, createMemo } from "solid-js";
 import { ButtonLink } from "../button-link";
-import CodeSnippet, { counterTxt, snippetLines } from "./hero-code-snippet";
-import { useLocation, useMatch } from "@solidjs/router";
+import { snippetLines } from "./hero-code-snippet";
+import { useMatch } from "@solidjs/router";
 import { useI18n } from "~/i18n/i18n-context";
+import RenderedCode from "./hero-code-snippet";
 
 const TrafficLightsIcon: Component<{ class: string }> = (props) => {
 	return (
@@ -22,21 +16,25 @@ const TrafficLightsIcon: Component<{ class: string }> = (props) => {
 };
 
 export const Hero: Component = () => {
-	const location = useLocation();
 	const isStart = useMatch(() => "/solid-start/*");
 	const isRouter = useMatch(() => "/solid-router/*");
 	const isMeta = useMatch(() => "/solid-meta/*");
 
 	const buttonHref = createMemo(() => {
-		if (location.pathname === "/solid-start")
+		if (isStart()) {
 			return "solid-start/getting-started";
-		if (location.pathname === "/solid-router")
+		}
+		if (isRouter()) {
 			return "solid-router/getting-started/installation-and-setup";
-		if (location.pathname === "/solid-meta")
+		}
+		if (isMeta()) {
 			return "solid-meta/getting-started/installation-and-setup";
+		}
 		return "/quick-start";
 	});
+
 	const i18n = useI18n();
+
 	return (
 		<div class="overflow-hidden bg-sky-100/80 border border-sky-200  dark:border-none dark:bg-slate-900 mb-10 ">
 			<div class="py-10 sm:px-2 lg:relative">
@@ -104,16 +102,11 @@ export const Hero: Component = () => {
 											</Index>
 										</div>
 										<div
-											class={`flex overflow-x-auto px-4 min-h-[${snippetLines.length + 5
-												}em] text-white custom-scrollbar`}
+											class={`flex overflow-x-auto px-4 min-h-[${
+												snippetLines.length + 5
+											}em] text-white custom-scrollbar`}
 										>
-											<Suspense
-												fallback={
-													<pre class="text-slate-300">{counterTxt}</pre>
-												}
-											>
-												<CodeSnippet />
-											</Suspense>
+											<RenderedCode />
 										</div>
 									</div>
 								</div>

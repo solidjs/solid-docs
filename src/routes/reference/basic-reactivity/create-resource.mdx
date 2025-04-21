@@ -24,11 +24,18 @@ You can call `mutate` to directly update the `data` signal (it works like any ot
 You can also call refetch to rerun the fetcher directly, and pass an optional argument to provide additional info to the fetcher e.g `refetch(info)`.
 
 `data` works like a normal signal getter: use `data()` to read the last returned value of `fetchData`. 
-But it also has extra reactive properties: `data.loading` tells you if the fetcher has been called but not returned, and `data.error` tells you if the request has errored out; if so, it contains the error thrown by the fetcher. 
-(Note: if you anticipate errors, you may want to wrap `createResource` in an [ErrorBoundary](/reference/components/error-boundary).)
+But it also has extra reactive properties:
 
-As of **v1.4.0**, `data.latest` will return the last returned value and won't trigger [Suspense](/reference/components/suspense) and [transitions](#TODO); if no value has been returned yet, `data.latest` acts the same as `data()`. 
-This can be useful if you want to show the out-of-date data while the new data is loading.
+- `data.loading`: whether the fetcher has been called but not returned.
+- `data.error`: if the request has errored out.
+  `createResource`: provides an `Error` object for `data.error`. It will show even if the fetcher throws something else.
+
+  - Fetcher throws an `Error` instance, `data.error` will be that instance.
+  - If the fetcher throws a string, `data.error.message` will contain that string.
+  - When the fetcher throws a value that is neither an `Error` nor a string, that value will be available as `data.error.cause`.
+  
+- As of **v1.4.0**, `data.latest` returns the last value received and will not trigger [Suspense](/reference/components/suspense) or [transitions](#TODO); if no value has been returned yet, `data.latest` will act the same as `data()`. 
+  This can be useful if you want to show the out-of-date data while the new data is loading.
 
 `loading`, `error`, and `latest` are reactive getters and can be tracked.
 
@@ -87,7 +94,7 @@ const [user] = createResource(() => params.id, fetchUser, {
 #### v1.5.0
 
 1. We've added a new state field which covers a more detailed view of the Resource state beyond `loading` and `error`. 
-You can now check whether a Resource is `unresolved`, `pending`, `ready`, `refreshing`, or `error`.
+You can now check whether a Resource is `unresolved`, `pending`, `ready`, `refreshing`, or `errored`.
 
 | State        | Value resolved | Loading | Has error |
 | ------------ | -------------- | ------- | --------- |
@@ -95,7 +102,7 @@ You can now check whether a Resource is `unresolved`, `pending`, `ready`, `refre
 | `pending`    | No             | Yes     | No        |
 | `ready`      | Yes            | No      | No        |
 | `refreshing` | Yes            | Yes     | No        |
-| `error`      | No             | No      | Yes       |
+| `errored`    | No             | No      | Yes       |
 
 2. When server-rendering resources, especially when embedding Solid in other systems that fetch data before rendering, you might want to initialize the resource with this prefetched value instead of fetching again and having the resource serialize it in its own state.
 You can use the new `ssrLoadFrom` option for this. 

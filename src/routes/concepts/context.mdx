@@ -21,16 +21,13 @@ This offers a way to access state across an application without passing props th
 Context is created using the [`createContext`](/reference/component-apis/create-context) function.
 This function has a `Provider` property that wraps the component tree you want to provide context to.
 
-<TabsCodeBlocks>
-<div id="/context/create.js">
-```jsx
+```jsx tab title="/context/create.js"
 import { createContext } from "solid-js";
 
 const MyContext = createContext();
 ```
-</div>
-<div id="/context/component.jsx">
-```jsx
+
+```jsx tab title="/context/component.jsx"
 import { MyContext } from "./create";
 
 export function Provider (props) {
@@ -41,8 +38,6 @@ export function Provider (props) {
 	)
 };
 ```
-</div>
-</TabsCodeBlocks>
 
 ## Providing context to children
 
@@ -60,9 +55,9 @@ const Provider = (props) => (
 );
 ```
 
-<Callout type="tip" title="Complex Types">
+:::tip[Complex Types]
 When passing multiple values (as an `array` or `object`), it is recommended to use a [store](/reference/component-apis/create-context#usage).
-</Callout>
+:::
 
 ## Consuming context
 
@@ -99,7 +94,7 @@ export const App = () => (
 ## Customizing Context Utilities
 
 When an application contains multiple context objects, it can be difficult to keep track of which context object is being used.
-To solve this issue, you can create a custom utilities to create a more readable way to access the context values.
+To solve this issue, you can create a custom utility to create a more readable way to access the context values.
 
 For example, when wrapping a component tree, you may want to create a custom `Provider` component that can be used to wrap the component tree.
 This also provides you with the option of re-using the `Provider` component in other parts of your application, if needed.
@@ -161,9 +156,7 @@ export function CounterProvider(props) {
 [Signals](/concepts/signals) offer a way to synchronize and manage data shared across your components using context.
 You can pass a signal directly to the `value` prop of the `Provider` component, and any changes to the signal will be reflected in all components that consume the context.
 
-<TabsCodeBlocks>
-<div id="App.jsx">
-```jsx
+```jsx tab title="App.jsx"
 import { CounterProvider } from "./Context";
 import { Child } from "./Child";
 
@@ -176,9 +169,8 @@ export function App() {
 	)
 }
 ```
-</div>
-<div id="Context.jsx">
-```jsx
+
+```jsx tab title="Context.jsx"
 import { createSignal, useContext } from "solid-js";
 
 export function CounterProvider(props) {
@@ -204,9 +196,9 @@ export function CounterProvider(props) {
 
 export function useCounter() { return useContext(CounterContext); }
 ```
-</div>
-<div id="Child.jsx">
-```tsx title="/context/counter-component.tsx"
+
+```tsx tab title="Child.jsx"
+// /context/counter-component.tsx
 import { useCounter } from "./Context";
 
 export function Child(props) {
@@ -221,8 +213,6 @@ export function Child(props) {
 	);
 };
 ```
-</div>
-</TabsCodeBlocks>
 
 This offers a way to manage state across your components without having to pass props through intermediate elements.
 
@@ -257,17 +247,17 @@ function Child() {
 
 If no default value is passed to `createContext`, it is possible for `useContext` to return `undefined`.
 
-<Callout type="info" title="More on default values">
+:::info[More on default values]
 Read more about default values in the [`createContext`](/reference/component-apis/create-context) entry.
-</Callout>
+:::
 
 Because of this, if an initial value was not passed to `createContext`, the TS type signature of `useContext` will indicate that
-the value returned might be `undefined` (as mentioned above). 
-This can be quite annoying when you want to use the context inside a component, and particularly when immediately destructuring the context. 
+the value returned might be `undefined` (as mentioned above).
+This can be quite annoying when you want to use the context inside a component, and particularly when immediately destructuring the context.
 Additionally, if you use `useContext` and it returns `undefined` (which is often, but not always, the result of a bug), the error message thrown at runtime can be confusing.
 
-The most common solution for it is to wrap all uses of `useContext` in a function that will explicitly throw a helpful error if the context is `undefined`. 
-This also serves to narrow the type returned, so TS doesn't complain. 
+The most common solution for it is to wrap all uses of `useContext` in a function that will explicitly throw a helpful error if the context is `undefined`.
+This also serves to narrow the type returned, so TS doesn't complain.
 As an example:
 
 ```ts title="/context/counter-component.tsx"
@@ -279,4 +269,3 @@ function useCounterContext() {
 	return context
 }
 ```
-

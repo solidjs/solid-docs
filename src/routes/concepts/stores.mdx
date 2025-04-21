@@ -94,7 +94,7 @@ When a store is created, it starts with the initial state but does _not_ immedia
 These signals are created **lazily**, meaning they are only formed when accessed within a tracking scope.
 
 Once data is used within a tracking scope, such as within the return statement of a component function, computed property, or an effect, a signal is created and dependencies are established.
-	
+
 For example, if you wanted to print out every new user, adding the console log below will not work because it is not within a tracked scope.
 
 
@@ -193,12 +193,12 @@ const App = () => {
 }
 ```
 
-<Callout>
+:::info
 Separating the read and write capabilities of a store provides a valuable debugging advantage.
 
 This separation facilitates the tracking and control of the components that are accessing or changing the values.
-</Callout>
-<Callout type="advanced">
+:::
+:::advanced
   A little hidden feature of stores is that you can also create nested stores to help with setting nested properties.
 
 ```jsx
@@ -224,7 +224,7 @@ This separation facilitates the tracking and control of the components that are 
 
   Note that the above relies on `store.users` to be set already in the existing store.
 
-</Callout>
+:::
 
 ## Path syntax flexibility
 
@@ -277,32 +277,63 @@ setStore("users", store.users.length, {
 })
 ```
 
-### Range specification
+### Modifying multiple elements
 
-With path syntax, you can target a subset of elements to update or modify by specifying a range of indices.
-You can do this using an array of values:
+With path syntax, you can target a subset of elements of an array,
+or properties of an object, by specifying an array or range of indices.
 
-```jsx
-setStore("users", [1, 3], "loggedIn", false)
-```
-
-    <Callout>
-    If your *store* is an array, you can specify a range of indices using an object with `from` and `to` keys.
+The most general form is to specify an array of values.
+For example, if `store.users` is an array of objects,
+you can set the `loggedIn` property of several indices at once like so:
 
 ```jsx
-const [store, setStore] = createStore([]) // A store that is an array
-...
-setStore({ from: 1, to: store.length - 1 }, "loggedIn", false)
+setStore("users", [2, 7, 10], "loggedIn", false)
+// equivalent to (but more efficient than):
+setStore("users", 2, "loggedIn", false)
+setStore("users", 7, "loggedIn", false)
+setStore("users", 10, "loggedIn", false)
 ```
 
-In addition to this, including the `by` key, can help you perform iterative updates within an array, which can be useful when you want to update elements at regular intervals.
-This key defines the step size for index increments, similar to a [`for` loop](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for):
+This array syntax also works for object property names.
+For example, if `store.users` is an object mapping usernames to objects,
+you can set the `loggedIn` property of several users at once like so:
 
 ```jsx
-setStore({ from: 0, to: store.length, by: 2 }, "loggedIn", false)
+setStore("users", ["me", "you"], "loggedIn", false)
+// equivalent to (but more efficient than):
+setStore("users", ["me"], "loggedIn", false)
+setStore("users", ["you"], "loggedIn", false)
 ```
 
-    </Callout>
+For arrays specifically, you can specify a range of indices via an object
+with `from` and `to` keys (both of which are inclusive).
+For example, assuming `store.users` is an array again,
+you can set the `loggedIn` state for all users except index 0 as follows:
+
+```jsx
+setStore("users", { from: 1, to: store.users.length - 1 }, "loggedIn", false)
+// equivalent to (but more efficient than):
+for (let i = 1; i <= store.users.length - 1; i++) {
+  setStore("users", i, "loggedIn", false)
+}
+```
+
+You can also include a `by` key in a range object to specify a step size,
+and thereby update a regular subset of elements.
+For example, you can set the `loggedIn` state for even-indexed users like so:
+
+```jsx
+setStore("users", { from: 0, to: store.users.length - 1, by: 2 }, "loggedIn", false)
+// equivalent to (but more efficient than):
+for (let i = 1; i <= store.users.length - 1; i += 2) {
+  setStore("users", i, "loggedIn", false)
+}
+```
+
+Multi-setter syntax differs from the "equivalent" code in one key way:
+a single store setter call automatically gets wrapped in a
+[`batch`](/reference/reactive-utilities/batch), so all the elements update
+at once before any downstream effects are triggered.
 
 ### Dynamic value assignment
 

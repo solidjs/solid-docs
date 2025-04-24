@@ -3,48 +3,86 @@ title: <Show>
 order: 5
 ---
 
-The `Show` control flow is used to conditionally render part of the view: it renders children when `when` is truthy, a fallback otherwise. It is similar to the ternary operator `(when ? children : fallback)` but is ideal for templating JSX.
-
-```ts
-import { Show } from "solid-js"
-import type { JSX } from "solid-js"
-
-function Show<T>(props: {
-	when: T | undefined | null | false
-	keyed?: boolean
-	fallback?: JSX.Element
-	children: JSX.Element | ((item: T | Accessor<T>) => JSX.Element)
-}): () => JSX.Element
-```
-
-Here's an example of using the `Show` control flow:
+The `<Show>` component is used for conditionally rendering UI elements.
+It takes a `when` prop that defines the condition for rendering.
+When the `when` prop is truthy, the children of the `<Show>` component are displayed.
+Additionally, an optional `fallback` prop can be provided to specify an element that is shown when the condition is falsy.
 
 ```tsx
-<Show when={state.count > 0} fallback={<div>Loading...</div>}>
-	<div>My Content</div>
-</Show>
+import { createSignal, Show } from "solid-js";
+
+function Example() {
+	const [value, setValue] = createSignal(true);
+	return (
+		<div>
+			<button onClick={() => setValue((prev) => !prev)}>Toggle Show</button>
+			<Show when={value()} fallback={<div>Fallback Element</div>}>
+				<div>Child Element</div>
+			</Show>
+		</div>
+	);
+}
 ```
 
-`Show` can also be used as a way of keying blocks to a specific data model. For example the function is re-executed whenever the user model is replaced.
+## Keyed rendering
+
+When the `keyed` prop is set to `true`, the children of the `<Show>` component are re-rendered every time the `when` prop changes.
+It's important to note that in this case, even if the reference of the `when` prop changes, the children will still re-render.
 
 ```tsx
-<Show when={state.user} fallback={<div>Loading...</div>} keyed>
-	{(user) => <div>{user.firstName}</div>}
-</Show>
+import { createSignal, Show } from "solid-js";
+
+function KeyedExample() {
+	const [user, setUser] = createSignal({ name: "John Wick" });
+
+	function update() {
+		// This operation changes the reference of the user object.
+		setUser({ ...user() });
+	}
+
+	return (
+		<div>
+			<button onClick={update}>Update</button>
+			<Show when={user()} keyed>
+				<p>Name: {user().name}</p>
+				{/* Updates shown with each click */}
+				<p>Last updated: {Date.now()}</p>
+			</Show>
+		</div>
+	);
+}
 ```
 
-If the `keyed` property is not used, the argument of the child function will be an accessor containing the item.
+## Render function
+
+The `<Show>` component can also accept a render function as its child.
+In this case, the first argument of the render function is an _accessor_ to the `when` prop.
+However, when the `keyed` prop is set to `true`, the argument is the `when` prop itself instead of an accessor.
+
+The render function is treated like a separate component.
+A key point to understand is that the render function is wrapped in [`untrack`](/reference/reactive-utilities/untrack).
+As a result, any signals accessed directly within the render function will not trigger updates.
+
+For example, in the following code, clicking the increment button does not update the count value displayed on the screen because the `count` signal is not tracked.
 
 ```tsx
-<Show when={state.user} fallback={<div>Loading...</div>}>
-	{(user) => <div>{user().firstName}</div>}
-</Show>
+import { createSignal, Show } from "solid-js";
+
+function RenderFunctionExample() {
+	const [count, setCount] = createSignal(0);
+	return (
+		<div>
+			<button onClick={() => setCount((c) => c + 1)}>Increment</button>
+			<Show when={count()}>{() => count()}</Show>
+		</div>
+	);
+}
 ```
 
 ## Props
 
-| Name       | Type                              | Description                                   |
-| :--------- | :-------------------------------- | :-------------------------------------------- |
-| `when`     | `T \| undefined \| null \| false` | The value to test for truthiness              |
-| `keyed`    | `boolean`                         | Whether to key the block to the value of when |
-| `fallback` | `JSX.Element`                     | The fallback to render when the `when` is falsy     |
+| Name       | Type                              | Description                                           |
+| :--------- | :-------------------------------- | :---------------------------------------------------- |
+| `when`     | `T \| undefined \| null \| false` | The condition value.                                  |
+| `keyed`    | `boolean`                         | Whether to key the block to the value of when.        |
+| `fallback` | `JSX.Element`                     | The fallback to render when the `when` prop is falsy. |

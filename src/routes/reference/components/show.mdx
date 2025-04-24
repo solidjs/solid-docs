@@ -61,7 +61,7 @@ However, when the `keyed` prop is set to `true`, the argument is the `when` prop
 
 The render function is treated like a separate component.
 A key point to understand is that the render function is wrapped in [`untrack`](/reference/reactive-utilities/untrack).
-As a result, any signals accessed directly within the render function will not trigger updates.
+As a result, any changes to signals accessed directly within the render function will not be reflected in the UI.
 
 For example, in the following code, clicking the increment button does not update the count value displayed on the screen because the `count` signal is not tracked.
 
@@ -72,8 +72,10 @@ function RenderFunctionExample() {
 	const [count, setCount] = createSignal(0);
 	return (
 		<div>
-			<button onClick={() => setCount((c) => c + 1)}>Increment</button>
+			{/* This does not update because the count signal is not being tracked. */}
 			<Show when={count()}>{() => count()}</Show>
+			{/* This will update because the outer JSX element creates a tracking scope. */}
+			<Show when={count()}>{() => <>{count()}</>}</Show>
 		</div>
 	);
 }

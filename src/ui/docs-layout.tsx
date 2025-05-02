@@ -5,6 +5,7 @@ import { coreEntries } from "solid:collection";
 import { Pagination } from "~/ui/pagination";
 import { EditPageLink } from "./edit-page-link";
 import { PageIssueLink } from "./page-issue-link";
+import { useProjectTitle } from "./use-project-title";
 
 interface DocsLayoutProps {
 	entries: typeof coreEntries;
@@ -13,6 +14,7 @@ interface DocsLayoutProps {
 
 export const DocsLayout = (props: DocsLayoutProps) => {
 	const location = useLocation();
+	const projectTitle = useProjectTitle();
 
 	const collection = () =>
 		location.pathname.includes("/reference/")
@@ -40,7 +42,7 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 		<Show when={props.entries} keyed>
 			<>
 				<Show when={titles()?.title} fallback={<Title>SolidDocs</Title>}>
-					{(title) => <Title>{`${title()} - SolidDocs`}</Title>}
+					{(title) => <Title>{`${title()} - ${projectTitle()}`}</Title>}
 				</Show>
 				<div id="rr" class="flex relative justify-center">
 					<article class="w-fit overflow-hidden pb-16 lg:px-5 expressive-code-overrides lg:max-w-none">

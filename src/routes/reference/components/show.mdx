@@ -26,8 +26,7 @@ function Example() {
 
 ## Keyed rendering
 
-When the `keyed` prop is set to `true`, the children of the `<Show>` component are re-rendered every time the `when` prop changes.
-It's important to note that in this case, even if the reference of the `when` prop changes, the children will still re-render.
+When the `keyed` is set to `true`, any change to the `when` prop — including changes in its reference — will cause the `<Show>` component to re-render its children.
 
 ```tsx
 import { createSignal, Show } from "solid-js";
@@ -59,11 +58,11 @@ The `<Show>` component can also accept a render function as its child.
 In this case, the first argument of the render function is an _accessor_ to the `when` prop.
 However, when the `keyed` prop is set to `true`, the argument is the `when` prop itself instead of an accessor.
 
-The render function is treated like a separate component.
-A key point to understand is that the render function is wrapped in [`untrack`](/reference/reactive-utilities/untrack).
-As a result, any changes to signals accessed directly within the render function will not trigger updates.
+When a render function is used, it is internally wrapped with [`untrack`](/reference/reactive-utilities/untrack).
+As a result, signals accessed directly within the render function's scope will not react to updates.
 
-For example, in the following code, clicking the increment button does not update the count value displayed on the screen because the `count` signal is not tracked.
+For example, in the following code, the count displayed in the first `<Show>` component does not update when the `count` signal changes.
+However, the second `<Show>` component does update since the `count` signal is accessed within a JSX element, which creates a tracking scope.
 
 ```tsx
 import { createSignal, Show } from "solid-js";
@@ -73,9 +72,9 @@ function RenderFunctionExample() {
 	return (
 		<div>
 			<button onClick={() => setCount((c) => c + 1)}>Increment</button>
-			{/* This does not update because the count signal is not being tracked. */}
+			{/* This does not update. */}
 			<Show when={count()}>{(c) => count()}</Show>
-			{/* This will update because the outer JSX element creates a tracking scope. */}
+			{/* This will update. */}
 			<Show when={count()}>{(c) => <>{count()}</>}</Show>
 		</div>
 	);

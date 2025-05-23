@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { globSync } from "glob";
 import { generalPurposeCrawler } from "@orama/crawly";
+import { CloudManager } from "@oramacloud/client";
 import "dotenv/config";
 
 const ORAMA_PRIVATE_API_KEY = process.env.ORAMA_PRIVATE_API_KEY;
@@ -27,19 +28,13 @@ const pagesToIndex = HTMLFiles.flatMap((file) => {
 	};
 });
 
-async function emptyIndex() {
-	await fetch(
-		`https://api.oramasearch.com/api/v1/webhooks/${ORAMA_PRIVATE_INDEX_ID}/snapshot`,
-		{
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				authorization: `Bearer ${ORAMA_PRIVATE_API_KEY}`,
-			},
-			body: JSON.stringify([]),
-		}
-	);
-}
+const cloudManager = new CloudManager({
+	apiKey: ORAMA_PRIVATE_API_KEY,
+});
+
+const indexManager = cloudManager.index({
+	indexId: ORAMA_PRIVATE_INDEX_ID,
+});
 
 async function upsertFreshData() {
 	const batches = [];
@@ -53,36 +48,10 @@ async function upsertFreshData() {
 	for (let i = 0; i < batches.length; i++) {
 		const batch = batches[i];
 
-		await fetch(
-			`https://api.oramasearch.com/api/v1/webhooks/${ORAMA_PRIVATE_INDEX_ID}/notify`,
-			{
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					authorization: `Bearer ${ORAMA_PRIVATE_API_KEY}`,
-				},
-				body: JSON.stringify({
-					upsert: batch,
-				}),
-			}
-		);
+		await indexManager.upsertDocuments(batch);
 	}
 }
 
-async function deployIndex() {
-	await fetch(
-		`https://api.oramasearch.com/api/v1/webhooks/${ORAMA_PRIVATE_INDEX_ID}/deploy`,
-		{
-			method: "POST",
-			headers: {
-				authorization: `Bearer ${ORAMA_PRIVATE_API_KEY}`,
-			},
-		}
-	);
-
-	console.log("Index deployed");
-}
-
-await emptyIndex();
+await indexManager.empty();
 await upsertFreshData();
-await deployIndex();
+await indexManager.deploy();

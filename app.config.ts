@@ -126,7 +126,7 @@ export default defineConfig(
 							"install-local": "deno i",
 							run: "deno run :content",
 							exec: "dpx :content",
-							create: "deno run -A npm:create-:content",
+							create: "deno init --npm :content",
 						},
 					},
 				},

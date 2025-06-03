@@ -83,9 +83,9 @@ export function MainHeader(props: NavProps) {
 					<li>
 						<A
 							href="/"
-							class="text-slate-900 dark:text-slate-200 relative overflow-hidden drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] px-2"
+							class="border-b-2 border-transparent text-slate-900 dark:text-slate-200 relative overflow-hidden drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] px-2"
 							classList={{
-								"border-b-2 border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250":
+								"border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250":
 									!notSolidCore() && !translatedLocale(),
 							}}
 							addLocale
@@ -96,8 +96,8 @@ export function MainHeader(props: NavProps) {
 					<li>
 						<A
 							href="/solid-router"
-							class="text-slate-900 dark:text-slate-200 px-2"
-							activeClass="border-b-2 border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
+							class="border-b-2 border-transparent text-slate-900 dark:text-slate-200 px-2"
+							activeClass="border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
 							addLocale
 						>
 							Router
@@ -106,8 +106,8 @@ export function MainHeader(props: NavProps) {
 					<li>
 						<A
 							href="/solid-start"
-							class="text-slate-900 dark:text-slate-200 px-2"
-							activeClass="border-b-2 border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
+							class="border-b-2 border-transparent text-slate-900 dark:text-slate-200 px-2"
+							activeClass="border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
 							addLocale
 						>
 							SolidStart
@@ -116,8 +116,8 @@ export function MainHeader(props: NavProps) {
 					<li>
 						<A
 							href="/solid-meta"
-							class="text-slate-900 dark:text-slate-200 px-2"
-							activeClass="border-b-2 border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
+							class="border-b-2 border-transparent text-slate-900 dark:text-slate-200 px-2"
+							activeClass="border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
 							addLocale
 						>
 							Meta

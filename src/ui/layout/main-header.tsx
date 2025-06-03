@@ -83,9 +83,9 @@ export function MainHeader(props: NavProps) {
 					<li>
 						<A
 							href="/"
-							class="transition-all duration-250 rounded-lg dark:hover:bg-blue-500/10 text-slate-900 dark:text-slate-300 relative overflow-hidden drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] px-4 py-2"
+							class="transition-all duration-250 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-500/10 text-slate-900 dark:text-slate-200 relative overflow-hidden px-4 py-2"
 							classList={{
-								"dark:!text-slate-100 dark:!bg-blue-500/20":
+								"text-black dark:!text-white !bg-blue-200 dark:!bg-blue-500/20":
 									!notSolidCore() && !translatedLocale(),
 							}}
 							addLocale
@@ -96,8 +96,8 @@ export function MainHeader(props: NavProps) {
 					<li>
 						<A
 							href="/solid-router"
-							class="transition-all duration-250 rounded-lg dark:hover:bg-blue-500/10 text-slate-900 dark:text-slate-300 px-4 py-2"
-							activeClass="dark:!text-slate-100 dark:!bg-blue-500/20"
+							class="transition-all duration-250 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-500/10 text-slate-900 dark:text-slate-200 px-4 py-2"
+							activeClass="text-black dark:!text-white !bg-blue-200 dark:!bg-blue-500/20"
 							addLocale
 						>
 							Router
@@ -106,8 +106,8 @@ export function MainHeader(props: NavProps) {
 					<li>
 						<A
 							href="/solid-start"
-							class="transition-all duration-250 rounded-lg dark:hover:bg-blue-500/10 text-slate-900 dark:text-slate-300 px-4 py-2"
-							activeClass="dark:!text-slate-100 dark:!bg-blue-500/20"
+							class="transition-all duration-250 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-500/10 text-slate-900 dark:text-slate-200 px-4 py-2"
+							activeClass="text-black dark:!text-white !bg-blue-200 dark:!bg-blue-500/20"
 							addLocale
 						>
 							SolidStart
@@ -116,8 +116,8 @@ export function MainHeader(props: NavProps) {
 					<li>
 						<A
 							href="/solid-meta"
-							class="transition-all duration-250 rounded-lg dark:hover:bg-blue-500/10 text-slate-900 dark:text-slate-300 px-4 py-2"
-							activeClass="dark:!text-slate-100 dark:!bg-blue-500/20"
+							class="transition-all duration-250 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-500/10 text-slate-900 dark:text-slate-200 px-4 py-2"
+							activeClass="text-black dark:!text-white !bg-blue-200 dark:!bg-blue-500/20"
 							addLocale
 						>
 							Meta

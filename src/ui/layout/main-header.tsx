@@ -83,7 +83,7 @@ export function MainHeader(props: NavProps) {
 					<li>
 						<A
 							href="/"
-							class="transition-all duration-250 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-500/10 text-slate-900 dark:text-slate-200 relative overflow-hidden px-4 py-2"
+							class="transition-all duration-250 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-500/10 text-slate-900 dark:text-slate-200 relative overflow-hidden px-4 py-2"
 							classList={{
 								"text-black dark:!text-white !bg-blue-200 dark:!bg-blue-500/20":
 									!notSolidCore() && !translatedLocale(),
@@ -96,7 +96,7 @@ export function MainHeader(props: NavProps) {
 					<li>
 						<A
 							href="/solid-router"
-							class="transition-all duration-250 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-500/10 text-slate-900 dark:text-slate-200 px-4 py-2"
+							class="transition-all duration-250 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-500/10 text-slate-900 dark:text-slate-200 px-4 py-2"
 							activeClass="text-black dark:!text-white !bg-blue-200 dark:!bg-blue-500/20"
 							addLocale
 						>
@@ -106,7 +106,7 @@ export function MainHeader(props: NavProps) {
 					<li>
 						<A
 							href="/solid-start"
-							class="transition-all duration-250 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-500/10 text-slate-900 dark:text-slate-200 px-4 py-2"
+							class="transition-all duration-250 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-500/10 text-slate-900 dark:text-slate-200 px-4 py-2"
 							activeClass="text-black dark:!text-white !bg-blue-200 dark:!bg-blue-500/20"
 							addLocale
 						>
@@ -116,7 +116,7 @@ export function MainHeader(props: NavProps) {
 					<li>
 						<A
 							href="/solid-meta"
-							class="transition-all duration-250 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-500/10 text-slate-900 dark:text-slate-200 px-4 py-2"
+							class="transition-all duration-250 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-500/10 text-slate-900 dark:text-slate-200 px-4 py-2"
 							activeClass="text-black dark:!text-white !bg-blue-200 dark:!bg-blue-500/20"
 							addLocale
 						>

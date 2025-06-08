@@ -2,8 +2,7 @@
 title: useSubmission
 ---
 
-The `useSubmission` function returns a submission object for a specified action.
-This submission object contains properties to access the state of action execution and functions to control the action.
+The `useSubmission` function retrieves the state of the most recent submission for a given action.
 
 ```tsx
 import { Show } from "solid-js";
@@ -37,15 +36,14 @@ function AddTodoForm() {
 ```
 
 :::info[Note]
-If an action is executed multiple times, the last submission will be returned.
-To access all submissions, `useSubmissions`[/solid-router/reference/data-apis/use-submissions] can be used.
+To access the state of all submissions, `useSubmissions`[/solid-router/reference/data-apis/use-submissions] can be used.
 :::
 
 ## Filter function
 
-Optionally, `useSubmission` accepts a second parameter, which is a filter function.
-This function is executed for each submission and returns the first submission that passes through the filter.
-The filter function takes the submitted data as its parameter and should return `true` to select the submission and `false` otherwise.
+The `useSubmission` function optionally accepts a second parameter, which is a filter function.
+This function is executed for each submission in the order they were created, and the first submission that meet the filter criteria is returned by `useSubmission`.
+The filter function recieves the input data of the action as its parameter and must return `true` to select the submission or `false` otherwise.
 
 ```tsx
 import { useSubmission } from "@solidjs/router";
@@ -59,23 +57,28 @@ function LatestTodo() {
 			return name.length > 2;
 		}
 	);
-	return <p>Latest valid submittion: {latestValidSubmission.result}</p>;
+	return <p>Latest valid submission: {latestValidSubmission.result}</p>;
 }
 ```
 
 ## Parameters
 
-- **action**: The action for which you want to return submissions.
-- **filter** (Optional): The filter function that receives the submitted data as its parameter.
-  It should return `true` if the submission passes the filter and `false` otherwise.
+- **action**: The action for which you want to get the most recent submission.
+- **filter** (optional): A filter function.
+  When provided, it executes on each submission in the order of creation, returning the first submission that passes the filter.
+  It receives the input data of the action as its parameter and must return `true` for the submission to be selected and `false` otherwise.
 
 ## Returns
 
 `useSubmission` returns an object containing the following properties:
 
 - **input**: The input data of the action.
-- **result**: The returned value of the action.
+  This is a reactive value.
+- **result**: The value returned from the action.
+  This is a reactive value.
 - **error**: Any error thrown from the action.
+  This is a reactive value.
 - **pending**: A boolean indicating whether the action is currently being executed.
-- **clear**: A function to clear the results of the submission.
-- **retry**: A function to re-execute the action.
+  This is a reactive value.
+- **clear**: A function that clears the result of the submission.
+- **retry**: A function that re-executes the submission with the same input.

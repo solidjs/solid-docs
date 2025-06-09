@@ -1,8 +1,4 @@
-import {
-	A as RouterAnchor,
-	useLocation,
-	type AnchorProps,
-} from "@solidjs/router";
+import { A as RouterAnchor, type AnchorProps } from "@solidjs/router";
 import { Match, Switch, splitProps } from "solid-js";
 import { getCurrentLocale, isExternalURL } from "~/i18n/helpers";
 

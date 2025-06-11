@@ -5,7 +5,7 @@ import { coreEntries } from "solid:collection";
 import { Pagination } from "~/ui/pagination";
 import { EditPageLink } from "./edit-page-link";
 import { PageIssueLink } from "./page-issue-link";
-import { useProjectTitle } from "./use-project-title";
+import { useProjectTitle } from "./use-project";
 
 interface DocsLayoutProps {
 	entries: typeof coreEntries;

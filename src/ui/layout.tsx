@@ -18,7 +18,7 @@ import { query, createAsync, useMatch } from "@solidjs/router";
 import { DocsLayout } from "./docs-layout";
 import { SidePanel } from "./layout/side-panel";
 import { SUPPORTED_LOCALES } from "~/i18n/config";
-import { getValidLocaleFromPathname } from "~/i18n/helpers";
+import { getCurrentLocale } from "~/i18n/helpers";
 import { useCurrentRouteMetaData } from "~/utils/route-metadata-helper";
 
 const PROJECTS = ["solid-router", "solid-start", "solid-meta"] as const;
@@ -72,7 +72,7 @@ const getDocsMetadata = query(
 
 		const { path } = (isFirstMatch || isI18nOrProject || isCore) as PathMatch;
 
-		const locale = getValidLocaleFromPathname(path);
+		const locale = getCurrentLocale();
 		const project = getProjectFromUrl(path);
 
 		if (project) {

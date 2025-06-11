@@ -1,4 +1,10 @@
 export default {
+	// meta
+	"meta.title.solid_start": "SolidStart Docs",
+	"meta.title.solid_router": "Solid Router Docs",
+	"meta.title.solid_meta": "Solid Meta Docs",
+	"meta.title.solid": "Solid Docs",
+
 	// hero
 	"hero.title": "Effortless UIs with Reactive Precision.",
 	"hero.subtitle": "Solid is a modern JavaScript framework for today's web.",

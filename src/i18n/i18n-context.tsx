@@ -1,22 +1,22 @@
-import { useLocation } from "@solidjs/router";
+import { useMatch } from "@solidjs/router";
 import { type JSX, createContext, useContext } from "solid-js";
 import { createStore } from "solid-js/store";
 import { createTranslator } from "./translator";
-import { getValidLocaleFromPathname } from "./helpers";
+import { SUPPORTED_LOCALES } from "./config";
 
 type ProviderProps = { children: JSX.Element };
 
 const initialI18nStore = {
 	get t() {
-		const { pathname } = useLocation();
-		const locale = getValidLocaleFromPathname(pathname);
+		const match = useMatch(() => "/:locale?/*", {
+			locale: SUPPORTED_LOCALES,
+		});
 
-		return createTranslator(locale);
+		return createTranslator(match()?.params.project ?? null);
 	},
 };
 
-export const I18nContext =
-	createContext<typeof initialI18nStore>(initialI18nStore);
+export const I18nContext = createContext(initialI18nStore);
 
 export function I18nProvider(props: ProviderProps) {
 	const [i18n] = createStore(initialI18nStore);

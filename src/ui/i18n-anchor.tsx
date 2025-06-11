@@ -1,18 +1,13 @@
-import {
-	A as RouterAnchor,
-	useLocation,
-	type AnchorProps,
-} from "@solidjs/router";
+import { A as RouterAnchor, type AnchorProps } from "@solidjs/router";
 import { Match, Switch, splitProps } from "solid-js";
-import { getValidLocaleFromPathname, isExternalURL } from "~/i18n/helpers";
+import { getCurrentLocale, isExternalURL } from "~/i18n/helpers";
 
 export type RouterLinkProps = AnchorProps & {
 	addLocale?: boolean;
 };
 
 export function A(props: RouterLinkProps) {
-	const { pathname } = useLocation();
-	const locale = () => getValidLocaleFromPathname(pathname);
+	const locale = () => getCurrentLocale();
 	const external = () => isExternalURL(props.href);
 
 	const [_, rest] = splitProps(props, ["addLocale"]);

@@ -2,7 +2,7 @@ import { Title } from "@solidjs/meta";
 import { Layout } from "./layout";
 import { HttpStatusCode } from "@solidjs/start";
 import { A } from "~/ui/i18n-anchor";
-import { useProjectTitle } from "./use-project-title";
+import { useProjectTitle } from "./use-project";
 
 export function NotFound() {
 	const projectTitle = useProjectTitle();

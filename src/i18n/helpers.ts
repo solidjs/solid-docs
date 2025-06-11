@@ -1,21 +1,12 @@
-import { useLocation } from "@solidjs/router";
-import { SUPPORTED_LOCALES } from "./config";
+import { useLocation, useMatch } from "@solidjs/router";
 import { useCurrentRouteMetaData } from "~/utils/route-metadata-helper";
+import { SUPPORTED_LOCALES } from "./config";
 
-export function getLocaleFromPathname(pathname: string) {
-	return pathname.split("/")[1];
-}
-
-export function isValidLocale(
-	locale: string
-): locale is (typeof SUPPORTED_LOCALES)[number] {
-	return SUPPORTED_LOCALES.includes(locale);
-}
-
-export function getValidLocaleFromPathname(pathname: string) {
-	const locale = getLocaleFromPathname(pathname);
-
-	return isValidLocale(locale) ? locale : null;
+export function getCurrentLocale() {
+	const match = useMatch(() => "/:locale?/*", {
+		locale: SUPPORTED_LOCALES,
+	});
+	return match()?.params.project ?? null;
 }
 
 export function getEntryFileName() {

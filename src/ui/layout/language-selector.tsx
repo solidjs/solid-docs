@@ -4,7 +4,7 @@ import { Icon } from "solid-heroicons";
 import { language } from "solid-heroicons/solid";
 import { A, useLocation } from "@solidjs/router";
 import { languages } from "~/i18n/dictionaries";
-import { getValidLocaleFromPathname } from "~/i18n/helpers";
+import { getCurrentLocale } from "~/i18n/helpers";
 
 const getLocalizedPath = ({
 	selectedLanguage,
@@ -30,8 +30,7 @@ const languageEntries = Object.entries(languages);
 
 export const LanguageSelector: Component = () => {
 	const location = useLocation();
-	const selectedLanguage =
-		getValidLocaleFromPathname(location.pathname) ?? "en";
+	const selectedLanguage = getCurrentLocale() ?? "en";
 
 	return (
 		<DropdownMenu.Root gutter={10}>

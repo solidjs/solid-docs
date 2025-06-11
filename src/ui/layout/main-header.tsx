@@ -11,6 +11,7 @@ import { LanguageSelector } from "./language-selector";
 
 import { useCurrentRouteMetaData } from "~/utils/route-metadata-helper";
 import { clientOnly } from "@solidjs/start";
+import { useProject } from "~/ui/use-project";
 
 const ClientSearch = clientOnly(() =>
 	import("../search").then((m) => ({ default: m.Search }))
@@ -33,9 +34,7 @@ interface NavProps {
 
 export function MainHeader(props: NavProps) {
 	const [isScrolled, setIsScrolled] = createSignal(false);
-	const notSolidCore = useMatch(() => "/:project/*", {
-		project: ["solid-router", "solid-start", "solid-meta"],
-	});
+	const project = useProject();
 	const translatedLocale = useMatch(() => "/:locale/:project/*", {
 		locale: SUPPORTED_LOCALES,
 		project: ["solid-router", "solid-start", "solid-meta"],
@@ -60,6 +59,19 @@ export function MainHeader(props: NavProps) {
 		return useCurrentRouteMetaData();
 	});
 
+	const homePageUrl = createMemo(() => {
+		switch (project()) {
+			case "solid-start":
+				return "/solid-start";
+			case "solid-router":
+				return "/solid-router";
+			case "solid-meta":
+				return "/solid-meta";
+			default:
+				return "/";
+		}
+	});
+
 	return (
 		<header
 			class="sticky top-0 z-50 flex items-center justify-between bg-blue-50/80 shadow-md shadow-slate-900/5 transition duration-500 dark:shadow-none backdrop-blur"
@@ -74,7 +86,7 @@ export function MainHeader(props: NavProps) {
 					<div class="flex lg:hidden">
 						<MobileNavigation tree={props.tree} />
 					</div>
-					<A href="/" aria-label="Home page" addLocale>
+					<A href={homePageUrl()} aria-label="Home page" addLocale>
 						<Logo class="h-9" />
 					</A>
 				</div>
@@ -83,10 +95,12 @@ export function MainHeader(props: NavProps) {
 					<li>
 						<A
 							href="/"
-							class="border-b-2 border-transparent text-slate-900 dark:text-slate-200 relative overflow-hidden drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] px-2"
+							class="border-b-2 text-slate-900 dark:text-slate-200 relative overflow-hidden drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] px-2"
+              activeClass="border-b-blue-500 dark:bottom-b-blue-500"
+              inactiveClass="border-transparent"
 							classList={{
-								"border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250":
-									!notSolidCore() && !translatedLocale(),
+								"transition-all duration-250":
+									project() === "solid" && !translatedLocale(),
 							}}
 							addLocale
 						>
@@ -96,8 +110,9 @@ export function MainHeader(props: NavProps) {
 					<li>
 						<A
 							href="/solid-router"
-							class="border-b-2 border-transparent text-slate-900 dark:text-slate-200 px-2"
+							class="border-b-2 text-slate-900 dark:text-slate-200 px-2"
 							activeClass="border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
+              inactiveClass="border-transparent"
 							addLocale
 						>
 							Router
@@ -106,8 +121,9 @@ export function MainHeader(props: NavProps) {
 					<li>
 						<A
 							href="/solid-start"
-							class="border-b-2 border-transparent text-slate-900 dark:text-slate-200 px-2"
+							class="border-b-2 text-slate-900 dark:text-slate-200 px-2"
 							activeClass="border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
+              inactiveClass="border-transparent"
 							addLocale
 						>
 							SolidStart
@@ -116,8 +132,9 @@ export function MainHeader(props: NavProps) {
 					<li>
 						<A
 							href="/solid-meta"
-							class="border-b-2 border-transparent text-slate-900 dark:text-slate-200 px-2"
+							class="border-b-2 text-slate-900 dark:text-slate-200 px-2"
 							activeClass="border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
+              inactiveClass="border-transparent"
 							addLocale
 						>
 							Meta

@@ -1,4 +1,3 @@
-/* eslint-disable solid/reactivity */
 import { ParentProps, Show, createSignal } from "solid-js";
 import "./eraser-link.css";
 

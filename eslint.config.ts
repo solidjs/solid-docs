@@ -8,7 +8,6 @@ export default [
 	{
 		name: "global-ignores",
 		ignores: [
-			"**/build/**",
 			"**/dist/**",
 			"**/node_modules/**",
 			".github/",

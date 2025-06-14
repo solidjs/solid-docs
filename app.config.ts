@@ -76,7 +76,6 @@ export default defineConfig(
 							cursorColor: "var(--twoslash-cursor)",
 						},
 					},
-					twoSlash: false,
 				},
 				toc: {
 					minDepth: 2,

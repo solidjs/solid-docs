@@ -46,7 +46,6 @@ const client = getOramaClient({
 });
 
 export function Search() {
-	// eslint-disable-next-line solid/components-return-once
 	if (!client) return null;
 
 	const navigate = useNavigate();

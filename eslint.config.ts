@@ -12,6 +12,8 @@ export default [
 			"**/node_modules/**",
 			".github/",
 			".solid/",
+			".vinxi/",
+			".netlify/",
 			"public/",
 			"scripts/",
 		],

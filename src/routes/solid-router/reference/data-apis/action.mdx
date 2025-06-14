@@ -2,196 +2,132 @@
 title: action
 ---
 
-Actions are data mutations that can trigger invalidations and further routing.
-A list of prebuilt response helpers can be found below.
+The `action` function wraps an asynchronous function and returns an action.
+Actions enable data mutations and side effects, often in response to user interactions such as form submissions.
+To learn more about actions, see [the actions documentation](/solid-router/concepts/actions).
 
-```jsx
-import { action, revalidate, redirect } from "@solidjs/router"
+```tsx
+import { action } from "@solidjs/router";
 
-// anywhere
-const myAction = action(async (data) => {
-  await doMutation(data);
-  throw redirect("/", { revalidate: getUser.keyFor(data.id) }); // throw a response to do a redirect
+const addTodoAction = action(async (name: string) => {
+	await fetch("https://api.com/todos", {
+		method: "POST",
+		body: JSON.stringify({ name }),
+	});
+});
+```
+
+## Forms
+
+Actions can be used to handle form submissions by passing them to the `action` prop in the [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/form) element.
+The form values will be accessible through the first parameter of the action function, which is a [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object.
+
+Please note that the `<form>` element **must** have `method="post"`.
+When using Server-Side Rendering (SSR), you must provide a unique name as the second parameter to the action function.
+
+```tsx
+import { action } from "@solidjs/router";
+
+const addTodoAction = action(async (formData: FormData) => {
+	const name = formData.get("name")?.toString();
+	await fetch("https://api.com/todos", {
+		method: "POST",
+		body: JSON.stringify({ name }),
+	});
+}, "add-todo");
+
+function TodoForm() {
+	return (
+		<form action={addTodoAction} method="post">
+			<input name="name" />
+			<button>Add todo</button>
+		</form>
+	);
+}
+```
+
+### The `with` method
+
+Actions have a `with` method that is used to pass additional arguments to the action.
+The parameters passed to the `with` method are forwarded to the action function in the same order.
+The `FormData` is still available as the last parameter.
+
+```tsx
+import { action } from "@solidjs/router";
+
+const addTodoAction = action(async (userId: number, formData: FormData) => {
+	const name = formData.get("name")?.toString();
+	await fetch("https://api.com/todos", {
+		method: "POST",
+		body: JSON.stringify({ userId, name }),
+	});
 });
 
-// in component
-<form action={myAction} method="post" />
-
-//or
-<button type="submit" formaction={myAction}></button>
-
-```
-
-Actions only work with **post** requests.
-This means forms require `method="post"`.
-
-A `with` method can be used when typed data is required.
-This removes the need to use `FormData` or other additional hidden fields.
-The `with` method works similar to [`bind`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_objects/Function/bind), which applies the arguments in order.
-
-Without `with`:
-
-```jsx
-const deleteTodo = action(async (formData: FormData) => {
-  const id = Number(formData.get("id"))
-  await api.deleteTodo(id)
-})
-
-<form action={deleteTodo} method="post">
-  <input type="hidden" name="id" value={todo.id} />
-  <button type="submit">Delete</button>
-</form>
-
-```
-
-Using `with`:
-
-```jsx del={5,6} ins={7}
-const deleteTodo = action(async (id: number) => {
-  await api.deleteTodo(id)
-})
-
-<form action={deleteTodo} method="post">
-  <input type="hidden" name="id" value={todo.id} />
-<form action={deleteTodo.with(todo.id)} method="post">
-  <button type="submit">Delete</button>
-</form>
-
-```
-
-:::tip
-In [SolidStart](/solid-start) apps, it's recommended to use the [`"use server"`](/solid-start/reference/server/use-server) directive to leverage server-side caching.
-:::
-
-## Notes of `<form>` implementation and SSR
-
-This requires stable references because a string can only be serialized as an attribute, and it is crucial for consistency across SSR. where these references must align.
-The solution is to provide a unique name.
-
-```jsx
-const myAction = action(async (args) => {}, "my-action");
-```
-
-## `useAction`
-
-Instead of forms, actions can directly be wrapped in a `useAction` primitive.
-This is how router context is created.
-
-```jsx
-// in component
-const submit = useAction(myAction);
-submit(...args);
-
-```
-
-The outside of a form context can use custom data instead of `formData`.
-These helpers preserve types.
-
-However, even when used with server functions, such as with [SolidStart](https://start.solidjs.com/getting-started/what-is-solidstart), this requires client-side JavaScript and is not progressively enhanceable like forms are.
-
-## `useSubmission`/`useSubmissions`
-
-These functions are used when incorporating optimistic updates during ongoing actions.
-They provide either a singular Submission (the latest one), or a collection of Submissions that match, with an optional filtering function.
-
-```jsx
-type Submission<T, U> = {
-  input: T;
-  result: U;
-  error: any;
-  pending: boolean
-  clear: () => {}
-  retry: () => {}
+function TodoForm() {
+	const userId = 1;
+	return (
+		<form action={addTodoAction.with(userId)} method="post">
+			<input name="name" />
+			<button>Add todo</button>
+		</form>
+	);
 }
-
-const submissions = useSubmissions(action, (input) => filter(input));
-const submission = useSubmission(action, (input) => filter(input));
-
 ```
 
-##  Revalidate cached functions
+## Response helpers
 
-###  Revalidate all (default)
-By default all cached functions will be revalidated wether the action does not return or return a "normal" response.
+Solid Router provides three response helpers that customize the behavior of the action:
 
-```jsx
+- [`json`](/solid-router/reference/response-helpers/json): Allows returning JSON from the action, which will be accessible as the return value when invoking the action using [`useAction`](/solid-router/reference/data-apis/use-action).
+- [`redirect`](/solid-router/reference/response-helpers/redirect): Performs a redirect.
+- [`reload`](/solid-router/reference/response-helpers/reload): Revalidates queries.
 
-const deleteTodo = action(async (formData: FormData) => {
-  const id = Number(formData.get("id"))
-  await api.deleteTodo(id)
-  // ...
-  return new  Response("success",  {  status:  200  });
-})
+Response helpers return a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object with custom properties recognized by Solid Router.
+When a `Response` object is either returned or thrown from an action function, Solid Router handles it automatically.
+It's advised not to construct a `Response` object without using response helpers.
+
+```tsx
+import { action, redirect, json } from "@solidjs/router";
+import { getCurrentUser } from "./auth";
+
+const addTodoAction = action(async (name: string) => {
+	const user = await getCurrentUser();
+	if (!user) {
+		throw redirect("/login");
+		// Or
+		// return redirect("/login");
+	}
+
+	const todo = await fetch("https://api.com/todos", {
+		method: "POST",
+		body: JSON.stringify({ name }),
+	}).then((response) => response.json());
+	throw json({ todo });
+	// Or
+	// return json({ todo });
+});
 ```
 
-### Revalidate specific cached keys
+## Query revalidation
 
-By returning a response with solid-router's `json`, `reload` or `redirect` helpers you can pass a key / keys to the revalidate prop as the second argument of the json response helper.
-You can either pass as `string` directly or use the cached functions `key` or `keyFor` props.
+By default, when an action is invoked, all [queries](/solid-router/reference/data-apis/query) used on the same page are automatically revalidated.
+This behavior can be customized using the [response helpers](#response-helpers).
 
-```jsx
-import { action, json, reload, redirect } from "@solidjs/router"
+Response helpers accept a parameter that allows to specify which query keys to revalidate in an action.
+This can be used to disable revalidation for a specific set of queries or to disable it entirely.
 
-const deleteTodo = action(async (formData: FormData) => {
-  const id = Number(formData.get("id"))
-  await api.deleteTodo(id)
-  return json(
-  { deleted: id },
-  { revalidate: ["getAllTodos", getTodos.key, getTodoByID.keyFor(id)]}
-  )
+```tsx
+import { action, reload } from "@solidjs/router";
 
-  //or
-  return reload({ revalidate: ["getAllTodos", getTodos.key, getTodoByID.keyFor(id)]})
-
-  //or
-  return redirect("/", { revalidate: ["getAllTodos", getTodos.key, getTodoByID.keyFor(id)]})
-
-})
-
+const addTodoAction = action(async (name: string) => {
+	await fetch("https://api.com/todos", {
+		method: "POST",
+		body: JSON.stringify({ name }),
+	});
+	return reload({ revalidate: [] });
+	// return reload({ revalidate: ["getTodos"] });
+});
 ```
 
-## Prevent revalidation
-To opt out of any revalidation you can pass any `string` to revalidate which is not a key of any cached function.
-
-```jsx
-const deleteTodo = action(async (formData: FormData) => {
-  const id = Number(formData.get("id"))
-  await api.deleteTodo(id)
-  // returns a `json` without revalidating the action.
-  return json(`deleted ${id}`,{ revalidate: "nothing" })
-
-  // or reload the route without revalidating the request.
-  return reload({ revalidate: "nothing" })
-
- // or redirect without revalidating
- return redirect("/", { revalidate: "nothing" })
-})
-
-```
-
-###  Revalidate without action
-
-Cached functions can also be revalidated by the  `revalidate` helper.
-
-```jsx
-revalidate([getTodos.key, getTodoByID.keyFor(id)])
-
-```
-
-This is also great if you want to set your own "refresh" interval e.g. poll data every 30 seconds.
-
-```jsx
-export default function TodoLayout(){
-	
-	const todos = createAsync(() => getTodos())
-	
-	onMount(() => {
-		//30 second polling
-		const interval = setInterval(() => revalidate(getTodos.key),1000 * 30)
-		onCleanup(() => clearInterval(interval))
-	})
-	
-	// ...
-}
-
-```
+In this example, the first `reload` completely disables revalidation.
+The second return (which is commented out) only revalidates queries with the `getTodos` query key.

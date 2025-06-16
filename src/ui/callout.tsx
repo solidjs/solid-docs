@@ -10,7 +10,7 @@ import {
 } from "solid-heroicons/solid";
 
 const styles = {
-	info: {
+	note: {
 		container:
 			"bg-emerald-500/20 border-emerald-500 dark:border-emerald-400 dark:bg-emerald-800/20 dark:border-emerald-900",
 		title: "text-emerald-900 dark:text-emerald-300",
@@ -38,18 +38,18 @@ const styles = {
 };
 
 const icons = {
+	note: (props: { class?: string }) => (
+		<Icon
+			aria-hidden="true"
+			path={bookOpen}
+			class={`${props.class} fill-emerald-800 dark:fill-emerald-300`}
+		/>
+	),
 	tip: (props: { class?: string }) => (
 		<Icon
 			aria-hidden="true"
 			path={lightBulb}
 			class={`${props.class} fill-violet-900 dark:fill-violet-300`}
-		/>
-	),
-	info: (props: { class?: string }) => (
-		<Icon
-			aria-hidden="true"
-			path={bookOpen}
-			class={`${props.class} fill-emerald-800 dark:fill-emerald-300`}
 		/>
 	),
 	advanced: (props: { class?: string }) => (
@@ -75,17 +75,16 @@ const icons = {
 	),
 };
 
+type CalloutType = keyof typeof styles;
+
 export type CalloutProps = {
 	title?: string;
 	children: JSX.Element;
-	type?: keyof typeof styles;
+	type?: CalloutType;
 };
 
 export function Callout(props: CalloutProps) {
-	const mergedProps = mergeProps(
-		{ type: "info" as keyof typeof styles },
-		props
-	);
+	const mergedProps = mergeProps({ type: "note" as CalloutType }, props);
 
 	const iconType = untrack(() => mergedProps.type);
 
@@ -103,7 +102,7 @@ export function Callout(props: CalloutProps) {
 					when={props.title}
 					fallback={
 						<span class="capitalize font-semibold text-xl">
-							{props.type || "Info"}
+							{props.type || "Note"}
 						</span>
 					}
 				>

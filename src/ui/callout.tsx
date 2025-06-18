@@ -101,7 +101,11 @@ export function Callout(props: CalloutProps) {
 				<Show
 					when={props.title}
 					fallback={
+<<<<<<< HEAD
 						<span class="text-xl font-semibold capitalize">
+=======
+						<span class="capitalize font-semibold text-xl">
+>>>>>>> 0c3b40b1 (Update info callout titles (#1207))
 							{props.type || "Note"}
 						</span>
 					}

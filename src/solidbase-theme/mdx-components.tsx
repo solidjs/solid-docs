@@ -14,15 +14,15 @@ import { clientOnly } from "@solidjs/start";
 import { Callout } from "~/ui/callout";
 import { Tabs, TabList, TabPanel, Tab } from "~/ui/tabs";
 
-export { EditPageLink } from "../ui/edit-page-link";
-export { PageIssueLink } from "../ui/page-issue-link";
+export { EditPageLink } from "~/ui/edit-page-link";
+export { PageIssueLink } from "~/ui/page-issue-link";
 export { Callout } from "~/ui/callout";
 export { QuickLinks } from "~/ui/quick-links";
 export { ImageLinks } from "~/ui/image-links";
 
 const EraserLinkImpl = clientOnly(() => import("../ui/eraser-link"));
 
-type CalloutType = "info" | "tip" | "danger" | "caution";
+type CalloutType = "note" | "tip" | "advanced" | "caution" | "danger";
 
 export const DirectiveContainer = (
 	props: {
@@ -38,7 +38,11 @@ export const DirectiveContainer = (
 	return (
 		<Switch
 			fallback={
-				<Callout type={props.type as CalloutType} children={_children} />
+				<Callout
+					type={props.type as CalloutType}
+					title={props.title}
+					children={_children}
+				/>
 			}
 		>
 			<Match when={props.type === "tab"}>{_children}</Match>

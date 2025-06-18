@@ -107,7 +107,8 @@ const LEGACY_ROUTES = {
 
 	// solid-docs-next moves/new location for old pages/solid api updates
 	"/reference/jsx-attributes/on-and-oncapture": "/reference/jsx-attributes/on",
-
+	
+	"/solid-router/reference/response-helpers/revalidate": "/solid-router/reference/data-apis/revalidate",
 } as const;
 
 function isLegacyRoute(path: string): path is keyof typeof LEGACY_ROUTES {

@@ -1,0 +1,43 @@
+---
+title: revalidate
+---
+
+The `revalidate` function is used to revalidate queries associated with specified [query keys](/solid-router/reference/data-apis/query#query-keys).
+When a [query](/solid-router/reference/data-apis/query) is revalidated, it is executed again, and any references to the associated query data are updated accordingly.
+
+```tsx
+import { For } from "solid-js";
+import { query, createAsync, revalidate } from "@solidjs/router";
+
+const getPosts = query(async () => {
+	return await fetch("https://api.com/posts").then((response) =>
+		response.json()
+	);
+}, "posts");
+
+function Posts() {
+	const posts = createAsync(() => getPosts());
+
+	function refetchPosts() {
+		revalidate(getPosts.key);
+	}
+
+	return (
+		<div>
+			<button onClick={refetchPosts}>Refetch posts</button>
+			<ul>
+				<For each={posts()}>{(post) => <li>{post.title}</li>}</For>
+			</ul>
+		</div>
+	);
+}
+```
+
+## Parameters
+
+- `key`: The query key or an array of query keys to be revalidated.
+- `force` (optional): A boolean that indicates whether to delete the existing cached value of the queries.
+  Note that this cache is solely for de-duplication purposes.
+  Therefore, deleting the cache only affects de-duplication.
+  For more information on how `query` works, refer to [the `query` documentation](/solid-router/reference/data-apis/query).
+  The default value is `true`.

@@ -66,7 +66,7 @@ We ask that you use them sparingly.
 3. Once you have the Aside component imported, simply follow the below example for how to add one to your document.
 
 ```
-:::info
+:::note
     content here
 :::
 ```

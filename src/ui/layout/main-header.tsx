@@ -62,11 +62,11 @@ export function MainHeader(props: NavProps) {
 	const homePageUrl = createMemo(() => {
 		switch (project()) {
 			case "solid-start":
-				return "/solid-start";
+				return "/solid-start/";
 			case "solid-router":
-				return "/solid-router";
+				return "/solid-router/";
 			case "solid-meta":
-				return "/solid-meta";
+				return "/solid-meta/";
 			default:
 				return "/";
 		}
@@ -107,7 +107,7 @@ export function MainHeader(props: NavProps) {
 					</li>
 					<li>
 						<A
-							href="/solid-router"
+							href="/solid-router/"
 							class="text-slate-900 dark:text-slate-200 px-2"
 							activeClass="border-b-2 border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
 							addLocale
@@ -117,7 +117,7 @@ export function MainHeader(props: NavProps) {
 					</li>
 					<li>
 						<A
-							href="/solid-start"
+							href="/solid-start/"
 							class="text-slate-900 dark:text-slate-200 px-2"
 							activeClass="border-b-2 border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
 							addLocale
@@ -127,7 +127,7 @@ export function MainHeader(props: NavProps) {
 					</li>
 					<li>
 						<A
-							href="/solid-meta"
+							href="/solid-meta/"
 							class="text-slate-900 dark:text-slate-200 px-2"
 							activeClass="border-b-2 border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
 							addLocale

@@ -7,7 +7,7 @@ export default {
 		"./src/**/*.{js,jsx,ts,tsx,md,mdx}",
 		"./content/**/*.{js,jsx,ts,tsx,md,mdx}",
 	],
-	darkMode: ["selector", "[data-theme='dark']"],
+	darkMode: ["selector", "[data-theme*='dark']"],
 	theme: {
 		fontSize: {
 			xs: ["0.75rem", { lineHeight: "1rem" }],

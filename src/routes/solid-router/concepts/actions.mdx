@@ -2,151 +2,166 @@
 title: "Actions"
 ---
 
-When developing applications, it is common to need to communicate new information to the server based on user interactions.
-Actions are Solid Router’s solution to this problem.
+Actions provide a powerful and flexible mechanism for handling data mutations and side effects.
+They are designed to simplify your application's data flow, ensure a consistent user experience, and integrate seamlessly with Solid's reactivity.
 
-## What are actions?
+Actions provide several key benefits:
 
-Actions are asynchronous processing functions that allow you to submit data to your server and receive a response.
-They are isomorphic, meaning they can run either on the server or the client, depending on what is needed.
-This flexibility makes actions a powerful tool for managing and tracking data submissions.
-
-### How actions work
-
-Actions represent the server-side part of an [HTML form](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form).
-They handle submissions through POST requests, allowing you to easily use HTML forms to send data.
-
-When a user performs an action, such as submitting a form, the data is sent to the server for processing via an action.
-
-### Benefits of using actions
-
-1. **Isomorphic**: Since actions can run on both the server and client, you can optimize performance by choosing the best execution environment for your needs.
-2. **Asynchronous processing**: Actions handle data submissions asynchronously, ensuring that your application remains responsive.
-3. **Simplified data handling**: By using actions, the process of managing and tracking data submissions can be streamlined, reducing the complexity of your application.
+- **Centralized Logic**: Encapsulate the logic for data modifications in a single, reusable function.
+- **Integrated State Management**: Solid Router automatically tracks the execution state of an action (whether it's pending, successful, or has encountered an error), making it easy to build reactive UI feedback.
+- **Automatic Data Revalidation**: By default, after an action successfully completes, Solid Router revalidates any queries on the same page.
+  This ensures your UI reflects the latest data without manual intervention.
+- **Progressive Enhancement**: When used with HTML forms, actions can enable forms to function even if JavaScript is not yet loaded, providing a robust and accessible user experience.
 
 ## Creating actions
 
-To create an action, use the `action` function from the `@solidjs/router` package. 
-This function takes an asynchronous function as an argument and returns a new function that can be used to submit data.
+At their core, actions are **asynchronous functions** that you define using the `action` function.
+The [`action`](/solid-router/reference/data-apis/action) function takes your asynchronous function and returns an action object.
+
+To define an action, import the `action` function from `@solidjs/router` and pass it your asynchronous logic:
 
 ```tsx
 import { action } from "@solidjs/router";
 
-const echo = action(async (message: string) => {
-  // Simulates an asynchronous operation, such as an API call
-  await new Promise((resolve, reject) => setTimeout(resolve, 1000));
-  console.log(message);
+const addPostAction = action(async (title: string) => {
+	const response = await fetch("https://api.com/posts", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({ title }),
+	});
+
+	if (!response.ok) {
+		const errorData = await response.json();
+		throw new Error(errorData.message || "Failed to add post");
+	}
+
+	return await response.json();
 });
 ```
 
-In this example, the `echo` action simulates a fetch call with a 1 second delay before logging the message to the console.
-The `echo` action will act as a backend, however, it can be substituted for any API provided it can be run on the client.
-Typically, route actions are used with some sort of solution like fetch or GraphQL.
+In this example, `addPostAction` handles sending a POST request to create a new post.
+The return value of the action can be accessed later when tracking action state.
 
-:::tip
-In [SolidStart](/solid-start) apps, it's recommended to use the [`"use server"`](/solid-start/reference/server/use-server) directive to leverage server-side functionality.
+:::note[Server-Side Rendering (SSR)]
+When using actions with SSR, you must provide a unique name string as the second parameter to the `action` function.
+This is crucial for Solid Router to correctly identify and re-run actions on the server.
+We'll explore this in more detail in the Handling Form Submissions section.
 :::
 
-### Using actions
+## How to Use Actions
 
-To use the action, you can call it from within a component using [`useAction`](/solid-router/reference/data-apis/use-action).
-This returns a function that can be called with the necessary arguments to trigger the action.
+Solid Router offers two primary ways to invoke an action:
 
-```tsx del={1} ins={2,9-13}
-import { action } from "@solidjs/router";
-import { action, useAction } from "@solidjs/router";
+1.  **Via the `<form>` element's `action` prop**: This is the recommended approach for most data mutations, especially those triggered by user input, as it provides **progressive enhancement**.
+2.  **Programmatically with `useAction`**: For scenarios where you need to trigger an action outside of a form context.
 
-const echo = action(async (message: string) => {
-  await new Promise((resolve, reject) => setTimeout(resolve, 1000));
-  console.log(message);
-});
+### Handling Form Submissions with the `action` prop
 
-export function MyComponent() {
-  const myEcho = useAction(echo);
+Solid Router extends the standard HTML `<form>` element to accept an `action` prop, allowing you to handle your form submissions to an action.
+This method provides the best user experience due to progressive enhancement.
 
-  myEcho("Hello from Solid!");
-}
-```
+When using actions with `<form>`:
 
-In this component, `useAction` is used to get a reference to the `echo` action.
-The action is then called with the message `"Hello from Solid!"`, which will be logged to the console after a 1 second delay.
-
-### Returning data from actions
-
-In many cases, after submitting data, the server sends some data back as well.
-This may be in the form of an error message if something has failed or the results of a successful operation.
-Anything returned from an action can be accessed using the reactive `action.result` property, where the value can change each time you submit your action.
-
-To access the action's result, you must pass the action to `useSubmission`:
-
-```tsx del={1} ins={2,11,15-17}
-import { action, useAction } from "@solidjs/router";
-import { action, useAction, useSubmission } from "@solidjs/router";
-
-const echo = action(async (message: string) => {
-  await new Promise((resolve, reject) => setTimeout(resolve, 1000));
-  return message;
-});
-
-export function MyComponent() {
-  const myEcho = useAction(echo);
-  const echoing = useSubmission(echo);
-
-  myEcho("Hello from solid!");
-
-  setTimeout(() => myEcho("This is a second submission!"), 1500);
-
-  return <p>{echoing.result}</p>;
-}
-```
-
-Using `useSubmission` leaves the implementation details of how you trigger `echo` up to you.
-When handling user inputs, for example, it is better to use a `form` for a multitude of reasons.
-
-## Using forms to submit data
-
-When submitting data with actions, it is recommended to use HTML forms.
-These forms can be used prior to JavaScript loading, which creates instantly interactive applications.
-This also inherently provides accessibility benefits, saving the time of designing a custom UI library that may not have these benefits.
-
-When using forms to submit actions, the first argument passed to your action function is an instance of [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData).
-To use actions with forms, pass the action to the `action` property of your form.
-This creates progressively enhanced forms that work even when JavaScript is disabled.
-
-If you do not return a `Response` from your action, the user will stay on the same page and responses will be re-triggered.
-Using a `redirect` can tell the browser to navigate to a new page.
-
+1. The `<form>` element **must** have `method="post"`.
+2. The action function will automatically receive the form's data as a [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object as its first parameter.
+3. For SSR environments, you **must** provide a unique name string as the second parameter to the `action` function.
+   This name is used by Solid Router to uniquely identify and serialize the action across the client and server.
 
 ```tsx
-import { action, redirect } from "@solidjs/router";
+import { action } from "@solidjs/router";
 
-const isAdmin = action(async (formData: FormData) => {
-  await new Promise((resolve, reject) => setTimeout(resolve, 1000));
+const addPostAction = action(async (formData: FormData) => {
+	const title = formData.get("title")?.toString();
 
-  const username = formData.get("username");
+	if (!title || title.trim() === "") {
+		throw new Error("Post title cannot be empty.");
+	}
 
-  if (username === "admin") throw redirect("/admin");
-  return new Error("Invalid username");
-});
+	const response = await fetch("https://api.com/posts", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({ title }),
+	});
 
-export function MyComponent() {
+	if (!response.ok) {
+		const errorData = await response.json();
+		throw new Error(errorData.message || "Failed to add post");
+	}
+}, "add-post");
 
-  return (
-    <form action={isAdmin} method="post">
-      <label for="username">Username:</label>
-      <input type="text" name="username" />
-      <input type="submit" value="submit" />
-    </form>
-  );
+function AddPostForm() {
+	return (
+		<form action={addPostAction} method="post">
+			<label for="title">Post Title:</label>
+			<input id="title" name="title" placeholder="Enter post title" />
+			<button type="submit">Create Post</button>
+		</form>
+	);
 }
 ```
 
-**Note:** If you are uploading files make sure you include `enctype="multipart/form-data"` to your `<form>` element.
+When this form is submitted, `addPostFormAction` will be invoked with the `FormData` containing the form values.
 
-## Error handling
+:::tip[File Uploads]
 
-Rather than throwing errors, it is recommended to return them from actions.
-This helps with the typing of submissions that would be used with `useSubmission`.
-This is important when handling progressive enhancement where no JavaScript is present in the client, so that errors can be used declaratively to render the updated page on the server.
+If your form includes file inputs, ensure your <form> element has enctype="multipart/form-data" to correctly send the file data.
 
-Additionally, when using server actions, it is good practice to handle errors on the server to sanitize error messages.
+```tsx
+<form action={uploadFileAction} method="post" enctype="multipart/form-data">
+	<input type="file" name="myFile" />
+	<button type="submit">Upload</button>
+</form>
+```
+
+:::
+
+#### Passing additional data
+
+Sometimes, your action might need additional data that isn't part of the form's inputs.
+You can pass these additional arguments using the `with` method on your action.
+
+Arguments passed to `with` will be forwarded to your action function before the `FormData` object.
+
+```tsx
+import { action } from "@solidjs/router";
+
+const updatePostAction = action(async (postId: string, formData: FormData) => {
+	const newTitle = formData.get("title")?.toString();
+
+	if (!newTitle || newTitle.trim() === "") {
+		throw new Error("Post title cannot be empty.");
+	}
+
+	const response = await fetch(
+		`https://api.com/posts/${encodeURIComponent(newTitle)}`,
+		{
+			method: "PUT",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ title: newTitle }),
+		}
+	);
+
+	if (!response.ok) {
+		const errorData = await response.json();
+		throw new Error(errorData.message || "Failed to update post");
+	}
+});
+
+function PostEditForm(props: { postId: string }) {
+	return (
+		<form action={updatePostAction.with(props.postId)} method="post">
+			<label for="title">Title:</label>
+			<input id="title" name="title" placeholder="New title" />
+			<button type="submit">Update Post</button>
+		</form>
+	);
+}
+```
+
+Here, `updatePostAction` receives `postId` (passed via `with`), and then the `formData` from the form.

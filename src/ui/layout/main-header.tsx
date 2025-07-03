@@ -1,5 +1,5 @@
 import { Show, createMemo, createSignal, onCleanup, onMount } from "solid-js";
-import { A } from "~/ui/i18n-anchor";
+import { A, type RouterLinkProps } from "~/ui/i18n-anchor";
 import { isServer } from "solid-js/web";
 
 import { Logo, GitHubIcon, DiscordIcon } from "~/ui/logo";
@@ -16,6 +16,26 @@ import { useProject } from "~/ui/use-project";
 const ClientSearch = clientOnly(() =>
 	import("../search").then((m) => ({ default: m.Search }))
 );
+
+interface NavLinkProps extends RouterLinkProps {
+	active?: boolean;
+}
+
+function NavLink(props: NavLinkProps) {
+	return (
+		<A
+			class="border-b-2 text-slate-900 dark:text-slate-200 relative overflow-hidden drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] px-2 transition-all duration-250"
+			classList={{
+				"border-b-blue-500 dark:bottom-b-blue-500": props.active,
+				"border-transparent": !props.active,
+			}}
+			addLocale
+			{...props}
+		>
+			{props.children}
+		</A>
+	);
+}
 
 interface Entry {
 	title: string;
@@ -93,47 +113,30 @@ export function MainHeader(props: NavProps) {
 
 				<ul class="order-2 col-span-2 lg:col-span-1 flex pt-6 lg:pt-0 lg:w-auto w-full gap-5 justify-center">
 					<li>
-						<A
+						<NavLink
 							href="/"
-							class="text-slate-900 dark:text-slate-200 relative overflow-hidden drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] px-2"
-							classList={{
-								"border-b-2 border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250":
-									project() === "solid" && !translatedLocale(),
-							}}
-							addLocale
+							active={project() === "solid" && !translatedLocale()}
 						>
 							Core
-						</A>
+						</NavLink>
 					</li>
 					<li>
-						<A
+						<NavLink
 							href="/solid-router/"
-							class="text-slate-900 dark:text-slate-200 px-2"
-							activeClass="border-b-2 border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
-							addLocale
+							active={project() === "solid-router"}
 						>
 							Router
-						</A>
+						</NavLink>
 					</li>
 					<li>
-						<A
-							href="/solid-start/"
-							class="text-slate-900 dark:text-slate-200 px-2"
-							activeClass="border-b-2 border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
-							addLocale
-						>
+						<NavLink href="/solid-start/" active={project() === "solid-start"}>
 							SolidStart
-						</A>
+						</NavLink>
 					</li>
 					<li>
-						<A
-							href="/solid-meta/"
-							class="text-slate-900 dark:text-slate-200 px-2"
-							activeClass="border-b-2 border-b-blue-500 dark:bottom-b-blue-500 transition-all duration-250"
-							addLocale
-						>
+						<NavLink href="/solid-meta/" active={project() === "solid-meta"}>
 							Meta
-						</A>
+						</NavLink>
 					</li>
 				</ul>
 

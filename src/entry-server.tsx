@@ -20,7 +20,7 @@ export default createHandler(() => (
 						<script src="/scripts/browser-specific.js" type="module" />
 						{assets}
 					</head>
-					<body class="min-h-screen dark:bg-slate-900 bg-slate-50">
+					<body class="min-h-screen bg-slate-50 dark:bg-slate-900">
 						<div id="app">{children}</div>
 						{scripts}
 					</body>

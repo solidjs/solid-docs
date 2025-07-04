@@ -133,14 +133,14 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 	);
 
 	return (
-		<div class="relative dark:bg-slate-900 bg-slate-50">
+		<div class="relative bg-slate-50 dark:bg-slate-900">
 			<Show when={entries()}>
 				{(data) => <MainHeader tree={data().tree} />}
 			</Show>
 			<Show when={useCurrentRouteMetaData().isProjectRoot} keyed>
 				<Hero />
 			</Show>
-			<div class="relative mx-auto flex max-w-8xl flex-auto justify-center custom-scrollbar pt-10">
+			<div class="custom-scrollbar relative mx-auto flex max-w-8xl flex-auto justify-center pt-10">
 				<Show when={!props.isError}>
 					<div class="hidden md:relative lg:block lg:flex-none">
 						<div class="absolute inset-y-0 right-0 w-[50vw] dark:hidden" />
@@ -157,12 +157,12 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 						</Suspense>
 					</div>
 				</Show>
-				<main class="w-full md:max-w-2xl flex-auto px-4 pt-2 md:pb-16 lg:max-w-none prose prose-slate dark:prose-invert dark:text-slate-300">
+				<main class="prose prose-slate w-full flex-auto px-4 pt-2 dark:prose-invert md:max-w-2xl md:pb-16 lg:max-w-none dark:text-slate-300">
 					<Show
 						when={!useCurrentRouteMetaData().isProjectRoot}
 						keyed
 						fallback={
-							<article class="px-2 md:px-10 expressive-code-overrides overflow-y-auto">
+							<article class="expressive-code-overrides overflow-y-auto px-2 md:px-10">
 								{props.children}
 							</article>
 						}
@@ -181,8 +181,8 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 					</Show>
 				</main>
 				<Show when={!props.isError}>
-					<div class="hidden xl:block shrink-0 w-56 2xl:w-72 pr-4 prose prose-slate dark:prose-invert dark:text-slate-300">
-						<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] overflow-y-auto custom-scrollbar">
+					<div class="prose prose-slate hidden w-56 shrink-0 pr-4 dark:prose-invert xl:block 2xl:w-72 dark:text-slate-300">
+						<div class="custom-scrollbar sticky top-[4.75rem] h-[calc(100vh-7rem)] overflow-y-auto">
 							<SidePanel />
 						</div>
 					</div>

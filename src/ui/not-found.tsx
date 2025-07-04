@@ -13,7 +13,7 @@ export function NotFound() {
 			<Layout isError>
 				<HttpStatusCode code={404} />
 				<div class="flex flex-col items-center">
-					<h1 class="inline pb-1 bg-gradient-to-r from-indigo-200 via-blue-400 to-indigo-200 bg-clip-text text-5xl tracking-tight text-transparent">
+					<h1 class="inline bg-gradient-to-r from-indigo-200 via-blue-400 to-indigo-200 bg-clip-text pb-1 text-5xl tracking-tight text-transparent">
 						Page Not Found
 					</h1>
 					<A href="/">Take me back.</A>

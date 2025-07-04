@@ -8,7 +8,7 @@ const SolidLogo = (props: { class?: string }) => (
 		width="100%"
 		height="100%"
 		xmlns="http://www.w3.org/2000/svg"
-		class="w-9 h-9 -mt-1 text-link dark:text-link-dark"
+		class="text-link dark:text-link-dark -mt-1 h-9 w-9"
 		viewBox="0 0 166 155.3"
 	>
 		<defs>
@@ -95,14 +95,14 @@ const SolidStartLogo = () => (
 		width="531"
 		height="454"
 		viewBox="0 0 531 454"
-		class="w-9 h-9 -mt-1 text-link dark:text-link-dark"
+		class="text-link dark:text-link-dark -mt-1 h-9 w-9"
 		fill="none"
 		xmlns="http://www.w3.org/2000/svg"
 	>
 		<g clip-path="url(#clip0_0_3)">
 			<mask
 				id="mask0_0_3"
-				style={{"mask-type":"luminance"}}
+				style={{ "mask-type": "luminance" }}
 				maskUnits="userSpaceOnUse"
 				x="246"
 				y="369"
@@ -122,7 +122,7 @@ const SolidStartLogo = () => (
 			</g>
 			<mask
 				id="mask1_0_3"
-				style={{"mask-type":"luminance"}}
+				style={{ "mask-type": "luminance" }}
 				maskUnits="userSpaceOnUse"
 				x="77"
 				y="241"
@@ -142,7 +142,7 @@ const SolidStartLogo = () => (
 			</g>
 			<mask
 				id="mask2_0_3"
-				style={{"mask-type":"luminance"}}
+				style={{ "mask-type": "luminance" }}
 				maskUnits="userSpaceOnUse"
 				x="375"
 				y="167"
@@ -162,7 +162,7 @@ const SolidStartLogo = () => (
 			</g>
 			<mask
 				id="mask3_0_3"
-				style={{"mask-type":"luminance"}}
+				style={{ "mask-type": "luminance" }}
 				maskUnits="userSpaceOnUse"
 				x="199"
 				y="35"
@@ -182,7 +182,7 @@ const SolidStartLogo = () => (
 			</g>
 			<mask
 				id="mask4_0_3"
-				style={{"mask-type":"luminance"}}
+				style={{ "mask-type": "luminance" }}
 				maskUnits="userSpaceOnUse"
 				x="32"
 				y="245"
@@ -202,7 +202,7 @@ const SolidStartLogo = () => (
 			</g>
 			<mask
 				id="mask5_0_3"
-				style={{"mask-type":"luminance"}}
+				style={{ "mask-type": "luminance" }}
 				maskUnits="userSpaceOnUse"
 				x="154"
 				y="39"
@@ -222,7 +222,7 @@ const SolidStartLogo = () => (
 			</g>
 			<mask
 				id="mask6_0_3"
-				style={{"mask-type":"luminance"}}
+				style={{ "mask-type": "luminance" }}
 				maskUnits="userSpaceOnUse"
 				x="118"
 				y="106"
@@ -242,7 +242,7 @@ const SolidStartLogo = () => (
 			</g>
 			<mask
 				id="mask7_0_3"
-				style={{"mask-type":"luminance"}}
+				style={{ "mask-type": "luminance" }}
 				maskUnits="userSpaceOnUse"
 				x="108"
 				y="110"
@@ -362,12 +362,12 @@ export function Logo(props: { class?: string }) {
 	const isMeta = useMatch(() => "/solid-meta/*");
 
 	return (
-		<div class="w-full inline-flex space-x-1 items-center text-primary dark:text-primary-dark py-2">
+		<div class="text-primary dark:text-primary-dark inline-flex w-full items-center space-x-1 py-2">
 			<Switch
 				fallback={
 					<>
 						<SolidLogo class={props.class} />
-						<span class="dark:text-white text-2xl leading-none font-normal inactive md:block hidden">
+						<span class="inactive hidden text-2xl font-normal leading-none md:block dark:text-white">
 							<b>Solid</b>
 						</span>
 					</>
@@ -376,7 +376,7 @@ export function Logo(props: { class?: string }) {
 				<Match when={isStart()?.path}>
 					<>
 						<SolidStartLogo />
-						<span class="dark:text-white text-2xl leading-none font-normal inactive md:block hidden">
+						<span class="inactive hidden text-2xl font-normal leading-none md:block dark:text-white">
 							<b>Solid</b>Start
 						</span>
 					</>
@@ -384,7 +384,7 @@ export function Logo(props: { class?: string }) {
 				<Match when={isRouter()?.path}>
 					<>
 						<SolidLogo />
-						<span class="dark:text-white text-2xl leading-none font-normal inactive md:block hidden">
+						<span class="inactive hidden text-2xl font-normal leading-none md:block dark:text-white">
 							Solid <b>Router</b>
 						</span>
 					</>
@@ -392,7 +392,7 @@ export function Logo(props: { class?: string }) {
 				<Match when={isMeta()?.path}>
 					<>
 						<SolidLogo />
-						<span class="dark:text-white text-2xl leading-none font-normal inactive md:block hidden">
+						<span class="inactive hidden text-2xl font-normal leading-none md:block dark:text-white">
 							Solid-<b>Meta</b>
 						</span>
 					</>

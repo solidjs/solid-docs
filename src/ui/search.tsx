@@ -113,10 +113,10 @@ export function Search() {
 
 	const regex = createMemo(() => makeSearchRegex(searchTerm()));
 	const highlightTitle = createMarker((text) => (
-		<mark class="font-bold bg-transparent dark:text-white">{text()}</mark>
+		<mark class="bg-transparent font-bold dark:text-white">{text()}</mark>
 	));
 	const highlightContent = createMarker((text) => (
-		<mark class="rounded bg-blue-200 dark:bg-slate-600 dark:text-white px-0.5">
+		<mark class="rounded bg-blue-200 px-0.5 dark:bg-slate-600 dark:text-white">
 			{text()}
 		</mark>
 	));
@@ -134,7 +134,7 @@ export function Search() {
 		>
 			<Dialog.Trigger
 				aria-keyshortcuts={isAppleDevice ? "Meta+K" : "Control+K"}
-				class="items-center rounded-lg md:border border-black/10 dark:border-white/60 dark:bg-slate-800 md:px-2 md:py-1.5 flex"
+				class="flex items-center rounded-lg border-black/10 md:border md:px-2 md:py-1.5 dark:border-white/60 dark:bg-slate-800"
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -145,17 +145,17 @@ export function Search() {
 				>
 					<path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
 				</svg>
-				<span class="hidden md:block ml-1 text-sm">Search</span>
-				<kbd class="hidden md:block ml-2 min-w-6 rounded border border-black/5 px-1 pb-px pt-1 text-center font-mono text-xs dark:bg-slate-700">
+				<span class="ml-1 hidden text-sm md:block">Search</span>
+				<kbd class="ml-2 hidden min-w-6 rounded border border-black/5 px-1 pb-px pt-1 text-center font-mono text-xs md:block dark:bg-slate-700">
 					<kbd>{isAppleDevice ? "⌘" : "Ctrl"}</kbd>
 					<kbd class="ml-0.5">K</kbd>
 				</kbd>
 			</Dialog.Trigger>
 			<Dialog.Portal>
 				<Dialog.Overlay class="fixed inset-0 z-50 bg-black/50" />
-				<Dialog.Content class="fixed inset-0 flex flex-col lg:top-14 z-50 lg:bottom-auto lg:max-h-[calc(100%-56px-56px)] w-full lg:left-1/2 lg:max-w-[550px] lg:-translate-x-1/2 overflow-hidden lg:rounded-2xl border border-black/5 bg-white pt-4 dark:border-white/60 dark:bg-slate-800">
-					<div class="flex mr-4 lg:mx-4 items-center">
-						<Dialog.CloseButton tabIndex={-1} class="px-4 lg:hidden py-3">
+				<Dialog.Content class="fixed inset-0 z-50 flex w-full flex-col overflow-hidden border border-black/5 bg-white pt-4 lg:bottom-auto lg:left-1/2 lg:top-14 lg:max-h-[calc(100%-56px-56px)] lg:max-w-[550px] lg:-translate-x-1/2 lg:rounded-2xl dark:border-white/60 dark:bg-slate-800">
+					<div class="mr-4 flex items-center lg:mx-4">
+						<Dialog.CloseButton tabIndex={-1} class="px-4 py-3 lg:hidden">
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
 								fill="currentColor"
@@ -170,7 +170,7 @@ export function Search() {
 								xmlns="http://www.w3.org/2000/svg"
 								fill="currentColor"
 								viewBox="0 0 256 256"
-								class="absolute inset-y-0 my-auto ml-3 left-0 size-5"
+								class="absolute inset-y-0 left-0 my-auto ml-3 size-5"
 							>
 								<path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
 							</svg>
@@ -181,7 +181,7 @@ export function Search() {
 								role="searchbox"
 								spellcheck={false}
 								value={searchTerm()}
-								class="px-9 w-full rounded border border-blue-100 bg-white dark:bg-slate-800 py-2 ring-2 ring-blue-400 focus-visible:border focus-visible:border-blue-400 focus-visible:ring-2 focus:outline-none"
+								class="w-full rounded border border-blue-100 bg-white px-9 py-2 ring-2 ring-blue-400 focus:outline-none focus-visible:border focus-visible:border-blue-400 focus-visible:ring-2 dark:bg-slate-800"
 								onInput={(e) =>
 									startTransition(() =>
 										setSearchTerm((e.target as HTMLInputElement).value)
@@ -216,7 +216,7 @@ export function Search() {
 							</Show>
 						</div>
 					</div>
-					<div class="mt-1 lg:grow space-y-2 overflow-y-auto px-4 py-2 scrollbar-thin">
+					<div class="scrollbar-thin mt-1 space-y-2 overflow-y-auto px-4 py-2 lg:grow">
 						<Suspense>
 							<Show when={searchTerm() && Object.keys(result()).length === 0}>
 								<p class="mt-2 text-center text-sm">
@@ -227,7 +227,7 @@ export function Search() {
 									<A
 										href={`https://github.com/solidjs/solid-docs/issues/new?title=[Search]+Missing+results+for+query+%22${encodeURIComponent(searchTerm())}%22`}
 										target="_blank"
-										class="text-blue-400 font-bold"
+										class="font-bold text-blue-400"
 									>
 										Let us know
 									</A>
@@ -275,7 +275,7 @@ export function Search() {
 																<span class="block">
 																	{highlightTitle(hit.document.title, regex())}
 																</span>
-																<span class="block text-black/70 dark:text-white/70 truncate">
+																<span class="block truncate text-black/70 dark:text-white/70">
 																	{highlightContent(
 																		trimContent(hit.document.content),
 																		regex()
@@ -292,7 +292,7 @@ export function Search() {
 							</For>
 						</Suspense>
 					</div>
-					<div class="px-4 justify-center lg:justify-between items-center border-t border-black/10 dark:border-slate-700 pt-2 pb-3 text-sm flex">
+					<div class="flex items-center justify-center border-t border-black/10 px-4 pb-3 pt-2 text-sm lg:justify-between dark:border-slate-700">
 						<div class="hidden lg:block">
 							<KeyboardShortcut key="↩" />
 							<span class="ml-1">to select</span>
@@ -313,7 +313,7 @@ export function Search() {
 									xmlns="http://www.w3.org/2000/svg"
 									fill="none"
 									viewBox="0 0 4053 1000"
-									class="dark:hidden h-[18px]"
+									class="h-[18px] dark:hidden"
 								>
 									<g clip-path="url(#a)">
 										<path
@@ -564,7 +564,7 @@ export function Search() {
 									xmlns="http://www.w3.org/2000/svg"
 									fill="none"
 									viewBox="0 0 4053 1000"
-									class="hidden dark:block h-[18px]"
+									class="hidden h-[18px] dark:block"
 								>
 									<g clip-path="url(#a-dark)">
 										<path

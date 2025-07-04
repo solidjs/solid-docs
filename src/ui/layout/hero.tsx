@@ -36,12 +36,12 @@ export const Hero: Component = () => {
 	const i18n = useI18n();
 
 	return (
-		<div class="overflow-hidden bg-sky-100/80 border border-sky-200  dark:border-none dark:bg-slate-900 mb-10 ">
+		<div class="mb-10 overflow-hidden border border-sky-200 bg-sky-100/80 dark:border-none dark:bg-slate-900">
 			<div class="py-10 sm:px-2 lg:relative">
 				<div class="mx-auto grid max-w-2xl grid-cols-1 items-center gap-x-8 gap-y-16 px-4 lg:max-w-8xl lg:grid-cols-2 lg:px-8 xl:gap-x-16 xl:px-12">
 					<div class="relative md:text-center lg:text-left">
 						<div class="relative">
-							<h2 class="inline bg-gradient-to-r dark:from-indigo-200 dark:via-blue-400 dark:to-indigo-200 from-blue-700 via-slate-800 to-blue-700 bg-clip-text font-bold text-5xl tracking-tight text-transparent">
+							<h2 class="inline bg-gradient-to-r from-blue-700 via-slate-800 to-blue-700 bg-clip-text text-5xl font-bold tracking-tight text-transparent dark:from-indigo-200 dark:via-blue-400 dark:to-indigo-200">
 								<Switch fallback={i18n.t("hero.title")}>
 									<Match when={isStart()?.path}>
 										Solid<span class="font-thin">Start</span>
@@ -76,16 +76,16 @@ export const Hero: Component = () => {
 					</div>
 					<div class="relative lg:static xl:pl-10">
 						<div class="relative">
-							<div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-blue-500 dark:from-blue-300 via-blue-500/70 dark:via-blue-300/70 to-blue-300 opacity-10 blur-lg dark:bg-white" />
+							<div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-blue-500 via-blue-500/70 to-blue-300 opacity-10 blur-lg dark:bg-white dark:from-blue-300 dark:via-blue-300/70" />
 							<div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-blue-300 via-blue-300/70 to-blue-300 opacity-10" />
 							<div class="relative rounded-2xl bg-[#0A101F]/80 ring-1 ring-blue-200/10 backdrop-blur">
 								<div class="absolute -top-px left-20 right-11 h-px bg-gradient-to-r from-blue-300/0 via-blue-300/70 to-blue-300/0" />
-								<div class="absolute -bottom-px left-11 right-20 h-px bg-gradient-to-r from-blue-400/0 via-blue-800 dark:via-blue-400 to-blue-400/0" />
+								<div class="absolute -bottom-px left-11 right-20 h-px bg-gradient-to-r from-blue-400/0 via-blue-800 to-blue-400/0 dark:via-blue-400" />
 								<div class="pl-4 pt-4">
 									<TrafficLightsIcon class="h-2.5 w-auto stroke-slate-500/30" />
 									<div class="mt-4 flex space-x-2 text-xs">
-										<div class="flex h-6 rounded-full border dark:border-none border-blue-400 shadow-sm bg-gradient-to-r from-blue-400/30  via-blue-400 to-blue-400/30 p-px font-semibold text-blue-300 ">
-											<div class="flex items-center rounded-full px-2.5 bg-slate-800">
+										<div class="flex h-6 rounded-full border border-blue-400 bg-gradient-to-r from-blue-400/30 via-blue-400 to-blue-400/30 p-px font-semibold text-blue-300 shadow-sm dark:border-none">
+											<div class="flex items-center rounded-full bg-slate-800 px-2.5">
 												Counter.jsx
 											</div>
 										</div>
@@ -93,7 +93,7 @@ export const Hero: Component = () => {
 									<div class="mt-6 flex items-start px-1 text-sm">
 										<div
 											aria-hidden="true"
-											class="select-none border-r border-slate-300/5 pr-4 font-mono text-slate-300 pb-6"
+											class="select-none border-r border-slate-300/5 pb-6 pr-4 font-mono text-slate-300"
 										>
 											<Index each={snippetLines}>
 												{(_, index) => (
@@ -104,7 +104,7 @@ export const Hero: Component = () => {
 										<div
 											class={`flex overflow-x-auto px-4 min-h-[${
 												snippetLines.length + 5
-											}em] text-white custom-scrollbar`}
+											}em] custom-scrollbar text-white`}
 										>
 											<RenderedCode />
 										</div>

@@ -55,7 +55,7 @@ const EraserLink = (
 			fallback={
 				<a
 					href={linkUrl}
-					class="dark:text-solid-darklink break-normal text-solid-lightlink duration-100 ease-in font-semibold leading-normal transition hover:underline"
+					class="dark:text-solid-darklink text-solid-lightlink break-normal font-semibold leading-normal transition duration-100 ease-in hover:underline"
 					rel="noopener noreferrer"
 				>
 					{props.children}
@@ -81,7 +81,7 @@ const EraserLink = (
 					<div class="eraserLinkContainer">
 						<img
 							src="https://firebasestorage.googleapis.com/v0/b/second-petal-295822.appspot.com/o/images%2Fgithub%2FOpen%20in%20Eraser.svg?alt=media&token=968381c8-a7e7-472a-8ed6-4a6626da5501"
-							class="max-w-none m-0"
+							class="m-0 max-w-none"
 							alt="Open in Eraser"
 						/>
 					</div>
@@ -100,7 +100,7 @@ export default function EraserOrAnchor(props: ParentProps<{ href: string }>) {
 			fallback={
 				<a
 					{...props}
-					class="dark:text-solid-darklink break-normal text-solid-lightlink duration-100 ease-in font-semibold leading-normal transition hover:underline"
+					class="dark:text-solid-darklink text-solid-lightlink break-normal font-semibold leading-normal transition duration-100 ease-in hover:underline"
 					rel="noopener noreferrer"
 				>
 					{props.children}

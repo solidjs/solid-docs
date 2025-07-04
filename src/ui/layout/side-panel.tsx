@@ -3,7 +3,7 @@ import { TableOfContents } from "./table-of-contents";
 
 export const SidePanel = () => {
 	return (
-		<div class="h-full relative">
+		<div class="relative h-full">
 			<TableOfContents />
 			<Contribute />
 		</div>

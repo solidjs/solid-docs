@@ -82,7 +82,7 @@ export const EraserLink = (
 				aria-hidden={true}
 				tabIndex="-1"
 				href={props.href}
-				class="no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,theme(colors.blue.400))] hover:[--tw-prose-underline-size:4px] dark:[--tw-prose-background:theme(colors.slate.900)] dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.blue.800))] dark:hover:[--tw-prose-underline-size:6px] dark:text-blue-400 text-blue-700 font-semibold"
+				class="font-semibold text-blue-700 no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,theme(colors.blue.400))] hover:[--tw-prose-underline-size:4px] dark:text-blue-400 dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.blue.800))] dark:[--tw-prose-background:theme(colors.slate.900)] dark:hover:[--tw-prose-underline-size:6px]"
 				rel="noopener noreferrer"
 			>
 				View on Eraser
@@ -104,7 +104,7 @@ export const h1 = (props: ParentProps) => (
 export const h2 = (props: ParentProps) => {
 	return (
 		<>
-			<hr class="dark:prose-hr:border-slate-800 border-slate-400 my-8" />
+			<hr class="my-8 border-slate-400 dark:prose-hr:border-slate-800" />
 			<h2
 				{...props}
 				class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
@@ -184,7 +184,7 @@ export const a = (props: ParentProps & { href: string }) => {
 		return (
 			<A
 				addLocale
-				class="no-underline shadow-[inset_0_calc(-1*(var(--tw-prose-underline-size,0.5px)+2px))_0_0_var(--tw-prose-underline,theme(colors.blue.400))] hover:[--tw-prose-underline-size:4px] dark:[--tw-prose-background:theme(colors.slate.900)] [--tw-prose-background:theme(colors.slate.50)] dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.blue.500))] dark:hover:[--tw-prose-underline-size:6px] dark:text-blue-300 text-blue-800 font-semibold"
+				class="font-semibold text-blue-800 no-underline shadow-[inset_0_calc(-1*(var(--tw-prose-underline-size,0.5px)+2px))_0_0_var(--tw-prose-underline,theme(colors.blue.400))] [--tw-prose-background:theme(colors.slate.50)] hover:[--tw-prose-underline-size:4px] dark:text-blue-300 dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.blue.500))] dark:[--tw-prose-background:theme(colors.slate.900)] dark:hover:[--tw-prose-underline-size:6px]"
 				{...rest}
 			>
 				{resolved()}
@@ -203,12 +203,12 @@ export const li = (props: ParentProps) => (
 	</li>
 );
 export const ul = (props: ParentProps) => (
-	<ul {...props} class="pl-6 mb-2 list-disc">
+	<ul {...props} class="mb-2 list-disc pl-6">
 		{props.children}
 	</ul>
 );
 export const ol = (props: ParentProps) => (
-	<ol {...props} class="list-decimal pl-8 mb-2">
+	<ol {...props} class="mb-2 list-decimal pl-8">
 		{props.children}
 	</ol>
 );
@@ -225,7 +225,7 @@ export const pre = (props: ParentProps) => {
 	return (
 		<pre
 			{...props}
-			class="[&>code]:bg-white dark:[&>code]:!bg-slate-950 [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal custom-scrollbar"
+			class="custom-scrollbar [&>code]:bg-white [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal dark:[&>code]:!bg-slate-950"
 		>
 			{props.children}
 		</pre>
@@ -234,7 +234,7 @@ export const pre = (props: ParentProps) => {
 export const code = (props: ParentProps) => {
 	return (
 		<code
-			class="inline-block not-prose !font-mono font-semibold bg-blue-200 dark:bg-slate-600/60 text-slate-900 dark:text-white px-1 py-0.5 rounded-lg text-[0.8em] leading-snug"
+			class="not-prose inline-block rounded-lg bg-blue-200 px-1 py-0.5 !font-mono text-[0.8em] font-semibold leading-snug text-slate-900 dark:bg-slate-600/60 dark:text-white"
 			{...props}
 		>
 			{props.children}

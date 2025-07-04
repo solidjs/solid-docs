@@ -92,23 +92,23 @@ export function Callout(props: CalloutProps) {
 
 	return (
 		<Alert.Root
-			class={`my-6 rounded-3xl flex p-4 border w-full ${
+			class={`my-6 flex w-full rounded-3xl border p-4 ${
 				styles[mergedProps.type].container
 			}`}
 		>
-			<IconComponent class="h-6 w-8 mt-1 flex-none" />
-			<div class={`m-0 pb-1 px-4 w-full ${styles[mergedProps.type].title}`}>
+			<IconComponent class="mt-1 h-6 w-8 flex-none" />
+			<div class={`m-0 w-full px-4 pb-1 ${styles[mergedProps.type].title}`}>
 				<Show
 					when={props.title}
 					fallback={
-						<span class="capitalize font-semibold text-xl">
+						<span class="text-xl font-semibold capitalize">
 							{props.type || "Note"}
 						</span>
 					}
 				>
-					<span class="font-semibold text-xl">{mergedProps.title}</span>
+					<span class="text-xl font-semibold">{mergedProps.title}</span>
 				</Show>
-				<div class="dark:prose-invert prose pr-7 [&>*:first-child]:mt-1">
+				<div class="prose pr-7 dark:prose-invert [&>*:first-child]:mt-1">
 					{mergedProps.children}
 				</div>
 			</div>

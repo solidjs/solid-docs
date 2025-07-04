@@ -24,7 +24,7 @@ interface NavLinkProps extends RouterLinkProps {
 function NavLink(props: NavLinkProps) {
 	return (
 		<A
-			class="border-b-2 text-slate-900 dark:text-slate-200 relative overflow-hidden drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] px-2 transition-all duration-250"
+			class="duration-250 relative overflow-hidden border-b-2 px-2 text-slate-900 drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] transition-all dark:text-slate-200"
 			classList={{
 				"border-b-blue-500 dark:bottom-b-blue-500": props.active,
 				"border-transparent": !props.active,
@@ -94,14 +94,14 @@ export function MainHeader(props: NavProps) {
 
 	return (
 		<header
-			class="sticky top-0 z-50 flex items-center justify-between bg-blue-50/80 shadow-md shadow-slate-900/5 transition duration-500 dark:shadow-none backdrop-blur"
+			class="sticky top-0 z-50 flex items-center justify-between bg-blue-50/80 shadow-md shadow-slate-900/5 backdrop-blur transition duration-500 dark:shadow-none"
 			classList={{
 				"dark:bg-slate-900/95 dark:[@supports(backdrop-filter:blur(0))]:bg-slate-900/75":
 					isScrolled(),
 				"dark:bg-transparent bg-transparent": !isScrolled(),
 			}}
 		>
-			<div class="grid lg:grid-cols-[1fr,2fr,1fr] grid-cols-2 py-2 px-4 items-center w-full max-w-8xl mx-auto ">
+			<div class="mx-auto grid w-full max-w-8xl grid-cols-2 items-center px-4 py-2 lg:grid-cols-[1fr,2fr,1fr]">
 				<div class="flex justify-start gap-2">
 					<div class="flex lg:hidden">
 						<MobileNavigation tree={props.tree} />
@@ -111,7 +111,7 @@ export function MainHeader(props: NavProps) {
 					</A>
 				</div>
 
-				<ul class="order-2 col-span-2 lg:col-span-1 flex pt-6 lg:pt-0 lg:w-auto w-full gap-5 justify-center">
+				<ul class="order-2 col-span-2 flex w-full justify-center gap-5 pt-6 lg:col-span-1 lg:w-auto lg:pt-0">
 					<li>
 						<NavLink
 							href="/"
@@ -140,7 +140,7 @@ export function MainHeader(props: NavProps) {
 					</li>
 				</ul>
 
-				<div class="lg:order-2 flex basis-0 gap-4 items-center justify-end order-">
+				<div class="order- flex basis-0 items-center justify-end gap-4 lg:order-2">
 					<ClientSearch />
 					<A
 						href={`https://github.com/solidjs${currentRouteMetaData().project ? currentRouteMetaData().project : "/solid"}`}

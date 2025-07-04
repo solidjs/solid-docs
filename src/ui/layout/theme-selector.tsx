@@ -58,29 +58,30 @@ export const ThemeSelector: Component = () => {
 			placement="bottom-end"
 			itemComponent={(props) => (
 				<Select.Item
-					class="flex cursor-pointer select-none items-center rounded-[0.625rem] p-1 hover:bg-slate-200 hover:dark:bg-slate-600 group kb-selected:bg-slate-200 kb-selected:dark:bg-slate-700 kb-selected:font-semibold outline-none"
+					class="group flex cursor-pointer select-none items-center rounded-[0.625rem] p-1 outline-none hover:bg-slate-200 kb-selected:bg-slate-200 kb-selected:font-semibold hover:dark:bg-slate-600 kb-selected:dark:bg-slate-700"
 					item={props.item}
 				>
 					<Select.ItemLabel>
 						<Icon
-							class="inline-block h-6 w-6 mr-2 rounded-md bg-white p-1 shadow ring-1 ring-slate-900/5 dark:bg-slate-700 dark:ring-inset dark:ring-white/5 fill-slate-700 dark:fill-slate-200 kb-selected:fill-slate-800 kb-selected:dark:fill-white"
+							class="mr-2 inline-block h-6 w-6 rounded-md bg-white fill-slate-700 p-1 shadow ring-1 ring-slate-900/5 kb-selected:fill-slate-800 dark:bg-slate-700 dark:fill-slate-200 dark:ring-inset dark:ring-white/5 kb-selected:dark:fill-white"
 							path={props.item.rawValue.icon}
 						/>
-						<span
-							class="prose prose-slate text-sm group-hover:dark:text-white text-slate-700 dark:text-slate-300 kb-selected:text-blue-500 kb-selected:group-hover:dark:text-white"
-						>
+						<span class="prose prose-slate text-sm text-slate-700 kb-selected:text-blue-500 dark:text-slate-300 group-hover:dark:text-white kb-selected:group-hover:dark:text-white">
 							{props.item.rawValue.label}
 						</span>
 					</Select.ItemLabel>
 				</Select.Item>
 			)}
 		>
-			<Select.Trigger class="flex h-6 w-6 items-center justify-center rounded-lg shadow-md shadow-black/5 ring-1 ring-black/10 dark:bg-slate-800 dark:ring-inset dark:ring-white/60 shrink-0" aria-label="Change theme mode">
+			<Select.Trigger
+				class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg shadow-md shadow-black/5 ring-1 ring-black/10 dark:bg-slate-800 dark:ring-inset dark:ring-white/60"
+				aria-label="Change theme mode"
+			>
 				<Select.Value<ThemeOption>>
 					{(state) => (
 						<RefreshOnMount aria-label={state.selectedOption().label}>
 							<Icon
-								class="w-4 h-4 fill-slate-700 dark:fill-slate-200"
+								class="h-4 w-4 fill-slate-700 dark:fill-slate-200"
 								path={state.selectedOption().icon}
 							/>
 						</RefreshOnMount>
@@ -104,7 +105,15 @@ function RefreshOnMount(props: ComponentProps<"div">) {
 	});
 
 	return (
-		<Show when={refresh()} fallback={<div {...props}><div>{props.children}</div></div>} keyed>
+		<Show
+			when={refresh()}
+			fallback={
+				<div {...props}>
+					<div>{props.children}</div>
+				</div>
+			}
+			keyed
+		>
 			<div {...props}>{props.children}</div>
 		</Show>
 	);

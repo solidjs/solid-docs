@@ -35,7 +35,7 @@ export function Pagination(props: Pagination) {
 	return (
 		<Suspense>
 			<Show when={i18n.t}>
-				<nav class="flex justify-between mt-10 pt-6 border-t border-slate-200 dark:border-slate-800">
+				<nav class="mt-10 flex justify-between border-t border-slate-200 pt-6 dark:border-slate-800">
 					<Show when={previous()}>
 						{(entry) => (
 							<div>
@@ -43,7 +43,7 @@ export function Pagination(props: Pagination) {
 									{i18n.t("pagination.previous")}
 								</span>
 								<A
-									class="flex items-center gap-x-1 text-base font-medium text-slate-500 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-300 flex-row-reverse no-underline"
+									class="flex flex-row-reverse items-center gap-x-1 text-base font-medium text-slate-500 no-underline hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-300"
 									href={entry().path}
 								>
 									← {entry().title}
@@ -58,7 +58,7 @@ export function Pagination(props: Pagination) {
 									{i18n.t("pagination.next")}
 								</span>
 								<A
-									class="flex items-center gap-x-1 text-base font-medium text-slate-500 hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-300 flex-row-reverse no-underline"
+									class="flex flex-row-reverse items-center gap-x-1 text-base font-medium text-slate-500 no-underline hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-300"
 									href={entry().path}
 								>
 									{entry().title} →

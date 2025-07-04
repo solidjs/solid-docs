@@ -35,13 +35,13 @@ export const QuickLinks: ParentComponent<QuickLinksProps> = (props) => {
 						path={icons[props.icon as keyof typeof icons]}
 						class="h-7 w-7 fill-blue-500"
 					/>
-					<div class="text-xl text-slate-900 dark:text-white capitalize no-underline pl-3">
+					<div class="pl-3 text-xl capitalize text-slate-900 no-underline dark:text-white">
 						<Show
 							when={isExternalURL(props.href)}
 							fallback={
 								<A
 									href={props.href}
-									class="no-underline font-semibold"
+									class="font-semibold no-underline"
 									addLocale
 								>
 									<span class="absolute -inset-px rounded-xl" />
@@ -51,7 +51,7 @@ export const QuickLinks: ParentComponent<QuickLinksProps> = (props) => {
 						>
 							<a
 								href={props.href}
-								class="no-underline font-semibold bg-gradient-to-br from-blue-400 to-blue-700 inline-block text-transparent bg-clip-text"
+								class="inline-block bg-gradient-to-br from-blue-400 to-blue-700 bg-clip-text font-semibold text-transparent no-underline"
 							>
 								<span class="absolute -inset-px rounded-xl" />
 								{props.title}
@@ -60,7 +60,7 @@ export const QuickLinks: ParentComponent<QuickLinksProps> = (props) => {
 					</div>
 				</div>
 
-				<p class="text-[0.91rem] pl-1 text-balance text-slate-800 dark:text-slate-300 -mb-2">
+				<p class="-mb-2 text-balance pl-1 text-[0.91rem] text-slate-800 dark:text-slate-300">
 					{props.children}
 				</p>
 			</div>

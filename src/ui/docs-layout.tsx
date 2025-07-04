@@ -44,26 +44,26 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 				<Show when={titles()?.title} fallback={<Title>SolidDocs</Title>}>
 					{(title) => <Title>{`${title()} - ${projectTitle()}`}</Title>}
 				</Show>
-				<article class="mx-auto overflow-hidden pb-16 max-w-2xl w-full expressive-code-overrides">
+				<article class="expressive-code-overrides mx-auto w-full max-w-2xl overflow-hidden pb-16">
 					<Show when={titles()?.parent}>
 						{(t) => (
-							<span class="text-sm font-semibold text-blue-700 dark:text-blue-300 my-1">
+							<span class="my-1 text-sm font-semibold text-blue-700 dark:text-blue-300">
 								{t()}
 							</span>
 						)}
 					</Show>
 					<Show when={titles()?.title}>
 						{(t) => (
-							<h1 class="prose-headings:text-[2.8rem] text-slate-900 dark:text-white">
+							<h1 class="text-slate-900 prose-headings:text-[2.8rem] dark:text-white">
 								{t()}
 							</h1>
 						)}
 					</Show>
-					<span class="xl:hidden text-sm -mt-[15px] block">
+					<span class="-mt-[15px] block text-sm xl:hidden">
 						<EditPageLink />
 					</span>
 					<div class="w-full">{props.children}</div>
-					<span class="xl:hidden text-sm">
+					<span class="text-sm xl:hidden">
 						<PageIssueLink />
 					</span>
 					<Pagination currentIndex={entryIndex()} collection={collection()} />

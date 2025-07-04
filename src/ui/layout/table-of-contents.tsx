@@ -57,9 +57,9 @@ export const TableOfContents = () => {
 			</span>
 			<ol
 				role="list"
-				class="text-sm list-none mt-2 p-0 flex flex-col pl-2.5 space-y-2"
+				class="mt-2 flex list-none flex-col space-y-2 p-0 pl-2.5 text-sm"
 			>
-				<li class="pl-0 mt-0 mb-0">
+				<li class="mb-0 mt-0 pl-0">
 					<span>
 						<a
 							href="#_top"
@@ -76,7 +76,7 @@ export const TableOfContents = () => {
 				</li>
 				<Index each={toc()}>
 					{(section) => (
-						<li class="pl-0 pt-0 space-y-2">
+						<li class="space-y-2 pl-0 pt-0">
 							<span>
 								<a
 									href={section().href}
@@ -93,7 +93,7 @@ export const TableOfContents = () => {
 							<Show when={section().children.length !== 0}>
 								<ol
 									role="list"
-									class="pl-2.5 text-slate-500 dark:text-slate-300 list-none active:font-bold hover:text-slate-700 dark:hover:text-blue-200 font-bold active:text-blue-600 space-y-2"
+									class="list-none space-y-2 pl-2.5 font-bold text-slate-500 hover:text-slate-700 active:font-bold active:text-blue-600 dark:text-slate-300 dark:hover:text-blue-200"
 								>
 									<Index each={section().children}>
 										{(subSection) => (

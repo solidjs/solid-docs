@@ -51,7 +51,7 @@ function ListItemLink(props: { item: Entry }) {
 					component={props.item.isTranslated ? A : "a"}
 					onClick={() => setIsOpen(false)}
 					href={props.item.path}
-					class={`hover:text-blue-700 dark:hover:text-blue-300 block w-full lg:text-sm pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full ${linkStyles()}`}
+					class={`block w-full pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full hover:text-blue-700 lg:text-sm dark:hover:text-blue-300 ${linkStyles()}`}
 				>
 					{props.item.title}
 					<Show when={props.item.isDeprecated}> (deprecated)</Show>
@@ -59,7 +59,7 @@ function ListItemLink(props: { item: Entry }) {
 						<span>
 							<abbr
 								title="english"
-								class="text-[0.7em] relative -top-2 left-2 no-underline  text-neutral-400 "
+								class="relative -top-2 left-2 text-[0.7em] text-neutral-400 no-underline"
 							>
 								EN
 							</abbr>
@@ -86,7 +86,7 @@ function DirList(props: { list: Entry[]; sortAlphabeticaly?: boolean }) {
 							</span>
 							<ul
 								role="list"
-								class="ml-2 mt-2 space-y-3 border-l-[1px] border-slate-400 dark:border-slate-700 lg:border-slate-400"
+								class="ml-2 mt-2 space-y-3 border-l-[1px] border-slate-400 lg:border-slate-400 dark:border-slate-700"
 							>
 								<For each={itemChildren}>
 									{(child) => {
@@ -100,14 +100,14 @@ function DirList(props: { list: Entry[]; sortAlphabeticaly?: boolean }) {
 											<>
 												<li>
 													<Collapsible.Root defaultOpen={true}>
-														<Collapsible.Trigger class="relative flex justify-between hover:cursor-pointer w-full pl-3.5 dark:text-slate-300 group">
+														<Collapsible.Trigger class="group relative flex w-full justify-between pl-3.5 hover:cursor-pointer dark:text-slate-300">
 															<span class="font-semibold dark:text-slate-100">
 																{child.title}
 															</span>
 															<Icon
 																aria-hidden="true"
 																path={chevronDown}
-																class="h-4 my-auto transition-transform  kb-group-closed:rotate-180"
+																class="my-auto h-4 transition-transform kb-group-closed:rotate-180"
 															/>
 														</Collapsible.Trigger>
 														<Collapsible.Content class="navigation_collapsible">
@@ -170,12 +170,12 @@ export function MainNavigation(props: NavProps) {
 	return (
 		<Suspense>
 			<Show when={i18n.t}>
-				<nav class="overflow-y-auto custom-scrollbar h-full md:h-[calc(100vh-7rem)] pb-20">
+				<nav class="custom-scrollbar h-full overflow-y-auto pb-20 md:h-[calc(100vh-7rem)]">
 					<Tabs.Root value={selectedTab()}>
-						<Tabs.List class="sticky top-0 grid grid-cols-2 w-full z-10 md:dark:bg-slate-900 md:bg-slate-50">
+						<Tabs.List class="sticky top-0 z-10 grid w-full grid-cols-2 md:bg-slate-50 md:dark:bg-slate-900">
 							<Tabs.Trigger
 								value="learn"
-								class="inline-block py-3 outline-none hover:bg-blue-500/30 focus-visible:bg-blue-500/40 dark:hover:bg-blue-300/20 dark:focus-visible:bg-blue-800 dark:text-slate-100 font-medium"
+								class="inline-block py-3 font-medium outline-none hover:bg-blue-500/30 focus-visible:bg-blue-500/40 dark:text-slate-100 dark:hover:bg-blue-300/20 dark:focus-visible:bg-blue-800"
 								onClick={() => {
 									setSelectedTab("learn");
 								}}
@@ -184,16 +184,16 @@ export function MainNavigation(props: NavProps) {
 							</Tabs.Trigger>
 							<Tabs.Trigger
 								value="reference"
-								class="inline-block py-3 outline-none hover:bg-blue-500/30 focus-visible:bg-blue-500/40 dark:hover:bg-blue-300/20 dark:focus-visible:bg-blue-800 dark:text-slate-100 font-medium"
+								class="inline-block py-3 font-medium outline-none hover:bg-blue-500/30 focus-visible:bg-blue-500/40 dark:text-slate-100 dark:hover:bg-blue-300/20 dark:focus-visible:bg-blue-800"
 								onClick={() => {
 									setSelectedTab("reference");
 								}}
 							>
 								{i18n.t("main.nav.tab.reference")}
 							</Tabs.Trigger>
-							<Tabs.Indicator class="absolute bottom-0 bg-blue-500 dark:bg-blue-500 transition-all duration-250 h-[2px]" />
+							<Tabs.Indicator class="duration-250 absolute bottom-0 h-[2px] bg-blue-500 transition-all dark:bg-blue-500" />
 						</Tabs.List>
-						<Tabs.Content value="learn" class="w-full relative mt-5">
+						<Tabs.Content value="learn" class="relative mt-5 w-full">
 							<Show
 								when={learn()}
 								fallback={
@@ -205,7 +205,7 @@ export function MainNavigation(props: NavProps) {
 								</ul>
 							</Show>
 						</Tabs.Content>
-						<Tabs.Content value="reference" class="w-full relative top-8">
+						<Tabs.Content value="reference" class="relative top-8 w-full">
 							<Show
 								when={reference()}
 								fallback={<p>{i18n.t("main.nav.no.routes")}</p>}

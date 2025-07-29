@@ -10,8 +10,8 @@ Solid provides two ways to add event listeners to the browser:
 - [`on:__`](/reference/jsx-attributes/on): adds an event listener to the `element`. This is also known as a _native event_.
 - [`on__`](/reference/jsx-attributes/on_): adds an event listener to the `document` and dispatches it to the `element`. This can be referred to as a _delegated event_.
 
-Delegated events flow through the [_component tree_](/concepts/components/basics#component-trees), and save some resources by performing better on commonly used events.
-Native events, however, flow through the _DOM tree_, and provide more control over the behavior of the event.
+Delegated events save some resources by sharing a handler, performing better on commonly used events.
+Native events, however, provide more control over the behavior of the event.
 
 ## Using events
 
@@ -95,7 +95,7 @@ If you need to attach an event listener to an element that is not supported by S
 
 While delegated events provide some performance enhancements, there are tradeoffs.
 
-Event delegation is designed for event propagation through the JSX Tree, rather than the DOM Tree.
+Delegated events flow through native element parents but can be overriden by components like Portal.
 This can differ from the previous expectations of how events work and flow.
 
 Some things to keep in mind include:
@@ -171,8 +171,8 @@ button
 
 [See how this solution differs in the Solid Playground](https://playground.solidjs.com/anonymous/9e2deddc-2e83-4ac2-8ee0-49c7c3a45d11).
 
-- [Portals](/concepts/control-flow/portal) propagate events following the _component tree_ and not the _DOM tree_, making them easier to use.
-  This means when a `Portal` gets attached to the `body`, any events will propagate up to the `container`.
+- [Portals](/concepts/control-flow/portal) propagate events to the parent on where it was created, and not to the parent on where it was mounted, making them easier to use.
+  This means when a `Portal` gets attached to the `body`, any events will propagate up to the `container` instead of to the `body`.
 
 ```tsx
 <div class="container" onInput={() => console.log("portal key press")}>

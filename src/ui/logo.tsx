@@ -4,7 +4,6 @@ import { Match, Switch } from "solid-js";
 const SolidLogo = (props: { class?: string }) => (
 	<svg
 		{...props}
-		data-hk="0-0-0-0-0-0-0-0-0-1-0-0-0-0-0-0-0-0-1-1-1-0-1-0"
 		width="100%"
 		height="100%"
 		xmlns="http://www.w3.org/2000/svg"

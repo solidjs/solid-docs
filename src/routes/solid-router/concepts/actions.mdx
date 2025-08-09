@@ -2,24 +2,25 @@
 title: "Actions"
 ---
 
-Actions simplify handling data mutations and side effects in your applications.
-They are ideal for handling form submissions, API calls, and other updates that modify your application's state on the server or client.
+In web applications, many user interactions result in changing data on the server.
+These changes, often called mutations, require careful management of asynchronous operations, state updates, and error handling.
+Actions provide a comprehensive framework for managing these data mutations.
+They are designed to handle everything from simple form submissions to complex asynchronous workflows.
 
 Actions provide several benefits:
 
 - **Integrated state management:**
-  Solid Router automatically tracks the execution state of an action (pending, successful, error), simplifying reactive UI feedback.
+  Solid Router automatically tracks the execution state of an action, simplifying reactive UI feedback.
 - **Automatic data revalidation:**
-  After an action successfully completes, Solid Router revalidates relevant queries that are used on the same page.
-  This ensures your UI reflects the latest data without manual intervention.
+  After an action successfully completes, Solid Router revalidates relevant queries, ensuring the UI reflects the latest data.
 - **Progressive enhancement:**
   When used with HTML forms, actions enable functionality even if JavaScript is not yet loaded.
 
 ## Defining actions
 
-At their core, actions are **asynchronous operations**.
-You define them by wrapping your asynchronous logic with the [`action`](/solid-router/reference/data-apis/action) function.
-When the action is invoked, Solid Router executes your defined logic.
+At their core, actions are asynchronous operations.
+They are defined by wrapping asynchronous logic with the [`action`](/solid-router/reference/data-apis/action) function.
+When the action is invoked, Solid Router executes the defined logic.
 
 ```tsx
 import { action } from "@solidjs/router";
@@ -42,52 +43,50 @@ const addPostAction = action(async (title: string) => {
 });
 ```
 
-In this example, `addPostAction` sending a POST request to create a new post.
-If the request failed, it returns an error.
-We will cover error handling later in this page.
+In this example, an action is defined that sends a POST request to create a new post.
 
 ## Invoking actions
 
-You can invoke an action in two primary ways: through an HTML `<form>` or programmatically with the `useAction` primitive.
+Actions can be invoked in two primary ways: through an HTML `<form>` or programmatically with the `useAction` primitive.
 
-The recommended approach for any operation that involves changing data is to use a `<form>`.
-This ensures your application works even before any client-side JavaScript has loaded, providing a robust user experience through [progressive enhancement](https://developer.mozilla.org/en-US/docs/Glossary/Progressive_Enhancement).
+The recommended approach for is to use a `<form>`.
+This ensures the application works even before any client-side JavaScript has loaded, providing a robust user experience through progressive enhancement.
 
-For cases where a form is not suitable, you can use the `useAction` primitive to invoke the action programmatically.
+For cases where a form is not suitable, the [`useAction` primitive](/solid-router/reference/data-apis/use-action) can be used to invoke the action programmatically.
 
 ### With the `<form>` element
 
 Solid Router extends the standard HTML `<form>` element to work with actions.
-By passing an action to the `action` prop, you can handle form submissions seamlessly.
+By passing an action to the `action` prop, form submissions can be handled seamlessly.
 
 Consider these points when using actions with `<form>`:
 
 1. The `<form>` element **must** have `method="post"`.
 2. The action function will automatically receive the form's data as a [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object as its first parameter.
-3. For SSR environments, you **must** provide a unique name as the second parameter to the `action` function.
+3. For SSR environments, a unique name **must** be provided as the second parameter to the `action` function.
    This name is used by Solid Router to uniquely identify and serialize the action across the client and server.
 
 ```tsx
 import { action } from "@solidjs/router";
 
 const addPostAction = action(async (formData: FormData) => {
-	// ...
+	// ... Handles the form submission logic.
 }, "addPost");
 
 function AddPostForm() {
 	return (
 		<form action={addPostAction} method="post">
-			<input id="title" name="title" placeholder="Enter post title" />
+			<input name="title" placeholder="Enter post title" />
 			<button type="submit">Create Post</button>
 		</form>
 	);
 }
 ```
 
-When the form is submitted, `addPostFormAction` will be invoked with the `FormData` containing the form values.
+In this example, when the form is submitted, `addPostAction` will be invoked with the `FormData` containing the form values.
 
 :::tip[Uploading files]
-If your form includes file inputs, ensure your `<form>` element has `enctype="multipart/form-data"` to correctly send the file data.
+If a form includes file inputs, the `<form>` element must have `enctype="multipart/form-data"` to correctly send the file data.
 
 ```tsx
 <form action={uploadFileAction} method="post" enctype="multipart/form-data">
@@ -100,17 +99,17 @@ If your form includes file inputs, ensure your `<form>` element has `enctype="mu
 
 #### Passing additional arguments
 
-Sometimes, your action needs data that isn't included in the form's inputs.
-You can pass these additional arguments by using the `with` method.
+Sometimes, an action needs data that isn't included in the form's inputs.
+These additional arguments can be passed by using the `with` method.
 
-The `with` method creates a new action that wraps around your original action.
-When this new action is invoked, it passes the arguments specified in the `with` method to your original action function, followed by the `FormData` object.
+The `with` method creates a new action that wraps around the original action.
+When this new action is invoked, it passes the arguments specified in the `with` method to the original action function, followed by the `FormData` object.
 
 ```tsx
 import { action } from "@solidjs/router";
 
 const editPostAction = action(async (postId: string, formData: FormData) => {
-	// ...
+	// ... Handles the edit logic.
 }, "editPost");
 
 function EditPostForm(props: { postId: string }) {
@@ -136,9 +135,7 @@ The `useAction` primitive takes an action as its argument and returns a function
 import { action, useAction } from "@solidjs/router";
 
 const likePostAction = action(async (postId: string) => {
-	await fetch(`https://api.com/posts/${encodeURIComponent(postId)}/likes`, {
-		method: "POST",
-	});
+	// ... Likes a post on the server.
 });
 
 function LikePostButton(props: { postId: string }) {
@@ -157,7 +154,7 @@ When an action is invoked, it creates a **submission** object.
 This object is a snapshot of the action's execution, containing its input, current status (pending or complete), and its final result or error.
 To access this state, Solid Router provides the `useSubmission` and `useSubmissions` primitives.
 
-The `useSubmission` primitive tracks the state of the _most recent_ submission for a specific action.
+The [`useSubmission` primitive](/solid-router/reference/data-apis/use-submission) tracks the state of the _most recent_ submission for a specific action.
 This is ideal for most use cases, such as disabling a form's submit button while the action is pending or displaying a confirmation message upon success.
 
 ```tsx
@@ -171,7 +168,7 @@ const saveSettingsAction = action(async (formData: FormData) => {
 		return { ok: false, message: "Please enter a valid email address." };
 	}
 
-	// ...send data to server
+	// ... Sends the settings data to the server.
 
 	return { ok: true };
 }, "save-settings");
@@ -187,105 +184,79 @@ function UserSettingsForm() {
 				{submission.pending ? "Saving..." : "Save Settings"}
 			</button>
 
-			<Show
-				when={submission.result?.ok}
-				fallback={
-					<div>
-						<p>Error: {submission.result.message}</p>
-						<button onClick={() => submission.clear()}>Clear Error</button>
-						<button onClick={() => submission.retry()}>Retry</button>
-					</div>
-				}
-			>
-				<p>Settings saved successfully!</p>
+			<Show when={!submission.result?.ok}>
+				<p>Error: {submission.result.message}</p>
 			</Show>
 		</form>
 	);
 }
 ```
 
-In this example, the form's submit button is disabled while `submission.pending` is true, and messages are shown based on the `submission.error` or `submission.result` properties.
-The `clear` method resets the submission state, and `retry` re-executes the last submission with its original input.
+In this example, the form's submit button is disabled while `submission.pending` is true.
+Error messages are shown based on the `submission.result` property.
 
 For more details, see the [`useSubmission` API reference](/solid-router/reference/data-apis/use-submission).
 
 :::tip
-If you need to track multiple concurrent submissions for a single action, such as in a multi-file uploader interface, you can use the [`useSubmissions` primitive](/solid-router/reference/data-apis/use-submissions).
+To track multiple submissions for a single action, such as in a multi-file uploader interface, use the [`useSubmissions` primitive](/solid-router/reference/data-apis/use-submissions).
 :::
 
 ## Handling errors
 
-Actions provide two primary mechanisms for error handling.
+When an action performs an operation like an API call, it can fail for various reasons.
+A robust application must handle these failures gracefully.
+Solid Router provides two mechanisms for an action to signal its outcome: returning a value or throwing an `Error`.
 
-1. **Throwing an `Error`:**
-   You can `throw` an `Error` instance within an action.
-   When you do, Solid Router catches it and makes it available in the `submission.error` property.
-2. **Returning a structured object:**
-   For more complex scenarios, like form validation, you can `return` an object from your action.
-   This object is then available in the `submission.result` property.
-   This allows you to pass detailed error information back to your component for display.
+Throwing an `Error` is a valid way to signal failure.
+Solid Router will catch the thrown error and make it available in the `submission.error` property.
+However, this approach has some drawbacks.
+The `submission.error` property is typed as `any`, which undermines type safety in the consuming component.
+It is also difficult to convey structured error information, such as validation messages for multiple form fields, using a simple `Error` instance.
 
-While you can use either method as you see fit, a common pattern is to `throw` for unexpected errors and `return` an object for expected ones (like validation failures).
+For these reasons, the recommended practice is to always `return` a descriptive object from an action to represent its outcome.
+The returned object is available in the `submission.result` property, which will be fully typed.
+This makes handling different outcomes in the UI simple and safe.
 
 ```tsx
-import { action, useSubmission } from "@solidjs/router";
 import { Show } from "solid-js";
+import { action, useSubmission } from "@solidjs/router";
 
-const editPostAction = action(async (postId: string, formData: FormData) => {
+const editPostAction = action(async (formData: FormData) => {
 	const title = formData.get("title")?.toString();
 
-	// Validation errors are expected.
-	// We return an object to handle them gracefully.
 	if (!title || title.length < 3) {
 		return {
-			success: false,
+			ok: false,
 			errors: { title: "Title must be at least 3 characters long." },
 		};
 	}
 
-	const response = await fetch(`https://api.com/posts/${postId}`, {
-		method: "PATCH",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ title }),
-	});
+	// ... Performs an update on the server and handles potential errors.
 
-	if (!response.ok) {
-		// Server-side validation errors are also expected.
-		if (response.status === 400) {
-			const errorData = await response.json();
-			return {
-				success: false,
-				errors: errorData,
-			};
-		}
-
-		// For other failures, we throw an error.
-		throw new Error("An unexpected error occurred. Please try again.");
-	}
-
-	return { success: true };
+	return { ok: true };
 }, "editPost");
 
 function EditPostForm(props: { postId: string }) {
 	const submission = useSubmission(editPostAction);
-	const errors = () => submission.result?.errors;
+
+	const errors = () => {
+		const result = submission.result;
+		if (result && !result.ok) {
+			return result.errors;
+		}
+	};
 
 	return (
 		<form action={editPostAction.with(props.postId)} method="post">
-			<Show when={submission.error}>
-				{(error) => (
-					<div>
-						<p>{error().message}</p>
-						<button type="button" onClick={() => submission.retry()}>
-							Try Again
-						</button>
-					</div>
-				)}
+			<Show when={errors()?.server}>
+				<p>{errors().server}</p>
 			</Show>
 
 			<div>
 				<input name="title" placeholder="Enter new title" />
-				<Show when={errors()?.title}>{(error) => <p>{error()}</p>}</Show>
+				<Show when={errors()?.title}>
+					<p>{errors().title}</p>
+				</Show>
 			</div>
 
 			<button type="submit" disabled={submission.pending}>
@@ -296,38 +267,39 @@ function EditPostForm(props: { postId: string }) {
 }
 ```
 
-In this example:
+In this example, the `errors` derived signal inspects `submission.result` to check for failures.
+If an error object is found, its properties are used to conditionally render error messages next to the relevant form fields.
 
-- If the title validation fails, the action returns an object with an `errors` field.
-  The UI then accesses `submission.result.errors.title` to display the specific validation message.
-- If an unexpected server error occurs, the action throws an `Error`.
-  The UI uses `submission.error` to display a generic error message and provides a "Try Again" button.
+:::caution[Always return a value]
+It is important that an action consistently returns a value from all of its possible code paths.
+If an action returns `undefined` or `null`, Solid Router removes that submission from its internal list upon completion.
+This can lead to unexpected behavior.
+For example, consider an action that returns an error object on failure but returns nothing on success.
+If the action fails once, `useSubmission` will correctly report the error.
+However, if a subsequent submission succeeds, it will be removed from the list, and `useSubmission` will continue to report the previous stale error state.
+To prevent this, ensure every code path in an action returns a value, such as `{ ok: true }` for a successful outcome.
+:::
 
 ## Automatic data revalidation
 
-After you change data on the server, you face a common challenge: the data displayed in your UI is now stale.
+After changing data on the server, the data displayed in the UI can become stale.
 To solve this, Solid Router automatically revalidates the data for the current route after a successful action.
 
-This means you typically don't have to manually refetch data after a mutation.
+This means data does not have to be manually refetched after a mutation.
 Behind the scenes, Solid Router re-runs all active queries on the page, ensuring that any component using that data is automatically updated with the freshest information.
 
-For example, if you have a page that displays a list of posts and includes a form to add a new one, the list will automatically update after you submit the form.
+For example, if a page displays a list of posts and includes a form to add a new one, the list will automatically update after the form is submitted.
 
 ```tsx
+import { For } from "solid-js";
 import { query, action, createAsync } from "@solidjs/router";
 
 const getPostsQuery = query(async () => {
-	const response = await fetch("https://api.com/posts");
-	return await response.json();
+	// ... Fetches the list of posts.
 }, "getPosts");
 
 const addPostAction = action(async (formData: FormData) => {
-	const title = formData.get("title")?.toString();
-	await fetch("https://api.com/posts", {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ title }),
-	});
+	// ... Adds a new post.
 }, "addPost");
 
 function PostsPage() {
@@ -349,13 +321,13 @@ function PostsPage() {
 }
 ```
 
-While this automatic behavior is convenient for most cases, you may need more fine-grained control.
-The next section on managing navigation and revalidation explains how you can customize or even disable this behavior for specific actions.
+While this automatic behavior is convenient for most cases, more fine-grained control may be needed.
+The next section explains how to customize or even disable this behavior for specific actions.
 
 ## Managing navigation and revalidation
 
-While automatic revalidation is powerful, you often need more control.
-You might want to redirect the user to a different page, prevent revalidation entirely, or revalidate a specific set of queries.
+While automatic revalidation is powerful, more control is often needed.
+It may be desirable to redirect the user to a different page, prevent revalidation entirely, or revalidate a specific set of queries.
 This is where response helpers come in.
 
 Response helpers are functions that create special `Response` objects.
@@ -363,33 +335,39 @@ When an action returns or throws one of these responses, Solid Router intercepts
 
 ### Redirecting
 
-If you want to navigate the user to a new page after an action completes, you can use the [`redirect`](/solid-router/reference/response-helpers/redirect) helper.
+To navigate the user to a new page after an action completes, the [`redirect`](/solid-router/reference/response-helpers/redirect) helper can be used.
+It can also be used to revalidate specific queries upon redirection, which is useful for updating data that is displayed on the new page.
 
 ```tsx
 import { action, redirect } from "@solidjs/router";
 
 const loginAction = action(async (formData: FormData) => {
-	// ...login logic
-	throw redirect("/dashboard");
+	// ... Handles the login logic.
+
+	// Redirect to the dashboard and revalidate the session query.
+	throw redirect("/dashboard", { revalidate: ["session"] });
 });
 ```
 
+In this example, after a successful login, the `redirect` helper is used to navigate to the dashboard.
+It also revalidates the "session" query to ensure the UI reflects the user's authenticated state.
+
 ### Customizing revalidation
 
-To override the default revalidation behavior, you can use the [`reload`](/solid-router/reference/response-helpers/reload) and [`json`](/solid-router/reference/response-helpers/json) helpers.
+To override the default revalidation behavior, the [`reload`](/solid-router/reference/response-helpers/reload) and [`json`](/solid-router/reference/response-helpers/json) helpers can be used.
 
-- `reload`: Use this when you only need to control revalidation.
-- `json`: Use this when you need to control revalidation _and_ return data from the action.
+- `reload`: Use this when only revalidation needs to be controlled.
+- `json`: Use this when revalidation needs to be controlled _and_ data needs to be returned from the action.
 
 Both helpers accept a `revalidate` option, which takes an array of query keys to revalidate.
-If you provide an empty array (`[]`), you can prevent revalidation altogether.
+If an empty array (`[]`) is provided, revalidation can be prevented altogether.
 
 ```tsx
 import { action, reload, json } from "@solidjs/router";
 
 // Example 1: Revalidating a specific query
 const savePreferencesAction = action(async (formData: FormData) => {
-	// ...save preferences logic
+	// ... Saves the user preferences.
 
 	// Only revalidate the 'userPreferences' query
 	throw reload({ revalidate: ["userPreferences"] });
@@ -397,52 +375,39 @@ const savePreferencesAction = action(async (formData: FormData) => {
 
 // Example 2: Disabling revalidation and returning data
 const logActivityAction = action(async (activityData: FormData) => {
-	// ...log activity to server
+	// ... Logs the activity to the server.
 
-	// Return a success message without revalidating any queries
-	return json({ success: true }, { revalidate: [] });
+	// Return without revalidating any queries
+	return json({ ok: true }, { revalidate: [] });
 });
 ```
 
 :::tip[Throwing vs. Returning]
-You can either `return` or `throw` a response helper.
-In TypeScript, `throw` can be more convenient, as it avoids potential type conflicts with your action's expected return value.
+A response helper can be either `return`ed or `throw`n.
+In TypeScript, `throw` can be more convenient, as it avoids potential type conflicts with an action's expected return value.
 :::
 
 ## Optimistic UI
 
-Optimistic UI is a pattern where you update the user interface immediately after a user performs an operation.
+Optimistic UI is a pattern where the user interface is updated immediately after a user performs an operation.
 This is done without waiting for the server to confirm the operation's success.
-This approach makes your application feel faster and more responsive.
+This approach makes an application feel faster and more responsive.
 If the operation fails, the UI change is reverted.
 
 Actions can be combined with local state management to implement optimistic UI.
-You can use the `useSubmission` primitive to access the input of an action as it's being submitted.
-This input can be used to temporarily update your UI.
+The `useSubmission` primitive can be used to access the input of an action as it's being submitted.
+This input can be used to temporarily update the UI.
 
 ```tsx
 import { For, createSignal, Show } from "solid-js";
 import { query, action, createAsync, useSubmission } from "@solidjs/router";
 
 const getPostsQuery = query(async () => {
-	const response = await fetch("https://api.com/posts");
-	return await response.json();
+	// ... Fetches the list of posts.
 }, "getPosts");
 
 const addPostAction = action(async (formData: FormData) => {
-	const title = formData.get("title")?.toString();
-
-	const response = await fetch("https://api.com/posts", {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ title }),
-	});
-
-	if (!response.ok) {
-		return { ok: false, message: "Failed to add post" };
-	}
-
-	return { ok: true };
+	// ... Adds a new post and handles potential errors.
 }, "addPost");
 
 function PostsPage() {
@@ -475,16 +440,12 @@ function PostsPage() {
 					{submission.pending ? "Adding..." : "Add Post"}
 				</button>
 			</form>
-
-			<Show when={submission.error}>
-				<p>Failed to add post. Please try again.</p>
-			</Show>
 		</div>
 	);
 }
 ```
 
-In this example, we create a derived signal `optimisticPosts`.
+In this example, a derived signal `optimisticPosts` is created.
 When an action is pending, it checks the `submission.input` and adds the new post to the list with a temporary ID.
 This makes the new post appear in the list instantly.
 

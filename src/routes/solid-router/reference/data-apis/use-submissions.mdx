@@ -2,22 +2,50 @@
 title: useSubmissions
 ---
 
-The `useSubmissions` function retrieves the state of all submissions for a given action.
+The `useSubmissions` primitive returns the state of all submissions for a given action.
+
+## Parameters
+
+- `action`:
+  The action to track.
+- `filter` (optional):
+  A function that filters submissions.
+  It is executed for each submission in the order of creation.
+  It receives an array of the action's inputs as a parameter and must return `true` to select the submission or `false` otherwise.
+
+## Returns
+
+`useSubmissions` returns a reactive array of submission objects.
+Each submission object has the following properties:
+
+- `input`:
+  The reactive input data of the action.
+- `result`:
+  A reactive value representing the successful return value of the action.
+- `error`:
+  A reactive value for any error thrown by the action.
+- `pending`:
+  A reactive boolean indicating if the action is currently running.
+- `clear`:
+  A function to clear the submission's state.
+- `retry`:
+  A function to re-execute the submission with the same input.
+
+## Examples
+
+### Basic usage
 
 ```tsx
 import { For, Show } from "solid-js";
 import { action, useSubmissions } from "@solidjs/router";
 
 const addTodoAction = action(async (formData: FormData) => {
-	const name = formData.get("name")?.toString() ?? "";
-	if (name.length <= 2) {
-		throw new Error("Name must be larger than 2 characters");
-	}
-	return name;
-}, "add-todo");
+	// ... Sends the todo data to the server.
+}, "addTodo");
 
-export default function AddTodoForm() {
+function AddTodoForm() {
 	const submissions = useSubmissions(addTodoAction);
+
 	return (
 		<div>
 			<form action={addTodoAction} method="post">
@@ -31,16 +59,12 @@ export default function AddTodoForm() {
 						<Show when={submission.pending}>
 							<span> (pending...)</span>
 						</Show>
-						<Show when={submission.result}>
+						<Show when={submission.result?.ok}>
 							<span> (completed)</span>
 						</Show>
-						<Show when={submission.error}>
-							{(error) => (
-								<>
-									<span>{` (Error: ${error().message})`}</span>
-									<button onClick={() => submission.retry()}>Retry</button>
-								</>
-							)}
+						<Show when={!submission.result?.ok}>
+							<span>{` (Error: ${submission.result?.message})`}</span>
+							<button onClick={() => submission.retry()}>Retry</button>
 						</Show>
 					</div>
 				)}
@@ -50,28 +74,25 @@ export default function AddTodoForm() {
 }
 ```
 
-:::note
-To access the state of the most recent submission, `useSubmission`[/solid-router/reference/data-apis/use-submission] can be used.
-:::
-
-## Filter function
-
-The `useSubmissions` function optionally accepts a second parameter, which is a filter function.
-This function is executed for each submission in the order they were created, and only the submissions that meet the filter criteria are returned by `useSubmissions`.
-The filter function recieves the input data of the action as its parameter and must return `true` to select the submission or `false` otherwise.
+### Filtering submissions
 
 ```tsx
 import { useSubmissions } from "@solidjs/router";
-import { addTodoAction } from "./actions";
+
+const addTodoAction = action(async (formData: FormData) => {
+	// ... Sends the todo data to the server.
+}, "addTodo");
 
 function FailedTodos() {
 	const failedSubmissions = useSubmissions(
 		addTodoAction,
 		([formData]: [FormData]) => {
+			// Filters for submissions that failed a client-side validation
 			const name = formData.get("name")?.toString() ?? "";
 			return name.length <= 2;
 		}
 	);
+
 	return (
 		<div>
 			<p>Failed submissions:</p>
@@ -87,26 +108,3 @@ function FailedTodos() {
 	);
 }
 ```
-
-## Parameters
-
-- **action**: The action for which you want to get the submissions.
-- **filter** (optional): A filter function.
-  When provided, it executes on each submission in the order of creation, returning the submissions that pass the filter.
-  It receives the input data of the action as its parameter and must return `true` to select the submission and `false` otherwise.
-
-## Returns
-
-`useSubmissions` returns an array of submissions.
-Each submission is an object containing the following properties:
-
-- **input**: The input data of the action.
-  This is a reactive value.
-- **result**: The value returned from the action.
-  This is a reactive value.
-- **error**: Any error thrown from the action.
-  This is a reactive value.
-- **pending**: A boolean indicating whether the action is currently being executed.
-  This is a reactive value.
-- **clear**: A function that clears the result of the submission.
-- **retry**: A function that re-executes the submission with the same input.

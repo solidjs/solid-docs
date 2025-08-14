@@ -2,118 +2,60 @@
 title: query
 ---
 
-`query` is a [higher-order function](https://en.wikipedia.org/wiki/Higher-order_function) designed to create a new function with the same signature as the function passed to it.
-When this newly created function is called for the first time with a specific set of arguments, the original function is run, and its return value is stored in a cache and returned to the caller of the created function.
-The next time the created function is called with the same arguments (as long as the cache is still valid), it will return the cached value instead of re-executing the original function.
+The `query` function wraps an asynchronous function (the fetcher) and returns a new function (the query).
 
-:::note
-`query` can be defined anywhere and then used inside your components with [`createAsync`](/solid-router/reference/data-apis/create-async).
+The primary purpose of a query is to prevent redundant data fetching.
+When a query is called, a key is generated from its name (the second parameter to the `query` function) and arguments.
+This key is used to internally cache the result of the fetcher.
+If a query with the same key is called, the cached result is used in these scenarios:
 
-However, using `query` directly in [`createResource`](/reference/basic-reactivity/create-resource) will not work since the fetcher is not reactive and will not invalidate properly.
+- **For preloading:**
+  After a route's data is preloaded, a subsequent call to the same query within a 5-second window uses the preloaded data.
+- **For active subscriptions:**
+  When a query is actively being used by a component (e.g., via [`createAsync`](/solid-router/reference/data-apis/create-async)), its data is reused without expiration.
+- **On native history navigation:**
+  When navigating with the browser's back or forward buttons, the data is reused instead of being re-fetched.
+- **For server-side deduplication:**
+  Within a single server-side rendering (SSR) request, repeated calls to the same query reuse the same Promise or value.
+- **During client hydration:**
+  If SSR has provided data for a key, that data is used immediately on the client without a new network request.
 
-:::
+## Parameters
 
-## Usage
+- `fetcher`:
+  An asynchronous function that handles the logic for fetching data.
+  All arguments passed to this function must be JSON-serializable.
+- `name`:
+  A string used as a namespace for the query.
+  Solid Router combines this with the query's arguments to generate a unique key for deduplication.
 
-```js
-const getUser = query(
-	(id, options = {}) =>
-		fetch(`/api/users/${id}?summary=${options.summary || false}`).then((r) =>
-			r.json()
-		),
-	"usersById"
-);
+## Returns
 
-getUser(123); // Causes a GET request to /api/users/123?summary=false
-getUser(123); // Does not cause a GET request
-getUser(123, { summary: true }); // Causes a GET request to /api/users/123?summary=true
-setTimeout(() => getUser(123, { summary: true }), 999000); // Eventually causes another GET request to /api/users/123?summary=true
+`query` returns a new function with the same call signature as the fetcher.
+This returned function has the following properties attached to it:
+
+- `key`:
+  A string representing the base key for the query (its name).
+  This key targets all queries with that name, regardless of their arguments.
+- `keyFor`:
+  A function that takes the same arguments as the fetcher and returns a string representing a specific key for that set of arguments.
+  This allows for targeting and revalidating only a single, specific query.
+
+## Example
+
+```tsx
+import { query } from "@solidjs/router";
+
+const getUserProfileQuery = query(async (userId: string) => {
+	const response = await fetch(
+		`https://api.example.com/users/${encodeURIComponent(userId)}`
+	);
+	const json = await response.json();
+
+	if (!response.ok) {
+		throw new Error(json?.message ?? "Failed to load user profile.");
+	}
+
+	return json;
+}, "userProfile");
 ```
-
-### With preload functions
-
-Using it with a [preload function](/solid-router/reference/preload-functions/preload):
-
-```js
-import { lazy } from "solid-js";
-import { Route } from "@solidjs/router";
-import { getUser } from ... // the cache function
-
-const User = lazy(() => import("./pages/users/[id].js"));
-
-// preload function
-function preloadUser({params, location}) {
-  void getUser(params.id)
-}
-
-// Pass it in the route definition
-<Route path="/users/:id" component={User} preload={preloadUser} />;
-```
-
-### Inside a route's component
-
-Using it inside a route's component:
-
-```jsx
-// pages/users/[id].js
-import { getUser } from ... // the cache function
-
-export default function User(props) {
-  const user = createAsync(() => getUser(props.params.id));
-  return <h1>{user().name}</h1>;
-}
-```
-
-## Query Function Capabilities
-
-`query` accomplishes the following:
-
-1. Deduping on the server for the lifetime of the request.
-2. It fills a preload cache in the browser - this lasts 5 seconds.
-   When a route is preloaded on hover or when preload is called when entering a route it will make sure to dedupe calls.
-3. A reactive refetch mechanism based on key.
-   This prevents routes that are not new from retriggering on action revalidation.
-4. Serve as a back/forward cache for browser navigation for up to 5 minutes.
-   Any user based navigation or link click bypasses this cache.
-   Revalidation or new fetch updates the cache.
-
-## Query Keys
-
-To ensure that the query keys are consistent and unique, arguments are deterministically serialized using `JSON.stringify`.
-Before serialization, key/value pairs in objects are sorted so that the order of properties does not affect the serialization.
-For instance, both `{ name: 'Ryan', awesome: true }` and `{ awesome: true, name: 'Ryan' }` will serialize to the same string so that they produce the same query key.
-
-## Return value
-
-The return value is a `CachedFunction`, a function that has the same signature as the function you passed to `query`.
-This cached function stores the return value using the query key.
-Under most circumstances, this temporarily prevents the passed function from running with the same arguments, even if the created function is called repeatedly.
-
-## Arguments
-
-| argument | type                    | description                                                               |
-| -------- | ----------------------- | ------------------------------------------------------------------------- |
-| `fn`     | `(...args: any) => any` | A function whose return value you'd like to be cached.                    |
-| `name`\* | string                  | Any arbitrary string that you'd like to use as the rest of the query key. |
-
-\*Since the internal cache is shared by all the functions using `query`, the string should be unique for each function passed to `query`.
-If the same key is used with multiple functions, one function might return the cached result of the other.
-
-## Methods
-
-### `.key` and `.keyFor`
-
-Query functions provide `.key` and `.keyFor`, are useful when retrieving the keys used in cases involving invalidation:
-
-```ts
-let id = 5;
-getUser.key; // returns "users"
-getUser.keyFor(id); // returns "users[5]"
-```
-
-### `revalidate`
-
-The `query` can be revalidated using the `revalidate` method or the `revalidate` keys that are set on the response from the actions.
-If the entire key is passed, it will invalidate all entries for the cache (ie. `users` in the example above).
-If only a single entry needs to be invalidated, `keyFor` is provided.
-To revalidate everything in the cache, pass `undefined` as the key.

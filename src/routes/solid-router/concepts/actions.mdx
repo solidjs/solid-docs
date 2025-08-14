@@ -2,17 +2,16 @@
 title: "Actions"
 ---
 
-In web applications, many user interactions result in changing data on the server.
-These changes, often called mutations, require careful management of asynchronous operations, state updates, and error handling.
-Actions provide a comprehensive framework for managing these data mutations.
-They are designed to handle everything from simple form submissions to complex asynchronous workflows.
+Many user interactions in an application involve changing data on the server.
+These **mutations** can be challenging to manage, as they require updates to the application's state and proper error handling.
+Actions provide a simple solution for managing these data mutations.
 
 Actions provide several benefits:
 
 - **Integrated state management:**
   Solid Router automatically tracks the execution state of an action, simplifying reactive UI feedback.
 - **Automatic data revalidation:**
-  After an action successfully completes, Solid Router revalidates relevant queries, ensuring the UI reflects the latest data.
+  After an action successfully completes, Solid Router revalidates relevant [`queries`](/solid-router/concepts/queries), ensuring the UI reflects the latest data.
 - **Progressive enhancement:**
   When used with HTML forms, actions enable functionality even if JavaScript is not yet loaded.
 
@@ -25,13 +24,11 @@ When the action is invoked, Solid Router executes the defined logic.
 ```tsx
 import { action } from "@solidjs/router";
 
-const addPostAction = action(async (title: string) => {
-	const response = await fetch("https://api.com/posts", {
+const createTicketAction = action(async (subject: string) => {
+	const response = await fetch("https://api.com/support/tickets", {
 		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify({ title }),
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ subject }),
 	});
 
 	if (!response.ok) {
@@ -40,16 +37,16 @@ const addPostAction = action(async (title: string) => {
 	}
 
 	return { ok: true };
-});
+}, "createTicket");
 ```
 
-In this example, an action is defined that sends a POST request to create a new post.
+In this example, an action is defined that creates a support ticket with a subject.
 
 ## Invoking actions
 
 Actions can be invoked in two primary ways: through an HTML `<form>` or programmatically with the `useAction` primitive.
 
-The recommended approach for is to use a `<form>`.
+The recommended approach is to use a `<form>`.
 This ensures the application works even before any client-side JavaScript has loaded, providing a robust user experience through progressive enhancement.
 
 For cases where a form is not suitable, the [`useAction` primitive](/solid-router/reference/data-apis/use-action) can be used to invoke the action programmatically.
@@ -69,21 +66,25 @@ Consider these points when using actions with `<form>`:
 ```tsx
 import { action } from "@solidjs/router";
 
-const addPostAction = action(async (formData: FormData) => {
-	// ... Handles the form submission logic.
-}, "addPost");
+const submitFeedbackAction = action(async (formData: FormData) => {
+	const message = formData.get("message")?.toString();
 
-function AddPostForm() {
+	// ... Sends the feedback to the server.
+
+	return { ok: true };
+}, "submitFeedback");
+
+function FeedbackForm() {
 	return (
-		<form action={addPostAction} method="post">
-			<input name="title" placeholder="Enter post title" />
-			<button type="submit">Create Post</button>
+		<form action={submitFeedbackAction} method="post">
+			<textarea name="message" placeholder="Message" />
+			<button type="submit">Send feedback</button>
 		</form>
 	);
 }
 ```
 
-In this example, when the form is submitted, `addPostAction` will be invoked with the `FormData` containing the form values.
+In this example, when the form is submitted, `submitFeedbackAction` will be invoked with the `FormData` containing the form values.
 
 :::tip[Uploading files]
 If a form includes file inputs, the `<form>` element must have `enctype="multipart/form-data"` to correctly send the file data.
@@ -108,21 +109,27 @@ When this new action is invoked, it passes the arguments specified in the `with`
 ```tsx
 import { action } from "@solidjs/router";
 
-const editPostAction = action(async (postId: string, formData: FormData) => {
-	// ... Handles the edit logic.
-}, "editPost");
+const updateProductAction = action(
+	async (productId: string, formData: FormData) => {
+		// ... Sends the updated fields to the server.
 
-function EditPostForm(props: { postId: string }) {
+		return { ok: true };
+	},
+	"updateProduct"
+);
+
+function EditProductForm(props: { productId: string }) {
 	return (
-		<form action={editPostAction.with(props.postId)} method="post">
-			<input name="title" placeholder="New title" />
-			<button type="submit">Edit Post</button>
+		<form action={updateProductAction.with(props.productId)} method="post">
+			<input name="name" placeholder="Product name" />
+			<input name="price" type="number" step="0.01" placeholder="Price" />
+			<button type="submit">Save product</button>
 		</form>
 	);
 }
 ```
 
-In this example, `editPostAction` receives `postId` (passed via `with`), and then the `formData` from the form.
+In this example, `updateProductAction` receives `productId` (passed via `with`), and then the `formData` from the form.
 
 ### With the `useAction` primitive
 
@@ -134,19 +141,19 @@ The `useAction` primitive takes an action as its argument and returns a function
 ```tsx
 import { action, useAction } from "@solidjs/router";
 
-const likePostAction = action(async (postId: string) => {
-	// ... Likes a post on the server.
+const markNotificationReadAction = action(async (notificationId: string) => {
+	// ... Marks a notification as read on the server.
 });
 
-function LikePostButton(props: { postId: string }) {
-	const likePost = useAction(likePostAction);
+function NotificationItem(props: { id: string }) {
+	const markRead = useAction(markNotificationReadAction);
 
-	return <button onClick={() => likePost(props.postId)}>Like</button>;
+	return <button onClick={() => markRead(props.id)}>Mark as read</button>;
 }
 ```
 
-In this example, `likePost` is a function that can be called with arguments matching `likePostAction`.
-When the button is clicked, `likePostAction` is invoked for the specific `postId`.
+In this example, `markRead` is a function that can be called with arguments matching `markNotificationReadAction`.
+When the button is clicked, the action is invoked for the specific notification.
 
 ## Tracking submission state
 
@@ -171,7 +178,7 @@ const saveSettingsAction = action(async (formData: FormData) => {
 	// ... Sends the settings data to the server.
 
 	return { ok: true };
-}, "save-settings");
+}, "saveSettings");
 
 function UserSettingsForm() {
 	const submission = useSubmission(saveSettingsAction);
@@ -181,7 +188,7 @@ function UserSettingsForm() {
 			<input name="email" type="email" placeholder="Enter your email" />
 
 			<button type="submit" disabled={submission.pending}>
-				{submission.pending ? "Saving..." : "Save Settings"}
+				{submission.pending ? "Saving..." : "Save settings"}
 			</button>
 
 			<Show when={!submission.result?.ok}>
@@ -221,23 +228,23 @@ This makes handling different outcomes in the UI simple and safe.
 import { Show } from "solid-js";
 import { action, useSubmission } from "@solidjs/router";
 
-const editPostAction = action(async (formData: FormData) => {
-	const title = formData.get("title")?.toString();
+const verifyTwoFactorAction = action(async (formData: FormData) => {
+	const code = formData.get("code")?.toString();
 
-	if (!title || title.length < 3) {
+	if (!code || code.length !== 6) {
 		return {
 			ok: false,
-			errors: { title: "Title must be at least 3 characters long." },
+			errors: { code: "Enter the 6-digit code from the authenticator app." },
 		};
 	}
 
-	// ... Performs an update on the server and handles potential errors.
+	// ... Verifies the code with the server and handles potential errors.
 
 	return { ok: true };
-}, "editPost");
+}, "verifyTwoFactor");
 
-function EditPostForm(props: { postId: string }) {
-	const submission = useSubmission(editPostAction);
+function TwoFactorForm() {
+	const submission = useSubmission(verifyTwoFactorAction);
 
 	const errors = () => {
 		const result = submission.result;
@@ -247,20 +254,16 @@ function EditPostForm(props: { postId: string }) {
 	};
 
 	return (
-		<form action={editPostAction.with(props.postId)} method="post">
-			<Show when={errors()?.server}>
-				<p>{errors().server}</p>
-			</Show>
-
+		<form action={verifyTwoFactorAction} method="post">
 			<div>
-				<input name="title" placeholder="Enter new title" />
-				<Show when={errors()?.title}>
-					<p>{errors().title}</p>
+                <input name="code" placeholder="6-digit code" inputMode="numeric" />
+				<Show when={errors()?.code}>
+					<p>{errors().code}</p>
 				</Show>
 			</div>
 
 			<button type="submit" disabled={submission.pending}>
-				{submission.pending ? "Saving..." : "Save Changes"}
+				{submission.pending ? "Verifying..." : "Verify"}
 			</button>
 		</form>
 	);
@@ -274,6 +277,7 @@ If an error object is found, its properties are used to conditionally render err
 It is important that an action consistently returns a value from all of its possible code paths.
 If an action returns `undefined` or `null`, Solid Router removes that submission from its internal list upon completion.
 This can lead to unexpected behavior.
+
 For example, consider an action that returns an error object on failure but returns nothing on success.
 If the action fails once, `useSubmission` will correctly report the error.
 However, if a subsequent submission succeeds, it will be removed from the list, and `useSubmission` will continue to report the previous stale error state.
@@ -288,33 +292,33 @@ To solve this, Solid Router automatically revalidates the data for the current r
 This means data does not have to be manually refetched after a mutation.
 Behind the scenes, Solid Router re-runs all active queries on the page, ensuring that any component using that data is automatically updated with the freshest information.
 
-For example, if a page displays a list of posts and includes a form to add a new one, the list will automatically update after the form is submitted.
+For example, if a page displays a list of registered devices and includes a form to register a new one, the list will automatically update after the form is submitted.
 
 ```tsx
 import { For } from "solid-js";
 import { query, action, createAsync } from "@solidjs/router";
 
-const getPostsQuery = query(async () => {
-	// ... Fetches the list of posts.
-}, "getPosts");
+const getDevicesQuery = query(async () => {
+	// ... Fetches the list of registered devices.
+}, "devices");
 
-const addPostAction = action(async (formData: FormData) => {
-	// ... Adds a new post.
-}, "addPost");
+const registerDeviceAction = action(async (formData: FormData) => {
+	// ... Registers a new device on the server.
+}, "registerDevice");
 
-function PostsPage() {
-	// This query will automatically revalidate after addPostAction completes.
-	const posts = createAsync(() => getPostsQuery());
+function DevicesPage() {
+	// This query will automatically revalidate after registerDeviceAction completes.
+	const devices = createAsync(() => getDevicesQuery());
 
 	return (
 		<div>
-			<h2>All Posts</h2>
-			<For each={posts()}>{(post) => <p>{post.title}</p>}</For>
+			<h2>Registered devices</h2>
+			<For each={devices()}>{(device) => <p>{device.name}</p>}</For>
 
-			<h3>Add New Post</h3>
-			<form action={addPostAction} method="post">
-				<input name="title" placeholder="Post title" />
-				<button type="submit">Add Post</button>
+			<h3>Register new device</h3>
+			<form action={registerDeviceAction} method="post">
+				<input name="name" placeholder="Device name" />
+				<button type="submit">Register device</button>
 			</form>
 		</div>
 	);
@@ -399,45 +403,46 @@ The `useSubmission` primitive can be used to access the input of an action as it
 This input can be used to temporarily update the UI.
 
 ```tsx
-import { For, createSignal, Show } from "solid-js";
+import { For, Show } from "solid-js";
 import { query, action, createAsync, useSubmission } from "@solidjs/router";
 
-const getPostsQuery = query(async () => {
-	// ... Fetches the list of posts.
-}, "getPosts");
+const getCartQuery = query(async () => {
+	// ... Fetches the current shopping cart items.
+}, "cart");
 
-const addPostAction = action(async (formData: FormData) => {
-	// ... Adds a new post and handles potential errors.
-}, "addPost");
+const addToCartAction = action(async (formData: FormData) => {
+	// ... Adds a product to the cart and handles potential errors.
+}, "addToCart");
 
-function PostsPage() {
-	const postsQuery = createAsync(() => getPostsQuery());
-	const submission = useSubmission(addPostAction);
+function CartPage() {
+	const cart = createAsync(() => getCartQuery());
+	const submission = useSubmission(addToCartAction);
 
-	const optimisticPosts = () => {
-		const originalPosts = postsQuery() ?? [];
+	const optimisticCart = () => {
+		const originalItems = cart() ?? [];
 		if (submission.pending) {
 			const formData = submission.input[0] as FormData;
-			const title = formData.get("title")?.toString();
-			if (title) {
-				// Add the optimistic post to the list with a temporary ID.
-				return [...originalPosts, { id: -1, title }];
+			const productId = formData.get("productId")?.toString();
+			const name = formData.get("name")?.toString();
+			if (productId && name) {
+				// Add the optimistic line item with a temporary identifier.
+				return [...originalItems, { id: "temp", productId, name, quantity: 1 }];
 			}
 		}
-		return originalPosts;
+		return originalItems;
 	};
 
 	return (
 		<div>
-			<h2>All Posts</h2>
-			{/* The list now uses optimisticPosts to render */}
-			<For each={optimisticPosts()}>{(post) => <p>{post.title}</p>}</For>
+			<h2>Your cart</h2>
+			<For each={optimisticCart()}>{(item) => <p>{item.name}</p>}</For>
 
-			<h3>Add New Post</h3>
-			<form action={addPostAction} method="post">
-				<input name="title" placeholder="Post title" />
+			<h3>Add item</h3>
+			<form action={addToCartAction} method="post">
+				<input name="productId" placeholder="Product ID" />
+				<input name="name" placeholder="Product name" />
 				<button type="submit" disabled={submission.pending}>
-					{submission.pending ? "Adding..." : "Add Post"}
+					{submission.pending ? "Adding..." : "Add to cart"}
 				</button>
 			</form>
 		</div>
@@ -445,16 +450,10 @@ function PostsPage() {
 }
 ```
 
-In this example, a derived signal `optimisticPosts` is created.
-When an action is pending, it checks the `submission.input` and adds the new post to the list with a temporary ID.
-This makes the new post appear in the list instantly.
-
-If the action fails, `submission.pending` becomes false, and `optimisticPosts` will revert to showing the original list from `postsQuery`.
-The error message will also be displayed.
-
-When the action succeeds, Solid Router automatically revalidates `getPostsQuery`.
-This fetches the updated list of posts from the server, including the newly created post with its final ID.
-The UI then seamlessly updates to reflect the correct state.
+In this example, a derived signal `optimisticCart` is created.
+When an action is pending, it checks the `submission.input` and adds the new line item to the list with a temporary identifier.
+If the action fails, `submission.pending` becomes false, and `optimisticCart` will revert to showing the original list from `cart`.
+When the action succeeds, Solid Router automatically revalidates `getCartQuery` and updates the UI with the confirmed cart state.
 
 :::note
 For more advanced optimistic UI patterns, consider using a library like [TanStack Query](https://tanstack.com/query/latest/docs/framework/solid/guides/optimistic-updates).

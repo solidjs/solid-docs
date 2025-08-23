@@ -1,0 +1,104 @@
+---
+title: "Data mutation"
+---
+
+Mutating (or updating) data on a server is a common task in most applications.
+[Solid Router](/solid-router) provides [actions](/solid-router/concepts/actions) to manage data mutations effectively.
+
+SolidStart builds upon the capabilities of actions, extending their scope to provide a comprehensive, full-stack solution for data mutations.
+
+This page does not cover the foundational concepts from Solid Router.
+If you are a beginner, we highly recommend starting with the [actions documentation](/solid-router/concepts/actions).
+You can also find many practical examples in the [data mutation how-to guide](/solid-start/guides/data-mutation).
+
+## Server functions and actions
+
+Server functions allow an action to run exclusively on the server.
+This enables performing sensitive operations—such as writing to a database or working with sessions—directly within the action.
+
+```tsx
+import { action, redirect } from "@solidjs/router";
+import { useSession } from "vinxi/http";
+import { db } from "./db";
+
+const logoutAction = action(async () => {
+	"use server";
+	const session = await useSession({
+		password: process.env.SESSION_SECRET as string,
+		name: "session",
+	});
+
+	if (session.data.sessionId) {
+		await session.clear();
+		await db.session.delete({ id: sessionId });
+	}
+
+	throw redirect("/");
+}, "logout");
+```
+
+In this example, the entire `logoutAction` runs on the server.
+It safely accesses the session to retrieve the `sessionId` and performs a database deletion without exposing this logic to the client.
+The `redirect` then navigates the user back to the home page.
+
+## Single-flight mutations
+
+When a piece of data changes on the server, the new data needs to be fetched so the UI doesn't fall out of sync.
+Traditionally, this is done in two separate HTTP requests: one to update the data, and a second to fetch the new data.
+
+Single-flight mutations are a unique feature of SolidStart that handles this pattern in a single request.
+This is enabled when two requirements are met:
+
+1. The action that updates the data must execute on the server using server functions.
+2. The data that the action updated must be preloaded.
+   If the action performs a redirect, preloading needs to happen on the destination page.
+
+```tsx title="src/routes/products/[id].tsx"
+import {
+	action,
+	query,
+	createAsync,
+	type RouteDefinition,
+	type RouteSectionProps,
+} from "@solidjs/router";
+import { db } from "./db";
+
+const updateProductAction = action(async (id: string, formData: FormData) => {
+	"use server";
+	const name = formData.get("name")?.toString();
+	await db.products.update(id, { name });
+}, "updateProduct");
+
+const getProductQuery = query(async (id: string) => {
+	"use server";
+	return await db.products.get(id);
+}, "product");
+
+export const route = {
+	preload: ({ params }) => getProductQuery(params.id as string),
+} satisfies RouteDefinition;
+
+export default function ProductDetail(props: RouteSectionProps) {
+	const product = createAsync(() => getProductQuery(props.params.id as string));
+
+	return (
+		<div>
+			<p>Current name: {props.data.product?.name}</p>
+			<form
+				action={updateProductAction.with(props.params.id as string)}
+				method="post"
+			>
+				<input name="name" placeholder="New name" />
+				<button>Save</button>
+			</form>
+		</div>
+	);
+}
+```
+
+In this example, `updateProductAction` updates the product within a server function, and `getProductQuery` is responsible for fetching the product data.
+Note that `getProductQuery` is preloaded on the route.
+
+When a user submits the form, a single POST request is sent to the server.
+After the action completes, `getProductQuery` is automatically revalidated.
+Because it's preloaded, SolidStart can trigger the revalidation on the server and stream the result back to the client in the same response.

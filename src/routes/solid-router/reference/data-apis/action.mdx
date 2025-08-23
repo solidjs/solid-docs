@@ -2,26 +2,70 @@
 title: action
 ---
 
-The `action` function wraps an asynchronous function and returns an action.
+`action` wraps an asynchronous function and returns an [action](/solid-router/concepts/actions).
 
-When an action is invoked, it creates a submission object that tracks its execution status, including whether it is pending, the input it was called with, and the eventual result or error.
+## Import
+
+```tsx
+import { action } from "@solidjs/router";
+```
+
+## Type
+
+```tsx
+function action<T extends Array<any>, U = void>(
+	fn: (...args: T) => Promise<U>,
+	name?: string
+): Action<T, U>;
+
+function action<T extends Array<any>, U = void>(
+	fn: (...args: T) => Promise<U>,
+	options?: { name?: string; onComplete?: (s: Submission<T, U>) => void }
+): Action<T, U>;
+
+function action<T extends Array<any>, U = void>(
+	fn: (...args: T) => Promise<U>,
+	options:
+		| string
+		| { name?: string; onComplete?: (s: Submission<T, U>) => void } = {}
+): Action<T, U>;
+```
+
+## Details
+
+When an action is invoked, it creates a submission object that tracks its execution status.
 This state can be accessed with the [`useSubmission`](/solid-router/reference/data-apis/use-submission) and [`useSubmissions`](/solid-router/reference/data-apis/use-submissions) primitives.
+
+After the action completed successfully, all queries active in the same page are revalidated, unless revalidation is configured using [response helpers](/solid-router/concepts/actions#managing-navigation-and-revalidation).
 
 ## Parameters
 
 ### `handler`
 
+- **Type:** `(...args: T) => Promise<U>`
+
 An asynchronous function that performs the action's logic.
 When the action is used with a [`<form>` elements](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/form), the function receives a [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object as its first argument.
 
-### `name` (optional):
+### `options`
 
-A unique string that is used to identify the action in Server-Side Rendering (SSR) environments.
-This is required when using the action with a `<form>`.
+- **Type:** `string | { name?: string; onComplete?: (s: Submission<T, U>) => void }`
 
-## Returns
+A unique string used to identify the action in Server-Side Rendering (SSR) environments.
+This is required when using the action with a [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/form) element.
 
-`action` returns a new function with the following properties:
+Alternatively, a configuration object can be passed with the following properties:
+
+- `name` (optional):
+  The unique string to identify the action in SSR environments.
+  Required for `<form>` usage.
+- `onComplete` (optional):
+  A function that runs after the action completes successfully.
+  It recieves a submission object as its parameter.
+
+## Return value
+
+`action` returns an action with the following properties:
 
 - `with`:
   A method that wraps the original action and returns a new one.

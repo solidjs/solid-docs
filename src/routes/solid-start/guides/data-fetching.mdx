@@ -2,15 +2,7 @@
 title: "Data fetching"
 ---
 
-SolidStart is built on top of [Solid](/) and uses [Solid Router](/solid-router) by default.
-This means you can leverage their respective data-fetching primitives within SolidStart.
-Since SolidStart itself provides minimal data-fetching APIs, most functionality comes from Solid and Solid Router.
-
-This guide provides practical examples of common data-fetching tasks using these primitives.
-
-:::note
-For detailed API information, refer to the [Solid](/) and [Solid Router](/solid-router) documentation.
-:::
+This guide provides practical examples of common data-fetching tasks in SolidStart.
 
 Here's a simple example:
 
@@ -54,12 +46,12 @@ export default function Page() {
 }
 ```
 
-In this example, a [`query`](/solid-router/reference/data-apis/query) is created.
-In order to access it's data within the component, the [`createAsync`](/solid-router/reference/data-apis/create-async) primitive was used.
+In this example, a [`query`](/solid-router/concepts/queries) is created.
+The [`createAsync` primitive](/solid-router/reference/data-apis/create-async) is used to access its data.
 
 ## Showing loading UI
 
-To show a loading UI during data-fetching:
+To show a loading UI during data fetching:
 
 1. Import [`Suspense`](/reference/components/suspense) from `solid-js`.
 2. Wrap your data rendering in `<Suspense>`, and use the `fallback` prop to show a component during data fetching.
@@ -110,7 +102,7 @@ export default function Page() {
 
 ## Handling errors
 
-To show a fallback UI if the data-fetching fails:
+To show a fallback UI if the data fetching fails:
 
 1. Import [`ErrorBoundary`](/reference/components/error-boundary) from `solid-js`.
 2. Wrap the data rendering in `<ErrorBoundary>`, and use the `fallback` prop to show a component if an error occurs.
@@ -165,7 +157,7 @@ export default function Page() {
 
 ## Preloading data
 
-Data fetching can be optimized during user navigation by preloading the data:
+To preload data before a route renders:
 
 1. Export a `route` object with a [`preload`](/solid-router/reference/preload-functions/preload) function.
 2. Run your query inside the `preload` function.
@@ -273,17 +265,11 @@ export default function Page() {
 	const post = createAsync(() => getPost(postId));
 	return (
 		<div>
-			<ErrorBoundary fallback={<div>Something went wrong!</div>}>
-				<h1>{post().title}</h1>
-			</ErrorBoundary>
-		</div>
-	);
-}
-```
+			<ErrorBoundary fallback={<div>Something went wrong!</div>}>\n\t\t\t\t<h1>{post().title}</h1>\n\t\t\t</ErrorBoundary>\n\t\t</div>\n\t);\n}\n```
 
 ## Using a database or an ORM
 
-To safely interact with your database or ORM in a query, ensure it's server-only by adding [`"use server"`](/solid-start/reference/server/use-server) as the first line of your query:
+To safely interact with your database or ORM in a query, use a [server function](/solid-start/reference/server/use-server):
 
 ```tsx tab title="TypeScript" {7-8}
 // src/routes/index.tsx

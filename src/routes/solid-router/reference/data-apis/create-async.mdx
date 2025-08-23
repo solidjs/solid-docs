@@ -2,42 +2,77 @@
 title: createAsync
 ---
 
-An asynchronous primitive with a function that tracks similar to `createMemo`.
-`createAsync` expects a promise back that is then turned into a Signal.
-Reading it before it is ready causes Suspense/Transitions to trigger.
+The `createAsync` primitive is designed to simplify asynchronous data fetching.
 
-:::caution
-	Using `query` in `createResource` directly will not work since the fetcher is
-	not reactive. This means that it will not invalidate properly.
+:::note
+`createAsync` is currently a thin wrapper over `createResource`.
+While `createResource` offers similar functionality, **`createAsync` is the recommended primitive for most asynchronous data fetching**.
+It is intended to be the standard async primitive in a future Solid 2.0 release.
 :::
 
-This is light wrapper over [`createResource`](/reference/basic-reactivity/create-resource) which serves as a stand-in for a future primitive being brought to Solid core in 2.0.
-It is recommended that `createAsync` be used in favor of `createResource` specially when in a **SolidStart** app because `createAsync` works better in conjunction with the [cache](/solid-router/reference/data-apis/cache) helper.
+## Parameters
 
+### `fetcher`
 
+An asynchronous function or a function that returns a `Promise`.
+The resolved value of this `Promise` is what `createAsync` tracks.
+This function is reactive and will automatically re-execute if any of its dependencies change.
 
-```tsx title="component.tsx" {6,10}
-import { createAsync } from "@solidjs/router";
-import { Suspense } from "solid-js";
-import { getUser } from "./api";
+### `options`
 
-export function Component () => {
-	const user = createAsync(() => getUser(params.id));
+An object for configuring the primitive.
+It has the following properties:
 
-	return (
-		<Suspense fallback="loading user...">
-			<p>{user()}</p>
-		</Suspense>
-	);
+- `name` (optional):
+  A name for the resource, used for identification in debugging tools like [Solid Debugger](https://github.com/thetarnav/solid-devtools).
+- `initialValue` (optional):
+  The initial value of the returned signal before the fetcher finishes executing.
+- `deferStream` (optional):
+  If `true`, [streaming](/solid-router/concepts/queries#streaming) will be deferred until the fetcher finishes executing.
+
+## Return value
+
+`createAsync` returns a derived signal that contains the resolved value of the fetcher.
+
+While the fetcher is executing for the first time, unless an `initialValue` is specified, the signal's value is `undefined`.
+
+## Examples
+
+### Basic usage
+
+```tsx
+import { createAsync, query } from "@solidjs/router";
+
+const getUserQuery = query(async (id: string) => {
+	// ... Fetches the user from the server.
+}, "user");
+
+function UserProfile() {
+	const user = createAsync(() => getUserQuery());
+
+	return <p>{user()?.name}</p>;
+}
 ```
 
-## Options
+### Handling loading and errors
 
-| Name         | Type                    | Default        | Description                                                                                                                                                   |
-| ------------ | ----------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| name         | `string`                | `undefined`    | A name for the resource. This is used for debugging purposes.                                                                                                 |
-| deferStream  | `boolean`               | `false`        | If true, Solid will wait for the resource to resolve before flushing the stream.                                                                              |
-| initialValue | `any`                   | `undefined`    | The initial value of the resource.                                                                                                                            |
-| onHydrated   | `function`              | `undefined`    | A callback that is called when the resource is hydrated.                                                                                                      |
-| ssrLoadFrom  | `"server" \| "initial"` | `"server"`     | The source of the initial value for SSR. If set to `"initial"`, the resource will use the `initialValue` option instead of the value returned by the fetcher. |
-| storage      | `function`              | `createSignal` | A function that returns a signal. This can be used to create a custom storage for the resource. This is still experimental
+```tsx
+import { Suspense, ErrorBoundary, For } from "solid-js";
+import { createAsync, query } from "@solidjs/router";
+
+const getUserQuery = query(async (id: string) => {
+	// ... Fetches the user from the server.
+}, "user");
+
+function UserProfile() {
+	const user = createAsync(() => getUserQuery());
+
+	return (
+		<ErrorBoundary fallback={<p>Could not fetch user data.</p>}>
+			<Suspense fallback={<p>Loading user...</p>}>
+				<p>{user()!.name}</p>
+			</Suspense>
+		</ErrorBoundary>
+	);
+}
+```

@@ -2,8 +2,75 @@
 title: createAsyncStore
 ---
 
-Similar to [createAsync](/solid-router/reference/data-apis/create-async) except it uses a deeply reactive store. Perfect for applying fine-grained changes to large model data that updates.
+`createAsyncStore`, similar to [createAsync](/solid-router/reference/data-apis/create-async), is designed to simplify asynchronous data fetching.
+The main difference with `createAsync` is that `createAsyncStore` uses a [**store**](/concepts/stores).
 
-```jsx
-const todos = createAsyncStore(() => getTodos());
+When new data arrives, `createAsyncStore` [reconciles](/reference/store-utilities/reconcile) it with the old data.
+This means it intelligently updates the store, only changing the fields that are different and preserving the state of unchanged fields.
+
+## Parameters
+
+### `fetcher`
+
+An asynchronous function or a function that returns a `Promise`.
+The resolved value of this `Promise` is what `createAsyncStore` tracks.
+This function is reactive and will automatically re-execute if any of its dependencies change.
+
+### `options` (optional)
+
+An object for configuring the primitive.
+It has the following properties:
+
+- `name` (optional):
+  A name for the resource, used for identification in debugging tools like [Solid Debugger](https://github.com/thetarnav/solid-devtools).
+- `initialValue` (optional):
+  The initial value of the returned store before the fetcher resolves.
+- `deferStream` (optional):
+  If `true`, [streaming](/solid-router/concepts/queries#streaming) will be deferred until the resource has resolved.
+- `reconcile` (optional):
+  [Options](/reference/store-utilities/reconcile#options) passed directly to the `reconcile` function.
+  It controls how new data is merged with the existing store.
+
+## Return value
+
+`createAsyncStore` returns a derived signal that contains the resolved value of the fetcher as a store.
+
+While the fetcher is executing for the first time, unless an `initialValue` is specified, the store's value is `undefined`.
+
+## Examples
+
+### Basic usage
+
+```tsx
+import { For } from "solid-js";
+import { createAsyncStore, query } from "@solidjs/router";
+
+const getNotificationsQuery = query(async (unreadOnly: boolean) => {
+	// ... Fetches the list of notifications from the server.
+}, "notifications");
+
+function Notifications() {
+	const [unreadOnly, setUnreadOnly] = createSignal(false);
+	const notifications = createAsyncStore(() =>
+		getNotificationsQuery(unreadOnly())
+	);
+
+	return (
+		<div>
+			<button onClick={() => setUnreadOnly(!unreadOnly())}>
+				Toggle unread
+			</button>
+			<ul>
+				<For each={notifications()}>
+					{(notification) => (
+						<li>
+							<div>{notification.message}</div>
+							<div>{notification.user.name}</div>
+						</li>
+					)}
+				</For>
+			</ul>
+		</div>
+	);
+}
 ```

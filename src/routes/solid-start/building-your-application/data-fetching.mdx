@@ -1,0 +1,43 @@
+---
+title: "Data fetching"
+---
+
+Fetching data from a remote API, database or other sources is a core task for most applications.
+[Solid](/) and [Solid Router](/solid-router) provide foundational tools like the [`createResource` primitive](/guides/fetching-data) and [queries](/solid-router/concepts/queries) to manage asynchronous data.
+
+SolidStart builds on these capabilities, extending them to provide a comprehensive solution for data fetching in a full-stack environment.
+
+This page assumes you are familiar with the fundamental concepts of Solid and Solid Router.
+If you are a beginner, we highly recommend starting with the [queries documentation](/solid-router/concepts/queries).
+You can also find many practical examples in the [data fetching how-to guide](/solid-start/guides/data-fetching).
+
+## Server functions and queries
+
+Server functions provide a way to write functions that run exclusively on the server.
+This makes it safe to fetch data directly from a database without relying on a separate API endpoint.
+
+Server functions integrate seamlessly with queries, as they can be used as the fetcher for a query.
+
+```tsx
+import { query, redirect } from "@solidjs/router";
+import { useSession } from "vinxi/http";
+import { db } from "./db";
+
+const getCurrentUserQuery = query(async (id: string) => {
+	"use server";
+	const session = await useSession({
+		password: process.env.SESSION_SECRET as string,
+		name: "session",
+	});
+
+	if (session.data.userId) {
+		return await db.users.get({ id: session.data.userId });
+	} else {
+		throw redirect("/login");
+	}
+}, "currentUser");
+```
+
+In this example, the `getCurrentUserQuery` retrieves the session data, and if an authenticated user exists, it gets their information from the database and returns it.
+Otherwise, it redirects the user to the login page.
+All of these operations are performed completely on the server regardless of how the query is called.

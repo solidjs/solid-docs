@@ -8,28 +8,83 @@ The main difference with `createAsync` is that `createAsyncStore` uses a [**stor
 When new data arrives, `createAsyncStore` [reconciles](/reference/store-utilities/reconcile) it with the old data.
 This means it intelligently updates the store, only changing the fields that are different and preserving the state of unchanged fields.
 
+## Import
+
+```tsx
+import { createAsyncStore } from "@solidjs/router";
+```
+
+## Type
+
+```tsx
+function createAsyncStore<T>(
+  fn: (prev: T) => Promise<T>,
+  options: {
+    name?: string;
+    initialValue: T;
+    deferStream?: boolean;
+    reconcile?: ReconcileOptions;
+  }
+): AccessorWithLatest<T>;
+
+function createAsyncStore<T>(
+  fn: (prev: T | undefined) => Promise<T>,
+  options?: {
+    name?: string;
+    initialValue?: T;
+    deferStream?: boolean;
+    reconcile?: ReconcileOptions;
+  }
+): AccessorWithLatest<T | undefined>;
+```
+
 ## Parameters
 
 ### `fetcher`
+
+- **Type:** `(prev: T | undefined) => Promise<T>`
+- **Required:** Yes
 
 An asynchronous function or a function that returns a `Promise`.
 The resolved value of this `Promise` is what `createAsyncStore` tracks.
 This function is reactive and will automatically re-execute if any of its dependencies change.
 
-### `options` (optional)
+### `options`
+
+- **Type:** `{ name?: string; initialValue?: T; deferStream?: boolean; reconcile?: ReconcileOptions; }`
+- **Required:** No
 
 An object for configuring the primitive.
-It has the following properties:
+It has the following properties.
 
-- `name` (optional):
-  A name for the resource, used for identification in debugging tools like [Solid Debugger](https://github.com/thetarnav/solid-devtools).
-- `initialValue` (optional):
-  The initial value of the returned store before the fetcher resolves.
-- `deferStream` (optional):
-  If `true`, [streaming](/solid-router/concepts/queries#streaming) will be deferred until the resource has resolved.
-- `reconcile` (optional):
-  [Options](/reference/store-utilities/reconcile#options) passed directly to the `reconcile` function.
-  It controls how new data is merged with the existing store.
+#### `name`
+
+- **Type:** `string`
+- **Required:** No
+
+A name for the resource, used for identification in debugging tools like [Solid Debugger](https://github.com/thetarnav/solid-devtools).
+
+#### `initialValue`
+
+- **Type:** `T`
+- **Required:** No
+
+The initial value of the returned store before the fetcher resolves.
+
+#### `deferStream`
+
+- **Type:** `boolean`
+- **Required:** No
+
+If `true`, [streaming](/solid-router/concepts/queries#streaming) will be deferred until the resource has resolved.
+
+#### `reconcile`
+
+- **Type:** `ReconcileOptions`
+- **Required:** No
+
+[Options](/reference/store-utilities/reconcile#options) passed directly to the `reconcile` function.
+It controls how new data is merged with the existing store.
 
 ## Return value
 
@@ -42,7 +97,7 @@ While the fetcher is executing for the first time, unless an `initialValue` is s
 ### Basic usage
 
 ```tsx
-import { For } from "solid-js";
+import { For, createSignal } from "solid-js";
 import { createAsyncStore, query } from "@solidjs/router";
 
 const getNotificationsQuery = query(async (unreadOnly: boolean) => {

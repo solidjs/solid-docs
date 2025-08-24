@@ -266,8 +266,8 @@ To prevent this, ensure every code path in an action returns a value, such as `{
 ## Automatic data revalidation
 
 After changing data on the server, the data used in the application can become stale.
-To solve this, Solid Router automatically revalidates all [queries](/solid-router/concepts/actions) used in the same page after a successful action.
-This ensurs any component using that data is automatically updated with the freshest information.
+To solve this, Solid Router automatically revalidates all [queries](/solid-router/concepts/queries) used in the same page after a successful action.
+This ensures any component using that data is automatically updated with the freshest information.
 
 For example, if a page displays a list of registered devices and includes a form to register a new one, the list will automatically update after the form is submitted.
 
@@ -321,13 +321,22 @@ It can also be used to revalidate specific queries upon redirection, which is us
 
 ```tsx
 import { action, redirect } from "@solidjs/router";
+import { useSession } from "vinxi/http";
 
-const loginAction = action(async (formData: FormData) => {
-	// ... Handles the login logic.
+const logoutAction = action(async () => {
+	"use server";
+	const session = await useSession({
+		password: process.env.SESSION_SECRET as string,
+		name: "session",
+	});
 
-	// Redirect to the dashboard and revalidate the session query.
-	throw redirect("/dashboard", { revalidate: ["session"] });
-});
+	if (session.data.sessionId) {
+		await session.clear();
+		await db.session.delete({ id: sessionId });
+	}
+
+	throw redirect("/");
+}, "logout");
 ```
 
 In this example, after a successful login, the `redirect` helper is used to navigate to the dashboard.

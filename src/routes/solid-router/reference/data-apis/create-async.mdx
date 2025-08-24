@@ -10,9 +10,40 @@ While `createResource` offers similar functionality, **`createAsync` is the reco
 It is intended to be the standard async primitive in a future Solid 2.0 release.
 :::
 
+## Import
+
+```tsx
+import { createAsync } from "@solidjs/router";
+```
+
+## Type
+
+```tsx
+function createAsync<T>(
+  fn: (prev: T) => Promise<T>,
+  options: {
+    name?: string;
+    initialValue: T;
+    deferStream?: boolean;
+  }
+): AccessorWithLatest<T>;
+
+function createAsync<T>(
+  fn: (prev: T | undefined) => Promise<T>,
+  options?: {
+    name?: string;
+    initialValue?: T;
+    deferStream?: boolean;
+  }
+): AccessorWithLatest<T | undefined>;
+```
+
 ## Parameters
 
 ### `fetcher`
+
+- **Type:** `(prev: T | undefined) => Promise<T>`
+- **Required:** Yes
 
 An asynchronous function or a function that returns a `Promise`.
 The resolved value of this `Promise` is what `createAsync` tracks.
@@ -20,15 +51,32 @@ This function is reactive and will automatically re-execute if any of its depend
 
 ### `options`
 
+- **Type:** `{ name?: string; initialValue?: T; deferStream?: boolean; }`
+- **Required:** No
+
 An object for configuring the primitive.
 It has the following properties:
 
-- `name` (optional):
-  A name for the resource, used for identification in debugging tools like [Solid Debugger](https://github.com/thetarnav/solid-devtools).
-- `initialValue` (optional):
-  The initial value of the returned signal before the fetcher finishes executing.
-- `deferStream` (optional):
-  If `true`, [streaming](/solid-router/concepts/queries#streaming) will be deferred until the fetcher finishes executing.
+#### `name`
+
+- **Type:** `string`
+- **Required:** No
+
+A name for the resource, used for identification in debugging tools like [Solid Debugger](https://github.com/thetarnav/solid-devtools).
+
+#### `initialValue`
+
+- **Type:** `T`
+- **Required:** No
+
+The initial value of the returned signal before the fetcher finishes executing.
+
+#### `deferStream`
+
+- **Type:** `boolean`
+- **Required:** No
+
+If `true`, [streaming](/solid-router/concepts/queries#streaming) will be deferred until the fetcher finishes executing.
 
 ## Return value
 

@@ -2,7 +2,6 @@
 title: "Queries"
 ---
 
-
 Queries are the core building blocks for data fetching in Solid Router.
 They provide an elegant solution for managing data fetching.
 
@@ -35,15 +34,13 @@ const getUserProfileQuery = query(async (userId: string) => {
 ```
 
 In this example, the defined query fetches a user's profile from an API.
-The fetcher will throw an error if the request fails, which can be handled by an [`<ErrorBoundary>`](/reference/components/error-boundary).
+If the request fails, the fetcher will throw an error that will be caught by the nearest [`<ErrorBoundary>`](/reference/components/error-boundary) in the component tree.
 
 ## Using queries in components
 
-Defining a query does not, by itself, fetch any data.
-To call a query and make its data available to a component, the [`createAsync` primitive](/solid-router/reference/data-apis/create-async) is used.
-
-`createAsync` takes an asynchronous function and returns a signal that tracks its result.
-Because a query is essentially an asynchronous function, it can be used with `createAsync`.
+Defining a query does not by itself fetch any data.
+To access its data, the query can be used with the [`createAsync` primitive](/solid-router/reference/data-apis/create-async).
+`createAsync` takes an asynchronous function, such as a query, and returns a signal that tracks its result.
 
 ```tsx
 import { For, Show } from "solid-js";
@@ -64,6 +61,9 @@ function Articles() {
 }
 ```
 
+In this example, `createAsync` is used to call the query.
+Once the query completes, `articles` holds the result, which is then rendered.
+
 :::tip
 When working with complex data types, such as arrays or deeply nested objects, the [`createAsyncStore` primitive](/solid-router/reference/data-apis/create-async-store) offers a more ergonomic and performant solution.
 It works like `createAsync`, but returns a [store](/concepts/stores) for easier state management..
@@ -73,7 +73,6 @@ It works like `createAsync`, but returns a [store](/concepts/stores) for easier 
 
 The `createAsync` primitive is designed to work with Solid's native components for managing asynchronous states.
 It reports its pending state to the nearest [`<Suspense>` boundary](/reference/components/suspense) to display loading fallbacks, and propagate errors to an [<ErrorBoundary>](/reference/components/error-boundary) for handling and displaying error messages.
-
 
 ```tsx
 import { Suspense, ErrorBoundary, For } from "solid-js";
@@ -101,16 +100,21 @@ function NewsFeed() {
 ## Preloading data
 
 Preloading data improves perceived performance by fetching the data for an upcoming page before the user navigates to it.
-Solid Router initiates preloading in two scenarios: when a user indicates an intent to navigate (for example, by hovering over a link), and when a route's component is rendering.
-This ensures that data fetching begins at the earliest possible moment, often allowing data to be ready when the component renders.
+
+Solid Router initiates preloading in two scenarios:
+
+- When a user indicates intent to navigate to the page (e.g., by hovering over a link).
+- When the route's component is rendering.
+
+This ensures data fetching starts as early as possible, often making data ready once the component renders.
 
 Preloading is configured using the [`preload`](/solid-router/reference/preload-functions/preload) prop on a [`Route`](/solid-router/reference/components/route).
 This prop accepts a function that calls one or more queries.
-When triggered, the preload function executes the queries, and their results are stored in a short-lived internal cache.
-When the user completes the navigation and the destination route's component begins to render, the `createAsync` call in the component will use the preloaded data.
-Because of the [deduplication mechanism](#deduplication), it will not send a redundant network request.
+When triggered, the queries execute and their results are stored in a short-lived internal cache.
+Once the user navigates and the destination route’s component renders, any `createAsync` calls within the page will consume the preloaded data.
+Thanks to the [deduplication mechanism](#deduplication), no redundant network requests are made.
 
-```tsx
+```tsx {18-20,27}
 import { Show } from "solid-js";
 import { Route, query, createAsync } from "@solidjs/router";
 
@@ -148,16 +152,14 @@ When the `ProductDetails` component renders, its `createAsync` call will instant
 
 ## Deduplication
 
-A key feature of queries is their ability to deduplicate requests.
-It is a short-term mechanism to prevent redundant data fetching in quick succession.
+A key feature of queries is their ability to deduplicate requests, preventing redundant data fetching in quick succession.
 
-A common example of this is preloading.
-When a user hovers over a link, the application can begin preloading the data for the destination page.
-If the user then clicks the link, the query has already been executed, and the data is available instantly without a second network request.
-This deduplication is fundamental to the performance of Solid Router applications.
+One common use case is preloading: when a user hovers over a link, the application can begin preloading the data for the destination page.
+If the user then clicks the link, the query has already been completed, and the data is available instantly without triggering another network request.
+This mechanism is fundamental to the performance of Solid Router applications.
 
-This deduplication also applies when multiple components on the same page use the same query.
-As long as a query is actively being used by one component, Solid Router will not refetch its data and uses the cached data.
+Deduplication also applies when multiple components on the same page use the same query.
+As long as at least one component is actively using the query, Solid Router will reuse the cached result instead of refetching the data.
 
 ## Revalidation
 
@@ -167,12 +169,12 @@ The most common case is **automatic revalidation**.
 After an [action](/solid-router/concepts/actions) completes successfully, Solid Router automatically revalidates all active queries on the page.
 For more details, see the [actions documentation](/solid-router/concepts/actions#automatic-data-revalidation).
 
-For more fine-grained control, you can trigger revalidation manually with the [`revalidate`](/solid-router/reference/data-apis/revalidate) function.
+For more fine-grained control, you can trigger revalidation manually with the [`revalidate` function](/solid-router/reference/data-apis/revalidate).
 It accepts a query key (or an array of keys) to target specific queries.
 Each query exposes two properties for this: `key` and `keyFor`.
 
-- `query.key` is the base key for the query, which targets all queries.
-  Using this key will revalidate all data previously fetched by that query, regardless of the arguments used.
+- `query.key` is the base key for a query and targets all of its instances.
+  Using this key will revalidate all data fetched by that query, regardless of the arguments provided.
 - `query.keyFor(arguments)` generates a key for a specific set of arguments, allowing you to target and revalidate only that particular query.
 
 ```tsx
@@ -220,14 +222,14 @@ function Project(props: { id: string }) {
 
 ## Streaming
 
-In a traditional server-rendered application, the user must wait for all data to be fetched on the server before the page is rendered and sent to the browser.
-This can lead to a slow initial page load if some queries are slow.
-Streaming solves this problem by allowing the server to send the page's HTML shell immediately and "stream" the content for data-dependent sections as they become ready.
+In traditional server-rendered applications, the server must fetch all data before rendering and sending the page to the browser.
+If some queries are slow, this delays the initial load.
+**Streaming** solves this by sending the page’s HTML shell immediately and progressively streaming data-dependent sections as they become ready.
 
 When a query is accessed during a server-side render, Solid suspends the UI until the data resolves.
 By default, this suspension affects the entire page.
 
-To control this behavior, you can use suspense boundaries - regions of the component tree defined by a [`<Suspense>`](/reference/components/suspense) component.
+To control this behavior, you can use suspense boundaries - regions of the component tree defined by a [`<Suspense>` component](/reference/components/suspense).
 It isolates asynchronous behavior to a specific section of the page.
 
 Content inside the boundary is managed by Solid’s concurrency system: if it isn’t ready, the boundary’s fallback UI is shown while the rest of the page renders and streams immediately.
@@ -276,20 +278,20 @@ function Dashboard() {
 }
 ```
 
-In this example, each `<Suspense>` component creates its own independent boundary.
-The server can start streaming the heading `<h1>Dashboard</h1>` immediately, while the two data-dependent sections (`stats` and `transactions`) are handled separately.
-If the `transactions` query is slow, only its boundary will show a pending fallback, and the `stats` will still render as soon as their data is ready.
+For example, each `<Suspense>` component creates its own independent boundary.
+The server can stream the heading `<h1>Dashboard</h1>` immediately, while the `stats` and `transactions` are handled separately.
+If the `transactions` query is slow, only its boundary will display a fallback, while `stats` will render as soon as its data is ready.
 
 ### When to disable streaming
 
-While streaming is powerful, there are scenarios where it is preferable to wait for the data to load on the server.
-For these cases, the `deferStream` option on `createAsync` can be used.
+While streaming is powerful, there are cases where it is better to wait for the data to load on the server.
+In these situations, you can use the `deferStream` option in `createAsync`.
 
-By setting `deferStream` to `true`, the server will wait for the query to resolve before sending the initial HTML.
+When `deferStream` is set to `true`, the server waits for the query to resolve before sending the initial HTML.
 
-One reason to disable streaming is for Search Engine Optimization (SEO).
-Some search engine crawlers may not wait for streamed content to be fully loaded.
-If a piece of data is critical for SEO, such as a page title or meta description, it is best to ensure it is part of the initial server response.
+A common reason to disable streaming is for Search Engine Optimization (SEO).
+Some search engine crawlers may not wait for streamed content to load.
+If critical data, such as a page title or meta description, affects SEO, it should be included in the initial server response.
 
 ```tsx
 import { query, createAsync } from "@solidjs/router";

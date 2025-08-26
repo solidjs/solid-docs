@@ -224,17 +224,14 @@ In a traditional server-rendered application, the user must wait for all data to
 This can lead to a slow initial page load if some queries are slow.
 Streaming solves this problem by allowing the server to send the page's HTML shell immediately and "stream" the content for data-dependent sections as they become ready.
 
-When a query is accessed during a server-side render, Solid suspends the UI while it waits for the data to resolve.
-By default, this suspense affects the entire page.
+When a query is accessed during a server-side render, Solid suspends the UI until the data resolves.
+By default, this suspension affects the entire page.
 
-The key to controlling this behavior is suspense boundaries.
-A suspense boundary is a region in the component tree defined by a [`<Suspense>`](/reference/components/suspense) component.
-It acts like a container that isolates asynchronous behavior to a specific part of the page.
+To control this behavior, you can use suspense boundaries - regions of the component tree defined by a [`<Suspense>`](/reference/components/suspense) component.
+It isolates asynchronous behavior to a specific section of the page.
 
-Anything inside the suspense boundary will be managed by Solid's concurrency system, and if it's not ready, the boundary's fallback UI will be displayed.
-This allows the rest of the page, which is outside the boundary, to be rendered and sent to the user immediately.
-Once the data inside a suspense boundary resolves, the server streams the final HTML for that section to the browser, replacing the fallback.
-This allows the user to see and interact with the majority of the page much faster.
+Content inside the boundary is managed by Solid’s concurrency system: if it isn’t ready, the boundary’s fallback UI is shown while the rest of the page renders and streams immediately.
+Once the data resolves, the server streams the final HTML for that section, replacing the fallback and letting users see and interact with most of the page much sooner.
 
 ```tsx
 import { Suspense, For } from "solid-js";

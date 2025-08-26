@@ -13,13 +13,75 @@ tags:
 version: '1.0'
 ---
 
-This helper is used to handle form submissions and can provide optimistic updates while actions are in flight as well as pending state feedback.
-This method will return a single (latest) value while its sibling, [`useSubmissions`](/solid-router/reference/data-apis/use-submissions), will return all values submitted while the component is active. With an optional second parameter for a filter function.
+The `useSubmission` primitive returns the state of the _most recent_ submission for a given [action](/solid-router/concepts/actions).
 
-It's important to note that `useSubmission` requires the form method to be **post** otherwise it will trigger a browser navigation and will not work.
+## Import
 
-```tsx title="component.tsx" {4,8}
+```tsx
 import { useSubmission } from "@solidjs/router";
+```
+
+## Type
+
+```tsx
+function useSubmission<T extends Array<any>, U, V>(
+  fn: Action<T, U, V>,
+  filter?: (input: V) => boolean
+): Submission<T, NarrowResponse<U>> | SubmissionStub;
+```
+
+## Parameters
+
+### `action`
+
+- **Type:** `Action<T, U, V>`
+- **Required:** Yes
+
+The action to track.
+
+### `filter`
+
+- **Type:** `(input: V) => boolean`
+- **Required:** No
+
+A function that filters submissions.
+It is executed for each submission in the order of creation.
+It receives an array of the action's inputs as a parameter and must return `true` to select the submission or `false` otherwise.
+The first submission that passes the filter is returned by `useSubmission`.
+
+## Return value
+
+`useSubmission` returns a reactive object with the following properties:
+
+### `input`
+
+A reactive value representing the input data of the action.
+
+### `result`
+
+A reactive value representing the successful return value of the action.
+
+### `error`
+
+A reactive value representing any error thrown by the action.
+
+### `pending`
+
+A reactive boolean indicating if the action is currently running.
+
+### `clear`
+
+A function to clear the submission's state.
+
+### `retry`
+
+A function to re-execute the submission with the same input.
+
+## Examples
+
+### Basic usage
+
+```tsx
 
 function Component() {
   const submission = useSubmission(postNameAction);
@@ -75,98 +137,57 @@ Once the action is complete, the `pending` property will be set to `false` and t
 ```tsx tab title="TypeScript" {6,10-12}
 // component.tsx
 import { Show } from "solid-js";
-import { useSubmission } from "@solidjs/router";
+import { action, useSubmission } from "@solidjs/router";
 
-function Component() {
-  const submission = useSubmission(postNameAction);
+const addTodoAction = action(async (formData: FormData) => {
+	const name = formData.get("name")?.toString();
 
-    return (
-      <>
-        <Show when={submission.input?.[0].get("name")}>
-          {(name) => <div>Optimistic: {name() as string}</div>}
-        </Show>
+	if (!name || name.length <= 2) {
+		return { ok: false, message: "Name must be larger than 2 characters." };
+	}
 
-        <Show when={submission.result?.name}>
-          {(name) => <div>Result: {name()}</div>}
-        </Show>
+	// ... Sends the todo data to the server.
 
-        <form method="post" action={sendData}>
-          <input type="text" name="name" required />
-          <button type="submit" disabled={submission.pending}>
-            {submission.pending ? "Submitting" : "Submit"}
-          </button>
-        </form>
-      </>
-    )
+	return { ok: true };
+}, "addTodo");
+
+function AddTodoForm() {
+	const submission = useSubmission(addTodoAction);
+
+	return (
+		<form action={addTodoAction} method="post">
+			<input name="name" />
+			<button type="submit">{submission.pending ? "Adding..." : "Add"}</button>
+			<Show when={!submission.result?.ok}>
+				<div>
+					<p>{submission.result.message}</p>
+					<button onClick={() => submission.clear()}>Clear</button>
+					<button onClick={() => submission.retry()}>Retry</button>
+				</div>
+			</Show>
+		</form>
+	);
 }
 ```
 
-```tsx tab title="JavaScript" {6,10-12}
-// component.jsx
-import { Show } from "solid-js";
+### Filtering submissions
+
+```tsx
 import { useSubmission } from "@solidjs/router";
 
-function Component() {
-  const submission = useSubmission(postNameAction);
+const addTodoAction = action(async (formData: FormData) => {
+	// ... Sends the todo data to the server.
+}, "addTodo");
 
-    return (
-      <>
-        <Show when={submission.input?.[0].get("name")}>
-          {(name) => <div>Optimistic: {name()}</div>}
-        </Show>
+function LatestTodo() {
+	const latestValidSubmission = useSubmission(
+		addTodoAction,
+		([formData]: [FormData]) => {
+			const name = formData.get("name")?.toString();
+			return name && name.length > 2;
+		}
+	);
 
-        <Show when={submission.result?.name}>
-          {(name) => <div>Result: {name()}</div>}
-        </Show>
-
-        <form method="post" action={sendData}>
-          <input type="text" name="name" required />
-          <button type="submit" disabled={submission.pending}>
-            {submission.pending ? "Submitting" : "Submit"}
-          </button>
-        </form>
-      </>
-    )
-}
-```
-
-## Error Handling
-
-If the action fails, the `submission` object will be updated with the error and the `pending` property will be set to `false`.
-This allows you to provide feedback to the user that the action has failed. Additionally, the return type of `useSubmission` will have a new key `error` that will contain the error object thrown by the submission handler.
-
-At this stage, you can also use the `retry()` method to attempt the action again or the `clear()` to wipe the filled data in the platform.
-
-```tsx title="component.tsx" {12-18}
-import { Show } from "solid-js";
-import { useSubmission } from "@solidjs/router";
-
-function Component() {
-  const submission = useSubmission(postNameAction);
-
-    return (
-      <>
-        <Show when={submission.error}>
-          {(error) => (
-            <div>
-              <p>Error: {error.message}</p>
-              <button onClick={() => submission.clear()}>
-                Clear
-              </button>
-              <button onClick={async () => submission.retry()}>
-               Retry
-              </button>
-            </div>
-          )}
-        </Show>
-
-        <form method="post" action={sendData}>
-          <input type="text" name="name" required />
-          <button type="submit" disabled={submission.pending}>
-            {submission.pending ? "Submitting" : "Submit"}
-          </button>
-        </form>
-      </>
-    )
+	return <p>Latest valid submission: {latestValidSubmission.result}</p>;
 }
 ```

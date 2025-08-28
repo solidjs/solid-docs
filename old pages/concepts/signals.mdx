@@ -11,39 +11,45 @@ tags:
 version: '1.0'
 ---
 
-Signals are the primary means of [managing state](/concepts/intro-to-reactivity#state-management) in your Solid application.
-They provide a way to store and update values, and are the foundation of [reactivity](/concepts/intro-to-reactivity) in Solid.
+Signals are the **core primitive for state** in Solid.
+They provide a way to store a value, read it, and update it.
+When a signal changes, anything that depends on it will update automatically.
 
-Signals can be used to represent any kind of state in your application, such as the current user, the current page, or the current theme.
-This can be any value, including primitive values such as strings and numbers, or complex values such as objects and arrays.
+Signals can represent any kind of state in your application:  
+- simple values like numbers or strings  
+- complex values like objects or arrays  
+- application state such as the current user, theme, or page
+
+For an overview of how signals fit into Solid’s reactive model, see [Reactivity Basics](/reactivity/basics).
 
 ## Creating a signal
 
-You can create a signal by calling the [`createSignal`](/reference/basic-reactivity/create-signal) function, which is imported from `solid-js`.
-This function takes an initial value as an argument, and returns a pair of functions: a **getter** function, and a **setter** function.
+Use [`createSignal`](/reference/basic-reactivity/create-signal) from `solid-js` to create a signal.  
+It returns a pair of functions:  
+- a **getter** to read the value  
+- a **setter** to update the value  
 
 ```jsx
 import { createSignal } from "solid-js";
 
 const [count, setCount] = createSignal(0);
-//       ^ getter  ^ setter
+//       ^ getter   ^ setter
 ```
 
-    	:::note
-    	  The syntax using `[` and `]` is called [array destructuring](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment).
+:::note
+The syntax using `[` and `]` is called [array destructuring](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment).
 
 This lets you extract values from the array.
 In the context of `createSignal`, the first value is the getter function, and the second value is the setter function.
-
 :::
 
 ## Accessing values
 
 The getter function returned by `createSignal` is used to access the value of the signal.
-You call this function with no arguments to get the current value of the signal:
+Call the getter function with no arguments to read the current value:
 
 ```jsx
-console.log(count()); // output: 0
+console.log(count()); // 0
 ```
 
 ## Updating values
@@ -54,7 +60,7 @@ This function takes an argument that represents the new value of the signal:
 ```jsx
 setCount(count() + 1);
 
-console.log(count()); // output: 1
+console.log(count()); // 1
 ```
 
 The setter function can also take a function that passes the previous value.
@@ -62,14 +68,13 @@ The setter function can also take a function that passes the previous value.
 ```jsx
 setCount((prevCount) => prevCount + 1);
 
-console.log(count()); // output: 1
+console.log(count()); // 1
 ```
 
 ## Reactivity
 
-Signals are reactive, which means that they automatically update when their value changes.
-When a signal is called within a [tracking scope](/concepts/intro-to-reactivity#tracking-changes), the signal adds the dependency to a list of subscribers.
-Once a signal's value changes, it notifies all of its dependencies of the change so they can re-evaluate their values and update accordingly.
+Signals are **reactive**, which means that they automatically update when their value changes.
+For example, using a signal inside JSX automatically makes the DOM update when the signal changes:
 
 ```jsx
 function Counter() {
@@ -87,12 +92,13 @@ function Counter() {
 }
 ```
 
-:::note
-A tracking scope can be created by [`createEffect`](/reference/basic-reactivity/create-effect)  or [`createMemo`](/reference/basic-reactivity/create-memo), which are other Solid primitives.
+To learn how signals connect to effects and tracking scopes, see:
+- [Reactive Side Effects](/reactivity/effects)
+- [Memoized Computations](/reactivity/memo)
 
-Both functions subscribe to the signals accessed within them, establishing a dependency relationship.
-Once this relationship is established, the function is notified whenever the signal changes.
+## Related Pages
 
-:::
-
-To learn more about how to use Signals in your application, visit our [state management guide](/guides/state-management).
+- [Reactivity Basics](/reactivity/basics)
+- [Reactive Side Effects](/reactivity/effects)
+- [Memoized Computations](/reactivity/memo)
+- [Introduction to Components](/components/intro)

@@ -3,8 +3,74 @@ title: "Signals"
 order: 2
 ---
 
-[TODO: 
-Concept page on signals
-- Any complex parts should be moved to reference section
-- Move any concept bits from reference section into here
-]
+Signals are the **primary way to manage state** in a Solid application.  
+They store values, notify dependents when those values change, and form the [foundation of reactivity](/reactivity/overview).
+
+You can use signals for any kind of state:  
+- simple values (strings, numbers)  
+- complex values (objects, arrays)  
+- application state (current user, theme, page, etc.)
+
+## What is a Signal?
+
+A **signal** is a reactive value container.  
+- It holds a value.  
+- It provides a **getter** to read the value.  
+- It provides a **setter** to update the value.  
+- When the value changes, any reactive computations that depend on it are updated automatically.  
+
+They can be thought of as a **reactive variable**.
+
+## Create a Signal
+
+
+Use [`createSignal`](/reference/basic-reactivity/create-signal) from `solid-js`:
+
+```tsx
+import { createSignal } from "solid-js";
+
+const [count, setCount] = createSignal(0);
+//       ^ getter  ^ setter
+```
+
+:::note
+The [getter, setter] syntax uses [array destructuring](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment)().
+:::
+
+
+## Read a Signal's Value
+
+To read the current value of a signal, simply call the getter function:
+
+```tsx
+console.log(count()); // 0
+```
+
+## Update a Signal's Value
+
+To update the value of a signal, call the setter function with the new value:
+
+```tsx
+setCount(1);
+console.log(count()); // 1
+```
+
+## Reactivity in Action
+
+Signals are **reactive**: when used inside a tracking scope, they automatically notify dependents when updated.
+
+```tsx
+function Counter() {
+  const [count, setCount] = createSignal(0);
+  const increment = () => setCount(prev => prev + 1);
+
+  return (
+    <div>
+      <span>Count: {count()}</span> {/* Updates when `count` changes */}
+      <button onClick={increment}>Increment</button>
+    </div>
+  );
+}
+```
+
+:::

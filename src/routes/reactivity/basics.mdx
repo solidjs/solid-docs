@@ -1,0 +1,88 @@
+---
+title: "Reactivity Basics"
+order: 1
+---
+
+
+Reactivity is the foundation of Solid.  
+It’s the programming model where **changes in data automatically update the parts of your app that depend on it**.  
+
+Solid’s approach is **fine-grained**: instead of re-rendering entire components, only the exact parts of the DOM that depend on a value update. This makes applications efficient and responsive, even as they grow.
+
+## Core Principles of Reactivity
+	
+Solid’s reactivity is built on three key ideas: **signals, subscribers, and tracking scopes**.  
+Together, these create a system where updates are precise, automatic, and efficient.
+
+### Signals: Reactive Values
+
+A **signal** is a reactive value container.
+They consist of 2 parts:
+- **Getter** → reads the current value.  
+- **Setter** → updates the value and notifies dependents.  
+
+```tsx
+const [count, setCount] = createSignal(0);
+
+console.log(count()); // 0
+setCount(1);
+console.log(count()); // 1
+```
+
+Signals can hold any type of value:
+- primitives (string, number, boolean)
+- objects and arrays
+- application state (user, theme, current page)
+
+Learn more in the [Signals page](/reactivity/signals).
+
+### Subscribers: Reactive Consumers
+
+If signals are the **source of truth**, subscribers are the **reactive consumers**.
+
+A subscriber is any function or construct that reads a signal inside a tracking scope and automatically re-runs whenever it changes.
+This is what makes Solid’s reactivity *fine-grained*: only the subscribers that depend on a signal update, not the entire component.
+
+How subscribers work:
+1. **Observation** → subscriber runs and reads signals.
+2. **Dependency tracking** → those signals register the subscriber.
+3. **Response** → when a signal changes, the subscriber re-runs.
+
+### Tracking Scopes: Connecting Signals & Subscribers
+
+A **tracking scope** is the environment where Solid records which signals are being used.
+When a signal is read within a tracking scope, it registers the current subscriber as a dependency.
+Once that signal changes, it will notify the subscriber to re-run and update accordingly.
+
+Tracking scopes within Solid include:
+- Component render functions (JSX return values)
+- Reactive computations (e.g., `createMemo`)
+- Effects (e.g., `createEffect`)
+
+Example of a tracking vs non-tracking scope:
+
+```tsx
+import { createSignal } from "solid-js";
+
+function Counter() {
+  const [count, setCount] = createSignal(0);
+
+  console.log(count()) // ❌ Not tracked — runs once
+
+  return (
+    <div>
+      <p>Count: {count()}</p> {/* ✅ tracked automatically - re-runs on update */}
+      <button onClick={() => setCount(count() + 1)}>Increment</button>
+    </div>
+  );
+}
+```
+
+Tracking scopes are what enable **precise DOM updates**: only parts of the UI that depend on signals re-run, not the entire component.
+You can learn more about [component lifecycles in the Intro to Components page](/components/intro).
+
+
+## Related pages
+- [Signals](/reactivity/signals)
+- [Reactive Side Effects](/reactivity/effects)
+- [Introduction to Components](/components/intro)

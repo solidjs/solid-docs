@@ -1,0 +1,149 @@
+---
+title: "Understanding JSX"
+order: 2
+---
+
+Solid's JSX is a JavaScript extension that lets you write **HTML-like syntax inside JavaScript**.  
+It keeps your rendering logic and markup together, making components easier to read and maintain.
+
+## How Solid uses JSX
+
+Solid was designed to align closely with HTML standards.
+
+```tsx
+const element = <h1>I'm JSX!!</h1>
+```
+
+Unlike some other frameworks, Solid compiles JSX directly to real DOM nodes.
+This means:
+- JSX expressions map closely to HTML.
+- You can use variables and functions inline using curly braces `{}`.
+- Only the parts of the DOM that depend on reactive state update.
+This avoids the whole component re-rendering, improving performance.
+
+```tsx
+const component = () => {
+    const animal = { breed: "cat", name: "Midnight" }
+
+    return (
+        <p>
+           I have a {animal.breed} named {animal.name}.
+        </p>
+    )
+}
+```
+
+## Solid's JSX Rules
+
+### 1. Return a Single Root Element
+
+Each component must return a single root element.
+Since JSX maintains the familiar tree-like structure of HTML, having a single root element helps keep the hierarchy clear.
+If you need multiple top-level elements, wrap them in a `<div>`, `<section>`, or use a fragment `<>...</>`.
+
+```tsx
+function App() {
+    return (
+        <div>
+            <h1>Hello World!</h1>
+            <p>Welcome to JSX in Solid.</p>
+        </div>
+    )
+}
+```
+
+```advanced
+JSX in Solid compiles into structured HTML.
+Static elements are optimized once, while dynamic ones get special markers so Solid can update them efficiently.
+Requiring a single root element keeps the hierarchy consistent and easier to update.
+```
+
+
+### 2. Close All Tags
+
+All tags must be properly closed.
+This includes self-closing tags like `<img />`, `<input />`, and `<br />`.
+
+```tsx
+// Correct
+<img src="image.jpg" alt="Description" />
+
+// Incorrect
+<img src="image.jpg" alt="Description">
+```
+
+### 3. Properties vs Attributes
+
+In Solid's JSX, you can use both HTML attributes and JSX properties (props) to define element behavior and appearance.
+
+#### HTML attributes
+
+Solid's JSX blends HTML attributes with JavaScript expressions.
+
+- **HTML attributes** → work similar to regular HTML, but you can use JavaScript expressions inside curly braces `{}`.
+- **Event listeners** → Solid's JSX allows you to add event listeners using camelCase (e.g., `onClick`, `onChange`) or all lowercase (e.g., `onclick`, `onchange`).
+- **Inline styles** → You can apply styles directly using the `style` attribute with a JavaScript object.
+
+```tsx
+<button class="myClass" onClick={handleClick}>
+  Click me!
+</button>
+
+<button style={{ color: "red", fontSize: "2rem" }}>
+  Styled Button
+</button>
+```
+
+You can also use JavaScript expressions to set attribute values dynamically:
+
+```tsx
+const isActive = true;
+
+<button class={isActive ? "active" : "inactive"}>
+  Click me!
+</button>
+```
+
+For more information on:
+- [Using Event Listeners](/components/how-to/event-listeners)
+- [Styling Components](/components/how-to/styling)
+
+#### JSX Properties (Props)
+
+JSX properties (or props) are how you pass data and event handlers to components in Solid.
+They work similarly to HTML attributes but can accept JavaScript expressions.
+
+In this example, the `name` prop is passed to the `Greeting` component, which uses it within its JSX:
+
+```tsx
+function App() {
+    return (
+        <div>
+            <Greeting name="Alice" />
+            <Greeting name="Bob" />
+        </div>
+    );
+}
+
+function Greeting(props) {
+    return <h1>Hello, {props.name}!</h1>;
+}
+```
+
+The core concepts of JSX properties in Solid include:
+- **Static props**: Directly integrated into the HTML by cloning the template and using them as attributes.
+- **Dynamic props**: Rely on state, allowing content or properties to change in response to user interactions or other events.
+An example is changing the style of an element based on a signal (`value={value()}`).
+- **Data transfer**: Props can be used to fill components with data from resources, such as API responses or context providers.
+This allows for components to update reactively when the underlying data changes.
+
+:::note
+In JSX, expressions are applied in the order they appear.
+This works for most elements, but some (i.e. `<input type="range" />`) require attributes in a specific order.
+When order matters, make sure to define expressions in the sequence the element expects.
+:::
+
+## Related Pages
+- [Using Event Listeners](/components/how-to/event-listeners)
+- [Styling Components](/components/how-to/styling)
+- [Passing Data with Props](/components/props)

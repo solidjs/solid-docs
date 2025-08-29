@@ -19,7 +19,7 @@ export default function WelcomeRedirect() {
     // use replace so the redirect doesn't add an extra history entry
     try {
       window.location.replace("https://docs.solidjs.com/quick-start");
-    } catch (e) {
+    } catch {
       // fallback: set href
       window.location.href = "https://docs.solidjs.com/quick-start";
     }

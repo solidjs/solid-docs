@@ -1,4 +1,4 @@
-import { createEffect, createSignal, type Accessor } from "solid-js";
+import { createRenderEffect, createSignal, type Accessor } from "solid-js";
 import { useMatch } from "@solidjs/router";
 import { SUPPORTED_LOCALES } from "~/i18n/config";
 import { useI18n } from "~/i18n/i18n-context";
@@ -19,7 +19,7 @@ export function useProjectTitle(): Accessor<string> {
 	const project = useProject();
 	const i18n = useI18n();
 
-	createEffect(() => {
+	createRenderEffect(() => {
 		switch (project()) {
 			case "solid-start":
 				setTitle(i18n.t("meta.title.solid_start"));

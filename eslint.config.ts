@@ -4,7 +4,8 @@ import * as globals from "globals";
 import tseslint from "typescript-eslint";
 import tsParser from "@typescript-eslint/parser";
 
-export default [
+export default tseslint.config(
+		[
 	{
 		name: "global-ignores",
 		ignores: [
@@ -19,7 +20,7 @@ export default [
 		],
 	},
 	eslint.configs.recommended,
-	...tseslint.configs.recommended,
+	tseslint.configs.recommendedTypeChecked,
 	{
 		files: ["**/*.{ts,tsx}"],
 		languageOptions: {
@@ -55,3 +56,6 @@ export default [
 		},
 	},
 ];
+
+)
+	

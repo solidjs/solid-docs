@@ -180,6 +180,8 @@ const LEGACY_ROUTES = {
 
 	"/solid-router/reference/response-helpers/revalidate":
 		"/solid-router/reference/data-apis/revalidate",
+
+	"/solid-start/guides/data-loading": "/solid-start/guides/data-fetching",
 } as const;
 
 function isLegacyRoute(path: string): path is keyof typeof LEGACY_ROUTES {

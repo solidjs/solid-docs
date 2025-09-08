@@ -253,8 +253,10 @@ Instead of relying on discovering individual indices, path syntax introduces sev
 
 ### Appending new values
 
-To append new values to an array in a store, use the setter function with the spread operator (`...`) to create a new array that includes the existing items and the new ones.
-For appending a single element, you can instead leverage the "path syntax" by specifying the array’s length as the index to set.
+To append values to an array in a store, use the setter function with the spread operator (`...`) or the path syntax. Both methods add an element to the array but differ in how they modify it and their reactivity behavior.
+
+The spread operator creates a new array by copying the existing elements and adding the new one, effectively replacing the entire `store.users` array.
+This replacement triggers reactivity for all effects that depend on the array or its properties.
 
 ```jsx
 setStore("users", (otherUsers) => [
@@ -266,9 +268,12 @@ setStore("users", (otherUsers) => [
 		loggedIn: false,
 	},
 ])
+```
 
-// can become
+The path syntax adds the new element by assigning it to the index equal to `store.users.length`, directly modifying the existing array.
+This triggers reactivity only for effects that depend on the new index or properties like `store.users.length`, making updates more efficient and targeted.
 
+```jsx
 setStore("users", store.users.length, {
 	id: 3,
 	username: "michael584",

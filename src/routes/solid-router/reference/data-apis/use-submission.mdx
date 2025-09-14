@@ -13,14 +13,12 @@ import { useSubmission } from "@solidjs/router";
 function Component() {
   const submission = useSubmission(postNameAction);
 
-    return (
-      <form action={postNameAction} method="post">
-          <input type="text" name="name" />
-          <button type="submit">
-              {submission.pending ? "Adding..." : "Add"}
-          </button>
-      </form>
-    )
+  return (
+    <form action={postNameAction} method="post">
+      <input type="text" name="name" />
+      <button type="submit">{submission.pending ? "Adding..." : "Add"}</button>
+    </form>
+  );
 }
 ```
 
@@ -34,23 +32,21 @@ As an optional second parameter, the `useSubmission` helper can receive a filter
 The filter receives the submitted data as a parameter and should return a boolean value.
 The action below will only submit if the name is "solid".
 
-```tsx title="component.tsx" {4-8}
+```tsx title="component.tsx" {4-7}
 import { useSubmission } from "@solidjs/router";
 
 function Component() {
-  const submission = useSubmission(postNameAction, ([formData]) => {
-    const name = formData.get("name") ?? "";
-    return name === "solid";
-  });
+  const submission = useSubmission(
+    postNameAction,
+    ([formData]) => formData.get("name") === "solid"
+  );
 
-    return (
-      <form action={postNameAction} method="post">
-          <input type="text" name="name" />
-          <button type="submit">
-              {submission.pending ? "Adding..." : "Add"}
-          </button>
-      </form>
-    )
+  return (
+    <form action={postNameAction} method="post">
+      <input type="text" name="name" />
+      <button type="submit">{submission.pending ? "Adding..." : "Add"}</button>
+    </form>
+  );
 }
 ```
 
@@ -60,61 +56,59 @@ When the form is submitted, the `submission` object will be updated with the new
 This allows you to provide feedback to the user that the action is in progress.
 Once the action is complete, the `pending` property will be set to `false` and the `result` property will be updated with final value.
 
-```tsx tab title="TypeScript" {6,10-12}
-// component.tsx
+```tsx tab title="TypeScript" {5,9-11}
 import { Show } from "solid-js";
 import { useSubmission } from "@solidjs/router";
 
 function Component() {
   const submission = useSubmission(postNameAction);
 
-    return (
-      <>
-        <Show when={submission.input?.[0].get("name")} keyed>
-          {(name) => <div>Optimistic: {name() as string}</div>}
-        </Show>
+  return (
+    <>
+      <Show when={submission.input?.[0].get("name")} keyed>
+        {(name) => <div>Optimistic: {name() as string}</div>}
+      </Show>
 
-        <Show when={submission.result?.name} keyed>
-          {(name) => <div>Result: {name()}</div>}
-        </Show>
+      <Show when={submission.result?.name} keyed>
+        {(name) => <div>Result: {name()}</div>}
+      </Show>
 
-        <form method="post" action={sendData}>
-          <input type="text" name="name" required />
-          <button type="submit" disabled={submission.pending}>
-            {submission.pending ? "Submitting" : "Submit"}
-          </button>
-        </form>
-      </>
-    )
+      <form method="post" action={sendData}>
+        <input type="text" name="name" required />
+        <button type="submit" disabled={submission.pending}>
+          {submission.pending ? "Submitting" : "Submit"}
+        </button>
+      </form>
+    </>
+  );
 }
 ```
 
-```tsx tab title="JavaScript" {6,10-12}
-// component.jsx
+```tsx tab title="JavaScript" {5,9-11}
 import { Show } from "solid-js";
 import { useSubmission } from "@solidjs/router";
 
 function Component() {
   const submission = useSubmission(postNameAction);
 
-    return (
-      <>
-        <Show when={submission.input?.[0].get("name")} keyed>
-          {(name) => <div>Optimistic: {name()}</div>}
-        </Show>
+  return (
+    <>
+      <Show when={submission.input?.[0].get("name")} keyed>
+        {(name) => <div>Optimistic: {name()}</div>}
+      </Show>
 
-        <Show when={submission.result?.name} keyed>
-          {(name) => <div>Result: {name()}</div>}
-        </Show>
+      <Show when={submission.result?.name} keyed>
+        {(name) => <div>Result: {name()}</div>}
+      </Show>
 
-        <form method="post" action={sendData}>
-          <input type="text" name="name" required />
-          <button type="submit" disabled={submission.pending}>
-            {submission.pending ? "Submitting" : "Submit"}
-          </button>
-        </form>
-      </>
-    )
+      <form method="post" action={sendData}>
+        <input type="text" name="name" required />
+        <button type="submit" disabled={submission.pending}>
+          {submission.pending ? "Submitting" : "Submit"}
+        </button>
+      </form>
+    </>
+  );
 }
 ```
 
@@ -125,36 +119,32 @@ This allows you to provide feedback to the user that the action has failed. Addi
 
 At this stage, you can also use the `retry()` method to attempt the action again or the `clear()` to wipe the filled data in the platform.
 
-```tsx title="component.tsx" {12-18}
+```tsx title="component.tsx" {12-14}
 import { Show } from "solid-js";
 import { useSubmission } from "@solidjs/router";
 
 function Component() {
   const submission = useSubmission(postNameAction);
 
-    return (
-      <>
-        <Show when={submission.error} keyed>
-          {(error) => (
-            <div>
-              <p>Error: {error.message}</p>
-              <button onClick={() => submission.clear()}>
-                Clear
-              </button>
-              <button onClick={async () => submission.retry()}>
-               Retry
-              </button>
-            </div>
-          )}
-        </Show>
+  return (
+    <>
+      <Show when={submission.error} keyed>
+        {(error) => (
+          <div>
+            <p>Error: {error.message}</p>
+            <button onclick={() => submission.clear()}>Clear</button>
+            <button onclick={async () => submission.retry()}>Retry</button>
+          </div>
+        )}
+      </Show>
 
-        <form method="post" action={sendData}>
-          <input type="text" name="name" required />
-          <button type="submit" disabled={submission.pending}>
-            {submission.pending ? "Submitting" : "Submit"}
-          </button>
-        </form>
-      </>
-    )
+      <form method="post" action={sendData}>
+        <input type="text" name="name" required />
+        <button type="submit" disabled={submission.pending}>
+          {submission.pending ? "Submitting" : "Submit"}
+        </button>
+      </form>
+    </>
+  );
 }
 ```

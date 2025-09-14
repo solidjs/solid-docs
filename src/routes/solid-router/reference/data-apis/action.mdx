@@ -112,7 +112,7 @@ const submission = useSubmission(action, (input) => filter(input));
 ##  Revalidate cached functions
 
 ###  Revalidate all (default)
-By default all cached functions will be revalidated wether the action does not return or return a "normal" response.
+By default all cached functions will be revalidated whether the action does not return or return a "normal" response.
 
 ```jsx
 
@@ -120,7 +120,7 @@ const deleteTodo = action(async (formData: FormData) => {
   const id = Number(formData.get("id"))
   await api.deleteTodo(id)
   // ...
-  return new  Response("success",  {  status:  200  });
+  return new  Response("success", { status:  200 });
 })
 ```
 
@@ -136,15 +136,15 @@ const deleteTodo = action(async (formData: FormData) => {
   const id = Number(formData.get("id"))
   await api.deleteTodo(id)
   return json(
-  { deleted: id },
-  { revalidate: ["getAllTodos", getTodos.key, getTodoByID.keyFor(id)]}
+    { deleted: id },
+    { revalidate: ["getAllTodos", getTodos.key, getTodoById.keyFor(id)]}
   )
 
   //or
-  return reload({ revalidate: ["getAllTodos", getTodos.key, getTodoByID.keyFor(id)]})
+  return reload({ revalidate: ["getAllTodos", getTodos.key, getTodoById.keyFor(id)]})
 
   //or
-  return redirect("/", { revalidate: ["getAllTodos", getTodos.key, getTodoByID.keyFor(id)]})
+  return redirect("/", { revalidate: ["getAllTodos", getTodos.key, getTodoById.keyFor(id)]})
 
 })
 
@@ -158,7 +158,7 @@ const deleteTodo = action(async (formData: FormData) => {
   const id = Number(formData.get("id"))
   await api.deleteTodo(id)
   // returns a `json` without revalidating the action.
-  return json(`deleted ${id}`,{ revalidate: "nothing" })
+  return json(`deleted ${id}`, { revalidate: "nothing" })
 
   // or reload the route without revalidating the request.
   return reload({ revalidate: "nothing" })
@@ -174,21 +174,20 @@ const deleteTodo = action(async (formData: FormData) => {
 Cached functions can also be revalidated by the  `revalidate` helper.
 
 ```jsx
-revalidate([getTodos.key, getTodoByID.keyFor(id)])
+revalidate([getTodos.key, getTodoById.keyFor(id)])
 
 ```
 
 This is also great if you want to set your own "refresh" interval e.g. poll data every 30 seconds.
 
 ```jsx
-export default function TodoLayout(){
-	
-	const todos = createAsync(() => getTodos())
+export default function TodoLayout() {
+	const todos = createAsync(() => getTodos());
 	
 	onMount(() => {
-		//30 second polling
-		const interval = setInterval(() => revalidate(getTodos.key),1000 * 30)
-		onCleanup(() => clearInterval(interval))
+		// 30 second polling
+		const interval = setInterval(() => revalidate(getTodos.key), 1000 * 30);
+		onCleanup(() => clearInterval(interval));
 	})
 	
 	// ...

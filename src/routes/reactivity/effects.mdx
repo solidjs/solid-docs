@@ -1,12 +1,165 @@
 ---
-title: "Derived Reactive Values"
+title: "Effects"
 order: 4
 ---
 
-[TODO:
-Concept page for Effects
-- What are Effects
-- How to use them
-- When to use Effects
-- Move relevant sections to ref and vice versa
-]
+Effects are reactive functions that run when the values they depend on change.
+They’re the main way to manage side effects that occur outside an application's scope, such as:
+- DOM manipulation
+- Data fetching
+- Subscriptions
+
+## What are Effects?
+
+An effect is a reactive function that **runs automatically whenever the values it depends on change**.
+
+Unlike [signals](/basics/signals) (which store state) or [memos](/basics/derived-state) (which derive state), effects connect your reactive data to the outside world.
+They are used for running code that has side effects, meaning it interacts with or modifies something beyond Solid's reactive graph, such as:
+
+- updating or interacting with the DOM
+- logging values
+- fetching or subscribing to external data
+- setting up or cleaning up resources
+
+Effects run **once when created** to establish its subscriptions, then **again whenever its dependencies change**.
+
+## Creating an Effect
+
+You create an effect using the `createEffect` function.
+It takes a **callback function** as its first argument, which contains the code you want to run reactively.
+
+```tsx
+import { createSignal, createEffect } from "solid-js";
+
+function Counter() {
+  const [count, setCount] = createSignal(0);
+
+  createEffect(() => {
+    console.log(`Count is: ${count()}`);
+  });
+
+  return (
+    <button onClick={() => setCount(count() + 1)}>
+      Increment
+    </button>
+  );
+}
+```
+
+In this example, the effect logs the current value of `count` to the console.
+The effect runs once when created, logging `Count is: 0`, and will run again whenever `count` changes, in this case when the button is clicked.
+
+## Lifecycle of an Effect
+
+An effect goes through a predictable cycle every time it's created and re-runs:
+
+### 1. **Initialization**
+
+When you call `createEffect`, the effect is immediately scheduled to run **once**.
+This first run happens **after the current render phase** finishes, or after the component function returns its JSX.
+This ensures that the DOM is already created and refs are assigned, allowing you to safely interact with the DOM.
+
+```tsx
+createEffect(() => console.log("Initial run"));
+console.log("Hello");
+
+// Output:
+// Hello
+// Initial run
+```
+
+### 2. **Dependency tracking**
+
+During its first run, the effect records every reactive value it accesses (such as signals or memos).
+It becomes subscribed to those values, which are now its **dependencies**.
+From then on, the effect automatically re‑runs whenever any of its dependencies change.
+
+```tsx
+const [count, setCount] = createSignal(0);
+
+createEffect(() => {
+  console.log(`Count: ${count()}`);
+});
+
+// Count: 0 runs immediately
+// every setCount(...) re‑runs the effect
+```
+
+### 3. **Reactive Updates**
+
+Whenever *any* dependency changes, the effects is scheduled to run again.
+This happens **after the current synchronous code completes**, ensuring that all changes are batched together.
+This means that if the dependencies change multiple times in quick succession, the effect will only run *once* after all changes are made:
+
+```tsx
+const [count, setCount] = createSignal(0);
+const [name, setName] = createSignal("Solid");
+
+createEffect(() => {
+    console.log(`Count: ${count()}, Name: ${name()}`);
+});
+
+setCount(1);
+setName("SolidJS"); 
+```
+
+In this example, the effect will only log `Count: 1, Name: SolidJS` once, after all changes have been made.
+
+### Lifecycle functions
+
+Effects are reactive and run whenever their dependencies change, but sometimes finer control is needed.
+Solid provides lifecycle functions to manage when code runs and how it gets cleaned up.
+
+These functions are especially useful for:
+- Running a side effect **only once** when the component mounts
+- Cleaning up resources, event listeners, or other side effects when the component unmounts
+
+#### `onMount`
+
+The [`onMount`](TODO) function allows you to run code **once** when the component is first added to the DOM.
+Unlike effects, `onMount` does **not track dependencies**.
+It will execute the callback once, and never again.
+
+```tsx
+import { onMount, createSignal, createEffect } from "solid-js";
+
+function Component() {
+  const [data, setData] = createSignal(null);
+
+  createEffect(() => {
+    // Still runs reactively whenever `data` changes
+    console.log("Data:", data());
+  });
+
+  onMount(async () => {
+    // Runs only once when the component is mounted
+    const res = await fetch("/api/data");
+    setData(await res.json());
+  });
+
+  return <div>...</div>;
+}
+```
+
+#### `onCleanup`
+
+Use [`onCleanup`](TODO) to **dispose of resources** before a component unmounts, or before an effect re-runs.
+This will prevent memory leaks and ensure that any subscriptions or event listeners are properly removed.
+
+```tsx
+import { createSignal, onCleanup } from "solid-js";
+
+function App() {
+  const [count, setCount] = createSignal(0);
+
+  const timer = setInterval(() => setCount(c => c + 1), 1000);
+
+  onCleanup(() => {
+    // Runs when the component unmounts
+    clearInterval(timer);
+  });
+
+  return <div>Count: {count()}</div>;
+}
+```
+

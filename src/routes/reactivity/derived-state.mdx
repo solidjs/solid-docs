@@ -3,9 +3,63 @@ title: "Derived State"
 order: 3
 ---
 
-[TODO:
-Concept page on Memos
-- Improve on existing page
-- Move relevant sections to reference and vice versa
-- Link out to how-to for derived signals where appropriate
-]
+Derived state often refers to values that are computed based on other reactive values.
+Rather than storing multiple pieces of state and manually keeping them consistent, Solid encourages you to derive new values from existing signals, memos, or stores.
+
+The benefits of derived state:
+- You store only the minimal amount of state necessary.
+- Relationships between values are described declaratively, making it easier to understand how data flows through your application.
+- Derived values are automatically kept in sync with their dependencies.
+
+## Derived signals
+
+The simplest way to create derived state is by using a function that accesses one or more signals.
+
+```tsx
+const [count, setCount] = createSignal(0);
+
+// A derived signal: always reflects count * 2
+const double = () => count() * 2;
+
+console.log(double()); // 0
+setCount(5);
+console.log(double()); // 10
+```
+
+In the above example, `double` is a derived signal that computes its value based on the `count` signal.
+Whenever `count` changes, calling `double()` produces the correct and current value.
+Any component or effect that uses `double()`, too, will update automatically when `count` changes.
+
+### Limitations of derived signals
+
+While derived signals are simple and effective for many use cases, they have some limitations:
+
+- **They do not cache their results.** 
+    For derived signal call, the function is re-executed every time it is accessed, even if the underlying signals have not changed.
+    For trivial computations, this is not a problem, but for expensive calculations (eg. processing large datasets), this can lead to performance issues.
+- **They do not create their own reactive scope.**
+    A derived function runs only when you call it. 
+    Reactivity comes from the signals it touches, but there is no intermediate node in the reactivity graph.
+- **Dependent computations can cause unnecessary updates.**
+    If a derived signal is used within another derived signal or effect, any change to its dependencies will trigger the entire chain to re-evaluate, even if the final value does not change.
+
+In other words, derived signals are best suited for lightweight computations, but they may not be ideal for more complex or performance-sensitive scenarios.
+
+## Memoizing derived state
+
+Memos are a specialized type of derived state that address the limitations of simple derived signals.
+They cache results and only re-compute when their dependencies change, making them much more efficient for expensive or frequently accessed calculations.
+
+```tsx
+// add example
+```
+
+
+### Advantages of memos
+
+Memos offer several advantages over simple derived signals:
+
+- **Efficient execution** – a memo runs only once per dependency change, rather than re-executing every time it’s accessed.
+- **Cached results** – results are stored and reused, avoiding unnecessary recomputation of expensive logic.
+- **Change detection** – if dependencies change but the computed value is strictly equal (`===`) to the previous result, no downstream updates are triggered.
+- **Automatic tracking** – any signal or memo read inside a memo’s function is automatically tracked, so the memo re-evaluates only when those dependencies change.

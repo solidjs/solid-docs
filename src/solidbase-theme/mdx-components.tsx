@@ -10,7 +10,6 @@ import {
 import { isServer } from "solid-js/web";
 
 import { A } from "~/ui/i18n-anchor";
-import { clientOnly } from "@solidjs/start";
 import { Callout } from "~/ui/callout";
 import { Tabs, TabList, TabPanel, Tab } from "~/ui/tabs";
 
@@ -19,8 +18,6 @@ export { PageIssueLink } from "~/ui/page-issue-link";
 export { Callout } from "~/ui/callout";
 export { QuickLinks } from "~/ui/quick-links";
 export { ImageLinks } from "~/ui/image-links";
-
-const EraserLinkImpl = clientOnly(() => import("../ui/eraser-link"));
 
 type CalloutType = "note" | "tip" | "advanced" | "caution" | "danger";
 
@@ -69,28 +66,6 @@ export const DirectiveContainer = (
 export const strong = (props: ParentProps) => (
 	<b class="font-semibold">{props.children}</b>
 );
-export const EraserLink = (
-	props: ParentProps<{ href: string; preview: string }>
-) => {
-	const [, rest] = splitProps(props, ["children"]);
-
-	if (!isServer) {
-		return <EraserLinkImpl {...rest} />;
-	} else {
-		return (
-			<a
-				aria-hidden={true}
-				tabIndex="-1"
-				href={props.href}
-				class="font-semibold text-blue-700 no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,theme(colors.blue.400))] hover:[--tw-prose-underline-size:4px] dark:text-blue-400 dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.blue.800))] dark:[--tw-prose-background:theme(colors.slate.900)] dark:hover:[--tw-prose-underline-size:6px]"
-				rel="noopener noreferrer"
-			>
-				View on Eraser
-				<img src={props.preview} />
-			</a>
-		);
-	}
-};
 export const ssr = (props: ParentProps) => <>{props.children}</>;
 export const spa = () => <></>;
 export const h1 = (props: ParentProps) => (

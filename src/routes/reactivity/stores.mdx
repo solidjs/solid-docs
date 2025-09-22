@@ -2,3 +2,99 @@
 title: "Stores"
 order: 5
 ---
+
+Stores are a state management primitive in Solid that provide a convenient, centralized way to handle structured data.
+Unlike signals, which are best suited for primitive values, stores are better for managing complex data structures like objects and arrays:
+
+- They provide fine-grained reactivity, meaning only the parts of the store that are accessed will trigger updates when they change.
+- They support **nested reactivity,** so you can track and update deeply nested properties without losing reactivity.
+- They make working with complex state easier while avoiding duplication or unnecessary recomputation.
+
+Stores are built on top of Solid's reactive system, leveraging [JavaScript's proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) to track property access and changes.
+
+## Creating a Store
+
+To create a store, you can use the `createStore` function from the `solid-js/store` package. 
+This function takes an initial value and returns a tuple containing the store and a setter function to update it.
+
+```tsx
+import { createStore } from "solid-js/store"
+
+// Initialize store
+const [store, setStore] = createStore({
+	userCount: 3,
+	users: [
+		{
+			id: 0,
+			username: "felix909",
+			location: "England",
+			loggedIn: false,
+		},
+		{
+			id: 1,
+			username: "tracy634",
+			location: "Canada",
+			loggedIn: true,
+		},
+		{
+			id: 2,
+			username: "johny123",
+			location: "India",
+			loggedIn: true,
+		},
+	],
+})
+```
+
+## Accessing store values
+
+Unlike signals, which are functions that need to be called to get their values, stores can be accessed directly like regular objects or arrays.
+
+```tsx
+console.log(store.userCount) // 3
+```
+
+Inside a tracking scope, store properties can be accessed directly, and any changes to those properties will trigger updates to the scope.
+
+:::note
+
+Stores create signals **lazily**.
+This means that a property only becomes reactive once accessed inside a tracking scope.
+:::
+
+```tsx
+const App = () => {
+	const [mySignal, setMySignal] = createSignal("This is a signal.")
+	const [store, setStore] = createStore({
+		userCount: 3,
+		users: [
+			{
+				id: 0,
+				username: "felix909",
+				location: "England",
+				loggedIn: false,
+			},
+			{
+				id: 1,
+				username: "tracy634",
+				location: "Canada",
+				loggedIn: true,
+			},
+			{
+				id: 2,
+				username: "johny123",
+				location: "India",
+				loggedIn: true,
+			},
+		],
+	})
+	return (
+		<div>
+			<h1>Hello, {store.users[0].username}</h1> {/* Accessing a store value */}
+			<span>{mySignal()}</span> {/* Accessing a signal */}
+		</div>
+	)
+}
+```
+
+##

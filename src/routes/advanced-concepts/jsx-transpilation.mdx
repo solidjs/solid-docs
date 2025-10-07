@@ -1,0 +1,240 @@
+---
+title: JSX transpilation
+---
+
+Most frameworks using JSX are using so-called "pragma" calls, i.e. `<div />` are compiled into `h('div')` by the build system. The default template for Solid uses [`vite-plugin-solid`](https://github.com/solidjs/vite-plugin-solid), which itself uses [`babel-preset-solid`](https://github.com/solidjs/solid/tree/main/packages/babel-preset-solid), which uses [`dom-expressions`](https://github.com/ryansolid/dom-expressions) to a very different effect.
+
+## Setup
+
+Usually, you would use Solid inside a project that either uses `vite` directly or indirectly through `vinxi`. If you use `rollup` instead, our `vite-plugin-solid` should be compatible with this one, too. Otherwise, if you are using `babel` directly or indirectly, configure it to use `babel-preset-solid`.
+
+<TabsCodeBlocks>
+  <div id="vite.config.ts">
+```ts
+import { defineConfig } from 'vite';
+import solidPlugin from 'vite-plugin-solid';
+
+defineConfig({ plugins: [solidPlugin()] });
+```
+  </div>
+  <div id="rollup.config.ts">
+```ts
+import solidPlugin from 'vite-plugin-solid';
+
+export default {
+  input: 'main.js',
+  output: { dir: 'dist' },
+  plugins: [solidPlugin()]
+};
+```
+  </div>
+  <div id="babel.config.json">
+```json
+{
+  "presets": [
+    "@babel/preset-env",
+    "babel-preset-solid",
+    "@babel/preset-typescript"
+  ]
+}
+```
+  </div>
+</TabsCodeBlocks>
+
+### TypeScript setup
+
+If you do not use TypeScript, you can skip this part. Since TypeScript expects JSX to conform to the format used by most other frameworks, you need it to preserve the JSX and recognize the types exported by Solid for the JSX:
+
+```json title="tsconfig.json (Excerpt)"
+{
+	"compilerOptions": {
+		"jsxImportSource": "solid-js",
+		"jsx": "preserve"
+	}
+}
+```
+
+## Result
+
+Solid divides JSX into static templates that can be cloned into the DOM and reactive code to fill in the missing parts:
+
+```tsx {"1":8,10-11,13,19,22,27-28,31,36} {"2":9,20,29,33,37} {"3":12,21,30,38}
+import { createSignal } from "solid-js";
+import { render } from "solid-js/web";
+
+const [count, setCount] = createSignal(0);
+
+render(
+  () => (
+    <button
+      onClick={() => setCount(x => x + 1)}
+    >
+    Add 1 to
+    {count()}
+  </button>,
+  document.getElementById("app")!,
+);
+
+// becomes
+
+import { template as _$template } from "solid-js/web";
+import { delegateEvents as _$delegateEvents } from "solid-js/web";
+import { insert as _$insert } from "solid-js/web";
+var _tmpl$ = /*#__PURE__*/_$template(`<button>Add 1 to `);
+import { createSignal } from "solid-js";
+import { render } from "solid-js/web";
+const [count, setCount] = createSignal(0);
+render(() => (() => {
+  var _el$ = _tmpl$(),
+    _el$2 = _el$.firstChild;
+  _el$.$$click = () => setCount(x => x + 1);
+  _$insert(_el$, count, null);
+  return _el$;
+})(), document.getElementById("app"));
+_$delegateEvents(["click"]);
+
+/*
+Static Content
+DOM Event
+Reactive Content
+*/
+```
+
+This means that static content is rendered once and then not touched again, only reactive content is ever updated.
+
+<Callout>
+If you want to check the transpiled output for yourself, you can use our [Solid playground](https://playground.solidjs.com/) and check the output tab which is located behind the result.
+</Callout>
+
+## Universal renderer
+
+Solid is providing three different rendering modes by default:
+
+- **Client-side rendering:** JSX elements become DOM elements and reactive effects
+- **Server-side rendering with hydration:** JSX elements become an array of template strings, interspersed with comments to be replaced by the reactive parts on the client
+- **Universal rendering:** Using a custom renderer to create whatever output is desired
+
+In order to create a universal renderer, you need to use the `createRenderer` function from `solid-js/universal`. It is called with an object containing the following methods:
+
+```ts
+import { createRenderer } from "solid-js/universal";
+
+const renderer = createRenderer({
+  createElement(type) {
+    return document.createElement(type);
+  },
+  createTextNode(text) {
+    return document.createTextNode(text);
+  },
+  replaceText(node, text) {
+    node.data = text;
+  },
+  insertNode(parent, node, anchor) {
+    console.log(node);
+    parent.insertBefore(node, anchor);
+  },
+  removeNode(parent, node) {
+    parent.removeChild(node);
+  },
+  setProperty(node, name, value) {
+    if (name === 'style') Object.assign(node.style, value);
+    else if (name.startsWith('on')) node[name.toLowerCase()] = value;
+    else if (PROPERTIES.has(name)) node[name] = value;
+    else node.setAttribute(name, value);
+  },
+  isTextNode(node) {
+    console.log(node);
+    return node.type === 3;
+  },
+  getParentNode(node) {
+    return node.parentNode;
+  },
+  getFirstChild(node) {
+    return node.firstChild;
+  },
+  getNextSibling(node) {
+    return node.nextSibling;
+  },
+});
+```
+
+Now, it does not matter if what happens behind these functions is actual DOM. You could also use a UI toolkit like QT or GTK+. What matters is that the underlying implementation allows for the same mechanisms to work.
+
+## Solid Hyperscript
+
+If for some reason you cannot use any of these build tools, there is an alternative, albeit one with some caveats: [`Solid Hyperscript`](https://github.com/solidjs/solid/tree/main/packages/solid/h).
+
+There are some differences to Solid's usual JSX: 
+
+- You need to manually `import "h" from 'solid-js/h'`
+- Reactive props and content needs to be wrapped in functions manually
+- Merging props must be done manually using [`mergeProps`](/reference/reactive-utilities/merge-props)
+- To use Fragments (`<></>`), you need to define a Fragment Component yourself and use it through an option
+- let-refs do not work (use callback)
+
+```jsx del={6,10,21-22} ins={7,11-14,23-24}
+// Manually import h:
+import "h" from 'solid-js/h'
+
+// Reactive props/content must be function:
+const [count, setCount] = createSignal(0);
+<div>{count()}</div>
+<div>{count}</div>
+
+// Merging props using mergeProps:
+<input {...props.inputProps} class={props.class} value={props.value} />
+h('input', mergeProps(
+  props.inputProps,
+  { class: props.class, value: props.value }
+))
+// To add as a child, use squiggly brackets: `<div>{h(...)}</div>}`
+
+// Define Fragment yourself:
+export const Fragment = (props) => children(props.children).toArray();
+
+// Use callback refs instead of variable refs:
+let divRef;
+<div ref={divRef} />
+const [ref, setRef] = createSignal();
+<div ref={setRef} />
+```
+
+### Setup
+
+<TabsCodeBlocks>
+  <div id="tsconfig.json">
+```json
+{
+  "build": {
+    "jsx": "react",
+    "jsxFactory": "h",
+    "jsxFragment": "Fragment",
+    "jsxImportSource": "solid-js/h"
+  }
+}
+```
+  </div>
+  <div id="esbuild.json">
+```json
+{
+  "loader": "jsx",
+  "jsxFactory": "h",
+  "jsxFragment": "Fragment"
+}
+```
+  </div>
+  <div id="babel.config.json">
+```json
+{
+  "presets": [
+    "@babel/preset-env",
+    "babel-preset-solid",
+    ["@babel/preset-typescript", {
+      "jsxPragma": "h",
+      "jsxPragmaFrag": "Fragment"
+    }]
+  ]
+}
+```
+  </div>
+</TabsCodeBlocks>

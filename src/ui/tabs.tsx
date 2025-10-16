@@ -23,8 +23,11 @@ export type TabListProps = PolymorphicProps<
 
 export function TabList(props: TabListProps) {
 	return (
-		<div class="custom-scrollbar mb-2 flex overflow-x-auto">
-			<KobalteTabs.List {...props} class="flex border-b-2 border-slate-800" />
+		<div class="custom-scrollbar flex overflow-x-auto overflow-y-hidden">
+			<KobalteTabs.List
+				{...props}
+				class="z-1 flex w-full border-b border-blue-200 dark:border-slate-800"
+			/>
 		</div>
 	);
 }
@@ -38,7 +41,7 @@ export function Tab(props: TabProps) {
 	return (
 		<KobalteTabs.Trigger
 			{...props}
-			class="relative top-0.5 px-5 py-1 transition-colors duration-300 aria-selected:border-b-2 aria-selected:border-blue-400 aria-selected:font-bold aria-selected:text-blue-500 aria-selected:dark:text-slate-300"
+			class="z-2 aria-selected-before:w-full aria-selected:before:border-blue relative top-0.5 appearance-none bg-none px-[16px] py-[4px] outline-none transition-colors duration-150 aria-selected:h-full aria-selected:bg-slate-200 aria-selected:text-black aria-selected:before:absolute aria-selected:before:inset-0 aria-selected:before:border-t aria-selected:before:border-blue-600 aria-selected:dark:bg-slate-800 aria-selected:dark:text-white aria-selected:before:dark:border-blue-200"
 		/>
 	);
 }
@@ -50,6 +53,9 @@ export type TabPanelProps = PolymorphicProps<
 
 export function TabPanel(props: TabPanelProps) {
 	return (
-		<KobalteTabs.Content {...props} class="hidden data-[selected]:block" />
+		<KobalteTabs.Content
+			{...props}
+			class="hidden rounded-b-md bg-white data-[selected]:block dark:bg-slate-950"
+		/>
 	);
 }

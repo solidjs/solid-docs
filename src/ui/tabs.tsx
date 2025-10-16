@@ -13,7 +13,7 @@ export type TabsProps = PolymorphicProps<
 >;
 
 export function Tabs(props: TabsProps) {
-	return <KobalteTabs {...props} />;
+	return <KobalteTabs class="mt-6" {...props} />;
 }
 
 export type TabListProps = PolymorphicProps<

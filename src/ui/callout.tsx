@@ -92,7 +92,7 @@ export function Callout(props: CalloutProps) {
 
 	return (
 		<Alert.Root
-			class={`my-6 flex w-full rounded-3xl border p-4 ${
+			class={`my-6 flex w-full rounded-xl border p-4 ${
 				styles[mergedProps.type].container
 			}`}
 		>

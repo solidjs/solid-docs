@@ -162,7 +162,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 						when={!useCurrentRouteMetaData().isProjectRoot}
 						keyed
 						fallback={
-							<article class="overflow-y-auto px-2 md:px-10">
+							<article class="expressive-code-overrides overflow-y-auto px-2 md:px-10">
 								{props.children}
 							</article>
 						}

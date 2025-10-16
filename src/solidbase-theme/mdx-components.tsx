@@ -2,6 +2,7 @@ import {
 	For,
 	Match,
 	type ParentProps,
+	Show,
 	Switch,
 	children,
 	createMemo,
@@ -11,7 +12,8 @@ import { isServer } from "solid-js/web";
 
 import { A } from "~/ui/i18n-anchor";
 import { Callout } from "~/ui/callout";
-import { Tabs, TabList, TabPanel, Tab } from "~/ui/tabs";
+import { Tabs, TabList, TabPanel, Tab, TSJSToggle } from "~/ui/tabs";
+import { usePreferredLanguage } from "@kobalte/solidbase/client";
 
 export { EditPageLink } from "~/ui/edit-page-link";
 export { PageIssueLink } from "~/ui/page-issue-link";
@@ -27,10 +29,12 @@ export const DirectiveContainer = (
 		title?: string;
 		codeGroup?: string;
 		tabNames?: string;
+		withTsJsToggle?: string;
 	} & ParentProps
 ) => {
 	const _children = children(() => props.children).toArray();
 	const tabNames = createMemo(() => props.tabNames?.split("\0") ?? []);
+	const [preferredLanguage] = usePreferredLanguage();
 
 	return (
 		<Switch
@@ -47,8 +51,27 @@ export const DirectiveContainer = (
 				<Tabs>
 					<TabList>
 						<For each={tabNames()}>
-							{(title) => <Tab value={title}>{title}</Tab>}
+							{(title) => {
+								const jsTitle = title.replace(/\.tsx?$/, (ext) => {
+									if (ext === ".tsx") {
+										return ".jsx";
+									}
+									if (ext === ".ts") {
+										return ".js";
+									}
+									return ext;
+								});
+
+								return (
+									<Tab value={title}>
+										{preferredLanguage() === "ts" ? title : jsTitle}
+									</Tab>
+								);
+							}}
 						</For>
+						<Show when={props.withTsJsToggle}>
+							<TSJSToggle />
+						</Show>
 					</TabList>
 					<For each={tabNames()}>
 						{(title, idx) => (

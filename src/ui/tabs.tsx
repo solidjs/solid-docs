@@ -26,7 +26,7 @@ export function TabList(props: TabListProps) {
 		<div class="custom-scrollbar flex overflow-x-auto overflow-y-hidden">
 			<KobalteTabs.List
 				{...props}
-				class="z-1 flex w-full border-b border-blue-200 dark:border-slate-800"
+				class="z-1 flex h-full w-full rounded-t-md bg-slate-200 dark:bg-slate-800/50"
 			/>
 		</div>
 	);
@@ -41,7 +41,7 @@ export function Tab(props: TabProps) {
 	return (
 		<KobalteTabs.Trigger
 			{...props}
-			class="z-2 aria-selected-before:w-full aria-selected:before:border-blue relative top-0.5 appearance-none bg-none px-[16px] py-[4px] outline-none transition-colors duration-150 aria-selected:h-full aria-selected:bg-slate-200 aria-selected:text-black aria-selected:before:absolute aria-selected:before:inset-0 aria-selected:before:border-t aria-selected:before:border-blue-600 aria-selected:dark:bg-slate-800 aria-selected:dark:text-white aria-selected:before:dark:border-blue-200"
+			class="z-2 aria-selected-before:w-full relative appearance-none bg-none px-[16px] py-[4px] outline-none transition-colors duration-150 aria-selected:h-full aria-selected:rounded-t-md aria-selected:border-t aria-selected:border-blue-400 aria-selected:bg-white aria-selected:text-black aria-selected:before:absolute aria-selected:before:inset-0 aria-selected:dark:bg-slate-950 aria-selected:dark:text-white"
 		/>
 	);
 }
@@ -56,6 +56,18 @@ export function TabPanel(props: TabPanelProps) {
 		<KobalteTabs.Content
 			{...props}
 			class="hidden rounded-b-md bg-white data-[selected]:block dark:bg-slate-950"
+		/>
+	);
+}
+
+export function TSJSToggle() {
+	return (
+		<input
+			type="checkbox"
+			checked
+			title="Toggle language"
+			aria-label="Toggle TS/JS"
+			class="sb-ts-js-toggle"
 		/>
 	);
 }

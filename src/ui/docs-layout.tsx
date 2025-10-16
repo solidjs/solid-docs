@@ -44,7 +44,7 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 				<Show when={titles()?.title} fallback={<Title>SolidDocs</Title>}>
 					{(title) => <Title>{`${title()} - ${projectTitle()}`}</Title>}
 				</Show>
-				<article class="expressive-code-overrides mx-auto w-full max-w-2xl overflow-hidden pb-16">
+				<article class="mx-auto w-full max-w-2xl overflow-hidden pb-16">
 					<Show when={titles()?.parent}>
 						{(t) => (
 							<span class="my-1 text-sm font-semibold text-blue-700 dark:text-blue-300">

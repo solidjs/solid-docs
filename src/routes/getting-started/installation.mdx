@@ -3,83 +3,369 @@ title: Installation
 order: 1
 ---
 
-The fastest way to try Solid is to create a new project and run it locally.
-In just a few minutes, you’ll have a working Solid app running in your browser.
+Solid can be installed and configured manually in any JavaScript project using a package manager and build tool.
+This approach provides full control over your project setup and configuration.
 
-## Solid in Your Browser
+To see how to get started quickly, check out the [Quick Start Guide](/getting-started/quick-start).
 
-If you're looking to experiment with Solid without setting up a local environment, open the [Solid Playground](https://playground.solidjs.com/) in your browser.
+## 1. Create Project Directory
 
-If you prefer a more complete development setup, you can use the StackBlitz [JavaScript](https://stackblitz.com/github/solidjs/templates/tree/master/js) or [TypeScript](https://stackblitz.com/github/solidjs/templates/tree/master/ts) templates.
-
-## Create a New Project
-
-:::note[Before You Begin]
-Make sure you have a recent version of your preferred JavaScript runtime installed, such as [Node.js](https://nodejs.org/en), [Bun](https://bun.sh/), or [Deno](https://deno.com/).
-:::
-
-To create a new Solid project, follow these steps:
-
-1. **Open your terminal and navigate to the directory** where you want to create your project.
-
-2. **Run the following command:**
-
-```package-create
-solid
-```
-
-3. **Follow the CLI prompts** to select your project name, template (JavaScript or TypeScript), and other options.
+Create a new directory for your project and navigate into it:
 
 ```sh
-◆  Project Name
-│  solid-project
-
-◆  What type of project would you like to create?
-│  ○ SolidStart
-│  ● SolidJS + Vite
-│  ○ Library
-
-◆  Use Typescript?
-│  ● Yes / ○ No
-
-◆  Which template would you like to use?
-│  ● ts
-│  ○ ts-vitest
-│  ○ ts-uvu
-│  ○ ts-unocss
-│  ○ ts-tailwindcss
+mkdir solid-project
+cd solid-project
 ```
 
-4. **Follow the instructions to install the dependencies and start the development server:**
+## 2. Initialize Package Configuration
+
+Create a `package.json` file to manage dependencies and scripts:
 
 ```sh title="npm" tab="package-manager"
-cd solid-project
-npm install
+npm init -y
+```
+
+```sh title="pnpm" tab="package-manager"
+pnpm init
+```
+
+```sh title="yarn" tab="package-manager"
+yarn init -y
+```
+
+```sh title="bun" tab="package-manager"
+bun init
+```
+
+## 3. Install Solid and Build Tools
+
+Install Solid as a dependency:
+
+```package-install
+solid-js
+```
+
+In addition to Solid, you'll need a build tool.
+Vite is the recommended build tool for Solid projects due to its speed and ease of use. Install Vite and the Solid plugin:
+
+```package-install-dev
+vite vite-plugin-solid
+```
+
+## 4. Configure Vite
+
+To configure Vite for Solid, create a `vite.config.js` file in your project root:
+
+```js
+import { defineConfig } from 'vite';
+import solid from 'vite-plugin-solid';
+
+export default defineConfig({
+  plugins: [solid()],
+  server: {
+    port: 3000,
+  },
+  build: {
+    target: 'esnext',
+  },
+});
+```
+
+## 5. Create HTML Template
+
+Create an `index.html` file in your project root:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <title>Solid App</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script src="/src/index.jsx" type="module"></script>
+  </body>
+</html>
+```
+
+## 6. Create Source Directory and Files
+
+Create the source directory and core application files:
+
+```sh
+mkdir src
+```
+
+Create `src/index.jsx`:
+
+```jsx
+/* @refresh reload */
+import { render } from 'solid-js/web';
+import App from './App';
+import './index.css';
+
+const root = document.getElementById('root');
+
+render(() => <App />, root);
+```
+
+Create `src/App.jsx`:
+
+```jsx
+import { createSignal } from 'solid-js';
+
+function App() {
+  const [count, setCount] = createSignal(0);
+
+  return (
+    <div class="App">
+      <header class="App-header">
+        <h1>Welcome to Solid</h1>
+        <p>Count: {count()}</p>
+        <button onClick={() => setCount(count() + 1)}>
+          Increment
+        </button>
+      </header>
+    </div>
+  );
+}
+
+export default App;
+```
+
+Create `src/index.css`:
+
+```css
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.App {
+  text-align: center;
+}
+
+.App-header {
+  background-color: #282c34;
+  padding: 20px;
+  color: white;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+button {
+  background-color: #61dafb;
+  border: none;
+  color: #282c34;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+button:hover {
+  background-color: #21a6c7;
+}
+```
+
+## 7. Add Build Scripts
+
+Update your `package.json` to include development and build scripts:
+
+```json
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  }
+}
+```
+
+## 8. Start Development Server
+
+Launch the development server:
+
+```sh title="npm" tab="package-manager"
 npm run dev
 ```
 
 ```sh title="pnpm" tab="package-manager"
-cd solid-project
-pnpm install
 pnpm dev
 ```
 
 ```sh title="yarn" tab="package-manager"
-cd solid-project
-yarn install
 yarn dev
 ```
 
 ```sh title="bun" tab="package-manager"
-cd solid-project
-bun install
 bun run dev
 ```
 
-```sh title="deno" tab="package-manager"
-cd solid-project
-deno install
-deno run dev
+The development server will start on `http://localhost:3000`. Open this URL in your browser to view your application.
+
+## Project Structure
+
+Your manually created Solid project should now have this structure:
+
+```
+solid-project/
+├── src/
+│   ├── App.jsx          # Root component
+│   ├── index.jsx        # Application entry point
+│   └── index.css        # Global styles
+├── index.html           # HTML template
+├── package.json         # Project configuration
+└── vite.config.js       # Vite build configuration
 ```
 
-6. **Open your browser and go to the local URL** provided in the terminal to see your new Solid app in action!
+## TypeScript Setup (Optional)
+
+To add TypeScript support to your project:
+
+### 1. Install TypeScript Dependencies
+
+```sh title="npm" tab="package-manager"
+npm install --save-dev typescript
+```
+
+```sh title="pnpm" tab="package-manager"
+pnpm add -D typescript
+```
+
+```sh title="yarn" tab="package-manager"
+yarn add --dev typescript
+```
+
+```sh title="bun" tab="package-manager"
+bun add --dev typescript
+```
+
+### 2. Create TypeScript Configuration
+
+Create a `tsconfig.json` file:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
+```
+
+### 3. Rename Files to TypeScript
+
+Rename your source files:
+- `src/index.jsx` → `src/index.tsx`
+- `src/App.jsx` → `src/App.tsx`
+
+Update the script tag in `index.html`:
+
+```html
+<script src="/src/index.tsx" type="module"></script>
+```
+
+## Next Steps
+
+With your development environment ready:
+
+1. **Explore the generated code** in `src/App.jsx` or `src/App.tsx`
+2. **Modify components** and observe hot reloading in action
+3. **Review the [Basic Concepts](/concepts/intro-to-reactivity)** to understand Solid's reactivity system
+4. **Build your first component** following the [Getting Started guide](/getting-started/building-your-first-app)
+
+## Alternative Build Tools
+
+While Vite is the recommended build tool, Solid works with other bundlers:
+
+### Webpack Setup
+
+Install webpack and the Solid loader:
+
+```sh
+npm install --save-dev webpack webpack-cli webpack-dev-server babel-loader @babel/core @babel/preset-env babel-preset-solid
+```
+
+Create `webpack.config.js`:
+
+```javascript
+const path = require('path');
+
+module.exports = {
+  entry: './src/index.jsx',
+  mode: 'development',
+  module: {
+    rules: [
+      {
+        test: /\.(js|jsx)$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env', 'babel-preset-solid']
+          }
+        }
+      }
+    ]
+  },
+  resolve: {
+    extensions: ['.js', '.jsx']
+  },
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'bundle.js'
+  },
+  devServer: {
+    static: path.join(__dirname, 'public'),
+    port: 3000
+  }
+};
+```
+
+### Rollup Setup
+
+Install Rollup and the Solid plugin:
+
+```sh
+npm install --save-dev rollup @rollup/plugin-babel @rollup/plugin-node-resolve rollup-preset-solid
+```
+
+Create `rollup.config.js`:
+
+```javascript
+import { withSolid } from 'rollup-preset-solid';
+
+export default withSolid({
+  input: 'src/index.jsx',
+  targets: ['esm', 'cjs'],
+});
+```

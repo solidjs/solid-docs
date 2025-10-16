@@ -69,24 +69,18 @@ export const strong = (props: ParentProps) => (
 export const ssr = (props: ParentProps) => <>{props.children}</>;
 export const spa = () => <></>;
 export const h1 = (props: ParentProps) => (
-	<h1
-		{...props}
-		class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
-	>
+	<h1 {...props} class="prose-headings:font-normal">
 		{props.children}
 	</h1>
 );
 export const h2 = (props: ParentProps) => {
 	return (
-		<>
-			<hr class="my-8 border-slate-400 dark:prose-hr:border-slate-800" />
-			<h2
-				{...props}
-				class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
-			>
-				{props.children}
-			</h2>
-		</>
+		<h2
+			{...props}
+			class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+		>
+			{props.children}
+		</h2>
 	);
 };
 export const h3 = (props: ParentProps) => {
@@ -233,3 +227,11 @@ export const response = (props: ParentProps) => {
 export const unknown = (props: ParentProps) => {
 	return <span>{props.children}</span>;
 };
+
+export function Steps(props: ParentProps) {
+	return <div class="steps">{props.children}</div>;
+}
+
+export function Step(props: ParentProps) {
+	return <div class="step">{props.children}</div>;
+}

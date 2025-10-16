@@ -137,7 +137,6 @@ export default defineConfig(
 
 import { readFile } from "node:fs/promises";
 import { codeToHtml } from "shiki";
-import defaultTheme from "@kobalte/solidbase/default-theme";
 
 function heroCodeSnippet() {
 	const virtualModuleId = "solid:hero-code-snippet";

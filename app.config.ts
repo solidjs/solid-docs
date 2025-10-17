@@ -51,7 +51,9 @@ function docsData() {
 
 const theme = defineTheme({
 	componentsPath: import.meta.resolve("./src/solidbase-theme"),
+	extends: defaultTheme,
 });
+
 export default defineConfig(
 	createWithSolidBase(theme)(
 		{
@@ -148,6 +150,7 @@ export default defineConfig(
 
 import { readFile } from "node:fs/promises";
 import { codeToHtml } from "shiki";
+import defaultTheme from "@kobalte/solidbase/default-theme";
 
 function heroCodeSnippet() {
 	const virtualModuleId = "solid:hero-code-snippet";

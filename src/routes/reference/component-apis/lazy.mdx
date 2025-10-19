@@ -2,24 +2,75 @@
 title: lazy
 ---
 
-```ts
+Used to lazy load components to allow for code splitting. 
+Components are not loaded until rendered. 
+
+```tsx title="app.tsx"
+import { lazy } from "solid-js"
+
+const ComponentA = lazy(() => import("./ComponentA"));
+
+function App(props: { title: string }) {
+  return (
+		<ComponentA title={props.title} />
+	)
+}
+```
+
+Lazy loaded components can be used the same as its statically imported counterpart, receiving props etc. 
+Lazy components trigger `<Suspense>`
+
+## Preloading data in Nested Lazy Components
+
+Top-level lazy components will automatically be preloaded as well as their preload functions.
+Though nested lazy components will not be preloaded automatically because they are not part of the route hyerarchy.
+To preload such components, you can use the `preload` method exposed on the lazy component
+
+```tsx title="component-with-preload.tsx"
 import { lazy } from "solid-js"
 import type { Component } from "solid-js"
 
+const Nested = lazy(() => import("./Nested"))
+
+const ComponentWithPreload: Component = () => {
+  // preload Nested component when needed
+  async function handlePreload() {
+	await Nested.preload()
+  }
+
+  return (
+	<div>
+	  <button onClick={handlePreload}>Preload Nested Component</button>
+	  <Nested />
+	</div>
+  )
+}
+
+```
+
+## Type Signature
+
+```tsx
 function lazy<T extends Component<any>>(
 	fn: () => Promise<{ default: T }>
 ): T & { preload: () => Promise<T> }
 ```
 
-Used to lazy load components to allow for code splitting. 
-Components are not loaded until rendered. 
-Lazy loaded components can be used the same as its statically imported counterpart, receiving props etc. 
-Lazy components trigger `<Suspense>`
+### Type Parameters
 
-```tsx
-// wrap import
-const ComponentA = lazy(() => import("./ComponentA"));
+| Name | Constraint | Description |
+| ---- | ---------- | ----------- |
+| `T`  | `Component<any>` | The component type that will be lazily loaded (including its props).
 
-// use in JSX
-<ComponentA title={props.title} />
-```
+### Parameters
+
+| Parameter | Type | Required | Description |
+| --------- | ---- | -------- | ----------- |
+| `fn` | `() => Promise<{ default: T }>` | Yes | A function that returns a dynamic import resolving to the component as the `default` export. |
+
+### Returns
+
+| Type | Description |
+| ---- | ----------- |
+| `T & { preload: () => Promise<T> }` | A renderable component compatible with `T` that also exposes a `preload()` method to eagerly load the module. |
+

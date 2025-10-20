@@ -3,28 +3,36 @@ title: createHandler
 ---
 
 The `createHandler` is used to start the server in [`entry-server.tsx`](/solid-start/reference/entrypoints/entry-server).
-It takes a function that returns a static document (often created with [`<StartServer>`](/solid-start/reference/server/start-server)), and serves it using one of the three function for server side rendering (SSR):
+It takes a function that returns a static document (often created with [`<StartServer>`](/solid-start/reference/server/start-server)), renders, and serves it.
 
-- [`renderToString`](/reference/rendering/render-to-string) - "sync"
-- [`renderToStringAsync`](/reference/rendering/render-to-string-async) - "async"
-- [`renderToStream`](/reference/rendering/render-to-stream) - "stream"
+:::note
+To fully understand how to leverage different rendering modes, please refer to the [Rendering Modes](/solid-start/building-your-application/rendering-modes) page.
+:::
 
-The SSR mode can be configured through the `mode` property on the options object:
+A `createHandler` is essential to every SolidStart app.
+To fallback the rendering mode to the [`app.config.ts`](/solid-start/reference/entrypoints/app-config-ts) definition (or the default "stream" mode), you can use the `createHandler` without any options.
 
-```tsx
+```tsx title="src/entry-server.tsx"
 import { createHandler, StartServer } from "@solidjs/start/server";
 
 export default createHandler(() => (
   <StartServer document={...}
   />
-), {
-  mode: "async"
-});
+));
 ```
 
-## Parameters
+It is also possible to [override the rendering mode for a specific route](/solid-start/building-your-application/rendering-modes#per-route-configuration).
 
-| Argument     | Type                     | Default  | Description                                                       |
-| ------------ | ------------------------ | -------- | ----------------------------------------------------------------- |
-| fn           | fn: (context: PageEvent) |          | A function that returns the static document for your application. |
-| options.mode | string                   | "stream" | The SSR mode. Options are 'sync', 'async' and 'stream'.           |
+## Type Signature
+
+```tsx
+type RenderingModes = "stream" | "async" | "sync";
+
+function createHandler(
+	handler: () => (document: any, options?: any) => void,
+	options?:
+		| { mode?: RenderingModes }
+		| ((event: RequestEvent) => { mode: RenderingModes })
+		| undefined
+): (event: RequestEvent) => Response;
+```

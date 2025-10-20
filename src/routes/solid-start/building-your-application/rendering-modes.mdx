@@ -1,0 +1,95 @@
+---
+title: "Rendering Modes"
+---
+
+SolidStart has 3 kinds of rendering modes: `sync`, `async`, and `stream`.
+Let's talk about how each of them work and which one to pick.
+
+:::note
+Default is **stream** and performance-wise should be preferred as a rule-of-thumb.
+:::
+
+All modes have some degree of Server-Side Rendering, you may need to change them globally depending on your deployment provider.
+And you may prefer to override them for better bot support and SEO.
+
+## Impacted Features
+
+| Feature              | sync        | async                       | stream                  |
+| -------------------- | ----------- | --------------------------- | ----------------------- |
+| Data fetching        | Client-side | Server-side (blocking)      | Server-side (streaming) |
+| Suspense fallbacks   | Yes         | No                          | Yes                     |
+| Time to first byte   | Fast        | Slower (waits for all data) | Faster                  |
+| Total page load time | Slower      | Fast (server fetches)       | Faster (progressive)    |
+
+### Sync Mode
+
+Uses [`renderToString`](/reference/rendering/render-to-string) to render the page from Solid's core to render the page synchronously.
+All async features are disabled and the page is rendered as soon as possible and sent to the client-side where data fetching will happen post-hydration.
+
+### Async Mode
+
+Uses [`renderToStringAsync`](/reference/rendering/render-to-string-async) to render the page from Solid's core to render the page asynchronously.
+All Suspense boundares are resolved and rendered before being sent to the client-side.
+
+No suspense fallbacks are shown in the browser, which makes this mode ideal for SEO optimizations and bot support.
+
+### Stream Mode
+
+Uses [`renderToStream`](/reference/rendering/render-to-stream) to render the page from Solid's core to render the page streaming.
+Leveraging [TransformableStream](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream) to progressively send the HTML to the client-side.
+
+This mode is ideal for performance and future-friendly apps. .
+
+## Global Configuration
+
+The modes can be defined app-wide via the configuration file or via the [`entry-server.tsx`](/solid-start/reference/entrypoints/entry-server) file.
+
+```tsx title="app.config.ts"
+import { defineConfig } from "@solidjs/start/config";
+
+export default defineConfig({
+	mode: "stream",
+});
+```
+
+The value in [`entry-server.tsx`](/solid-start/reference/entrypoints/entry-server) overrides the value in [`app.config.ts`](/solid-start/reference/entrypoints/app-config).
+
+```tsx title="src/entry-server.tsx"
+import { createHandler, StartServer } from "@solidjs/start/server";
+
+export default createHandler(() => (
+	<StartServer document={...} mode="async" />
+), {
+	mode: "async"
+});
+```
+
+## Per-Route Configuration
+
+The optional secondary parameter in [`createHandler`](/solid-start/reference/server/create-handler) can be an object or a function that receives the `RequestEvent` and returns an object with the mode to use for the route.
+
+```tsx title="src/entry-server.tsx"
+import { createHandler, StartServer } from "@solidjs/start/server";
+
+export default createHandler(() => (
+	<StartServer document={...} />
+), {
+	mode: (event) => {
+		return event.request.url.includes("/special-route") ? "async" : "stream";
+	}
+});
+```
+
+It can also be used for bot detection via the `userAgent` property of the `RequestEvent`.
+
+```tsx title="src/entry-server.tsx"
+import { createHandler, StartServer } from "@solidjs/start/server";
+
+export default createHandler(() => (
+	<StartServer document={...} />
+), {
+	mode: (event) => {
+		return isBot(event.request.userAgent) ? "async" : "stream";
+	}
+});
+```

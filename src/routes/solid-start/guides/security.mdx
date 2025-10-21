@@ -9,12 +9,13 @@ However, this protection does not apply when using [`innerHTML`](/reference/jsx-
 
 To protect your application from XSS attacks:
 
+- Set a [Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP).
+- Validate and sanitize user inputs, especially form inputs on the server and client.
 - Avoid using `innerHTML` when possible.
   If necessary, make sure to sanitize user-supplied data with libraries such as [DOMPurify](https://github.com/cure53/DOMPurify).
-- Validate and sanitize user inputs, especially form inputs on the server and client.
-- Set a [Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP).
 - Sanitize attributes containing user-supplied data within `<noscript>` elements.
   This includes both the attributes of the `<noscript>` element itself and its children.
+- When URLs are provided or constructed via user input validate its `origin` and `protocol` (to avoid evaluating code via `javascript:` URLs) using the [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) API.
 
 It is highly recommended to read the [Cross Site Scripting Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html) for further guidance.
 
@@ -135,7 +136,7 @@ export default createMiddleware({
 
 ## CSRF (Cross-Site Request Forgery)
 
-To prevent CSRF attacks, a middleware can be used to block untrusted requests:
+To prevent basic CSRF attacks, a middleware can be used to block untrusted requests:
 
 ```tsx
 import { createMiddleware } from "@solidjs/start/middleware";
@@ -193,6 +194,7 @@ export default createMiddleware({
 ```
 
 This example demonstrates a basic CSRF protection that verifies the `Origin` and `Referer` headers, blocking requests from untrusted origins.
+**Please note both of these headers can be forged.**
 Additionally, consider implementing a more robust CSRF protection mechanism, such as the [Double-Submit Cookie Pattern](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#alternative-using-a-double-submit-cookie-pattern).
 
 For further guidance, you can look at the [Cross-Site Request Forgery Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html).

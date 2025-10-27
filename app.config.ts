@@ -11,6 +11,16 @@ import solidrouterTree from "./.solid/solid-router-tree";
 import solidStartTree from "./.solid/solid-start-tree";
 import solidMetaTree from "./.solid/solid-meta-tree";
 
+const allEntries = [
+	entries.learn, entries.reference,
+	solidstartEntries.learn, solidstartEntries.reference,
+	solidrouterEntries.learn, solidrouterEntries.reference,
+	solidMetaEntries.learn, solidMetaEntries.reference,
+].flat(Infinity).map(x =>
+	// @ts-expect-error `flat` mess up the type and I have no idea how to fix this
+	x.path.replace(/\\/g, "/")
+);
+
 function docsData() {
 	const virtualModuleId = "solid:collection";
 	const resolveVirtualModuleId = "\0" + virtualModuleId;
@@ -53,6 +63,7 @@ export default defineConfig(
 					crawlLinks: true,
 					autoSubfolderIndex: false,
 					failOnError: true,
+					routes: allEntries,
 					// eslint-disable-next-line no-useless-escape
 					ignore: [/\{\getPath}/, /.*?emojiSvg\(.*/],
 				},

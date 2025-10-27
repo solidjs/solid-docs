@@ -13,7 +13,7 @@ const generateLinkArray = (routes) => {
 
 const formatSection = (title, links) => {
 	const formattedLinks = links
-		.map((link) => `${link.title}: ${link.url}`)
+		.map((link) => `- [${link.title}](${link.url})`)
 		.join("\n");
 	return `## ${title}\n\n${formattedLinks}`;
 };
@@ -44,6 +44,11 @@ const formatSection = (title, links) => {
 	];
 
 	const output = `# SolidJS Documentation
+> Solid is a JavaScript library built around signals. It prioritizes a simple and predictable development experience, making it a great choice for developers of all skill levels. These are the documention for the main official projects.
+> - SolidJS: The core library for building reactive user interfaces.
+> - SolidStart: A full-stack framework for building web applications.
+> - Solid Router: A routing library for building web applications.
+> - Solid Meta: A library for managing the HTML head and meta tags.
 
 ${formatSection("SolidJS", coreLinks)}
 
@@ -54,5 +59,5 @@ ${formatSection("Solid Router", routerLinks)}
 ${formatSection("Solid Meta", metaLinks)}
 `;
 
-	fs.writeFileSync("public/llm.txt", output, { encoding: "utf-8" });
+	fs.writeFileSync("public/llms.txt", output, { encoding: "utf-8" });
 })();

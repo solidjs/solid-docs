@@ -16,7 +16,10 @@ const allEntries = [
 	solidstartEntries.learn, solidstartEntries.reference,
 	solidrouterEntries.learn, solidrouterEntries.reference,
 	solidMetaEntries.learn, solidMetaEntries.reference,
-].flat(Infinity).map(x => x.path.replace(/\\/g, '/'))
+].flat(Infinity).map(x =>
+	// @ts-expect-error `flat` mess up the type and I have no idea how to fix this
+	x.path.replace(/\\/g, '/')
+)
 
 function docsData() {
 	const virtualModuleId = "solid:collection";

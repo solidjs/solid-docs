@@ -16,7 +16,7 @@ const allEntries = [
 	solidstartEntries.learn, solidstartEntries.reference,
 	solidrouterEntries.learn, solidrouterEntries.reference,
 	solidMetaEntries.learn, solidMetaEntries.reference,
-].flat(Infinity).map(x => x.path.replace(/\\/g, '/')).sort()
+].flat(Infinity).map(x => x.path.replace(/\\/g, '/'))
 
 function docsData() {
 	const virtualModuleId = "solid:collection";

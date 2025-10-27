@@ -72,5 +72,8 @@ export const COLLECTIONS_ROOT = "src/routes";
 		Object.keys(projectTrees).forEach((project) =>
 			writeFile(`${project}-entries.ts`, projectTrees[project])
 		),
+		Object.keys(projectFlatEntries).forEach((project) =>
+			writeFile(`${project}-flat-entries.js`, projectFlatEntries[project], true)
+		),
 	]);
 })();

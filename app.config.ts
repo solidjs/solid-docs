@@ -18,7 +18,7 @@ const allEntries = [
 	solidMetaEntries.learn, solidMetaEntries.reference,
 ].flat(Infinity).map(x =>
 	// @ts-expect-error `flat` mess up the type and I have no idea how to fix this
-	x.path.replace(/\\/g, '/')
+	x.path.replace(/\\/g, "/")
 );
 
 function docsData() {

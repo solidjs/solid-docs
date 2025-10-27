@@ -64,7 +64,7 @@ export function Search() {
 			});
 			if (!result) return {};
 
-			const seen = {}
+			const seen: Record<string, boolean> = {}
 			result.hits = result.hits.filter(
 				hit => {
 					hit.document.path = hit.document.path.replace("/index#", "#");

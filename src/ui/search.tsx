@@ -63,6 +63,18 @@ export function Search() {
 				mode: "fulltext",
 			});
 			if (!result) return {};
+
+			const seen: Record<string, boolean> = {};
+			result.hits = result.hits.filter(
+				hit => {
+					hit.document.path = hit.document.path.replace("/index#", "#");
+					if(!seen[hit.document.path]) {
+						seen[hit.document.path] = true;
+						return hit;
+					}
+				}
+			);
+
 			const groupedHits = result.hits.reduce(
 				(groupedHits, hit) => {
 					const section = hit.document.section.replace(

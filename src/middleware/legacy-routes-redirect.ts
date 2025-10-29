@@ -165,7 +165,7 @@ const LEGACY_ROUTES = {
 	"/guides/how-to-guides/routing-in-solid/solid-router":
 		"/routing/installation-and-setup",
 	"/guides/tutorials/getting-started-with-solid/installing-solid":
-		"/quick-start",
+		"/getting-started/quick-start",
 	"/references/concepts/reactivity": "/concepts/intro-to-reactivity",
 	"/references/concepts/reactivity/tracking":
 		"/concepts/intro-to-reactivity#subscribers",
@@ -180,6 +180,8 @@ const LEGACY_ROUTES = {
 
 	"/solid-router/reference/response-helpers/revalidate":
 		"/solid-router/reference/data-apis/revalidate",
+
+	"/solid-start/guides/data-loading": "/solid-start/guides/data-fetching",
 } as const;
 
 function isLegacyRoute(path: string): path is keyof typeof LEGACY_ROUTES {

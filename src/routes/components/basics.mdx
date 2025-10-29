@@ -1,0 +1,110 @@
+---
+title: "Basics of Components"
+order: 1
+---
+
+Components are the **fundamental building blocks** of Solid applications.  
+A component is a **JavaScript function that returns JSX**.
+This allows you to create encapsulated pieces of UI that can manage their own state and behavior.
+
+## Your First Component
+
+A component starts as a plain JavaScript function, defined by either a function declaration or an arrow function:
+
+```tsx
+// Greeting.jsx
+export function Greeting() {
+  return <div>Hello, Solid!</div>;
+}
+
+export const Greeting = () => {
+  return <div>Hello, Solid!</div>;
+};
+```
+
+These functions can be used in other components by importing them and using their names like HTML tags:
+
+```tsx
+// App.tsx
+import { Greeting } from './Greeting';
+
+function App() {
+  return (
+    <div>
+      <Greeting />
+    </div>
+  );
+}
+```
+
+### Passing Props
+
+Props, short for properties, let you pass data from a parent component to a child component.
+They are passed as attributes on the component tag and received as an object in the component function.
+
+```tsx
+//Greeting.tsx
+export function Greeting(props) {
+  return <div>Hello, {props.name}!</div>;
+}
+
+// App.tsx
+import { Greeting } from './Greeting';
+
+function App() {
+  return (
+    <div>
+      <Greeting name="Solid" />
+    </div>
+  );
+}
+```
+
+To learn more about props, see the next section: [Passing Data with Props](/components/props).
+
+### Composing Components
+
+Components can be composed together to build more complex UIs. 
+You can use one component inside another, passing props as needed.
+
+```tsx
+// App.tsx
+import { Greeting } from './Greeting';
+
+function App() {
+  return (
+    <div>
+      <Greeting name="Solid" />
+      <Greeting name="World" />
+    </div>
+  );
+}
+```
+
+## Component lifecycles
+
+Components in Solid have a lifecycle that includes mounting, updating, and unmounting phases.
+
+1. **Mounting**: When the component is being created and inserted into the DOM. 
+It occurs once in the component's lifecycle.
+2. **Updating**: The component's state or props change, causing it to re-render. Solid optimizes updates to ensure minimal re-rendering.
+3. **Unmounting**: The component is removed from the DOM. 
+Cleanup tasks, such as cancelling network requests or removing event listeners, should be performed here.
+
+There are certain lifecycle helpers available in Solid to manage these phases more easily, such as `onMount`, `onCleanup`, and `createEffect`.
+
+```tsx
+import { onMount, onCleanup } from "solid-js";
+
+function Timer() {
+  let interval;
+
+  onMount(() => {
+    interval = setInterval(() => console.log("tick"), 1000);
+  });
+
+  onCleanup(() => clearInterval(interval));
+
+  return <p>Timer running...</p>;
+}
+```

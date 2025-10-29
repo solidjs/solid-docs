@@ -2,6 +2,7 @@ import {
 	For,
 	Match,
 	type ParentProps,
+	Show,
 	Switch,
 	children,
 	createMemo,
@@ -10,17 +11,15 @@ import {
 import { isServer } from "solid-js/web";
 
 import { A } from "~/ui/i18n-anchor";
-import { clientOnly } from "@solidjs/start";
 import { Callout } from "~/ui/callout";
-import { Tabs, TabList, TabPanel, Tab } from "~/ui/tabs";
+import { Tabs, TabList, TabPanel, Tab, TSJSToggle } from "~/ui/tabs";
+import { usePreferredLanguage } from "@kobalte/solidbase/client";
 
 export { EditPageLink } from "~/ui/edit-page-link";
 export { PageIssueLink } from "~/ui/page-issue-link";
 export { Callout } from "~/ui/callout";
 export { QuickLinks } from "~/ui/quick-links";
 export { ImageLinks } from "~/ui/image-links";
-
-const EraserLinkImpl = clientOnly(() => import("../ui/eraser-link"));
 
 type CalloutType = "note" | "tip" | "advanced" | "caution" | "danger";
 
@@ -30,10 +29,12 @@ export const DirectiveContainer = (
 		title?: string;
 		codeGroup?: string;
 		tabNames?: string;
+		withTsJsToggle?: string;
 	} & ParentProps
 ) => {
 	const _children = children(() => props.children).toArray();
 	const tabNames = createMemo(() => props.tabNames?.split("\0") ?? []);
+	const [preferredLanguage] = usePreferredLanguage();
 
 	return (
 		<Switch
@@ -50,8 +51,27 @@ export const DirectiveContainer = (
 				<Tabs>
 					<TabList>
 						<For each={tabNames()}>
-							{(title) => <Tab value={title}>{title}</Tab>}
+							{(title) => {
+								const jsTitle = title.replace(/\.tsx?$/, (ext) => {
+									if (ext === ".tsx") {
+										return ".jsx";
+									}
+									if (ext === ".ts") {
+										return ".js";
+									}
+									return ext;
+								});
+
+								return (
+									<Tab value={title}>
+										{preferredLanguage() === "ts" ? title : jsTitle}
+									</Tab>
+								);
+							}}
 						</For>
+						<Show when={props.withTsJsToggle}>
+							<TSJSToggle />
+						</Show>
 					</TabList>
 					<For each={tabNames()}>
 						{(title, idx) => (
@@ -69,49 +89,21 @@ export const DirectiveContainer = (
 export const strong = (props: ParentProps) => (
 	<b class="font-semibold">{props.children}</b>
 );
-export const EraserLink = (
-	props: ParentProps<{ href: string; preview: string }>
-) => {
-	const [, rest] = splitProps(props, ["children"]);
-
-	if (!isServer) {
-		return <EraserLinkImpl {...rest} />;
-	} else {
-		return (
-			<a
-				aria-hidden={true}
-				tabIndex="-1"
-				href={props.href}
-				class="font-semibold text-blue-700 no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,theme(colors.blue.400))] hover:[--tw-prose-underline-size:4px] dark:text-blue-400 dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.blue.800))] dark:[--tw-prose-background:theme(colors.slate.900)] dark:hover:[--tw-prose-underline-size:6px]"
-				rel="noopener noreferrer"
-			>
-				View on Eraser
-				<img src={props.preview} />
-			</a>
-		);
-	}
-};
 export const ssr = (props: ParentProps) => <>{props.children}</>;
 export const spa = () => <></>;
 export const h1 = (props: ParentProps) => (
-	<h1
-		{...props}
-		class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
-	>
+	<h1 {...props} class="prose-headings:font-normal">
 		{props.children}
 	</h1>
 );
 export const h2 = (props: ParentProps) => {
 	return (
-		<>
-			<hr class="my-8 border-slate-400 dark:prose-hr:border-slate-800" />
-			<h2
-				{...props}
-				class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
-			>
-				{props.children}
-			</h2>
-		</>
+		<h2
+			{...props}
+			class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+		>
+			{props.children}
+		</h2>
 	);
 };
 export const h3 = (props: ParentProps) => {
@@ -258,3 +250,11 @@ export const response = (props: ParentProps) => {
 export const unknown = (props: ParentProps) => {
 	return <span>{props.children}</span>;
 };
+
+export function Steps(props: ParentProps) {
+	return <div class="steps">{props.children}</div>;
+}
+
+export function Step(props: ParentProps) {
+	return <div class="step">{props.children}</div>;
+}

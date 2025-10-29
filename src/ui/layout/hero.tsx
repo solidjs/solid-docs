@@ -30,7 +30,7 @@ export const Hero: Component = () => {
 		if (isMeta()) {
 			return "solid-meta/getting-started/installation-and-setup";
 		}
-		return "/quick-start";
+		return "/getting-started/quick-start";
 	});
 
 	const i18n = useI18n();

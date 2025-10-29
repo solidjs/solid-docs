@@ -1,0 +1,241 @@
+---
+title: Installation
+order: 1
+---
+
+Solid can be installed and configured manually in any JavaScript project using a package manager and build tool.
+This approach provides full control over your project setup and configuration.
+
+To see how to get started quickly, check out the [Quick Start Guide](/getting-started/quick-start).
+
+## Manual Setup Guide
+
+### 1. Create Project Directory
+
+Create a new directory for your project and navigate into it:
+
+```sh
+mkdir solid-project
+cd solid-project
+```
+
+### 2. Initialize Package Configuration
+
+Create a `package.json` file to manage dependencies and scripts:
+
+```sh title="npm" tab="package-manager"
+npm init -y
+```
+
+```sh title="pnpm" tab="package-manager"
+pnpm init
+```
+
+```sh title="yarn" tab="package-manager"
+yarn init -y
+```
+
+```sh title="bun" tab="package-manager"
+bun init
+```
+
+### 3. Install Solid and Build Tools
+
+Install Solid as a dependency:
+
+```package-install
+solid-js
+```
+
+In addition to Solid, you'll need a build tool.
+Vite is the recommended build tool for Solid projects due to its speed and ease of use. Install Vite and the Solid plugin:
+
+```package-install-dev
+vite vite-plugin-solid
+```
+
+### 4. Configure Vite
+
+To configure Vite for Solid, create a `vite.config.js` file in your project root:
+
+```js
+import { defineConfig } from 'vite';
+import solid from 'vite-plugin-solid';
+
+export default defineConfig({
+  plugins: [solid()],
+  server: {
+    port: 3000,
+  },
+  build: {
+    target: 'esnext',
+  },
+});
+```
+
+### 5. Create HTML Template
+
+Create an `index.html` file in your project root:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <title>Solid App</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script src="/src/index.jsx" type="module"></script>
+  </body>
+</html>
+```
+
+### 6. Create Source Directory and Files
+
+Create the source directory and core application files:
+
+```sh
+mkdir src
+```
+
+Once the `src` directory is created, you can create the following files:
+- `src/index.jsx` - Application entry point
+- `src/App.jsx` - Root component
+- `src/index.css` - Global styles
+
+```jsx tab title="src/index.jsx"
+/* @refresh reload */
+import { render } from 'solid-js/web';
+import App from './App';
+import './index.css';
+
+const root = document.getElementById('root');
+
+render(() => <App />, root);
+```
+
+```jsx tab title="src/App.jsx"
+import { createSignal } from 'solid-js';
+
+function App() {
+  const [count, setCount] = createSignal(0);
+
+  return (
+    <div class="app">
+        <h1 class="app-header">Welcome to Solid</h1>
+    </div>
+  );
+}
+
+export default App;
+```
+
+```css tab title="src/index.css"
+body {
+  margin: 0;
+  background-color: #f0f0f0;
+}
+
+.app {
+  text-align: center;
+}
+
+.app-header {
+  color: red;
+}
+```
+
+### 7. Add Build Scripts
+
+Update your `package.json` to include the following scripts:
+- `dev` - Start the development server
+- `build` - Build the project for production
+- `start` - Start the production server
+-  `serve` - Preview the production build
+
+```json
+{
+  //... 
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "vite",
+    "serve": "vite preview"
+  }
+  // ...
+}
+```
+
+### 8. Start Development Server
+
+```package-run
+dev
+```
+
+### 9. Open in Browser
+
+The development server will start on `http://localhost:3000`. Open this URL in your browser and begin developing your Solid application!
+
+## TypeScript Setup
+
+To add TypeScript support to your project:
+
+### 1. Install TypeScript Dependencies
+
+```package-install-dev
+typescript
+```
+
+### 2. Create TypeScript Configuration
+
+Create a `tsconfig.json` file in your project root to configure TypeScript:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
+```
+
+### 3. Rename Files to TypeScript
+
+Rename your source files:
+- `src/index.jsx` → `src/index.tsx`
+- `src/App.jsx` → `src/App.tsx`
+
+In addition to updating the file extensions, ensure that your import statements reflect the new file types in the `index.html` file:
+
+```html title="index.html"
+<script src="/src/index.tsx" type="module"></script>
+```
+
+## Next Steps
+
+With your development environment ready:
+
+1. **Explore the generated code** in `src/App.jsx` or `src/App.tsx`
+2. **Modify components** and observe hot reloading in action
+3. **Review the [Basic Concepts](/reactivity/basics)** to understand Solid's reactivity system
+4. Learn to **build your first component** with the [Basics of Components](/components/basics) guide

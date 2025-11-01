@@ -7,38 +7,134 @@ tags:
   - json
   - api
   - actions
-  - cache
+  - queries
   - revalidation
   - response
-version: '1.0'
+version: "1.0"
 description: >-
-  Return JSON data from actions with cache revalidation control. Configure how
+  Return JSON data from actions with query revalidation control. Configure how
   route data updates after mutations for optimal performance.
 ---
 
-Returns JSON data from an action while also providing options for controlling revalidation of cache data on the route.
+The `json` function returns a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object that contains the provided data.
+It is intended for sending JSON data from a [query](/solid-router/reference/data-apis/query) or [action](/solid-router/concepts/actions) while also allowing configuration of query revalidation.
 
-```ts title="/actions/get-completed-todos.ts" {7}
-import { action, json } from "@solidjs/router";
-import { fetchTodo } from "../fetchers";
+This works both in client and server (e.g., using a server function) environments.
 
-const getCompletedTodos = action(async () => {
-  const completedTodos = await fetchTodo({ status: 'complete' });
+## Import
 
-  return json(completedTodos, { revalidate: getTodo.keyFor(id) });
-});
+```ts
+import { json } from "@solidjs/router";
 ```
 
-Also read [action](/solid-router/reference/data-apis/action) and [revalidate](/solid-router/reference/response-helpers/revalidate).
+## Type
 
-## Type Signature
+```ts
+function json<T>(
+	data: T,
+	init: {
+		revalidate?: string | string[];
+		headers?: HeadersInit;
+		status?: number;
+		statusText?: string;
+	} = {}
+): CustomResponse<T>;
+```
 
-```typescript
-interface ResponseOptions & Omit<ResponseInit, "body"> {
-  revalidate?: string | string[];
+## Parameters
+
+### `data`
+
+- **Type:** `T`
+- **Required:** Yes
+
+The data to be serialized as JSON in the response body.
+It must be a value that can be serialized with [`JSON.stringify`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify).
+
+### `init`
+
+- **Type:** `{ revalidate?: string | string[]; headers?: HeadersInit; status?: number; statusText?: string; }`
+- **Required:** No
+
+An optional configuration object with the following properties:
+
+#### `revalidate`
+
+- **Type:** `string | string[]`
+- **Required:** No
+
+A query key or an array of query keys to revalidate.
+Passing an empty array (`[]`) disables query revalidation entirely.
+
+#### `headers`
+
+- **Type:** `HeadersInit`
+- **Required:** No
+
+An object containing any headers to be sent with the response.
+
+#### `status`
+
+- **Type:** `number`
+- **Required:** No
+
+The HTTP status code of the response.
+Defaults to [`200 OK`](http://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/200).
+
+#### `statusText`
+
+- **Type:** `string`
+- **Required:** No
+
+The status text associated with the status code.
+
+## Examples
+
+### Invalidating Data After a Mutation
+
+```tsx
+import { For } from "solid-js";
+import { query, action, json, createAsync } from "@solidjs/router";
+
+const getCurrentUserQuery = query(async () => {
+	return await fetch("/api/me").then((response) => response.json());
+}, "currentUser");
+
+const getPostsQuery = query(async () => {
+	return await fetch("/api/posts").then((response) => response.json());
+}, "posts");
+
+const createPostAction = action(async (formData: FormData) => {
+	const title = formData.get("title")?.toString();
+	const newPost = await fetch("/api/posts", {
+		method: "POST",
+		body: JSON.stringify({ title }),
+	}).then((response) => response.json());
+
+	// Only revalidate the "posts" query.
+	return json(newPost, { revalidate: "posts" });
+}, "createPost");
+
+function Posts() {
+	const currentUser = createAsync(() => getCurrentUserQuery());
+	const posts = createAsync(() => getPostsQuery());
+
+	return (
+		<div>
+			<p>Welcome back {currentUser()?.name}</p>
+			<ul>
+				<For each={posts()}>{(post) => <li>{post.title}</li>}</For>
+			</ul>
+			<form action={createPostAction} method="post">
+				<input name="title" />
+				<button>Create Post</button>
+			</form>
+		</div>
+	);
 }
+```
 
-json<T>(data: T, opt?: ResponseOptions): CustomResponse<T>;
-``` 
+## Related
 
-The `ResponseOptions` extens the types from the native [`ResponseInit`](https://developer.mozilla.org/en-US/docs/Web/API/Response/Response#options) interface.
+- [`query`](/solid-router/reference/data-apis/query)
+- [`action`](/solid-router/reference/data-apis/action)

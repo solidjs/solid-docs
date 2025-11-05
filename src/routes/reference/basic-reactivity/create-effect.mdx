@@ -17,19 +17,21 @@ description: >-
 ---
 
 The `createEffect` primitive creates a reactive computation.
-It automatically tracks reactive values, such as signals, that are accessed within the provided function.
-This function re-runs whenever any of its dependencies change.
+It automatically tracks reactive values, such as [signals](/concepts/signals), that are accessed within the provided function.
+This function will re-run whenever any of its dependencies change.
 
 ## Execution Timing
 
-- The initial run of an effect is scheduled to run **after the current rendering phase completes**.
-  - This means it runs after all synchronous code in a component has been executed and the DOM elements have been created, but **before the browser paints them to the screen**.
-  - As a result, [refs](/concepts/refs) **are set** before the effect runs for the first time, even though the DOM nodes may **not be attached to the main document tree**.
-    This is particularly relevant when using [`children`](/reference/component-apis/children).
-- If multiple dependencies are updated within the same batch, the effect only runs once.
-- Effects always run **after** any pure computations (like [memos](/concepts/derived-values/memos)) in the same update cycle.
+- The initial execution of an effect is scheduled to occur **after the current rendering phase completes**.
+  This means it runs after all synchronous code in a component has executed and the DOM elements have been created, but **before the browser renders them on the screen**.
+
+  As a result, [refs](/concepts/refs) **are set** before the effect runs for the first time, even though the DOM nodes may **not be attached to the main document tree**.
+  This is particularly relevant when using the [`children`](/reference/component-apis/children) function.
+
 - The order in which effects run is **not guaranteed**.
-- Effects are **not run** during Server-Side Rendering (SSR) or the initial client hydration.
+- When multiple dependencies are updated within the same batch, the effect will only run once.
+- Effects always run **after** any pure computations (such as [memos](/concepts/derived-values/memos)) within the same update cycle.
+- Effects **are not executed** during Server-Side Rendering (SSR) or during the initial client hydration.
 
 ## Import
 
@@ -62,16 +64,16 @@ function createEffect<Next, Init>(
 - **Type:** `EffectFunction<undefined | NoInfer<Next> | EffectFunction<Init | Next, Next>`
 - **Required:** Yes
 
-The function to run.
-It receives the value returned from the previous run, or the initial `value` on the first run.
-The value it returns is passed to the next run.
+The function to execute as the effect.
+It receives the value returned from the previous execution, or the initial `value` during its first run.
+The value returned by this function will be passed to the next execution.
 
 ### `value`
 
 - **Type:** `Init`
 - **Required:** No
 
-The initial value passed to `fn` on its first run.
+The initial value that is passed to `fn` during its first execution.
 
 ### `options`
 
@@ -85,7 +87,7 @@ An optional configuration object with the following properties:
 - **Type:** `string`
 - **Required:** No
 
-A name for the effect, used for identification in debugging tools like [Solid Debugger](https://github.com/thetarnav/solid-devtools).
+A name for the effect, which can be useful for identification in debugging tools like the [Solid Debugger](https://github.com/thetarnav/solid-devtools).
 
 ## Return value
 

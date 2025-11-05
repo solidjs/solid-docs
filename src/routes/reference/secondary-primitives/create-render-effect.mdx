@@ -10,27 +10,27 @@ tags:
   - immediate
   - refs
   - lifecycle
-version: '1.0'
+version: "1.0"
 description: >-
   Execute effects immediately during rendering with createRenderEffect. Run side
   effects as DOM creates, before refs are set or connected.
 ---
 
-The `createRenderEffect` primitive creates a reactive computation.
-It automatically tracks reactive values, such as signals, that are accessed within the provided function.
+The `createRenderEffect` primitive creates a reactive computation that automatically tracks reactive values, such as signals, accessed within the provided function.
 This function re-runs whenever any of its dependencies change.
 
-Unlike [`createEffect`](/reference/basic-reactivity/create-effect), which runs after the rendering phase is complete, `createRenderEffect` runs immediately as the component is being rendered.
+In contrast to [`createEffect`](/reference/basic-reactivity/create-effect), which executes after the rendering phase is complete, `createRenderEffect` runs immediately during the component's rendering phase.
 
 ## Execution Timing
 
-- The initial run of a render effect happens during the current rendering phase.
-- It runs as DOM elements are being created and updated, but before they are mounted.
-  As a result, refs are _not_ set before a render effect runs for the first time.
-- If multiple dependencies are updated within the same batch, the render effect only runs once.
-- Effects always run after any pure computations (like [memos](/concepts/derived-values/memos)) in the same update cycle.
-- The order in which render effects run is not guaranteed.
-- Render effects are not run during Server-Side Rendering (SSR).
+- The initial execution of a render effect occurs **during the current rendering phase**.
+  It runs while DOM elements are being created and updated, but **before they are mounted**.
+
+  As a result, refs are **not set** before the render effect runs for the first time.
+
+- After the initial run, the order in which render effects run is **not guaranteed**.
+- If multiple dependencies are updated within the same batch, the render effect runs only once.
+- Render effects always run **after** any pure computations (such as [memos](/concepts/derived-values/memos)) within the same update cycle.
 
 ## Import
 
@@ -63,16 +63,16 @@ function createRenderEffect<Next, Init>(
 - **Type:** `EffectFunction<undefined | NoInfer<Next> | EffectFunction<Init | Next, Next>`
 - **Required:** Yes
 
-The function to run.
-It receives the value returned from the previous run, or the initial `value` on the first run.
-The value it returns is passed to the next run.
+The function to execute as the render effect.
+It receives the value returned from the previous execution, or the initial `value` during its the first run.
+The value returned by this function will be passed to the next execution.
 
 ### `value`
 
 - **Type:** `Init`
 - **Required:** No
 
-The initial value passed to `fn` on its first run.
+The initial value that is passed to `fn` during its first execution.
 
 ### `options`
 
@@ -86,7 +86,7 @@ An optional configuration object with the following properties:
 - **Type:** `string`
 - **Required:** No
 
-A name for the render effect, used for identification in debugging tools like [Solid Debugger](https://github.com/thetarnav/solid-devtools).
+A name for the render effect, which can be useful for identification in debugging tools like the [Solid Debugger](https://github.com/thetarnav/solid-devtools).
 
 ## Return value
 

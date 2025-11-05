@@ -17,19 +17,20 @@ description: >-
 ---
 
 The `createEffect` primitive creates a reactive computation.
-It automatically tracks reactive values, such as [signals](/concepts/signals), that are accessed within the provided function.
+It automatically tracks reactive values, such as [signals](/concepts/signals), accessed within the provided function.
 This function will re-run whenever any of its dependencies change.
 
 ## Execution Timing
 
-- The initial execution of an effect is scheduled to occur **after the current rendering phase completes**.
-  This means it runs after all synchronous code in a component has executed and the DOM elements have been created, but **before the browser renders them on the screen**.
+- The initial execution of effects is scheduled to occur **after the current rendering phase completes**.
+  It runs after all synchronous code in a component has executed and the DOM elements have been created, but **before the browser renders them on the screen**.
 
   As a result, [refs](/concepts/refs) **are set** before the effect runs for the first time, even though the DOM nodes may **not be attached to the main document tree**.
   This is particularly relevant when using the [`children`](/reference/component-apis/children) function.
 
+- After the initial execution, effects will re-run whenever any of their dependencies change.
+  When multiple dependencies are updated within the same batch, the effect will only run once.
 - The order in which effects run is **not guaranteed**.
-- When multiple dependencies are updated within the same batch, the effect will only run once.
 - Effects always run **after** any pure computations (such as [memos](/concepts/derived-values/memos)) within the same update cycle.
 - Effects **are not executed** during Server-Side Rendering (SSR) or during the initial client hydration.
 
@@ -103,7 +104,7 @@ import { createSignal, createEffect } from "solid-js";
 function Counter() {
 	const [count, setCount] = createSignal(0);
 
-	// Every time count changes this effect re-runs.
+	// Every time count changes, this effect re-runs.
 	createEffect(() => {
 		console.log("Count incremented! New value: ", count());
 	});

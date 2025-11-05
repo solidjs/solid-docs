@@ -16,20 +16,22 @@ description: >-
   effects as DOM creates, before refs are set or connected.
 ---
 
-The `createRenderEffect` primitive creates a reactive computation that automatically tracks reactive values, such as signals, accessed within the provided function.
+The `createRenderEffect` primitive creates a reactive computation that automatically tracks reactive values, such as [signals](/concepts/signals), accessed within the provided function.
 This function re-runs whenever any of its dependencies change.
-
-In contrast to [`createEffect`](/reference/basic-reactivity/create-effect), which executes after the rendering phase is complete, `createRenderEffect` runs immediately during the component's rendering phase.
 
 ## Execution Timing
 
-- The initial execution of a render effect occurs **during the current rendering phase**.
-  It runs while DOM elements are being created and updated, but **before they are mounted**.
+- The initial execution of render effects occurs **during the current rendering phase**.
+  It runs synchronously while DOM elements are being created and updated, but **before they are mounted**.
 
   As a result, refs are **not set** before the render effect runs for the first time.
 
-- After the initial run, the order in which render effects run is **not guaranteed**.
-- When multiple dependencies are updated within the same batch, the render effect will only run once.
+- After the initial execution, render effects will re-run whenever any of their dependencies change.
+
+  The order in which render effects re-run is **not guaranteed**.
+
+  When multiple dependencies are updated within the same batch, the render effect will only run once.
+
 - Render effects always run **after** any pure computations (such as [memos](/concepts/derived-values/memos)) within the same update cycle.
 
 ## Import

@@ -21,18 +21,25 @@ This function re-runs whenever any of its dependencies change.
 
 ## Execution Timing
 
-- The initial execution of render effects occurs **during the current rendering phase**.
-  It runs synchronously while DOM elements are being created and updated, but **before they are mounted**.
+### Initial Run
 
-  As a result, refs are **not set** before the render effect runs for the first time.
+- A render effect runs **synchronously during the current rendering phase**, while DOM elements are being created or updated.
+- It **runs before elements are mounted** to the DOM.
+- **[Refs](/concepts/refs) are not set** during this initial run.
 
-- After the initial execution, render effects will re-run whenever any of their dependencies change.
+### Subsequent Runs
 
-  Render effects always re-run **after** any pure computations (such as [memos](/concepts/derived-values/memos)) are executed within the same update cycle.
+- After the initial render, the render effect **re-runs whenever any of its tracked dependencies change**.
+- Re-runs occur **after** all pure computations (such as [memos](/concepts/derived-values/memos)) have completed within the same update cycle.
+- When multiple dependencies change within the same batch, the render effect **runs once per batch**.
+- The **order of re-runs** among multiple render effects is **not guaranteed**.
 
-  When multiple dependencies are updated within the same batch, the render effect will only run once.
+### Server-Side Rendering
 
-  The order in which render effects re-run is **not guaranteed**.
+- During SSR, render effects **run once on the server**, since they are part of the synchronous rendering phase.
+- On the client, an initial run still occurs during the client rendering phase to initialize the reactive system;
+  that client initial run is separate from the server run.
+- After hydration, subsequent runs occur on the client when dependencies change.
 
 ## Import
 
@@ -65,16 +72,17 @@ function createRenderEffect<Next, Init>(
 - **Type:** `EffectFunction<undefined | NoInfer<Next> | EffectFunction<Init | Next, Next>`
 - **Required:** Yes
 
-The function to execute as the render effect.
-It receives the value returned from the previous execution, or the initial `value` during its the first run.
-The value returned by this function will be passed to the next execution.
+A function to be executed as the render effect.
+
+It receives the value returned from the previous run, or the initial `value` during the first run.
+The value returned by `fn` is passed to the next run.
 
 ### `value`
 
 - **Type:** `Init`
 - **Required:** No
 
-The initial value that is passed to `fn` during its first execution.
+The initial value passed to `fn` during its first run.
 
 ### `options`
 

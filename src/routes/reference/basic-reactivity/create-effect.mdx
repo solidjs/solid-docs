@@ -22,19 +22,24 @@ This function will re-run whenever any of its dependencies change.
 
 ## Execution Timing
 
-- The initial execution of effects is scheduled to occur **after the current rendering phase completes**.
-  It runs after all synchronous code in a component has executed and the DOM elements have been created, but **before the browser renders them on the screen**.
+### Initial Run
 
-  As a result, [refs](/concepts/refs) **are set** before the effect runs for the first time, even though the DOM nodes may **not be attached to the main document tree**.
-  This is particularly relevant when using the [`children`](/reference/component-apis/children) function.
+- The initial run of effects is **scheduled to occur after the current rendering phase completes**.
+- It runs after all synchronous code in a component has finished and DOM elements have been created, but **before the browser paints them on the screen**.
+- **[Refs](/concepts/refs) are set** before the first run, even though DOM nodes may not yet be attached to the main document tree.
+  This is relevant when using the [`children`](/reference/component-apis/children) helper.
 
-- After the initial execution, effects will re-run whenever any of their dependencies change.
+### Subsequent Runs
 
-  When multiple dependencies are updated within the same batch, the effect will only run once.
+- After the initial run, the effect **re-runs whenever any tracked dependency changes**.
+- When multiple dependencies change within the same batch, the effect **runs once per batch**.
+- The **order of runs** among multiple effects is **not guaranteed**.
+- Effects always run **after** all pure computations (such as [memos](/concepts/derived-values/memos)) within the same update cycle.
 
-- The order in which effects run is **not guaranteed**.
-- Effects always run **after** any pure computations (such as [memos](/concepts/derived-values/memos)) within the same update cycle.
-- Effects **are not executed** during Server-Side Rendering (SSR) or during the initial client hydration.
+### Server-Side Rendering
+
+- Effects **never run during SSR**.
+- Effects also **do not run during the initial client hydration**.
 
 ## Import
 
@@ -67,16 +72,17 @@ function createEffect<Next, Init>(
 - **Type:** `EffectFunction<undefined | NoInfer<Next> | EffectFunction<Init | Next, Next>`
 - **Required:** Yes
 
-The function to execute as the effect.
-It receives the value returned from the previous execution, or the initial `value` during its first run.
-The value returned by this function will be passed to the next execution.
+A function to be executed as the effect.
+
+It receives the value returned from the previous run, or the initial `value` during the first run.
+The value returned by `fn` is passed to the next run.
 
 ### `value`
 
 - **Type:** `Init`
 - **Required:** No
 
-The initial value that is passed to `fn` during its first execution.
+The initial value passed to `fn` during its first run.
 
 ### `options`
 

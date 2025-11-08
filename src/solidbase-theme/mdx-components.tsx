@@ -234,7 +234,7 @@ export const pre = (props: ParentProps) => {
 export const code = (props: ParentProps) => {
 	return (
 		<code
-			class="not-prose inline-block rounded-lg bg-blue-200 px-1 py-0.5 !font-mono text-[0.8em] font-semibold leading-snug text-slate-900 dark:bg-slate-600/60 dark:text-white"
+			class="not-prose inline-flex rounded-lg bg-blue-200 px-1 py-0.5 !font-mono text-[0.8em] font-semibold leading-snug text-slate-900 dark:bg-slate-600/60 dark:text-white"
 			{...props}
 		>
 			{props.children}

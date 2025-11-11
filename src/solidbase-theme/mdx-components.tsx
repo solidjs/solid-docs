@@ -184,11 +184,7 @@ export const a = (props: ParentProps & { href: string }) => {
 		);
 	}
 };
-export const p = (props: ParentProps) => (
-	<p {...props} class="my-4">
-		{props.children}
-	</p>
-);
+export const p = (props: ParentProps) => <p {...props}>{props.children}</p>;
 export const li = (props: ParentProps) => (
 	<li {...props} class="mb-2 marker:text-slate-600 dark:marker:text-slate-300">
 		{props.children}

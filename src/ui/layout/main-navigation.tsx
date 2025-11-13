@@ -86,7 +86,7 @@ function DirList(props: { list: Entry[]; sortAlphabeticaly?: boolean }) {
 							</span>
 							<ul
 								role="list"
-								class="ml-2 mt-2 space-y-3 border-l-[1px] border-slate-400 lg:border-slate-400 dark:border-slate-700"
+								class="ml-2 mt-2 space-y-2 border-l-[1px] border-slate-400 lg:border-slate-400 dark:border-slate-700"
 							>
 								<For each={itemChildren}>
 									{(child) => {
@@ -113,7 +113,7 @@ function DirList(props: { list: Entry[]; sortAlphabeticaly?: boolean }) {
 														<Collapsible.Content class="navigation_collapsible">
 															<ul
 																role="list"
-																class="ml-4 mt-3 space-y-3 border-l-[1px] border-slate-400 dark:border-slate-700 dark:lg:border-slate-700"
+																class="ml-4 mt-3 space-y-2 border-l-[1px] border-slate-400 dark:border-slate-700 dark:lg:border-slate-700"
 															>
 																<DirList
 																	sortAlphabeticaly={props.sortAlphabeticaly}
@@ -200,7 +200,7 @@ export function MainNavigation(props: NavProps) {
 									<p class="text-white">{i18n.t("main.nav.no.routes")}</p>
 								}
 							>
-								<ul role="list" class="space-y-3 px-4">
+								<ul role="list" class="space-y-2 px-4">
 									<DirList list={learn()} />
 								</ul>
 							</Show>
@@ -210,7 +210,7 @@ export function MainNavigation(props: NavProps) {
 								when={reference()}
 								fallback={<p>{i18n.t("main.nav.no.routes")}</p>}
 							>
-								<ul role="list" class="space-y-3 px-4">
+								<ul role="list" class="space-y-2 px-4">
 									<DirList sortAlphabeticaly list={reference()} />
 								</ul>
 							</Show>

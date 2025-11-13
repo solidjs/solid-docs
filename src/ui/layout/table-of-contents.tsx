@@ -64,11 +64,11 @@ export const TableOfContents = () => {
 						<a
 							href="#_top"
 							classList={{
-								"dark:text-slate-300": currentSection() !== undefined,
-								"text-blue-800 dark:text-blue-300 font-bold hover:text-slate-700 dark:hover:text-slate-200":
+								"dark:text-slate-400": currentSection() !== undefined,
+								"text-blue-800 dark:text-blue-300 hover:text-slate-700 dark:hover:text-slate-200 underline-offset-2":
 									currentSection() === undefined,
 							}}
-							class="no-underline hover:text-slate-800"
+							class="no-underline underline-offset-2 hover:text-slate-700 hover:underline dark:hover:text-blue-300"
 						>
 							{i18n.t("toc.overview")}
 						</a>
@@ -81,11 +81,11 @@ export const TableOfContents = () => {
 								<a
 									href={section().href}
 									classList={{
-										"dark:text-slate-300": currentSection() !== section().href,
-										"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-bold":
+										"dark:text-slate-400": currentSection() !== section().href,
+										"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 ":
 											currentSection() === section().href,
 									}}
-									class="no-underline hover:text-slate-700 dark:hover:text-blue-300"
+									class="no-underline underline-offset-2 hover:text-slate-700 hover:underline dark:hover:text-blue-300"
 								>
 									{section().title}
 								</a>
@@ -93,7 +93,7 @@ export const TableOfContents = () => {
 							<Show when={section().children.length !== 0}>
 								<ol
 									role="list"
-									class="list-none space-y-2 pl-2.5 font-bold text-slate-500 hover:text-slate-700 active:font-bold active:text-blue-600 dark:text-slate-300 dark:hover:text-blue-200"
+									class="list-none space-y-2 pl-2.5 text-slate-500 hover:text-slate-700 active:text-blue-600 dark:text-slate-300 dark:hover:text-blue-200"
 								>
 									<Index each={section().children}>
 										{(subSection) => (
@@ -103,10 +103,10 @@ export const TableOfContents = () => {
 													classList={{
 														"dark:text-slate-300":
 															currentSection() !== subSection().href,
-														"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-bold":
+														"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200":
 															currentSection() === subSection().href,
 													}}
-													class="no-underline hover:text-blue-700 dark:hover:text-blue-300"
+													class="no-underline underline-offset-2 hover:text-slate-700 hover:underline dark:hover:text-blue-300"
 												>
 													{subSection().title}
 												</a>

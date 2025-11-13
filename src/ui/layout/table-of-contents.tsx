@@ -36,7 +36,7 @@ export const TableOfContents = () => {
 		})
 	);
 
-	if (!isServer)
+	if (!isServer) {
 		createEventListener(window, "scroll", () => {
 			let current;
 
@@ -49,6 +49,7 @@ export const TableOfContents = () => {
 
 			setCurrentSection(current);
 		});
+	}
 
 	return (
 		<aside aria-label="table of contents" class="w-full pt-5">
@@ -65,7 +66,7 @@ export const TableOfContents = () => {
 							href="#_top"
 							classList={{
 								"dark:text-slate-400": currentSection() !== undefined,
-								"text-blue-800 dark:text-blue-300 hover:text-slate-700 dark:hover:text-slate-200 underline-offset-2":
+								"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 underline-offset-2":
 									currentSection() === undefined,
 							}}
 							class="no-underline underline-offset-2 hover:text-slate-700 hover:underline dark:hover:text-blue-300"
@@ -101,7 +102,7 @@ export const TableOfContents = () => {
 												<a
 													href={subSection().href}
 													classList={{
-														"dark:text-slate-300":
+														"dark:text-slate-400":
 															currentSection() !== subSection().href,
 														"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200":
 															currentSection() === subSection().href,

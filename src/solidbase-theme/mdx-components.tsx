@@ -11,6 +11,7 @@ import { isServer } from "solid-js/web";
 
 import { A } from "~/ui/i18n-anchor";
 import { clientOnly } from "@solidjs/start";
+
 import { Callout } from "~/ui/callout";
 import { Tabs, TabList, TabPanel, Tab } from "~/ui/tabs";
 
@@ -50,7 +51,9 @@ export const DirectiveContainer = (
 				<Tabs>
 					<TabList>
 						<For each={tabNames()}>
-							{(title) => <Tab value={title}>{title}</Tab>}
+							{(title) => {
+								return <Tab value={title}>{title}</Tab>;
+							}}
 						</For>
 					</TabList>
 					<For each={tabNames()}>
@@ -94,24 +97,18 @@ export const EraserLink = (
 export const ssr = (props: ParentProps) => <>{props.children}</>;
 export const spa = () => <></>;
 export const h1 = (props: ParentProps) => (
-	<h1
-		{...props}
-		class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
-	>
+	<h1 {...props} class="prose-headings:font-normal">
 		{props.children}
 	</h1>
 );
 export const h2 = (props: ParentProps) => {
 	return (
-		<>
-			<hr class="my-8 border-slate-400 dark:prose-hr:border-slate-800" />
-			<h2
-				{...props}
-				class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
-			>
-				{props.children}
-			</h2>
-		</>
+		<h2
+			{...props}
+			class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+		>
+			{props.children}
+		</h2>
 	);
 };
 export const h3 = (props: ParentProps) => {
@@ -192,11 +189,7 @@ export const a = (props: ParentProps & { href: string }) => {
 		);
 	}
 };
-export const p = (props: ParentProps) => (
-	<p {...props} class="my-4">
-		{props.children}
-	</p>
-);
+export const p = (props: ParentProps) => <p {...props}>{props.children}</p>;
 export const li = (props: ParentProps) => (
 	<li {...props} class="mb-2 marker:text-slate-600 dark:marker:text-slate-300">
 		{props.children}
@@ -234,7 +227,7 @@ export const pre = (props: ParentProps) => {
 export const code = (props: ParentProps) => {
 	return (
 		<code
-			class="not-prose inline-flex rounded-lg bg-blue-200 px-1 py-0.5 !font-mono text-[0.8em] font-semibold leading-snug text-slate-900 dark:bg-slate-600/60 dark:text-white"
+			class="not-prose inline-block rounded-lg bg-blue-200 px-1 py-0.5 !font-mono text-[0.8em] font-semibold leading-snug text-slate-900 dark:bg-slate-600/60 dark:text-white"
 			{...props}
 		>
 			{props.children}
@@ -258,3 +251,11 @@ export const response = (props: ParentProps) => {
 export const unknown = (props: ParentProps) => {
 	return <span>{props.children}</span>;
 };
+
+export function Steps(props: ParentProps) {
+	return <div class="steps">{props.children}</div>;
+}
+
+export function Step(props: ParentProps) {
+	return <div class="step">{props.children}</div>;
+}

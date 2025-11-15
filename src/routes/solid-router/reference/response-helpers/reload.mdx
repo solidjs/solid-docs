@@ -10,37 +10,80 @@ tags:
   - mutations
   - queries
   - refresh
-version: '1.0'
+version: "1.0"
 description: >-
   Reload and revalidate specific queries after mutations. Efficiently update
   cached data without full page refreshes for better UX.
 ---
 
-Reload is a response helper built on top of [revalidate](/solid-router/reference/response-helpers/revalidate).
-It will receive a query key, or an array of query keys, to invalidate those queries, and cause them to fire again.
+The `reload` function returns a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object that instructs the router to revalidate specific queries when returned or thrown from a [query](/solid-router/reference/data-apis/query) or [action](/solid-router/concepts/actions).
 
-```ts title="/actions/update-todo.ts" {7}
-import { action, reload } from "@solidjs/router";
-import { putTodo, getTodo } from "../db";
-
-const updateTodo = action(async (todo: Todo) => {
-	await putTodo(todo.id, todo);
-	
-  return reload({ revalidate: getTodo.keyFor(id) });
-});
-```
-
-The code snippet above uses the query key from a user-defined query (`getTodo`). 
-To better understand how queries work, check the [query](/solid-router/reference/data-apis/query) documentation.
-
-## TypeScript Signature
+## Import
 
 ```ts
-interface ResponseOptions & Omit<ResponseInit, "body"> {
-  revalidate?: string | string[];
-}
-
-reload(opt?: ResponseOptions): CustomResponse<never>;
+import { reload } from "@solidjs/router";
 ```
 
-The `ResponseOptions` extends the types from the native [`ResponseInit`](https://developer.mozilla.org/en-US/docs/Web/API/Response/Response#options) interface.
+## Type
+
+```ts
+function reload(init?: {
+	revalidate?: string | string[];
+	headers?: HeadersInit;
+	status?: number;
+	statusText?: string;
+}): CustomResponse<never>;
+```
+
+## Parameters
+
+### `init`
+
+- **Type:** `{ revalidate?: string | string[]; headers?: HeadersInit; status?: number; statusText?: string; }`
+- **Required:** No
+
+An optional configuration object with the following properties:
+
+#### `revalidate`
+
+- **Type:** `string | string[]`
+- **Required:** No
+
+A query key or an array of query keys to revalidate.
+
+#### `headers`
+
+- **Type:** `HeadersInit`
+- **Required:** No
+
+An object containing any headers to be sent with the response.
+
+#### `status`
+
+- **Type:** `number`
+- **Required:** No
+
+The HTTP status code of the response.
+Defaults to [`200 OK`](http://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/200).
+
+#### `statusText`
+
+- **Type:** `string`
+- **Required:** No
+
+The status text associated with the status code.
+
+## Examples
+
+### Basic Usage
+
+```ts
+import { action, reload } from "@solidjs/router";
+
+const savePreferencesAction = action(async () => {
+	// ... Saves the user preferences.
+
+	// Only revalidate the "userPreferences" query.
+	return reload({ revalidate: ["userPreferences"] });
+}, "savePreferences");
+```

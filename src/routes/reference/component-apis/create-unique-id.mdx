@@ -9,23 +9,57 @@ tags:
   - ssr
   - forms
   - utilities
-version: '1.0'
+version: "1.0"
 description: >-
   Generate unique IDs that are stable across server and client with
   createUniqueId. Essential for accessible forms and SSR-compatible components.
 ---
 
+The `createUniqueId` function generates a unique ID that remains consistent across both server and client renders.
+It is commonly used with HTML `id` and `for` attributes to ensure stable hydration.
+
+`createUniqueId` does *not* generate a cryptographically secure ID and is not suitable for security-sensitive data.
+Additionally, it should not be used in scenarios that require uniqueness across a distributed system.
+
+:::note
+`createUniqueId` relies on a counter-based mechanism to generate IDs.
+It must be called the same number of times on both the server and client.
+
+Calling `createUniqueId` only on the server or only on the client, such as when using [`isServer`](/reference/rendering/is-server) or [`<NoHydration>`](/reference/components/no-hydration), may lead to hydration errors.
+:::
+
+## Import
+
 ```ts
-import { createUniqueId } from "solid-js"
-
-function createUniqueId(): string
-
+import { createUniqueId } from "solid-js";
 ```
 
-A universal id generator that is stable across server/browser.
+## Type
 
 ```ts
-const id = createUniqueId()
+function createUniqueId(): string;
 ```
 
-**Note:** on the server this only works under hydratable components.
+## Parameters
+
+This function does not take any parameters.
+
+## Returns
+
+`createUniqueId` returns a unique `string` that is stable across server and client renders.
+
+## Examples
+
+### Basic Usage
+
+```tsx
+import { createUniqueId } from "solid-js";
+
+type InputProps = {
+	id?: string;
+};
+
+function Input(props: InputProps) {
+	return <input id={props.id ?? createUniqueId()} />;
+}
+```

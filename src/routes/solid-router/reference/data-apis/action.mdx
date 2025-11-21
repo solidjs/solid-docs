@@ -1,197 +1,155 @@
 ---
 title: action
+use_cases: >-
+  forms, user input, data mutations, optimistic updates, form submissions,
+  server actions, post requests
+tags:
+  - actions
+  - forms
+  - mutations
+  - post
+  - validation
+  - optimistic-updates
+  - server
+version: '1.0'
+description: >-
+  Learn how to handle form submissions and data mutations in SolidJS with
+  actions, including optimistic updates and server-side processing.
 ---
 
-Actions are data mutations that can trigger invalidations and further routing.
-A list of prebuilt response helpers can be found below.
+The `action` function wraps an asynchronous function and returns an [action](/solid-router/concepts/actions).
 
-```jsx
-import { action, revalidate, redirect } from "@solidjs/router"
+When an action is triggered, it creates a submission object that tracks its execution status.
+This state can be accessed with the [`useSubmission`](/solid-router/reference/data-apis/use-submission) and [`useSubmissions`](/solid-router/reference/data-apis/use-submissions) primitives.
 
-// anywhere
-const myAction = action(async (data) => {
-  await doMutation(data);
-  throw redirect("/", { revalidate: getUser.keyFor(data.id) }); // throw a response to do a redirect
+After an action completed successfully, all queries active in the same page are revalidated, unless revalidation is configured using [response helpers](/solid-router/concepts/actions#managing-navigation-and-revalidation).
+
+## Import
+
+```tsx
+import { action } from "@solidjs/router";
+```
+
+## Type
+
+```tsx
+function action<T extends Array<any>, U = void>(
+	fn: (...args: T) => Promise<U>,
+	name?: string
+): Action<T, U>;
+
+function action<T extends Array<any>, U = void>(
+	fn: (...args: T) => Promise<U>,
+	options?: { name?: string; onComplete?: (s: Submission<T, U>) => void }
+): Action<T, U>;
+
+function action<T extends Array<any>, U = void>(
+	fn: (...args: T) => Promise<U>,
+	options:
+		| string
+		| { name?: string; onComplete?: (s: Submission<T, U>) => void } = {}
+): Action<T, U>;
+```
+
+## Parameters
+
+### `handler`
+
+- **Type:** `(...args: T) => Promise<U>`
+- **Required:** Yes
+
+An asynchronous function that performs the action's logic.
+When the action is used with a [`<form>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/form), the function receives a [`FormData` object](https://developer.mozilla.org/en-US/docs/Web/API/FormData) as its first parameter.
+
+### `options`
+
+- **Type:** `string | { name?: string; onComplete?: (s: Submission<T, U>) => void }`
+- **Required**: No
+
+A unique string used to identify the action in Server-Side Rendering (SSR) environments.
+This is required when using the action with a `<form>` element.
+
+Alternatively, a configuration object can be passed with the following properties.
+
+#### `name`
+
+- **Type:** `string`
+- **Required:** No
+
+The unique string to identify the action in SSR environments.
+Required for `<form>` usage.
+
+#### `onComplete` (optional):
+
+- **Type:** `(s: Submission<T, U>) => void`
+- **Required:** No
+
+A function that runs after the action completes.
+It receives a submission object as its parameter.
+
+## Return value
+
+`action` returns an action with the following properties.
+
+### `with`
+
+A method that wraps the original action and returns a new one.
+When this new action is triggered, the arguments passed to `with` are forwarded to the original action.
+If this new action is used with a `<form>`, the `FormData` object is passed as the last parameter, after any other forwarded parameters.
+
+## Examples
+
+### Form submission
+
+```tsx
+import { action } from "@solidjs/router";
+
+const addTodoAction = action(async (formData: FormData) => {
+	// Adds a new todo to the server.
+}, "addTodo");
+
+function TodoForm() {
+	return (
+		<form action={addTodoAction} method="post">
+			<input name="name" />
+			<button>Add todo</button>
+		</form>
+	);
+}
+```
+
+### Passing additional arguments
+
+```tsx
+import { action } from "@solidjs/router";
+
+const addTodoAction = action(async (userId: number, formData: FormData) => {
+	// ... Adds a new todo for a specific user.
+}, "addTodo");
+
+function TodoForm() {
+	const userId = 1;
+	return (
+		<form action={addTodoAction.with(userId)} method="post">
+			<input name="name" />
+			<button>Add todo</button>
+		</form>
+	);
+}
+```
+
+### Triggering actions programmatically
+
+```tsx
+import { action, useAction } from "@solidjs/router";
+
+const markDoneAction = action(async (id: string) => {
+	// ... Marks a todo as done on the server.
 });
 
-// in component
-<form action={myAction} method="post" />
+function NotificationItem(props: { id: string }) {
+	const markDone = useAction(markDoneAction);
 
-//or
-<button type="submit" formaction={myAction}></button>
-
-```
-
-Actions only work with **post** requests.
-This means forms require `method="post"`.
-
-A `with` method can be used when typed data is required.
-This removes the need to use `FormData` or other additional hidden fields.
-The `with` method works similar to [`bind`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_objects/Function/bind), which applies the arguments in order.
-
-Without `with`:
-
-```jsx
-const deleteTodo = action(async (formData: FormData) => {
-  const id = Number(formData.get("id"))
-  await api.deleteTodo(id)
-})
-
-<form action={deleteTodo} method="post">
-  <input type="hidden" name="id" value={todo.id} />
-  <button type="submit">Delete</button>
-</form>
-
-```
-
-Using `with`:
-
-```jsx del={5,6} ins={7}
-const deleteTodo = action(async (id: number) => {
-  await api.deleteTodo(id)
-})
-
-<form action={deleteTodo} method="post">
-  <input type="hidden" name="id" value={todo.id} />
-<form action={deleteTodo.with(todo.id)} method="post">
-  <button type="submit">Delete</button>
-</form>
-
-```
-
-:::tip
-In [SolidStart](/solid-start) apps, it's recommended to use the [`"use server"`](/solid-start/reference/server/use-server) directive to leverage server-side caching.
-:::
-
-## Notes of `<form>` implementation and SSR
-
-This requires stable references because a string can only be serialized as an attribute, and it is crucial for consistency across SSR. where these references must align.
-The solution is to provide a unique name.
-
-```jsx
-const myAction = action(async (args) => {}, "my-action");
-```
-
-## `useAction`
-
-Instead of forms, actions can directly be wrapped in a `useAction` primitive.
-This is how router context is created.
-
-```jsx
-// in component
-const submit = useAction(myAction);
-submit(...args);
-
-```
-
-The outside of a form context can use custom data instead of `formData`.
-These helpers preserve types.
-
-However, even when used with server functions, such as with [SolidStart](https://start.solidjs.com/getting-started/what-is-solidstart), this requires client-side JavaScript and is not progressively enhanceable like forms are.
-
-## `useSubmission`/`useSubmissions`
-
-These functions are used when incorporating optimistic updates during ongoing actions.
-They provide either a singular Submission (the latest one), or a collection of Submissions that match, with an optional filtering function.
-
-```jsx
-type Submission<T, U> = {
-  input: T;
-  result: U;
-  error: any;
-  pending: boolean
-  clear: () => {}
-  retry: () => {}
+	return <button onClick={() => markDone(props.id)}>Mark as done</button>;
 }
-
-const submissions = useSubmissions(action, (input) => filter(input));
-const submission = useSubmission(action, (input) => filter(input));
-
-```
-
-##  Revalidate cached functions
-
-###  Revalidate all (default)
-By default all cached functions will be revalidated wether the action does not return or return a "normal" response.
-
-```jsx
-
-const deleteTodo = action(async (formData: FormData) => {
-  const id = Number(formData.get("id"))
-  await api.deleteTodo(id)
-  // ...
-  return new  Response("success",  {  status:  200  });
-})
-```
-
-### Revalidate specific cached keys
-
-By returning a response with solid-router's `json`, `reload` or `redirect` helpers you can pass a key / keys to the revalidate prop as the second argument of the json response helper.
-You can either pass as `string` directly or use the cached functions `key` or `keyFor` props.
-
-```jsx
-import { action, json, reload, redirect } from "@solidjs/router"
-
-const deleteTodo = action(async (formData: FormData) => {
-  const id = Number(formData.get("id"))
-  await api.deleteTodo(id)
-  return json(
-  { deleted: id },
-  { revalidate: ["getAllTodos", getTodos.key, getTodoByID.keyFor(id)]}
-  )
-
-  //or
-  return reload({ revalidate: ["getAllTodos", getTodos.key, getTodoByID.keyFor(id)]})
-
-  //or
-  return redirect("/", { revalidate: ["getAllTodos", getTodos.key, getTodoByID.keyFor(id)]})
-
-})
-
-```
-
-## Prevent revalidation
-To opt out of any revalidation you can pass any `string` to revalidate which is not a key of any cached function.
-
-```jsx
-const deleteTodo = action(async (formData: FormData) => {
-  const id = Number(formData.get("id"))
-  await api.deleteTodo(id)
-  // returns a `json` without revalidating the action.
-  return json(`deleted ${id}`,{ revalidate: "nothing" })
-
-  // or reload the route without revalidating the request.
-  return reload({ revalidate: "nothing" })
-
- // or redirect without revalidating
- return redirect("/", { revalidate: "nothing" })
-})
-
-```
-
-###  Revalidate without action
-
-Cached functions can also be revalidated by the  `revalidate` helper.
-
-```jsx
-revalidate([getTodos.key, getTodoByID.keyFor(id)])
-
-```
-
-This is also great if you want to set your own "refresh" interval e.g. poll data every 30 seconds.
-
-```jsx
-export default function TodoLayout(){
-	
-	const todos = createAsync(() => getTodos())
-	
-	onMount(() => {
-		//30 second polling
-		const interval = setInterval(() => revalidate(getTodos.key),1000 * 30)
-		onCleanup(() => clearInterval(interval))
-	})
-	
-	// ...
-}
-
 ```

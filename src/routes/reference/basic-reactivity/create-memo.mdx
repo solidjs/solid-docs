@@ -10,77 +10,206 @@ tags:
   - derived-state
   - caching
   - reactivity
-version: '1.0'
+version: "1.0"
 description: >-
   Use createMemo to efficiently compute and cache derived values. Prevent
   expensive recalculations and optimize your Solid.js application's performance.
 ---
 
-Memos let you efficiently use a derived value in many reactive computations. 
-`createMemo` creates a readonly reactive value equal to the return value of the given function and makes sure that function only gets executed when its dependencies change.
+The `createMemo` function creates a read-only signal that derives its value from other reactive values.
+The calculated value is memoized: the calculation runs only when dependencies change, and is reused when the value is read.
+When a dependency changes, the calculation re-executes.
+If the new result is equal to the previous result (according to the `equals` option), the memo suppresses downstream updates.
 
-```tsx
-import { createMemo } from "solid-js"
+## Import
 
+```ts
+import { createMemo } from "solid-js";
+```
+
+## Type
+
+```ts
 function createMemo<T>(
 	fn: (v: T) => T,
 	value?: T,
-	options?: { equals?: false | ((prev: T, next: T) => boolean) }
-): () => T
-
+	options?: { equals?: false | ((prev: T, next: T) => boolean); name?: string }
+): () => T;
 ```
 
-Here's an example of how createMemo can be used:
+## Parameters
 
-```ts
-const value = createMemo(() => computeExpensiveValue(a(), b()))
+### `fn`
 
-//read the value
-value()
-```
+- **Type:** `(v: T) => T`
+- **Required:** Yes
 
-In Solid, you often don't need to wrap functions in memos; you can alternatively just define and call a regular function to get similar reactive behavior. 
-The main difference is when you call the function in multiple reactive settings. 
-In this case, when the function's dependencies update, the function will get called multiple times unless it is wrapped in createMemo. 
-For example:
+The function that calculates the memo's value.
+
+It receives the value returned from the previous execution as its argument.
+On the first execution, it receives the `value` parameter (if provided) or `undefined`.
+
+This function should be pure (it should not modify other reactive values).
+
+### `value`
+
+- **Type:** `T`
+- **Required:** No
+
+The initial value passed to `fn` on its first execution.
+
+### `options`
+
+- **Type:** `{ equals?: false | ((prev: T, next: T) => boolean); name?: string }`
+- **Required:** No
+
+An optional configuration object with the following properties:
+
+#### `equals`
+
+- **Type:** `false | ((prev: T, next: T) => boolean)`
+- **Required:** No
+
+A function to determine if the memo value has changed.
+Defaults to the strict equality (`===`) operator.
+
+- If the function returns `true`, the memo does not trigger downstream updates.
+- If set to `false`, the memo triggers updates whenever it re-executes, even if the value appears unchanged.
+
+#### `name`
+
+- **Type:** `string`
+- **Required:** No
+
+A debug name for the memo.
+It is used for identification in debugging tools like the [Solid Debugger](https://github.com/thetarnav/solid-devtools).
+
+## Return value
+
+- **Type:** `() => T`
+
+`createMemo` returns a read-only accessor function.
+Calling this function returns the current memoized value.
+
+## Examples
+
+### Basic usage
 
 ```tsx
-const user = createMemo(() => searchForUser(username()))
-// compare with: const user = () => searchForUser(username());
-return (
-	<ul>
-		<li>Your name is {user()?.name}</li>
-		<li>
-			Your email is <code>{user()?.email}</code>
-		</li>
-	</ul>
-)
+import { createSignal, createMemo, For } from "solid-js";
+
+const NAMES = ["Alice Smith", "Bob Jones", "Charlie Day", "David Lee"];
+
+function FilterList() {
+	const [query, setQuery] = createSignal("");
+
+	// The function executes immediately to calculate the initial value.
+	// It re-executes only when the `query` signal changes.
+	const filteredNames = createMemo(() => {
+		console.log("Calculating list...");
+		return NAMES.filter((name) => {
+			return name.toLowerCase().includes(query().toLowerCase());
+		});
+	});
+
+	return (
+		<div>
+			<input
+				value={query()}
+				onInput={(e) => setQuery(e.currentTarget.value)}
+				placeholder="Search..."
+			/>
+
+			{/* Accessing the memo. If dependencies haven't changed, returns cached value. */}
+			<div>Count: {filteredNames().length}</div>
+
+			<ul>
+				{/* Accessing the memo again does not trigger re-execution. */}
+				<For each={filteredNames()}>{(name) => <li>{name}</li>}</For>
+			</ul>
+		</div>
+	);
+}
 ```
 
-When the username signal updates, searchForUser will get called just once. 
-If the returned user actually changed, the user memo updates, and then both list items will update automatically.
-
-If we had instead defined user as a plain function `() => searchForUser(username())`, then `searchForUser` would have been called twice, once when updating each list item.
-
-Another key difference is that a memo can shield dependents from updating when the memo's dependencies change but the resulting memo value doesn't. 
-Like [createSignal](/reference/basic-reactivity/create-signal), the derived signal made by `createMemo` updates (and triggers dependents to rerun) only when the value returned by the memo function actually changes from the previous value, according to JavaScript's `===` operator. 
-Alternatively, you can pass an options object with `equals` set to false to always update the memo when its dependencies change, or you can pass your own `equals` function for testing equality.
-
-The memo function is called with an argument equal to the value returned from the previous execution of the memo function, or, on the first call, equal to the optional second argument to `createMemo`. 
-This is useful for reducing computations, such as:
+### Custom equality check
 
 ```tsx
-// track the sum of all values taken on by input() as it updates
-const sum = createMemo((prev) => input() + prev, 0)
+import { createSignal, createMemo, createEffect } from "solid-js";
+
+function DateNormalizer() {
+	const [dateString, setDateString] = createSignal("2024-05-10");
+
+	const dateObject = createMemo(
+		() => {
+			return new Date(dateString());
+		},
+		undefined,
+		{
+			// Overrides the default strict equality check (===).
+			// If this returns true, observers (like the Effect below) are NOT notified.
+			equals: (prev, next) => {
+				return prev.getTime() === next.getTime();
+			},
+		}
+	);
+
+	createEffect(() => {
+		// This effect runs only when the numeric time value changes,
+		// ignoring new Date object references.
+		console.log("Date changed to:", dateObject().toISOString());
+	});
+
+	return (
+		<div>
+			<input
+				value={dateString()}
+				onInput={(e) => setDateString(e.currentTarget.value)}
+			/>
+			{/* Setting the same date string creates a new Date object, 
+          but `equals` prevents the update propagation. */}
+			<button onClick={() => setDateString("2024-05-10")}>
+				Reset to the same date
+			</button>
+		</div>
+	);
+}
 ```
 
-The memo function should not change other signals by calling setters (it should be "pure"). 
-This enables Solid to optimize the execution order of memo updates according to their dependency graph, so that all memos can update at most once in response to a dependency change.
+### Accessing previous value
 
-## Options and arguments
+```tsx
+import { createSignal, createMemo } from "solid-js";
 
-| Name    | Type                                                    | Description                                                    |
-| :------ | :------------------------------------------------------ | :------------------------------------------------------------- |
-| fn      | `(v: T) => T`                                           | The function to memoize.                                       |
-| value   | `T`                                                     | The initial value of the memo.                                 |
-| options | `{ equals?: false \| ((prev: T, next: T) => boolean) }` | An optional object with an `equals` function to test equality. |
+function TrendTracker() {
+	const [count, setCount] = createSignal(0);
+
+	const trend = createMemo(
+		// The first argument `prev` is the return value of the previous execution.
+		(prev) => {
+			const current = count();
+			if (current === prev.value) return { value: current, label: "Same" };
+			return {
+				value: current,
+				label: current > prev.value ? "Up" : "Down",
+			};
+		},
+		// The second argument provides the initial value for `prev`.
+		{ value: 0, label: "Same" }
+	);
+
+	return (
+		<div>
+			<div>Current: {trend().value}</div>
+			<div>Direction: {trend().label}</div>
+
+			<button onClick={() => setCount((c) => c + 1)}>Increment</button>
+			<button onClick={() => setCount((c) => c - 1)}>Decrement</button>
+		</div>
+	);
+}
+```
+
+## Related
+
+- [`createComputed`](/reference/secondary-primitives/create-computed)

@@ -14,6 +14,7 @@ export const logos: { [key: string]: { file: string; style?: string } } = {
 	railway: { file: "railway.svg" },
 	vercel: { file: "vercel.svg" },
 	zerops: { file: "zerops.svg" },
+	northflank: { file: "northflank.svg" },
 	sass: { file: "sass.svg" },
 	less: { file: "less.svg" },
 	cssmodules: { file: "css-modules.svg", style: "invert" },

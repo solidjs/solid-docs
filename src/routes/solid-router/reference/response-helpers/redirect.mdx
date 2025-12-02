@@ -10,89 +10,106 @@ tags:
   - routing
   - authorization
   - forms
-version: '1.0'
+version: "1.0"
 description: >-
   Redirect users between routes with proper status codes. Handle authentication
   flows, form submissions, and protected route access.
 ---
 
-Redirects to the next route.
-When done over a server RPC (Remote Procedure Call), the redirect will be done through the server.
-By default the status code of a `redirect()` is `302 - FOUND`, also known as a temporary redirect.
+The `redirect` function returns a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object that instructs the router to navigate to a different route when returned or thrown from a [query](/solid-router/reference/data-apis/query) or [action](/solid-router/concepts/actions).
 
-Other useful redirect codes:
+This works both in client and server (e.g., using a server function) environments.
 
-| Code | Description |
-| ---- | ----------- |
-| `301` | Moved Permanently |
-| `307` | Temporary Redirect |
-| `308` | Permanent redirect |
-
-:::tip[Redirect Methods]
-307 and 308 won't allow the browser to change the method of the request.
-If you want to change the method, you should use 301 or 302.
-:::
-
-A common use-case for throwing a redirect is when a user is not authenticated and needs to be sent to the login page or another public route.
-
-```js title="/queries/get-user.ts" {7}
-import { query, redirect } from "@solidjs/router";
-import { getCurrentUser } from "../auth";
-
-const getUser = query(() => {
-  const user = await getCurrentUser();
-  
-  if (!user) throw redirect("/login");
-  
-  return user;
-}, "get-user")
-```
-
-## Single-Flight Mutations
-
-When using `redirect` during a Server Action, the redirect will be done through the server.
-The response value will automatically send data for the destination route, avoiding a subsequent roundtrip to load the data from the target route.
-
-This is useful when redirecting the user to a different route once a mutation is done.
-
-```ts title="/actions/add-user.ts" {3,6}
-import { action, redirect } from "@solidjs/router";
-
-const addUser = action(async (user: User) => {
-  await postUser(user);
-  
-  return redirect("/users");
-});
-```
-
-The `addUser` action will redirect the user to the `/users` route once the user has been added to the database.
-The response from the form action will send the updated data for the `/users` route without the developer needing to revalidate or reload.
-
-## Throw vs Return
-
-Both `throw` and `return` can be used to redirect the user to a different route.
-For general usage `throw` is recommended as it immediately stops the execution of the current action and redirects the user.
-
-When returning from a nested method, the parent method will continue to execute, which can lead to unexpected behavior.
-
-### TypeScript Signature
-
-```typescript
-type RouterResponseInit = Omit<ResponseInit, "body"> & {
-  revalidate?: string | string[];
-};
-
-function redirect(url: string, init?: number | RouterResponseInit): CustomResponse<never>;
-``` 
-
-The `RouterResponseInit` type extends the native [`ResponseInit`](https://developer.mozilla.org/en-US/docs/Web/API/Response/Response#options) interface.
-
-## Revalidate Query Keys
-
-You can pass query keys to the redirect helper to revalidate them.
+## Import
 
 ```ts
-redirect("/", { revalidate: ["getUser", getUser.keyFor(id)] });
+import { redirect } from "@solidjs/router";
 ```
 
-This will only invalidate the query keys passed to the redirect helper instead of the entire next page.
+## Type
+
+```ts
+function redirect(
+	url: string,
+	init?:
+		| number
+		| {
+				revalidate?: string | string[];
+				headers?: HeadersInit;
+				status?: number;
+				statusText?: string;
+		  }
+): CustomResponse<never>;
+```
+
+## Parameters
+
+### `url`
+
+- **Type:** `string`
+- **Required:** Yes
+
+The absolute or relative URL to which the redirect should occur.
+
+### `init`
+
+- **Type:** `number | { revalidate?: string | string[]; headers?: HeadersInit; status?: number; statusText?: string; }`
+- **Required:** No
+
+Either a number representing the status code or a configuration object with the following properties:
+
+#### `revalidate`
+
+- **Type:** `string | string[]`
+- **Required:** No
+
+A query key or an array of query keys to revalidate on the destination route.
+
+#### `status`
+
+- **Type:** `number`
+- **Required:** No
+
+The HTTP status code for the redirect.
+Defaults to [`302 Found`)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/302).
+
+## Examples
+
+### Basic Usage
+
+```ts
+import { query, redirect } from "@solidjs/router";
+
+const getCurrentUserQuery = query(async () => {
+	const response = await fetch("/api/me");
+
+	if (response.status === 401) {
+		return redirect("/login");
+	}
+
+	return await response.json();
+}, "currentUser");
+```
+
+### Configuring Query Revalidation
+
+```ts
+import { action, redirect } from "@solidjs/router";
+
+const loginAction = action(async (formData: FormData) => {
+	const username = formData.get("username")?.toString();
+	const password = formData.get("password")?.toString();
+
+	await fetch("/api/login", {
+		method: "POST",
+		body: JSON.stringify({ username, password }),
+	}).then((response) => response.json());
+
+	return redirect("/users", { revalidate: ["currentUser"] });
+}, "login");
+```
+
+## Related
+
+- [`query`](/solid-router/reference/data-apis/query)
+- [`action`](/solid-router/reference/data-apis/action)

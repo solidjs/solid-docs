@@ -18,6 +18,7 @@ description: >-
 ---
 
 Creates a reactive resource that manages asynchronous data fetching and loading states, automatically tracking dependencies and providing a simple interface for reading, refreshing, and error handling.
+It integrates with Solid's reactivity system and Suspense boundaries.
 
 ## Import
 
@@ -25,7 +26,7 @@ Creates a reactive resource that manages asynchronous data fetching and loading 
 import { createResource } from "solid-js";
 ```
 
-## Type Signature
+## Type
 
 ```typescript
 // Without source
@@ -42,7 +43,7 @@ function createResource<T, S, R = unknown>(
 ): ResourceReturn<T, R>
 ```
 
-### Related Types
+### Related types
 
 ```typescript
 type ResourceReturn<T, R = unknown> = [Resource<T>, ResourceActions<T, R>]
@@ -97,40 +98,41 @@ Function that receives the source value (or `true` if no source), the current re
 
 Configuration options for the resource.
 
-## Options
-
-### `initialValue`
+#### `initialValue`
 - **Type:** `T`
 - **Default:** `undefined`
 
 Initial value for the resource. 
 When provided, the resource starts in "ready" state and the type excludes `undefined`.
 
-### `name`
+#### `name`
 - **Type:** `string`
 - **Default:** `undefined`
 
 A name for debugging purposes in development mode.
 
-### `deferStream`
+#### `deferStream`
 - **Type:** `boolean`
 - **Default:** `false`
 
 Controls streaming behavior during server-side rendering.
 
-### `ssrLoadFrom`
+#### `ssrLoadFrom`
 - **Type:** `"initial" | "server"`
 - **Default:** `"server"`
 
 Determines how the resource loads during SSR hydration.
 
-### `storage`
+- "server": Uses the server-fetched value during hydration.
+- "initial": Re-fetches on the client after hydration.
+
+#### `storage`
 - **Type:** `(init: T | undefined) => [Accessor<T | undefined>, Setter<T | undefined>]`
 - **Default:** `createSignal`
 
 Custom storage function for the resource value, useful for persistence or custom state management.
 
-### `onHydrated`
+#### `onHydrated`
 - **Type:** `(k: S | undefined, info: { value: T | undefined }) => void`
 - **Default:** `undefined`
 
@@ -155,9 +157,18 @@ type Resource<T> = {
 ```
 
 - `state`: Current state of the resource.
+See table below for state descriptions.
 - `loading`: Indicates if the resource is currently loading.
 - `error`: Error information if the resource failed to load.
 - `latest`: The latest value of the resource.
+
+| State | Description | Loading | Error | Latest |
+| ------ | ----------- | ------- | ----- | ------ |
+| `unresolved` | Initial state, not yet fetched | `false` | `undefined` | `undefined` |
+| `pending` | Fetching in progress | `true` | `undefined` | `undefined` |
+| `ready` | Successfully fetched | `false` | `undefined` | `T` |
+| `refreshing` | Refetching while keeping previous value | `true` | `undefined` | `T` |
+| `errored` | Fetching failed | `false` | `any` | `undefined` |
 
 
 ### `ResourceActions`
@@ -170,16 +181,15 @@ type ResourceActions<T, R = unknown> = {
 ```
 
 - `mutate`: Function to Manually overwrite the resource value without calling the fetcher.
+Allows you to optimistically update the resource value locally, without making a network request.
 - `refetch`: Function to re-run the fetcher without changing the source.
 If a parameter is provided to `refetch`, it will be passed to the fetcher's `refetching` property.
 
-## Usage
+## Examples
 
-### Basic Usage
+### Basic usage
 
 ```typescript
-Basic Usage
-
 const [data] = createResource(async () => {
   const response = await fetch('/api/data');
   return response.json();
@@ -254,63 +264,3 @@ const [data] = createResource(
   async (id) => fetchUserData(id)
 );
 ```
-
-## Details
-
-Resources provide a reactive pattern for handling asynchronous data that integrates seamlessly with SolidJS's reactivity system and Suspense boundaries. 
-Unlike signals, resources are specifically designed for async operations and provide built-in loading states, error handling, and refetching capabilities.
-
-### State Management
-
-State follows a predictable lifecycle: `"unresolved" → "pending" → "ready"/"errored"`. 
-During refetching, the state transitions to `"refreshing"` while maintaining the previous value accessible via the latest property. 
-This prevents UI flickering during updates.
-
-In version v.1.5.0, resources gained the ability to cover a more detailed view of the Resource state, beyond `loading` and `error` states. 
-This includes distinct states for initial loading, successful fetches, refetching, and errors:
-
-| State | Description | Loading | Error | Latest |
-| ------ | ----------- | ------- | ----- | ------ |
-| `unresolved` | Initial state, not yet fetched | `false` | `undefined` | `undefined` |
-| `pending` | Fetching in progress | `true` | `undefined` | `undefined` |
-| `ready` | Successfully fetched | `false` | `undefined` | `T` |
-| `refreshing` | Refetching while keeping previous value | `true` | `undefined` | `T` |
-| `errored` | Fetching failed | `false` | `any` | `undefined` |
-
-### Source Reactivity
-
-Source automatically triggers refetching when the source value changes.
-The fetcher only runs when the source is truthy (not `null`, `undefined`, or `false`), allowing for conditional fetching patterns.
-Sources can be static values, reactive accessors, or computed values.
-
-### Refetching Behavior
-
-Refetching lets you manually trigger the fetcher using the `refetch` action, optionally passing extra parameters for more control over the request. 
-The `mutate` action allows you to optimistically update the resource value locally, without making a network request.
-
-### Suspense Integration
-
-Resources automatically suspend the nearest `<Suspense>` boundary while loading, allowing you to declaratively show fallback UI until data is ready. 
-When a resource is pending or refreshing, components reading its value will suspend, and the fallback of the closest Suspense boundary will be displayed. 
-If an error is thrown, the nearest `<ErrorBoundary>` will catch it. 
-
-### SSR and Hydration
-
-Solid's resources are designed for seamless server-side rendering (SSR) and hydration. 
-During SSR, resource data is serialized and streamed to the client, enabling fast initial page loads and smooth transitions. 
-The `ssrLoadFrom` option lets you control how the resource behaves after hydration:
-
-- `"server"` (default): The client uses the value fetched on the server during hydration, providing immediate access to data without additional fetches.
-- `"initial"`: The client re-fetches the data after hydration, allowing for dynamic updates but potentially leading to a loading state on the client.
-
-### Error Handling
-
-- Resources provide built-in error handling capabilities, allowing you to easily manage errors that occur during data fetching.
-- Accessing the resource value when in error state re-throws the error, triggering error boundaries. The `ErrorBoundary` component can be used to catch errors and display fallback UI.
-
-### Performance Characteristics
-
-Performance is enhanced by automatically deduplicating concurrent fetches and leveraging Solid's fine-grained reactivity and batching mechanisms. 
-During server-side rendering, resources can stream data for faster initial loads and improved user experience.
-
-

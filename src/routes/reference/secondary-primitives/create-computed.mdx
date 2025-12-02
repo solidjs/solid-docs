@@ -15,112 +15,114 @@ description: >-
   primitives and handle side effects that respond to dependencies.
 ---
 
-Creates a reactive computation that runs immediately before render, mainly used to synchronize or write to other reactive primitives, not for DOM side-effects.
+The `createComputed` function creates a reactive computation that runs _before_ the rendering phase.
+It is primarily used to synchronize state before rendering begins.
 
 ## Import
 
-```typescript
+```ts
 import { createComputed } from "solid-js";
 ```
 
-## Type Signature
+## Type
 
-```typescript
+```ts
+function createComputed<Next>(
+	fn: EffectFunction<undefined | NoInfer<Next>, Next>
+): void;
 function createComputed<Next, Init = Next>(
- *   fn: (v: Init | Next) => Next,
- *   value?: Init,
- *   options?: { name?: string }
- * ): void;
+	fn: EffectFunction<Init | Next, Next>,
+	value: Init,
+	options?: { name?: string }
+): void;
+function createComputed<Next, Init>(
+	fn: EffectFunction<Init | Next, Next>,
+	value?: Init,
+	options?: { name?: string }
+): void;
 ```
 
 ## Parameters
 
 ### `fn`
 
-**Type:** `(v: Init | Next) => Next`
+- **Type:** `EffectFunction<undefined | NoInfer<Next>, Next> | EffectFunction<Init | Next, Next>`
+- **Required:** Yes
 
-The computation function.
- Receives the previous value (or initial value, if set) and returns a new value. 
- Runs reactively when dependencies change.
+The function that performs the computation.
+It executes immediately to track dependencies and re-runs whenever a dependency changes.
 
-### `value` 
+It receives the value returned from the previous execution as its argument.
+On the initial execution, it receives the [`value`](#value) parameter (if provided) or `undefined`.
 
-**Type:** `Init`
+### `value`
 
-Initial value for the computation. 
-If provided, `fn` will never receive `undefined` as its first argument.
+- **Type:** `Init`
+- **Required:** No
 
-### `options` 
+The initial value passed to `fn` on its first execution.
 
-**Type:** `{ name?: string }` (optional)
+### `options`
 
-Used in development to identify the computed effect.
+- **Type:** `{ name?: string }`
+- **Required:** No
 
-## Return Value
+An optional configuration object with the following properties:
 
-**Type:** `void`
+#### `name`
 
-Registers a computation in the reactive system. Does _not_ return a value.
+- **Type:** `string`
+- **Required:** No
 
-## Usage
+A debug name for the computation.
+It is used for identification in debugging tools like the [Solid Debugger](https://github.com/thetarnav/solid-devtools).
 
-```typescript
+## Return value
+
+- **Type:** `void`
+
+`createComputed` does not return a value.
+
+## Examples
+
+### Basic usage
+
+```tsx
 import { createComputed } from "solid-js";
+import { createStore } from "solid-js/store";
 
-createComputed((prev) => {
-  // Compute the next value based on the previous value
-  return prev + 1;
-}, 0);
+type User = {
+	name?: string;
+};
+
+type UserEditorProps = {
+	user: User;
+};
+
+function UserEditor(props: UserEditorProps) {
+	const [formData, setFormData] = createStore<User>({
+		name: "",
+	});
+
+	// Update the store synchronously when props change.
+	// This prevents a second render cycle.
+	createComputed(() => {
+		setFormData("name", props.user.name);
+	});
+
+	return (
+		<form>
+			<h1>Editing: {formData.name}</h1>
+			<input
+				value={formData.name}
+				onInput={(e) => setFormData("name", e.currentTarget.value)}
+			/>
+		</form>
+	);
+}
 ```
 
-## Advanced Usage
+## Related
 
-### Using an Initial Value
-
-```typescript
-import { createComputed } from "solid-js";
-
-createComputed((prev) => {
-  // Compute the next value based on the previous value
-  return prev + 1;
-}, 0);
-```
-
-### Synchronizing State
-
-```typescript
-const [source, setSource] = createSignal("initial");
-const [copy, setCopy] = createSignal("");
-
-createComputed(() => setCopy(source()));
-```
-
-## Common Patterns
-
-- Writing to other reactive primitives, such as signals or stores, based on dependencies.
-- Performing computations that must happen before render, not after.
-- Setting up synchronization between multiple signals without side effects.
-
-## How It Works 
-
-`createComputed` defines a reactive computation that tracks any signals or memos accessed within its function. 
-Whenever any of those dependencies change, the computation is rescheduled to run before the next render. 
-It is "pure" in the sense that it is not intended to cause side effects outside of updating other reactive primitives.
-
-## Details
-
-### Development vs Production
-
-In development mode, passing a name in the options object can help with debugging and inspection in developer tools.
-In production, the name has no effect.
-
-### Error Handling
-
-- Errors thrown from the computation function are caught and reported using Solid's error boundaries or global error handlers.
-- Computations created outside a root (e.g. outside `createRoot` or a component) will never be disposed, and a warning is shown in development.
-
-### Performance Characteristics
-
-- Computed functions are optimized to run only when their tracked dependencies change.
-- Avoid doing expensive work or side effects in createComputed; use for reactive synchronization.
-- For memoized derived values, use createMemo. For post-render side effects (e.g., DOM or network), use createEffect.
+- [`createMemo`](/reference/basic-reactivity/create-memo)
+- [`createRenderEffect`](/reference/secondary-primitives/create-render-effect)

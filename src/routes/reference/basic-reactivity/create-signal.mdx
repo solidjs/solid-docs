@@ -16,6 +16,7 @@ description: >-
 ---
 
 Creates a reactive state primitive consisting of a getter (accessor) and a setter function that forms the foundation of Solid's reactivity system.
+Signals are optimized for frequent reads and infrequent writes
 
 ## Import
 
@@ -66,6 +67,8 @@ The initial value for the signal. If no initial value is provided, the signal's 
 - **Default:** `undefined`
 
 Configuration object for the signal.
+In production mode, all debugging metadata is stripped away for optimal performance. 
+Dev-only options like `name` are ignored, and no warnings are issued, ensuring that your application runs as efficiently as possible.
 
 #### `name`
 
@@ -73,14 +76,18 @@ Configuration object for the signal.
 - **Default:** `undefined`
 
 A name for the signal used for debugging purposes in development mode.
+The name will show up in console messages and in the [Solid devtools](https://github.com/thetarnav/solid-devtools).
 
 #### `equals`
 
 - **Type:** `false | ((prev: T, next: T) => boolean)`
 - **Default:** `false`
 
+By default, signals use reference equality (`===`).
 A custom comparison function to determine when the signal should update. 
-If set to `false`, the signal will always update regardless of value equality. By default, signals use reference equality (`===`).
+If set to `false`, the signal will always update regardless of value equality.
+This can be useful to create a Signal that triggers manual updates in the reactive system, but must remain a pure function.
+
 
 #### `internal`
 
@@ -101,7 +108,7 @@ Returns a tuple `[getter, setter]` where:
 
 ## Examples
 
-### Basic Usage
+### Basic usage
 
 ```tsx
 import { createSignal } from "solid-js";
@@ -118,75 +125,3 @@ function Counter() {
 }
 
 ```
-
-## How It Works
-
-Signals are the foundational primitive of SolidJS's fine-grained reactivity system. 
-When you call the accessor function within a reactive context (like inside [`createEffect`](/reference/basic-reactivity/create-effect) or a component's JSX), it automatically establishes a dependency relationship. 
-Any subsequent calls to the setter will trigger updates only to the specific computations that depend on that signal.
-
-```typescript
-const [name, setName] = createSignal("John");
-
-// This effect will re-run whenever name changes
-createEffect(() => {
-  console.log(`Hello, ${name()}!`);
-});
-
-setName("Jane"); // Logs: "Hello, Jane!"
-```
-
-## Details
-
-### Reactivity System Integration
-
-- **Effects**: Automatically track signal reads and re-run when values change
-- **Memos**: Cache computed values based on signal dependencies
-- **Resources**: Use signals internally for state management
-- **Stores**: Built on top of signals with additional mutation tracking
-
-### Equality Checking
-
-By default, signals use strict equality (`===`) to determine if a value has changed. 
-This means primitive values are compared by value, while objects and arrays are compared by reference. 
-Setting a signal to the same reference will not trigger updates, but setting it to a new object or array, even if it has identical properties, will trigger updates.
-
-### Function Values
-
-When your signal stores a function as its value, updating it requires special care because the setter treats functions as updater functions by default.
-To set a function as the actual value, wrap it in another function:
-
-```typescript
-const [fn, setFn] = createSignal(() => "hello");
-
-// ❌ This treats your function as an updater, not the new value
-setFn(() => "world"); // Signal becomes "world"
-
-// ✅ Wrap your function to store it as the actual value  
-setFn(() => () => "world"); // Signal becomes () => "world" (function)
-```
-
-The pattern is: `setSignal(() => yourNewFunction)`. 
-The outer function is the updater, the inner function is your actual value.
-
-### Development vs Production
-
-In development mode, signals track additional metadata to aid debugging. 
-The `name` option allows you to assign meaningful names to signals, making them easier to identify in developer tools. 
-Additionally, Solid issues warnings if signals are created outside of reactive contexts, helping you catch potential issues early.
-
-In production mode, all debugging metadata is stripped away for optimal performance. 
-Dev-only options like `name` are ignored, and no warnings are issued, ensuring that your application runs as efficiently as possible.
-
-### Error Handling
-
-- If an equality function throws an error, it's caught and handled by Solid's error boundary system
-- Setter functions are synchronous and will throw immediately if errors occur
-- Reading a signal outside of a reactive context is safe but won't establish tracking
-
-### Performance Characteristics
-
-- Signals are optimized for frequent reads and infrequent writes
-- The equality function is called on every setter invocation
-- Custom equality functions should be fast and pure
-- Avoid creating signals inside frequently-called functions

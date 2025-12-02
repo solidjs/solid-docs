@@ -1,6 +1,6 @@
 ---
 title: useSearchParams
-use_cases: 'pagination, filters, search forms, url state management, query string updates'
+use_cases: "pagination, filters, search forms, url state management, query string updates"
 tags:
   - search
   - query
@@ -8,34 +8,72 @@ tags:
   - pagination
   - filters
   - url
-version: '1.0'
+version: "1.0"
 description: >-
   Manage URL query parameters with useSearchParams - handle pagination, filters,
   and search state directly in the URL query string.
 ---
 
-Retrieves a tuple containing a reactive object to read the current location's query parameters and a method to update them.
-The object is a proxy so you must access properties to subscribe to reactive updates.
-Note values will be strings and property names will retain their casing.
+The `useSearchParams` function reads the URL query parameters for the current route and provides a function to update them.
 
-The setter method accepts an object as an input, and its key-value pairs will be merged into the existing query string.
-If a value is `''`, `undefined` or `null`, the corresponding key will be omitted from the resulting query string.
-The updates behave like navigation and will not scroll the page to the top.
-Additionally, the setter can take an optional second parameter, the same as `navigate`, to control the navigation behavior and auto-scrolling, which are disabled by default.
+## Import
 
-```js
-const [searchParams, setSearchParams] = useSearchParams();
-
-return (
-	<div>
-		<span>Page: {searchParams.page}</span>
-		<button
-			onClick={() =>
-				setSearchParams({ page: (parseInt(searchParams.page) || 0) + 1 })
-			}
-		>
-			Next Page
-		</button>
-	</div>
-);
+```ts
+import { useSearchParams } from "@solidjs/router";
 ```
+
+## Type
+
+```ts
+function useSearchParams<T extends Record<string, string | string[]>>(): [
+	Partial<T>,
+	(params: SetSearchParams, options?: Partial<NavigateOptions>) => void,
+];
+```
+
+## Parameters
+
+`useSearchParams` takes no arguments.
+
+## Return value
+
+- **Type:** `[ Partial<T>, (params: SetSearchParams, options?: Partial<NavigateOptions>) => void ]`
+
+`useSearchParams` returns an array with two items.
+
+The first item is a reactive object containing the current query parameters.
+Accessing a property within a tracking scope registers a dependency, causing the computation to re-run when the parameter changes.
+Values are always strings.
+
+The second item is a function that updates the query string.
+It merges the object provided as its first argument with the current query parameters.
+Passing an empty string (`""`), an empty array (`[]`), `undefined`, or `null` as a value removes the key.
+It accepts the same options as [`useNavigate`](/solid-router/reference/primitives/use-navigate) as the second parameter.
+By default, the `resolve` and `scroll` options are set to `false`.
+
+## Examples
+
+### Basic usage
+
+```tsx
+import { useSearchParams } from "@solidjs/router";
+
+function Paginator() {
+	const [params, setParams] = useSearchParams();
+
+	const page = () => Number(params.page || "1");
+
+	return (
+		<div>
+			<span>Current Page: {page()}</span>
+			<button onClick={() => setParams({ page: page() + 1 })}>Next</button>
+		</div>
+	);
+}
+```
+
+## Related
+
+- [`useParams`](/solid-router/reference/primitives/use-params)
+- [`useLocation`](/solid-router/reference/primitives/use-location)
+- [`useNavigate`](/solid-router/reference/primitives/use-navigate)

@@ -1,24 +1,63 @@
 ---
 title: useParams
-use_cases: 'dynamic routes, user profiles, product pages, id-based content, url parameters'
+use_cases: "dynamic routes, user profiles, product pages, id-based content, url parameters"
 tags:
   - params
   - dynamic
   - routes
   - parameters
   - reactive
-version: '1.0'
+version: "1.0"
 description: >-
   Access route parameters reactively with useParams - extract dynamic segments
   from URLs for user profiles, products, and ID-based pages.
 ---
 
-`useParams` retrieves a reactive object similar to a store.
-It contains the current route's path parameters as defined in the Route.
+The `useParams` function reads the path parameters of the current route.
 
-```js
-const params = useParams();
+## Import
 
-// Route path: /user/:id => /user/123
-console.log(params.id); // 123
+```ts
+import { useParams } from "@solidjs/router";
 ```
+
+## Type
+
+```ts
+function useParams<T extends Record<string, string>>(): T;
+```
+
+## Parameters
+
+`useParams` takes no arguments.
+
+## Return value
+
+- **Type**: `T`
+
+`useParams` returns a reactive object where keys match the dynamic segments defined in the route path.
+Accessing a property within a tracking scope registers a dependency, causing the computation to re-run when the parameter changes.
+
+## Examples
+
+### Basic usage
+
+```ts
+import { createMemo } from "solid-js";
+import { useParams } from "@solidjs/router";
+
+// Rendered via <Route path="/users/:id" component={UserPage} />
+function UserPage() {
+  const params = useParams();
+
+  // Derived value updates when the route parameter changes.
+  const title = createMemo(() => `Profile for ${params.id}`);
+
+  return <h1>{title()}</h1>;
+}
+```
+
+## Related
+
+- [useLocation](/solid-router/reference/primitives/use-location)
+- [useSearchParams](/solid-router/reference/primitives/use-search-params)

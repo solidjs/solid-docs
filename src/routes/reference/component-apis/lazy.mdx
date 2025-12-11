@@ -73,15 +73,18 @@ import type { Component } from "solid-js"
 
 const Nested = lazy(() => import("./Nested"))
 
-const ComponentWithPreload: Component = () => {
-  async function handlePreload() {
-	  await Nested.preload()
-  }
+const ComponentWithPreload = () => {
+  const [showNested, setShowNested] = createSignal(false)
 
   return (
 	<div>
-	  <button onClick={handlePreload}>Preload Nested Component</button>
-	  <Nested />
+	  <button
+        onMouseEnter={() => Nested.preload()}
+        onClick={() => setShowNested(true)}
+      >Preload Nested Component</button>
+      <Show when={showNested()}>
+	    <Nested />
+      </Show>
 	</div>
   )
 }

@@ -16,40 +16,66 @@ description: >-
   performance. Components load on-demand and integrate with Suspense.
 ---
 
-Used to lazy load components to allow for code splitting. 
-Components are not loaded until rendered or manually preloaded. 
+The `lazy` helper wraps a dynamic import and returns a component that loads on demand.
+Lazy components accept the same props as their eager counterparts and integrate with `<Suspense>` boundaries.
+
+## Import
+
+```tsx
+import { lazy } from "solid-js"
+```
+
+## Type
+
+```tsx
+function lazy<T extends Component<any>>(
+  fn: () => Promise<{ default: T }>
+): T & { preload: () => Promise<T> }
+```
+
+## Parameters
+
+### `fn`
+
+- **Type:** `() => Promise<{ default: T }>`
+- **Required:** Yes
+
+Dynamic import that resolves to the component module, exposing the component as the `default` export.
+
+## Return value
+
+`lazy` returns a renderable component compatible with `T`.
+The component exposes a `preload()` method that resolves the underlying module.
+
+| Property | Type | Description |
+| -------- | ---- | ----------- |
+| `preload` | `() => Promise<T>` | Loads the module without rendering and returns the resolved component. |
+
+## Examples
+
+### Basic usage
 
 ```tsx title="app.tsx"
 import { lazy } from "solid-js"
 
-const ComponentA = lazy(() => import("./ComponentA"));
+const ComponentA = lazy(() => import("./ComponentA"))
 
 function App(props: { title: string }) {
-  return (
-		<ComponentA title={props.title} />
-	)
+  return <ComponentA title={props.title} />
 }
 ```
 
-Lazy loaded components can be used the same as its statically imported counterpart, receiving props etc. 
-Lazy components trigger `<Suspense>`
+### Preloading nested lazy components
 
-## Preloading data in Nested Lazy Components
-
-Top-level lazy components will automatically be preloaded as well as their preload functions.
-However, nested lazy components will not be preloaded automatically because they are not part of the route hierarchy.
-To preload such components, you can use the `preload` method exposed on the lazy component.
-
-```tsx title="component-with-preload.tsx"
+```tsx
 import { lazy } from "solid-js"
 import type { Component } from "solid-js"
 
 const Nested = lazy(() => import("./Nested"))
 
 const ComponentWithPreload: Component = () => {
-  // preload Nested component when needed
   async function handlePreload() {
-	await Nested.preload()
+	  await Nested.preload()
   }
 
   return (
@@ -59,32 +85,9 @@ const ComponentWithPreload: Component = () => {
 	</div>
   )
 }
-
 ```
 
-## Type Signature
+## See also
 
-```tsx
-function lazy<T extends Component<any>>(
-	fn: () => Promise<{ default: T }>
-): T & { preload: () => Promise<T> }
-```
-
-### Type Parameters
-
-| Name | Constraint | Description |
-| ---- | ---------- | ----------- |
-| `T`  | `Component<any>` | The component type that will be lazily loaded (including its props).
-
-### Parameters
-
-| Parameter | Type | Required | Description |
-| --------- | ---- | -------- | ----------- |
-| `fn` | `() => Promise<{ default: T }>` | Yes | A function that returns a dynamic import resolving to the component as the `default` export. |
-
-### Returns
-
-| Type | Description |
-| ---- | ----------- |
-| `T & { preload: () => Promise<T> }` | A renderable component compatible with `T` that also exposes a `preload()` method to eagerly load the module. |
-
+- [`Suspense`](https://docs.solidjs.com/reference/component-apis/suspense)
+- [Router preloading guide](/solid-router/advanced-concepts/preloading)

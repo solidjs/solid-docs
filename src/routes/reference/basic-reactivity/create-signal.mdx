@@ -29,11 +29,7 @@ import { createSignal } from "solid-js";
 ```typescript
 function createSignal<T>(): Signal<T | undefined>;
 function createSignal<T>(value: T, options?: SignalOptions<T>): Signal<T>;
-```
 
-### Related Types
-
-```typescript
 type Signal<T> = [get: Accessor<T>, set: Setter<T>];
 
 type Accessor<T> = () => T;
@@ -68,8 +64,6 @@ If no initial value is provided, the signal's type is automatically extended wit
 - **Default:** `undefined`
 
 Configuration object for the signal.
-In production mode, all debugging metadata is stripped away for optimal performance.
-Dev-only options like `name` are ignored, and no warnings are issued, ensuring that your application runs as efficiently as possible.
 
 #### `name`
 
@@ -84,10 +78,12 @@ It works only in development mode and is removed from the production bundle.
 - **Type:** `false | ((prev: T, next: T) => boolean)`
 - **Default:** `false`
 
-By default, signals use reference equality (`===`).
-A custom comparison function to determine when the signal should update.
-If set to `false`, the signal will always update regardless of value equality.
-This can be useful to create a Signal that triggers manual updates in the reactive system, but must remain a pure function.
+A custom comparison function to determine when the signal should update. 
+By default, signals use reference equality (`===`) to compare previous and next values.
+When set to `false`, the signal will always update regardless of value equality, which is useful for creating signals that trigger manual updates in the reactive system. 
+
+When providing a custom function, it should be pure and return `true` if the values are equal (no update needed) or `false` if they differ (trigger update). 
+Impure functions can create unexpected side effects and performance issues.
 
 #### `internal`
 

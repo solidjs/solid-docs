@@ -1,4 +1,4 @@
-import { OramaClient } from "@oramacloud/client";
+import { OramaCloud, type SearchResult } from "@orama/core";
 import {
 	createEffect,
 	createSignal,
@@ -16,22 +16,16 @@ import { createEventListener } from "@solid-primitives/event-listener";
 import { isAppleDevice } from "@solid-primitives/platform";
 
 function getOramaClient({
-	endpoint,
-	api_key,
-}: Record<"endpoint" | "api_key", string | null>) {
-	return endpoint && api_key
-		? new OramaClient({
-				endpoint,
-				api_key,
+	projectId,
+	apiKey,
+}: Record<"projectId" | "apiKey", string | null>) {
+	return projectId && apiKey
+		? new OramaCloud({
+				projectId,
+				apiKey,
 			})
 		: null;
 }
-
-type OramaResult = {
-	hits: {
-		document: OramaDocument;
-	}[];
-};
 
 type OramaDocument = {
 	content: string;
@@ -41,8 +35,8 @@ type OramaDocument = {
 };
 
 const client = getOramaClient({
-	endpoint: import.meta.env.VITE_ORAMA_ENDPOINT ?? null,
-	api_key: import.meta.env.VITE_ORAMA_API_KEY ?? null,
+	projectId: import.meta.env.ORAMA_PROJECT_ID ?? null,
+	apiKey: import.meta.env.ORAMA_PUBLIC_API_KEY ?? null,
 });
 
 export function Search() {
@@ -58,28 +52,27 @@ export function Search() {
 		async () => {
 			const _searchTerm = searchTerm();
 			if (!_searchTerm) return {};
-			const result: OramaResult | null = await client.search({
+			const result = (await client.search({
 				term: _searchTerm,
 				mode: "fulltext",
-			});
+				datasources: [],
+			})) as SearchResult<OramaDocument>;
 			if (!result) return {};
 
 			const seen: Record<string, boolean> = {};
-			result.hits = result.hits.filter(
-				hit => {
-					hit.document.path = hit.document.path.replace("/index#", "#");
-					if(!seen[hit.document.path]) {
-						seen[hit.document.path] = true;
-						return hit;
-					}
+			result.hits = result.hits.filter((hit) => {
+				hit.document.path = hit.document.path.replace("/index#", "#");
+				if (!seen[hit.document.path]) {
+					seen[hit.document.path] = true;
+					return hit;
 				}
-			);
+			});
 
 			const groupedHits = result.hits.reduce(
 				(groupedHits, hit) => {
 					const section = hit.document.section.replace(
 						/(^|-)([a-z])/g,
-						(_, sep, letter) => sep + letter.toUpperCase()
+						(_, sep, letter) => sep + letter.toUpperCase(),
 					);
 					if (!groupedHits[section]) {
 						groupedHits[section] = [];
@@ -87,13 +80,13 @@ export function Search() {
 					groupedHits[section].push(hit);
 					return groupedHits;
 				},
-				{} as Record<string, OramaResult["hits"]>
+				{} as Record<string, SearchResult<OramaDocument>["hits"]>,
 			);
 			setActive(0);
 			setResultRefs([]);
 			return groupedHits;
 		},
-		{ initialValue: {} }
+		{ initialValue: {} },
 	);
 
 	const resultArray = () => Object.values(result()).flatMap((hits) => hits);
@@ -196,7 +189,7 @@ export function Search() {
 								class="w-full rounded border border-blue-100 bg-white px-9 py-2 ring-2 ring-blue-400 focus:outline-none focus-visible:border focus-visible:border-blue-400 focus-visible:ring-2 dark:bg-slate-800"
 								onInput={(e) =>
 									startTransition(() =>
-										setSearchTerm((e.target as HTMLInputElement).value)
+										setSearchTerm((e.target as HTMLInputElement).value),
 									)
 								}
 								onFocus={() => setActive(0)}
@@ -290,7 +283,7 @@ export function Search() {
 																<span class="block truncate text-black/70 dark:text-white/70">
 																	{highlightContent(
 																		trimContent(hit.document.content),
-																		regex()
+																		regex(),
 																	)}
 																</span>
 															</Dialog.CloseButton>
@@ -835,8 +828,7 @@ function KeyboardShortcut(props: { key: string; class?: string }) {
 	return (
 		<kbd
 			classList={{
-				"min-w-6 rounded border border-black/10 bg-slate-100 dark:bg-slate-700 dark:border-slate-700 px-1 pb-px pt-1 text-center font-mono text-xs":
-					true,
+				"min-w-6 rounded border border-black/10 bg-slate-100 dark:bg-slate-700 dark:border-slate-700 px-1 pb-px pt-1 text-center font-mono text-xs": true,
 				[props.class ?? ""]: true,
 			}}
 		>

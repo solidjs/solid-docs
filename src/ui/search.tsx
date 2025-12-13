@@ -35,8 +35,8 @@ type OramaDocument = {
 };
 
 const client = getOramaClient({
-	projectId: import.meta.env.ORAMA_PROJECT_ID ?? null,
-	apiKey: import.meta.env.ORAMA_PUBLIC_API_KEY ?? null,
+	projectId: process.env.ORAMA_PROJECT_ID ?? null,
+	apiKey: process.env.ORAMA_PUBLIC_API_KEY ?? null,
 });
 
 export function Search() {
@@ -72,7 +72,7 @@ export function Search() {
 				(groupedHits, hit) => {
 					const section = hit.document.section.replace(
 						/(^|-)([a-z])/g,
-						(_, sep, letter) => sep + letter.toUpperCase(),
+						(_, sep, letter) => sep + letter.toUpperCase()
 					);
 					if (!groupedHits[section]) {
 						groupedHits[section] = [];
@@ -80,13 +80,13 @@ export function Search() {
 					groupedHits[section].push(hit);
 					return groupedHits;
 				},
-				{} as Record<string, SearchResult<OramaDocument>["hits"]>,
+				{} as Record<string, SearchResult<OramaDocument>["hits"]>
 			);
 			setActive(0);
 			setResultRefs([]);
 			return groupedHits;
 		},
-		{ initialValue: {} },
+		{ initialValue: {} }
 	);
 
 	const resultArray = () => Object.values(result()).flatMap((hits) => hits);
@@ -189,7 +189,7 @@ export function Search() {
 								class="w-full rounded border border-blue-100 bg-white px-9 py-2 ring-2 ring-blue-400 focus:outline-none focus-visible:border focus-visible:border-blue-400 focus-visible:ring-2 dark:bg-slate-800"
 								onInput={(e) =>
 									startTransition(() =>
-										setSearchTerm((e.target as HTMLInputElement).value),
+										setSearchTerm((e.target as HTMLInputElement).value)
 									)
 								}
 								onFocus={() => setActive(0)}
@@ -283,7 +283,7 @@ export function Search() {
 																<span class="block truncate text-black/70 dark:text-white/70">
 																	{highlightContent(
 																		trimContent(hit.document.content),
-																		regex(),
+																		regex()
 																	)}
 																</span>
 															</Dialog.CloseButton>

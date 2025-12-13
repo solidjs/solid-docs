@@ -35,8 +35,8 @@ type OramaDocument = {
 };
 
 const client = getOramaClient({
-	projectId: process.env.ORAMA_PROJECT_ID ?? null,
-	apiKey: process.env.ORAMA_PUBLIC_API_KEY ?? null,
+	projectId: import.meta.env.ORAMA_PROJECT_ID ?? null,
+	apiKey: import.meta.env.ORAMA_PUBLIC_API_KEY ?? null,
 });
 
 export function Search() {

@@ -242,8 +242,10 @@ export function Search() {
 							<For each={Object.entries(result())}>
 								{([section, hits]) => (
 									<section>
-										<p class="pl-2 pt-2 text-sm text-black/70 dark:text-white/70">
-											{section}
+										<p class="pl-2 pt-2 text-sm capitalize text-black/70 dark:text-white/70">
+											{section
+												.replace(/^Enum\('(.+)'\)$/, "$1")
+												.replace(/-/g, " ")}
 										</p>
 										<ul role="listbox">
 											<For each={hits}>

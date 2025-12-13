@@ -10,8 +10,10 @@ interface ImportMeta {
 
 declare namespace NodeJS {
 	interface ProcessEnv {
+		readonly ORAMA_PROJECT_ID: string;
+		readonly ORAMA_DATASOURCE_ID: string;
+		readonly ORAMA_PUBLIC_API_KEY: string;
 		readonly ORAMA_PRIVATE_API_KEY: string;
-		readonly ORAMA_PRIVATE_INDEX_ID: string;
 	}
 }
 

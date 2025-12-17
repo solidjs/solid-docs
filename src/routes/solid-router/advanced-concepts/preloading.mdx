@@ -1,0 +1,44 @@
+---
+title: Preloading
+---
+
+Preloading smooths navigation by resolving route code and data before a user completes a transition.
+Solid Router listens for intent signals, such as hover and focus, and primes the matching route after a short delay to balance responsiveness and network cost.
+Understanding the timing and scope of this work lets you decide when to rely on the default behaviour and when to layer custom strategies.
+
+| user action | route behaviour |
+| ----------- | --------------- |
+| hover | waits roughly 20 ms before preloading |
+| focus | preloads immediately |
+
+## How Solid Router Detects Intent
+
+Anchors registered with Solid Router emit hover and focus events that feed a small scheduler.
+The router debounces the hover signal for 20ms to ignore incidental pointer passes while still reacting quickly to purposeful movement.
+When the delay elapses, the router loads the route module and runs its preload routine so that navigation has the assets it needs when the user commits.
+
+Route modules can export a [`preload`](/solid-router/reference/preload-functions/preload) function that receives params, search values, and router context.
+The function lets you seed caches, warm derived computations, or coordinate streaming behaviours without blocking the eventual render.
+
+> [!NOTE]
+> SSR invokes route `preload` functions during the initial server render and resumes them on the client during hydration.
+> Keep these functions pure so the hydrated client does not need to undo server work when it takes over.
+
+## Imperative Preloading Hooks
+
+Not every interaction funnels through an anchor element.
+The [`usePreloadRoute`](/solid-router/reference/primitives/use-preload-route) primitive exposes the same scheduling behaviour for imperative flows like flyout previews, timers, or observer driven experiences.
+
+This helper mirrors the router behaviour by resolving the module, optionally running the loader, and caching the result for the eventual navigation.
+Empirical tuning of delay values helps you avoid excessive prefetching in dense UIs while still keeping high intent interactions snappy.
+
+## Coordinating Nested Lazy Components
+
+Nested lazy components live outside the router hierarchy, so route preloading does not automatically warm them.
+The component API [`lazy()`](/reference/component-apis/lazy) exposes a `preload()` method that resolves a component without rendering it.
+Calling both the route preload and the nested component preload can keep large detail panels responsive when a user hovers or focuses on the entry point.
+
+Balancing manual preloading requires observing real user flows so you avoid prefetching large bundles that the user never requests.
+Profiling tools help you spot whether preloading reduces long tasks or simply shifts work earlier without net gains.
+
+To learn more about lazy loading components, see the [lazy documentation](/reference/component-apis/lazy#preloading-data-in-nested-lazy-components).

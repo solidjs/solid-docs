@@ -1,0 +1,108 @@
+---
+title: Migrating from v1
+use_cases: >-
+  existing project, migration, upgrade
+tags:
+  - setup
+  - installation
+  - starter
+  - template
+  - quickstart
+  - init
+version: '2.0'
+description: >-
+  Migrate your SolidStart project from v1 to v2.
+---
+
+This is a migration guide of how to upgrade your v1 SolidStart app to our new v2 version.
+
+Please note that some third-party packages may not be compatible with v2 yet.
+
+## Migration steps
+
+**1. Update your project to use the latest version of SolidStart**
+
+```package-install
+@solidjs/start@alpha
+```
+
+**2. Rename `app.config.ts` to `vite.config.ts`**
+
+**3. Update`vite.config.ts`**
+
+v2 ships as a native vite plugin using the environment api instead of vinxi.
+
+```tsx
+import { defineConfig } from "vite";
+import { solidStart } from "@solidjs/start/config";
+export default defineConfig({
+  plugins: [
+     solidStart(),
+  ]
+});
+```
+
+An important note is that `defineConfig` comes from `vite` directly.
+
+#### Defining middleware
+
+Middlware is defined using the `middleware` option on the `solidStart` vite plugin.
+
+```tsx
+import { defineConfig } from "vite";
+import { solidStart } from "@solidjs/start/config";
+export default defineConfig({
+  plugins: [
+     solidStart({
+      	middleware: "./src/middleware.ts"
+    }),
+  ]
+});
+```
+
+**4. Remove the vinxi dependency and add the vite dependency**
+
+```bash
+pnpm remove vinxi
+```
+
+```json
+"dependencies": {
+  "vite": "^7"
+}
+```
+
+**5. Update`package.json` build/dev commands**
+
+Update the build/dev commands to use native vite instead of vinxi.
+
+```json
+"scripts": {
+  "dev": "vite dev",
+  "build": "vite build"
+}
+```
+
+**6. Replace all leftover vinxi imports**
+
+- `useSession` now comes from `@solidjs/start/server` instead of `vinxi/http
+
+**7. Add back nitro via the vite plugin**
+
+```package-install
+nitro@latest
+```
+
+```tsx
+import { defineConfig } from "vite";
+import { solidStart } from "@solidjs/start/config";
+
+export default defineConfig({
+  plugins: [
+     solidStart(),
+     nitro({
+        preset: 'netlify'
+      })
+  ]
+});
+```

@@ -50,9 +50,11 @@ const getPrivatePosts = query(async function() {
 })
 
 export default function Page() {
-	const posts = createAsync(() => getPrivatePosts());
+	const posts = createAsync(() => getPrivatePosts(), { deferStream: true });
 }
 ```
 
 Once the user hits this route, the router will attempt to fetch `getPrivatePosts` data.
 If the user is not signed in, `getPrivatePosts` will throw and the router will redirect to the login page.
+
+Setting `{ deferStream: true }` will wait until `getPrivatePosts` resolves before loading the page. Otherwise, opening the page directly will error, because server side redirects cannot occur after an initial response has streamed to the client.

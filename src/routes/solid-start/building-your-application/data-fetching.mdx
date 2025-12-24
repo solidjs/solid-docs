@@ -41,3 +41,19 @@ const getCurrentUserQuery = query(async (id: string) => {
 In this example, the `getCurrentUserQuery` retrieves the session data, and if an authenticated user exists, it gets their information from the database and returns it.
 Otherwise, it redirects the user to the login page.
 All of these operations are performed completely on the server regardless of how the query is called.
+
+:::caution[Modifying headers after streaming]
+Once a response starts streaming, its headers (including the status code and cookies) are immediately sent to the client and **cannot be modified**.
+
+Any server-side operation that changes headers, such as performing a redirect (`3xx` status) or using APIs like `useSession` that modify cookies, must happen **before** streaming begins.
+Otherwise, you'll encounter errors like:
+
+**"Cannot set headers after they are sent to the client."**
+
+To avoid this, disable streaming for queries that may modify headers by enabling the [`deferStream`](/solid-router/reference/data-apis/create-async#deferstream) option.
+
+```tsx
+const user = createAsync(() => getCurrentUserQuery(), { deferStream: true });
+```
+
+:::

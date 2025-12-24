@@ -41,3 +41,19 @@ const getCurrentUserQuery = query(async (id: string) => {
 In this example, the `getCurrentUserQuery` retrieves the session data, and if an authenticated user exists, it gets their information from the database and returns it.
 Otherwise, it redirects the user to the login page.
 All of these operations are performed completely on the server regardless of how the query is called.
+
+:::caution[Redirects and streaming don't mix]
+HTTP redirects work by setting a `3xx` status code on the response.
+Once a response has started streaming, its headers (including the status code) are already sent to the client and cannot be changed, even if the stream hasn't finished yet.
+
+If a server function attempts to redirect after streaming has begun, you'll encounter the common error:
+
+**"Cannot set headers after they are sent to the client."**
+
+To avoid this, disable streaming for queries that may perform a redirect by enabling the [`deferStream`](/solid-router/reference/data-apis/create-async#deferstream) option.
+
+```tsx
+const user = createAsync(() => getCurrentUserQuery(), { deferStream: true });
+```
+
+:::

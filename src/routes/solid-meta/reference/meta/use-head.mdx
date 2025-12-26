@@ -1,0 +1,247 @@
+---
+title: useHead
+order: 7
+use_cases: >-
+  custom head tags, scripts, json-ld, arbitrary head elements, dynamic metadata,
+  ssr head management
+tags:
+  - usehead
+  - head
+  - meta
+  - script
+  - json-ld
+  - ssr
+version: '1.0'
+description: >-
+  useHead inserts custom elements into document head with fine-grained control,
+  including scripts and JSON-LD, while staying SSR-ready.
+---
+
+`useHead` registers a custom head tag with the nearest [`MetaProvider`](/solid-meta/reference/meta/metaprovider).
+It is the low-level API used by the head components.
+It must be called under a `MetaProvider`, or it throws.
+
+Use it when you need a tag that does not have a dedicated component or when you need full control over closing tags and escaping.
+
+## When to use useHead
+
+- Insert tags without built-in components, such as `script` and `noscript`.
+- Control SSR output with `setting.close` and `setting.escape`.
+- Inject per-page structured data like JSON-LD.
+- Reuse an existing element via `ref`.
+
+## Prefer components when possible
+
+Use the dedicated components when they fit your use case:
+
+- [`<Title />`](/solid-meta/reference/meta/title) for page titles.
+- [`<Meta />`](/solid-meta/reference/meta/meta) for metadata.
+- [`<Link />`](/solid-meta/reference/meta/link) for external resources.
+- [`<Style />`](/solid-meta/reference/meta/style) for inline styles.
+- [`<Base />`](/solid-meta/reference/meta/base) for base URLs.
+
+They provide clearer intent and sensible defaults.
+
+## Import
+
+```ts
+import { useHead } from "@solidjs/meta";
+```
+
+## Type
+
+```ts
+type TagDescription = {
+	tag: string;
+	props: Record<string, unknown>;
+	setting?: {
+		close?: boolean;
+		escape?: boolean;
+	};
+	id: string;
+	name?: string;
+	ref?: Element;
+};
+
+function useHead(tag: TagDescription): void;
+```
+
+## Parameters
+
+### `tag`
+
+- **Type:** `string`
+- **Required:** Yes
+
+The tag name to render in `<head>`, such as `script`, `meta`, or `title`.
+
+### `props`
+
+- **Type:** `Record<string, unknown>`
+- **Required:** Yes
+
+The attributes and properties applied to the element.
+
+#### `props.children`
+
+When provided, `children` becomes the element content for tags like `title`, `style`, or `script`.
+On the server, arrays of strings are concatenated without commas.
+If `setting.close` is not enabled, `children` is not rendered during SSR.
+
+### `setting`
+
+- **Type:** `{ close?: boolean; escape?: boolean }`
+- **Required:** No
+
+SSR-only rendering options for the tag contents.
+
+#### `setting.close`
+
+- **Type:** `boolean`
+- **Required:** No
+
+When `true`, the server renders a closing tag and includes `children`.
+Use this for tags that cannot be self-closing, such as `script`, `style`, and `title`.
+
+#### `setting.escape`
+
+- **Type:** `boolean`
+- **Required:** No
+
+When `true`, the server HTML-escapes `children`.
+If omitted or `false`, `children` is rendered as raw HTML.
+
+### `id`
+
+- **Type:** `string`
+- **Required:** Yes
+
+A stable identifier used to match server-rendered tags during hydration.
+Use a consistent `id` for the lifetime of the component.
+
+### `name`
+
+- **Type:** `string`
+- **Required:** No
+
+An optional label for the tag.
+For `meta` tags, it typically mirrors `props.name` or `props.property`.
+
+### `ref`
+
+- **Type:** `Element`
+- **Required:** No
+
+An existing element to reuse instead of creating a new one.
+This is usually managed internally.
+
+## Return value
+
+`useHead` does not return a value.
+
+## Examples
+
+### Simple custom tag
+
+```tsx
+import { useHead } from "@solidjs/meta";
+
+useHead({
+	tag: "link",
+	id: "rss-feed",
+	props: {
+		rel: "alternate",
+		type: "application/rss+xml",
+		title: "Solid RSS",
+		href: "/rss.xml",
+	},
+});
+```
+
+### JSON-LD per page (script with `close` and `escape`)
+
+```tsx
+import { useHead } from "@solidjs/meta";
+
+const jsonLD = JSON.stringify({
+	"@context": "https://schema.org",
+	"@type": "WebSite",
+	name: "Solid Docs",
+	url: "https://docs.solidjs.com/",
+});
+
+useHead({
+	tag: "script",
+	setting: { close: true, escape: false },
+	id: "schema-home",
+	props: {
+		type: "application/ld+json",
+		children: jsonLD,
+	},
+});
+```
+
+### Reactive updates
+
+```tsx
+import { createSignal } from "solid-js";
+import { useHead } from "@solidjs/meta";
+
+const [pageTitle, setPageTitle] = createSignal("Getting started");
+
+useHead({
+	tag: "title",
+	setting: { close: true, escape: true },
+	id: "page-title",
+	props: {
+		get children() {
+			return `${pageTitle()} | Solid`;
+		},
+	},
+});
+```
+
+## Notes
+
+### SSR and hydration
+
+On the server, tags are collected and rendered into `<head>`.
+During hydration, tags with matching `id` values are reused.
+On client-only renders, existing server tags are removed and replaced.
+
+### Dedupe and idempotency
+
+For `title` and `meta`, only the most recent tag with the same key is kept.
+The key is derived from the tag name and selected attributes.
+For `meta`, the key uses `name` (or `property`), `http-equiv`, `content`, `charset`, and `media`.
+For `title`, the key does not include any attributes.
+Other tag types are not deduped.
+The `id` does not control deduping.
+It ensures hydration can reuse the same element instead of inserting a duplicate.
+
+### Reactive updates and cleanup
+
+`useHead` runs inside a render effect.
+If your tag description reads reactive values, the tag updates when those values change.
+When the component unmounts, the tag is removed and any previous cascading tag is restored.
+
+### Security and escaping
+
+Use `setting.escape: true` when inserting untrusted content.
+Setting `escape: false` renders raw HTML and can create XSS risks.
+Only use `escape: false` with trusted, pre-serialized strings such as JSON-LD.
+
+### Best practices
+
+Use stable, unique `id` values to avoid duplicates.
+Prefer the dedicated head components when they meet your needs.
+Avoid inserting multiple tags that represent the same metadata unless you intend to override.
+
+## Related
+
+- [`<MetaProvider />`](/solid-meta/reference/meta/metaprovider)
+- [`<Title />`](/solid-meta/reference/meta/title)
+- [`<Meta />`](/solid-meta/reference/meta/meta)
+- [`<Link />`](/solid-meta/reference/meta/link)
+- [`<Style />`](/solid-meta/reference/meta/style)
+- [`<Base />`](/solid-meta/reference/meta/base)

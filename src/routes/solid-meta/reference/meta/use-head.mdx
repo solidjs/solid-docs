@@ -19,25 +19,6 @@ description: >-
 
 `useHead` is a low-level API for registering custom `<head>` tags with the nearest [`MetaProvider`](/solid-meta/reference/meta/metaprovider).
 
-## When to use useHead
-
-- Insert tags without built-in components, such as `script` and `noscript`.
-- Control SSR output with `setting.close` and `setting.escape`.
-- Inject per-page structured data like JSON-LD.
-- Reuse an existing element via `ref`.
-
-## Prefer components when possible
-
-Use the dedicated components when they fit your use case:
-
-- [`<Title />`](/solid-meta/reference/meta/title) for page titles.
-- [`<Meta />`](/solid-meta/reference/meta/meta) for metadata.
-- [`<Link />`](/solid-meta/reference/meta/link) for external resources.
-- [`<Style />`](/solid-meta/reference/meta/style) for inline styles.
-- [`<Base />`](/solid-meta/reference/meta/base) for base URLs.
-
-They provide clearer intent and sensible defaults.
-
 ## Import
 
 ```ts
@@ -191,42 +172,6 @@ useHead({
 	},
 });
 ```
-
-## Notes
-
-### SSR and hydration
-
-On the server, tags are collected and rendered into `<head>`.
-During hydration, tags with matching `id` values are reused.
-On client-only renders, existing server tags are removed and replaced.
-
-### Dedupe and idempotency
-
-For `title` and `meta`, only the most recent tag with the same key is kept.
-The key is derived from the tag name and selected attributes.
-For `meta`, the key uses `name` (or `property`), `http-equiv`, `content`, `charset`, and `media`.
-For `title`, the key does not include any attributes.
-Other tag types are not deduped.
-The `id` does not control deduping.
-It ensures hydration can reuse the same element instead of inserting a duplicate.
-
-### Reactive updates and cleanup
-
-`useHead` runs inside a render effect.
-If your tag description reads reactive values, the tag updates when those values change.
-When the component unmounts, the tag is removed and any previous cascading tag is restored.
-
-### Security and escaping
-
-Use `setting.escape: true` when inserting untrusted content.
-Setting `escape: false` renders raw HTML and can create XSS risks.
-Only use `escape: false` with trusted, pre-serialized strings such as JSON-LD.
-
-### Best practices
-
-Use stable, unique `id` values to avoid duplicates.
-Prefer the dedicated head components when they meet your needs.
-Avoid inserting multiple tags that represent the same metadata unless you intend to override.
 
 ## Related
 

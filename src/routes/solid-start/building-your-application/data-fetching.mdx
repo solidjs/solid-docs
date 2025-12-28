@@ -43,10 +43,8 @@ Otherwise, it redirects the user to the login page.
 All of these operations are performed completely on the server regardless of how the query is called.
 
 :::caution[Modifying headers after streaming]
-Once a response starts streaming, its headers (including the status code and cookies) are immediately sent to the client and **cannot be modified**.
-
-Any server-side operation that changes headers, such as performing a redirect (`3xx` status) or using APIs like `useSession` that modify cookies, must happen **before** streaming begins.
-Otherwise, you'll encounter errors like:
+Once streaming begins, response headers (including status and cookies) are sent and cannot be changed.
+Any header-modifying logic within a server function, such as redirects or APIs like `useSession` that set cookies, must run before streaming starts, or this error will occur:
 
 **"Cannot set headers after they are sent to the client."**
 

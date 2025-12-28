@@ -188,6 +188,25 @@ Do: Check the [Solid homepage](https://www.solidjs.com)
 Don't: Click [here](https://www.solidjs.com) to go to the Solid homepage.
 ```
 
+## Reference pages
+
+Reference pages document the API surface.
+Keep them concise and easy to scan.
+
+Include:
+- Imports
+- Signatures
+- Parameters
+- Return values
+- Short examples
+
+Avoid:
+- Narrative context or “why”
+- Usage guidance (“when to use”, best practices)
+- Long notes
+
+If explanation is needed, link to a guide or how-to page.
+
 ## Voice and tone
 
 So far, we've dealt with how your contributions should look and function.

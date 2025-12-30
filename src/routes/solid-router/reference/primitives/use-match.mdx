@@ -10,52 +10,143 @@ tags:
   - path
   - conditional
   - links
-version: '1.0'
+version: "1.0"
 description: >-
   Check if paths match current route with useMatch - create active navigation
   links, conditional rendering based on route matching.
 ---
 
-`useMatch` takes an accessor that returns the path and creates a Memo that returns match information if the current path matches the provided path.
-Useful for determining if a given path matches the current route.
+The `useMatch` function checks whether the current path matches a provided path pattern.
 
-```js
-const match = useMatch(() => props.href);
+## Import
 
-return <div classList={{ active: Boolean(match()) }} />;
+```ts
+import { useMatch } from "@solidjs/router";
 ```
 
-As a second parameter, `useMatch` also accepts a group of `MatchFilters`.
-These filteres allow for a more granular check.
+## Type
 
-The filters are the same used by the `<Router>` itself and they accept either a an array of strings, or a regular expression. Additionally, there's a `boolean` option to match a route only if it has, or doesn't have, the HTML extension.
+```ts
+const useMatch: <S extends string>(
+	path: () => S,
+	matchFilters?: MatchFilters<S>
+): Accessor<PathMatch | undefined>;
 
-```js
-const filters: MatchFilters = {
-  parent: ["mom", "dad"]
-  id: /^\d+$/,
-  withHtmlExtension: (v: string) => v.length > 5 && v.endsWith(".html")
+type MatchFilters<P extends string | readonly string[] = any> = P extends string
+	? { [K in PathParams<P>[number]]?: MatchFilter }
+	: Record<string, MatchFilter>;
+
+interface PathMatch {
+  params: Params;
+  path: string;
+}
+```
+
+## Parameters
+
+### `path`
+
+- **Type:** `() => S`
+- **Required:** Yes
+
+An accessor function that returns the path pattern to match against the current route.
+Uses the same syntax as the `path` prop in the [`<Route>`](/solid-router/reference/components/route) component.
+Supports [path parameters](/solid-router/concepts/path-parameters), [optional parameters](/solid-router/concepts/path-parameters#optional-parameters), and [wildcard parameters](/solid-router/concepts/path-parameters#wildcard-routes).
+
+### `filters`
+
+- **Type:** `MatchFilters<S>`
+- **Required:** No
+
+An object where keys correspond to route parameter names and values define match filters.
+Each filter can be:
+
+- An array of allowed strings
+- A regular expression pattern
+- A function that receives the parameter value as a string and returns true if the parameter should match
+
+## Return value
+
+`useMatch` returns a memo containing a `PathMatch` object when the path matches, or `undefined` when there's no match.
+
+The `PathMatch` object contains:
+
+### `params`
+
+- **Type:** `Record<string, string>`
+
+An object containing the matched path parameters as key-value pairs.
+
+### `path`
+
+- **Type:** `string`
+
+The matched path.
+
+## Examples
+
+### Basic usage
+
+```tsx
+import { useMatch } from "@solidjs/router";
+import { type JSXElement } from "solid-js";
+
+type NavLinkProps = {
+	href: string;
+	children: JSXElement;
 };
+
+function NavLink(props: NavLinkProps) {
+	const match = useMatch(() => props.href);
+
+	return (
+		<a href={props.href} classList={{ active: Boolean(match()) }}>
+			{props.children}
+		</a>
+	);
+}
 ```
 
-Finally, any parameter can be determined optional by adding a `?` at the end of the parameter name.
+### With filters
 
-```js
-	const isReference = useMatch(() => "/:project?/reference/*?", {
-		project: ["solid-router", "solid-meta", "solid-start"],
+```tsx
+import { useMatch } from "@solidjs/router";
+import { Show } from "solid-js";
+
+function BlogPost() {
+	const match = useMatch(() => "/:lang?/blog/:slug", {
+		lang: ["en", "es", "fr"],
+		slug: /^[a-z0-9-]+$/, // Only allow lowercase letters, numbers, and hyphens
 	});
+
+	const lang = () => match()?.params.lang || "en";
+
+	return (
+		<Show when={match()}>
+			<article lang={lang()}>
+				<p>Blog slug: {match()?.params.slug}</p>
+			</article>
+		</Show>
+	);
+}
 ```
 
-The check above will match:
+### With custom filter functions
 
-```text
-/reference
-/solid-router/reference
-/solid-meta/reference
-/solid-start/reference
+```tsx
+import { useMatch } from "@solidjs/router";
 
-/reference/...
-/solid-router/reference/...
-/solid-meta/reference/...
-/solid-start/reference/...
+function FileInfo() {
+	const match = useMatch(() => "/files/:type/:name", {
+		type: ["images", "documents", "videos"],
+		name: (name) => name.length > 5 && name.endsWith(".html"),
+	});
+
+	return <div>File: {match()?.params.name}</div>;
+}
 ```
+
+## Related
+
+- [`useParams`](/reference/router-primitives/use-params)
+- [`useLocation`](/reference/router-primitives/use-location)

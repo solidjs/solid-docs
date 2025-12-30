@@ -10,24 +10,102 @@ tags:
   - query
   - hash
   - state
-version: '1.0'
+version: "1.0"
 description: >-
   Access reactive URL information with useLocation - track pathname, query
   strings, hash, and navigation state in your SolidJS app.
 ---
 
-Retrieves reactive `location` object useful for getting things like `pathname`
+The `useLocation` function provides information about the current URL, including pathname, query strings, hash, and navigation state.
 
-```js
-const location = useLocation();
+## Import
 
-const pathname = createMemo(() => parsePath(location.pathname));
+```ts
+import { useLocation } from "@solidjs/router";
 ```
 
-| attribute  | type   | description                                                                               |
-| ---------- | ------ | ----------------------------------------------------------------------------------------- |
-| `pathname` | string | The pathname part of the URL, without the query string.                                   |
-| `search`   | string | The query string part of the URL.                                                         |
-| `hash`     | string | The hash part of the URL, including the `#`.                                              |
-| `state`    | any    | Custom state passed from [`useNavigate`](/solid-router/reference/primitives/use-navigate) |
-| `query`    | object | Returns a store-like object containing all the query parameters of the URL.               |
+## Type
+
+```ts
+const useLocation: <S = unknown>() => Location<S>;
+
+interface Location<S = unknown> extends Path {
+	query: SearchParams;
+	state: Readonly<Partial<S>> | null;
+}
+
+interface Path {
+	pathname: string;
+	search: string;
+	hash: string;
+}
+```
+
+## Parameters
+
+None.
+
+## Return value
+
+`useLocation` returns a reactive `Location` object containing the current URL information.
+
+The `Location` object contains:
+
+### `pathname`
+
+**Type:** `string`
+
+The path portion of the URL, beginning with a `/` and excluding the query string and hash.
+
+### `search`
+
+**Type:** `string`
+
+The query string portion of the URL, including the leading `?` character if a parameter exists.
+
+### `hash`
+
+**Type:** `string`
+
+The hash fragment of the URL, including the leading `#` character if a hash exists.
+
+### `state`
+
+**Type:** `Readonly<Partial<S>> | null`
+
+Custom state passed from [`useNavigate`](/solid-router/reference/primitives/use-navigate).
+
+### `query`
+
+**Type:** `SearchParams`
+
+A reactive object containing the parsed query parameters from the URL.
+
+## Examples
+
+### Basic usage
+
+```tsx
+import { useLocation } from "@solidjs/router";
+
+function ProductFilter() {
+	const location = useLocation();
+
+	const category = () => location.query.category || "all";
+	const page = () => location.query.page || "1";
+
+	return (
+		<div>
+			<p>
+				Filtering by: {category()}, Page {page()}
+			</p>
+		</div>
+	);
+}
+```
+
+## Related
+
+- [`useNavigate`](/solid-router/reference/primitives/use-navigate)
+- [`useParams`](/solid-router/reference/primitives/use-params)
+- [`useSearchParams`](/solid-router/reference/primitives/use-search-params)

@@ -1,11 +1,9 @@
 import { Show, onMount, JSX } from "solid-js";
 import { useLocation } from "@solidjs/router";
-import { Title } from "@solidjs/meta";
 import { coreEntries } from "solid:collection";
 import { Pagination } from "~/ui/pagination";
 import { EditPageLink } from "./edit-page-link";
 import { PageIssueLink } from "./page-issue-link";
-import { useProjectTitle } from "./use-project";
 
 interface DocsLayoutProps {
 	entries: typeof coreEntries;
@@ -14,7 +12,6 @@ interface DocsLayoutProps {
 
 export const DocsLayout = (props: DocsLayoutProps) => {
 	const location = useLocation();
-	const projectTitle = useProjectTitle();
 
 	const collection = () =>
 		location.pathname.includes("/reference/")
@@ -41,9 +38,6 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 	return (
 		<Show when={props.entries} keyed>
 			<>
-				<Show when={titles()?.title} fallback={<Title>SolidDocs</Title>}>
-					{(title) => <Title>{`${title()} - ${projectTitle()}`}</Title>}
-				</Show>
 				<article class="expressive-code-overrides mx-auto w-full max-w-2xl overflow-hidden pb-16">
 					<Show when={titles()?.parent}>
 						{(t) => (

@@ -15,6 +15,23 @@ description: >-
   breadcrumbs, extract route metadata, and navigate nested routes.
 ---
 
+The `useCurrentMatches` function providing access to an array of all route matches corresponding to the current URL path.
+
+## Return value
+
+The function returns a getter function that provides access to the current route matches array. Each match object in the array contains:
+- params: An object containing extracted path parameters
+- path: The matched path segment string
+- route: A RouteDescription object containing:
+  - key: Unique identifier for the route
+  - originalPath: The path pattern as defined in the route configuration
+  - pattern: The URL-encoded pattern used for matching
+  - component: The component rendered for this route (if specified)
+  - preload: The data loading function (if specified)
+  - matcher: The function used to match this route
+  - matchFilters: Optional filters applied during matching
+  - info: Custom metadata object attached to the route definition
+
 `useCurrentMatches` returns all the matches for the current matched route. Useful for getting all the route information.
 
 For example if you stored breadcrumbs on your route definition you could retrieve them like so:
@@ -25,3 +42,44 @@ const breadcrumbs = createMemo(() =>
 	matches().map((m) => m.route.info.breadcrumb)
 );
 ```
+
+useCurrentMatches
+
+The function returns a getter that, when called, yields an array of RouteMatch[] objects representing each segment in the active route hierarchy.
+Function Signature
+const useCurrentMatches = () => useRouter().matches;
+Return Value
+The function returns a getter function that provides access to the current route matches array. Each match object in the array contains:
+- params: An object containing extracted path parameters
+- path: The matched path segment string
+- route: A RouteDescription object containing:
+  - key: Unique identifier for the route
+  - originalPath: The path pattern as defined in the route configuration
+  - pattern: The URL-encoded pattern used for matching
+  - component: The component rendered for this route (if specified)
+  - preload: The data loading function (if specified)
+  - matcher: The function used to match this route
+  - matchFilters: Optional filters applied during matching
+  - info: Custom metadata object attached to the route definition
+Characteristics
+Reactive Updates: The returned getter provides access to a reactive computation that automatically updates when the URL location changes. The matches array recomputes only when the location changes, ensuring efficient reactivity.
+Route Hierarchy: The returned array contains all matched route segments from the outermost to the innermost route. For nested routes such as /users/:id/profile, the array includes matches for /users/:id and /profile (if configured as separate segments).
+Memoized Computation: The matches are computed through a memoized reactive system that searches through pre-sorted route branches based on priority scores, stopping at the first matching branch.
+Server-Side Support: During server-side rendering, the matches are populated and accessible through the request event object for data fetching purposes.
+Computation Process
+The matches are determined by:
+1. Taking the current location pathname
+2. Applying optional URL transformation if configured
+3. Iterating through route branches sorted by descending priority score
+4. Finding the first branch where all route segments match the location
+5. Returning an array of match objects for each segment in that branch
+Access Pattern
+The function returns a getter rather than a direct value, requiring invocation to obtain the current matches:
+const matches = useCurrentMatches();  // Returns getter function
+const currentMatches = matches();     // Returns RouteMatch[]
+Relationship to Other Hook Functions
+The matches computed by useCurrentMatches serve as the source for several other router primitives:
+- useParams derives parameter objects by merging params from all matches
+- useMatch provides similar functionality but for checking if a specific path matches the current location
+- useCurrentMatches provides the complete route hierarchy rather than a single route
+The info property accessible through the matches originates from custom metadata defined on route definitions, allowing retrieval of application-specific data attached to routes.

@@ -9,36 +9,76 @@ tags:
   - optimization
   - prefetch
   - manual
-version: '1.0'
+version: "1.0"
 description: >-
   Manually preload routes with usePreloadRoute - optimize performance by
   prefetching route data before navigation in your SolidJS app.
 ---
 
-`usePreloadRoute` returns a function that can be used to preload a route manually.
+The `usePreloadRoute` function is a utility for manually preloading a route.
+
+## Import
 
 ```ts
-const preload = usePreloadRoute();
-
-preload(`/users/settings`, { preloadData: true });
+import { usePreloadRoute } from "@solidjs/router";
 ```
 
-## Usage
+## Type
 
-Routes are preloaded by default within Solid Router contexts.
-This helper is useful when you want to preload a route in response to some other event, such as a button click or a timer.
+```ts
+const usePreloadRoute: () => (
+	url: string | URL,
+	options?: { preloadData?: boolean }
+) => void;
+```
 
-## Type Signature
+## Parameters
 
-### Parameters
+### `url`
 
-| Parameter | Type     | Required | Description                          |
-| --------- | -------- | -------- | ------------------------------------ |
-| `to`      | `To`     | Yes      | The route path to preload            |
-| `options` | `object` | No       | Configuration options for preloading |
+**Type:** `string | URL`
+**Required:** Yes
 
-### Options
+The route path to preload.
+Accepts either a `string` path or a [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) object.
 
-| Option        | Type      | Default | Description                                                         |
-| ------------- | --------- | ------- | ------------------------------------------------------------------- |
-| `preloadData` | `boolean` | `false` | Whether to preload the route's data in addition to the route itself |
+### `options`
+
+- **Type:** `{ preloadData?: boolean }`
+- **Required:** No
+
+A configuration object with the following properties:
+
+#### `preloadData`
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+When `true`, triggers the route's data loading in addition to preloading the route itself.
+
+## Return value
+
+None.
+
+## Examples
+
+### Basic usage
+
+```tsx
+import { usePreloadRoute } from "@solidjs/router";
+
+function SettingsButton() {
+	const preload = usePreloadRoute();
+
+	return (
+		<button onClick={() => preload("/users/settings", { preloadData: true })}>
+			Load settings
+		</button>
+	);
+}
+```
+
+## Related
+
+- [`<A>`](/solid-router/reference/components/a)
+- [`preload`](/solid-router/reference/preload-functions/preload)

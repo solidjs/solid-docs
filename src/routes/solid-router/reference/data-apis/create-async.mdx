@@ -167,39 +167,6 @@ function Recipes() {
 }
 ```
 
-### With `deferStream`
-
-```tsx
-import { createAsync, query, redirect } from "@solidjs/router";
-
-const getDashboardDataQuery = query(async () => {
-	const res = await fetch("/api/dashboard");
-
-	if (res.status === 403) {
-		throw redirect("/login");
-	}
-
-	return res.json();
-}, "dashboard");
-
-function Dashboard() {
-	// Modifying response headers after streaming has started will cause an error.
-	// Since getDashboardDataQuery may trigger a redirect, which requires updating
-	// response headers, deferStream is used to ensure headers can still be modified
-	// when needed.
-	const data = createAsync(() => getDashboardDataQuery(), {
-		deferStream: true,
-	});
-
-	return (
-		<div>
-			<h1>Dashboard</h1>
-			<p>Welcome back, {data()?.username}</p>
-		</div>
-	);
-}
-```
-
 ## Related
 
 - [`query`](/solid-router/reference/data-apis/query)

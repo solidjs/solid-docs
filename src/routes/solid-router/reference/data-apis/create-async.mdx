@@ -10,7 +10,7 @@ tags:
   - loading
   - promises
   - ssr
-version: '1.0'
+version: "1.0"
 description: >-
   Transform promises into reactive signals with createAsync. Handle async data
   with Suspense and automatic loading states.
@@ -34,21 +34,21 @@ import { createAsync } from "@solidjs/router";
 
 ```tsx
 function createAsync<T>(
-  fn: (prev: T) => Promise<T>,
-  options: {
-    name?: string;
-    initialValue: T;
-    deferStream?: boolean;
-  }
+	fn: (prev: T) => Promise<T>,
+	options: {
+		name?: string;
+		initialValue: T;
+		deferStream?: boolean;
+	}
 ): AccessorWithLatest<T>;
 
 function createAsync<T>(
-  fn: (prev: T | undefined) => Promise<T>,
-  options?: {
-    name?: string;
-    initialValue?: T;
-    deferStream?: boolean;
-  }
+	fn: (prev: T | undefined) => Promise<T>,
+	options?: {
+		name?: string;
+		initialValue?: T;
+		deferStream?: boolean;
+	}
 ): AccessorWithLatest<T | undefined>;
 ```
 
@@ -105,36 +105,70 @@ While the fetcher is executing for the first time, unless an `initialValue` is s
 ```tsx
 import { createAsync, query } from "@solidjs/router";
 
-const getUserQuery = query(async (id: string) => {
-	// ... Fetches the user from the server.
-}, "user");
+const getCurrentUser = query(async () => {
+	// ... Fetches the current authenticated user from the server.
+}, "currentUser");
 
 function UserProfile() {
-	const user = createAsync(() => getUserQuery());
+	const user = createAsync(() => getCurrentUser());
 
-	return <p>{user()?.name}</p>;
+	return <div>{user()?.name}</div>;
 }
 ```
 
-### Handling loading and errors
+### With parameter
 
 ```tsx
-import { Suspense, ErrorBoundary, For } from "solid-js";
 import { createAsync, query } from "@solidjs/router";
 
-const getUserQuery = query(async (id: string) => {
-	// ... Fetches the user from the server.
-}, "user");
+const getInvoiceQuery = query(async (invoiceId: string) => {
+	// ... Fetches the invoice details from the server.
+}, "invoice");
 
-function UserProfile() {
-	const user = createAsync(() => getUserQuery());
+function InvoiceDetails(props: { invoiceId: string }) {
+	const invoice = createAsync(() => getInvoiceQuery(props.invoiceId));
 
 	return (
-		<ErrorBoundary fallback={<p>Could not fetch user data.</p>}>
-			<Suspense fallback={<p>Loading user...</p>}>
-				<p>{user()!.name}</p>
+		<div>
+			<h2>Invoice #{invoice()?.number}</h2>
+			<p>Total: ${invoice()?.total}</p>
+		</div>
+	);
+}
+```
+
+### With error handling and pending state
+
+```tsx
+import { createAsync, query } from "@solidjs/router";
+import { Suspense, ErrorBoundary, For } from "solid-js";
+
+const getAllRecipesQuery = query(async () => {
+	// ... Fetches the recipes from the server and throws an error if an issue occurred.
+}, "recipes");
+
+function Recipes() {
+	const recipes = createAsync(() => getAllRecipesQuery());
+
+	return (
+		<ErrorBoundary fallback={<p>Couldn't fetch any recipes!</p>}>
+			<Suspense fallback={<p>Fetching recipes...</p>}>
+				<For each={recipes()}>
+					{(recipe) => (
+						<div>
+							<h3>{recipe.name}</h3>
+							<p>Cook time: {recipe.time}</p>
+						</div>
+					)}
+				</For>
 			</Suspense>
 		</ErrorBoundary>
 	);
 }
 ```
+
+## Related
+
+- [`query`](/solid-router/reference/data-apis/query)
+- [`<Suspense>`](/reference/components/suspense)
+- [`<ErrorBoundary>`](/reference/components/error-boundary)

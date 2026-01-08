@@ -56,7 +56,7 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 					<span class="-mt-[15px] block text-sm xl:hidden">
 						<EditPageLink />
 					</span>
-					<div class="w-full">{props.children}</div>
+					<div class="w-full px-2">{props.children}</div>
 					<span class="text-sm xl:hidden">
 						<PageIssueLink />
 					</span>

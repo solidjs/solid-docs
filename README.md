@@ -14,9 +14,7 @@ contains all the source code that we use to build our docs.
 
 ## What is Solid?
 
-Solid is a JavaScript framework used for building high-performance
-user-interfaces. Using a reactive approach and component-based architecture, we
-want to empower developers in creating efficient and scalable web applications.
+Solid is a JavaScript framework for building high-performance user interfaces. By leveraging a reactive approach and a component-based architecture, it empowers developers to create efficient and scalable web applications.
 
 ## Thank you for being here!
 

@@ -1,79 +1,120 @@
 ---
 title: children
 use_cases: >-
-  complex children manipulation, reusing children, avoiding duplicate dom,
-  children transformation, conditional children rendering
+  resolving component children, normalizing JSX children, slot-like helpers,
+  interacting with child content in library components
 tags:
-  - children
-  - props
   - components
+  - children
   - jsx
-  - composition
-  - helpers
-version: '1.0'
+  - utilities
+version: "1.0"
 description: >-
-  Use the children helper for complex child manipulation in Solid.js. Resolve,
-  reuse, and transform component children without creating duplicate DOM.
+  Resolve and normalize a component's `children` prop into a stable accessor.
+  Useful when you need to read or transform children imperatively inside a
+  component.
 ---
 
-```tsx
+`children` normalizes a component's `children` prop into a stable accessor that returns resolved JSX elements.
+It accepts functions, arrays, fragments, and nested structures.
+
+## Import
+
+```ts
 import { children } from "solid-js";
-import type { JSX, ResolvedChildren } from "solid-js";
-
-function children(fn: () => JSX.Element): () => ResolvedChildren
-
 ```
 
-The `children` helper is used for more complex interactions with props. 
-When you're not just passing children to another component using `props.children` once in JSX, you should use `children`. 
-Props are normally passed in via a getter for `props.children` in this manner:
+## Type
 
-```tsx
-const resolved = children(() => props.children)
+```ts
+function children(fn: Accessor<JSX.Element>): ChildrenReturn;
+
+type ChildrenReturn = Accessor<ResolvedChildren> & {
+	toArray: () => ResolvedChildren[];
+};
 ```
 
-The return value is a [memo](/reference/basic-reactivity/create-memo) evaluating to the resolved children, which updates whenever the children change. 
-Using this memo instead of accessing `props.children` directly has some important advantages in some scenarios. 
-The underlying issue is that, when you specify component children via JSX, Solid automatically defines `props.children` as a property getter, so that the children are created (in particular, DOM is created) whenever `props.children` gets accessed. 
+## Parameters
 
-Two particular consequences:
+### `fn`
 
-1. If you access `props.children` multiple times, the children (and associated DOM) get created multiple times. 
-This is useful if you want the DOM to be duplicated (as DOM nodes can appear in only one parent element), but in many cases it creates redundant DOM nodes. 
-If you instead call `resolved()` multiple times, you re-use the same children.
+- **Type:** `() => JSX.Element`
+- **Required:** Yes
 
-2. If you access `props.children` outside of a tracking scope (e.g., in an event handler), then you create children that will never be cleaned up. 
-If you instead call `resolved()`, you re-use the already resolved children. 
-You also guarantee that the children are tracked in the current component, as opposed to another tracking scope such as another component.
+An accessor that returns the `children` value (typically `props.children`).
 
-In addition, the `children` helper "resolves" children by calling argumentless functions and flattening arrays of arrays into an array. 
-For example, a child specified with JSX like `{count() * 2}` gets wrapped into a getter function `() => count() * 2` in `props.children`, but gets evaluated to an actual number in resolved, properly depending on a count signal.
+## Return value
 
-If the given `props.children` is not an array (which occurs when the JSX tag has a single child), then the `children` helper will not normalize it into an array. 
-This is useful behavior e.g. when the intention is to pass a single function as a child, which can be detected via `typeof resolved() === 'function'`. 
-If you want to normalize to an array, the returned memo has a `toArray` method _(new in 1.5)_.
+- **Type:** `ChildrenReturn`
 
-In most cases, you don't need (and in some cases, don't want) to use the `children` helper if you're just passing `props.children` on to another component or element via JSX:
+The function returns a callable accessor.
+Calling it yields the resolved children, either a single element or an array.
+
+## Helpers
+
+### `toArray()`
+
+- **Type:** `() => ResolvedChildren[]`
+
+- **Description:** Returns a flattened array of resolved child elements.
+
+This method is exposed on the returned accessor and is useful for iteration or index-based logic.
+
+## Examples
+
+### Basic usage
 
 ```tsx
-const Wrapper = (props) => {
-	return <div>{props.children}</div>
+function Wrapper(props) {
+	const resolved = children(() => props.children);
+
+	return <div>{resolved()}</div>;
 }
+
+// Usage
+<Wrapper>
+	<span>one</span>
+	<span>two</span>
+</Wrapper>;
 ```
 
-An important aspect of the `children` helper is that it forces the children to be created and resolved, as it accesses `props.children` immediately. 
-This can be undesirable for conditional rendering, e.g., when using the children within a [`<Show>`](/reference/components/show) component. 
-For example, the following code always evaluates the children:
+### `.toArray()` example
 
 ```tsx
-const resolved = children(() => props.children)
+function List(props) {
+	const resolved = children(() => props.children);
+	const items = resolved.toArray();
 
-return <Show when={visible()}>{resolved()}</Show>
+	return (
+		<ul>
+			{items.map((child) => (
+				<li>{child}</li>
+			))}
+		</ul>
+	);
+}
+
+// Usage
+<List>
+	<span>one</span>
+	<span>two</span>
+</List>;
 ```
 
-To evaluate the children only when `<Show>` would render them, you can push the call to children inside a component or a function within `<Show>`, which only evaluates its children when `when` condition is true. 
-Another nice workaround is to pass `props.children` to the children helper only when you actually want to evaluate the children:
+> [!NOTE]
+> `children` resolves the current value of `props.children`.
+> If `props.children` is reactive, the resolved accessor reflects updates.
+
+### Working with function-as-children
+
+If `children` is a function, the helper evaluates it and returns its rendered result.
 
 ```tsx
-const resolved = children(() => visible() && props.children)
+function Slot(props) {
+	const resolved = children(() => props.children);
+	return <div>{resolved()}</div>;
+}
+
+// Usage
+<Slot>{() => <span>dynamic</span>}</Slot>;
 ```

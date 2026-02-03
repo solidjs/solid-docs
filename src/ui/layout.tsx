@@ -157,7 +157,10 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 						</Suspense>
 					</div>
 				</Show>
-				<main class="prose prose-slate w-full flex-auto px-4 pt-2 dark:prose-invert md:max-w-2xl md:pb-16 lg:max-w-none dark:text-slate-300">
+				<main
+					class="prose prose-slate w-full flex-auto px-4 pt-2 dark:prose-invert md:max-w-2xl md:pb-16 lg:max-w-none dark:text-slate-300"
+					aria-live="polite"
+				>
 					<Show
 						when={!useCurrentRouteMetaData().isProjectRoot}
 						keyed

@@ -24,7 +24,10 @@ export const [isOpen, setIsOpen] = createSignal(false);
 export const MobileNavigation = (props: NavProps) => {
 	return (
 		<Dialog.Root open={isOpen()} onOpenChange={setIsOpen}>
-			<Dialog.Trigger>
+			<Dialog.Trigger
+				aria-label="Open navigation menu"
+				title="Open navigation menu"
+			>
 				<Icon path={bars_3} class="prose h-6 dark:prose-invert" />
 			</Dialog.Trigger>
 			<Dialog.Portal>

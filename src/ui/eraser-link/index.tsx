@@ -67,6 +67,7 @@ const EraserLink = (
 				class="relative inline-block"
 				target="_blank"
 				rel="noopener noreferrer"
+				aria-label="View diagram on Eraser.io"
 			>
 				<img
 					src={
@@ -74,7 +75,7 @@ const EraserLink = (
 							? `${workspaceUrl}/preview?${elementParams}&type=embed`
 							: `${workspaceUrl}/preview`
 					}
-					alt={""}
+					alt=""
 					onLoad={() => setIsLoaded(true)}
 				/>
 				{isLoaded() ? (

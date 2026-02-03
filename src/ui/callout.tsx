@@ -1,4 +1,3 @@
-import { Alert } from "@kobalte/core";
 import { Icon } from "solid-heroicons";
 import { mergeProps, type JSX, Show, untrack } from "solid-js";
 import {
@@ -91,7 +90,7 @@ export function Callout(props: CalloutProps) {
 	const IconComponent = icons[iconType];
 
 	return (
-		<Alert.Root
+		<div
 			class={`my-6 flex w-full rounded-3xl border p-4 ${
 				styles[mergedProps.type].container
 			}`}
@@ -112,6 +111,6 @@ export function Callout(props: CalloutProps) {
 					{mergedProps.children}
 				</div>
 			</div>
-		</Alert.Root>
+		</div>
 	);
 }

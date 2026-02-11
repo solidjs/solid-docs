@@ -10,48 +10,100 @@ tags:
   - invalidation
   - polling
   - refetch
-version: '1.0'
+version: "1.0"
 description: >-
   Manually revalidate cached queries to refresh stale data, implement polling,
   or trigger updates after mutations in SolidJS.
 ---
 
-The `revalidate` function is used to revalidate queries associated with specified [query keys](/solid-router/reference/data-apis/query#query-keys).
-When a [query](/solid-router/reference/data-apis/query) is revalidated, it is executed again, and any references to the associated query data are updated accordingly.
+The `revalidate` function triggers revalidation of [queries](/solid-router/data-fetching/queries) by their keys.
+Each query with active subscribers re-executes and updates its dependents; queries without subscribers are marked stale but don't execute until subscribed.
+
+## Import
 
 ```tsx
-import { For } from "solid-js";
+import { revalidate } from "@solidjs/router";
+```
+
+## Type
+
+```tsx
+function revalidate(
+	key?: string | string[] | void,
+	force?: boolean
+): Promise<void>;
+```
+
+## Parameters
+
+### `key`
+
+- **Type:** `string | string[] | void`
+- **Required:** No
+
+The query key or array of query keys to revalidate.
+If not provided, all queries on the current page are revalidated.
+
+### `force`
+
+- **Type:** `boolean`
+- **Required:** No
+- **Default:** `true`
+
+When `true`, clears the internal cache used for deduplication.
+When `false`, allows cached data to be reused if available.
+
+## Return value
+
+`revalidate` returns a `Promise` that resolves when the revalidation transition completes.
+
+## Examples
+
+### Basic usage
+
+```tsx
 import { query, createAsync, revalidate } from "@solidjs/router";
 
-const getPosts = query(async () => {
-	return await fetch("https://api.com/posts").then((response) =>
-		response.json()
-	);
-}, "posts");
+const getUserQuery = query(async () => {
+	// ... Fetches user data.
+	return { name: "John" };
+}, "user");
 
-function Posts() {
-	const posts = createAsync(() => getPosts());
+function UserProfile() {
+	const user = createAsync(() => getUserQuery());
 
-	function refetchPosts() {
-		revalidate(getPosts.key);
+	function refreshUser() {
+		revalidate(getUserQuery.key);
 	}
 
 	return (
 		<div>
-			<button onClick={refetchPosts}>Refetch posts</button>
-			<ul>
-				<For each={posts()}>{(post) => <li>{post.title}</li>}</For>
-			</ul>
+			<button onClick={refreshUser}>Refresh</button>
+			<p>{user()?.name}</p>
 		</div>
 	);
 }
 ```
 
-## Parameters
+### Revalidating multiple queries
 
-- `key`: The query key or an array of query keys to be revalidated.
-- `force` (optional): A boolean that indicates whether to delete the existing cached value of the queries.
-  Note that this cache is solely for de-duplication purposes.
-  Therefore, deleting the cache only affects de-duplication.
-  For more information on how `query` works, refer to [the `query` documentation](/solid-router/reference/data-apis/query).
-  The default value is `true`.
+```tsx
+import { query, revalidate } from "@solidjs/router";
+
+const getUsersQuery = query(async () => {
+	// ... Fetches users.
+}, "users");
+
+const getPostsQuery = query(async () => {
+	// ... Fetches posts.
+}, "posts");
+
+function refreshAll() {
+	revalidate([getUsersQuery.key, getPostsQuery.key]);
+}
+```
+
+## Related
+
+- [`query`](/solid-router/reference/data-apis/query)
+- [`createAsync`](/solid-router/reference/data-apis/create-async)

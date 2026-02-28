@@ -1,15 +1,16 @@
-import { defineConfig } from "@solidjs/start/config";
+import { createSolidBase, defineTheme } from "@kobalte/solidbase/config";
+import { solidStart } from "@solidjs/start/config";
+import { nitroV2Plugin } from "@solidjs/vite-plugin-nitro-2";
 
-import { createWithSolidBase, defineTheme } from "@kobalte/solidbase/config";
-
-import tree from "./.solid/tree";
+import { defineConfig } from "vite";
 import entries from "./.solid/flat-entries";
-import solidstartEntries from "./.solid/solid-start-flat-entries";
-import solidrouterEntries from "./.solid/solid-router-flat-entries";
 import solidMetaEntries from "./.solid/solid-meta-flat-entries";
-import solidrouterTree from "./.solid/solid-router-tree";
-import solidStartTree from "./.solid/solid-start-tree";
 import solidMetaTree from "./.solid/solid-meta-tree";
+import solidrouterEntries from "./.solid/solid-router-flat-entries";
+import solidrouterTree from "./.solid/solid-router-tree";
+import solidstartEntries from "./.solid/solid-start-flat-entries";
+import solidStartTree from "./.solid/solid-start-tree";
+import tree from "./.solid/tree";
 
 function docsData() {
 	const virtualModuleId = "solid:collection";
@@ -42,26 +43,12 @@ function docsData() {
 const theme = defineTheme({
 	componentsPath: import.meta.resolve("./src/solidbase-theme"),
 });
-export default defineConfig(
-	createWithSolidBase(theme)(
-		{
-			ssr: true,
-			middleware: "src/middleware/index.ts",
-			server: {
-				preset: "netlify",
-				prerender: {
-					crawlLinks: true,
-					autoSubfolderIndex: false,
-					failOnError: true,
-					// eslint-disable-next-line no-useless-escape
-					ignore: [/\{\getPath}/, /.*?emojiSvg\(.*/],
-				},
-			},
-			vite: {
-				plugins: [docsData(), heroCodeSnippet()],
-			},
-		},
-		{
+
+const solidbase = createSolidBase(theme);
+
+export default defineConfig({
+	plugins: [
+		solidbase.plugin({
 			title: "Solid Docs",
 			description:
 				"Documentation for SolidJS, the signals-powered UI framework",
@@ -140,9 +127,27 @@ export default defineConfig(
 					},
 				},
 			},
-		}
-	)
-);
+		}),
+		solidStart(
+			solidbase.startConfig({
+				ssr: true,
+				middleware: "src/middleware/index.ts",
+			})
+		),
+		docsData(),
+		heroCodeSnippet(),
+		nitroV2Plugin({
+			preset: "netlify",
+			prerender: {
+				crawlLinks: true,
+				autoSubfolderIndex: false,
+				failOnError: true,
+				// eslint-disable-next-line no-useless-escape
+				ignore: [/\{getPath}/, /.*?emojiSvg\(.*/],
+			},
+		}),
+	],
+});
 
 import { readFile } from "node:fs/promises";
 import { codeToHtml } from "shiki";

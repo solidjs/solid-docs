@@ -11,7 +11,7 @@ tags:
   - actions
   - security
   - database
-version: '1.0'
+version: "1.0"
 description: >-
   Create server-only functions in SolidStart using 'use server' directive.
   Handle database operations, API calls, and secure logic on the server.
@@ -26,7 +26,9 @@ const logHello = async (message: string) => {
 	console.log(message);
 };
 ```
+
 Or when using at the top of a file.
+
 ```tsx
 // File-level
 "use server";
@@ -74,16 +76,15 @@ The following examples show how to use server functions alongside solid-router's
 
 ```tsx {3}
 const getUser = query((id) => {
-  "use server";
-  return db.getUser(id);
+	"use server";
+	return db.getUser(id);
 }, "users");
 
 const updateUser = action(async (id, data) => {
-  "use server"
-  await db.setUser(id, data);
-  throw redirect("/", { revalidate: getUser.keyFor(id) });
+	"use server";
+	await db.setUser(id, data);
+	throw redirect("/", { revalidate: getUser.keyFor(id) });
 });
-
 ```
 
 When `getUser` or `updateUser` are triggered on the client, an http request will be made to the server, which calls the corresponding server function.
@@ -98,6 +99,7 @@ The data for the redirected page is fetched and streamed to the client in the sa
 
 Server functions allow the serialization of many different data types in the response, using the Seroval serializer.
 The full list is available [in Seroval's source code](https://github.com/lxsmnsyc/seroval/blob/main/docs/compatibility.md#supported-types).
+Configure serialization mode and CSP behavior in [`defineConfig`](/solid-start/reference/config/define-config#serialization).
 
 ## Meta information
 

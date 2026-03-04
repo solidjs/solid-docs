@@ -20,87 +20,82 @@ Please note that some third-party packages may not be compatible with v2 yet.
 
 ## Migration steps
 
-**1. Update your project to use the latest version of SolidStart**
+### Update dependencies
 
 ```package-install
-@solidjs/start@alpha
+@solidjs/start@alpha.2 @solidjs/vite-plugin-nitro-2 vite@7
 ```
 
-**2. Rename `app.config.ts` to `vite.config.ts`**
+```package-remove
+vinxi
+```
 
-**3. Update`vite.config.ts`**
+### Configuration files
 
-v2 ships as a native vite plugin using the environment api instead of vinxi.
+- Remove `app.config.ts`
+- Create `vite.config.ts`
 
-```tsx
-import { defineConfig } from "vite";
+```tsx title="vite.config.ts"
 import { solidStart } from "@solidjs/start/config";
-export default defineConfig({
-  plugins: [
-     solidStart(),
-  ]
+import { defineConfig } from "vite";
+import { nitroV2Plugin } from "@solidjs/vite-plugin-nitro-2";
+
+export default defineConfig(() => {
+	return {
+		plugins: [
+			solidStart({
+				middleware: "./src/middleware/index.ts",
+			}),
+			nitroV2Plugin(),
+		],
+	};
 });
 ```
 
-An important note is that `defineConfig` comes from `vite` directly.
+Compile-time environment variables are now handled by Vite's environment API.
 
-#### Defining middleware
+```tsx title="vite.config.ts"
+// ...
+export default defineConfig(({ mode }) => {
+	const env = loadEnv(mode, process.cwd(), "");
 
-Middlware is defined using the `middleware` option on the `solidStart` vite plugin.
-
-```tsx
-import { defineConfig } from "vite";
-import { solidStart } from "@solidjs/start/config";
-export default defineConfig({
-  plugins: [
-     solidStart({
-      	middleware: "./src/middleware.ts"
-    }),
-  ]
+	return {
+		// ...
+		environments: {
+			ssr: {
+				define: {
+					"process.env.DATABASE_URL": JSON.stringify(env.DATABASE_URL),
+				},
+			},
+		},
+	};
 });
+
 ```
 
-**4. Remove the vinxi dependency and add the vite dependency**
-
-```bash
-pnpm remove vinxi
-```
-
-```json
-"dependencies": {
-  "vite": "^7"
-}
-```
-
-**5. Update`package.json` build/dev commands**
-
-Update the build/dev commands to use native vite instead of vinxi.
+Update the build/dev commands to use native Vite instead of vinxi.
 
 ```json
 "scripts": {
   "dev": "vite dev",
-  "build": "vite build"
+  "build": "vite build",
+  "start": "vite preview"
 }
 ```
 
-**6. Replace all imports from `vinxi/http` with `@solidjs/start/http`**
 
-**7. Add back nitro via the vite plugin**
+### Environment types
 
-```package-install
-nitro@latest
+Only the `types` entry is new in v2. Everything else can remain unchanged.
+
+```json
+"compilerOptions": {
+  "types": ["@solidjs/start/env"]
+}
 ```
 
-```tsx
-import { defineConfig } from "vite";
-import { solidStart } from "@solidjs/start/config";
 
-export default defineConfig({
-  plugins: [
-     solidStart(),
-     nitro({
-        preset: 'netlify'
-      })
-  ]
-});
-```
+## Server runtime helpers
+
+- Replace all imports from `vinxi/http` with `@solidjs/start/http`
+- Optional: update the middleware syntax to the newer [H3 syntax](https://h3.dev/guide/basics/middleware)

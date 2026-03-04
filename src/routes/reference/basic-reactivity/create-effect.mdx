@@ -26,22 +26,23 @@ import { createEffect } from "solid-js"
 
 function createEffect<T>(
 	compute: () => T,
-	apply?: (value: T) => (() => void) | void
+	apply?: (value: T, prev: T | undefined) => (() => void) | void,
+	initialValue?: T
 ): void
 ```
 
 Effects are a general way to make arbitrary code ("side effects") run whenever dependencies change, e.g., to modify the DOM manually.
 
-The **compute** function runs in a tracking scope — it reads reactive values and returns a result. The **apply** function receives that result and performs the side effect. The apply function can optionally return a **cleanup** function that runs before the next execution or when the effect is disposed.
+The **compute** function runs in a tracking scope — it reads reactive values and returns a result. The **apply** function receives the computed value and the **previous value** (`prev`). On the first run, `prev` is `undefined` unless you provide an `initialValue`. The apply function can optionally return a **cleanup** function that runs before the next execution or when the effect is disposed.
 
 ```tsx
 const [count, setCount] = createSignal(0)
 
 createEffect(
-	() => count(),        // compute: track dependencies, return value
-	(value) => {          // apply: perform side effect with the value
-		console.log("count =", value)
-		return () => {        // optional cleanup
+	() => count(),              // compute: track dependencies, return value
+	(value, prev) => {          // apply: perform side effect with value and previous value
+		console.log("count =", value, "prev =", prev)
+		return () => {              // optional cleanup
 			console.log("cleaning up for count", value)
 		}
 	}
@@ -87,7 +88,7 @@ createEffect(
 
 ### Execution timing
 
-The first execution of the effect is not immediate; it's scheduled to run after the current rendering phase. If you need to wait for the DOM to be ready, use [`onSettled`](/reference/lifecycle/on-mount).
+The first execution of the effect is not immediate; it's scheduled to run after the current rendering phase. If you need to wait for the DOM to be ready, use [`onSettled`](/reference/lifecycle/on-settled).
 
 :::caution[Solid 2.0 — No signal writes in effects]
 Writing to signals inside effects warns in dev. Effects are for side effects (DOM updates, logging, external syncing) — not for deriving state. Use [`createMemo`](/reference/basic-reactivity/create-memo) or [derived signals](/concepts/derived-values/derived-signals) instead. If you must write a signal from within a reactive scope, use the `{ pureWrite: true }` option on the signal.
@@ -98,10 +99,11 @@ Writing to signals inside effects warns in dev. Effects are for side effects (DO
 | Name | Type | Description |
 | :--- | :--- | :---------- |
 | compute | `() => T` | A function that runs in a tracking scope, reads reactive values, and returns a value passed to `apply`. |
-| apply | `(value: T) => (() => void) \| void` | An optional function that receives the computed value and performs side effects. Can return a cleanup function. |
+| apply | `(value: T, prev: T \| undefined) => (() => void) \| void` | An optional function that receives the computed value and the previous value, and performs side effects. Can return a cleanup function. |
+| initialValue | `T` | An optional initial value for `prev` on the first run of `apply`. |
 
 ## Related
 
 - [`createTrackedEffect`](/reference/secondary-primitives/create-render-effect) — Single-callback form for effects that need the older pattern.
-- [`onSettled`](/reference/lifecycle/on-mount) — Runs once after the component's initial render is complete.
+- [`onSettled`](/reference/lifecycle/on-settled) — Runs once after the component's initial render is complete.
 - [`onCleanup`](/reference/lifecycle/on-cleanup) — Registers cleanup within a reactive computation.

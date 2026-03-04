@@ -24,7 +24,9 @@ import type { JSX } from "solid-js"
 
 function Repeat(props: {
   count: number
+  from?: number
   children: (index: () => number) => JSX.Element
+  fallback?: JSX.Element
 }): JSX.Element
 ```
 
@@ -70,9 +72,33 @@ Use `<For>` when:
 - You're rendering items from a data array
 - Items have identity and may be reordered, added, or removed
 
+## Using `from`
+
+The `from` prop sets the starting index (default `0`):
+
+```tsx
+<Repeat count={3} from={1}>
+  {(index) => <div>Page {index()}</div>}
+</Repeat>
+```
+
+Renders: Page 1, Page 2, Page 3
+
+## Fallback
+
+The `fallback` prop displays content when `count` is `0`:
+
+```tsx
+<Repeat count={items().length} fallback={<p>No items</p>}>
+  {(index) => <div>Item {index()}</div>}
+</Repeat>
+```
+
 ## Props
 
-| Name       | Type                                  | Description                              |
-| :--------- | :------------------------------------ | :--------------------------------------- |
-| `count`    | `number`                              | The number of times to render children.  |
-| `children` | `(index: () => number) => JSX.Element` | A callback receiving the index accessor. |
+| Name       | Type                                  | Default | Description                                    |
+| :--------- | :------------------------------------ | :------ | :--------------------------------------------- |
+| `count`    | `number`                              |         | The number of times to render children.        |
+| `from`     | `number`                              | `0`     | The starting index value.                      |
+| `children` | `(index: () => number) => JSX.Element` |         | A callback receiving the index accessor.       |
+| `fallback` | `JSX.Element`                         |         | Content to display when `count` is `0`.        |

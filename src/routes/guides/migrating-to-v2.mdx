@@ -20,7 +20,7 @@ This guide covers every breaking change in Solid 2.0 and shows how to update you
 
 ## Quick checklist
 
-- [ ] **Batching**: Setters no longer immediately update reads. Values become visible after the microtask flush (or via [`flush()`](/reference/reactive-utilities/flush)).
+- [ ] **Batching**: Updates are batched by default via microtasks. Signal reads update immediately after a set, but DOM updates and effects are deferred until the microtask flush (or [`flush()`](/reference/reactive-utilities/flush)).
 - [ ] **Effects**: [`createEffect`](/reference/basic-reactivity/create-effect) uses a split model (compute → apply). Cleanup is returned from the apply function.
 - [ ] **Lifecycle**: [`onMount`](/reference/lifecycle/on-mount) is replaced by [`onSettled`](/reference/lifecycle/on-settled), which can return cleanup.
 - [ ] **Async UI**: Use [`<Loading>`](/reference/components/suspense) for first readiness; use [`isPending()`](/reference/reactive-utilities/is-pending) for "refreshing…" indicators.
@@ -39,23 +39,27 @@ This guide covers every breaking change in Solid 2.0 and shows how to update you
 
 ### Batching and reads
 
-In Solid 2.0, updates are batched by default via microtasks. Setters no longer immediately update what reads return — the new value becomes visible when the batch flushes.
+In Solid 2.0, updates are batched by default via microtasks. Signal reads update immediately after calling a setter, but **DOM updates and effect runs are deferred** until the next microtask or until [`flush()`](/reference/reactive-utilities/flush) is called.
 
 ```ts
-import { createSignal } from "solid-js"
-import { flush } from "solid-js"
+import { createSignal, createEffect, flush } from "solid-js"
 
 const [count, setCount] = createSignal(0)
 
 setCount(1)
-count() // still 0
+count() // 1 — reads are immediately up to date
 
+// But effects and DOM updates are deferred:
+createEffect(
+  () => count(),
+  (value) => console.log("count =", value)
+)
+// The effect hasn't run yet — call flush() to force it synchronously
 flush()
-count() // now 1
 ```
 
-:::caution
-This is one of the most impactful behavioral changes. Code that reads a signal immediately after setting it will see the **old** value until the batch flushes. Use [`flush()`](/reference/reactive-utilities/flush) sparingly — it's most useful in tests or rare imperative code.
+:::note
+The `batch()` function from 1.x is removed since batching is now the default. Use [`flush()`](/reference/reactive-utilities/flush) when you need synchronous DOM updates or effect execution — most commonly in tests.
 :::
 
 The `batch()` function from 1.x is removed since batching is now the default behavior.

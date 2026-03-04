@@ -327,7 +327,7 @@ describe("pre-login: sign-in", () => {
   const login = getByRole('button', { text: 'Login' })
   // use touch event
   user.pointer([
-    { keys: "[TouchA]" target: login },
+    { keys: "[TouchA]", target: login },
     { keys: "[/TouchA]", target: login }
   ])
 });
@@ -354,8 +354,7 @@ For testing inside the DOM, the package `@testing-library/jest-dom` augments it 
 
 ### Directive testing
 
-[Directives](/reference/jsx-attributes/use) are reusable behaviors for elements.
-They receive the HTML element they are bound to as their first and an accessor of the directive prop as their second argument.
+In Solid 2.0, directives are implemented as [ref directive factories](/reference/jsx-attributes/ref) — functions that return a callback receiving the DOM element.
 To make testing them more concise, [`@solidjs/testing-library` has a `renderDirective`](https://testing-library.com/docs/solid-testing-library/api#renderdirective) function:
 
 
@@ -380,32 +379,38 @@ If, for example, you have a directive that handles the [Fullscreen API](https://
 ```ts tab title="fullscreen.test.ts"
 import { test, expect, vi } from "vitest"
 import { renderDirective } from "@solidjs/testing-library"
-import { createFullScreen } from "./fullscreen"
+import { fullscreen } from "./fullscreen"
 
 test("toggles fullscreen", () => {
   const targetElement = document.createElement("div")
-  const fs = vi.spyOn(targetElement, "fullscreen")
-  const [setArg, container] = renderDirective(createFullScreen, false)
+  const fs = vi.spyOn(targetElement, "requestFullscreen")
+  const { setArg } = renderDirective(fullscreen, { initialValue: false })
   setArg(true)
   expect(fs).toHaveBeenCalled()
 })
 ```
 
 ```ts tab title="fullscreen.ts"
-import { Accessor, createEffect } from "solid-js"
+import { createEffect } from "solid-js"
 
-export const fullscreen = (ref: HTMLElement, active: Accessor<boolean>) =>
+export function fullscreen(active: () => boolean) {
+  // Phase 1: Owned setup — create effect in component's reactive context
+  let el: HTMLElement
   createEffect(
-    () => active(), // compute: track the active state
-    (isActive) => {  // apply: perform DOM side effect
-      const currentlyFullscreen = document.fullscreenElement === ref
+    () => active(),
+    (isActive) => {
+      if (!el) return
+      const currentlyFullscreen = document.fullscreenElement === el
       if (isActive && !currentlyFullscreen) {
-        ref.requestFullScreen().catch(() => {})
+        el.requestFullscreen().catch(() => {})
       } else if (!isActive && currentlyFullscreen) {
-        document.exitFullScreen()
+        document.exitFullscreen()
       }
     }
   )
+  // Phase 2: Apply — receives the DOM element
+  return (element: HTMLElement) => { el = element }
+}
 ```
 
 ### Primitive testing
@@ -453,17 +458,21 @@ An example test using `testEffect` may look like this:
 
 ```ts frame="none"
 const [value, setValue] = createSignal(0)
+let run = 0
 return testEffect(done =>
-  createEffect((run: number = 0) => {
-    if (run === 0) {
-      expect(value()).toBe(0)
-      setValue(1)
-    } else if (run === 1) {
-      expect(value()).toBe(1)
-      done()
+  createEffect(
+    () => value(),
+    (v) => {
+      if (run === 0) {
+        expect(v).toBe(0)
+        setValue(1)
+      } else if (run === 1) {
+        expect(v).toBe(1)
+        done()
+      }
+      run++
     }
-    return run + 1
-  })
+  )
 )
 ```
 

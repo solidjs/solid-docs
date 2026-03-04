@@ -10,7 +10,7 @@ tags:
   - effects
   - optimization
   - fundamentals
-version: '1.0'
+version: '2.0'
 description: >-
   Master Solid's fine-grained reactivity system for targeted UI updates, optimal
   performance, and efficient state management patterns.
@@ -37,8 +37,7 @@ These core elements serve as the foundation for more specialized reactive featur
 - [Stores](/concepts/stores) which are [proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) that create, read, and write signals under the hood.
 - [Memos](/concepts/derived-values/memos) resemble [effects](/concepts/effects) but are distinct in that they _return_ a signal and optimize computations through caching.
   They update based on the behavior of effects, but are more ideal for computational optimization.
-- [Resources](/guides/fetching-data), building on the concept of memos, convert the asynchronicity of network requests into synchronicity, where the results are embedded within a signal.
-- Render effects are a tailored type of effect that initiate immediately, specifically designed for managing the rendering process.
+- [Async data](/guides/fetching-data), building on the concept of memos, handles asynchronous operations like network requests. Async computations (via `createMemo` or `createStore`) integrate with [`<Loading>`](/reference/components/suspense) boundaries to manage loading states.
 
 ### Understanding signals
 
@@ -75,12 +74,13 @@ import { createSignal, createEffect } from "solid-js";
 
 const [count, setCount] = createSignal(0);
 
-createEffect(() => {
-	console.log(count());
-});
+createEffect(
+	() => count(),
+	(value) => console.log(value)
+);
 ```
 
-The effect takes a function that is called whenever _any_ of the signals it relies on changes, such as `count` in this example.
+In Solid 2.0, effects use a **split model**: a compute function tracks dependencies and returns a value, and an apply function performs the side effect with that value. The effect re-runs whenever _any_ of the signals tracked in the compute phase change, such as `count` in this example.
 
 ## Building a reactive system
 
@@ -249,7 +249,10 @@ const displayTemperature = createMemo(() => {
 	return `${temperature()} degrees ${unit()}`;
 });
 
-createEffect(() => console.log("Current temperature is", displayTemperature()));
+createEffect(
+	() => displayTemperature(),
+	(value) => console.log("Current temperature is", value)
+);
 
 console.log("2. Turn off displayTemp");
 setDisplayTemp(false);
@@ -278,27 +281,22 @@ Specifically, the system registers the subscriber, runs the effect function, and
 Consider the following example:
 
 ```jsx
-createEffect(() => {
-	setTimeout(() => {
-		console.log(count());
-	}, 1000);
-});
+createEffect(
+	() => count(),
+	(value) => {
+		setTimeout(() => {
+			console.log(value);
+		}, 1000);
+	}
+);
 ```
 
-The `createEffect` function in this example, initiates a `setTimeout` to delay the console log.
-Because the system is synchronous, it doesn't wait for this operation to complete.
-By the time the `count` getter is triggered within the `setTimeout`, the global scope no longer has a registered subscriber.
-As a result, this `count` signal will not add the callback as a subscriber which leads to potential issues with tracking the changes to `count`.
+In Solid 2.0's split effect model, the compute function (first argument) tracks dependencies synchronously. The apply function (second argument) receives the computed value and performs the side effect. Because tracking happens entirely in the compute phase, asynchronous code in the apply phase does not affect dependency registration.
 
-### Handling asynchronous effects
+### Handling asynchronous data
 
-While the basic reactivity system is synchronous, frameworks like Solid offer more advanced features to handle asynchronous scenarios.
-For example, the `on` function provides a way to manually specify the dependencies of an effect.
-This is particularly useful for to make sure asynchronous operations are correctly tied into the reactive system.
+While the reactive tracking system is synchronous, Solid 2.0 provides built-in support for asynchronous data through async computations.
 
-Solid also introduces the concept of resources for managing asynchronous operations.
-Resources are specialized reactive primitives that convert the asynchronicity of operations like network requests into synchronicity, embedding the results within a signal.
-The system can then track asynchronous operations and their state, keeping the UI up-to-date when the operation completes or its' state changes.
+An async `createMemo` or function-form `createStore` integrates with [`<Loading>`](/reference/components/suspense) boundaries to manage loading states. The system tracks when async computations are pending and coordinates UI updates through transitions, [`isPending()`](/reference/reactive-utilities/is-pending), and [`latest()`](/reference/reactive-utilities/latest).
 
-Using resources in Solid can assist in complex scenarios when multiple asynchronous operations are involved and the completion may affect different parts of the reactive system.
-By integrating resources into the system, you can ensure that dependencies are correctly tracked and that the UI remains consistent with the underlying asynchronous data.
+For a deep dive into how Solid handles async data, see the [async reactivity](/advanced-concepts/async-reactivity) guide.

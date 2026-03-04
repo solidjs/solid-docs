@@ -62,9 +62,19 @@ function model(el: HTMLInputElement, accessor: Accessor<Signal<string>>) {
 // Solid 2.0
 function model(signal: Signal<string>) {
   const [field, setField] = signal;
-  return (el: HTMLInputElement) => {
-    createRenderEffect(() => (el.value = field()));
-    el.addEventListener("input", ({ target }) => setField(target.value));
+  // Phase 1: Owned setup — create reactive primitives here
+  createEffect(
+    () => field(),
+    (value) => {
+      // Phase 2: Apply — el is captured in closure from the ref callback
+      if (el) el.value = value;
+    }
+  );
+  let el: HTMLInputElement;
+  return (element: HTMLInputElement) => {
+    el = element;
+    el.value = field();
+    el.addEventListener("input", ({ target }) => setField((target as HTMLInputElement).value));
   };
 }
 

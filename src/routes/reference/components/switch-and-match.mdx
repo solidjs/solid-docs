@@ -30,7 +30,7 @@ function Switch(props: {
 
 type MatchProps<T> = {
 	when: T | undefined | null | false
-	children: JSX.Element | ((item: T) => JSX.Element)
+	children: JSX.Element | ((item: () => T) => JSX.Element)
 }
 function Match<T>(props: MatchProps<T>)
 ```
@@ -65,7 +65,15 @@ For example, it can be used to perform basic routing:
 </Switch>
 ```
 
-Match also supports function children to serve as keyed flow.
+Match also supports function children. When a function child is provided, it receives the `when` value as an **accessor** — the matched value is narrowed and can be called reactively:
+
+```tsx
+<Switch>
+	<Match when={user()}>
+		{(u) => <Profile name={u().name} />}
+	</Match>
+</Switch>
+```
 
 ## Props
 

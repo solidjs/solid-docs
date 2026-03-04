@@ -23,10 +23,14 @@ function isPending(fn: () => any): boolean
 
 `isPending` answers: "Does this expression currently have pending async work while also having a usable stale value?"
 
+For a conceptual overview of the async model, see [Async Reactivity](/advanced-concepts/async-reactivity).
+
 ## Key behavior
 
 - **False during initial `Loading` fallback** — there is no stale value yet, and the suspended subtree isn't producing UI.
 - **True during revalidation** — once you've rendered at least once and the data is being refreshed in the background.
+- **Reactive** — `isPending()` can be used directly in JSX or any reactive scope; it tracks dependencies and updates automatically.
+- **Works with actions** — reflects pending state from transitions created by [`action()`](/reference/reactive-utilities/action).
 
 This makes it ideal for showing subtle "refreshing…" indicators without replacing the whole subtree with a spinner.
 
@@ -53,13 +57,14 @@ function UserList() {
 
 ## Combining multiple sources
 
-You can check pending state across multiple async computations:
+You can check pending state across multiple async computations by reading them within the same expression:
 
 ```tsx
 const users = createMemo(() => fetchUsers())
 const posts = createMemo(() => fetchPosts())
 
-const listPending = () => isPending(() => users() || posts())
+// Read both values to track pending state for either
+const listPending = () => isPending(() => { users(); posts() })
 ```
 
 ## Replaces `.loading`

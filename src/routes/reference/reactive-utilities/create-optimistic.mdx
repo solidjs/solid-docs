@@ -23,7 +23,9 @@ function createOptimistic<T>(
 ): [get: () => T, set: (v: T) => T]
 ```
 
-`createOptimistic` has the same surface as [`createSignal`](/reference/basic-reactivity/create-signal), but its writes are treated as **optimistic** — values can be overridden during a transition and revert when the transition completes.
+`createOptimistic` has the same surface as [`createSignal`](/reference/basic-reactivity/create-signal), but its writes are treated as **optimistic** — values overlay during a transition and automatically revert when the transition settles.
+
+For a conceptual overview of the async model, see [Async Reactivity](/advanced-concepts/async-reactivity).
 
 ## Usage
 
@@ -38,7 +40,28 @@ const updateName = action(function* (next) {
 })
 ```
 
-During the action, `name()` returns the optimistic value. When the transition completes (or if the action fails), the value reverts.
+During the action, `name()` returns the optimistic value. When the transition settles, the value reverts — regardless of whether the action succeeded or failed.
+
+## How rollback works
+
+Optimistic writes are scoped to the transition created by an [`action`](/reference/reactive-utilities/action). When the transition completes:
+
+- **On success:** The optimistic overlay is discarded. If you called [`refresh()`](/reference/reactive-utilities/refresh) to re-fetch the source data, the fresh server value takes over.
+- **On failure:** The optimistic overlay is also discarded, reverting the value to its pre-mutation state — automatic rollback with no extra code.
+
+```ts
+const [count, setCount] = createOptimistic(0)
+
+const increment = action(function* () {
+  setCount(count() + 1)    // optimistic: shows 1 immediately
+  yield api.increment()    // if this fails...
+  // count() reverts to 0 automatically
+})
+```
+
+## Behavior outside actions
+
+Outside of an [`action`](/reference/reactive-utilities/action), `createOptimistic` behaves like a normal signal — writes are applied directly and do not revert. The optimistic rollback behavior only applies when writes happen inside an action's transition context.
 
 ## When to use
 

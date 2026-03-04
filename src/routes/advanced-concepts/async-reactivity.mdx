@@ -1,0 +1,266 @@
+---
+title: Async reactivity
+order: 7
+use_cases: >-
+  async data, loading states, transitions, pending indicators, data fetching,
+  suspense, revalidation, optimistic updates
+tags:
+  - async
+  - reactivity
+  - loading
+  - transitions
+  - pending
+  - optimistic
+  - data
+version: '2.0'
+description: >-
+  Understand how Solid 2.0 treats async as a first-class reactive concept —
+  computations can be async, Loading boundaries handle pending states, and
+  transitions coordinate refreshes.
+---
+
+Solid 2.0 makes async a **first-class capability of the reactive system**.
+Any computation — a memo, a derived store, a projection — can return a Promise, and the rest of the system handles it automatically.
+There is no special "resource" primitive; async is simply part of how computations work.
+
+## One model for sync and async
+
+In Solid 1.x, synchronous values used `createSignal`/`createMemo`, while async values required the separate `createResource` primitive with its own loading/error/refetch API.
+In 2.0, these are unified:
+
+```ts
+import { createSignal, createMemo } from "solid-js"
+
+// Synchronous derived value — works exactly as before
+const doubled = createMemo(() => count() * 2)
+
+// Async derived value — same API, returns a Promise
+const user = createMemo(() => fetchUser(userId()))
+```
+
+Consumers read both the same way — `doubled()` and `user()` — and the reactive system figures out the rest.
+If the async value isn't ready yet, the graph **suspends** and a [`<Loading>`](/reference/components/suspense) boundary catches it.
+
+## How suspension works
+
+When a computation returns a Promise, any component that reads its accessor while the Promise is unresolved will **suspend**.
+Suspension propagates upward through the component tree until it hits a `<Loading>` boundary:
+
+```tsx
+import { createMemo } from "solid-js"
+
+const user = createMemo(() => fetchUser(userId()))
+
+function Profile() {
+  // user() suspends here if the fetch hasn't resolved
+  return <h1>{user().name}</h1>
+}
+
+// The Loading boundary catches the suspension
+<Loading fallback={<Spinner />}>
+  <Profile />
+</Loading>
+```
+
+This pushes "loading state" into **UI structure** (boundaries) rather than leaking it into every type with `T | undefined`.
+You never have to check `if (user.loading)` — if the data isn't ready, the boundary handles it.
+
+### Nesting boundaries
+
+You can nest `<Loading>` boundaries to control exactly where loading UI appears and avoid blocking unrelated parts of the page:
+
+```tsx
+<Loading fallback={<PageSkeleton />}>
+  <Header />
+  <Loading fallback={<ContentSpinner />}>
+    <MainContent />
+  </Loading>
+  <Sidebar />
+</Loading>
+```
+
+The inner boundary catches suspension from `<MainContent />` without affecting `<Header />` or `<Sidebar />`.
+The outer boundary catches suspension from everything else.
+
+## Initial loading vs. revalidation
+
+Solid 2.0 distinguishes between two types of "pending" states:
+
+1. **Initial loading** — the first time a subtree reads an async value that hasn't resolved yet. Handled by `<Loading>`.
+2. **Revalidation** — the data has been shown at least once, and a background refresh is in progress. Handled by [`isPending()`](/reference/reactive-utilities/is-pending).
+
+This separation prevents the jarring UX of showing a full-page spinner every time data refreshes:
+
+```tsx
+import { createMemo, isPending, Show } from "solid-js"
+
+const users = createMemo(() => fetchUsers())
+
+function UserList() {
+  return (
+    <>
+      {/* Subtle indicator during background refresh */}
+      <Show when={isPending(() => users())}>
+        <div class="refreshing-banner">Updating...</div>
+      </Show>
+
+      {/* Full spinner only on initial load */}
+      <Loading fallback={<Spinner />}>
+        <List users={users()} />
+      </Loading>
+    </>
+  )
+}
+```
+
+Key detail: `isPending()` is **false during the initial `<Loading>` fallback** — there is no stale value yet, so "stale while revalidating" doesn't apply.
+
+## Transitions
+
+In Solid 2.0, transitions are a **built-in scheduling concept** rather than something you explicitly wrap with `startTransition`.
+When a reactive dependency changes and triggers an async recomputation, the system automatically manages the transition:
+
+- The **previous value stays on screen** (no flicker) while the new value resolves.
+- Multiple transitions can be **in flight simultaneously** — the system determines which values are entangled and coordinates their resolution.
+- [`isPending()`](/reference/reactive-utilities/is-pending) lets you observe whether a transition is in progress.
+- [`latest()`](/reference/reactive-utilities/latest) lets you peek at the in-flight value before a transition resolves.
+
+This means you no longer need `startTransition` or `useTransition`. The reactive system handles transition scheduling, and you use `isPending` and `latest` to observe it.
+
+### Peeking at in-flight values
+
+During a transition, `latest(fn)` reads the most recent value — even if it hasn't settled yet:
+
+```ts
+import { createSignal, createMemo, latest } from "solid-js"
+
+const [userId, setUserId] = createSignal(1)
+const user = createMemo(() => fetchUser(userId()))
+
+// Reflects the in-flight userId during a transition,
+// falls back to the settled value if the new one isn't available
+const latestId = () => latest(userId)
+```
+
+This is useful for UI that needs to reflect what the user just did (e.g. highlighting a selected tab) before the transition resolves.
+
+## Async stores
+
+The function form of [`createStore`](/reference/store-utilities/create-store) makes stores async-capable too.
+This is especially useful for list data where you want fine-grained reactivity and reconciliation:
+
+```ts
+import { createStore } from "solid-js/store"
+
+// Fetches users and reconciles by "id" key — unchanged items keep identity
+const [users] = createStore(() => api.listUsers(), [], { key: "id" })
+```
+
+The store suspends like any other async computation, so it works with `<Loading>` boundaries.
+Because changes are reconciled by key, list re-renders are efficient — only the items that actually changed update.
+
+## Mutations: `action` + `refresh`
+
+Reading async data is handled by computations and boundaries.
+**Writing** data — mutations — uses a different tool: [`action()`](/reference/reactive-utilities/action).
+
+An action wraps a generator function that can perform optimistic writes, async work, and refresh coordination in a structured way:
+
+```ts
+import { action, refresh } from "solid-js"
+import { createStore } from "solid-js/store"
+
+const [todos] = createStore(() => api.getTodos(), { list: [] })
+
+const addTodo = action(function* (todo) {
+  yield api.addTodo(todo)   // async work
+  refresh(todos)             // re-fetch the source data
+})
+```
+
+Actions run inside a transition. When the action completes and `refresh()` fires, the derived data recomputes and the UI updates.
+See the [Fetching Data](/guides/fetching-data) guide for the full mutation and optimistic update patterns.
+
+## Optimistic updates
+
+For instant UI feedback during mutations, Solid 2.0 provides two optimistic primitives:
+
+- [`createOptimistic`](/reference/reactive-utilities/create-optimistic) — a signal whose writes revert when the transition completes
+- [`createOptimisticStore`](/reference/reactive-utilities/create-optimistic-store) — the store equivalent
+
+Optimistic values overlay on top of a source during a transition and automatically roll back when the transition settles (on both success and failure):
+
+```ts
+import { action, refresh } from "solid-js"
+import { createStore, createOptimisticStore, snapshot } from "solid-js/store"
+
+const [todos] = createStore(() => api.getTodos(), { list: [] })
+const [optimisticTodos, setOptimisticTodos] = createOptimisticStore(
+  () => snapshot(todos),
+  { list: [] }
+)
+
+const addTodo = action(function* (todo) {
+  // 1. Instant UI update
+  setOptimisticTodos((s) => s.list.push(todo))
+
+  // 2. Server write
+  yield api.addTodo(todo)
+
+  // 3. Refresh source — fresh data replaces optimistic overlay
+  refresh(todos)
+})
+```
+
+The full lifecycle:
+
+1. User triggers the action (e.g. clicks "Add")
+2. The action begins a transition
+3. `setOptimisticTodos` applies the optimistic overlay — UI updates immediately
+4. `isPending(() => optimisticTodos)` becomes `true`
+5. `yield` waits for the server write to complete
+6. `refresh(todos)` re-fetches the source data
+7. The transition settles — the optimistic overlay is discarded, and the fresh server data shows through
+8. `isPending` becomes `false`
+
+If the server write fails, the optimistic overlay is still discarded and the UI reverts to the pre-mutation state — automatic rollback with no extra code.
+
+## Error handling
+
+Errors in async computations are caught by [`<Errored>`](/reference/components/error-boundary) boundaries, just like synchronous errors:
+
+```tsx
+<Errored fallback={(err) => <p>Something went wrong: {err.message}</p>}>
+  <Loading fallback={<Spinner />}>
+    <UserProfile />
+  </Loading>
+</Errored>
+```
+
+If a fetch rejects or a computation throws, the nearest `<Errored>` boundary renders its fallback.
+Inside actions, you can also use standard try/catch in the generator:
+
+```ts
+const save = action(function* (data) {
+  try {
+    yield api.save(data)
+    refresh(source)
+  } catch (err) {
+    console.error("Save failed:", err)
+    // Optimistic writes still revert automatically
+  }
+})
+```
+
+## Summary
+
+| Concept | API | Purpose |
+|---------|-----|---------|
+| Async computations | `createMemo`, `createStore(fn)` | Fetch and derive async data |
+| Initial loading | `<Loading>` | Show fallback until first value resolves |
+| Error handling | `<Errored>` | Catch rejected fetches and thrown errors |
+| Revalidation state | `isPending(fn)` | Detect background refresh (stale-while-revalidating) |
+| In-flight values | `latest(fn)` | Peek at transitioning values |
+| Mutations | `action(fn)` | Structured async writes with transition coordination |
+| Recomputation | `refresh()` | Re-run derived data after a mutation |
+| Optimistic UI | `createOptimistic`, `createOptimisticStore` | Instant feedback that reverts when transition settles |

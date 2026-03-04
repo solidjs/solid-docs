@@ -20,7 +20,7 @@ description: >-
 ---
 
 For most modern web applications, data fetching is a common task.
-In Solid 2.0, async is a first-class capability of computations — you can use `createMemo` or derived stores to fetch data, and the reactive system handles loading, error, and refresh states automatically.
+In Solid 2.0, async is a first-class capability of computations — you can use `createMemo` or derived stores to fetch data, and the reactive system handles loading, error, and refresh states automatically. For the conceptual foundation, see [Async Reactivity](/advanced-concepts/async-reactivity).
 
 :::caution[Solid 2.0 — `createResource` is removed]
 `createResource` has been removed. Async data is now handled by standard computations (`createMemo`, `createStore(fn)`) that return Promises. Wrap reads of async values in `<Loading>` to display fallback UI while data is pending.
@@ -31,7 +31,7 @@ In Solid 2.0, async is a first-class capability of computations — you can use 
 Any computation may return a Promise to represent pending work. Consumers read the accessor as usual; if the value isn't ready yet, the reactive graph suspends until it resolves.
 
 ```jsx
-import { createSignal, createMemo } from "solid-js";
+import { createSignal, createMemo, Loading } from "solid-js";
 
 const fetchUser = async (id) => {
   const response = await fetch(`https://swapi.dev/api/people/${id}/`);
@@ -90,7 +90,7 @@ You can nest `Loading` boundaries to control where loading UI appears and avoid 
 
 ## Error handling
 
-To handle errors during data fetching, wrap async reads in an [`Errored`](/concepts/control-flow/error-boundary) boundary:
+To handle errors during data fetching, wrap async reads in an [`Errored`](/reference/components/error-boundary) boundary:
 
 ```jsx
 import { createMemo } from "solid-js";
@@ -153,18 +153,22 @@ While async data reads can be modeled as computations, mutations need a differen
 
 ```jsx
 import { action, refresh } from "solid-js";
-import { createStore, snapshot } from "solid-js/store";
+import { createStore, createOptimisticStore, snapshot } from "solid-js/store";
 
 const [todos] = createStore(() => api.getTodos(), { list: [] });
+const [optimisticTodos, setOptimisticTodos] = createOptimisticStore(
+  () => snapshot(todos),
+  { list: [] }
+);
 
 const addTodo = action(function* (todo) {
-  // optimistic write (see below)
+  // optimistic write — UI updates immediately
   setOptimisticTodos((s) => s.list.push(todo));
 
   // perform async work
   yield api.addTodo(todo);
 
-  // refresh derived reads
+  // refresh derived reads — fresh server data replaces optimistic overlay
   refresh(todos);
 });
 ```

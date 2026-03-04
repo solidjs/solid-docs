@@ -29,17 +29,9 @@ function refresh(target: Refreshable): void
 
 ## Forms
 
-### Thunk form
-
-Re-runs an expression:
-
-```ts
-refresh(() => query.user(id()))
-```
-
 ### Refreshable form
 
-Requests recomputation for a derived signal/store/projection:
+Requests recomputation for a derived computation. Works with any "refreshable" target — a derived store, async memo, or projection created with a function argument:
 
 ```ts
 const [todos] = createStore(() => api.getTodos(), { list: [] })
@@ -48,9 +40,19 @@ const [todos] = createStore(() => api.getTodos(), { list: [] })
 refresh(todos)
 ```
 
+Refreshable targets are computations created with a function form: `createStore(() => ...)`, `createMemo(() => ...)` (async), and [`createProjection`](/reference/store-utilities/create-projection). These internally carry a refresh symbol that `refresh()` uses to trigger recomputation.
+
+### Thunk form
+
+Re-runs an arbitrary expression:
+
+```ts
+refresh(() => query.user(id()))
+```
+
 ## Usage with `action`
 
-`refresh` is typically used inside an `action` after async work completes:
+`refresh` is typically used inside an [`action`](/reference/reactive-utilities/action) after async work completes:
 
 ```ts
 import { action, refresh } from "solid-js"
@@ -63,6 +65,8 @@ const addTodo = action(function* (todo) {
   refresh(todos) // re-fetch the todos
 })
 ```
+
+`refresh` can also be called outside of actions — for example, in response to a WebSocket message or other external event — to trigger recomputation of derived data.
 
 ## Replaces `refetch`
 

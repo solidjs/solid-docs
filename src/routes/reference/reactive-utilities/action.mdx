@@ -23,10 +23,14 @@ function action<T extends (...args: any[]) => Generator | AsyncGenerator>(
 ): (...args: Parameters<T>) => Promise<ReturnType<T>>
 ```
 
-`action()` wraps a generator or async generator function for mutations. It returns an async function you can call from event handlers. Inside an action, you can:
+`action()` wraps a generator or async generator function for mutations. It returns an async function you can call from event handlers. Each call runs inside a **transition** — the reactive system coordinates optimistic writes, async work, and data refreshes automatically.
 
-1. Perform **optimistic writes**
-2. **yield/await** async work
+For a conceptual overview of the async model, see [Async Reactivity](/advanced-concepts/async-reactivity).
+
+Inside an action, you can:
+
+1. Perform **optimistic writes** with [`createOptimistic`](/reference/reactive-utilities/create-optimistic) or [`createOptimisticStore`](/reference/reactive-utilities/create-optimistic-store)
+2. **yield** Promises to perform async work
 3. **Refresh** derived async computations via [`refresh()`](/reference/reactive-utilities/refresh)
 
 ## Basic usage
@@ -72,19 +76,75 @@ const addTodo = action(function* (todo) {
 })
 ```
 
-## Async generator form
+## Generator forms
 
-For TypeScript ergonomics, an async generator form is also available:
+### Standard generator (`function*`)
+
+Use `yield` to wait on Promises. The action pauses at each `yield` and resumes when the Promise resolves:
+
+```ts
+const save = action(function* (data) {
+  yield api.save(data)      // pauses here until the Promise resolves
+  refresh(source)            // runs after save completes
+})
+```
+
+### Async generator (`async function*`)
+
+For TypeScript ergonomics, an async generator form is also available. Use `await` for async work and a bare `yield` to re-enter the transition context:
 
 ```ts
 const saveTodo = action(async function* (todo) {
   setOptimisticTodos((s) => s.list.push(todo))
   const res = await api.addTodo(todo)
-  yield  // resume in same transition context
+  yield  // re-enters the transition context after the await
   refresh(todos)
   return res
 })
 ```
+
+:::note
+In the async generator form, the bare `yield` (with no expression) is important — it signals the runtime to resume in the same transition context after the `await`. Without it, code after `await` runs outside the transition.
+:::
+
+## Error handling
+
+Use standard try/catch inside the generator. Optimistic writes revert automatically regardless of success or failure:
+
+```ts
+const addTodo = action(function* (todo) {
+  setOptimisticTodos((s) => s.list.push(todo))
+  try {
+    yield api.addTodo(todo)
+    refresh(todos)
+  } catch (err) {
+    console.error("Failed to add todo:", err)
+    // Optimistic writes revert automatically — no manual rollback needed
+  }
+})
+```
+
+If an error is not caught inside the action, it propagates to the caller as a rejected Promise:
+
+```tsx
+<button onClick={async () => {
+  try {
+    await addTodo({ id: 1, text: "New task" })
+  } catch (err) {
+    showToast("Something went wrong")
+  }
+}}>
+  Add Todo
+</button>
+```
+
+## Transitions and concurrency
+
+Each `action()` call creates its own transition. Actions coordinate with the reactive system:
+
+- [`isPending()`](/reference/reactive-utilities/is-pending) reflects that a transition is in progress.
+- Optimistic values overlay during the transition and revert when it settles.
+- Multiple transitions can be in flight simultaneously — the system entangles related computations automatically.
 
 ## Replaces manual mutation patterns
 

@@ -24,11 +24,21 @@ function createOptimisticStore<T>(
 ): [get: Store<T>, set: SetStoreFunction<T>]
 ```
 
-`createOptimisticStore` is the store analogue of [`createOptimistic`](/reference/reactive-utilities/create-optimistic). Writes are treated as optimistic and revert when the transition completes.
+`createOptimisticStore` is the store analogue of [`createOptimistic`](/reference/reactive-utilities/create-optimistic). Writes are treated as optimistic — they overlay during a transition and automatically revert when the transition settles.
+
+For a conceptual overview of the async model, see [Async Reactivity](/advanced-concepts/async-reactivity).
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `fnOrValue` | `T \| (() => T)` | A static initial value, or a **getter function** that derives the base value from a source. When a function is provided, the optimistic store tracks the source and reverts to it when transitions settle. |
+| `initial` | `T` (optional) | Fallback value used before the getter resolves (when `fnOrValue` is a function). Similar to the initial value in `createStore(fn, initial)`. |
+| `options` | `{ key?: string }` (optional) | The `key` property specifies which field to use for reconciliation when the source value is an array of objects (default: `"id"`). This preserves object identity for unchanged items during updates. |
 
 ## Usage
 
-A common pattern is to derive from a source store and apply optimistic mutations in an [`action`](/reference/reactive-utilities/action):
+A common pattern is to derive from a source store via [`snapshot()`](/reference/store-utilities/snapshot) and apply optimistic mutations in an [`action`](/reference/reactive-utilities/action):
 
 ```ts
 import { action, refresh } from "solid-js"
@@ -36,14 +46,45 @@ import { createStore, createOptimisticStore, snapshot } from "solid-js/store"
 
 const [todos] = createStore(() => api.getTodos(), { list: [] })
 const [optimisticTodos, setOptimisticTodos] = createOptimisticStore(
-  () => snapshot(todos),
-  { list: [] }
+  () => snapshot(todos),  // derive base value from the source store
+  { list: [] }            // initial value before first fetch resolves
 )
 
 const addTodo = action(function* (todo) {
   setOptimisticTodos((s) => s.list.push(todo)) // optimistic — instant UI
   yield api.addTodo(todo)                       // async work
   refresh(todos)                                // refresh source reads
+})
+```
+
+The `snapshot(todos)` call provides a non-reactive plain value from the source store. The optimistic store layers optimistic writes on top of this base. When the transition settles, the optimistic writes are discarded and the store returns to whatever `snapshot(todos)` provides — which is now the fresh server data thanks to `refresh(todos)`.
+
+### Static value form
+
+If you don't need to derive from a source, pass a plain value:
+
+```ts
+const [optimistic, setOptimistic] = createOptimisticStore({ items: [] })
+```
+
+## How rollback works
+
+When the transition completes:
+
+- **On success:** The optimistic overlay is discarded. `refresh()` causes the source to re-fetch, and the fresh server data shows through.
+- **On failure:** The optimistic overlay is also discarded, reverting to the pre-mutation source value — automatic rollback with no extra code.
+
+## Setter semantics
+
+The setter uses draft-first mutation syntax, the same as regular store setters in Solid 2.0:
+
+```ts
+// Mutate the draft directly
+setOptimisticTodos((s) => s.list.push(todo))
+
+// Set nested properties
+setOptimisticTodos((s) => {
+  s.list[0].completed = true
 })
 ```
 

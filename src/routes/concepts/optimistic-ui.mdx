@@ -1,0 +1,292 @@
+---
+title: Optimistic UI
+order: 8
+use_cases: >-
+  optimistic updates, instant feedback, mutations, actions, rollback, form
+  submissions, server writes, transitions
+tags:
+  - optimistic
+  - actions
+  - mutations
+  - transitions
+  - ui
+  - rollback
+version: '2.0'
+description: >-
+  Build responsive UIs that update instantly during mutations with Solid's
+  optimistic primitives. Learn actions, optimistic signals and stores, rollback,
+  and refresh coordination.
+---
+
+When a user clicks "Add to cart" or "Send message", they expect the UI to respond instantly — not after a network round-trip.
+**Optimistic UI** is the pattern of immediately showing the expected result while the server processes the request, then reconciling once the response arrives.
+
+Solid 2.0 provides first-class primitives for this pattern, making it straightforward to build UIs that feel instant while staying correct.
+
+## Why optimistic UI matters
+
+Without optimistic updates, a typical mutation flow looks like this:
+
+1. User clicks a button
+2. UI shows a spinner or disables the button
+3. Wait for the server response
+4. Update the UI
+
+With optimistic updates:
+
+1. User clicks a button
+2. UI updates **immediately** to show the expected result
+3. Server processes the request in the background
+4. If the server succeeds, the fresh data replaces the optimistic value seamlessly
+5. If the server fails, the UI **automatically reverts** — no manual rollback code
+
+The difference in perceived responsiveness is dramatic, especially on slow or unreliable networks.
+
+## The building blocks
+
+Solid's optimistic UI system has four pieces that work together:
+
+| Primitive | Purpose |
+|-----------|---------|
+| [`action()`](/reference/reactive-utilities/action) | Wraps a mutation in a transition — coordinates optimistic writes, async work, and refreshes |
+| [`createOptimistic`](/reference/reactive-utilities/create-optimistic) | A signal whose writes overlay during a transition and revert when it settles |
+| [`createOptimisticStore`](/reference/reactive-utilities/create-optimistic-store) | The store equivalent — for lists, nested objects, and complex state |
+| [`refresh()`](/reference/reactive-utilities/refresh) | Re-fetches source data after a mutation completes |
+
+## Actions: structured mutations
+
+An [`action`](/reference/reactive-utilities/action) wraps a generator function that follows a simple three-step pattern:
+
+```ts
+import { action, refresh } from "solid-js"
+
+const save = action(function* (data) {
+  // 1. Optimistic write — UI updates immediately
+  setOptimistic(data)
+
+  // 2. Server write — happens in the background
+  yield api.save(data)
+
+  // 3. Refresh — re-fetch source data to replace the optimistic overlay
+  refresh(source)
+})
+```
+
+Each action call runs inside a **transition**. The transition coordinates everything:
+- Optimistic values are visible during the transition
+- [`isPending()`](/reference/reactive-utilities/is-pending) reflects that work is in progress
+- When the transition settles, optimistic overlays are discarded
+
+You call actions from event handlers just like any other function:
+
+```tsx
+<button onClick={() => save({ id: 1, text: "New item" })}>
+  Save
+</button>
+```
+
+## Optimistic signals
+
+[`createOptimistic`](/reference/reactive-utilities/create-optimistic) works like `createSignal`, but writes made inside an action are temporary — they revert when the transition settles:
+
+```ts
+import { createOptimistic, action } from "solid-js"
+
+const [liked, setLiked] = createOptimistic(false)
+
+const toggleLike = action(function* () {
+  setLiked(!liked())        // instant — button shows "liked" immediately
+  yield api.toggleLike()    // server processes in background
+})
+```
+
+```tsx
+<button onClick={() => toggleLike()}>
+  {liked() ? "Unlike" : "Like"}
+</button>
+```
+
+If the server call fails, `liked()` reverts to its pre-mutation value automatically.
+
+## Optimistic stores
+
+For lists and complex state, [`createOptimisticStore`](/reference/reactive-utilities/create-optimistic-store) provides the same pattern with store semantics.
+
+The common setup derives from a source store using [`snapshot()`](/reference/store-utilities/snapshot):
+
+```ts
+import { action, refresh } from "solid-js"
+import { createStore, createOptimisticStore, snapshot } from "solid-js/store"
+
+// Source: fetched from the server
+const [todos] = createStore(() => api.getTodos(), { list: [] })
+
+// Optimistic layer: derives from the source, overlays during mutations
+const [optimisticTodos, setOptimisticTodos] = createOptimisticStore(
+  () => snapshot(todos),
+  { list: [] }
+)
+```
+
+Why `snapshot(todos)`? The optimistic store needs a non-reactive plain value as its base. [`snapshot()`](/reference/store-utilities/snapshot) provides this — a point-in-time value from the source store. The optimistic store layers writes on top of this base.
+
+### Adding items
+
+```ts
+const addTodo = action(function* (todo) {
+  setOptimisticTodos((s) => s.list.push(todo))
+  yield api.addTodo(todo)
+  refresh(todos)
+})
+```
+
+### Removing items
+
+```ts
+const removeTodo = action(function* (id) {
+  setOptimisticTodos((s) => {
+    const idx = s.list.findIndex((t) => t.id === id)
+    if (idx !== -1) s.list.splice(idx, 1)
+  })
+  yield api.removeTodo(id)
+  refresh(todos)
+})
+```
+
+### Updating items
+
+```ts
+const toggleComplete = action(function* (id) {
+  setOptimisticTodos((s) => {
+    const todo = s.list.find((t) => t.id === id)
+    if (todo) todo.completed = !todo.completed
+  })
+  yield api.toggleTodo(id)
+  refresh(todos)
+})
+```
+
+Render the optimistic store (not the source store) for instant feedback:
+
+```tsx
+<For each={optimisticTodos.list}>
+  {(todo) => (
+    <li>
+      <span class={todo().completed ? "done" : ""}>{todo().text}</span>
+      <button onClick={() => toggleComplete(todo().id)}>Toggle</button>
+      <button onClick={() => removeTodo(todo().id)}>Delete</button>
+    </li>
+  )}
+</For>
+```
+
+## How rollback works
+
+Optimistic writes are scoped to the transition created by the action. When the transition settles:
+
+- **On success:** `refresh()` re-fetches the source data. The optimistic overlay is discarded, and the fresh server value shows through. Because the server confirmed the change, the UI doesn't visually change — it transitions smoothly from optimistic to real.
+- **On failure:** The optimistic overlay is discarded and the UI reverts to the pre-mutation state. No manual rollback code is needed.
+
+```ts
+const addTodo = action(function* (todo) {
+  setOptimisticTodos((s) => s.list.push(todo))  // shows immediately
+  try {
+    yield api.addTodo(todo)                       // server write
+    refresh(todos)                                // replace optimistic with real
+  } catch (err) {
+    // The optimistic item disappears automatically
+    console.error("Failed:", err)
+  }
+})
+```
+
+## Observing mutation state
+
+Use [`isPending()`](/reference/reactive-utilities/is-pending) to show that a mutation is in progress without replacing the content:
+
+```tsx
+import { isPending, Show } from "solid-js"
+
+<div class={isPending(() => optimisticTodos) ? "saving" : ""}>
+  <Show when={isPending(() => optimisticTodos)}>
+    <span class="save-indicator">Saving...</span>
+  </Show>
+  <TodoList todos={optimisticTodos} />
+</div>
+```
+
+## Putting it all together
+
+Here's a complete todo app with optimistic add, remove, and toggle:
+
+```tsx
+import { action, refresh, isPending, Show } from "solid-js"
+import { createStore, createOptimisticStore, snapshot } from "solid-js/store"
+
+const [todos] = createStore(() => api.getTodos(), { list: [] })
+const [optimisticTodos, setOptimisticTodos] = createOptimisticStore(
+  () => snapshot(todos),
+  { list: [] }
+)
+
+const addTodo = action(function* (text) {
+  const todo = { id: crypto.randomUUID(), text, completed: false }
+  setOptimisticTodos((s) => s.list.push(todo))
+  yield api.addTodo(todo)
+  refresh(todos)
+})
+
+const toggleTodo = action(function* (id) {
+  setOptimisticTodos((s) => {
+    const t = s.list.find((t) => t.id === id)
+    if (t) t.completed = !t.completed
+  })
+  yield api.toggleTodo(id)
+  refresh(todos)
+})
+
+function TodoApp() {
+  let input
+  return (
+    <div>
+      <form onSubmit={(e) => { e.preventDefault(); addTodo(input.value); input.value = "" }}>
+        <input ref={input} placeholder="New todo" />
+        <button type="submit">Add</button>
+      </form>
+
+      <Show when={isPending(() => optimisticTodos)}>
+        <p class="saving">Saving...</p>
+      </Show>
+
+      <Loading fallback={<p>Loading todos...</p>}>
+        <For each={optimisticTodos.list}>
+          {(todo) => (
+            <label>
+              <input
+                type="checkbox"
+                checked={todo().completed}
+                onChange={() => toggleTodo(todo().id)}
+              />
+              {todo().text}
+            </label>
+          )}
+        </For>
+      </Loading>
+    </div>
+  )
+}
+```
+
+## When not to use optimistic UI
+
+Optimistic updates work best when:
+- The mutation is **likely to succeed** (common CRUD operations)
+- The expected result is **predictable** from the client side
+- A brief incorrect state is **acceptable** if the server rejects the change
+
+Consider skipping optimistic UI when:
+- The mutation result depends on **server-side logic** you can't predict (e.g. computed prices, generated IDs that affect display)
+- **Failure is common** and reverting would be disorienting
+- The operation is **destructive** and showing a false success could mislead the user
+
+In those cases, use `action()` without optimistic writes and rely on [`isPending()`](/reference/reactive-utilities/is-pending) to show a loading indicator instead.

@@ -19,7 +19,18 @@ import { latest } from "solid-js"
 function latest<T>(fn: () => T): T
 ```
 
-`latest(fn)` reads the "in-flight" value of a signal or computation during transitions. If the next value isn't available yet, it falls back to the stale value.
+`latest(fn)` reads the "in-flight" value of a signal or computation during transitions. If the next value isn't available yet, it falls back to the most recent settled value.
+
+For a conceptual overview of the async model, see [Async Reactivity](/advanced-concepts/async-reactivity).
+
+## How it works
+
+During a transition, the settled value of a computation stays on screen while the new value resolves. `latest()` lets you peek ahead at what the new value will be:
+
+- If the new value is **available** (resolved), `latest()` returns it.
+- If the new value is **not yet available** (still pending), `latest()` returns the stale/settled value.
+
+`latest()` is reactive — it can be used in JSX or any reactive scope and updates automatically.
 
 ## Usage
 
@@ -31,6 +42,37 @@ const user = createMemo(() => fetchUser(userId()))
 
 // During a transition, reflects the in-flight userId
 const latestUserId = () => latest(userId)
+```
+
+A common use case is highlighting a UI element that the user just selected, before the data for that selection has loaded:
+
+```tsx
+const [selectedId, setSelectedId] = createSignal("a")
+const details = createMemo(() => fetchDetails(selectedId()))
+
+<For each={items()}>
+  {(item) => (
+    <li
+      class={latest(selectedId) === item().id ? "active" : ""}
+      onClick={() => setSelectedId(item().id)}
+    >
+      {item().name}
+    </li>
+  )}
+</For>
+<Loading fallback={<Spinner />}>
+  <Details data={details()} />
+</Loading>
+```
+
+## Relationship to `isPending`
+
+[`isPending()`](/reference/reactive-utilities/is-pending) tells you **whether** a transition is in progress. `latest()` tells you **what** the in-flight value is. They complement each other:
+
+```tsx
+<Show when={isPending(() => details())}>
+  <span>Loading {latest(selectedId)}...</span>
+</Show>
 ```
 
 ## Replaces `.latest`

@@ -367,7 +367,7 @@ export function Logo(props: { class?: string }) {
 					<>
 						<SolidLogo class={props.class} />
 						<span class="inactive hidden text-2xl font-normal leading-none md:block dark:text-white">
-							<b>Solid</b>
+							<b>Solid 2.0</b>
 						</span>
 					</>
 				}

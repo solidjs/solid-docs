@@ -3,60 +3,44 @@ title: Fetching data
 order: 3
 use_cases: >-
   api calls, async data loading, server communication, external data fetching,
-  loading states, error handling
+  loading states, error handling, mutations, optimistic updates
 tags:
   - data
   - fetching
   - async
   - api
-  - createresource
-  - suspense
   - loading
-version: '1.0'
+  - ispending
+  - action
+  - optimistic
+version: '2.0'
 description: >-
-  Master data fetching in Solid with createResource for async operations,
-  loading states, error handling, and Suspense boundaries.
+  Fetch data in Solid 2.0 with async computations, Loading boundaries, isPending
+  for stale-while-revalidating, and action() for mutations.
 ---
 
 For most modern web applications, data fetching is a common task.
-Solid has a built-in utility, `createResource` , that was created to simplify data fetching.
+In Solid 2.0, async is a first-class capability of computations — you can use `createMemo` or derived stores to fetch data, and the reactive system handles loading, error, and refresh states automatically.
 
-## What is `createResource` ?
+:::caution[Solid 2.0 — `createResource` is removed]
+`createResource` has been removed. Async data is now handled by standard computations (`createMemo`, `createStore(fn)`) that return Promises. Wrap reads of async values in `<Loading>` to display fallback UI while data is pending.
+:::
 
-`createResource` is a specialized [signal](/concepts/signals) designed specifically for managing asynchronous data fetching.
-It wraps around the async operations, providing a way to handle various states: loading, success, and error.
+## Async computations
 
-This function is non-blocking, meaning that `createResource` guarantees that the application remains responsive, even during the retrieval of information.
-Because of this, common pitfalls of traditional async handling, such as unresponsive UIs during data fetching can be avoided.
-
-## Using `createResource`
-
-`createResource` requires a function that returns a promise as its argument.
-Upon the call, `createResource` returns a signal which has reactive properties like loading, error, latest, etc.
-These properties can be used to conditionally render JSX based on the current reactive state.
-
-The fetcher function that is created makes a call to get a user, which is then passed in as an argument to `createResource`.
-
-The signal returned from the `createResource` provides the properties that can assist with conditional rendering based on the current reactive state:
-* `state`: The current status of the operation (`unresolved`, `pending`, `ready`, `refreshing`, or `errored`).
-* `loading`: Indicates that the operation is currently in progress via a `boolean`.
-* `error`: If the operation fails for any reason, this property will contain information about this error.
-It may be a string with an error message, or an object with more detailed information.
-* `latest`: The most recent data or result returned from the operation.
-
-When there is a change in the source signal, an internal fetch process is triggered to retrieve new data based on this change.
+Any computation may return a Promise to represent pending work. Consumers read the accessor as usual; if the value isn't ready yet, the reactive graph suspends until it resolves.
 
 ```jsx
-import { createSignal, createResource, Switch, Match, Show } from "solid-js";
+import { createSignal, createMemo } from "solid-js";
 
 const fetchUser = async (id) => {
   const response = await fetch(`https://swapi.dev/api/people/${id}/`);
   return response.json();
-}
+};
 
 function App() {
-  const [userId, setUserId] = createSignal();
-  const [user] = createResource(userId, fetchUser);
+  const [userId, setUserId] = createSignal(1);
+  const user = createMemo(() => fetchUser(userId()));
 
   return (
     <div>
@@ -66,142 +50,192 @@ function App() {
         placeholder="Enter Numeric Id"
         onInput={(e) => setUserId(e.currentTarget.value)}
       />
-      <Show when={user.loading}>
-        <p>Loading...</p>
-      </Show>
-      <Switch>
-        <Match when={user.error}>
-          <span>Error: {user.error}</span>
-        </Match>
-        <Match when={user()}>
-          <div>{JSON.stringify(user())}</div>
-        </Match>
-      </Switch>
+      <Loading fallback={<p>Loading...</p>}>
+        <div>{JSON.stringify(user())}</div>
+      </Loading>
     </div>
   );
 }
 ```
 
-Whenever the signal value, `userId`, changes, the internal fetch method `fetchUser` gets triggered.
-The properties of the `user` resource allow for conditional rendering based on the different states of the fetch process.
+When `userId` changes, the memo re-runs the fetch. While the Promise is unresolved, the `<Loading>` boundary displays its fallback. Once the data arrives, the content renders automatically.
 
-The `Switch/Match` construct provides one way to manage these conditions.
-When the fetch succeeds and user data is retrieved, the `user()` condition becomes active, and its related block executes.
-However, if there's an error while fetching, the `user.error` block becomes `true`, leading to its corresponding `Match` block being shown.
+This approach pushes "loading state" into UI structure (boundaries) rather than leaking it into every type with `T | undefined`.
 
-:::tip
+## `Loading` boundaries
 
-If you anticipate errors, you may want to wrap `createResource` in an [ErrorBoundary](/reference/components/error-boundary).
-  
-:::
-
-In addition to the `error` property, the `loading` property offers a way to display a loading state to the user during the fetch operation.
-
-
-## Calling multiple async events
-
-Although you can use `createResource` independently, Solid provides an alternative method for synchronizing the display of multiple asynchronous events.
-`Suspense` is a component in Solid designed to act as a boundary.
-It allows you to display a fallback placeholder while waiting for all asynchronous events to resolve, preventing the display of partially loaded content:
+`Loading` is a component that shows fallback UI while its subtree has unresolved async values.
 
 ```jsx
-import { createSignal, createResource, Switch, Match, Suspense } from "solid-js";
+import { Loading } from "solid-js";
 
-const fetchUser = async (id) => {
-  const response = await fetch(`https://swapi.dev/api/people/${id}/`);
-  return response.json();
-}
-
-function App() {
-  const [userId, setUserId] = createSignal();
-  const [user] = createResource(userId, fetchUser);
-
-  return (
-    <div>
-    <input
-      type="number"
-      min="1"
-      placeholder="Enter Numeric Id"
-      onInput={(e) => setUserId(e.currentTarget.value)}
-    />
-      <Suspense fallback={<div>Loading...</div>}>
-        <Switch>
-          <Match when={user.error}>
-            <span>Error: {user.error.message}</span>
-          </Match>
-          <Match when={user()}>
-            <div>{JSON.stringify(user())}</div>
-          </Match>
-        </Switch>
-      </Suspense>
-    </div>
-  );
-}
+<Loading fallback={<Spinner />}>
+  <UserProfile id={id()} />
+</Loading>
 ```
 
-`Suspense` has the ability to identify asynchronous reads within its descendants and act accordingly.
-This feature helps to remove any intermediate components that may otherwise be displayed during partial loading states.
-Additionally, you can nest as many components as needed within `Suspense` but only the closest ancestor will switch to the `fallback` state when a loading state is detected.
+`Loading` is intended for **initial readiness**: it handles the first time a subtree reads async values that aren't ready yet. After the subtree has produced a value, subsequent revalidation should generally not show the fallback again — use `isPending` for that.
 
-<EraserLink
-	href="https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=kMt6qc0qF9MlG2K9P28pOQ"
-	preview="https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9/preview?elements=kMt6qc0qF9MlG2K9P28pOQ&type=embed"
-/>
-
-## Dynamic data handling
-
-With the second output of `createResource`, there are 2 powerful methods designed to enhance and simplify some complex aspects of data management:
-
-### `mutate`
-
-In situations where immediate feedback or responsiveness is important, the `mutate` method offers "optimistic mutations."
-These mutations provide instant feedback, even while background processes, such as server confirmations, are still in progress.
-
-This functionality is particularly valuable in applications like task lists.
-For example, when users input a new task and click the `Add` button, the list will refresh immediately, regardless of the ongoing data communication with the server.
+You can nest `Loading` boundaries to control where loading UI appears and avoid blocking large subtrees:
 
 ```jsx
-import { For, createResource } from "solid-js"
+<Loading fallback={<div>Loading page...</div>}>
+  <Header />
+  <Loading fallback={<div>Loading content...</div>}>
+    <MainContent />
+  </Loading>
+  <Sidebar />
+</Loading>
+```
 
-function TodoList() {
-  const [tasks, { mutate }] = createResource(fetchTasksFromServer);
+## Error handling
 
+To handle errors during data fetching, wrap async reads in an [`Errored`](/concepts/control-flow/error-boundary) boundary:
+
+```jsx
+import { createMemo } from "solid-js";
+
+const user = createMemo(() => fetchUser(userId()));
+
+<Errored fallback={(err, reset) => <span>Error: {err.message}</span>}>
+  <Loading fallback={<p>Loading...</p>}>
+    <div>{JSON.stringify(user())}</div>
+  </Loading>
+</Errored>
+```
+
+## Stale-while-revalidating with `isPending`
+
+`isPending` answers: "Does this expression currently have pending async work while also having a usable stale value?"
+
+`isPending` is **false during the initial `Loading` fallback** (there is no stale value yet). It becomes useful once you've rendered at least once and want to show a subtle "refreshing…" indicator during revalidation without replacing the whole subtree with a spinner.
+
+```jsx
+import { createMemo, isPending, Show } from "solid-js";
+
+const users = createMemo(() => fetchUsers());
+
+function UserList() {
   return (
     <>
-      <ul>
-        <For each={tasks()}>
-          {(task) => (
-            <li>{task.name}</li>
-          )}
-        </For>
-      </ul>
-      <button
-        onClick={() => {
-          mutate((todos) => [...todos, "do new task"]); // add todo for user
-          // make a call to send to database
-        }}
-      >
-        Add Task
-      </button>
+      <Show when={isPending(() => users())}>
+        <div class="refreshing-indicator">Refreshing...</div>
+      </Show>
+      <Loading fallback={<Spinner />}>
+        <List users={users()} />
+      </Loading>
     </>
   );
 }
 ```
 
-### `refetch`
+## Peeking at in-flight values with `latest`
 
-When real-time feedback is necessary, the `refetch` method can be used to reload the current query regardless of any changes.
-This method can be particularly useful when data is constantly evolving, such as with real-time financial applications.
+`latest(fn)` reads the "in-flight" value of a signal or computation during transitions. It may fall back to the stale value if the next value isn't available yet.
 
 ```jsx
-import { createResource, onCleanup } from "solid-js"
+import { createSignal, createMemo, latest } from "solid-js";
 
-function StockPriceTicker() {
-  const [prices, { refetch }] = createResource(fetchStockPrices);
+const [userId, setUserId] = createSignal(1);
+const user = createMemo(() => fetchUser(userId()));
 
-  const timer = setInterval(() => {
-    refetch()
-  }, 1000);
-  onCleanup(() => clearInterval(timer))
-}
+// During a transition, this can reflect the in-flight userId
+const latestUserId = () => latest(userId);
 ```
+
+## Mutations with `action`
+
+While async data reads can be modeled as computations, mutations need a different tool. `action()` wraps a generator or async generator for mutations. Inside an action, you can:
+
+1. Perform **optimistic writes**
+2. **yield/await** async work
+3. **Refresh** derived async computations via `refresh()`
+
+```jsx
+import { action, refresh } from "solid-js";
+import { createStore, snapshot } from "solid-js/store";
+
+const [todos] = createStore(() => api.getTodos(), { list: [] });
+
+const addTodo = action(function* (todo) {
+  // optimistic write (see below)
+  setOptimisticTodos((s) => s.list.push(todo));
+
+  // perform async work
+  yield api.addTodo(todo);
+
+  // refresh derived reads
+  refresh(todos);
+});
+```
+
+Call it from an event handler:
+
+```jsx
+<button onClick={() => addTodo({ id: 1, text: "New task" })}>
+  Add Task
+</button>
+```
+
+### `refresh` — explicit recomputation
+
+`refresh()` explicitly re-runs derived reads when you know the underlying source-of-truth may have changed (e.g. after an action completes a server write).
+
+```jsx
+// Refreshable form — re-runs the derived store
+refresh(todos);
+
+// Thunk form — re-runs an expression
+refresh(() => query.user(id()));
+```
+
+## Optimistic updates
+
+Solid 2.0 provides optimistic primitives that behave like signals/stores but reset to their source when the transition completes.
+
+### `createOptimistic`
+
+`createOptimistic` has the same surface as `createSignal`, but its writes are treated as optimistic — values revert when the transition completes.
+
+```jsx
+import { createOptimistic, action } from "solid-js";
+
+const [name, setName] = createOptimistic("Alice");
+
+const updateName = action(function* (next) {
+  setName(next); // optimistic — UI updates immediately
+  yield api.saveName(next); // async work
+});
+```
+
+### `createOptimisticStore`
+
+`createOptimisticStore` is the store analogue. A common pattern is to derive from a source getter and apply optimistic mutations in an action:
+
+```jsx
+import { action, refresh } from "solid-js";
+import { createStore, createOptimisticStore, snapshot } from "solid-js/store";
+
+const [todos] = createStore(() => api.getTodos(), { list: [] });
+const [optimisticTodos, setOptimisticTodos] = createOptimisticStore(
+  () => snapshot(todos),
+  { list: [] }
+);
+
+const addTodo = action(function* (todo) {
+  setOptimisticTodos((s) => s.list.push(todo)); // optimistic
+  yield api.addTodo(todo); // async work
+  refresh(todos); // refresh source reads
+});
+```
+
+## Migration from Solid 1.x
+
+| 1.x | 2.0 |
+|-----|-----|
+| `createResource(source, fetcher)` | `createMemo(() => fetcher(source()))` |
+| `resource.loading` | `isPending(() => memo())` (after initial load) |
+| `resource.latest` | `latest(() => memo())` |
+| `<Suspense>` | `<Loading>` |
+| `resource.mutate` + `resource.refetch` | `action()` + `refresh()` + `createOptimistic` |
+| `startTransition` / `useTransition` | Removed — built-in transitions + `isPending` / `Loading` |

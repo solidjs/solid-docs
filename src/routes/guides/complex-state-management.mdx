@@ -11,7 +11,7 @@ tags:
   - scaling
   - components
   - management
-version: '1.0'
+version: '2.0'
 description: >-
   Master complex state management in Solid using stores and context to build
   scalable, maintainable applications efficiently.
@@ -60,18 +60,18 @@ const App = () => {
 			</div>
 			<For each={tasks()}>
 				{(task) => {
-					const { id, text } = task
+					const { id, text } = task()
 					console.log(`Creating ${text}`)
 					return (
 						<div>
 							<input
 								type="checkbox"
-								checked={task.completed}
+								checked={task().completed}
 								onChange={[toggleTask, id]}
 							/>
 							<span
 								style={{
-									"text-decoration": task.completed ? "line-through" : "none",
+									"text-decoration": task().completed ? "line-through" : "none",
 								}}
 							>
 								{text}
@@ -153,145 +153,101 @@ Through `state.numberOfTasks`, the display will now show the store's value held 
 
 When you want to modify your store, you use the second element returned by the `createStore` function.
 This element allows you to make modifications to the store, letting you both add new properties and update existing ones.
-However, because properties within a store are created lazily, setting a property in the component function body without creating a tracking scope will **not** update the value.
-To create the signal so it reactively updates, you have to access the property within a tracking scope, such as using a [`createEffect`](/reference/basic-reactivity/create-effect):
 
-```jsx
-// not reactive
-setState("numberOfTasks", state.tasks.length)
-
-// reactive
-createEffect(() => {
-	setState("numberOfTasks", state.tasks.length)
-})
-```
+:::caution[Solid 2.0 — Draft-first store setters]
+In Solid 2.0, store setters use a **draft-first** pattern (produce-style) by default. The setter receives a mutable draft that you can modify directly. Returning a value from the callback performs a shallow replacement/diff instead.
+:::
 
 ### Adding to an array
 
-To add an element to an array, in this case the new task, you can append to the next index of the array through `state.tasks.length`.
-By pinpointing the `tasks` key in combination with the upcoming position, the new task is added to the end of the array.
+To add an element to an array, you mutate the draft directly:
 
 ```jsx
 const addTask = (text) => {
-	setState("tasks", state.tasks.length, {
-		id: state.tasks.length,
-		text,
-		completed: false,
+	setState((s) => {
+		s.tasks.push({
+			id: s.tasks.length,
+			text,
+			completed: false,
+		})
 	})
 }
 ```
 
-The setter in stores follow [path syntax](/concepts/stores#path-syntax-flexibility): `setStore("key", value)`.
-In the `addTask` function the `tasks` array is appended through `setState("tasks", state.tasks.length, { id: state.tasks.length, text, completed: false })`, an example of this in action.
+### Toggling a value
 
-#### Mutating state with `produce`
-
-In situations where you need to make multiple `setState` calls and target multiple properties, you can simplify your code and improve readability by using Solid's [`produce`](/concepts/stores#store-updates-with-produce) utility function.
-
-Something such as toggle function:
+With draft-first setters, toggling a property is straightforward:
 
 ```jsx
 const toggleTask = (id) => {
-	const currentCompletedStatus = state.tasks[id].completed
-	setState(
-		"tasks",
-		(task) => task.id === id,
-		"completed",
-		!currentCompletedStatus
-	)
+	setState((s) => {
+		const task = s.tasks.find((t) => t.id === id)
+		if (task) task.completed = !task.completed
+	})
 }
 ```
 
-Can be simplified using `produce`:
+### Multiple mutations in one setter
+
+Since the setter receives a mutable draft, you can make multiple changes in a single call without any special batching:
 
 ```jsx
-import { produce } from "solid-js/store"
-
-const toggleTask = (id) => {
-	setState(
-		"tasks",
-		(task) => task.id === id,
-		produce((task) => {
-			task.completed = !task.completed
-		})
-	)
-}
-
-// You can also rewrite the `addTask` function through produce
-const addTask = (text) => {
-	setState(
-		"tasks",
-		produce((task) => {
-			task.push({ id: state.tasks.length, text, completed: false })
-		})
-	)
-}
-```
-
-Read about some of the other [advantages to using `produce`](/concepts/stores#store-updates-with-produce).
-
-    :::note
-      Another benefit to working with `produce` is that it offers a way to modify a store without having to make multiple `setStore` calls.
-
-```jsx
-// without produce
-batch(() => {
-	setState(0, "text", "I'm updated text")
-	setState(0, "completed", true)
+setState((s) => {
+	s.tasks[0].text = "I'm updated text"
+	s.tasks[0].completed = true
 })
-
-// with produce
-setState(
-	0,
-	produce((task) => {
-		task.text = "I'm updated text";
-		task.completed = true;
-	})
-)
 ```
 
-      :::
+### Path-style setters with `storePath`
 
-The updated example:
+If you prefer the Solid 1.x path-style setter syntax, use the `storePath()` compatibility helper:
 
 ```jsx
-import { For, createEffect, Show } from "solid-js"
-import { createStore, produce } from "solid-js/store"
+import { storePath } from "solid-js/store"
+
+setState(storePath("tasks", state.tasks.length, {
+	id: state.tasks.length,
+	text,
+	completed: false,
+}))
+```
+
+See the [stores concept page](/concepts/stores) for more details on `storePath`.
+
+The updated example using draft-first setters:
+
+```jsx
+import { For, Show } from "solid-js"
+import { createStore } from "solid-js/store"
 
 const App = () => {
-	let input // lets you target the input value
+	let input
 	const [state, setState] = createStore({
 		tasks: [],
-		numberOfTasks: 0,
 	})
 
 	const addTask = (text) => {
-		setState("tasks", state.tasks.length, {
-			id: state.tasks.length,
-			text,
-			completed: false,
+		setState((s) => {
+			s.tasks.push({
+				id: s.tasks.length,
+				text,
+				completed: false,
+			})
 		})
 	}
 
 	const toggleTask = (id) => {
-		setState(
-			"tasks",
-			(task) => task.id === id,
-			produce((task) => {
-				task.completed = !task.completed
-			})
-		)
+		setState((s) => {
+			const task = s.tasks.find((t) => t.id === id)
+			if (task) task.completed = !task.completed
+		})
 	}
-
-	createEffect(() => {
-		setState("numberOfTasks", state.tasks.length)
-	})
 
 	return (
 		<>
 			<div>
 				<h1>My Task List for Today</h1>
-				<span>You have {state.numberOfTasks} task(s) for today!</span>
+				<span>You have {state.tasks.length} task(s) for today!</span>
 			</div>
 			<input ref={input} />
 			<button
@@ -305,15 +261,14 @@ const App = () => {
 			</button>
 			<For each={state.tasks}>
 				{(task) => {
-					const { id, text } = task
 					return (
 						<div>
 							<input
 								type="checkbox"
-								checked={task.completed}
-								onChange={() => toggleTask(task.id)}
+								checked={task().completed}
+								onChange={() => toggleTask(task().id)}
 							/>
-							<span>{text}</span>
+							<span>{task().text}</span>
 						</div>
 					)
 				}}
@@ -324,6 +279,8 @@ const App = () => {
 
 export default App
 ```
+
+Notice that the `numberOfTasks` property and its `createEffect` are no longer needed — you can derive the count directly from `state.tasks.length` in the JSX. This avoids the Solid 2.0 restriction on writing signals inside effects.
 
 ## State sharing
 
@@ -341,7 +298,11 @@ import { createContext } from "solid-js"
 const TaskContext = createContext()
 ```
 
-Your components will be wrapped with the `Provider` from the context, and passed with the values that you wish to share.
+Your components will be wrapped with the context component directly, and passed with the values that you wish to share.
+
+:::note[Solid 2.0 — Context as provider]
+`Context.Provider` is removed. Use the context itself as the JSX component: `<TaskContext value={...}>`.
+:::
 
 ```jsx
 import { createStore } from "solid-js/store"
@@ -349,13 +310,12 @@ import { createStore } from "solid-js/store"
 const TaskApp = () => {
 	const [state, setState] = createStore({
 		tasks: [],
-		numberOfTasks: 0,
 	})
 
 	return (
-		<TaskContext.Provider value={{ state, setState }}>
+		<TaskContext value={{ state, setState }}>
 			{/* Your components */}
-		</TaskContext.Provider>
+		</TaskContext>
 	)
 }
 ```

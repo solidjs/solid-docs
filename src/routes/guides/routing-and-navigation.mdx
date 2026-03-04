@@ -249,10 +249,10 @@ const User = () => {
 };
 ```
 
-`useParams` can be especially useful with other Solid primitives, such as [`createResource`](/reference/basic-reactivity/create-resource) and [`createSignal`](/reference/basic-reactivity/create-signal), which can create dynamic behaviors based on the route parameters.
+`useParams` can be especially useful with other Solid primitives, such as [`createMemo`](/reference/basic-reactivity/create-memo) and [`createSignal`](/reference/basic-reactivity/create-signal), which can create dynamic behaviors based on the route parameters.
 
 ```jsx
-import { createResource } from "solid-js";
+import { createMemo } from "solid-js";
 import { useParams } from "@solidjs/router";
 
 async function fetchUser(id) {
@@ -264,17 +264,17 @@ async function fetchUser(id) {
 
 const User = () => {
 	const params = useParams();
-	const [data] = createResource(() => params.id, fetchUser); // Pass the id parameter to createResource
+	const data = createMemo(() => fetchUser(params.id)); // Async memo suspends until resolved
 
 	return (
 		<div>
-			<Show when={!data.loading} fallback={<p>Loading...</p>}>
+			<Loading fallback={<p>Loading...</p>}>
 				<div>
 					<p>Name: {data().name}</p>
 					<p>Email: {data().email}</p>
 					<p>Phone: {data().phone}</p>
 				</div>
-			</Show>
+			</Loading>
 		</div>
 	);
 };

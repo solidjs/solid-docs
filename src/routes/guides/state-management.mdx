@@ -12,7 +12,7 @@ tags:
   - memos
   - effects
   - management
-version: '1.0'
+version: '2.0'
 description: >-
   Learn Solid's state management with signals, derived values, memos, and
   effects for reactive data flow and component updates.
@@ -78,9 +78,11 @@ To update the state, you use the signal's setter function:
 
 ```jsx
 setCount((prev) => prev + 1);
-
-console.log(count()); // 1
 ```
+
+:::note[Solid 2.0 — Batched updates]
+Signal updates are batched by default via microtask scheduling. After calling a setter, the value is visible immediately through the getter, but DOM updates are deferred until the next microtask. If you need to force synchronous DOM updates, use `flush()`.
+:::
 
 With signals, you can create and manage state in a simple and straightforward manner.
 This allows you to focus on the logic of your application, rather than the complexities of state management.
@@ -118,43 +120,52 @@ Through reducing the re-rendering of entire components or larger DOM segments, U
 ## Reacting to changes
 
 When the state is updated, any updates are reflected in the UI.
-However, there may be times when you want to perform additional actions when the state changes.
+However, there may be times when you want to perform additional side effects when the state changes — such as logging, syncing to an external system, or updating the DOM.
 
-For example, in the `Counter` component, you may want to display the doubled value of `count` to the user.
-This can be achieved through the use of [effects](/concepts/effects), which are reactive primitives that perform side effects when the state changes:
+[Effects](/concepts/effects) are reactive primitives designed for side effects. In Solid 2.0, effects use a split model: a **compute** function that tracks reactive dependencies, and an **apply** function that performs the side effect:
 
 ```jsx
 import { createSignal, createEffect } from "solid-js";
 
 function Counter() {
 	const [count, setCount] = createSignal(0);
-	const [doubleCount, setDoubleCount] = createSignal(0); // Initialize a new state for doubleCount
 
 	const increment = () => {
 		setCount((prev) => prev + 1);
 	};
 
-	createEffect(() => {
-		setDoubleCount(count() * 2); // Update doubleCount whenever count changes
-	});
+	createEffect(
+		() => count(), // compute: track count
+		(value) => {
+			console.log("Count changed to:", value); // apply: side effect
+		}
+	);
 
 	return (
 		<>
 			<div>Current count: {count()}</div>
-			<div>Doubled count: {doubleCount()}</div> // Display the doubled count
 			<button onClick={increment}>Increment</button>
 		</>
 	);
 }
 ```
 
-The [`createEffect`](/reference/basic-reactivity/create-effect) function sets up a function to perform side effects whenever the state is modified.
-Here, a side-effect refers to operations or updates that affect state outside of the local environment - like modifying a global variable or updating the DOM - triggered by those state changes.
+:::caution[Solid 2.0 — No signal writes in effects]
+Writing to signals inside effects, memos, or the component body now warns in dev. Effects are for side effects (DOM updates, logging, external syncing) — not for deriving state. If you need a value based on other state, use a [derived signal](/concepts/derived-values/derived-signals) or [memo](/concepts/derived-values/memos) instead.
+:::
 
-In the `Counter` component, a `createEffect` function can be used to update the `doubleCount` state whenever the `count` state changes.
-This keeps the `doubleCount` state in sync with the `count` state, and allows the UI to display the doubled value of `count` to the user.
+For example, if you want to display a doubled value of `count`, **don't** use an effect to write to another signal. Instead, derive the value:
 
-View this example of [`doubleCount` in a `createEffect` in the Solid Playground example](https://playground.solidjs.com/anonymous/b05dddaa-e62a-4c56-b745-5704f3a40194).
+```jsx
+// ❌ Anti-pattern: writing signals in an effect
+createEffect(
+	() => count(),
+	(value) => setDoubleCount(value * 2) // warns in dev!
+);
+
+// ✅ Use a derived signal
+const doubleCount = () => count() * 2;
+```
 
 ```html tab title="First render"
 Current count: 0 Doubled count: 0
@@ -299,16 +310,12 @@ This can keep things synchronized across the [component tree](/concepts/componen
 For example, in the `Counter` component, you may want to display the doubled value of `count` to the user through a separate component:
 
 ```jsx
-import { createSignal, createEffect, createMemo } from "solid-js";
+import { createSignal, createMemo } from "solid-js";
 
 function App() {
 	const [count, setCount] = createSignal(0);
-	const [doubleCount, setDoubleCount] = createSignal(0);
+	const doubleCount = () => count() * 2;
 	const squaredCount = createMemo(() => count() * count());
-
-	createEffect(() => {
-		setDoubleCount(count() * 2);
-	});
 
 	return (
 		<>

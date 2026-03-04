@@ -10,7 +10,7 @@ tags:
   - components
   - unit-tests
   - quality
-version: '1.0'
+version: '2.0'
 description: >-
   Test Solid apps with Vitest and Testing Library. Write component tests,
   simulate user interactions, and ensure code quality effectively.
@@ -392,17 +392,20 @@ test("toggles fullscreen", () => {
 ```
 
 ```ts tab title="fullscreen.ts"
-import { Accessor } from "solid-js"
+import { Accessor, createEffect } from "solid-js"
 
 export const fullscreen = (ref: HTMLElement, active: Accessor<boolean>) =>
-  createEffect(() => {
-    const isActive = document.fullscreenElement === ref
-    if (active() && !isActive) {
-      ref.requestFullScreen().catch(() => {})
-    } else if (!active() && isActive) {
-      document.exitFullScreen()
+  createEffect(
+    () => active(), // compute: track the active state
+    (isActive) => {  // apply: perform DOM side effect
+      const currentlyFullscreen = document.fullscreenElement === ref
+      if (isActive && !currentlyFullscreen) {
+        ref.requestFullScreen().catch(() => {})
+      } else if (!isActive && currentlyFullscreen) {
+        document.exitFullScreen()
+      }
     }
-  })
+  )
 ```
 
 ### Primitive testing
@@ -478,14 +481,14 @@ describe('list rendering', () => {
   const listFor = Array.from({ length: ITEMS }, (_, i) => i)
   bench('For', () => new Promise((resolve) => {
     const ItemFor = (props) => {
-      onMount(() => {
+      onSettled(() => {
         renderedFor.add(props.number)
         if (renderedFor.size === ITEMS) { resolve() }
       })
       return <span>{props.number}</span>
     }
     render(() => <For each={listFor}>
-      {(item) => <ItemFor number={item} />}
+      {(item) => <ItemFor number={item()} />}
     </For>)
   }))
 
@@ -493,14 +496,14 @@ describe('list rendering', () => {
   const listList = Array.from({ length: ITEMS }, (_, i) => i)
   bench('List', () => new Promise((resolve) => {
     const ItemList = (props) => {
-      onMount(() => {
+      onSettled(() => {
         renderedList.add(props.number)
         if (renderedList.size === ITEMS) { resolve() }
       })
       return <span>{props.number}</span>
     }
     render(() => <List each={listList}>
-      {(item) => <ItemList number={item} />}
+      {(item) => <ItemList number={item()} />}
     </List>)
   }))
 })

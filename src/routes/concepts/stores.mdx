@@ -12,7 +12,7 @@ tags:
   - nested
   - produce
   - reconcile
-version: '1.0'
+version: '2.0'
 description: >-
   Manage complex nested state efficiently with stores that provide fine-grained
   reactivity for objects and arrays in Solid.
@@ -162,8 +162,11 @@ const App = () => {
 
 ## Modifying store values
 
-Updating values within a store is best accomplished using a setter provided by the `createStore` initialization.
-This setter allows for the modification of a specific key and its associated value, following the format `setStore(key, newValue)`:
+:::caution[Solid 2.0 — Draft-first setters]
+In Solid 2.0, the default way to update stores is with **draft-first setters** — the setter receives a mutable draft object that you modify directly (produce-style). The old path-based setter syntax is available as an opt-in via `storePath()`.
+:::
+
+Updating values within a store is done using the setter provided by `createStore`. In Solid 2.0, the setter receives a **mutable draft** that you modify directly:
 
 ```jsx "setStore"
 const [store, setStore] = createStore({
@@ -171,38 +174,42 @@ const [store, setStore] = createStore({
 	users: [ ... ],
 })
 
-setStore("users", (currentUsers) => [
-	...currentUsers,
-	{
+// Draft-first setter: modify the draft directly
+setStore((s) => {
+	s.users.push({
 		id: 3,
 		username: "michael584",
 		location: "Nigeria",
 		loggedIn: false,
-	},
-])
+	});
+	s.userCount = s.users.length;
+})
 ```
 
-The value of `userCount` could also be automatically updated whenever a new user is added to keep it synced with the users array:
+This is equivalent to the `produce` pattern from Solid 1.x, but it is now the **default** behavior.
 
-```tsx ins={11}
+The value of `userCount` can be kept in sync with the users array using a derived value rather than writing inside an effect:
+
+```tsx
 const App = () => {
 	const [store, setStore] = createStore({
-		userCount: 3,
 		users: [ ... ],
 	})
 
-	const addUser = () => { ... }
+	// Derive the count from the store — no need to sync manually
+	const userCount = createMemo(() => store.users.length)
 
-	createEffect(() => {
-		console.log(store.users.at(-1))
-		setStore("userCount", store.users.length)
-	})
+	const addUser = () => {
+		setStore((s) => {
+			s.users.push({ id: 3, username: "michael584", location: "Nigeria", loggedIn: false })
+		})
+	}
 
 	return (
 		<div>
 			<h1>Hello, {store.users[0].username}</h1>
-			<p>User count: {store.userCount}</p>
-      <button onClick={addUser}>Add user</button>
+			<p>User count: {userCount()}</p>
+			<button onClick={addUser}>Add user</button>
 		</div>
 	)
 }
@@ -241,18 +248,27 @@ This separation facilitates the tracking and control of the components that are 
 
 :::
 
-## Path syntax flexibility
+## Path syntax with `storePath` (compatibility helper)
 
-Modifying a store using this method is referred to as "path syntax."
-In this approach, the initial arguments are used to specify the keys that lead to the target value you want to modify, while the last argument provides the new value.
+:::note
+In Solid 2.0, the **draft-first setter** (shown above) is the preferred way to update stores. The path-based syntax from Solid 1.x is available as an opt-in via the `storePath()` helper for teams migrating from 1.x.
+:::
 
-String keys are used to precisely target particular values with path syntax.
-By specifying these exact key names, you can directly retrieve the targeted information.
-However, path syntax goes beyond string keys and offers more versatility when accessing targeted values.
+`storePath` adapts the old path-style setter ergonomics into a function you pass to `setStore`:
 
-Instead of employing the use of just string keys, there is the option of using an array of keys.
-This method grants you the ability to select multiple properties within the store, facilitating access to nested structures.
-Alternatively, you can use filtering functions to access keys based on dynamic conditions or specific rules.
+```jsx
+import { storePath } from "solid-js/store"
+
+// 2.0 preferred: draft-first setter
+setStore((s) => {
+	s.user.address.city = "Paris";
+});
+
+// Optional compat: 1.x-style path setter
+setStore(storePath("user", "address", "city", "Paris"));
+```
+
+In path syntax, the initial arguments specify the keys that lead to the target value, while the last argument provides the new value.
 
 <EraserLink
 	href="https://app.eraser.io/workspace/maDvFw5OryuPJOwSLyK9?elements=M6Y55ScNFDD_2HmRd4OJkQ"
@@ -351,8 +367,7 @@ for (let i = 1; i <= store.users.length - 1; i += 2) {
 ```
 
 Multi-setter syntax differs from the "equivalent" code in one key way:
-a single store setter call automatically gets wrapped in a
-[`batch`](/reference/reactive-utilities/batch), so all the elements update
+a single store setter call batches all updates together, so all the elements update
 at once before any downstream effects are triggered.
 
 ### Dynamic value assignment
@@ -405,42 +420,35 @@ setStore("users", 0, (user) => ({
 
 ## Store utilities
 
-### Store updates with `produce`
+### Draft-first setters (produce by default)
 
-Rather than directly modifying a store with setters, Solid has the `produce` utility.
-This utility provides a way to work with data as if it were a [mutable](https://developer.mozilla.org/en-US/docs/Glossary/Mutable) JavaScript object.
-`produce` also provides a way to make changes to multiple properties at the same time which eliminates the need for multiple setter calls.
+In Solid 2.0, the store setter natively accepts a draft-first callback — the `produce` pattern from 1.x is now the default behavior:
 
 ```jsx
-import { produce } from "solid-js/store"
-
-// without produce
-setStore("users", 0, "username", "newUsername")
-setStore("users", 0, "location", "newLocation")
-
-// with produce
-setStore(
-	"users",
-	0,
-	produce((user) => {
-		user.username = "newUsername"
-		user.location = "newLocation"
-	})
-)
+// Solid 2.0: draft-first is the default
+setStore((s) => {
+	s.users[0].username = "newUsername"
+	s.users[0].location = "newLocation"
+})
 ```
 
-`produce` and `setStore` do have distinct functionalities.
-While both can be used to modify the state, the key distinction lies in how they handle data.
-`produce` allows you to work with a temporary draft of the state, apply the changes, then produce a new [immutable](https://developer.mozilla.org/en-US/docs/Glossary/Immutable) version of the store.
-Comparatively, `setStore` provides a more straightforward way to update the store directly, without creating a new version.
+When you **return a value** from the setter callback, it performs a shallow replacement/diff:
 
-It's important to note, however, `produce` is specifically designed to work with **arrays** and **objects**.
-Other collection types, such as JavaScript [Sets](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set) and [Maps](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map), are not compatible with this utility.
+```jsx
+setStore((s) => {
+	// Replace the top-level list (shallow diff)
+	return { ...s, list: [] };
+})
+```
 
 ### Data integration with `reconcile`
 
 When new information needs to be merged into an existing store `reconcile` can be useful.
 `reconcile` will determine the differences between new and existing data and initiate updates only when there are _changed_ values, thereby avoiding unnecessary updates.
+
+:::note
+In Solid 2.0, the new `createProjection` primitive handles reconciliation automatically for derived stores. Consider using `createProjection` for async data patterns where you want automatic keyed reconciliation.
+:::
 
 ```jsx
 import { createStore, reconcile } from "solid-js/store"
@@ -451,30 +459,59 @@ const [data, setData] = createStore({
 
 const newData = getNewData() // eg. contains ['cat', 'dog', 'bird', 'gorilla', 'koala']
 setData('animals', reconcile(newData))
-
 ```
 
 In this example, the store will look for the differences between the existing and incoming data sets.
-Consequently, only `'koala'` - the new edition - will cause an update.
+Consequently, only `'koala'` - the new addition - will cause an update.
 
-### Extracting raw data with `unwrap`
+### Extracting raw data with `snapshot`
 
-When there is a need for dealing with data outside of a tracking scope, the `unwrap` utility offers a way to transform a store to a standard [object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object).
-This conversion serves several important purposes.
+:::caution[Solid 2.0 — `unwrap` is replaced by `snapshot`]
+`unwrap(store)` is replaced by `snapshot(store)` in Solid 2.0. The new name better reflects what the function does: it produces a **non-reactive plain value** suitable for serialization or interop with libraries that expect plain objects.
+:::
 
-Firstly, it provides a snapshot of the current state without the processing overhead associated with reactivity.
-This can be useful in situations where an unaltered, non-reactive view of the data is needed.
-Additionally, `unwrap` provides a means to interface with third-party libraries or tools that anticipate regular JavaScript objects.
-This utility acts as a bridge to facilitate smooth integrations with external components and simplifies the incorporation of stores into various applications and workflows.
+When there is a need for dealing with data outside of a tracking scope, `snapshot` offers a way to transform a store to a standard [object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object).
 
 ```jsx
-import { createStore, unwrap } from "solid-js/store"
+import { createStore, snapshot } from "solid-js/store"
 
 const [data, setData] = createStore({
 	animals: ["cat", "dog", "bird", "gorilla"],
 })
 
-const rawData = unwrap(data)
+const rawData = snapshot(data)
+JSON.stringify(rawData) // safe for serialization
 ```
+
+### Deep observation with `deep`
+
+Store tracking is normally property-level (optimal). When you truly need deep observation (e.g. for serialization, logging, or "watch everything"), use `deep(store)` inside a reactive scope:
+
+```jsx
+import { deep } from "solid-js/store"
+
+createEffect(
+	() => deep(store),
+	(snapshot) => {
+		// runs when anything inside store changes
+		console.log("Store changed:", snapshot)
+	}
+)
+```
+
+### Derived stores with `createStore(fn)`
+
+In Solid 2.0, `createStore` accepts a **function** as its first argument to create a derived store. The function receives a mutable draft that you modify based on reactive inputs:
+
+```jsx
+const [cache] = createStore(
+	(draft) => {
+		draft.total = items().length;
+	},
+	{ total: 0 }
+)
+```
+
+This is the store analogue of function-form `createSignal(fn)`. For more advanced patterns with automatic reconciliation, see `createProjection`.
 
 To learn more about how to use Stores in practice, visit the [guide on complex state management](/guides/complex-state-management).

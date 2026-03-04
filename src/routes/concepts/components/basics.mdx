@@ -11,7 +11,7 @@ tags:
   - lifecycle
   - imports
   - structure
-version: '1.0'
+version: '2.0'
 description: >-
   Learn Solid component fundamentals: creating reusable UI blocks, component
   trees, lifecycles, and proper import/export patterns.
@@ -107,6 +107,22 @@ When a component is first rendered into the DOM, the component function is execu
 This is where you will set up the component's state and side-effects.
 This includes setting up [signals](/concepts/signals), [stores](/concepts/stores), [effects](/concepts/effects), and other reactive elements.
 Since the logic in the component function is not continuously visited, it is important to set up the component correctly from the outset.
+
+:::caution[Solid 2.0 — Strict top-level reads]
+In Solid 2.0, reading signals or reactive props **at the top level of a component body** will produce a dev warning. This includes destructuring props. Always read reactive values inside JSX, `createMemo`, `createEffect`, or wrap in `untrack` for intentional one-time reads.
+
+```tsx
+// ❌ warns: destructuring reactive props
+function Bad({ name }) {
+	return <div>{name}</div>;
+}
+
+// ✅ access props inside JSX
+function Good(props) {
+	return <div>{props.name}</div>;
+}
+```
+:::
 
 Each component instance is independent of other instances, meaning that each component has its own state and side-effects.
 Through establishing proper dependencies, you can ensure that the component is set up correctly.

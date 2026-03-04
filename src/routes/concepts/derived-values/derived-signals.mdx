@@ -10,7 +10,7 @@ tags:
   - derived
   - computed
   - state
-version: '1.0'
+version: '2.0'
 description: >-
   Create reactive derived values that automatically update when their
   dependencies change using Solid's derived signals.
@@ -39,5 +39,22 @@ These dependent functions gain reactivity from the signal they access, ensuring 
 It is important to note that these functions do not store a value themselves; instead, they can update any effects or components that depend on them. 
 If included within a component's body, these derived signals will trigger an update when necessary.
 
-While you can create derived values in this manner, Solid created the [`createMemo`](/reference/basic-reactivity/create-memo) primitive.
+While you can create derived values in this manner, Solid provides the [`createMemo`](/reference/basic-reactivity/create-memo) primitive for cached, read-only derived values.
 To dive deeper into how memos work, [check out the memos section](/concepts/derived-values/memos).
+
+## Writable derived signals (Solid 2.0)
+
+In Solid 2.0, `createSignal` can accept a **function** as its first argument to create a **writable derived signal**. This is a signal whose value is computed reactively from other signals, but can also be overridden with the setter:
+
+```js
+const [count, setCount] = createSignal(0);
+
+// A derived signal that tracks `count` and doubles it
+const [doubled] = createSignal(() => count() * 2);
+
+doubled(); // 0
+setCount(3);
+// After flush, doubled() will be 6
+```
+
+This pattern replaces the removed `createComputed` primitive from Solid 1.x. Use it when you need a derived value that can also be written to (e.g. controllable components, manual overrides). For read-only derived values, prefer `createMemo`.

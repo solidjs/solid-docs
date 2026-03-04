@@ -11,7 +11,7 @@ tags:
   - getter
   - setter
   - fundamentals
-version: '1.0'
+version: '2.0'
 description: >-
   Create reactive state with signals - the foundation of Solid's reactivity
   system for automatic UI updates and tracking.
@@ -59,17 +59,29 @@ This function takes an argument that represents the new value of the signal:
 
 ```jsx
 setCount(count() + 1);
-
-console.log(count()); // output: 1
 ```
 
-The setter function can also take a function that passes the previous value.
+The setter function can also take a function that passes the previous value:
 
 ```jsx
 setCount((prevCount) => prevCount + 1);
-
-console.log(count()); // output: 1
 ```
+
+:::caution[Solid 2.0 — Batched updates]
+In Solid 2.0, calling a setter **queues** the update rather than applying it immediately. The new value becomes visible after the microtask flush:
+
+```jsx
+const [count, setCount] = createSignal(0);
+
+setCount(1);
+console.log(count()); // still 0 — update is queued
+
+flush();
+console.log(count()); // now 1
+```
+
+Within reactive scopes (effects, memos, JSX), this is handled automatically — your UI will always reflect the latest value. You only need `flush()` in imperative code where you need the value synchronously.
+:::
 
 ## Reactivity
 
@@ -99,6 +111,47 @@ A tracking scope can be created by [`createEffect`](/reference/basic-reactivity/
 Both functions subscribe to the signals accessed within them, establishing a dependency relationship.
 Once this relationship is established, the function is notified whenever the signal changes.
 
+:::
+
+## Derived signals (function-form `createSignal`)
+
+In Solid 2.0, `createSignal` can accept a **function** as its first argument instead of a static value. This creates a **writable derived signal** — sometimes called a "writable memo". The function is used to compute the signal's value reactively, and the setter can override it:
+
+```jsx
+import { createSignal } from "solid-js";
+
+const [count, setCount] = createSignal(0);
+
+// derived: automatically tracks `count` and doubles it
+const [doubled] = createSignal(() => count() * 2);
+
+console.log(doubled()); // 0
+
+setCount(5);
+// After flush, doubled() will be 10
+```
+
+This replaces many patterns that previously used `createComputed` for "write-back" derived values.
+For read-only derived values, prefer [`createMemo`](/reference/basic-reactivity/create-memo).
+
+## Writes under owned scope
+
+:::caution[Solid 2.0 — No signal writes in reactive scopes]
+Writing to signals inside a reactive scope (effects, memos, component body) will produce a **dev warning** in Solid 2.0. Signal writes belong in **event handlers**, **`onSettled`**, or untracked blocks.
+
+```jsx
+// ❌ warns: writing from inside a memo
+createMemo(() => setDoubled(count() * 2));
+
+// ✅ derive instead of writing back
+const doubled = createMemo(() => count() * 2);
+```
+
+For rare cases where a signal must be written from within scope (e.g. internal component flags), opt in with `{ pureWrite: true }`:
+
+```jsx
+const [ref, setRef] = createSignal(null, { pureWrite: true });
+```
 :::
 
 To learn more about how to use Signals in your application, visit our [state management guide](/guides/state-management).

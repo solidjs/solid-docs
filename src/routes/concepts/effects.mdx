@@ -10,7 +10,7 @@ tags:
   - reactivity
   - lifecycle
   - subscriptions
-version: '1.0'
+version: '2.0'
 description: >-
   Manage side effects like DOM updates, API calls, and subscriptions that
   respond automatically to reactive state changes.
@@ -19,166 +19,133 @@ description: >-
 Effects are functions that are triggered when the signals they depend on change.
 They play a crucial role in managing side effects, which are actions that occur outside of the application's scope, such as DOM manipulations, data fetching, and subscriptions.
 
+:::caution[Solid 2.0 — Split effects]
+In Solid 2.0, `createEffect` uses a **two-phase model**: a **compute** function that tracks reactive dependencies, and an **apply** function that performs side effects. This is a fundamental change from Solid 1.x where effects used a single callback. The split design ensures that all dependencies are recorded before any side effects run, which is critical for async, `Loading`, and `Errored` boundaries.
+:::
+
 ## Using an effect
 
 An effect is created using the `createEffect` function.
-This function takes a callback as its argument that runs when the effect is triggered.
+In Solid 2.0, this function takes **two** callbacks:
+
+1. A **compute** function — runs in the reactive tracking phase. It should only read reactive values and return a value.
+2. An **apply** function — receives the computed value and performs side effects. It can return a cleanup function.
 
 ```jsx
 import { createEffect } from "solid-js";
 
 const [count, setCount] = createSignal(0);
 
-createEffect(() => {
-	console.log(count());
-});
+createEffect(
+	() => count(),           // compute: track dependencies, return value
+	(value) => {             // apply: run side effects with the tracked value
+		console.log(value);
+	}
+);
 ```
 
-In this example, an effect is created that logs the current value of `count` to the console.
-When the value of `count` changes, the effect is triggered, causing it to run again and log the new value of `count`.
+In this example, the compute function tracks `count` and returns its value. When `count` changes, the apply function runs with the new value and logs it to the console.
 
 ## Managing dependencies
 
-Effects can be set to observe any number of dependencies.
-Dependencies are what allow an effect to track changes and respond accordingly.
-These can include signals, props, context, or any other reactive values.
-When any of these change, the effect is notified and will run again to update its state.
+Dependencies are determined by the **compute** function. Any signals read inside the compute function are automatically tracked. The apply function does **not** track dependencies — it is purely for side effects.
 
-Upon initialization, an effect will run _once_, regardless of whether it has any dependencies.
-This is useful for setting up the effect and initializing variables or subscribing to [signals](/concepts/signals).
-After this run, the effect will only be triggered when any of its _dependencies_ change.
+The compute function runs whenever any of its tracked dependencies change. The apply function then receives the new computed value.
 
 ```jsx
-createEffect(() => {
-	console.log("hello"); // will run only once
-});
-
-createEffect(() => {
-	console.log(count()); // will run every time count changes
-});
+createEffect(
+	() => [count(), message()],   // track multiple dependencies
+	([countVal, messageVal]) => {
+		console.log(countVal, messageVal);
+	}
+);
 ```
 
-Solid automatically tracks the dependencies of an effect, so you do not need to manually specify them.
-This improves the tracking and minimizes the chances of overlooking or incorrectly identifying dependencies.
+When either `count` or `message` changes, the compute function re-runs, and the apply function receives the updated array.
 
-## Subscribing to signals
+## Cleanup
 
-When an effect is set to observe a signal, it creates a subscription to it.
-This subscription allows the effect to track the changes in the signal's value, which causes it to observe any changes that may happen and to execute its callback accordingly.
+In Solid 2.0, cleanup is handled by **returning a function** from the apply callback. This replaces the pattern of calling `onCleanup` inside effects.
 
 ```jsx
-import { createSignal, createEffect } from "solid-js";
+createEffect(
+	() => name(),
+	(value) => {
+		const id = setInterval(() => console.log(value), 1000);
 
-const [count, setCount] = createSignal(0);
-
-createEffect(() => {
-	console.log(count()); // Logs current value of count whenever it changes
-});
-```
-
-### Managing multiple signals
-
-Effects have the ability to observe multiple signals.
-A single effect can subscribe to multiple signals, and similarly, multiple effects can keep track of a single signal.
-This is useful when you need to update the UI based on multiple signals.
-
-When multiple signals are observed within a single effect, it will execute its callback whenever _any_ of the signals change.
-The effect will run even if only one of the signals changes, not necessarily all of them.
-This means that the effect will run with the latest values of all of the signals that it is observing.
-
-```jsx
-import { createSignal, createEffect } from "solid-js";
-
-const [count, setCount] = createSignal(0);
-const [message, setMessage] = createSignal("Hello");
-
-createEffect(() => {
-	console.log(count(), message());
-});
-
-setCount(1); // Output: 1, "Hello"
-setMessage("World"); // Output: 1, "World"
+		// Return a cleanup function — called before the next apply run or on disposal
+		return () => clearInterval(id);
+	}
+);
 ```
 
 :::note
-When a signal updates, it notifies all of its subscribers sequentially but the *order can vary*.
-While effects are guaranteed to run when a signal updates, the execution might **not** be instantaneous.
-This means that the order of execution of effects is *not guaranteed* and should not be relied upon.
+`onCleanup` remains available for cleanup inside **computations** (like `createMemo`), but is not expected to be used inside effect apply functions. Use the return-based cleanup pattern instead.
 :::
 
-### Nested effects
+## Effects should not write signals
 
-When working with effects, it is possible to nest them within each other.
-This allows each effect to independently track its own dependencies, without affecting the effect that it is nested within.
-
-```jsx
-createEffect(() => {
-	console.log("Outer effect starts");
-	createEffect(() => console.log("Inner effect"));
-	console.log("Outer effect ends");
-});
-```
-
-The order of execution is important to note.
-An inner effect will _not_ affect the outer effect.
-Signals that are accessed within an inner effect, will _not_ be registered as dependencies for the outer effect.
-When the signal located within the inner effect changes, it will trigger only the _inner effect_ to re-run, not the outer one.
+:::caution[Solid 2.0 — No writes under owned scope]
+Writing to signals inside effects, memos, or component bodies will produce a **dev warning** in Solid 2.0. Effects are for interacting with the outside world, not synchronizing the reactive system.
 
 ```jsx
-import { createSignal, createEffect } from "solid-js";
+// ❌ warns: writing a signal inside an effect
+createEffect(
+	() => count(),
+	(value) => {
+		setDoubled(value * 2); // this will warn
+	}
+);
 
-const [count, setCount] = createSignal(0);
+// ✅ use createMemo for derived values
+const doubled = createMemo(() => count() * 2);
 
-createEffect(() => {
-	console.log("Outer effect starts");
-	createEffect(() => console.log(count())); // when count changes, only this effect will run
-	console.log("Outer effect ends");
-});
+// ✅ write signals in event handlers
+button.onclick = () => setCount((c) => c + 1);
 ```
 
-This forces each effect to be independent of each other, which helps to avoid unexpected behaviour.
-Additionally, it allows you to create effects that are only triggered when certain conditions are met.
+If you truly need to write a signal from within a reactive scope (e.g. internal component flags), create the signal with `{ pureWrite: true }`.
+:::
 
 ## Lifecycle functions
 
-Effects have a lifecycle that can be managed using certain functions.
-These functions allow you to control the initialization and disposal of effects to build the type of behaviour that you need.
-This can include running a side effect only once, or cleaning up a task when it is no longer needed.
+### `onSettled`
 
-### `onMount`
+:::caution[Solid 2.0 — `onMount` is replaced by `onSettled`]
+`onMount` is removed in Solid 2.0. Use `onSettled` instead. Unlike `onMount`, `onSettled` can return a cleanup function and runs when the current activity is settled (e.g. after mount, or when the reactive graph is idle).
+:::
 
-In situations where you just want to run a side effect **once**, you can use the [`onMount`](/reference/lifecycle/on-mount) function.
-This lifecycle function is similar to an effect, but it does not track any dependencies.
-Rather, once the component has been initialized, the `onMount` callback will be executed and will not run again.
+In situations where you want to run a side effect **once** after the component is settled, use `onSettled`:
 
 ```jsx
-import { onMount } from "solid-js";
+import { onSettled } from "solid-js";
 
 function Component() {
 	const [data, setData] = createSignal(null);
 
-	createEffect(() => {
-		data(); // will run every time data changes
-	});
-
-	onMount(async () => {
-		// will run only once, when the component is mounted
+	onSettled(async () => {
+		// runs once when the component is settled
 		const fetchedData = await fetch("https://example.com/data");
 		setData(fetchedData);
+
+		// can return cleanup
+		return () => {
+			// cleanup when component is disposed
+		};
 	});
 
 	return <div>...</div>;
 }
 ```
 
-`onMount` provides the assurance that the callback will only run once.
-If using an effect in this situation, there is no guarantee that it will only run once, which can lead to unexpected behaviour.
-This makes `onMount` useful for API calls and other side effects that only need to be run once per component instance.
+:::note
+Unlike other tracked scopes, `onSettled` **cannot create nested reactive primitives** (such as `createSignal` or `createEffect` inside its callback). This is a breaking change from Solid 1.x's `onMount`.
+:::
 
 ### `onCleanup`
 
-While `onMount` is useful for running a side effect once, [`onCleanup`](/reference/lifecycle/on-cleanup) is helpful for cleaning up a task when it is no longer needed.
-`onCleanup` will run whenever the component unmounts, removing any subscriptions that the effect has.
+[`onCleanup`](/reference/lifecycle/on-cleanup) is used for cleaning up a task when it is no longer needed.
+`onCleanup` will run whenever the component unmounts or the enclosing computation re-runs, removing any subscriptions.
 
 ```jsx
 import { onCleanup } from "solid-js";
@@ -198,9 +165,18 @@ function App() {
 }
 ```
 
-In this example, the `onCleanup` function is used to clear the interval that is set up in the effect.
-To avoid the interval from running indefinitely, the `onCleanup` function is used to clear the interval once the component unmounts.
+`onCleanup` is best used inside **computations** (`createMemo`, the setup phase of components). For effects, prefer the return-based cleanup from the apply function.
 
-`onCleanup` can be used to avoid memory leaks.
-These occur when a component is unmounted, but references to it still exist and, as a result, could still be running in the background.
-Using `onCleanup` to remove any subscriptions or references to the component can help to avoid this issue.
+## `createTrackedEffect`
+
+For special cases where you need a single-callback effect (similar to the 1.x pattern), `createTrackedEffect` is available. However, be aware that it may re-run in async situations and is not the default.
+
+```jsx
+import { createTrackedEffect } from "solid-js";
+
+createTrackedEffect(() => {
+	console.log(count()); // single-callback form — tracks and runs side effects
+});
+```
+
+Prefer the split two-phase `createEffect` for most use cases.

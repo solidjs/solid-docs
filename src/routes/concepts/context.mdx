@@ -11,7 +11,7 @@ tags:
   - providers
   - sharing
   - management
-version: '1.0'
+version: '2.0'
 description: >-
   Share data across component trees with Solid's Context API. Avoid prop
   drilling and manage global application state effectively.
@@ -33,7 +33,10 @@ This offers a way to access state across an application without passing props th
 ## Creating context
 
 Context is created using the [`createContext`](/reference/component-apis/create-context) function.
-This function has a `Provider` property that wraps the component tree you want to provide context to.
+
+:::note[Solid 2.0 — Context is the provider]
+In Solid 2.0, `Context.Provider` is removed. Instead, **the context itself is used directly as a component** with a `value` prop. This reduces boilerplate and simplifies the API.
+:::
 
 ```jsx tab title="/context/create.js"
 import { createContext } from "solid-js";
@@ -46,17 +49,17 @@ import { MyContext } from "./create";
 
 export function Provider (props) {
 	return (
-		<MyContext.Provider>
+		<MyContext value={undefined}>
 			{props.children}
-		</MyContext.Provider>
+		</MyContext>
 	)
 };
 ```
 
 ## Providing context to children
 
-To pass a value to the `Provider`, you use the `value` prop which can take in any value, including [signals](#updating-context-values).
-Once a value is passed to the `Provider`, it is available to all components that are descendants of the `Provider`.
+To pass a value to the context, use the `value` prop on the context component itself, which can take in any value, including [signals](#updating-context-values).
+Once a value is passed, it is available to all components that are descendants of the context provider.
 
 When passing a single value, it can be directly passed to the `value` prop:
 
@@ -65,7 +68,7 @@ import { createContext, useContext } from "solid-js";
 import { MyContext } from "./create";
 
 const Provider = (props) => (
-	<MyContext.Provider value="new value">{props.children}</MyContext.Provider>
+	<MyContext value="new value">{props.children}</MyContext>
 );
 ```
 
@@ -83,9 +86,9 @@ import { createContext, useContext } from "solid-js";
 import { MyContext } from "./create";
 
 const Provider = (props) => (
-	<MyContext.Provider value="new value">
+	<MyContext value="new value">
 		{props.children}
-	</MyContext.Provider>
+	</MyContext>
 );
 
 const Child = () => {
@@ -119,9 +122,9 @@ import { CounterContext } from "~/context/counter";
 
 export function CounterProvider(props) {
 	return (
-		<CounterContext.Provider value={props.count ?? 0}>
+		<CounterContext value={props.count ?? 0}>
 			{props.children}
-		</CounterContext.Provider>
+		</CounterContext>
 	);
 }
 ```
@@ -202,9 +205,9 @@ export function CounterProvider(props) {
 	];
 
 	return (
-		<CounterContext.Provider value={counter}>
+		<CounterContext value={counter}>
 			{props.children}
-		</CounterContext.Provider>
+		</CounterContext>
 	);
 }
 

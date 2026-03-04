@@ -11,32 +11,33 @@ tags:
   - recovery
   - stability
   - debugging
-version: '1.0'
+version: '2.0'
 description: >-
-  Catch and handle rendering errors gracefully with ErrorBoundary. Prevent app
+  Catch and handle rendering errors gracefully with Errored. Prevent app
   crashes and provide user-friendly error recovery.
 ---
 
 By default, if part of an application throws an error during rendering, the entire application can crash, resulting in Solid removing its UI from the screen.
 Error boundaries provide a way to catch these errors and prevent the entire app from crashing.
 
-The [`<ErrorBoundary>`](/reference/components/error-boundary) component is used to create an error boundary.
-It catches any error that occurs during the rendering or updating of its children.
-However, an important note is that errors occurring outside the rendering process, such as in event handlers or after a `setTimeout`, are _not_ caught by error boundaries.
+:::caution[Solid 2.0 — `ErrorBoundary` is renamed to `Errored`]
+In Solid 2.0, `ErrorBoundary` is renamed to `Errored`. The API is the same — it catches errors during rendering or updating its children. Errors occurring outside the rendering process, such as in event handlers or after a `setTimeout`, are _not_ caught by error boundaries.
+:::
 
+The [`<Errored>`](/reference/components/errored) component is used to create an error boundary.
 The `fallback` prop can be used to display a user-friendly error message or notification when an error occurs.
 If a function is passed to `fallback`, it will receive the error object as well as a `reset` function.
-The `reset` function forces the `<ErrorBoundary>` to re-render its children and reset the error state, providing users with a way to recover from the error.
+The `reset` function forces the `<Errored>` to re-render its children and reset the error state, providing users with a way to recover from the error.
 
 ```tsx
-import { ErrorBoundary } from "solid-js";
+import { Errored } from "solid-js";
 import { Header, ErrorProne } from "./components";
 
 function App() {
 	return (
 		<div>
 			<Header />
-			<ErrorBoundary
+			<Errored
 				fallback={(error, reset) => (
 					<div>
 						<p>Something went wrong: {error.message}</p>
@@ -45,11 +46,11 @@ function App() {
 				)}
 			>
 				<ErrorProne />
-			</ErrorBoundary>
+			</Errored>
 		</div>
 	);
 }
 ```
 
-In this example, when the `ErrorProne` component throws an error, the `<ErrorBoundary>` catches it, preventing it from affecting the rest of the application.
+In this example, when the `ErrorProne` component throws an error, the `<Errored>` catches it, preventing it from affecting the rest of the application.
 Instead, it displays the error message passed to the fallback prop.

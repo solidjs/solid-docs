@@ -10,7 +10,7 @@ tags:
   - communication
   - mergeprops
   - splitprops
-version: '1.0'
+version: '2.0'
 description: >-
   Pass and manage component props in Solid while maintaining reactivity. Learn
   mergeProps, splitProps, and best practices.
@@ -38,18 +38,22 @@ function MyComponent(props) {
 }
 ```
 
-## `mergeProps`
+## `merge`
 
-[`mergeProps`](/reference/reactive-utilities/merge-props) is a Solid utility function designed to merge multiple potentially reactive objects together.
+:::note[Solid 2.0 — `mergeProps` is renamed to `merge`]
+`mergeProps` is renamed to `merge` in Solid 2.0. The behavior is the same, with one important change: **`undefined` is treated as a real value** and will override, rather than being skipped.
+:::
+
+`merge` is a Solid utility function designed to merge multiple potentially reactive objects together.
 It behaves similar to [`Object.assign`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign) but will retain the reactivity of the properties being merged.
 This helps ensure that when individual properties within the merged object change, their reactivity is not lost.
 
 ```typescript
-import { mergeProps } from "solid-js";
+import { merge } from "solid-js";
 
 function MyComponent(props) {
-	// Using mergeProps to set default values for props
-	const finalProps = mergeProps({ defaultName: "Ryan Carniato" }, props);
+	// Using merge to set default values for props
+	const finalProps = merge({ defaultName: "Ryan Carniato" }, props);
 
 	return <div>Hello {finalProps.defaultName}</div>;
 }
@@ -60,12 +64,25 @@ function MyComponent(props) {
 When merging props, if there is no existing value for a property, the value from the first object will be used.
 However, if a value already exists, it will be used instead, all while retaining the reactivity of the property.
 
+:::caution
+In Solid 2.0, `undefined` is treated as a value that **overrides**:
+```js
+const merged = merge({ a: 1, b: 2 }, { b: undefined });
+// merged.b is undefined (not 2)
+```
+:::
+
 ## Destructuring props
 
 Props are read-only so that child components do not directly modify the data passed by the parent.
 This also encourages one-way data flow, a pattern often seen to promote more predictable data management.
 
 With Solid, destructuring props is not recommended as it can break reactivity.
+
+:::caution[Solid 2.0 — Destructuring props warns in dev]
+In Solid 2.0, destructuring reactive props at the top level of a component body will produce a **dev warning**. Always access props through the `props` object, or wrap them in a function:
+:::
+
 Instead, you should access props directly from the `props` object, or wrap them in a function to ensure they are always up-to-date:
 
 ```typescript
@@ -76,33 +93,26 @@ function MyComponent(props) {
 }
 ```
 
-### `splitProps`
+### `omit`
 
-[`splitProps`](/reference/reactive-utilities/split-props) is a utility function designed to help split a single props object into multiple sets of props, retaining the reactivity of the individual properties.
-It provides a way to destructure props without breaking reactivity.
+:::note[Solid 2.0 — `splitProps` is replaced by `omit`]
+`splitProps` is replaced by `omit` in Solid 2.0. Instead of splitting props into multiple groups, `omit` creates a view of the props **without** the listed keys.
+:::
 
-`splitProps` gives you the ability to define one or more arrays of keys that you wish to extract into separate props objects, all while retaining the reactivity of the individual properties.
-It will return an array of props objects related to each set of keys, plus an additional props object containing any remaining keys.
-
-When passing props to child components, you can use `splitProps` to split the props into multiple groups, and then pass each group to the appropriate child component:
+`omit` is a utility function that creates a reactive view of a props object with specific keys removed. It provides a way to extract "rest" props without breaking reactivity:
 
 ```typescript
-import { splitProps } from "solid-js";
+import { omit } from "solid-js";
 
 function ParentComponent(props) {
-	// Splitting props into two groups: 'name' and 'age'
-	const [greetingProps, personalInfoProps, restProps] = splitProps(
-		props,
-		["name"],
-		["age"]
-	);
+	// Create a view without 'name' and 'age'
+	const restProps = omit(props, "name", "age");
 
-	// Using greetingProps and personalInfoProps in the current component
 	return (
 		<div>
-			<Greeting {...greetingProps} />
-			<PersonalInfo {...personalInfoProps} />
-			{/* restProps can be passed down or used as needed */}
+			<Greeting name={props.name} />
+			<PersonalInfo age={props.age} />
+			<OtherComponent {...restProps} />
 		</div>
 	);
 }

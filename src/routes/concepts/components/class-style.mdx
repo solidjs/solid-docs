@@ -11,7 +11,7 @@ tags:
   - themes
   - dynamic
   - ui
-version: '1.0'
+version: '2.0'
 description: >-
   Style Solid components with CSS classes and inline styles. Learn dynamic
   styling, classList usage, and theme implementation.
@@ -88,36 +88,38 @@ function ThemedButton(props) {
 }
 ```
 
-### `classList`
+### Enhanced `class` with objects and arrays
 
-When you want to apply multiple classes to an element, you can use the [`classList` attribute](https://developer.mozilla.org/en-US/docs/Web/API/Element/classList).
-To use it, you can pass either a string or an object where the keys represent the class names and the values represent a boolean expression.
-When the value is `true`, the class is applied; when `false`, it is removed.
+:::caution[Solid 2.0 — `classList` is removed]
+In Solid 2.0, `classList` is removed. Its behavior is merged into the `class` prop, which now accepts **strings**, **objects**, and **arrays** (clsx-style). This eliminates the need for a separate attribute and avoids the issues that arose from mixing `class` and `classList`.
+:::
+
+The `class` prop now supports multiple forms for applying conditional classes:
+
+```tsx
+// String (same as before)
+<div class="card" />
+
+// Object — keys are class names, values are boolean conditions
+<div class={{ active: isActive(), disabled: isDisabled() }} />
+
+// Array — mix strings, objects, and dynamic values
+<div class={["card", props.class, { active: isActive() }]} />
+```
+
+Example with a dynamic selection:
 
 ```tsx
 const [current, setCurrent] = createSignal("foo");
 
 <button
-	classList={{ "selected" : current() === "foo" }}
+	class={["btn", { selected: current() === "foo" }]}
 	onClick={() => setCurrent("foo")}
 >
 	foo
 </button>;
 ```
 
-`classList` is often more efficient than `class` when handling multiple conditional classes.
-This is because `classList` selectively toggles only the classes that require alteration, while `class` will be re-evaluated each time.
-For a single conditional class, using `class` might be simpler but as the number of conditional classes increases, `classList` offers a more readable and declarative approach.
-
-:::note
-    While it is possible, mixing `class` and `classList` can introduce unexpected errors.
-    If both are reactive when the `class` value changes, Solid will set the entire `class` attribute.
-    This will remove any classes set by `classList`.
-
-    To avoid this, the `class` attribute should be set to a static string or nothing.
-    Alternatively, `class` can be set to a static computed value (e.g. `class={baseClass()}`), but then it must be put before any `classList` attributes.
-
-    Additionally, since `classList` is a pseudo-attribute, it doesn't work in prop spreads like `<div {...props} />` or in `<Dynamic>`.
-:::
+This approach is both more ergonomic and avoids the edge cases that existed when mixing `class` and `classList` in Solid 1.x.
 
 For a guide on how to style your components, see [Styling Your Components](/guides/styling-your-components), where we cover the different ways to style your components using libraries such as [Tailwind CSS](https://tailwindcss.com/).

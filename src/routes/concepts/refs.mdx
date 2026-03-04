@@ -10,7 +10,7 @@ tags:
   - directives
   - access
   - forward
-version: '1.0'
+version: '2.0'
 description: >-
   Access and manipulate DOM elements directly using refs, forward refs between
   components, and create custom directives.
@@ -23,7 +23,7 @@ They are particularly useful when you need to access the DOM nodes directly or i
 
 One way of accessing DOM elements is through [element selectors](https://developer.mozilla.org/en-US/docs/Web/API/Document_object_model/Locating_DOM_elements_using_selectors) such as [`document.querySelector`](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector) or [`document.getElementById`](https://developer.mozilla.org/en-US/docs/Web/API/Document/getElementById).
 Since elements in Solid can be added or removed from the DOM based on state, you need to wait until the element is attached to the DOM before accessing it.
-This can be done by using [`onMount`](/reference/lifecycle/on-mount) to wait until the element is attached to the DOM before accessing it:
+This can be done by using [`onSettled`](/reference/lifecycle/on-settled) to wait until the element is attached to the DOM before accessing it:
 
 Accessing DOM elements through element selectors is not recommended for this reason.
 As elements with the same selectors are added and removed from the DOM, the first element that matches the selector will be returned, which may not be the element you want.
@@ -158,35 +158,54 @@ function Canvas(props) {
 In this example, the `canvas` element is directly assigned the `ref` attribute through the `props.ref` variable.
 This forwards the reference to the parent component, giving it direct access to the `canvas` element.
 
-## Directives
+## Directives via `ref` factories
 
-Directives allow the attachment of reusable behaviours to DOM elements.
-The [`use:`](/reference/jsx-attributes/use) prefix is used to denote these custom directives.
-Unlike props or attributes, directives operate at a lower level through providing fine-grained control over the elements they are attached to.
+:::caution[Solid 2.0 — `use:` directives are removed]
+The `use:` directive namespace is removed in Solid 2.0. Instead, directives are expressed as **`ref` directive factories** — functions that return a callback to receive the element.
+:::
 
-Directives are like callback refs but they enable two extra features:
+Directives allow the attachment of reusable behaviors to DOM elements. In Solid 2.0, they use the `ref` prop:
 
-- Having multiple directives on an element.
-- Passing in reactive data to the callback.
-
-A directive is essentially a function with a specific signature:
-
-```typescript
-function directive(element: Element, accessor: () => any): void
-
+```jsx
+// 2.0: directive factory pattern
+<input ref={autofocus} />
+<button ref={tooltip({ content: "Save" })} />
 ```
 
-- `element`: The DOM element that the directive is applied to.
-- `accessor`: A function that gives access to the value(s) passed to the directive.
+Multiple directives can be composed using arrays:
 
-The directive functions are called at render time, but are called before the element is added to the DOM.
-Due to this order, elements are fully primed with their attributes, properties, or event listeners, therefore minimizing unexpected behaviors or premature interactions.
+```jsx
+<button ref={[autofocus, tooltip({ content: "Save" })]} />
+```
 
-Within directives, you're able to perform a variety of tasks, including:
+### Two-phase directive pattern
 
-- creating [signals](/concepts/signals)
-- initiating [effects](/guides/state-management#reacting-to-changes)
-- adding [event listeners](/concepts/components/event-handlers)
-- and more.
+The recommended directive pattern is **two-phase** — matching the split effect model:
+
+1. **Setup phase (owned):** Create reactive primitives and subscriptions. Avoid imperative DOM mutation.
+2. **Apply phase (unowned):** Receives the element, performs DOM writes. No new primitives should be created.
+
+```js
+function titleDirective(source) {
+	// Setup phase (owned): create primitives/subscriptions
+	let el;
+
+	createEffect(source, (value) => {
+		if (el) el.title = value;
+	});
+
+	// Apply phase (unowned): DOM writes happen here
+	return (nextEl) => {
+		el = nextEl;
+		el.title = source();
+	};
+}
+```
+
+Used as:
+
+```jsx
+<button ref={titleDirective(() => props.title)} />
+```
 
 To learn more about directives and how they work with TypeScript, refer to our [TypeScript for Solid guide](/configuration/typescript).

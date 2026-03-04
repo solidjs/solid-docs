@@ -5,19 +5,22 @@ use_cases: >-
   coordinating loading, multiple async, loading sequences, layout stability,
   parallel data fetching
 tags:
-  - suspense
-  - async
   - loading
+  - async
   - coordination
   - experimental
   - components
-version: '1.0'
+version: '2.0'
 description: >-
-  Coordinate multiple Suspense components in SolidJS. Control reveal order and
+  Coordinate multiple Loading components in Solid. Control reveal order and
   manage loading states for parallel async operations smoothly.
 ---
 
-SuspenseList allows for coordinating multiple parallel Suspense and SuspenseList components. It controls the order in which content is revealed to reduce layout thrashing and has an option to collapse or hide fallback states.
+:::note[Solid 2.0]
+`SuspenseList` coordinates `Loading` boundaries (previously `Suspense`). This component is still experimental.
+:::
+
+SuspenseList allows for coordinating multiple parallel `Loading` and SuspenseList components. It controls the order in which content is revealed to reduce layout thrashing and has an option to collapse or hide fallback states.
 
 ```ts
 import { SuspenseList } from "solid-js"
@@ -37,12 +40,12 @@ Here's an example of how to use SuspenseList:
 ```tsx
 <SuspenseList revealOrder="forwards" tail="collapsed">
 	<ProfileDetails user={resource.user} />
-	<Suspense fallback={<h2>Loading posts...</h2>}>
+	<Loading fallback={<h2>Loading posts...</h2>}>
 		<ProfileTimeline posts={resource.posts} />
-	</Suspense>
-	<Suspense fallback={<h2>Loading fun facts...</h2>}>
+	</Loading>
+	<Loading fallback={<h2>Loading fun facts...</h2>}>
 		<ProfileTrivia trivia={resource.trivia} />
-	</Suspense>
+	</Loading>
 </SuspenseList>
 ```
 
@@ -51,7 +54,7 @@ Here's an example of how to use SuspenseList:
 | Name          | Type                                      | Default      | Description                                                                 |
 | ------------- | ----------------------------------------- | ------------ | --------------------------------------------------------------------------- |
 | `revealOrder` | `"forwards" \| "backwards" \| "together"` | `"forwards"` | Determines the order in which the SuspenseList children should be revealed. |
-| `tail`        | `"collapsed" \| "hidden"`                 | `undefined`  | TODO                                                                        |
+| `tail`        | `"collapsed" \| "hidden"`                 | `undefined`  | Controls how non-revealed fallbacks are displayed.                          |
 
 ### `revealOrder`
 

@@ -10,10 +10,11 @@ tags:
   - memory
   - events
   - disposal
-version: '1.0'
+version: '2.0'
 description: >-
   Register cleanup methods in SolidJS to prevent memory leaks. Executes when
-  components unmount or tracking scopes dispose. Essential for proper cleanup.
+  components unmount or tracking scopes dispose. Essential for proper cleanup in
+  reactive computations.
 ---
 
 `onCleanup` registers a cleanup method that executes on disposal and recalculation of the current tracking scope.
@@ -27,6 +28,10 @@ import { onCleanup } from "solid-js"
 
 function onCleanup(fn: () => void): void;
 ```
+
+:::note[Split effects and the apply phase]
+`onCleanup` is not expected to be used inside the **apply phase** of split effects. If you need to perform cleanup for work done in the apply phase, return a cleanup function from the apply callback instead of calling `onCleanup`.
+:::
 
 Without the `onCleanup` function, the event listener would remain attached to the `document` even after the component is removed from the page.
 This can cause memory leaks and other issues.

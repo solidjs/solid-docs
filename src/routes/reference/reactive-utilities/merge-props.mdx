@@ -1,5 +1,5 @@
 ---
-title: mergeProps
+title: merge
 use_cases: >-
   component props, default values, prop cloning, prop merging, component
   configuration
@@ -10,33 +10,56 @@ tags:
   - defaults
   - cloning
   - merging
-version: '1.0'
+version: '2.0'
 description: >-
-  Learn how to merge reactive props in SolidJS for setting component defaults,
-  cloning props objects, and combining multiple prop sources dynamically.
+  Merge reactive props in Solid for setting component defaults, cloning props
+  objects, and combining multiple prop sources dynamically.
 ---
 
+:::note[Solid 2.0 — `mergeProps` is renamed to `merge`]
+`mergeProps` has been renamed to `merge` in Solid 2.0. The behavior is the same, with one important change: **`undefined` is treated as a real value** and will override, rather than being skipped.
+:::
+
 ```ts
-import { mergeProps } from "solid-js"
+import { merge } from "solid-js"
 
-function mergeProps(...sources: any): any
-
+function merge(...sources: any): any
 ```
 
-A reactive object **merge** method. 
-Useful for setting default props for components in case caller doesn't provide them. 
-Or cloning the props object including reactive properties.
+A reactive object **merge** method.
+Useful for setting default props for components in case the caller doesn't provide them, or for cloning the props object including reactive properties.
 
-This method works by using a proxy and resolving properties in reverse order. 
+This method works by using a proxy and resolving properties in reverse order.
 This allows for dynamic tracking of properties that aren't present when the prop object is first merged.
 
 ```ts
 // default props
-props = mergeProps({ name: "Smith" }, props)
+props = merge({ name: "Smith" }, props)
 
 // clone props
-newProps = mergeProps(props)
+newProps = merge(props)
 
 // merge props
-props = mergeProps(props, otherProps)
+props = merge(props, otherProps)
+```
+
+:::caution[`undefined` overrides in Solid 2.0]
+Unlike `mergeProps` in 1.x, `undefined` is now treated as a value that **overrides**:
+
+```ts
+const merged = merge({ a: 1, b: 2 }, { b: undefined })
+// merged.b is undefined (not 2)
+```
+:::
+
+## Migration
+
+```ts
+// 1.x
+import { mergeProps } from "solid-js"
+const props = mergeProps({ name: "default" }, props)
+
+// 2.0
+import { merge } from "solid-js"
+const props = merge({ name: "default" }, props)
 ```

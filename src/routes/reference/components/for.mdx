@@ -11,13 +11,17 @@ tags:
   - arrays
   - rendering
   - performance
-version: '1.0'
+version: '2.0'
 description: >-
-  Efficiently render lists in SolidJS with the For component. Provides keyed
-  iteration with minimal DOM updates for dynamic array rendering.
+  Efficiently render lists in Solid with the For component. Supports keyed and
+  non-keyed iteration with accessor children and minimal DOM updates.
 ---
 
-The `<For>` component is used to render a list of items. It is similar to the `.map()` function in JavaScript.
+:::caution[Solid 2.0 — Breaking changes]
+In Solid 2.0, `<For>` children receive **accessor functions** for both the item and the index — call `item()` and `i()` to read their values. The `<Index>` component has been removed; use `<For keyed={false}>` for non-keyed iteration.
+:::
+
+The `<For>` component is used to render a list of items.
 
 ```ts
 import { For } from "solid-js"
@@ -26,40 +30,62 @@ import type { JSX } from "solid-js"
 function For<T, U extends JSX.Element>(props: {
 	each: readonly T[]
 	fallback?: JSX.Element
-	children: (item: T, index: () => number) => U
+	keyed?: boolean | ((item: T) => any)
+	children: (item: () => T, index: () => number) => U
 }): () => U[]
 ```
 
-A referentially keyed loop with efficient updating of only changed items. The callback takes the current item as the first argument:
-
-```jsx
-<For each={state.list} fallback={<div>Loading...</div>}>
-	{(item) => <div>{item}</div>}
-</For>
-```
-
-The `each` prop can also be a function that returns a list. This is useful for creating a loop that depends on a state value:
-
-```jsx
-<For each={stateSignal()}>{(item) => <div>{item}</div>}</For>
-```
-
-The optional second argument is an index signal:
+A referentially keyed loop with efficient updating of only changed items. Both the item and index are **accessor functions**:
 
 ```jsx
 <For each={state.list} fallback={<div>Loading...</div>}>
 	{(item, index) => (
 		<div>
-			#{index()} {item}
+			#{index()} {item().name}
 		</div>
 	)}
 </For>
 ```
 
+## Keyed vs non-keyed
+
+By default, `<For>` uses **keyed** iteration (by reference identity). When an item's identity changes, its DOM is recreated.
+
+### Non-keyed (`keyed={false}`)
+
+Use `keyed={false}` for the behavior of the removed `<Index>` component — items are keyed by array index instead of identity:
+
+```jsx
+<For each={state.list} keyed={false}>
+	{(item) => <div>{item()}</div>}
+</For>
+```
+
+### Custom key function
+
+Provide a function to `keyed` for custom identity:
+
+```jsx
+<For each={state.users} keyed={(user) => user.id}>
+	{(user) => <div>{user().name}</div>}
+</For>
+```
+
+## Fallback
+
+The `fallback` prop specifies content to show when the list is empty:
+
+```jsx
+<For each={items()} fallback={<div>No items found.</div>}>
+	{(item) => <div>{item().name}</div>}
+</For>
+```
+
 ## Props
 
-| Name       | Type                                  | Description                                                      |
-| :--------- | :------------------------------------ | :--------------------------------------------------------------- |
-| `each`     | `readonly T[]`                        | The list of items to render.                                     |
-| `fallback` | `JSX.Element`                         | A fallback element to render while the list is loading.          |
-| `children` | `(item: T, index: () => number) => U` | A callback that returns a JSX element for each item in the list. |
+| Name       | Type                                            | Description                                                      |
+| :--------- | :---------------------------------------------- | :--------------------------------------------------------------- |
+| `each`     | `readonly T[]`                                  | The list of items to render.                                     |
+| `fallback` | `JSX.Element`                                   | A fallback element to render when the list is empty.             |
+| `keyed`    | `boolean \| ((item: T) => any)`                 | Keying strategy: `true` (default, by reference), `false` (by index), or a custom key function. |
+| `children` | `(item: () => T, index: () => number) => U`     | A callback that returns a JSX element. Both arguments are accessors. |

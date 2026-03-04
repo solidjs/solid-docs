@@ -1,67 +1,71 @@
 ---
-title: splitProps
+title: omit
 use_cases: >-
   prop forwarding, component composition, prop separation, child components,
-  prop destructuring
+  rest props
 tags:
   - props
   - components
   - composition
-  - destructuring
   - reactive
-version: '1.0'
+  - omit
+version: '2.0'
 description: >-
-  Split reactive props objects by keys in SolidJS. Perfect for consuming
-  specific props while forwarding others to child components efficiently.
+  Create a reactive view of props with specific keys removed. Replaces splitProps
+  for consuming specific props while forwarding others to child components.
 ---
 
+:::note[Solid 2.0 — `splitProps` is replaced by `omit`]
+`splitProps` has been replaced by `omit` in Solid 2.0. Instead of splitting props into multiple groups, `omit` creates a reactive view of the props **without** the listed keys.
+:::
+
 ```ts
-import { splitProps } from "solid-js"
+import { omit } from "solid-js"
 
-function splitProps<T>(
-	props: T,
-	...keys: Array<(keyof T)[]>
-): [...parts: Partial<T>]
-
+function omit<T>(props: T, ...keys: (keyof T)[]): Partial<T>
 ```
 
-Splits a reactive object by keys.
-
-It takes a reactive object and any number of arrays of keys; for each array of keys, it will return a reactive object with just those properties of the original object. 
-The last reactive object in the returned array will have any leftover properties of the original object.
-
-This can be useful if you want to consume a subset of props and pass the rest to a child.
+`omit` creates a reactive view of a props object with specific keys removed. It provides a way to extract "rest" props without breaking reactivity.
 
 ```tsx
 function MyComponent(props) {
-	const [local, others] = splitProps(props, ["children"])
+	const restProps = omit(props, "children")
 
 	return (
 		<>
-			<div>{local.children}</div>
-			<Child {...others} />
+			<div>{props.children}</div>
+			<Child {...restProps} />
 		</>
 	)
 }
 ```
 
-Because `splitProps` takes any number of arrays, we can split a props object as much as we wish (if, for example, we had multiple child components that each required a subset of the props).
-
-Let's say a component was passed six props:
+You can omit multiple keys:
 
 ```tsx
-<MyComponent a={1} b={2} c={3} d={4} e={5} foo="bar" />
-// ...
+function ParentComponent(props) {
+	const restProps = omit(props, "name", "age")
 
-function MyComponent(props) {
-	console.log(props) // {a: 1, b: 2, c: 3, d: 4, e: 5, foo: "bar"}
-	const [vowels, consonants, leftovers] = splitProps(
-		props,
-		["a", "e"],
-		["b", "c", "d"]
+	return (
+		<div>
+			<Greeting name={props.name} />
+			<PersonalInfo age={props.age} />
+			<OtherComponent {...restProps} />
+		</div>
 	)
-	console.log(vowels) // {a: 1, e: 5}
-	console.log(consonants) // {b: 2, c: 3, d: 4}
-	console.log(leftovers.foo) // bar
 }
+```
+
+## Migration
+
+```ts
+// 1.x
+import { splitProps } from "solid-js"
+const [local, others] = splitProps(props, ["name", "age"])
+// use local.name, local.age, and spread others
+
+// 2.0
+import { omit } from "solid-js"
+const others = omit(props, "name", "age")
+// access props.name, props.age directly, and spread others
 ```

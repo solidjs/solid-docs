@@ -11,98 +11,81 @@ tags:
   - bindings
   - components
   - typescript
-version: '1.0'
+  - removed
+version: '2.0'
 description: >-
-  Create custom directives in SolidJS to attach reusable behaviors to DOM
-  elements. Perfect for tooltips, form handling, and two-way data binding.
+  The use:* directive syntax has been removed in Solid 2.0. Use ref directive
+  factories with the ref attribute instead.
 ---
 
-Custom directives attach reusable behavior to DOM elements, acting as syntactic sugar over `ref`. They’re ideal for complex DOM interactions like scrolling, tooltips, or form handling, which are cumbersome to repeat in JSX.
-
-A directive is a function with the following signature
-
-```ts
-function directive(element: HTMLElement, accessor: Accessor<any>): void;
-```
-
-Directive functions are called at render time but before being added to the DOM. You can do whatever you'd like in them including create signals, effects, register clean-up etc.
-
-## Example
-
-A `model` directive for two-way data binding
-
-```tsx
-import type { Accessor, Signal } from "solid-js";
-
-function model(element: HTMLInputElement, value: Accessor<Signal<string>>) {
-	const [field, setField] = value();
-	createRenderEffect(() => (element.value = field()));
-	element.addEventListener("input", ({ target }) => setField(target.value));
-}
-
-const [name, setName] = createSignal("");
-
-<input type="text" use:model={[name, setName]} />;
-```
-
-## TypeScript Support
-
-To type custom directives, extend the `DirectiveFunctions` interface
-
-```ts
-declare module "solid-js" {
-	namespace JSX {
-		interface DirectiveFunctions {
-			model: typeof model;
-		}
-	}
-}
-```
-
-If you just want to constrain the second argument to the directive function, you can extend the older `Directives` interface
-
-```tsx
-declare module "solid-js" {
-	namespace JSX {
-		interface Directives {
-			model: Signal<string>;
-		}
-	}
-}
-```
-
-## Avoiding Tree-Shaking
-
-When importing a directive `d` from another module and using it only as `use:d`, TypeScript (via [babel-preset-typescript](https://babeljs.io/docs/babel-preset-typescript)) may remove the import, as it doesn’t recognize `use:d` as a reference to `d`.
-To prevent this:
-
-1. Use the `onlyRemoveTypeImports: true` option in `babel-preset-typescript`. For `vite-plugin-solid`, add this to `vite.config.ts`
-
-	```ts
-	import solidPlugin from "vite-plugin-solid";
-
-	export default {
-		plugins: [
-			solidPlugin({
-				typescript: { onlyRemoveTypeImports: true }
-			})
-		],
-   };
-   ```
-
-   Note: This requires consistent use of `export type` and `import type` in your codebase to avoid issues.
-
-2. Add a fake access like `false && d;` in the module
-
-	```tsx
-	import { model } from "./directives";
-	false && model; // Prevents tree-shaking
-	<input type="text" use:model={[name, setName]} />;
-	```
-
-   This is removed by bundlers like Terser, unlike a plain `model;` which may remain in the bundle.
-
-:::caution[Limitations]
-Directives only work with native HTML elements (HTML/SVG/MathML/Custom Elements).
-Directives are not forwarded and **won't work in user defined components**, such as `<MyComponent use:myinput={[..]}/>` [see also](https://github.com/solidjs/solid/discussions/722)
+:::caution[Removed in Solid 2.0]
+The `use:*` directive syntax has been removed in Solid 2.0. Directives are now implemented as ref directive factories and are passed through the `ref` attribute. This provides a more composable and explicit pattern.
 :::
+
+## Migration
+
+In Solid 1.x, directives used the `use:directiveName` syntax. In Solid 2.0, create a directive factory function that returns a ref callback, and pass it via `ref`.
+
+### Basic directive
+
+```tsx
+// Solid 1.x
+function tooltip(el: HTMLElement, accessor: Accessor<string>) {
+  const text = accessor();
+  // ... attach tooltip to el
+}
+
+<div use:tooltip={"Hello"} />
+
+// Solid 2.0
+function tooltip(text: string) {
+  return (el: HTMLElement) => {
+    // ... attach tooltip to el
+  };
+}
+
+<div ref={tooltip("Hello")} />
+```
+
+### Two-way data binding example
+
+```tsx
+// Solid 1.x
+function model(el: HTMLInputElement, accessor: Accessor<Signal<string>>) {
+  const [field, setField] = accessor();
+  createRenderEffect(() => (el.value = field()));
+  el.addEventListener("input", ({ target }) => setField(target.value));
+}
+
+<input type="text" use:model={[name, setName]} />
+
+// Solid 2.0
+function model(signal: Signal<string>) {
+  const [field, setField] = signal;
+  return (el: HTMLInputElement) => {
+    createRenderEffect(() => (el.value = field()));
+    el.addEventListener("input", ({ target }) => setField(target.value));
+  };
+}
+
+<input type="text" ref={model([name, setName])} />
+```
+
+### Composing multiple directives
+
+In Solid 2.0, you can compose multiple ref directives using an array:
+
+```tsx
+<div ref={[tooltip("Hello"), draggable({ axis: "x" })]} />
+```
+
+See the [ref](/reference/jsx-attributes/ref) documentation for more details on ref directive factories and composition.
+
+## Migration summary
+
+| Solid 1.x | Solid 2.0 |
+|---|---|
+| `use:directiveName={value}` | `ref={directiveName(value)}` |
+| `use:a={va} use:b={vb}` | `ref={[a(va), b(vb)]}` |
+| Directive signature: `(el, accessor) => void` | Factory signature: `(opts) => (el) => void` |
+| Required `false && directive` to avoid tree-shaking | No longer needed (ref values are always used) |

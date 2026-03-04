@@ -10,13 +10,24 @@ tags:
   - reactivity
   - optimization
   - defaults
-version: '1.0'
+version: '2.0'
 description: >-
-  Prevent dependency tracking for static values in SolidJS. Optimize performance
-  by excluding non-updating props from reactive tracking scope.
+  Prevent dependency tracking for static values in Solid. Essential for
+  intentional one-time reads in Solid 2.0's strict top-level read model.
 ---
 
-Ignores tracking any of the dependencies in the executing code block and returns the value. This helper is useful when a certain `prop` will never update and thus it is ok to use it outside of the tracking scope.
+Ignores tracking any of the dependencies in the executing code block and returns the value.
+
+:::note[Solid 2.0 — Importance for strict top-level reads]
+In Solid 2.0, reading signals or reactive props at the top level of a component body **warns in dev** unless the read is inside a reactive scope (`createMemo`, `createEffect`, JSX) or explicitly wrapped in `untrack`. Use `untrack` for intentional one-time reads:
+
+```tsx
+function Title(props) {
+  const t = untrack(() => props.title) // intentional one-time read — no warn
+  return <h1>{t}</h1>
+}
+```
+:::
 
 ```tsx title="component.tsx"
 import { untrack } from "solid-js"

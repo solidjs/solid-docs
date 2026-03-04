@@ -9,31 +9,39 @@ tags:
   - boolean
   - conditional
   - dynamic
-version: '1.0'
+  - removed
+version: '2.0'
 description: >-
-  Control attribute presence with bool:* directive in SolidJS. Add or remove
-  attributes dynamically based on truthy/falsy values for web components.
+  The bool:* prefix has been removed in Solid 2.0. Boolean attribute behavior is
+  now the default: true adds the attribute, false removes it.
 ---
 
-`bool:*` controls the presence of an attribute in an element.
-When the value is `truthy` it adds the `attribute` to the element.
-Alternatively, when the value is `falsy` it removes the `attribute` from the element.
-This attribute is most useful for Web Components.
-
-```tsx
-<my-element bool:status={prop.value} />
-```
-
-```tsx
-// Assuming `prop.value` is `truthy`, then it becomes
-<my-element status />
-
-// And when `falsy`, then it becomes
-<my-element />
-
-```
-
-:::note[Strong-Typing Custom Boolean Attributes]
-Type definitions are required when using TypeScript.
-See the [TypeScript](/configuration/typescript#forcing-properties-and-custom-attributes) page for examples.
+:::caution[Removed in Solid 2.0]
+The `bool:*` prefix has been removed in Solid 2.0. Boolean attribute behavior is now built-in: passing `true` adds the attribute to the element (as a valueless attribute), and passing `false` removes it.
 :::
+
+## Migration
+
+In Solid 1.x, you needed `bool:` to control attribute presence based on a boolean value. In Solid 2.0, this is the standard behavior for boolean-valued attributes.
+
+```tsx
+// Solid 1.x
+<my-element bool:muted={isMuted()} />
+
+// Solid 2.0
+<my-element muted={isMuted()} />
+```
+
+When `isMuted()` is `true`, the rendered output is:
+
+```html
+<my-element muted></my-element>
+```
+
+When `isMuted()` is `false`, the attribute is removed:
+
+```html
+<my-element></my-element>
+```
+
+This works for all boolean attributes on both native HTML elements and Web Components.

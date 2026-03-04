@@ -9,32 +9,39 @@ tags:
   - proxy
   - state
   - compatibility
-version: '1.0'
+  - removed
+version: '2.0'
 description: >-
-  Create mutable proxy stores with automatic deep tracking. Ideal for MobX/Vue
-  compatibility or integrating external mutable systems.
+  createMutable has been removed from solid-js/store in Solid 2.0 and moved to
+  the @solidjs/signals package.
 ---
 
-`createMutable` creates a new mutable Store proxy object that provides a way to selectively trigger updates only when values change.
-
-By intercepting property access, it allows automatic tracking of deep nesting via proxy making it useful for integrating external systems or serving as a compatibility layer with frameworks like MobX or Vue.
-
-```tsx
-import { createMutable } from "solid-js/store"
-import type { Store, StoreNode } from "solid-js/store"
-
-function createMutable<T extends StoreNode>(state: T | Store<T>): Store<T>;
-```
-
-:::note
-	It's important to recognize that a mutable state, which can be passed around and modified anywhere, may complicate the code structure and increase the risk of breaking unidirectional flow.
-
-	For a more robust alternative, it is generally recommended to use `createStore` instead.
-	Additionally, the [`produce`](/reference/store-utilities/produce) utility can provide many of these same benefits without the associated downsides.
+:::caution
+In Solid 2.0, `createMutable` has been **removed from `solid-js/store`** and moved to the **`@solidjs/signals`** package. If you depend on mutable store patterns, you will need to install and import from `@solidjs/signals` instead.
 :::
 
+## Migration
+
+Update your imports from:
+
 ```tsx
-import { createMutable } from "solid-js/store"
+// Solid 1.x (no longer works in 2.0)
+import { createMutable } from "solid-js/store";
+```
+
+To:
+
+```tsx
+// Solid 2.0
+import { createMutable } from "@solidjs/signals";
+```
+
+## Usage (via `@solidjs/signals`)
+
+`createMutable` creates a new mutable Store proxy object that provides a way to selectively trigger updates only when values change. By intercepting property access, it allows automatic tracking of deep nesting via proxy.
+
+```tsx
+import { createMutable } from "@solidjs/signals";
 
 const state = createMutable({
 	someValue: 0,
@@ -50,17 +57,6 @@ state.someValue = 5;
 state.list.push(anotherValue);
 ```
 
-Mutables support setters along with getters.
-
-```tsx
-const user = createMutable({
-	firstName: "John",
-	lastName: "Smith",
-	get fullName() {
-		return `${this.firstName} ${this.lastName}`;
-	},
-	set setFullName(value) {
-		[this.firstName, this.lastName] = value.split(" ");
-	},
-});
-```
+:::note
+In Solid 2.0, the recommended approach for most use cases is [`createStore`](/reference/store-utilities/create-store) with its new draft-first setter pattern, which provides the ergonomic benefits of mutable-style updates while maintaining unidirectional data flow.
+:::

@@ -10,62 +10,82 @@ tags:
   - immediate
   - refs
   - lifecycle
-version: '1.0'
+version: '2.0'
 description: >-
-  Execute effects immediately during rendering with createRenderEffect. Run side
-  effects as DOM creates, before refs are set or connected.
+  Execute effects immediately during the rendering phase with
+  createRenderEffect. Uses the same split compute/apply model as createEffect
+  in Solid 2.0.
 ---
+
+:::caution[Solid 2.0 — Split effect model]
+In Solid 2.0, `createRenderEffect` uses the same **split model** as [`createEffect`](/reference/basic-reactivity/create-effect): a **compute** function (tracking phase) and an **apply** function (side-effect phase). The single-callback form is no longer supported.
+:::
 
 ```ts
 import { createRenderEffect } from "solid-js"
 
-function createRenderEffect<T>(fn: (v: T) => T, value?: T): void
-
+function createRenderEffect<T>(
+	compute: () => T,
+	apply?: (value: T) => (() => void) | void
+): void
 ```
 
-A render effect is a computation similar to a regular effect (as created by [`createEffect`](/reference/basic-reactivity/create-effect)), but differs in when Solid schedules the first execution of the effect function. 
-While `createEffect` waits for the current rendering phase to be complete, `createRenderEffect` immediately calls the function. 
-Thus the effect runs as DOM elements are being created and updated, but possibly before specific elements of interest have been created, and probably before those elements have been connected to the document. 
-In particular, **refs** will not be set before the initial effect call. 
+A render effect is a computation similar to a regular effect (as created by [`createEffect`](/reference/basic-reactivity/create-effect)), but differs in when Solid schedules the first execution of the effect function.
+While `createEffect` waits for the current rendering phase to be complete, `createRenderEffect` immediately calls the function.
+Thus the effect runs as DOM elements are being created and updated, but possibly before specific elements of interest have been created, and probably before those elements have been connected to the document.
+In particular, **refs** will not be set before the initial effect call.
 Indeed, Solid uses `createRenderEffect` to implement the rendering phase itself, including setting of **refs**.
 
-Reactive updates to render effects are identical to effects: they queue up in response to a reactive change (e.g., a single signal update, or a batch of changes, or collective changes during an entire render phase) and run in a single [`batch`](/reference/reactive-utilities/batch) afterward (together with effects). 
-In particular, all signal updates within a render effect are batched.
+### Split model
 
-Here is an example of the behavior. (Compare with the example in [`createEffect`](/reference/basic-reactivity/create-effect).)
+Like `createEffect`, the **compute** function runs in a tracking scope and returns a value. The **apply** function receives that value and performs the side effect. The apply function can optionally return a **cleanup** function.
 
 ```ts
 // assume this code is in a component function, so is part of a rendering phase
 const [count, setCount] = createSignal(0)
 
-// this effect prints count at the beginning and when it changes
-createRenderEffect(() => console.log("count =", count()))
+// compute tracks `count`, apply logs the value
+createRenderEffect(
+	() => count(),                          // compute: runs immediately
+	(value) => console.log("count =", value) // apply: side effect
+)
 // render effect runs immediately, printing `count = 0`
-console.log("hello")
-setCount(1) // effect won't run yet
-setCount(2) // effect won't run yet
-
-queueMicrotask(() => {
-	// now `count = 2` will print
-	console.log("microtask")
-	setCount(3) // immediately prints `count = 3`
-	console.log("goodbye")
-})
-
-// --- overall output: ---
-// count = 0   [this is the only added line compared to createEffect]
-// hello
-// count = 2
-// microtask
-// count = 3
-// goodbye
 ```
 
-Just like `createEffect`, the effect function gets called with an argument equal to the value returned from the effect function's last execution, or on the first call, equal to the optional second argument of `createRenderEffect`.
+### Migration from Solid 1.x
+
+```ts
+// 1.x — single-callback form
+createRenderEffect(() => console.log("count =", count()))
+
+// 2.0 — split compute/apply
+createRenderEffect(
+	() => count(),
+	(value) => console.log("count =", value)
+)
+```
+
+Reactive updates to render effects are identical to effects: they queue up in response to a reactive change (e.g., a single signal update, or a batch of changes, or collective changes during an entire render phase) and run in a single [`batch`](/reference/reactive-utilities/batch) afterward (together with effects).
+In particular, all signal updates within a render effect are batched.
+
+### Cleanup
+
+The apply function can return a cleanup function. This cleanup runs before the next execution or when the effect is disposed:
+
+```ts
+createRenderEffect(
+	() => eventName(),
+	(event) => {
+		const callback = (e) => console.log(e)
+		ref.addEventListener(event, callback)
+		return () => ref.removeEventListener(event, callback)
+	}
+)
+```
 
 ## Arguments
 
-| Name    | Type          | Description                                            |
-| :------ | :------------ | :----------------------------------------------------- |
-| `fn`    | `(v: T) => T` | The effect function to be called.                      |
-| `value` | `T`           | The initial value to be passed to the effect function. |
+| Name | Type | Description |
+| :--- | :--- | :---------- |
+| `compute` | `() => T` | A function that runs in a tracking scope, reads reactive values, and returns a value passed to `apply`. Runs immediately during the rendering phase. |
+| `apply` | `(value: T) => (() => void) \| void` | An optional function that receives the computed value and performs side effects. Can return a cleanup function. |

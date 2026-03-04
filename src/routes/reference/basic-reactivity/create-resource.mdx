@@ -2,221 +2,136 @@
 title: createResource
 use_cases: >-
   data fetching, api calls, async operations, loading states, error handling,
-  server data, suspense boundaries
+  server data
 tags:
   - async
   - fetching
   - api
-  - suspense
   - loading
   - error-handling
-  - ssr
-version: '1.0'
+  - removed
+version: '2.0'
 description: >-
-  Fetch async data with createResource. Handles loading states, errors, and
-  integrates with Suspense for seamless data fetching in Solid.js applications.
+  createResource has been removed in Solid 2.0. Use async createMemo with
+  Loading boundaries for data fetching instead.
 ---
 
-`createResource` takes an asynchronous fetcher function and returns a signal that is updated with the resulting data when the fetcher completes.
+:::caution[Solid 2.0 — `createResource` is removed]
+`createResource` has been removed in Solid 2.0. Async is now a first-class capability of computations. Use `createMemo` with an async function and wrap reads in `<Loading>` boundaries.
+:::
 
-There are two ways to use `createResource`: you can pass the fetcher function as the sole argument, or you can additionally pass a source signal as the first argument. 
-The source signal will retrigger the fetcher whenever it changes, and its value will be passed to the fetcher.
+## Replacement: async computations + `Loading`
+
+In Solid 2.0, any computation may return a Promise. Consumers read the accessor as usual; if the value isn't ready, the graph suspends and `<Loading>` displays fallback UI.
+
+### Basic data fetching
 
 ```tsx
-const [data, { mutate, refetch }] = createResource(fetchData)
-```
-
-```tsx
+// 1.x
 const [data, { mutate, refetch }] = createResource(source, fetchData)
+
+// 2.0
+import { createMemo } from "solid-js"
+
+const data = createMemo(() => fetchData(source()))
 ```
 
-In these snippets, the fetcher is the function `fetchData`, and `data()` is undefined until `fetchData` finishes resolving. 
-In the first case, `fetchData` will be called immediately. 
-In the second, `fetchData` will be called as soon as `source` has any value other than false, null, or undefined. 
-It will be called again whenever the value of `source` changes, and that value will always be passed to `fetchData` as its first argument.
-
-You can call `mutate` to directly update the `data` signal (it works like any other signal setter). 
-You can also call refetch to rerun the fetcher directly, and pass an optional argument to provide additional info to the fetcher e.g `refetch(info)`.
-
-`data` works like a normal signal getter: use `data()` to read the last returned value of `fetchData`. 
-But it also has extra reactive properties:
-
-- `data.loading`: whether the fetcher has been called but not returned.
-- `data.error`: if the request has errored out.
-  `createResource`: provides an `Error` object for `data.error`. It will show even if the fetcher throws something else.
-
-  - Fetcher throws an `Error` instance, `data.error` will be that instance.
-  - If the fetcher throws a string, `data.error.message` will contain that string.
-  - When the fetcher throws a value that is neither an `Error` nor a string, that value will be available as `data.error.cause`.
-  
-- As of **v1.4.0**, `data.latest` returns the last value received and will not trigger [Suspense](/reference/components/suspense) or [transitions](#TODO); if no value has been returned yet, `data.latest` will act the same as `data()`. 
-  This can be useful if you want to show the out-of-date data while the new data is loading.
-
-`loading`, `error`, and `latest` are reactive getters and can be tracked.
-
-## The fetcher
-
-The `fetcher` is the async function that you provide to `createResource` to actually fetch the data.
-It is passed two arguments: the value of the source signal (if provided), and an info object with two properties: `value` and `refetching`. 
-The `value` property tells you the previously fetched value. 
-The `refetching` property is true if the `fetcher` was triggered using the refetch function and false otherwise. 
-If the `refetch` function was called with an argument (`refetch(info)`), refetching is set to that argument.
+### Loading states
 
 ```tsx
-async function fetchData(source, { value, refetching }) {
-	// Fetch the data and return a value.
-	//`source` tells you the current value of the source signal;
-	//`value` tells you the last returned value of the fetcher;
-	//`refetching` is true when the fetcher is triggered by calling `refetch()`,
-	// or equal to the optional data passed: `refetch(info)`
-}
+// 1.x
+<Suspense fallback={<Spinner />}>
+  <UserProfile />
+</Suspense>
 
-const [data, { mutate, refetch }] = createResource(getQuery, fetchData)
+// 2.0
+<Loading fallback={<Spinner />}>
+  <UserProfile />
+</Loading>
+```
 
-// read value
-data()
+### Checking loading state
 
-// check if loading
+```tsx
+// 1.x
 data.loading
 
-// check if errored
-data.error
+// 2.0
+import { isPending } from "solid-js"
 
-// directly set value without creating promise
+// false during initial Loading fallback, true during revalidation
+isPending(() => data())
+```
+
+### Getting the latest value
+
+```tsx
+// 1.x
+data.latest
+
+// 2.0
+import { latest } from "solid-js"
+
+latest(() => data())
+```
+
+### Mutations and refetching
+
+```tsx
+// 1.x
+const [data, { mutate, refetch }] = createResource(fetchTodos)
 mutate(optimisticValue)
-
-// refetch the last request explicitly
 refetch()
 
-```
+// 2.0
+import { action, refresh } from "solid-js"
+import { createStore, createOptimisticStore, snapshot } from "solid-js/store"
 
-## Version 1.4.0 and Later
+const [todos] = createStore(() => api.getTodos(), { list: [] })
+const [optimisticTodos, setOptimisticTodos] = createOptimisticStore(
+  () => snapshot(todos),
+  { list: [] }
+)
 
-#### v1.4.0
-
-If you're using `renderToStream`, you can tell Solid to wait for a resource before flushing the stream using the `deferStream` option:
-
-```tsx
-// fetches a user and streams content as soon as possible
-const [user] = createResource(() => params.id, fetchUser)
-
-// fetches a user but only streams content after this resource has loaded
-const [user] = createResource(() => params.id, fetchUser, {
-	deferStream: true,
+const addTodo = action(function* (todo) {
+  setOptimisticTodos((s) => s.list.push(todo)) // optimistic
+  yield api.addTodo(todo)                       // async work
+  refresh(todos)                                // refresh reads
 })
 ```
 
-#### v1.5.0
-
-1. We've added a new state field which covers a more detailed view of the Resource state beyond `loading` and `error`. 
-You can now check whether a Resource is `unresolved`, `pending`, `ready`, `refreshing`, or `errored`.
-
-| State        | Value resolved | Loading | Has error |
-| ------------ | -------------- | ------- | --------- |
-| `unresolved` | No             | No      | No        |
-| `pending`    | No             | Yes     | No        |
-| `ready`      | Yes            | No      | No        |
-| `refreshing` | Yes            | Yes     | No        |
-| `errored`    | No             | No      | Yes       |
-
-2. When server-rendering resources, especially when embedding Solid in other systems that fetch data before rendering, you might want to initialize the resource with this prefetched value instead of fetching again and having the resource serialize it in its own state.
-You can use the new `ssrLoadFrom` option for this. 
-Instead of using the default `server` value, you can pass `initial` and the resource will use `initialValue` as if it were the result of the first fetch for both SSR and hydration.
+### Error handling
 
 ```tsx
-const [data, { mutate, refetch }] = createResource(() => params.id, fetchUser, {
-	initialValue: preloadedData,
-	ssrLoadFrom: "initial",
-})
+// 1.x
+data.error
+
+// 2.0
+<Errored fallback={(err, reset) => <span>Error: {err.message}</span>}>
+  <Loading fallback={<Spinner />}>
+    <div>{data()}</div>
+  </Loading>
+</Errored>
 ```
 
-3. Resources can be set with custom defined storage with the same signature as a Signal by using the storage option. 
-For example using a custom reconciling store could be done this way:
+## Migration summary
 
-```tsx
-function createDeepSignal<T>(value: T): Signal<T> {
-	const [store, setStore] = createStore({
-		value,
-	})
-	return [
-		() => store.value,
-		(v: T) => {
-			const unwrapped = unwrap(store.value)
-			typeof v === "function" && (v = v(unwrapped))
-			setStore("value", reconcile(v))
-			return store.value
-		},
-	] as Signal<T>
-}
+| 1.x | 2.0 |
+|-----|-----|
+| `createResource(fetcher)` | `createMemo(() => fetcher())` |
+| `createResource(source, fetcher)` | `createMemo(() => fetcher(source()))` |
+| `data.loading` | `isPending(() => data())` |
+| `data.latest` | `latest(() => data())` |
+| `data.error` | `<Errored>` boundary |
+| `<Suspense>` | `<Loading>` |
+| `mutate` | `createOptimistic` / `createOptimisticStore` |
+| `refetch` | `refresh()` |
 
-const [resource] = createResource(fetcher, {
-	storage: createDeepSignal,
-})
-```
+## See also
 
-This option is still experimental and may change in the future.
-
-## Options
-
-The `createResource` function takes an optional third argument, an options object. The options are:
-
-| Name         | Type                    | Default        | Description                                                                                                                                                   |
-| ------------ | ----------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| name         | `string`                | `undefined`    | A name for the resource. This is used for debugging purposes.                                                                                                 |
-| deferStream  | `boolean`               | `false`        | If true, Solid will wait for the resource to resolve before flushing the stream.                                                                              |
-| initialValue | `any`                   | `undefined`    | The initial value of the resource.                                                                                                                            |
-| onHydrated   | `function`              | `undefined`    | A callback that is called when the resource is hydrated.                                                                                                      |
-| ssrLoadFrom  | `"server" \| "initial"` | `"server"`     | The source of the initial value for SSR. If set to `"initial"`, the resource will use the `initialValue` option instead of the value returned by the fetcher. |
-| storage      | `function`              | `createSignal` | A function that returns a signal. This can be used to create a custom storage for the resource. This is still experimental                                    |
-
-## Note for TypeScript users
-
-The function and type definitions for `createResource` are as follows:
-
-```tsx
-import { createResource } from "solid-js"
-import type { ResourceReturn, ResourceOptions } from "solid-js"
-
-type ResourceReturn<T> = [
-	{
-		(): T | undefined
-		state: "unresolved" | "pending" | "ready" | "refreshing" | "errored"
-		loading: boolean
-		error: any
-		latest: T | undefined
-	},
-	{
-		mutate: (v: T | undefined) => T | undefined
-		refetch: (info: unknown) => Promise<T> | T
-	}
-]
-
-type ResourceOptions<T, S = unknown> = {
-	initialValue?: T
-	name?: string
-	deferStream?: boolean
-	ssrLoadFrom?: "initial" | "server"
-	storage?: (
-		init: T | undefined
-	) => [Accessor<T | undefined>, Setter<T | undefined>]
-	onHydrated?: (k: S | undefined, info: { value: T | undefined }) => void
-}
-
-function createResource<T, U = true>(
-	fetcher: (
-		k: U,
-		info: { value: T | undefined; refetching: boolean | unknown }
-	) => T | Promise<T>,
-	options?: ResourceOptions<T, U>
-): ResourceReturn<T>
-
-function createResource<T, U>(
-	source: U | false | null | (() => U | false | null),
-	fetcher: (
-		k: U,
-		info: { value: T | undefined; refetching: boolean | unknown }
-	) => T | Promise<T>,
-	options?: ResourceOptions<T, U>
-): ResourceReturn<T>
-
-```
+- [Fetching data guide](/guides/fetching-data) — Complete guide to data fetching in Solid 2.0
+- [`createMemo`](/reference/basic-reactivity/create-memo) — Async memos that suspend
+- [`Loading`](/reference/components/suspense) — Async boundary component
+- [`Errored`](/reference/components/error-boundary) — Error boundary component
+- [`isPending`](/concepts/intro-to-reactivity) — Stale-while-revalidating indicator
+- [`action`](/guides/fetching-data#mutations-with-action) — Mutation wrapper

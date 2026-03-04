@@ -1,5 +1,5 @@
 ---
-title: <ErrorBoundary>
+title: <Errored>
 order: 5
 use_cases: >-
   error handling, production apps, preventing crashes, user experience,
@@ -11,21 +11,24 @@ tags:
   - fallback
   - production
   - stability
-version: '1.0'
+version: '2.0'
 description: >-
-  Catch and handle rendering errors in SolidJS components with ErrorBoundary.
-  Display fallback UI when errors occur in children components.
+  Catch and handle rendering errors in Solid components with Errored. Display
+  fallback UI when errors occur in children components.
 ---
 
-The `<ErrorBoundary>` component catches errors that occur during the rendering or updating of its children and shows a fallback UI instead.
+:::note[Solid 2.0 — `ErrorBoundary` is renamed to `Errored`]
+`ErrorBoundary` has been renamed to `Errored` in Solid 2.0.
+:::
+
+The `<Errored>` component catches errors that occur during the rendering or updating of its children and shows a fallback UI instead.
 This includes:
 
 - Errors that occur while rendering JSX.
-- Errors that occur within `createEffect`, `createMemo`, and other state management primitives.
-- Errors that occur within `createResource` and other asynchronous state management or data-fetching primitives.
+- Errors that occur within `createEffect`, `createMemo`, and other reactive primitives.
+- Errors that occur within async computations.
 
-However, errors occurring outside the rendering process are **not** captured by error boundaries.
-For instance:
+However, errors occurring outside the rendering process are **not** captured:
 
 - Errors that occur inside event handlers.
 - Errors that occur after a `setTimeout`.
@@ -40,20 +43,20 @@ For instance:
 If a function is passed, it receives two parameters:
 
 - `err`: The caught error object.
-- `reset`: A function that forces the `<ErrorBoundary>` to re-render its children and clear the error state.
+- `reset`: A function that forces `<Errored>` to re-render its children and clear the error state.
 
-If there's an error within the `fallback` itself, however, it is not caught by the same `<ErrorBoundary>`.
+If there's an error within the `fallback` itself, it is not caught by the same `<Errored>`.
 Instead, it will bubble up to any parent error boundaries.
 
 ## Example
 
 ```tsx
-import { ErrorBoundary } from "solid-js";
+import { Errored } from "solid-js";
 import { ErrorProne } from "./components";
 
 function Example() {
 	return (
-		<ErrorBoundary
+		<Errored
 			fallback={(error, reset) => (
 				<div>
 					<p>{error.message}</p>
@@ -62,7 +65,23 @@ function Example() {
 			)}
 		>
 			<ErrorProne />
-		</ErrorBoundary>
+		</Errored>
 	);
 }
+```
+
+## Migration
+
+```tsx
+// 1.x
+import { ErrorBoundary } from "solid-js"
+<ErrorBoundary fallback={(err, reset) => <div>{err.message}</div>}>
+  <Child />
+</ErrorBoundary>
+
+// 2.0
+import { Errored } from "solid-js"
+<Errored fallback={(err, reset) => <div>{err.message}</div>}>
+  <Child />
+</Errored>
 ```

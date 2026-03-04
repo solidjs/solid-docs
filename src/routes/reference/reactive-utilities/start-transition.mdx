@@ -1,26 +1,34 @@
 ---
 title: startTransition
 use_cases: >-
-  async updates, performance optimization, non-blocking updates, transition
-  control
+  async updates, transition control
 tags:
   - transitions
   - async
-  - performance
-  - updates
-  - batching
-version: '1.0'
+  - removed
+version: '2.0'
 description: >-
-  Start transitions in SolidJS without pending state tracking. Batch async
-  updates for improved performance and smoother user interactions.
+  startTransition has been removed in Solid 2.0. Transitions are now built into
+  the runtime. Use Loading and isPending for transition UI.
 ---
 
+:::caution[Solid 2.0 — `startTransition` is removed]
+`startTransition` has been removed in Solid 2.0. Transitions are now a built-in scheduling concept managed by the runtime. Use `<Loading>` boundaries and `isPending()` for transition UI.
+:::
+
+## Replacement
+
 ```ts
+// 1.x
 import { startTransition } from "solid-js"
+startTransition(() => setSignal(newValue))
 
-function startTransition: (fn: () => void) => Promise<void>
+// 2.0 — just update the signal; transitions are automatic
+setSignal(newValue)
 
+// For pending UI during async revalidation:
+import { isPending } from "solid-js"
+const pending = () => isPending(() => asyncMemo())
 ```
 
-Similar to `useTransition` except there is no associated pending state. 
-This one can just be used directly to start the Transition.
+For mutations with optimistic UI, see [`action()`](/guides/fetching-data#mutations-with-action).

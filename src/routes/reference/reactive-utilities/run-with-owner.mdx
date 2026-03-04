@@ -11,9 +11,9 @@ tags:
   - cleanup
   - lifecycle
   - effects
-version: '1.0'
+version: '2.0'
 description: >-
-  Execute code under a specific owner in SolidJS for proper cleanup and context
+  Execute code under a specific owner in Solid for proper cleanup and context
   access, especially in async operations and setTimeout callbacks.
 ---
 
@@ -55,3 +55,14 @@ setTimeout(() => {
 ```
 
 **Note:** that owners are not what determines dependency tracking, so `runWithOwner` does not help with tracking in asynchronous functions; use of reactive state in the asynchronous part (e.g. after the first `await`) will not be tracked as a dependency.
+
+:::note[Solid 2.0 — Detaching roots]
+In Solid 2.0, roots created inside an owned scope are disposed with the parent. To create a fully detached root, pass `null` as the owner:
+
+```ts
+runWithOwner(null, () => {
+  // Code here runs without any owner
+  // Roots created here are fully independent
+})
+```
+:::

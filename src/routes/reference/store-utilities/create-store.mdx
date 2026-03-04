@@ -1,21 +1,28 @@
 ---
 title: createStore
 use_cases: >-
-  complex state management, nested data, arrays and objects, derived values,
-  application state
+  complex state management, nested data, arrays and objects, derived stores,
+  application state, draft-first setters
 tags:
   - store
   - state
   - data-structures
   - objects
   - arrays
-version: '1.0'
+  - draft
+  - derived
+version: '2.0'
 description: >-
-  Manage complex application state with createStore. Handle nested objects,
-  arrays, and derived values with fine-grained reactivity.
+  Manage complex application state with createStore. Uses draft-first setters
+  (produce-style by default) with fine-grained reactivity. Supports derived
+  stores via function form.
 ---
 
 Stores were intentionally designed to manage data structures like objects and arrays but are capable of handling other data types, such as strings and numbers.
+
+:::caution
+In Solid 2.0, the store setter now uses **draft-first semantics** by default. The setter callback receives a mutable draft of the store (similar to Immer/`produce` in Solid 1.x). If you were using path-based setters from Solid 1.x, see the [`storePath()`](#storepath-compat-helper) section below for the compatibility helper.
+:::
 
 ## Types Signature
 
@@ -23,9 +30,15 @@ Stores were intentionally designed to manage data structures like objects and ar
 import { createStore } from "solid-js/store"
 import type { StoreNode, Store, SetStoreFunction } from "solid-js/store"
 
+// Object initializer form
 function createStore<T extends StoreNode>(
 	state: T | Store<T>
 ): [get: Store<T>, set: SetStoreFunction<T>];
+
+// Derived store form (function initializer)
+function createStore<T extends StoreNode>(
+	fn: () => T
+): Store<T>;
 
 type Store<T> = T; // conceptually readonly, but not typed as such
 ```
@@ -52,7 +65,7 @@ const [store, setStore] = createStore({
 			loggedIn: true,
 		},
 		{
-			id: 1,
+			id: 2,
 			username: "johny123",
 			location: "India",
 			loggedIn: true,
@@ -77,11 +90,28 @@ const [state, setState] = createStore({
 });
 ```
 
-## Setter
+## Setter (Draft-First)
 
-Changes can take the form of function that passes previous state and returns new state or a value.
-Objects are always shallowly merged. Set values to undefined to delete them from the Store.
-In TypeScript, you can delete a value by using a non-null assertion, like `undefined!`.
+In Solid 2.0, the setter callback receives a **mutable draft** of the store. You can directly mutate the draft -- this is the default behavior, replacing the need to wrap updates in `produce`.
+
+```tsx
+const [state, setState] = createStore({
+	firstName: "John",
+	lastName: "Miller",
+	list: ["book", "pen"],
+});
+
+// Mutate the draft directly (produce-style, now the default)
+setState((draft) => {
+	draft.firstName = "Johnny";
+	draft.lastName = "Milner";
+	draft.list.push("pencil");
+});
+```
+
+### Shallow Replacement via Return Value
+
+If the setter callback **returns a value**, that value is used as a shallow replacement (diffed against the current store state), rather than applying draft mutations.
 
 ```tsx
 const [state, setState] = createStore({
@@ -89,12 +119,70 @@ const [state, setState] = createStore({
 	lastName: "Miller",
 });
 
+// Returning an object performs a shallow merge/diff
+setState((state) => ({ firstName: "Johnny", middleName: "Lee" }));
+// Result: { firstName: 'Johnny', middleName: 'Lee', lastName: 'Miller' }
+```
+
+### Direct Object Setter
+
+You can also pass an object directly for a shallow merge:
+
+```tsx
 setState({ firstName: "Johnny", middleName: "Lee" });
 // ({ firstName: 'Johnny', middleName: 'Lee', lastName: 'Miller' })
-
-setState((state) => ({ preferredName: state.firstName, lastName: "Milner" }));
-// ({ firstName: 'Johnny', preferredName: 'Johnny', middleName: 'Lee', lastName: 'Milner' })
 ```
+
+## Derived Store (Function Form)
+
+In Solid 2.0, passing a **function** to `createStore` creates a **derived store**. The function is re-evaluated reactively, and the store updates automatically when its dependencies change.
+
+```tsx
+import { createStore } from "solid-js/store";
+import { createSignal } from "solid-js";
+
+const [multiplier, setMultiplier] = createSignal(2);
+
+const [base] = createStore({
+	items: [1, 2, 3],
+});
+
+// Derived store: automatically updates when `base` or `multiplier` change
+const derived = createStore(() => ({
+	doubled: base.items.map((n) => n * multiplier()),
+}));
+```
+
+:::note
+For reconciling derived store data (e.g., from API responses), see [`createProjection`](/reference/store-utilities/create-projection) which handles reconciliation for derived stores.
+:::
+
+## `storePath()` Compat Helper
+
+If you are migrating from Solid 1.x and relied on path-based setters, the `storePath()` helper provides backward compatibility:
+
+```tsx
+import { createStore, storePath } from "solid-js/store";
+
+const [state, setState] = createStore({
+	users: [
+		{ id: 0, username: "felix909", loggedIn: false },
+		{ id: 1, username: "tracy634", loggedIn: true },
+	],
+});
+
+// 1.x-style path setter via storePath()
+setState(storePath("users", 0, "loggedIn", true));
+
+// Equivalent draft-first setter (preferred in 2.0)
+setState((draft) => {
+	draft.users[0].loggedIn = true;
+});
+```
+
+:::caution
+`storePath()` is provided as a migration convenience. New code should prefer the draft-first setter style.
+:::
 
 ---
 

@@ -1,44 +1,142 @@
 ---
-title: onMount
+title: onSettled (formerly onMount)
 order: 5
 use_cases: >-
   initial setup, dom refs access, one-time initialization, component mounting,
-  element manipulation after render
+  element manipulation after render, cleanup on disposal
 tags:
   - lifecycle
   - mounting
   - refs
   - dom
   - initialization
-version: '1.0'
+  - settled
+version: '2.0'
 description: >-
-  Run code after SolidJS components mount to the DOM. Perfect for accessing
-  refs, setting up third-party libraries, and one-time initializations.
+  Run code after SolidJS components have settled. Replaces onMount in Solid 2.0.
+  Perfect for accessing refs, setting up third-party libraries, and one-time
+  initializations. Supports returning a cleanup function.
 ---
 
-Registers a method that runs after initial rendering is done and the elements are mounted to the page.
+:::caution[Renamed in Solid 2.0]
+`onMount` has been renamed to `onSettled` in Solid 2.0. The `onMount` export is no longer available. If you are migrating from Solid 1.x, update all usages of `onMount` to `onSettled`.
+:::
+
+Registers a method that runs after initial rendering is done and the elements have settled on the page.
 Ideal for using [refs](/reference/jsx-attributes/ref) and managing other one-time setup.
 
 ```tsx
-import { onMount } from "solid-js"
+import { onSettled } from "solid-js"
 
-function onMount(fn: () => void): void
-
+function onSettled(fn: () => void | (() => void)): void
 ```
 
-This is an alias for an effect that is non-tracking, meaning that it is equivalent to a [`createEffect`](/reference/basic-reactivity/create-effect) with no dependencies.
+`onSettled` is equivalent to a non-tracking effect -- a [`createEffect`](/reference/basic-reactivity/create-effect) with no dependencies.
+
+### Key differences from `onMount` (Solid 1.x)
+
+- **Cleanup support:** `onSettled` can return a cleanup function that will be called when the owning scope is disposed.
+- **No nested reactive primitives:** You cannot create nested reactive primitives (such as signals, effects, or memos) inside the `onSettled` callback.
+
+## Usage
+
+### Accessing a ref after render
 
 ```tsx
-// example that shows how to use onMount to get a reference to an element
-import { onMount } from "solid-js"
+import { onSettled } from "solid-js"
 
 function MyComponent() {
 	let ref: HTMLButtonElement
 
-	// when the component is mounted, the button will be disabled
-	onMount(() => {
+	// when the component has settled, the button will be disabled
+	onSettled(() => {
 		ref.disabled = true
 	})
 	return <button ref={ref}>Focus me!</button>
 }
+```
+
+### Returning a cleanup function
+
+Unlike `onMount` in Solid 1.x, `onSettled` supports returning a cleanup function.
+This cleanup function runs when the owning scope is disposed (e.g., when the component unmounts).
+
+```tsx
+import { onSettled } from "solid-js"
+
+function JsonViewer(props) {
+	let ref: HTMLDivElement
+
+	onSettled(() => {
+		const editor = initThirdPartyEditor(ref)
+
+		// cleanup: destroy the editor when the component unmounts
+		return () => {
+			editor.destroy()
+		}
+	})
+
+	return <div ref={ref} />
+}
+```
+
+## Migration from Solid 1.x
+
+To migrate from `onMount` to `onSettled`:
+
+1. Replace all imports of `onMount` with `onSettled`:
+
+```tsx
+// Before (Solid 1.x)
+import { onMount } from "solid-js"
+
+// After (Solid 2.0)
+import { onSettled } from "solid-js"
+```
+
+2. Replace all calls to `onMount` with `onSettled`:
+
+```tsx
+// Before (Solid 1.x)
+onMount(() => {
+	console.log("mounted")
+})
+
+// After (Solid 2.0)
+onSettled(() => {
+	console.log("settled")
+})
+```
+
+3. If you previously created reactive primitives inside `onMount`, move them outside:
+
+```tsx
+// Before (Solid 1.x) -- allowed nested reactive primitives
+onMount(() => {
+	const [value, setValue] = createSignal(0) // this worked in 1.x
+})
+
+// After (Solid 2.0) -- reactive primitives must be created outside
+const [value, setValue] = createSignal(0)
+onSettled(() => {
+	// use value() and setValue() here, but do not create them here
+})
+```
+
+4. Optionally, take advantage of the new cleanup return value to simplify your code:
+
+```tsx
+// Before (Solid 1.x)
+onMount(() => {
+	const handler = () => console.log("resize")
+	window.addEventListener("resize", handler)
+	onCleanup(() => window.removeEventListener("resize", handler))
+})
+
+// After (Solid 2.0) -- return cleanup directly
+onSettled(() => {
+	const handler = () => console.log("resize")
+	window.addEventListener("resize", handler)
+	return () => window.removeEventListener("resize", handler)
+})
 ```

@@ -11,10 +11,10 @@ tags:
   - control-flow
   - ui
   - toggle
-version: '1.0'
+version: '2.0'
 description: >-
-  Conditionally render UI elements in SolidJS with Show component. Display
-  content based on truthy conditions with optional fallback support.
+  Conditionally render UI elements in Solid with Show component. Display
+  content based on truthy conditions with accessor children and keyed support.
 ---
 
 The `<Show>` component is used for conditionally rendering UI elements.
@@ -66,11 +66,14 @@ function KeyedExample() {
 }
 ```
 
-## Render function
+## Render function (accessor children)
 
 The `<Show>` component can also accept a render function as its child.
-In this case, the first argument of the render function is an _accessor_ to the `when` prop.
-However, when the `keyed` prop is set to `true`, the argument is the `when` prop itself instead of an accessor.
+The argument of the render function is an **accessor** to the narrowed `when` value — call it to read the value.
+
+:::note[Solid 2.0]
+Function children always receive an accessor. When `keyed` is set to `true`, the accessor returns the unwrapped value directly (re-runs when reference changes). When `keyed` is `false` (default), the accessor is stable and its internal value updates reactively.
+:::
 
 When a render function is used, it is internally wrapped with [`untrack`](/reference/reactive-utilities/untrack).
 As a result, signals accessed directly within the render function's scope will not react to updates.

@@ -11,60 +11,69 @@ tags:
   - reactive
   - conditional
   - dom
-version: '1.0'
+  - removed
+version: '2.0'
 description: >-
-  Manage element classes dynamically in SolidJS with class and classList
-  attributes. Toggle multiple classes reactively based on application state.
+  classList has been removed in Solid 2.0. The class attribute now accepts
+  strings, objects, and arrays for dynamic class management.
 ---
 
-Solid offers two attributes to set the class of an element: `class` and `classList`.
-
-First, `class` can be set like other attributes. For example:
-
-```tsx
-// Two static classes
-<div class="active editing" />
-
-// One dynamic class, deleting class attribute if it's not needed
-<div class={state.active ? 'active' : undefined} />
-
-// Two dynamic classes
-<div class={`${state.active ? 'active' : ''} ${state.currentId === row.id ? 'editing' : ''}`} />
-```
-
-:::note
-	Note that <code>className</code> was deprecated in Solid 1.4 in favor of {" "}
-	<code>class</code>.
+:::caution[Removed in Solid 2.0]
+The `classList` pseudo-attribute has been removed in Solid 2.0. Its functionality has been merged into the `class` attribute, which now accepts a string, an object, or an array.
 :::
 
-Alternatively, the `classList` pseudo-attribute lets you specify an object, where each key is a class and the value is treated as a boolean representing whether to include that class. For example (matching the last example):
+## Migration
+
+In Solid 2.0, the `class` attribute handles all class-related use cases. It accepts three forms:
+
+### String (unchanged)
 
 ```tsx
-<div
-	classList={{
-		active: state.active,
-		editing: state.currentId === row.id,
-	}}
-/>
+<div class="active editing" />
+
+<div class={state.active ? 'active' : undefined} />
 ```
 
-This example compiles to a render effect that dynamically calls [element.classList.toggle](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/toggle) to turn each class on or off, only when the corresponding boolean changes. For example, when `state.active` becomes true [false], the element gains [loses] the `active` class.
+### Object (replaces `classList`)
 
-The value passed into `classList` can be any expression (including a signal getter) that evaluates to an appropriate object. Some examples:
+Pass an object where keys are class names and values are booleans to conditionally toggle classes. This replaces the old `classList` attribute.
+
+```tsx
+// Solid 1.x (removed)
+<div classList={{ active: state.active, editing: state.currentId === row.id }} />
+
+// Solid 2.0
+<div class={{ active: state.active, editing: state.currentId === row.id }} />
+```
+
+### Array (new in 2.0)
+
+Pass an array to combine static strings, dynamic strings, and conditional objects:
+
+```tsx
+<div class={[
+  "base-class",
+  state.active && "active",
+  { editing: state.currentId === row.id }
+]} />
+```
+
+### Dynamic class names and signal values
 
 ```tsx
 // Dynamic class name and value
-<div classList={{ [className()]: classOn() }} />
+<div class={{ [className()]: classOn() }} />
 
-// Signal class list
+// Signal-driven class object
 const [classes, setClasses] = createSignal({})
 setClasses((c) => ({ ...c, active: true }))
-<div classList={classes()} />
+<div class={classes()} />
 ```
 
-While possible, mixing `class` and `classList` in Solid can lead to unexpected behavior.
-The safest approach is to use a static string (or nothing) for `class` and keep `classList` reactive.
-You can also use a static computed value for class, such as `class={baseClass()}`, however you must make sure it comes before any `classList` pseudo-attributes.
-If both `class` and `classList` are reactive, changes to `class` will overwrite the entire `class` attribute, potentially undoing any updates made by `classList`.
+## Migration summary
 
-Because classList is a compile-time pseudo-attribute, it does not work in a prop spread like `<div {...props} />` or in `<Dynamic>`.
+| Solid 1.x | Solid 2.0 |
+|---|---|
+| `classList={{ active: isActive() }}` | `class={{ active: isActive() }}` |
+| `class="static" classList={{ dynamic: isDynamic() }}` | `class={["static", { dynamic: isDynamic() }]}` |
+| Mixing `class` and `classList` (fragile) | Single `class` attribute handles all cases |

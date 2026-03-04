@@ -9,7 +9,7 @@ tags:
   - reactivity
   - core
   - primitives
-version: '1.0'
+version: '2.0'
 description: >-
   Create reactive state with createSignal, Solid's fundamental primitive. Track
   values that change over time and automatically update your UI when they do.
@@ -21,13 +21,21 @@ They track a single value (which can be a value of any type) that changes over t
 ```tsx
 import { createSignal } from "solid-js"
 
+// Standard form
 function createSignal<T>(
 	initialValue: T,
 	options?: {
 		equals?: false | ((prev: T, next: T) => boolean)
 		name?: string
 		internal?: boolean
+		pureWrite?: boolean
 	}
+): [get: () => T, set: (v: T) => T]
+
+// Function form (writable derived signal) — new in 2.0
+function createSignal<T>(
+	fn: () => T,
+	options?: { ... }
 ): [get: () => T, set: (v: T) => T]
 
 // available types for return value of createSignal:
@@ -159,3 +167,47 @@ This is useful for Signals that are used internally by a component and should no
 ```tsx
 const [count, setCount] = createSignal(0, { internal: true })
 ```
+
+### `pureWrite`
+
+:::note[Solid 2.0]
+The `pureWrite` option is new in Solid 2.0.
+:::
+
+In Solid 2.0, writing to a signal inside a reactive scope (effect, memo, component body) warns in dev. If a signal must be written from within scope (e.g., internal state flags), opt in with `pureWrite: true`:
+
+```tsx
+const [ref, setRef] = createSignal(null, { pureWrite: true })
+```
+
+`pureWrite` is not a general-purpose escape hatch. Only use it for internal state that needs to be set during reactive scope — not for application state that should be derived instead.
+
+## Function form (writable derived signal)
+
+:::note[Solid 2.0]
+The function form of `createSignal` is new in Solid 2.0.
+:::
+
+When a function is passed as the first argument instead of a value, `createSignal` creates a **writable derived signal**. The function defines the default derived value, but the signal can be overridden via the setter. This replaces many uses of `createComputed`.
+
+```tsx
+const [count, setCount] = createSignal(0)
+
+// A writable derived signal: defaults to count() * 2, but can be overridden
+const [doubled, setDoubled] = createSignal(() => count() * 2)
+
+doubled() // 0 (derived from count)
+setCount(5)
+doubled() // 10 (derived from count)
+
+setDoubled(99) // override the derived value
+doubled() // 99
+```
+
+This pattern is useful when you want a value that is usually derived but can be temporarily overridden (e.g., optimistic UI, user edits that override computed defaults).
+
+## Batching
+
+:::note[Solid 2.0 — Microtask batching]
+Signal updates are batched by default via microtask scheduling. After calling a setter, the value is visible immediately through the getter, but DOM updates and effect runs are deferred until the next microtask or until `flush()` is called. The `batch()` function has been removed.
+:::

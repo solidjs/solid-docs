@@ -10,10 +10,10 @@ tags:
   - derived-state
   - caching
   - reactivity
-version: '1.0'
+version: '2.0'
 description: >-
-  Use createMemo to efficiently compute and cache derived values. Prevent
-  expensive recalculations and optimize your Solid.js application's performance.
+  Use createMemo to efficiently compute and cache derived values. Supports async
+  Promises for data fetching with automatic suspension.
 ---
 
 Memos let you efficiently use a derived value in many reactive computations. 
@@ -74,13 +74,50 @@ This is useful for reducing computations, such as:
 const sum = createMemo((prev) => input() + prev, 0)
 ```
 
-The memo function should not change other signals by calling setters (it should be "pure"). 
+The memo function should not change other signals by calling setters (it should be "pure").
 This enables Solid to optimize the execution order of memo updates according to their dependency graph, so that all memos can update at most once in response to a dependency change.
+
+:::caution[Solid 2.0 — No signal writes in memos]
+Writing to signals inside a memo warns in dev. Memos should be pure computations. If you need to write a signal based on reactive state, use an event handler or `onSettled` instead.
+:::
+
+## Async memos
+
+:::note[Solid 2.0 — Async support]
+In Solid 2.0, `createMemo` can return a Promise. When an async memo is read before the Promise resolves, it suspends — causing the nearest `<Loading>` boundary to show its fallback. This replaces `createResource` for data fetching.
+:::
+
+```tsx
+import { createMemo } from "solid-js"
+
+const user = createMemo(() => fetchUser(userId()))
+
+// In JSX, wrap in Loading to handle the pending state
+<Loading fallback={<Spinner />}>
+  <div>{user().name}</div>
+</Loading>
+```
+
+Async memos work with all reactive features:
+- **`isPending(() => memo())`** — check if the memo is revalidating (stale-while-revalidating)
+- **`latest(() => memo())`** — read the in-flight value during transitions
+- **`<Errored>`** — catch errors thrown by the async computation
+
+```tsx
+const users = createMemo(() => fetchUsers())
+
+<Show when={isPending(() => users())}>
+  <RefreshingIndicator />
+</Show>
+<Loading fallback={<Spinner />}>
+  <UserList users={users()} />
+</Loading>
+```
 
 ## Options and arguments
 
 | Name    | Type                                                    | Description                                                    |
 | :------ | :------------------------------------------------------ | :------------------------------------------------------------- |
-| fn      | `(v: T) => T`                                           | The function to memoize.                                       |
+| fn      | `(v: T) => T`                                           | The function to memoize. May return a Promise for async data.  |
 | value   | `T`                                                     | The initial value of the memo.                                 |
 | options | `{ equals?: false \| ((prev: T, next: T) => boolean) }` | An optional object with an `equals` function to test equality. |

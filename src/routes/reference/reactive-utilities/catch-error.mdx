@@ -1,29 +1,37 @@
 ---
 title: catchError
 use_cases: >-
-  error handling, error boundaries, exception management, debugging, graceful
-  error recovery
+  error handling, error boundaries, exception management
 tags:
   - errors
   - debugging
   - exceptions
-  - handlers
-version: '1.0'
+  - removed
+version: '2.0'
 description: >-
-  Wrap SolidJS code with error handlers to catch and handle exceptions
-  gracefully. Create error boundaries for robust error management in components.
+  catchError has been removed in Solid 2.0. Use the Errored component for error
+  boundaries instead.
 ---
 
-:::note
-<span>New in v1.7.0</span>
+:::caution[Solid 2.0 — `catchError` is removed]
+`catchError` (and the older `onError`) have been removed in Solid 2.0. Use the [`Errored`](/reference/components/error-boundary) component for error boundaries instead.
 :::
 
+## Replacement: `Errored`
+
 ```tsx
+// 1.x
 import { catchError } from "solid-js"
 
-function catchError<T>(tryFn: () => T, onError: (err: any) => void): T
+catchError(
+  () => riskyOperation(),
+  (err) => console.error("Caught:", err)
+)
+
+// 2.0
+<Errored fallback={(err, reset) => <div>Error: {err.message}</div>}>
+  <RiskyComponent />
+</Errored>
 ```
 
-Wraps a `tryFn` with an error handler that fires if an error occurs below that point.
-Only the nearest scope error handlers execute.
-Rethrow to trigger up the line.
+See the [`Errored` reference](/reference/components/error-boundary) for full documentation.

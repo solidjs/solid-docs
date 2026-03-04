@@ -9,13 +9,18 @@ tags:
   - updates
   - immer
   - mutations
-version: '1.0'
+version: '2.0'
 description: >-
-  Use Immer-inspired produce API to mutate Solid stores immutably. Simplify
-  complex nested updates with familiar mutation syntax.
+  The produce-style mutation pattern is now the default setter behavior in Solid
+  2.0 stores. The standalone produce utility remains available for advanced use
+  cases.
 ---
 
-`produce` is an [Immer](https://immerjs.github.io/immer/) inspired API for Solid's Store objects that allows the store to be mutated inside the `produce` function.
+:::note
+In Solid 2.0, the `produce`-style draft mutation is now the **default behavior** of the `createStore` setter. You no longer need to wrap your setter callback in `produce` -- simply mutate the draft directly inside the setter.
+:::
+
+`produce` is an [Immer](https://immerjs.github.io/immer/) inspired API for Solid's Store objects that allows the store to be mutated using a draft pattern.
 
 ```ts
 import { produce } from "solid-js/store"
@@ -28,10 +33,12 @@ function produce<T>(
 ) => T extends NotWrappable ? T : Store<T>;
 ```
 
-For use with `createStore`:
+## Default Setter in Solid 2.0
+
+In Solid 2.0, the store setter already receives a mutable draft. The following two patterns are equivalent:
 
 ```tsx
-import { produce } from "solid-js/store";
+import { createStore, produce } from "solid-js/store";
 
 const [state, setState] = createStore({
 	user: {
@@ -41,10 +48,34 @@ const [state, setState] = createStore({
 	list: ["book", "pen"],
 });
 
+// Solid 2.0: draft-first setter (preferred -- no produce wrapper needed)
+setState((draft) => {
+	draft.user.name = "Jane";
+	draft.list.push("pencil");
+});
+
+// Equivalent using explicit produce (still works, but redundant for setStore)
 setState(
 	produce((state) => {
 		state.user.name = "Jane";
 		state.list.push("pencil");
 	})
 );
+```
+
+## Standalone Use
+
+The `produce` utility is still useful when you need to create a reusable modifier function outside of `setStore`, or when working with other APIs that accept store modifiers:
+
+```tsx
+import { produce } from "solid-js/store";
+
+// Create a reusable modifier
+const addItem = (item: string) =>
+	produce((state) => {
+		state.list.push(item);
+	});
+
+// Apply it later
+setState(addItem("pencil"));
 ```

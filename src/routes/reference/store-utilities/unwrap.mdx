@@ -1,25 +1,57 @@
 ---
-title: unwrap
+title: snapshot (unwrap)
 use_cases: >-
   raw data access, proxy removal, debugging, third-party integration, data
-  serialization
+  serialization, snapshots
 tags:
   - store
   - proxy
   - data
   - debugging
   - utilities
-version: '1.0'
+  - snapshot
+  - serialization
+version: '2.0'
 description: >-
-  Extract raw data from Solid stores without proxy wrapping. Essential for
-  debugging, serialization, or third-party integrations.
+  Take a non-reactive snapshot of a Solid store for serialization, debugging, or
+  third-party integrations. Renamed from unwrap in Solid 2.0.
 ---
 
-`unwrap` returns the underlying data in the store without a proxy.
+:::caution
+In Solid 2.0, `unwrap` has been **renamed to `snapshot`**. The `snapshot(store)` function produces a non-reactive plain value suitable for serialization, logging, or passing to external libraries that do not understand Solid's reactive proxies.
+:::
+
+`snapshot` returns a non-reactive, plain JavaScript copy of the store's data without the reactive proxy wrapper.
 
 ```tsx
-import { unwrap } from "solid-js/store"
+import { snapshot } from "solid-js/store"
 import type { Store } from "solid-js/store"
 
-function unwrap(store: Store<T>): T
+function snapshot<T>(store: Store<T>): T
 ```
+
+## Usage
+
+```tsx
+import { createStore, snapshot } from "solid-js/store";
+
+const [state, setState] = createStore({
+	user: { name: "John", age: 30 },
+	items: ["book", "pen"],
+});
+
+// Get a plain, non-reactive copy for serialization
+const plain = snapshot(state);
+console.log(JSON.stringify(plain));
+// {"user":{"name":"John","age":30},"items":["book","pen"]}
+
+// Useful for passing store data to external APIs or libraries
+fetch("/api/save", {
+	method: "POST",
+	body: JSON.stringify(snapshot(state)),
+});
+```
+
+:::note
+The returned value is a plain JavaScript object/array and is no longer reactive. Mutations to the snapshot will **not** update the store or trigger any reactive computations.
+:::

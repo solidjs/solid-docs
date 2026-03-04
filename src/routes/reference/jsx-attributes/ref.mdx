@@ -3,7 +3,7 @@ title: ref
 order: 7
 use_cases: >-
   dom access, element manipulation, focus management, measurements, third-party
-  libraries, animations
+  libraries, animations, directives, composing behaviors
 tags:
   - refs
   - dom
@@ -11,13 +11,15 @@ tags:
   - access
   - manipulation
   - components
-version: '1.0'
+  - directives
+version: '2.0'
 description: >-
-  Access DOM elements directly in SolidJS with refs. Get references to rendered
-  elements for imperative operations and third-party integrations.
+  Access DOM elements directly in SolidJS with refs. Supports variable
+  assignment, callbacks, directive factories, and array composition for
+  combining multiple behaviors on a single element.
 ---
 
-Refs are a way of getting access to underlying DOM elements in our JSX. While it is true one could just assign an element to a variable, it is more optimal to leave components in the flow of JSX. Refs are assigned at render time but before the elements are connected to the DOM. They come in 2 flavors.
+Refs provide access to underlying DOM elements in your JSX. While you could assign an element to a variable directly, it is more optimal to leave components in the flow of JSX. Refs are assigned at render time but before the elements are connected to the DOM. They come in two flavors.
 
 ```tsx
 // variable assigned directly by ref
@@ -45,3 +47,62 @@ function App() {
 	return <MyComp ref={myDiv} />
 }
 ```
+
+## Ref directive factories
+
+In Solid 2.0, `ref` replaces the removed `use:*` directive syntax. A ref directive factory is a function that accepts options and returns a callback that receives the element. This follows a two-phase pattern:
+
+1. **Owned setup phase**: The factory function runs inside the component's reactive owner context. Create signals, effects, and register cleanup here.
+2. **Unowned apply phase**: The returned callback receives the DOM element and applies the behavior.
+
+```tsx
+function tooltip(text: string) {
+	// Phase 1: Owned setup - runs in component's reactive context
+	onCleanup(() => { /* cleanup logic */ });
+
+	// Phase 2: Unowned apply - receives the DOM element
+	return (el: HTMLElement) => {
+		// attach tooltip to el
+	};
+}
+
+<div ref={tooltip("Hello world")} />
+```
+
+## Array composition
+
+You can compose multiple ref callbacks and directive factories on a single element using an array:
+
+```tsx
+function draggable(opts: { axis: "x" | "y" | "both" }) {
+	return (el: HTMLElement) => {
+		// make el draggable
+	};
+}
+
+function tooltip(text: string) {
+	return (el: HTMLElement) => {
+		// attach tooltip to el
+	};
+}
+
+// Combine a variable ref with multiple directive factories
+let myDiv;
+<div ref={[myDiv, tooltip("Drag me"), draggable({ axis: "x" })]} />
+```
+
+Each entry in the array is called in order with the DOM element. You can mix variable assignments, callbacks, and directive factory results.
+
+## Migration from `use:*`
+
+If you previously used `use:` directives, convert them to ref directive factories:
+
+```tsx
+// Solid 1.x
+<div use:tooltip={"Hello"} use:draggable={{ axis: "x" }} />
+
+// Solid 2.0
+<div ref={[tooltip("Hello"), draggable({ axis: "x" })]} />
+```
+
+See the [use:*](/reference/jsx-attributes/use) page for more migration details.

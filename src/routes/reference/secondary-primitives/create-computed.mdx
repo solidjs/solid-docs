@@ -9,36 +9,90 @@ tags:
   - primitives
   - effects
   - tracking
-version: '1.0'
+  - removed
+version: '2.0'
 description: >-
-  Create immediate reactive computations with createComputed. Build custom
-  primitives and handle side effects that respond to dependencies.
+  createComputed has been removed in Solid 2.0. Use the split createEffect,
+  createSignal(fn) for writable derived signals, createStore(fn) for derived
+  stores, or createMemo instead.
 ---
+
+:::caution[Solid 2.0 — `createComputed` is removed]
+`createComputed` has been removed in Solid 2.0. Its use cases are covered by the split [`createEffect`](/reference/basic-reactivity/create-effect), [`createSignal(fn)`](/reference/basic-reactivity/create-signal) for writable derived signals, [`createStore(fn)`](/reference/store-utilities/create-store) for derived stores, or [`createMemo`](/reference/basic-reactivity/create-memo).
+:::
+
+## Migration
+
+### Deriving state — use `createMemo`
+
+If you used `createComputed` to derive a value from other signals, use `createMemo` instead:
+
+```ts
+// 1.x — createComputed to derive a value
+const [count, setCount] = createSignal(0)
+const [doubled, setDoubled] = createSignal(0)
+createComputed(() => setDoubled(count() * 2))
+
+// 2.0 — createMemo
+const [count, setCount] = createSignal(0)
+const doubled = createMemo(() => count() * 2)
+```
+
+### Writable derived signals — use `createSignal(fn)`
+
+If you used `createComputed` to set a signal from reactive data while also allowing manual writes, use `createSignal(fn)` to create a writable derived signal:
+
+```ts
+// 1.x — createComputed with a writable signal
+const [count, setCount] = createSignal(0)
+const [label, setLabel] = createSignal("")
+createComputed(() => setLabel(`Count: ${count()}`))
+// could also call setLabel("custom") elsewhere
+
+// 2.0 — writable derived signal
+const [count, setCount] = createSignal(0)
+const [label, setLabel] = createSignal(() => `Count: ${count()}`)
+// label() returns the derived value, but setLabel("custom") can override it
+```
+
+### Derived stores — use `createStore(fn)`
+
+If you used `createComputed` to synchronize store data, use `createStore(fn)`:
+
+```ts
+// 1.x — createComputed updating a store
+const [source] = createSignal({ name: "Alice", age: 30 })
+const [state, setState] = createStore({ name: "", age: 0 })
+createComputed(() => setState(source()))
+
+// 2.0 — derived store
+const [source] = createSignal({ name: "Alice", age: 30 })
+const [state, setState] = createStore(() => source())
+```
+
+### Side effects — use split `createEffect`
+
+If you used `createComputed` to run side effects on reactive changes, use the split `createEffect`:
+
+```ts
+// 1.x — createComputed for side effects
+createComputed(() => {
+  console.log("value changed:", someSignal())
+})
+
+// 2.0 — split createEffect
+createEffect(
+  () => someSignal(),             // compute: track dependencies
+  (value) => console.log("value changed:", value)  // apply: side effect
+)
+```
+
+## 1.x API reference (removed)
 
 ```ts
 import { createComputed } from "solid-js"
 
 function createComputed<T>(fn: (v: T) => T, value?: T): void
-
 ```
 
-`createComputed` creates a new computation that immediately runs the given function in a tracking scope, thus automatically tracking its dependencies, and automatically reruns the function whenever the dependencies changes. 
-The function gets called with an argument equal to the value returned from the function's last execution, or on the first call, equal to the optional second argument to `createComputed`. 
-Note that the return value of the function is not otherwise exposed; in particular, createComputed has no return value.
-
-`createComputed` is the most immediate form of reactivity in Solid, and is most useful for building other reactive primitives. 
-For example, some other Solid primitives are built from `createComputed`. 
-However, it should be used with care, as `createComputed` can easily cause more unnecessary updates than other reactive primitives. 
-Before using it, consider the closely related primitives [`createMemo`](/reference/basic-reactivity/create-memo) and [`createRenderEffect`](/reference/secondary-primitives/create-render-effect).
-
-Like `createMemo`, `createComputed` calls its function immediately on updates (unless you're in a [batch](/reference/reactive-utilities/batch), [effect](/reference/basic-reactivity/create-effect), or [transition](/reference/reactive-utilities/use-transition)). 
-However, while `createMemo` functions should be pure (not set any signals), `createComputed` functions can set signals. 
-Related, `createMemo` offers a readonly signal for the return value of the function, whereas to do the same with `createComputed` you would need to set a signal within the function. 
-If it is possible to use pure functions and `createMemo`, this is likely more efficient, as Solid optimizes the execution order of memo updates, whereas updating a signal within `createComputed` will immediately trigger reactive updates some of which may turn out to be unnecessary.
-
-## Arguments
-
-| Name    | Type          | Description                                |
-| :------ | :------------ | :----------------------------------------- |
-| `fn`    | `(v: T) => T` | The function to run in a tracking scope.   |
-| `value` | `T`           | The initial value to pass to the function. |
+`createComputed` created a new computation that immediately ran the given function in a tracking scope, automatically tracking its dependencies and rerunning whenever they changed. The function received the value returned from its last execution, or the optional second argument on the first call.

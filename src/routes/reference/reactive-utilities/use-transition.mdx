@@ -1,40 +1,40 @@
 ---
 title: useTransition
 use_cases: >-
-  async batching, loading states, suspense integration, concurrent updates, ui
-  transitions
+  async batching, loading states, concurrent updates
 tags:
   - transitions
   - async
-  - suspense
   - loading
-  - batching
-  - concurrent
-version: '1.0'
+  - removed
+version: '2.0'
 description: >-
-  Batch async updates with transitions in SolidJS. Track pending states and
-  defer commits until all async processes complete for smooth UI updates.
+  useTransition has been removed in Solid 2.0. Transitions are now built into the
+  runtime. Use Loading and isPending for transition UI.
 ---
 
+:::caution[Solid 2.0 — `useTransition` is removed]
+`useTransition` has been removed in Solid 2.0. Transitions are now a built-in scheduling concept managed by the runtime. Multiple transitions can be in flight simultaneously.
+:::
+
+## Replacement
+
 ```ts
+// 1.x
 import { useTransition } from "solid-js"
+const [isPending, start] = useTransition()
+start(() => setSignal(newValue))
 
-function useTransition(): [
-	pending: () => boolean,
-	startTransition: (fn: () => void) => Promise<void>
-]
+// 2.0 — just update the signal
+setSignal(newValue)
 
+// For pending state:
+import { isPending } from "solid-js"
+const pending = () => isPending(() => asyncMemo())
 ```
 
-Used to batch async updates in a transaction deferring commit until all async processes are complete. 
-This is tied into Suspense and only tracks resources read under Suspense boundaries.
+- Use `<Loading>` boundaries for initial loading UI
+- Use `isPending()` for stale-while-revalidating indicators
+- Use [`action()`](/guides/fetching-data#mutations-with-action) for mutations with optimistic UI
 
-```ts
-const [isPending, start] = useTransition();
-
-// check if transitioning
-isPending();
-
-// wrap in transition
-start(() => setSignal(newValue), () => /* transition is done */)
-```
+See the [fetching data guide](/guides/fetching-data) for complete patterns.

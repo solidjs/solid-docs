@@ -1,0 +1,173 @@
+---
+title: Projections
+order: 2
+use_cases: >-
+  derived stores, selection patterns, reconciled data, async derived state,
+  cached transformations, replacing createSelector
+tags:
+  - stores
+  - derived
+  - projection
+  - reconciliation
+  - selection
+  - createProjection
+version: '2.0'
+description: >-
+  Create mutable derived stores with createProjection. Replaces createSelector
+  with a general-purpose projection and reconciliation model for efficient
+  selection, derived caches, and async data.
+---
+
+A **projection** is a mutable derived store — a reactive store whose values are computed from other reactive sources.
+The [`createProjection`](/reference/store-utilities/create-projection) primitive generalizes patterns like selection, derived caches, and async-fetched lists into a single tool.
+
+In Solid 1.x, `createSelector` handled one narrow case: efficiently mapping a selected ID to a boolean for each row.
+`createProjection` replaces it with a more general approach that works for any "derive a store from reactive inputs" pattern.
+
+## How projections work
+
+`createProjection` accepts a derive function, an optional initial value, and options:
+
+```ts
+import { createProjection } from "solid-js/store"
+
+const projection = createProjection(fn, initial?, options?)
+```
+
+The derive function receives a **mutable draft** — the same produce-style pattern used by [store setters](/concepts/stores/basics#modifying-store-values).
+The function re-runs whenever its reactive dependencies change, and the projection store updates with fine-grained reactivity.
+
+The derive function has two modes:
+
+| Mode | When | Behavior |
+|------|------|----------|
+| **Mutate** | Function does not return a value | Mutations are applied directly to the projection |
+| **Reconcile** | Function returns a value | The returned value is [reconciled](/reference/store-utilities/reconcile) into the projection, preserving identity for unchanged entries |
+
+## Selection pattern
+
+The most common use case is **selection** — tracking which item in a list is "active" without notifying every row when the selection changes.
+
+With `createSelector` in Solid 1.x, you created a function that returned `true` for the selected ID:
+
+```ts
+// 1.x
+import { createSelector } from "solid-js"
+
+const isSelected = createSelector(selectedId)
+// In JSX: isSelected(item.id) ? "selected" : ""
+```
+
+With `createProjection`, you create a store where only the affected keys update:
+
+```ts
+import { createSignal } from "solid-js"
+import { createProjection } from "solid-js/store"
+
+const [selectedId, setSelectedId] = createSignal("a")
+
+const selected = createProjection((draft) => {
+  const id = selectedId()
+  draft[id] = true
+  if (draft._prev != null) delete draft[draft._prev]
+  draft._prev = id
+}, {})
+```
+
+When `selectedId` changes from `"a"` to `"b"`:
+1. The derive function runs
+2. It sets `draft["b"] = true` and deletes `draft["a"]`
+3. Only components reading `selected["a"]` or `selected["b"]` re-render — every other row is untouched
+
+Use it in JSX by reading the projection as a store:
+
+```tsx
+<For each={items()}>
+  {(item) => (
+    <li
+      class={selected[item().id] ? "selected" : ""}
+      onClick={() => setSelectedId(item().id)}
+    >
+      {item().name}
+    </li>
+  )}
+</For>
+```
+
+This scales to thousands of items because only two DOM nodes update per selection change.
+
+## Reconciled projections
+
+When the derive function **returns a value**, that value is reconciled into the projection store.
+Reconciliation preserves object identity for unchanged entries, keyed by `options.key` (default `"id"`).
+This makes it efficient for keyed list rendering — unchanged items keep their reference, so `<For>` skips re-rendering them.
+
+This is particularly useful for async-derived data:
+
+```ts
+const users = createProjection(async () => {
+  return await api.listUsers()
+}, [], { key: "id" })
+```
+
+When the API returns new data:
+- New items are added
+- Removed items are deleted
+- Unchanged items keep their object identity (no unnecessary re-renders)
+- Changed items are updated granularly
+
+Render the projection like any store:
+
+```tsx
+<For each={users}>
+  {(user) => <UserCard user={user()} />}
+</For>
+```
+
+## Derived caches
+
+Projections can compute and cache expensive derived data from reactive inputs:
+
+```ts
+import { createProjection } from "solid-js/store"
+
+const stats = createProjection((draft) => {
+  const data = rawData()
+  draft.total = data.length
+  draft.average = data.reduce((a, b) => a + b, 0) / data.length
+  draft.max = Math.max(...data)
+}, { total: 0, average: 0, max: 0 })
+```
+
+Components reading `stats.total` won't re-render when only `stats.max` changes — the store provides fine-grained tracking at the property level.
+
+## `createStore(fn)` shorthand
+
+For simpler derived stores, `createStore` accepts a function as a shorthand:
+
+```ts
+import { createStore } from "solid-js/store"
+
+const [cache] = createStore((draft) => {
+  draft.value = expensive(selector())
+}, { value: 0 })
+```
+
+This is equivalent to `createProjection` but uses the familiar `createStore` API.
+Use `createProjection` directly when you need:
+- Reconciliation via return values (`options.key`)
+- Async derive functions
+- The projection as a read-only store (no setter returned)
+
+## When to use projections
+
+| Pattern | Use |
+|---------|-----|
+| Selection (active item in a list) | `createProjection` with draft mutation |
+| Fetched list data with keyed reconciliation | `createProjection` with return value + `key` option |
+| Cached derived computations on a store shape | `createProjection` or `createStore(fn)` |
+| Simple derived value (single value, not a store) | [`createMemo`](/reference/basic-reactivity/create-memo) instead |
+
+Projections are the store-level equivalent of memos.
+If your derived data is a single value, use `createMemo`.
+If it's an object or list where you want fine-grained property-level reactivity, use a projection.

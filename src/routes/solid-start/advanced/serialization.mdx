@@ -67,6 +67,24 @@ SolidStart enables Seroval plus a default set of web platform plugins. These plu
 
 Seroval supports additional value types. The compatibility list is broader than what SolidStart enables by default, so treat it as a superset. See the [Seroval compatibility docs](https://github.com/lxsmnsyc/seroval/blob/main/docs/COMPATIBILITY.md).
 
+## Server function payloads (v1 vs v2)
+
+SolidStart applies extra handling for certain payload types so file uploads and binary data can flow without being serialized by Seroval.
+
+In v1, only `FormData` is treated this way, and only when it is the single argument passed to a server function. This allows file uploads to work without Seroval serialization.
+
+In v2, this behavior is expanded and applies to both server function arguments and return values. SolidStart bypasses Seroval for:
+
+- `FormData`
+- `URLSearchParams`
+- `Uint8Array`
+- `ArrayBuffer`
+- `Blob`
+- `File`
+- `string`
+
+Because these values are transferred directly, v2 can yield smaller payloads for these cases.
+
 ## Limits and exclusions
 
 - `RegExp` is disabled by default.

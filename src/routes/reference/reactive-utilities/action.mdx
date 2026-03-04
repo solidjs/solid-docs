@@ -1,0 +1,108 @@
+---
+title: action
+use_cases: >-
+  mutations, server writes, optimistic updates, form submissions, data
+  modification
+tags:
+  - mutations
+  - async
+  - actions
+  - optimistic
+  - transitions
+version: '2.0'
+description: >-
+  Wrap async mutations with action() for structured optimistic writes, async
+  work, and refresh coordination in Solid 2.0.
+---
+
+```ts
+import { action } from "solid-js"
+
+function action<T extends (...args: any[]) => Generator | AsyncGenerator>(
+  fn: T
+): (...args: Parameters<T>) => Promise<ReturnType<T>>
+```
+
+`action()` wraps a generator or async generator function for mutations. It returns an async function you can call from event handlers. Inside an action, you can:
+
+1. Perform **optimistic writes**
+2. **yield/await** async work
+3. **Refresh** derived async computations via [`refresh()`](/reference/reactive-utilities/refresh)
+
+## Basic usage
+
+```ts
+import { action, refresh } from "solid-js"
+import { createStore } from "solid-js/store"
+
+const [todos] = createStore(() => api.getTodos(), { list: [] })
+
+const addTodo = action(function* (todo) {
+  yield api.addTodo(todo)  // async work
+  refresh(todos)           // refresh reads
+})
+```
+
+Call it from an event handler:
+
+```tsx
+<button onClick={() => addTodo({ id: 1, text: "New task" })}>
+  Add Todo
+</button>
+```
+
+## With optimistic updates
+
+Combine with [`createOptimistic`](/reference/reactive-utilities/create-optimistic) or [`createOptimisticStore`](/reference/reactive-utilities/create-optimistic-store) for instant UI feedback:
+
+```ts
+import { action, refresh } from "solid-js"
+import { createStore, createOptimisticStore, snapshot } from "solid-js/store"
+
+const [todos] = createStore(() => api.getTodos(), { list: [] })
+const [optimisticTodos, setOptimisticTodos] = createOptimisticStore(
+  () => snapshot(todos),
+  { list: [] }
+)
+
+const addTodo = action(function* (todo) {
+  setOptimisticTodos((s) => s.list.push(todo)) // optimistic — instant UI
+  yield api.addTodo(todo)                       // async work
+  refresh(todos)                                // refresh source
+})
+```
+
+## Async generator form
+
+For TypeScript ergonomics, an async generator form is also available:
+
+```ts
+const saveTodo = action(async function* (todo) {
+  setOptimisticTodos((s) => s.list.push(todo))
+  const res = await api.addTodo(todo)
+  yield  // resume in same transition context
+  refresh(todos)
+  return res
+})
+```
+
+## Replaces manual mutation patterns
+
+In Solid 1.x, mutations required ad-hoc wrappers with `startTransition`. Actions provide a structured alternative:
+
+```ts
+// 1.x
+const [data, { mutate, refetch }] = createResource(fetchData)
+startTransition(() => {
+  mutate(optimistic)
+})
+await saveToServer()
+refetch()
+
+// 2.0
+const save = action(function* (value) {
+  setOptimistic(value)
+  yield saveToServer()
+  refresh(data)
+})
+```

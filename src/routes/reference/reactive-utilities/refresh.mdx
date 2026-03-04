@@ -1,0 +1,79 @@
+---
+title: refresh
+use_cases: >-
+  recomputation, data invalidation, refetching, cache busting, manual
+  revalidation
+tags:
+  - async
+  - mutations
+  - refresh
+  - revalidation
+  - data
+version: '2.0'
+description: >-
+  Explicitly re-run derived reads with refresh(). Invalidate and recompute async
+  data after mutations or server writes.
+---
+
+```ts
+import { refresh } from "solid-js"
+
+// Thunk form — re-runs an expression
+function refresh<T>(fn: () => T): T
+
+// Refreshable form — recomputes a derived signal/store/projection
+function refresh(target: Refreshable): void
+```
+
+`refresh()` explicitly re-runs derived reads when you know the underlying source-of-truth may have changed (e.g., after a server write completes).
+
+## Forms
+
+### Thunk form
+
+Re-runs an expression:
+
+```ts
+refresh(() => query.user(id()))
+```
+
+### Refreshable form
+
+Requests recomputation for a derived signal/store/projection:
+
+```ts
+const [todos] = createStore(() => api.getTodos(), { list: [] })
+
+// After a server write, refresh the store
+refresh(todos)
+```
+
+## Usage with `action`
+
+`refresh` is typically used inside an `action` after async work completes:
+
+```ts
+import { action, refresh } from "solid-js"
+import { createStore } from "solid-js/store"
+
+const [todos] = createStore(() => api.getTodos(), { list: [] })
+
+const addTodo = action(function* (todo) {
+  yield api.addTodo(todo)
+  refresh(todos) // re-fetch the todos
+})
+```
+
+## Replaces `refetch`
+
+In Solid 1.x, `createResource` returned a `refetch` method. `refresh()` is the general replacement:
+
+```ts
+// 1.x
+const [data, { refetch }] = createResource(fetchData)
+refetch()
+
+// 2.0
+const data = createMemo(() => fetchData())
+refresh(data)
+```

@@ -1,0 +1,549 @@
+---
+title: Migrating to Solid 2.0
+order: 10
+use_cases: >-
+  upgrading, migration, solid 1 to 2, breaking changes, version upgrade,
+  compatibility, before and after
+tags:
+  - migration
+  - upgrade
+  - v2
+  - breaking-changes
+  - compatibility
+version: '2.0'
+description: >-
+  A comprehensive guide for migrating from Solid 1.x to Solid 2.0. Covers every
+  breaking change with before/after examples and links to reference docs.
+---
+
+This guide covers every breaking change in Solid 2.0 and shows how to update your code. Work through the [quick checklist](#quick-checklist) first, then use the detailed sections for each area.
+
+## Quick checklist
+
+- [ ] **Batching**: Setters no longer immediately update reads. Values become visible after the microtask flush (or via [`flush()`](/reference/reactive-utilities/flush)).
+- [ ] **Effects**: [`createEffect`](/reference/basic-reactivity/create-effect) uses a split model (compute → apply). Cleanup is returned from the apply function.
+- [ ] **Lifecycle**: [`onMount`](/reference/lifecycle/on-mount) is replaced by [`onSettled`](/reference/lifecycle/on-settled), which can return cleanup.
+- [ ] **Async UI**: Use [`<Loading>`](/reference/components/suspense) for first readiness; use [`isPending()`](/reference/reactive-utilities/is-pending) for "refreshing…" indicators.
+- [ ] **Data fetching**: [`createResource`](/reference/basic-reactivity/create-resource) is removed. Use async [`createMemo`](/reference/basic-reactivity/create-memo) or [`createStore(fn)`](/reference/store-utilities/create-store).
+- [ ] **Lists**: [`<Index>`](/reference/components/index-component) is removed — use `<For keyed={false}>`. [`<For>`](/reference/components/for) children receive **accessors** (`item()`, `i()`).
+- [ ] **Stores**: Prefer draft-first setters. [`storePath()`](/reference/store-utilities/store-path) exists as a compatibility helper.
+- [ ] **Plain values**: [`snapshot()`](/reference/store-utilities/snapshot) replaces `unwrap()`.
+- [ ] **DOM**: `use:` directives are removed. Use [`ref`](/reference/jsx-attributes/ref) directive factories.
+- [ ] **Helpers**: `mergeProps` → [`merge`](/reference/reactive-utilities/merge-props), `splitProps` → [`omit`](/reference/reactive-utilities/split-props).
+- [ ] **Components**: `Suspense` → `Loading`, `ErrorBoundary` → `Errored`.
+- [ ] **Context**: `Context.Provider` → use the context directly as the provider component.
+
+---
+
+## Core behavior changes
+
+### Batching and reads
+
+In Solid 2.0, updates are batched by default via microtasks. Setters no longer immediately update what reads return — the new value becomes visible when the batch flushes.
+
+```ts
+import { createSignal } from "solid-js"
+import { flush } from "solid-js"
+
+const [count, setCount] = createSignal(0)
+
+setCount(1)
+count() // still 0
+
+flush()
+count() // now 1
+```
+
+:::caution
+This is one of the most impactful behavioral changes. Code that reads a signal immediately after setting it will see the **old** value until the batch flushes. Use [`flush()`](/reference/reactive-utilities/flush) sparingly — it's most useful in tests or rare imperative code.
+:::
+
+The `batch()` function from 1.x is removed since batching is now the default behavior.
+
+### Effects: split model
+
+[`createEffect`](/reference/basic-reactivity/create-effect) now takes two functions — a **compute** function that tracks reactive dependencies and returns a value, and an **apply** function that performs side effects with that value.
+
+```ts
+// 1.x — single function
+createEffect(() => {
+  document.title = name()
+})
+
+// 2.0 — split: compute → apply
+createEffect(
+  () => name(),
+  (value) => {
+    document.title = value
+  }
+)
+```
+
+Cleanup is returned from the apply function instead of using `onCleanup`:
+
+```ts
+// 1.x
+createEffect(() => {
+  const id = setInterval(() => console.log(name()), 1000)
+  onCleanup(() => clearInterval(id))
+})
+
+// 2.0
+createEffect(
+  () => name(),
+  (value) => {
+    const id = setInterval(() => console.log(value), 1000)
+    return () => clearInterval(id)
+  }
+)
+```
+
+### Lifecycle: `onMount` → `onSettled`
+
+[`onSettled`](/reference/lifecycle/on-settled) replaces `onMount`. It runs after all async descendants have resolved and can return cleanup:
+
+```ts
+// 1.x
+onMount(() => {
+  measureLayout()
+})
+
+// 2.0
+onSettled(() => {
+  measureLayout()
+  const onResize = () => measureLayout()
+  window.addEventListener("resize", onResize)
+  return () => window.removeEventListener("resize", onResize)
+})
+```
+
+:::note
+`onSettled` cannot create nested reactive primitives (no `createSignal`, `createEffect`, etc. inside).
+:::
+
+### Dev warnings
+
+Solid 2.0 introduces development-only warnings that catch subtle bugs early.
+
+#### Top-level reactive reads
+
+Reading reactive values at the top level of a component body (including destructuring props) will warn:
+
+```tsx
+// ❌ warns in 2.0
+function Bad(props) {
+  const n = props.count
+  return <div>{n}</div>
+}
+
+// ✅ read inside JSX or a reactive scope
+function Good(props) {
+  return <div>{props.count}</div>
+}
+```
+
+Destructuring props in the argument list also triggers the warning:
+
+```tsx
+// ❌ warns
+function Bad({ title }) {
+  return <h1>{title}</h1>
+}
+
+// ✅ keep the props object
+function Good(props) {
+  return <h1>{props.title}</h1>
+}
+```
+
+#### Writes inside reactive scopes
+
+Writing to signals or stores inside a reactive scope (effects, memos, component body) will warn:
+
+```ts
+// ❌ warns: writing from inside a memo
+createMemo(() => setDoubled(count() * 2))
+
+// ✅ derive instead of writing back
+const doubled = createMemo(() => count() * 2)
+```
+
+If you truly need to write a signal from an owned scope (not for app state), opt in with `{ pureWrite: true }` on [`createSignal`](/reference/basic-reactivity/create-signal).
+
+---
+
+## Async data and transitions
+
+### `createResource` → async computations
+
+[`createResource`](/reference/basic-reactivity/create-resource) is removed. Use async [`createMemo`](/reference/basic-reactivity/create-memo) or the function form of [`createStore`](/reference/store-utilities/create-store):
+
+```ts
+// 1.x
+const [user] = createResource(id, fetchUser)
+
+// 2.0
+const user = createMemo(() => fetchUser(id()))
+```
+
+Wrap the consuming component in a [`<Loading>`](/reference/components/suspense) boundary:
+
+```tsx
+<Loading fallback={<Spinner />}>
+  <Profile user={user()} />
+</Loading>
+```
+
+For list data that should reconcile by key, use the function form of `createStore`:
+
+```ts
+const [todos] = createStore(() => api.getTodos(), [], { key: "id" })
+```
+
+### `Suspense` → `Loading`, `ErrorBoundary` → `Errored`
+
+```tsx
+// 1.x
+<Suspense fallback={<Spinner />}>
+  <Profile />
+</Suspense>
+
+<ErrorBoundary fallback={(err) => <p>{err.message}</p>}>
+  <App />
+</ErrorBoundary>
+
+// 2.0
+<Loading fallback={<Spinner />}>
+  <Profile />
+</Loading>
+
+<Errored fallback={(err) => <p>{err.message}</p>}>
+  <App />
+</Errored>
+```
+
+### Initial loading vs. revalidation
+
+- [`<Loading>`](/reference/components/suspense) — handles initial "not ready yet" UI.
+- [`isPending()`](/reference/reactive-utilities/is-pending) — "stale while revalidating" indicator. Returns **false** during the initial `Loading` fallback.
+
+```tsx
+const refreshing = () => isPending(() => users())
+
+<Show when={refreshing()}>
+  <RefreshIndicator />
+</Show>
+<Loading fallback={<Spinner />}>
+  <UserList users={users()} />
+</Loading>
+```
+
+### Peeking in-flight values
+
+Use [`latest()`](/reference/reactive-utilities/latest) to read the most recent value even during a transition:
+
+```ts
+const latestId = () => latest(id)
+```
+
+### Mutations: `action()` + `refresh()`
+
+In 1.x, mutations required ad-hoc patterns with `startTransition` and manual refetching. In 2.0, use [`action()`](/reference/reactive-utilities/action) with [`refresh()`](/reference/reactive-utilities/refresh):
+
+```ts
+// 1.x
+const [data, { mutate, refetch }] = createResource(fetchData)
+startTransition(() => mutate(optimistic))
+await saveToServer()
+refetch()
+
+// 2.0
+const save = action(function* (value) {
+  setOptimistic(value)
+  yield saveToServer()
+  refresh(data)
+})
+```
+
+For optimistic UI, combine with [`createOptimistic`](/reference/reactive-utilities/create-optimistic) or [`createOptimisticStore`](/reference/reactive-utilities/create-optimistic-store):
+
+```ts
+const [todos] = createStore(() => api.getTodos(), { list: [] })
+const [optimisticTodos, setOptimisticTodos] = createOptimisticStore(
+  () => snapshot(todos),
+  { list: [] }
+)
+
+const addTodo = action(function* (todo) {
+  setOptimisticTodos((s) => s.list.push(todo))
+  yield api.addTodo(todo)
+  refresh(todos)
+})
+```
+
+---
+
+## Stores
+
+### Draft-first setters
+
+Store setters now use a produce-style draft by default:
+
+```ts
+// 1.x — path arguments
+setStore("user", "address", "city", "Paris")
+
+// 2.0 — draft-first (preferred)
+setStore((s) => {
+  s.user.address.city = "Paris"
+})
+```
+
+For gradual migration, [`storePath()`](/reference/store-utilities/store-path) provides the old path-argument ergonomics:
+
+```ts
+import { storePath } from "solid-js/store"
+
+setStore(storePath("user", "address", "city", "Paris"))
+```
+
+### `unwrap` → `snapshot`
+
+```ts
+// 1.x
+import { unwrap } from "solid-js/store"
+const plain = unwrap(store)
+
+// 2.0
+import { snapshot } from "solid-js/store"
+const plain = snapshot(store)
+```
+
+[`snapshot()`](/reference/store-utilities/snapshot) returns a non-reactive plain object suitable for serialization. It generates distinct objects (not just unwrapped proxies).
+
+### Function forms
+
+[`createSignal(fn)`](/reference/basic-reactivity/create-signal) creates a writable derived signal:
+
+```ts
+const [count, setCount] = createSignal(0)
+const [doubled] = createSignal(() => count() * 2)
+```
+
+[`createStore(fn)`](/reference/store-utilities/create-store) creates a derived store:
+
+```ts
+const [items] = createStore(() => api.listItems(), [])
+```
+
+---
+
+## Control flow
+
+### `Index` → `<For keyed={false}>`
+
+The [`<Index>`](/reference/components/index-component) component is removed. Use `<For>` with `keyed={false}`:
+
+```tsx
+// 1.x
+<Index each={items()}>
+  {(item, i) => <Row item={item()} index={i} />}
+</Index>
+
+// 2.0
+<For each={items()} keyed={false}>
+  {(item, i) => <Row item={item()} index={i()} />}
+</For>
+```
+
+### `For` children receive accessors
+
+Both the item and index are now **accessors** — call them with `()`:
+
+```tsx
+// 1.x
+<For each={items()}>
+  {(item, i) => <span>{item.name} at {i}</span>}
+</For>
+
+// 2.0
+<For each={items()}>
+  {(item, i) => <span>{item().name} at {i()}</span>}
+</For>
+```
+
+### Function children in `Show` and `Match`
+
+```tsx
+<Show when={user()} fallback={<Login />}>
+  {(u) => <Profile user={u()} />}
+</Show>
+```
+
+---
+
+## Props helpers
+
+### `mergeProps` → `merge`
+
+```ts
+// 1.x
+import { mergeProps } from "solid-js"
+const merged = mergeProps(defaults, overrides)
+
+// 2.0
+import { merge } from "solid-js"
+const merged = merge(defaults, overrides)
+```
+
+:::caution
+In 2.0, `undefined` is treated as a real value. `merge({ a: 1 }, { a: undefined })` results in `a` being `undefined`, not `1`.
+:::
+
+### `splitProps` → `omit`
+
+```ts
+// 1.x
+import { splitProps } from "solid-js"
+const [local, rest] = splitProps(props, ["class", "style"])
+
+// 2.0
+import { omit } from "solid-js"
+const rest = omit(props, "class", "style")
+```
+
+---
+
+## DOM changes
+
+### Attribute-first model
+
+Solid 2.0 uses attributes by default (not properties). The `attr:` and `bool:` namespaces are removed:
+
+```tsx
+// 1.x
+<video attr:muted={true} />
+<input bool:disabled={isDisabled()} />
+
+// 2.0 — standard attributes
+<video muted={true} />
+<input disabled={isDisabled()} />
+```
+
+### `classList` → `class`
+
+The [`classList`](/reference/jsx-attributes/classlist) attribute is removed. Use the `class` attribute with object or array forms:
+
+```tsx
+// 1.x
+<div class="card" classList={{ active: isActive(), disabled: isDisabled() }} />
+
+// 2.0
+<div class={["card", { active: isActive(), disabled: isDisabled() }]} />
+```
+
+### Directives: `use:` → `ref` factories
+
+The `use:` directive syntax is removed. Use [`ref`](/reference/jsx-attributes/ref) directive factories:
+
+```tsx
+// 1.x
+<button use:tooltip={{ content: "Save" }} />
+
+// 2.0
+<button ref={tooltip({ content: "Save" })} />
+```
+
+Multiple directives compose via arrays:
+
+```tsx
+<button ref={[autofocus, tooltip({ content: "Save" })]} />
+```
+
+### `oncapture:` removed
+
+Capture-phase event listeners via `oncapture:` are no longer available.
+
+---
+
+## Context
+
+### Context as provider
+
+[`Context.Provider`](/reference/component-apis/create-context) is removed. The context itself is the provider component:
+
+```tsx
+// 1.x
+const Theme = createContext("light")
+<Theme.Provider value="dark">{props.children}</Theme.Provider>
+
+// 2.0
+const Theme = createContext("light")
+<Theme value="dark">{props.children}</Theme>
+```
+
+---
+
+## Removed APIs
+
+### `createResource`
+
+Replaced by async [`createMemo`](/reference/basic-reactivity/create-memo), function-form [`createStore`](/reference/store-utilities/create-store), and [`<Loading>`](/reference/components/suspense) boundaries. See [Fetching Data](/guides/fetching-data) for full patterns.
+
+### `batch`
+
+Removed — batching is now the default. Use [`flush()`](/reference/reactive-utilities/flush) when you need synchronous updates.
+
+### `on` helper
+
+Removed — the [split effect](/reference/basic-reactivity/create-effect) model (separate compute and apply functions) replaces the need for explicit dependency declaration.
+
+### `createSelector`
+
+Replaced by [`createProjection`](/reference/store-utilities/create-projection) for selection patterns and derived stores.
+
+### `createComputed`
+
+Removed — use [`createEffect`](/reference/basic-reactivity/create-effect) (split model), [`createSignal(fn)`](/reference/basic-reactivity/create-signal) (writable derived), or [`createMemo`](/reference/basic-reactivity/create-memo).
+
+### `createMutable`
+
+Moved to `@solidjs/signals`. Not available in `solid-js/store`.
+
+### `catchError` / `onError`
+
+Removed — use the [`<Errored>`](/reference/components/error-boundary) component for error boundaries.
+
+### `startTransition` / `useTransition`
+
+Removed — transitions are built-in in Solid 2.0. Use [`isPending()`](/reference/reactive-utilities/is-pending) and [`<Loading>`](/reference/components/suspense) for transition indicators.
+
+### `indexArray`
+
+Removed — use `<For keyed={false}>` instead.
+
+---
+
+## Quick rename/removal map
+
+| 1.x | 2.0 | Type |
+|-----|-----|------|
+| `Suspense` | `Loading` | Renamed |
+| `ErrorBoundary` | `Errored` | Renamed |
+| `mergeProps` | `merge` | Renamed |
+| `splitProps` | `omit` | Renamed |
+| `unwrap` | `snapshot` | Renamed |
+| `onMount` | `onSettled` | Renamed |
+| `classList` | `class` (object/array) | Merged |
+| `createResource` | async `createMemo` / `createStore(fn)` | Replaced |
+| `createSelector` | `createProjection` | Replaced |
+| `createComputed` | `createEffect` / `createSignal(fn)` / `createMemo` | Replaced |
+| `batch` | Default behavior / `flush()` | Removed |
+| `on` | Split effects | Removed |
+| `Index` | `<For keyed={false}>` | Removed |
+| `catchError` / `onError` | `<Errored>` | Removed |
+| `startTransition` / `useTransition` | Built-in transitions | Removed |
+| `attr:` / `bool:` / `oncapture:` | Standard attributes | Removed |
+| `use:` directives | `ref` factories | Removed |
+| `Context.Provider` | Context as component | Removed |
+| `createMutable` | `@solidjs/signals` | Moved |

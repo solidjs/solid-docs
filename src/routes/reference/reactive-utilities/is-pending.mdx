@@ -1,0 +1,75 @@
+---
+title: isPending
+use_cases: >-
+  stale-while-revalidating, loading indicators, refresh state, background
+  updates, transition state
+tags:
+  - async
+  - loading
+  - transitions
+  - pending
+  - revalidation
+version: '2.0'
+description: >-
+  Check if an expression has pending async work with isPending(). Show
+  stale-while-revalidating indicators during background data refreshes.
+---
+
+```ts
+import { isPending } from "solid-js"
+
+function isPending(fn: () => any): boolean
+```
+
+`isPending` answers: "Does this expression currently have pending async work while also having a usable stale value?"
+
+## Key behavior
+
+- **False during initial `Loading` fallback** — there is no stale value yet, and the suspended subtree isn't producing UI.
+- **True during revalidation** — once you've rendered at least once and the data is being refreshed in the background.
+
+This makes it ideal for showing subtle "refreshing…" indicators without replacing the whole subtree with a spinner.
+
+## Usage
+
+```tsx
+import { createMemo, isPending, Show } from "solid-js"
+
+const users = createMemo(() => fetchUsers())
+
+function UserList() {
+  return (
+    <>
+      <Show when={isPending(() => users())}>
+        <div class="refreshing-banner">Refreshing...</div>
+      </Show>
+      <Loading fallback={<Spinner />}>
+        <List users={users()} />
+      </Loading>
+    </>
+  )
+}
+```
+
+## Combining multiple sources
+
+You can check pending state across multiple async computations:
+
+```tsx
+const users = createMemo(() => fetchUsers())
+const posts = createMemo(() => fetchPosts())
+
+const listPending = () => isPending(() => users() || posts())
+```
+
+## Replaces `.loading`
+
+In Solid 1.x, `createResource` had a `.loading` property. `isPending` replaces this with a more general mechanism that works for any expression:
+
+```ts
+// 1.x
+data.loading
+
+// 2.0
+isPending(() => data())
+```

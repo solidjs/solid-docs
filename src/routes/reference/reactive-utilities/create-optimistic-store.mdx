@@ -1,0 +1,68 @@
+---
+title: createOptimisticStore
+use_cases: >-
+  optimistic ui, list mutations, complex state, instant feedback, server sync
+tags:
+  - optimistic
+  - stores
+  - transitions
+  - mutations
+  - ui
+version: '2.0'
+description: >-
+  Create optimistic stores that revert when transitions complete. Provide instant
+  UI feedback for complex state mutations.
+---
+
+```ts
+import { createOptimisticStore } from "solid-js/store"
+
+function createOptimisticStore<T>(
+  fnOrValue: T | (() => T),
+  initial?: T,
+  options?: { key?: string }
+): [get: Store<T>, set: SetStoreFunction<T>]
+```
+
+`createOptimisticStore` is the store analogue of [`createOptimistic`](/reference/reactive-utilities/create-optimistic). Writes are treated as optimistic and revert when the transition completes.
+
+## Usage
+
+A common pattern is to derive from a source store and apply optimistic mutations in an [`action`](/reference/reactive-utilities/action):
+
+```ts
+import { action, refresh } from "solid-js"
+import { createStore, createOptimisticStore, snapshot } from "solid-js/store"
+
+const [todos] = createStore(() => api.getTodos(), { list: [] })
+const [optimisticTodos, setOptimisticTodos] = createOptimisticStore(
+  () => snapshot(todos),
+  { list: [] }
+)
+
+const addTodo = action(function* (todo) {
+  setOptimisticTodos((s) => s.list.push(todo)) // optimistic — instant UI
+  yield api.addTodo(todo)                       // async work
+  refresh(todos)                                // refresh source reads
+})
+```
+
+## Rendering
+
+Render the optimistic store in your UI for instant feedback:
+
+```tsx
+<For each={optimisticTodos.list}>
+  {(todo) => <div>{todo().text}</div>}
+</For>
+```
+
+## When to use
+
+Use `createOptimisticStore` when you need optimistic updates for:
+
+- Lists (adding, removing, reordering items)
+- Nested objects
+- Any complex state that requires store semantics
+
+For single values, use [`createOptimistic`](/reference/reactive-utilities/create-optimistic) instead.

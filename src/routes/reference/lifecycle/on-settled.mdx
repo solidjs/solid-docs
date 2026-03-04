@@ -1,0 +1,103 @@
+---
+title: onSettled
+use_cases: >-
+  component initialization, dom ready, third-party libraries, cleanup on
+  disposal, post-render setup
+tags:
+  - lifecycle
+  - initialization
+  - dom
+  - settled
+  - cleanup
+version: '2.0'
+description: >-
+  Run code after component rendering is complete with onSettled. Replaces
+  onMount with added cleanup support and clearer semantics.
+---
+
+```ts
+import { onSettled } from "solid-js"
+
+function onSettled(fn: () => void | (() => void)): void
+```
+
+`onSettled` registers a callback that runs once after the component's initial render is complete and the DOM is ready. It replaces `onMount` from Solid 1.x.
+
+## Key differences from `onMount`
+
+- **Can return a cleanup function** — the returned function runs when the component is disposed
+- **Cannot create nested reactive primitives** — don't call `createSignal`, `createEffect`, etc. inside the callback
+
+## Basic usage
+
+```tsx
+import { onSettled } from "solid-js"
+
+function MyComponent() {
+  let ref
+
+  onSettled(() => {
+    // DOM is ready, ref is set
+    console.log("Element width:", ref.offsetWidth)
+  })
+
+  return <div ref={ref}>Hello</div>
+}
+```
+
+## With cleanup
+
+Return a function from the callback to register cleanup logic:
+
+```tsx
+import { onSettled } from "solid-js"
+
+function JsonViewer(props) {
+  let container
+
+  onSettled(() => {
+    const editor = new ThirdPartyEditor(container, {
+      data: props.data,
+    })
+
+    return () => {
+      editor.destroy() // cleanup when component unmounts
+    }
+  })
+
+  return <div ref={container} />
+}
+```
+
+## Restrictions
+
+:::caution
+Do not create reactive primitives inside `onSettled`. The callback runs outside the reactive ownership scope:
+
+```tsx
+onSettled(() => {
+  // ❌ Don't do this
+  const [count, setCount] = createSignal(0)
+  createEffect(() => console.log(count()))
+
+  // ✅ Instead, create primitives in the component body
+})
+```
+:::
+
+## Migration
+
+```ts
+// 1.x
+import { onMount } from "solid-js"
+onMount(() => {
+  console.log("mounted")
+})
+
+// 2.0
+import { onSettled } from "solid-js"
+onSettled(() => {
+  console.log("settled")
+  return () => console.log("cleanup") // optional cleanup
+})
+```

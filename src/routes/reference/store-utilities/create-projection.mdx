@@ -1,0 +1,107 @@
+---
+title: createProjection
+use_cases: >-
+  derived stores, selection patterns, reconciled data, async derived state,
+  cached transformations
+tags:
+  - stores
+  - derived
+  - projection
+  - reconciliation
+  - selection
+version: '2.0'
+description: >-
+  Create mutable derived stores with createProjection. Replaces createSelector
+  with a more general projection and reconciliation model.
+---
+
+```ts
+import { createProjection } from "solid-js/store"
+
+function createProjection<T>(
+  fn: (draft: T) => T | void,
+  initial?: T,
+  options?: { key?: string }
+): Store<T>
+```
+
+`createProjection` creates a mutable derived store (a projection). The derive function receives a draft that you can mutate. It replaces `createSelector` with a more general tool.
+
+## How it works
+
+- The derive function receives a mutable **draft** that you can modify
+- If the function **returns a value**, that value is **reconciled** into the projection (preserving identity for unchanged entries, keyed by `options.key`, default `"id"`)
+- If the function **does not return**, the mutations are applied directly
+
+## Selection pattern
+
+Replace `createSelector` with a projection that updates only the affected keys:
+
+```ts
+import { createSignal } from "solid-js"
+import { createProjection } from "solid-js/store"
+
+const [selectedId, setSelectedId] = createSignal("a")
+
+const selected = createProjection((s) => {
+  const id = selectedId()
+  s[id] = true
+  if (s._prev != null) delete s[s._prev]
+  s._prev = id
+}, {})
+```
+
+Use in JSX:
+
+```tsx
+<For each={items()}>
+  {(item) => (
+    <li class={selected[item().id] ? "selected" : ""}>
+      {item().name}
+    </li>
+  )}
+</For>
+```
+
+## Reconciled list data
+
+When the derive function returns a value, it's reconciled into the projection. This is useful for async data:
+
+```ts
+const users = createProjection(async () => {
+  return await api.listUsers()
+}, [], { key: "id" })
+```
+
+Reconciliation preserves object identity for unchanged entries, making it efficient for keyed list rendering.
+
+## `createStore(fn)` shorthand
+
+`createStore(fn, initial?, options?)` is effectively a shorthand for creating a derived store using the projection mechanism:
+
+```ts
+import { createStore } from "solid-js/store"
+
+const [cache] = createStore((draft) => {
+  draft.value = expensive(selector())
+}, { value: 0 })
+```
+
+## Migration from `createSelector`
+
+```ts
+// 1.x
+import { createSelector } from "solid-js"
+const isSelected = createSelector(selectedId)
+// In JSX: isSelected(item.id)
+
+// 2.0
+import { createProjection } from "solid-js/store"
+const selected = createProjection((s) => {
+  const id = selectedId()
+  s[id] = true
+  if (s._prev != null) delete s[s._prev]
+  s._prev = id
+}, {})
+// In JSX: selected[item.id]
+```

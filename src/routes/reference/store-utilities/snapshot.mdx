@@ -1,0 +1,87 @@
+---
+title: snapshot
+use_cases: >-
+  serialization, json export, external libraries, data transfer, logging,
+  interop
+tags:
+  - stores
+  - serialization
+  - snapshot
+  - plain-objects
+  - interop
+version: '2.0'
+description: >-
+  Get a non-reactive plain value from a store with snapshot(). Essential for
+  serialization, logging, and interop with non-reactive libraries.
+---
+
+```ts
+import { snapshot } from "solid-js/store"
+
+function snapshot<T>(store: Store<T>): T
+```
+
+`snapshot(store)` produces a **non-reactive plain value** suitable for serialization or interop with libraries that expect plain objects/arrays. It replaces `unwrap` from Solid 1.x.
+
+## Usage
+
+```ts
+import { createStore } from "solid-js/store"
+import { snapshot } from "solid-js/store"
+
+const [store] = createStore({ user: { name: "Alice" } })
+
+const plain = snapshot(store)
+JSON.stringify(plain) // works — plain is non-reactive
+```
+
+## Common patterns
+
+### Sending data to an API
+
+```ts
+const [formData] = createStore({ name: "", email: "" })
+
+async function submit() {
+  await fetch("/api/submit", {
+    method: "POST",
+    body: JSON.stringify(snapshot(formData)),
+  })
+}
+```
+
+### Logging
+
+```ts
+createEffect(
+  () => deep(store),
+  (value) => {
+    console.log("Store changed:", snapshot(store))
+  }
+)
+```
+
+### Optimistic store source
+
+```ts
+const [optimistic, setOptimistic] = createOptimisticStore(
+  () => snapshot(sourceStore),
+  initialValue
+)
+```
+
+## Migration
+
+```ts
+// 1.x
+import { unwrap } from "solid-js/store"
+const plain = unwrap(store)
+
+// 2.0
+import { snapshot } from "solid-js/store"
+const plain = snapshot(store)
+```
+
+## Note
+
+The returned value is a new object/array graph where necessary, while preserving references when nothing has changed. This is not the same as simply unwrapping proxies — it generates distinct objects suitable for serialization.

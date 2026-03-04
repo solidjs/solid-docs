@@ -1,0 +1,82 @@
+---
+title: storePath
+use_cases: >-
+  migration compatibility, path-style setters, legacy code, gradual migration
+tags:
+  - stores
+  - compatibility
+  - migration
+  - path
+  - setters
+version: '2.0'
+description: >-
+  Use storePath() as a compatibility helper for Solid 1.x-style path setters.
+  Opt-in adapter for teams migrating to draft-first store setters.
+---
+
+```ts
+import { storePath } from "solid-js/store"
+
+function storePath(...args: any[]): (draft: any) => void
+```
+
+`storePath()` is a compatibility helper that adapts Solid 1.x-style path argument setters into a function you can pass to the Solid 2.0 draft-first `setStore`.
+
+## Usage
+
+```ts
+import { createStore } from "solid-js/store"
+import { storePath } from "solid-js/store"
+
+const [store, setStore] = createStore({
+  user: { address: { city: "London" } },
+  items: ["a", "b", "c"],
+})
+
+// 2.0 preferred: draft-first setter
+setStore((s) => {
+  s.user.address.city = "Paris"
+})
+
+// Optional compat: 1.x-style path setter via storePath
+setStore(storePath("user", "address", "city", "Paris"))
+```
+
+## Path patterns
+
+`storePath` supports the same patterns as Solid 1.x path setters:
+
+### Index access
+
+```ts
+setStore(storePath("items", 0, "newValue"))
+```
+
+### Range
+
+```ts
+setStore(storePath("items", { from: 1, to: 4, by: 2 }, 99))
+```
+
+### Filter
+
+```ts
+setStore(storePath("tasks", (task) => task.id === id, "completed", true))
+```
+
+### Delete sentinel
+
+```ts
+setStore(storePath("nickname", storePath.DELETE))
+```
+
+## When to use
+
+Use `storePath` for gradual migration from Solid 1.x. For new code, prefer the draft-first setter pattern:
+
+```ts
+// Preferred
+setStore((s) => {
+  s.user.address.city = "Paris"
+})
+```

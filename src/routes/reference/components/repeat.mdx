@@ -1,0 +1,78 @@
+---
+title: <Repeat>
+order: 5
+use_cases: >-
+  count-based rendering, range rendering, fixed iterations, grid layouts,
+  pagination dots
+tags:
+  - rendering
+  - iteration
+  - components
+  - count
+  - range
+version: '2.0'
+description: >-
+  Render a fixed number of elements with the Repeat component. Ideal for
+  count-based rendering without list diffing overhead.
+---
+
+`<Repeat>` renders its children a specified number of times. Unlike `<For>`, it does not perform list diffing — it simply renders `count` instances.
+
+```ts
+import { Repeat } from "solid-js"
+import type { JSX } from "solid-js"
+
+function Repeat(props: {
+  count: number
+  children: (index: () => number) => JSX.Element
+}): JSX.Element
+```
+
+## Basic usage
+
+```tsx
+<Repeat count={5}>
+  {(index) => <div>Item {index()}</div>}
+</Repeat>
+```
+
+Renders:
+```
+Item 0
+Item 1
+Item 2
+Item 3
+Item 4
+```
+
+## Dynamic count
+
+The `count` prop is reactive. When it changes, the component adjusts the number of rendered instances:
+
+```tsx
+const [rows, setRows] = createSignal(3)
+
+<Repeat count={rows()}>
+  {(i) => <tr><td>Row {i()}</td></tr>}
+</Repeat>
+
+<button onClick={() => setRows((r) => r + 1)}>Add Row</button>
+```
+
+## When to use
+
+Use `<Repeat>` when:
+- You need to render a fixed number of elements (e.g., star ratings, pagination dots, grid cells)
+- The content doesn't come from a data array
+- You don't need list diffing or keying
+
+Use `<For>` when:
+- You're rendering items from a data array
+- Items have identity and may be reordered, added, or removed
+
+## Props
+
+| Name       | Type                                  | Description                              |
+| :--------- | :------------------------------------ | :--------------------------------------- |
+| `count`    | `number`                              | The number of times to render children.  |
+| `children` | `(index: () => number) => JSX.Element` | A callback receiving the index accessor. |

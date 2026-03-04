@@ -1,0 +1,69 @@
+---
+title: deep
+use_cases: >-
+  deep observation, serialization triggers, logging, watching entire stores,
+  debugging
+tags:
+  - stores
+  - observation
+  - deep
+  - tracking
+  - debugging
+version: '2.0'
+description: >-
+  Observe an entire store deeply with deep(). Triggers reactive updates when
+  anything inside the store changes.
+---
+
+```ts
+import { deep } from "solid-js/store"
+
+function deep<T>(store: Store<T>): T
+```
+
+Store tracking is normally **property-level** (optimal for performance). When you truly need deep observation — tracking every change anywhere inside a store — use `deep(store)` inside a reactive scope.
+
+## Usage
+
+```ts
+import { createEffect } from "solid-js"
+import { createStore, deep, snapshot } from "solid-js/store"
+
+const [store, setStore] = createStore({
+  user: { name: "Alice", settings: { theme: "dark" } },
+})
+
+createEffect(
+  () => deep(store),      // compute: deeply observe entire store
+  () => {                  // apply: runs when anything changes
+    console.log("Store changed:", snapshot(store))
+  }
+)
+```
+
+## When to use
+
+Use `deep()` when you need to react to **any** change in a store, regardless of which property changed:
+
+- Serialization (auto-save on any change)
+- Logging and debugging
+- Syncing entire store to external systems
+- Undo/redo snapshots
+
+## Caution
+
+`deep()` opts out of Solid's fine-grained property-level tracking. Every change to any nested property will trigger the reactive scope. For most use cases, reading specific store properties directly is more performant:
+
+```ts
+// Preferred: fine-grained tracking
+createEffect(
+  () => store.user.name,
+  (name) => console.log("Name changed:", name)
+)
+
+// Use deep only when you need to watch everything
+createEffect(
+  () => deep(store),
+  () => console.log("Something changed")
+)
+```

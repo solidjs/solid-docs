@@ -1,0 +1,46 @@
+---
+title: latest
+use_cases: >-
+  in-flight values, transition previews, optimistic reads, stale data access
+tags:
+  - async
+  - transitions
+  - values
+  - preview
+version: '2.0'
+description: >-
+  Read in-flight values during transitions with latest(). Falls back to stale
+  data if the next value isn't available yet.
+---
+
+```ts
+import { latest } from "solid-js"
+
+function latest<T>(fn: () => T): T
+```
+
+`latest(fn)` reads the "in-flight" value of a signal or computation during transitions. If the next value isn't available yet, it falls back to the stale value.
+
+## Usage
+
+```tsx
+import { createSignal, createMemo, latest } from "solid-js"
+
+const [userId, setUserId] = createSignal(1)
+const user = createMemo(() => fetchUser(userId()))
+
+// During a transition, reflects the in-flight userId
+const latestUserId = () => latest(userId)
+```
+
+## Replaces `.latest`
+
+In Solid 1.x, `createResource` had a `.latest` property. `latest()` replaces this with a general mechanism that works for any expression:
+
+```ts
+// 1.x
+data.latest
+
+// 2.0
+latest(() => data())
+```

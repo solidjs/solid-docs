@@ -1,0 +1,52 @@
+---
+title: createOptimistic
+use_cases: >-
+  optimistic ui, instant feedback, pending state, form submissions, user
+  experience
+tags:
+  - optimistic
+  - signals
+  - transitions
+  - mutations
+  - ui
+version: '2.0'
+description: >-
+  Create optimistic signals that revert when transitions complete. Provide
+  instant UI feedback during async mutations.
+---
+
+```ts
+import { createOptimistic } from "solid-js"
+
+function createOptimistic<T>(
+  initialValue: T
+): [get: () => T, set: (v: T) => T]
+```
+
+`createOptimistic` has the same surface as [`createSignal`](/reference/basic-reactivity/create-signal), but its writes are treated as **optimistic** — values can be overridden during a transition and revert when the transition completes.
+
+## Usage
+
+```ts
+import { createOptimistic, action } from "solid-js"
+
+const [name, setName] = createOptimistic("Alice")
+
+const updateName = action(function* (next) {
+  setName(next)            // optimistic — UI updates immediately
+  yield api.saveName(next) // async work
+})
+```
+
+During the action, `name()` returns the optimistic value. When the transition completes (or if the action fails), the value reverts.
+
+## When to use
+
+Use `createOptimistic` when you need a single reactive value that should show an optimistic update during a mutation:
+
+- User name edits
+- Toggle states
+- Counter increments
+- Any single-value mutation
+
+For store-level optimistic updates (objects, arrays), use [`createOptimisticStore`](/reference/reactive-utilities/create-optimistic-store) instead.

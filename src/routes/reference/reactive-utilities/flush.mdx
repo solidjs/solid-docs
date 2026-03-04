@@ -1,0 +1,65 @@
+---
+title: flush
+use_cases: >-
+  synchronous updates, forced dom updates, testing, measuring dom after state
+  change
+tags:
+  - batching
+  - updates
+  - synchronous
+  - dom
+  - performance
+version: '2.0'
+description: >-
+  Synchronously apply all pending reactive updates with flush(). Use when you
+  need immediate DOM updates after state changes.
+---
+
+```ts
+import { flush } from "solid-js"
+
+function flush(): void
+```
+
+`flush()` synchronously applies all pending reactive updates. In Solid 2.0, signal updates are batched by default via microtask scheduling — `flush()` forces those updates to apply immediately.
+
+## When to use
+
+In most cases, you should let the default microtask batching handle updates. Use `flush()` only when you need to:
+
+- Read DOM measurements immediately after a state change
+- Ensure synchronous updates for testing
+- Coordinate with external libraries that need immediate DOM state
+
+```tsx
+const [count, setCount] = createSignal(0)
+
+setCount(1)
+setCount(2)
+setCount(3)
+// DOM hasn't updated yet — updates are batched
+
+flush()
+// Now all pending updates have been applied to the DOM
+```
+
+## Replacing `batch`
+
+`flush()` replaces `batch()` from Solid 1.x, but with inverted semantics. Where `batch` wrapped a block of updates to defer them, Solid 2.0 defers by default and `flush` forces synchronous application:
+
+```ts
+// 1.x — batch to defer
+batch(() => {
+  setA(1)
+  setB(2)
+})
+
+// 2.0 — deferred by default, flush to force sync
+setA(1)
+setB(2)
+flush() // only if you need synchronous DOM updates
+```
+
+## Caution
+
+Use `flush()` sparingly. Forcing synchronous updates bypasses the performance benefits of microtask batching. In most applications, the default behavior is sufficient.

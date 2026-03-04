@@ -10,7 +10,7 @@ tags:
   - deployment
   - build
   - plugins
-version: '1.0'
+version: "1.0"
 description: >-
   Configure SolidStart apps with defineConfig. Set up Vite plugins, Nitro
   presets, and deployment targets for any platform.
@@ -35,11 +35,12 @@ export default defineConfig({
 });
 ```
 
-The `vite` option can also be a function that can be customized for each Vinxi router. 
+The `vite` option can also be a function that can be customized for each Vinxi router.
 
 In SolidStart, 3 routers are used:
+
 - `server` - server-side routing
-- `client` -  for the client-side routing
+- `client` - for the client-side routing
 - `server-function` - server functions.
 
 ```tsx
@@ -56,13 +57,48 @@ export default defineConfig({
 });
 ```
 
+## Serialization
+
+SolidStart serializes server function payloads so they can move between server and client. You can configure the serializer mode to balance performance, payload size, and Content Security Policy (CSP) constraints.
+
+```tsx
+import { defineConfig } from "@solidjs/start/config";
+
+export default defineConfig({
+	serialization: {
+		mode: "json",
+	},
+});
+```
+
+### Modes
+
+- `json`: Uses `JSON.parse` on the client. This is the safest option for strict CSP because it avoids `eval`. Payloads can be slightly larger.
+- `js`: Uses Seroval's JS serializer for smaller payloads and better performance, but it relies on `eval` during client-side deserialization and requires `unsafe-eval` in CSP.
+
+### Defaults
+
+- SolidStart v1 defaults to `js` for backwards compatibility.
+- SolidStart v2 defaults to `json` for CSP compatibility.
+
+### Supported types (default)
+
+SolidStart enables Seroval plus a default set of web platform plugins. These plugins add support for:
+
+- `AbortSignal`, `CustomEvent`, `DOMException`, `Event`
+- `FormData`, `Headers`, `ReadableStream`
+- `Request`, `Response`
+- `URL`, `URLSearchParams`
+
+Seroval supports additional value types. The compatibility list is broader than what SolidStart enables by default, so treat it as a superset. See the full list in the [Seroval compatibility docs](https://github.com/lxsmnsyc/seroval/blob/main/docs/COMPATIBILITY.md).
+
 ## Configuring Nitro
 
-SolidStart uses [Nitro](https://nitro.build/) to run on a number of platforms. 
-The `server` option exposes some Nitro options including the build and deployment presets. 
+SolidStart uses [Nitro](https://nitro.build/) to run on a number of platforms.
+The `server` option exposes some Nitro options including the build and deployment presets.
 An overview of all available presets is available in the [Deploy section of the Nitro documentation](https://nitro.build/deploy).
 
- Some common ones include:
+Some common ones include:
 
 **Servers**
 
@@ -99,7 +135,7 @@ export default defineConfig({
 
 #### Special note
 
-SolidStart uses async local storage. 
+SolidStart uses async local storage.
 Netlify, Vercel, and Deno support this out of the box but if you're using Cloudflare you will need to specify the following:
 
 ```js
@@ -117,7 +153,6 @@ export default defineConfig({
 
 Within `wrangler.toml` you will need to enable node compatibility:
 
-
 ```
 compatibility_flags = [ "nodejs_compat" ]
 ```
@@ -130,6 +165,7 @@ compatibility_flags = [ "nodejs_compat" ]
 | solid                | object                                     |                            | Configuration object for [vite-plugin-solid](https://github.com/solidjs/vite-plugin-solid)                                                                                   |
 | extensions           | string[]                                   | ["js", "jsx", "ts", "tsx"] | Array of file extensions to be treated as routes.                                                                                                                            |
 | server               | object                                     |                            | Nitro server config options                                                                                                                                                  |
+| serialization        | object                                     |                            | Serialization settings for server function payloads.                                                                                                                         |
 | appRoot              | string                                     | "./src"                    | The path to the root of the application.                                                                                                                                     |
 | routeDir             | string                                     | "./routes"                 | The path to where the routes are located.                                                                                                                                    |
 | middleware           | string                                     |                            | The path to an optional [middleware](/solid-start/advanced/middleware) file.                                                                                                 |

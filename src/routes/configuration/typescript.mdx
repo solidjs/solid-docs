@@ -451,7 +451,7 @@ In an environment without TypeScript, using the `ref` attribute in Solid ensures
 ```js
 let divRef;
 console.log(divRef); // Outputs: undefined
-onMount(() => {
+onSettled(() => {
 	console.log(divRef); // Outputs: <div> element
 });
 return <div ref={divRef} />;
@@ -465,17 +465,17 @@ A safe approach in TypeScript is to acknowledge that `divRef` may initially be `
 let divRef: HTMLDivElement | undefined
 // This would be flagged as an error during compilation
 divRef.focus()
-onMount(() => {
+onSettled(() => {
 	if (!divRef) return
 	divRef.focus()
 })
 return <div ref={divRef}>...</div>
 ```
 
-Within the scope of the `onMount` function, which runs after rendering, you can use a non-`null` assertion (indicated by the exclamation mark `!`):
+Within the scope of the `onSettled` function, which runs after rendering, you can use a non-`null` assertion (indicated by the exclamation mark `!`):
 
 ```typescript
-onMount(() => {
+onSettled(() => {
 	divRef!.focus();
 });
 ```
@@ -486,7 +486,7 @@ Another approach is to bypass `null` during the assignment phase and then apply 
 let divRef: HTMLDivElement
 // Compilation error as expected
 divRef.focus()
-onMount(() => {
+onSettled(() => {
 	divRef.focus()
 })
 return <div ref={divRef!}>...</div>
@@ -499,9 +499,7 @@ While TypeScript does catch incorrect usage of refs that occur before their
 JSX block definition, it currently does not identify undefined variables
 within certain nested functions in Solid. Therefore, additional care is needed
 when using `ref`s in functions such as
-[`createMemo`](/reference/basic-reactivity/create-memo),
-[`createRenderEffect`](/reference/secondary-primitives/create-render-effect),
-and [`createComputed`](/reference/secondary-primitives/create-computed).
+[`createMemo`](/reference/basic-reactivity/create-memo).
 :::
 
 Finally, a riskier approach involves using the definite assignment assertion right at the point of variable initialization.
@@ -513,7 +511,7 @@ let divRef!: HTMLDivElement;
 // Permitted by TypeScript but will throw an error at runtime:
 // divRef.focus();
 
-onMount(() => {
+onSettled(() => {
 	divRef.focus();
 });
 ```
@@ -736,6 +734,10 @@ declare module "solid-js" {
 ```
 
 #### Custom directives
+
+:::caution[Solid 2.0 — `use:` directives are removed]
+In Solid 2.0, `use:` directives are removed. Directives are now expressed as `ref` callbacks/factories. See [Refs](/concepts/refs#directives-via-ref-factories) for the 2.0 pattern. The TypeScript patterns below apply to Solid 1.x and the `@solidjs/legacy` compatibility layer.
+:::
 
 In Solid, custom directives can be applied using the `use:___` attribute, which usually accepts a target element and a JSX attribute value.
 The traditional `Directives` interface types these values directly (i.e. the type of `value` in `<div use:foo={value} />`).

@@ -12,47 +12,118 @@ tags:
   - soft-navigation
 version: '1.0'
 description: >-
-  The A component provides enhanced anchor tags with automatic base path
-  support, active states, and soft navigation for better user experience.
+  Render router-aware links with active matching and client-side navigation.
 ---
 
-Solid Router exposes the `<A />` component as a wrapper around the [native anchor tag ](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a).
-It relies on the routing context provided by the [`<Router>` component](/solid-router/reference/components/router) and if used outside, will triggers a runtime error..
+`A` renders an anchor element that integrates with Solid Router.
+Requires routing context from [`<Router />`](/solid-router/reference/components/router).
 
-`<A />` supports relative and base paths. `<a />` doesn't. But `<a />` gets augmented
-when JS is present via a top-level listener to the DOM, so you get the
-soft-navigation experience nonetheless.
+## Import
 
-The `<A />` supports the [`<Router />`](/solid-router/reference/components/router) base property (`<Router base="/subpath">`) and prepend it to the received `href` automatically and the `<a />`does not.
-The same happens with relative paths passed to `<A />`.
+```tsx
+import { A } from "@solidjs/router"
+```
 
-The `<A>` tag has an `active` class if its href matches the current location, and `inactive` otherwise.
-By default matching includes locations that are descendants (e.g.: href `/users` matches locations `/users` and `/users/123`).
+## Type signature
 
-:::tip
-	Use the boolean `end` prop to prevent matching these. This is particularly
-	useful for links to the root route `/` which would match everything.
-:::
+```tsx
+import type { JSX } from "solid-js"
 
-## Soft Navigation
+interface AnchorProps extends Omit<JSX.AnchorHTMLAttributes<HTMLAnchorElement>, "state"> {
+	href: string;
+	replace?: boolean;
+	noScroll?: boolean;
+	state?: unknown;
+	inactiveClass?: string;
+	activeClass?: string;
+	end?: boolean;
+}
 
-When JavaScript is present at the runtime, both components behave in a very similar fashion.
-This is because Solid Router adds a listener at the top level of the DOM and will augment the native `<a />` tag to a more performant experience (with soft navigation).
+function A(props: AnchorProps): JSX.Element
+```
 
-:::note
+## Parameters
 
-To prevent, both `<A />` and `<a />` tags from soft navigating when JavaScript is present, pass a `target="_self"` attribute.
+### `href`
 
-:::
+- **Type:** `string`
+- **Required:** Yes
 
-## Props Reference
+Destination path resolved by the router, including base paths.
 
-| prop          | type    | description                                                                                                                                                                              |
-| ------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| href          | string  | The path of the route to navigate to. This will be resolved relative to the route that the link is in, but you can preface it with `/` to refer back to the root.                        |
-| noScroll      | boolean | If true, turn off the default behavior of scrolling to the top of the new page                                                                                                           |
-| replace       | boolean | If true, don't add a new entry to the browser history. (By default, the new page will be added to the browser history, so pressing the back button will take you to the previous route.) |
-| state         | unknown | [Push this value](https://developer.mozilla.org/en-US/docs/Web/API/History/pushState) to the history stack when navigating                                                               |
-| inactiveClass | string  | The class to show when the link is inactive (when the current location doesn't match the link)                                                                                           |
-| activeClass   | string  | The class to show when the link is active                                                                                                                                                |
-| end           | boolean | If `true`, only considers the link to be active when the current location matches the `href` exactly; if `false`, check if the current location _starts with_ `href`                     |
+### `replace`
+
+- **Type:** `boolean`
+- **Required:** No
+
+Replaces the current history entry instead of pushing a new entry.
+
+### `noScroll`
+
+- **Type:** `boolean`
+- **Required:** No
+
+Prevents scrolling to the top after navigation.
+
+### `state`
+
+- **Type:** `unknown`
+- **Required:** No
+
+Value pushed to `history.state` for the navigation entry.
+
+### `inactiveClass`
+
+- **Type:** `string`
+- **Required:** No
+
+Class applied when the current location does not match `href` (defaults to `"inactive"`).
+
+### `activeClass`
+
+- **Type:** `string`
+- **Required:** No
+
+Class applied when the current location matches `href` (defaults to `"active"`).
+
+### `end`
+
+- **Type:** `boolean`
+- **Required:** No
+
+Controls how strictly the link's `href` is matched against the current location.
+When `true`, only exact matches are considered active.
+When `false` (default), descendant paths are also matched (e.g., `/users` matches both `/users` and `/users/123`).
+
+## Return value
+
+- **Type:** `JSX.Element`
+
+Returns an anchor element with client-side navigation.
+Sets `aria-current="page"` on exact pathname matches.
+
+## Examples
+
+### Basic link
+
+```tsx
+<A href="/users">Users</A>
+```
+
+### Active matching with `end`
+
+```tsx
+<A href="/" end activeClass="is-active" inactiveClass="is-inactive">
+	Home
+</A>
+```
+
+### Link with router `base`
+
+```tsx
+<Router base="/app">
+	<A href="/settings">Settings</A>
+</Router>
+```
+
+Use native `<a>` when you need direct browser navigation without router matching behavior.

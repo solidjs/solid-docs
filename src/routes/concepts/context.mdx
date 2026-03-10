@@ -11,7 +11,7 @@ tags:
   - providers
   - sharing
   - management
-version: '1.0'
+version: "1.0"
 description: >-
   Share data across component trees with Solid's Context API. Avoid prop
   drilling and manage global application state effectively.
@@ -44,13 +44,9 @@ export const MyContext = createContext();
 ```jsx tab title="/context/component.jsx"
 import { MyContext } from "./create";
 
-export function Provider (props) {
-	return (
-		<MyContext.Provider>
-			{props.children}
-		</MyContext.Provider>
-	)
-};
+export function Provider(props) {
+	return <MyContext.Provider>{props.children}</MyContext.Provider>;
+}
 ```
 
 ## Providing context to children
@@ -83,19 +79,13 @@ import { createContext, useContext } from "solid-js";
 import { MyContext } from "./create";
 
 const Provider = (props) => (
-	<MyContext.Provider value="new value">
-		{props.children}
-	</MyContext.Provider>
+	<MyContext.Provider value="new value">{props.children}</MyContext.Provider>
 );
 
 const Child = () => {
 	const value = useContext(MyContext);
 
-	return (
-		<span>
-			{value}
-		</span>
-	);
+	return <span>{value}</span>;
 };
 
 export const App = () => (
@@ -180,7 +170,7 @@ export function App() {
 			<h1>Welcome to Counter App</h1>
 			<Child />
 		</CounterProvider>
-	)
+	);
 }
 ```
 
@@ -193,12 +183,12 @@ export function CounterProvider(props) {
 		count,
 		{
 			increment() {
-			setCount(prev => prev + 1);
+				setCount((prev) => prev + 1);
 			},
 			decrement() {
-			setCount(prev => prev - 1);
-			}
-		}
+				setCount((prev) => prev - 1);
+			},
+		},
 	];
 
 	return (
@@ -208,7 +198,9 @@ export function CounterProvider(props) {
 	);
 }
 
-export function useCounter() { return useContext(CounterContext); }
+export function useCounter() {
+	return useContext(CounterContext);
+}
 ```
 
 ```tsx tab title="Child.jsx"
@@ -219,13 +211,13 @@ export function Child(props) {
 	const [count, { increment, decrement }] = useCounter();
 
 	return (
-	<>
-		<div>{count()}</div>
-		<button onClick={increment}>+</button>
-		<button onClick={decrement}>-</button>
-	</>
+		<>
+			<div>{count()}</div>
+			<button onClick={increment}>+</button>
+			<button onClick={decrement}>-</button>
+		</>
 	);
-};
+}
 ```
 
 This offers a way to manage state across your components without having to pass props through intermediate elements.
@@ -241,19 +233,19 @@ To solve this issue, a default value can be specified when creating a context ob
 import { useContext } from "solid-js";
 
 function useMyContext() {
-  const value = useContext(MyContext);
+	const value = useContext(MyContext);
 
-  if (!value) {
-    throw new Error("Missing context Provider");
-  }
+	if (!value) {
+		throw new Error("Missing context Provider");
+	}
 
-  return value;
+	return value;
 }
 
 function Child() {
-  const value = useMyContext();
+	const value = useMyContext();
 
-  return <div>{value}</div>;
+	return <div>{value}</div>;
 }
 ```
 
@@ -276,10 +268,10 @@ As an example:
 
 ```ts title="/context/counter-component.tsx"
 function useCounterContext() {
-	const context = useContext(CounterContext)
+	const context = useContext(CounterContext);
 	if (!context) {
-		throw new Error("can't find CounterContext")
+		throw new Error("can't find CounterContext");
 	}
-	return context
+	return context;
 }
 ```

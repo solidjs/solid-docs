@@ -2,7 +2,6 @@
   <img src="https://assets.solidjs.com/banner?project=Solid%20Documentation&type=core" alt="Solid Documentation" />
 </p>
 
-
 Welcome to Solid's documentation!
 
 This is the repo for [﻿docs.solidjs.com](https://docs.solidjs.com/). This repo

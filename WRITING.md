@@ -194,6 +194,7 @@ Reference pages document the API surface.
 Keep them concise and easy to scan.
 
 Include:
+
 - Imports
 - Signatures
 - Parameters
@@ -201,6 +202,7 @@ Include:
 - Short examples
 
 Avoid:
+
 - Narrative context or “why”
 - Usage guidance (“when to use”, best practices)
 - Long notes

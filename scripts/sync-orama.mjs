@@ -20,41 +20,47 @@ const pagesToIndex = HTMLFiles.flatMap((file) => {
 
 	const productionDocsURL = `https://docs.solidjs.com/${path}`;
 
-	const content = generalPurposeCrawler(productionDocsURL, pageContent, { parseCodeBlocks: false })[0];
-	const contentWithCode = generalPurposeCrawler(productionDocsURL, pageContent, { parseCodeBlocks: true })[0];
+	const content = generalPurposeCrawler(productionDocsURL, pageContent, {
+		parseCodeBlocks: false,
+	})[0];
+	const contentWithCode = generalPurposeCrawler(
+		productionDocsURL,
+		pageContent,
+		{ parseCodeBlocks: true }
+	)[0];
 
 	const fullContent = {
 		title: content.title,
 		path: content.path,
 		content: content.content,
 		contentWithCode: contentWithCode.content,
-	}
+	};
 
 	if (content?.category) {
-		fullContent.category = `enum('${content.category}')`
+		fullContent.category = `enum('${content.category}')`;
 	}
 
 	if (content?.section) {
-		fullContent.section = `enum('${content.section}')`
+		fullContent.section = `enum('${content.section}')`;
 	}
 
-	return fullContent
+	return fullContent;
 });
 
 const orama = new OramaCloud({
 	apiKey: ORAMA_PRIVATE_API_KEY,
-	projectId: ORAMA_PROJECT_ID
-})
+	projectId: ORAMA_PROJECT_ID,
+});
 
-const index = orama.index.set(ORAMA_DATASOURCE_ID)
+const index = orama.index.set(ORAMA_DATASOURCE_ID);
 
-console.log(`[Orama] - Indexing ${pagesToIndex.length} documents to Orama...`)
+console.log(`[Orama] - Indexing ${pagesToIndex.length} documents to Orama...`);
 
-const tempIndexId = `tempIndex-${Date.now()}`
-await index.createTemporaryIndex(tempIndexId)
-const tempIdx = orama.index.set(tempIndexId)
-await tempIdx.insertDocuments(pagesToIndex)
-await index.swapTemporaryIndex(ORAMA_DATASOURCE_ID, tempIndexId)
-await orama.index.delete(tempIndexId)
+const tempIndexId = `tempIndex-${Date.now()}`;
+await index.createTemporaryIndex(tempIndexId);
+const tempIdx = orama.index.set(tempIndexId);
+await tempIdx.insertDocuments(pagesToIndex);
+await index.swapTemporaryIndex(ORAMA_DATASOURCE_ID, tempIndexId);
+await orama.index.delete(tempIndexId);
 
-console.log(`[Orama] - Indexed ${pagesToIndex.length} documents to Orama.`)
+console.log(`[Orama] - Indexed ${pagesToIndex.length} documents to Orama.`);

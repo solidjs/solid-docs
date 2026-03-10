@@ -10,7 +10,7 @@ tags:
   - suspense
   - optimization
   - imports
-version: '1.0'
+version: "1.0"
 description: >-
   Lazy load components with code splitting to reduce bundle size and improve
   performance. Components load on-demand and integrate with Suspense.
@@ -22,15 +22,15 @@ Lazy components accept the same props as their eager counterparts and integrate 
 ## Import
 
 ```tsx
-import { lazy } from "solid-js"
+import { lazy } from "solid-js";
 ```
 
 ## Type
 
 ```tsx
 function lazy<T extends Component<any>>(
-  fn: () => Promise<{ default: T }>
-): T & { preload: () => Promise<T> }
+	fn: () => Promise<{ default: T }>
+): T & { preload: () => Promise<T> };
 ```
 
 ## Parameters
@@ -47,8 +47,8 @@ Dynamic import that resolves to the component module, exposing the component as 
 `lazy` returns a renderable component compatible with `T`.
 The component exposes a `preload()` method that resolves the underlying module.
 
-| Property | Type | Description |
-| -------- | ---- | ----------- |
+| Property  | Type               | Description                                                            |
+| --------- | ------------------ | ---------------------------------------------------------------------- |
 | `preload` | `() => Promise<T>` | Loads the module without rendering and returns the resolved component. |
 
 ## Examples
@@ -56,38 +56,40 @@ The component exposes a `preload()` method that resolves the underlying module.
 ### Basic usage
 
 ```tsx title="app.tsx"
-import { lazy } from "solid-js"
+import { lazy } from "solid-js";
 
-const ComponentA = lazy(() => import("./ComponentA"))
+const ComponentA = lazy(() => import("./ComponentA"));
 
 function App(props: { title: string }) {
-  return <ComponentA title={props.title} />
+	return <ComponentA title={props.title} />;
 }
 ```
 
 ### Preloading nested lazy components
 
 ```tsx
-import { lazy } from "solid-js"
-import type { Component } from "solid-js"
+import { lazy } from "solid-js";
+import type { Component } from "solid-js";
 
-const Nested = lazy(() => import("./Nested"))
+const Nested = lazy(() => import("./Nested"));
 
 const ComponentWithPreload = () => {
-  const [showNested, setShowNested] = createSignal(false)
+	const [showNested, setShowNested] = createSignal(false);
 
-  return (
-	<div>
-	  <button
-        onMouseEnter={() => Nested.preload()}
-        onClick={() => setShowNested(true)}
-      >Preload Nested Component</button>
-      <Show when={showNested()}>
-	    <Nested />
-      </Show>
-	</div>
-  )
-}
+	return (
+		<div>
+			<button
+				onMouseEnter={() => Nested.preload()}
+				onClick={() => setShowNested(true)}
+			>
+				Preload Nested Component
+			</button>
+			<Show when={showNested()}>
+				<Nested />
+			</Show>
+		</div>
+	);
+};
 ```
 
 ## See also

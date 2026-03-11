@@ -2,6 +2,9 @@ import { defineConfig } from "@solidjs/start/config";
 
 import { createWithSolidBase, defineTheme } from "@kobalte/solidbase/config";
 
+import type { ViteDevServer } from "vite";
+import type { IncomingMessage, ServerResponse } from "node:http";
+
 import tree from "./.solid/tree";
 import entries from "./.solid/flat-entries";
 import solidstartEntries from "./.solid/solid-start-flat-entries";
@@ -168,8 +171,8 @@ function serveRawMarkdown() {
 
 	return {
 		name: "serve-raw-markdown",
-		configureServer(server: any) {
-			server.middlewares.use((req: any, res: any, next: any) => {
+		configureServer(server: ViteDevServer) {
+			server.middlewares.use((req: IncomingMessage, res: ServerResponse, next: () => void) => {
 				if (!req.url?.endsWith(".md")) return next();
 				const mdxPath = join(srcDir, req.url.replace(/\.md$/, ".mdx"));
 				try {

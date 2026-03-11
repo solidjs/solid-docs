@@ -58,7 +58,7 @@ export default defineConfig(
 				},
 			},
 			vite: {
-				plugins: [docsData(), heroCodeSnippet()],
+				plugins: [docsData(), heroCodeSnippet(), serveRawMarkdown()],
 			},
 		},
 		{
@@ -145,7 +145,52 @@ export default defineConfig(
 );
 
 import { readFile } from "node:fs/promises";
+import { readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
+import { join, relative, dirname, resolve } from "node:path";
 import { codeToHtml } from "shiki";
+
+function serveRawMarkdown() {
+	const srcDir = resolve("src/routes");
+	const publicDir = resolve("public");
+
+	function findMdxFiles(dir: string): string[] {
+		const results: string[] = [];
+		for (const entry of readdirSync(dir, { withFileTypes: true })) {
+			const fullPath = join(dir, entry.name);
+			if (entry.isDirectory()) {
+				results.push(...findMdxFiles(fullPath));
+			} else if (entry.name.endsWith(".mdx")) {
+				results.push(fullPath);
+			}
+		}
+		return results;
+	}
+
+	return {
+		name: "serve-raw-markdown",
+		configureServer(server: any) {
+			server.middlewares.use((req: any, res: any, next: any) => {
+				if (!req.url?.endsWith(".md")) return next();
+				const mdxPath = join(srcDir, req.url.replace(/\.md$/, ".mdx"));
+				try {
+					const content = readFileSync(mdxPath, "utf-8");
+					res.setHeader("Content-Type", "text/plain; charset=utf-8");
+					res.end(content);
+				} catch {
+					next();
+				}
+			});
+		},
+		buildStart() {
+			for (const file of findMdxFiles(srcDir)) {
+				const rel = relative(srcDir, file).replace(/\.mdx$/, ".md");
+				const dest = join(publicDir, rel);
+				mkdirSync(dirname(dest), { recursive: true });
+				writeFileSync(dest, readFileSync(file, "utf-8"));
+			}
+		},
+	};
+}
 
 function heroCodeSnippet() {
 	const virtualModuleId = "solid:hero-code-snippet";

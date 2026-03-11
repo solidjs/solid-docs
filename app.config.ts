@@ -172,17 +172,19 @@ function serveRawMarkdown() {
 	return {
 		name: "serve-raw-markdown",
 		configureServer(server: ViteDevServer) {
-			server.middlewares.use((req: IncomingMessage, res: ServerResponse, next: () => void) => {
-				if (!req.url?.endsWith(".md")) return next();
-				const mdxPath = join(srcDir, req.url.replace(/\.md$/, ".mdx"));
-				try {
-					const content = readFileSync(mdxPath, "utf-8");
-					res.setHeader("Content-Type", "text/plain; charset=utf-8");
-					res.end(content);
-				} catch {
-					next();
+			server.middlewares.use(
+				(req: IncomingMessage, res: ServerResponse, next: () => void) => {
+					if (!req.url?.endsWith(".md")) return next();
+					const mdxPath = join(srcDir, req.url.replace(/\.md$/, ".mdx"));
+					try {
+						const content = readFileSync(mdxPath, "utf-8");
+						res.setHeader("Content-Type", "text/plain; charset=utf-8");
+						res.end(content);
+					} catch {
+						next();
+					}
 				}
-			});
+			);
 		},
 		buildStart() {
 			for (const file of findMdxFiles(srcDir)) {

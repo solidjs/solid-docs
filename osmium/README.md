@@ -21,6 +21,6 @@ export default defineConfig({
   }),
   plugins: [solidBase.plugin({ ... })],
 })
-````
+```
 
 More information in the [SolidBase docs for consuming a theme.](https://solidbase.dev/guide/customization/custom-themes#consuming-a-theme)

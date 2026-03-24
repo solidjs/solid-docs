@@ -39,7 +39,7 @@ export const Hero: Component = () => {
 				<div class="mx-auto grid max-w-2xl grid-cols-1 items-center gap-x-8 gap-y-16 px-4 lg:max-w-8xl lg:grid-cols-2 lg:px-8 xl:gap-x-16 xl:px-12">
 					<div class="relative md:text-center lg:text-left">
 						<div class="relative">
-							<h2 class="inline bg-gradient-to-r from-blue-700 via-slate-800 to-blue-700 bg-clip-text text-5xl font-bold tracking-tight text-transparent dark:from-indigo-200 dark:via-blue-400 dark:to-indigo-200">
+							<h2 class="inline bg-linear-to-r from-blue-700 via-slate-800 to-blue-700 bg-clip-text text-5xl font-bold tracking-tight text-transparent dark:from-indigo-200 dark:via-blue-400 dark:to-indigo-200">
 								<Switch fallback={i18n.t("hero.title")}>
 									<Match when={isStart()?.path}>
 										Solid<span class="font-thin">Start</span>
@@ -74,15 +74,15 @@ export const Hero: Component = () => {
 					</div>
 					<div class="relative lg:static xl:pl-10">
 						<div class="relative">
-							<div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-blue-500 via-blue-500/70 to-blue-300 opacity-10 blur-lg dark:bg-white dark:from-blue-300 dark:via-blue-300/70" />
-							<div class="absolute inset-0 rounded-2xl bg-gradient-to-tr from-blue-300 via-blue-300/70 to-blue-300 opacity-10" />
+							<div class="absolute inset-0 rounded-2xl bg-linear-to-tr from-blue-500 via-blue-500/70 to-blue-300 opacity-10 blur-lg dark:bg-white dark:from-blue-300 dark:via-blue-300/70" />
+							<div class="absolute inset-0 rounded-2xl bg-linear-to-tr from-blue-300 via-blue-300/70 to-blue-300 opacity-10" />
 							<div class="relative rounded-2xl bg-[#0A101F]/80 ring-1 ring-blue-200/10 backdrop-blur">
-								<div class="absolute -top-px left-20 right-11 h-px bg-gradient-to-r from-blue-300/0 via-blue-300/70 to-blue-300/0" />
-								<div class="absolute -bottom-px left-11 right-20 h-px bg-gradient-to-r from-blue-400/0 via-blue-800 to-blue-400/0 dark:via-blue-400" />
+								<div class="absolute -top-px left-20 right-11 h-px bg-linear-to-r from-blue-300/0 via-blue-300/70 to-blue-300/0" />
+								<div class="absolute -bottom-px left-11 right-20 h-px bg-linear-to-r from-blue-400/0 via-blue-800 to-blue-400/0 dark:via-blue-400" />
 								<div class="pl-4 pt-4">
 									<TrafficLightsIcon class="h-2.5 w-auto stroke-slate-500/30" />
 									<div class="mt-4 flex space-x-2 text-xs">
-										<div class="flex h-6 rounded-full border border-blue-400 bg-gradient-to-r from-blue-400/30 via-blue-400 to-blue-400/30 p-px font-semibold text-blue-300 shadow-sm dark:border-none">
+										<div class="flex h-6 rounded-full border border-blue-400 bg-linear-to-r from-blue-400/30 via-blue-400 to-blue-400/30 p-px font-semibold text-blue-300 shadow-sm dark:border-none">
 											<div class="flex items-center rounded-full bg-slate-800 px-2.5">
 												Counter.jsx
 											</div>

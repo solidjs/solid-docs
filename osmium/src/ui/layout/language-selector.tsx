@@ -34,7 +34,7 @@ export const LanguageSelector: Component = () => {
 						)}
 					>
 						<Select.Trigger
-							class="flex h-6 w-[4.5rem] items-center rounded-lg text-left shadow-md shadow-black/5 ring-1 ring-black/10 dark:bg-slate-800 dark:ring-inset dark:ring-white/60"
+							class="flex h-6 w-18 items-center rounded-lg text-left shadow-md shadow-black/5 ring-1 ring-black/10 dark:bg-slate-800 dark:ring-inset dark:ring-white/60"
 							aria-label="change locale"
 						>
 							<Icon

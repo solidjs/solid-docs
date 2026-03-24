@@ -227,7 +227,7 @@ export function Search() {
 								<p class="mt-2 text-center text-sm">
 									No results for "<span class="font-bold">{searchTerm()}</span>"
 								</p>
-								<p class="!mb-3 !mt-4 text-center text-sm">
+								<p class="mb-3! mt-4! text-center text-sm">
 									Believe this query should return results?{" "}
 									<A
 										href={`https://github.com/solidjs/solid-docs/issues/new?title=[Search]+Missing+results+for+query+%22${encodeURIComponent(searchTerm())}%22`}

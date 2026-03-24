@@ -80,7 +80,7 @@ export const EraserLink = (
 				aria-hidden={true}
 				tabIndex="-1"
 				href={props.href}
-				class="font-semibold text-blue-700 no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,theme(colors.blue.400))] hover:[--tw-prose-underline-size:4px] dark:text-blue-400 dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.blue.800))] dark:[--tw-prose-background:theme(colors.slate.900)] dark:hover:[--tw-prose-underline-size:6px]"
+				class="font-semibold text-blue-700 no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,var(--color-blue-400))] hover:[--tw-prose-underline-size:4px] dark:text-blue-400 dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,var(--color-blue-800))] dark:[--tw-prose-background:var(--color-slate-900)] dark:hover:[--tw-prose-underline-size:6px]"
 				rel="noopener noreferrer"
 			>
 				View on Eraser
@@ -94,7 +94,7 @@ export const spa = () => <></>;
 export const h1 = (props: ParentProps) => (
 	<h1
 		{...props}
-		class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+		class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-34"
 	>
 		{props.children}
 	</h1>
@@ -105,7 +105,7 @@ export const h2 = (props: ParentProps) => {
 			<hr class="my-8 border-slate-400 dark:prose-hr:border-slate-800" />
 			<h2
 				{...props}
-				class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+				class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-34"
 			>
 				{props.children}
 			</h2>
@@ -116,7 +116,7 @@ export const h3 = (props: ParentProps) => {
 	return (
 		<h3
 			{...props}
-			class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+			class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-34"
 		>
 			{props.children}
 		</h3>
@@ -126,7 +126,7 @@ export const h4 = (props: ParentProps) => {
 	return (
 		<h4
 			{...props}
-			class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+			class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-34"
 		>
 			{props.children}
 		</h4>
@@ -136,7 +136,7 @@ export const h5 = (props: ParentProps) => {
 	return (
 		<h5
 			{...props}
-			class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+			class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-34"
 		>
 			{props.children}
 		</h5>
@@ -145,7 +145,7 @@ export const h5 = (props: ParentProps) => {
 export const h6 = (props: ParentProps) => (
 	<h6
 		{...props}
-		class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-[8.5rem]"
+		class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-34"
 	>
 		{props.children}
 	</h6>
@@ -180,7 +180,7 @@ export const a = (props: ParentProps & { href: string }) => {
 	} else {
 		return (
 			<a
-				class="font-semibold text-blue-800 no-underline shadow-[inset_0_calc(-1*(var(--tw-prose-underline-size,0.5px)+2px))_0_0_var(--tw-prose-underline,theme(colors.blue.400))] [--tw-prose-background:theme(colors.slate.50)] hover:[--tw-prose-underline-size:4px] dark:text-blue-300 dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.blue.500))] dark:[--tw-prose-background:theme(colors.slate.900)] dark:hover:[--tw-prose-underline-size:6px]"
+				class="font-semibold text-blue-800 no-underline shadow-[inset_0_calc(-1*(var(--tw-prose-underline-size,0.5px)+2px))_0_0_var(--tw-prose-underline,var(--color-blue-400))] [--tw-prose-background:var(--color-slate-50)] hover:[--tw-prose-underline-size:4px] dark:text-blue-300 dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,var(--color-blue-500))] dark:[--tw-prose-background:var(--color-slate-900)] dark:hover:[--tw-prose-underline-size:6px]"
 				{...rest}
 			>
 				{resolved()}
@@ -216,7 +216,7 @@ export const pre = (props: ParentProps) => {
 	return (
 		<pre
 			{...props}
-			class="custom-scrollbar [&>code]:bg-white [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal dark:[&>code]:!bg-slate-950"
+			class="custom-scrollbar [&>code]:bg-white [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal dark:[&>code]:bg-slate-950!"
 		>
 			{props.children}
 		</pre>
@@ -225,7 +225,7 @@ export const pre = (props: ParentProps) => {
 export const code = (props: ParentProps) => {
 	return (
 		<code
-			class="not-prose inline-flex rounded-lg bg-blue-200 px-1 py-0.5 !font-mono text-[0.8em] font-semibold leading-snug text-slate-900 dark:bg-slate-600/60 dark:text-white"
+			class="not-prose inline-flex rounded-lg bg-blue-200 px-1 py-0.5 font-mono! text-[0.8em] font-semibold leading-snug text-slate-900 dark:bg-slate-600/60 dark:text-white"
 			{...props}
 		>
 			{props.children}

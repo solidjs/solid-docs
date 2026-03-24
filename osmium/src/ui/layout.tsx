@@ -20,9 +20,9 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 				<Show when={!props.isError}>
 					<div class="hidden md:relative lg:block lg:flex-none">
 						<div class="absolute inset-y-0 right-0 w-[50vw] dark:hidden" />
-						<div class="absolute bottom-0 right-0 top-16 hidden h-12 w-px bg-gradient-to-t from-slate-800 dark:block" />
+						<div class="absolute bottom-0 right-0 top-16 hidden h-12 w-px bg-linear-to-t from-slate-800 dark:block" />
 						<div class="absolute bottom-0 right-0 top-28 hidden w-px bg-slate-800 dark:block" />
-						<div class="sticky top-[4.75rem] h-[calc(100vh-7rem)] w-64 pl-0.5 pr-2 xl:w-72">
+						<div class="sticky top-19 h-[calc(100vh-7rem)] w-64 pl-0.5 pr-2 xl:w-72">
 							<MainNavigation />
 						</div>
 					</div>
@@ -37,7 +37,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 				</main>
 				<Show when={!props.isError}>
 					<div class="prose prose-slate hidden w-56 shrink-0 pr-4 dark:prose-invert xl:block 2xl:w-72 dark:text-slate-300">
-						<div class="custom-scrollbar sticky top-[4.75rem] h-[calc(100vh-7rem)] overflow-y-auto">
+						<div class="custom-scrollbar sticky top-19 h-[calc(100vh-7rem)] overflow-y-auto">
 							<SidePanel />
 						</div>
 					</div>

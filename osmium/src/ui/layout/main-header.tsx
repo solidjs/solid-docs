@@ -87,7 +87,7 @@ export function MainHeader(props: MainHeaderProps) {
 				"dark:bg-transparent bg-transparent": !isScrolled(),
 			}}
 		>
-			<div class="mx-auto grid w-full max-w-8xl grid-cols-2 items-center px-4 py-2 lg:grid-cols-[1fr,2fr,1fr]">
+			<div class="mx-auto grid w-full max-w-8xl grid-cols-2 items-center px-4 py-2 lg:grid-cols-[1fr_2fr_1fr]">
 				<div class="flex justify-start gap-2">
 					<div class="flex lg:hidden">
 						<MobileNavigation />

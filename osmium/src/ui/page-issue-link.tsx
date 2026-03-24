@@ -30,7 +30,7 @@ export const PageIssueLink: Component = () => {
 
 	return (
 		<a
-			class="flex no-underline hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-300"
+			class="not-prose flex no-underline hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-300"
 			href={reportLink()}
 			target="_blank"
 		>

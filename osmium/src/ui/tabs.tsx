@@ -50,6 +50,6 @@ export type TabPanelProps = PolymorphicProps<
 
 export function TabPanel(props: TabPanelProps) {
 	return (
-		<KobalteTabs.Content {...props} class="hidden data-[selected]:block" />
+		<KobalteTabs.Content {...props} class="hidden ui-selected:block" />
 	);
 }

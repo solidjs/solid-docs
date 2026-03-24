@@ -8,8 +8,6 @@ import { useRouteConfig } from "./utils";
 import { OsmiumThemeStateProvider } from "./context";
 import { ParentProps } from "solid-js";
 
-import "./index.css";
-
 export default function (props: ParentProps) {
 	const config = useRouteConfig();
 	useThemeListener();

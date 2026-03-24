@@ -1,5 +1,5 @@
 import { defineTheme } from "@kobalte/solidbase/config";
-import { SidebarConfig } from "@kobalte/solidbase/config/sidebar";
+import type { SidebarConfig } from "@kobalte/solidbase/config/sidebar";
 import { fileURLToPath } from "node:url";
 
 export interface OsmiumThemeConfig {
@@ -27,13 +27,13 @@ const allFonts = {
 	geist: {
 		cssPath: import.meta.resolve("@fontsource-variable/geist"),
 		preloadFontPath: import.meta
-			.resolve("@fontsource-variable/inter/files/geist-latin-wght-normal.woff2"),
+			.resolve("@fontsource-variable/geist/files/geist-latin-wght-normal.woff2"),
 		fontType: "woff2",
 	},
 	geistMono: {
 		cssPath: import.meta.resolve("@fontsource-variable/geist-mono"),
 		preloadFontPath: import.meta
-			.resolve("@fontsource-variable/jetbrains-mono/files/geist-mono-latin-wght-normal.woff2"),
+			.resolve("@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2"),
 		fontType: "woff2",
 	},
 } satisfies Record<string, Font>;

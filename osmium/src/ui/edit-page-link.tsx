@@ -3,10 +3,7 @@ import { Icon } from "solid-heroicons";
 import { pencilSquare } from "solid-heroicons/outline";
 import { useCurrentPageData } from "@kobalte/solidbase/client";
 
-import { useI18n } from "~/i18n/i18n-context";
-
 export const EditPageLink: Component = () => {
-	const i18n = useI18n();
 	const data = useCurrentPageData();
 
 	return (
@@ -18,7 +15,7 @@ export const EditPageLink: Component = () => {
 					target="_blank"
 				>
 					<Icon aria-hidden="true" class="mr-1 w-[16px]" path={pencilSquare} />
-					{i18n.t("contribute.edit")}
+					Edit this page
 				</a>
 			)}
 		</Show>

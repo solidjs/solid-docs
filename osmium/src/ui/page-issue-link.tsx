@@ -3,7 +3,7 @@ import { Icon } from "solid-heroicons";
 import { exclamationTriangle } from "solid-heroicons/outline";
 import { useLocation } from "@solidjs/router";
 import { useCurrentPageData } from "@kobalte/solidbase/client";
-import { useRouteConfig } from "~/utils";
+import { useRouteConfig } from "../utils";
 
 export const PageIssueLink: Component = () => {
 	const location = useLocation();

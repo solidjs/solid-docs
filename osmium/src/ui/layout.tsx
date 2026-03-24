@@ -1,11 +1,11 @@
 import { ParentComponent, Show } from "solid-js";
 
-import { MainNavigation } from "~/ui/layout/main-navigation";
+import { MainNavigation } from "./layout/main-navigation";
 import { MainHeader } from "./layout/main-header";
 import { Hero } from "./layout/hero";
 import { DocsLayout } from "./docs-layout";
 import { SidePanel } from "./layout/side-panel";
-import { useOsmiumThemeFrontmatter } from "~/frontmatter";
+import { useOsmiumThemeFrontmatter } from "../frontmatter";
 
 export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 	const frontmatter = useOsmiumThemeFrontmatter();

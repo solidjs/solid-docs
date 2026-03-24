@@ -1,4 +1,4 @@
-import { type PolymorphicProps } from "@kobalte/core";
+import type { PolymorphicProps } from "@kobalte/core";
 import {
 	Tabs as KobalteTabs,
 	type TabsRootProps as KobalteTabsRootProps,

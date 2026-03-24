@@ -1,4 +1,4 @@
-import { useCurrentProject } from "~/utils";
+import { useCurrentProject } from "../utils";
 
 export function ProjectLogo(props: { class?: string }) {
 	const project = useCurrentProject();

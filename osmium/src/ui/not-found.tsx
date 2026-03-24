@@ -1,7 +1,7 @@
 import { Title } from "@solidjs/meta";
 import { Layout } from "./layout";
 import { HttpStatusCode } from "@solidjs/start";
-import { useCurrentProject } from "~/utils";
+import { useCurrentProject } from "../utils";
 
 export function NotFound() {
 	const project = useCurrentProject();

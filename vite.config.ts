@@ -8,6 +8,9 @@ import { osmium } from "solidbase-osmium";
 const solidBase = createSolidBase(osmium);
 
 export default defineConfig({
+	resolve: {
+		dedupe: ["@solidjs/start", "@kobalte/solidbase"], // TODO: Remove once start vite 8 releases (mismatch caused by preview release)
+	},
 	plugins: [
 		solidBase.plugin({
 			title: "SolidJS Documentation",

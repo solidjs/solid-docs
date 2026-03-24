@@ -1,18 +1,27 @@
-import { RouteSectionProps } from "@solidjs/router";
 import { ErrorBoundary } from "solid-js";
 
-import { Layout } from "~/ui/layout";
-import { NotFound } from "~/ui/not-found";
-import { useThemeListener } from "@kobalte/solidbase/client";
+import { Layout } from "./ui/layout";
+import { NotFound } from "./ui/not-found";
+import { SidebarProvider, useThemeListener } from "@kobalte/solidbase/client";
 import { usePace } from "@kobalte/solidbase/default-theme/pace.js";
+import { useRouteConfig } from "./utils";
+import { OsmiumThemeStateProvider } from "./context";
+import { ParentProps } from "solid-js";
 
-export default function (props: RouteSectionProps) {
+import "./index.css";
+
+export default function (props: ParentProps) {
+	const config = useRouteConfig();
 	useThemeListener();
 	usePace();
 
 	return (
-		<ErrorBoundary fallback={() => <NotFound />}>
-			<Layout>{props.children}</Layout>
-		</ErrorBoundary>
+		<OsmiumThemeStateProvider>
+			<SidebarProvider config={config().themeConfig?.sidebar}>
+				<ErrorBoundary fallback={() => <NotFound />}>
+					<Layout>{props.children}</Layout>
+				</ErrorBoundary>
+			</SidebarProvider>
+		</OsmiumThemeStateProvider>
 	);
 }

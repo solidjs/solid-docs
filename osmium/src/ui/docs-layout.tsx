@@ -1,9 +1,9 @@
 import { Show, onMount, JSX } from "solid-js";
 import { useLocation } from "@solidjs/router";
-import { Pagination } from "~/ui/pagination";
+import { Pagination } from "./pagination";
 import { EditPageLink } from "./edit-page-link";
 import { PageIssueLink } from "./page-issue-link";
-import { useOsmiumThemeFrontmatter } from "~/frontmatter";
+import { useOsmiumThemeFrontmatter } from "../frontmatter";
 
 interface DocsLayoutProps {
 	children: JSX.Element;

@@ -10,13 +10,13 @@ import {
 import { isServer } from "solid-js/web";
 
 import { clientOnly } from "@solidjs/start";
-import { Callout } from "~/ui/callout";
-import { Tabs, TabList, TabPanel, Tab } from "~/ui/tabs";
+import { Callout } from "./ui/callout";
+import { Tabs, TabList, TabPanel, Tab } from "./ui/tabs";
 
-export { EditPageLink } from "~/ui/edit-page-link";
-export { PageIssueLink } from "~/ui/page-issue-link";
-export { Callout } from "~/ui/callout";
-export { QuickLinks } from "~/ui/quick-links";
+export { EditPageLink } from "./ui/edit-page-link";
+export { PageIssueLink } from "./ui/page-issue-link";
+export { Callout } from "./ui/callout";
+export { QuickLinks } from "./ui/quick-links";
 
 const EraserLinkImpl = clientOnly(() => import("./ui/eraser-link"));
 

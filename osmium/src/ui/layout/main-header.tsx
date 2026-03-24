@@ -9,16 +9,16 @@ import {
 } from "solid-js";
 import { isServer } from "solid-js/web";
 
-import { ProjectLogo, GitHubIcon, DiscordIcon } from "~/ui/logo";
+import { ProjectLogo, GitHubIcon, DiscordIcon } from "../logo";
 import { ThemeSelector } from "./theme-selector";
 import { MobileNavigation } from "./mobile-navigation";
 import { useMatch } from "@solidjs/router";
 import { LanguageSelector } from "./language-selector";
 
 import { clientOnly } from "@solidjs/start";
-import { useCurrentProject, useRouteConfig } from "~/utils";
+import { useCurrentProject, useRouteConfig } from "../../utils";
 import { useLocale } from "@kobalte/solidbase/client";
-import { useOsmiumThemeState } from "~/context";
+import { useOsmiumThemeState } from "../../context";
 
 const ClientSearch = clientOnly(() =>
 	import("../search").then((m) => ({ default: m.Search }))

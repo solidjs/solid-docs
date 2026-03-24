@@ -3,7 +3,7 @@ import { Icon } from "solid-heroicons";
 import { language } from "solid-heroicons/solid";
 import { ResolvedLocale, useLocale } from "@kobalte/solidbase/client";
 import { Select } from "@kobalte/core/select";
-import { OsmiumThemeConfig } from "~/index";
+import { OsmiumThemeConfig } from "../..";
 
 export const LanguageSelector: Component = () => {
 	const { locales, currentLocale, setLocale } = useLocale();

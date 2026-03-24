@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import { nitro } from "nitro/vite";
 import { solidStart } from "@solidjs/start/config";
+import tailwindcss from "@tailwindcss/vite";
 
 import { createSolidBase } from "@kobalte/solidbase/config";
 import { osmium } from "solidbase-osmium";
@@ -12,6 +13,7 @@ export default defineConfig({
 		dedupe: ["@solidjs/start", "@kobalte/solidbase"], // TODO: Remove once start vite 8 releases (mismatch caused by preview release)
 	},
 	plugins: [
+		tailwindcss(),
 		solidBase.plugin({
 			title: "SolidJS Documentation",
 			description:

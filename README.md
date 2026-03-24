@@ -4,7 +4,7 @@
 
 Welcome to Solid's documentation!
 
-This is the repo for [﻿docs.solidjs.com](https://docs.solidjs.com/). This repo
+This is the repo for [docs.solidjs.com](https://docs.solidjs.com/). This repo
 contains all the source code that we use to build our docs.
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/solidjs/solid-docs-next)
@@ -37,9 +37,9 @@ Have you noticed something is missing, confusing, or is wrong in our
 documentation?
 
 Check to see if it has
-[﻿already been mentioned ](https://github.com/solidjs/solid-docs-next/issues)
+[﻿already been mentioned ](https://github.com/solidjs/solid-docs/issues)
 and, if not,
-[﻿create an issue](https://github.com/solidjs/solid-docs-next/issues/new/choose)
+[﻿create an issue](https://github.com/solidjs/solid-docs/issues/new/choose)
 to bring it to our attention!
 
 ## Share an idea
@@ -51,7 +51,7 @@ Discussion threads are where you can offer feedback on things that might not be
 problems that need addressing, but are ideas to be explored.
 
 Join us in the
-[﻿Discussions section](https://github.com/solidjs/solid-docs-next/discussions/280)
+[﻿Discussions section](https://github.com/solidjs/solid-docs/discussions/280)
 where we can brainstorm these ideas, ask questions, and share goals!
 
 ## Suggest a fix or contribute
@@ -62,19 +62,19 @@ If you can see what the problem is, and you know how to fix it, you can make a
 PR (pull request) with the change and contribute to the docs repo yourself.
 
 If you're looking to make a larger contribution, please see our
-[﻿CONTRIBUTING.md](https://github.com/solidjs/solid-docs-next/blob/main/CONTRIBUTING.md)
+[﻿CONTRIBUTING.md](https://github.com/solidjs/solid-docs/blob/main/CONTRIBUTING.md)
 first!
 
 ## Running the Site Locally
 
 At the moment, we recommend running the site locally through either
-[﻿CodeSandbox](https://codesandbox.io/p/github/solidjs/solid-docs-next/),
-[﻿Gitpod](https://gitpod.io/#https://github.com/solidjs/solid-docs-next), or
-[﻿StackBlitz](https://stackblitz.com/github/solidjs/solid-docs-next). These are
+[﻿CodeSandbox](https://codesandbox.io/p/github/solidjs/solid-docs/),
+[﻿Gitpod](https://gitpod.io/#https://github.com/solidjs/solid-docs), or
+[﻿StackBlitz](https://stackblitz.com/github/solidjs/solid-docs). These are
 the quickest and easiest way to browse and edit the project files and run the
 site locally.
 
-The app uses [pnpm](https://pnpm.io) as the package manager and it runs on Node.js `v18+`.
+The app uses [pnpm](https://pnpm.io) as the package manager and it runs on Node.js `v22+`.
 
 Install dependencies:
 
@@ -90,9 +90,7 @@ pnpm dev
 
 This will start your the app at [localhost:3000](http://localhost:3000) or the next available port.
 
-### Collections and virtual modules
+### Framework and Theme
 
-The builds an [Astro](https://docs.astro.build/en/guides/content-collections/) inspired collection navigation, it will bring all routes and generate a couple of files at `/.solid`.
-These files are exposed to your app via [Vite virtual modules](https://vitejs.dev/guide/api-plugin#virtual-modules-convention). This task is perform via our `sync` script (`pnpm sync`), ran before every build.
-
-If changes are made to the navigation (new entry, or repositioning entry), it is necessary to restart the server for changes to take effect.
+The docs are built on [SolidBase](https://solidbase.dev) and uses the [Osmium Theme](./osmium).
+This repo should only contain content as mdx files, features should be implemented upstream and UI changes in the theme.

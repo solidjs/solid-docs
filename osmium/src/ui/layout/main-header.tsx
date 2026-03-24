@@ -2,7 +2,6 @@ import {
 	ComponentProps,
 	For,
 	Show,
-	createMemo,
 	createSignal,
 	onCleanup,
 	onMount,
@@ -31,7 +30,7 @@ interface NavLinkProps extends ComponentProps<"a"> {
 function NavLink(props: NavLinkProps) {
 	return (
 		<a
-			class="duration-250 relative overflow-hidden border-b-2 px-2 text-slate-900 drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] transition-all dark:text-slate-200"
+			class="relative overflow-hidden border-b-2 px-2 text-slate-900 drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] transition-all duration-250 dark:text-slate-200"
 			classList={{
 				"border-b-blue-500 dark:bottom-b-blue-500": props.active,
 				"border-transparent": !props.active,
@@ -87,7 +86,7 @@ export function MainHeader(props: MainHeaderProps) {
 				"dark:bg-transparent bg-transparent": !isScrolled(),
 			}}
 		>
-			<div class="mx-auto grid w-full max-w-8xl grid-cols-2 items-center px-4 py-2 lg:grid-cols-[1fr_2fr_1fr]">
+			<div class="max-w-8xl mx-auto grid w-full grid-cols-2 items-center px-4 py-2 lg:grid-cols-[1fr_2fr_1fr]">
 				<div class="flex justify-start gap-2">
 					<div class="flex lg:hidden">
 						<MobileNavigation />
@@ -97,24 +96,22 @@ export function MainHeader(props: MainHeaderProps) {
 					</a>
 				</div>
 
-				<Show when={config().themeConfig?.nav}>
-					{(nav) => (
-						<For each={nav()}>
-							{(item) => {
+				<Show when={config().themeConfig?.projects}>
+					{(projects) => (
+						<For each={projects()}>
+							{(p) => {
 								const match = useMatch(() =>
-									locale.applyPathPrefix(
-										`${item.activeMatch ?? item.link}/*rest`
-									)
+									locale.applyPathPrefix(`${p.path}/*rest`)
 								);
 
 								return (
 									<li>
 										<NavLink
-											href={locale.applyPathPrefix(item.link)}
+											href={locale.applyPathPrefix(p.path)}
 											data-matched={match() !== undefined ? true : undefined}
 											onClick={() => setNavOpen(false)}
 										>
-											{item.text}
+											{p.name}
 										</NavLink>
 									</li>
 								);

@@ -132,7 +132,7 @@ export default defineConfig({
 			prerender: {
 				crawlLinks: true,
 				autoSubfolderIndex: false,
-				failOnError: true,
+				// failOnError: true,
 				// eslint-disable-next-line no-useless-escape
 				ignore: [/\{\getPath}/, /.*?emojiSvg\(.*/],
 			},

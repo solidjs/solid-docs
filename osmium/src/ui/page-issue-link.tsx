@@ -1,31 +1,37 @@
 import { Component, createMemo } from "solid-js";
 import { Icon } from "solid-heroicons";
 import { exclamationTriangle } from "solid-heroicons/outline";
-import { useI18n } from "~/i18n/i18n-context";
-import { getEntryFileName } from "~/i18n/helpers";
 import { useLocation } from "@solidjs/router";
+import { useCurrentPageData } from "@kobalte/solidbase/client";
+import { useRouteConfig } from "~/utils";
 
 export const PageIssueLink: Component = () => {
-	const i18n = useI18n();
 	const location = useLocation();
+	const config = useRouteConfig();
+	const pageData = useCurrentPageData();
 
-	const srcPath = createMemo(() => {
-		return (
-			"https://github.com/solidjs/solid-docs-next/issues/new" +
-			"?assignees=ladybluenotes" +
-			"&labels=improve+documentation%2Cpending+review" +
-			"&projects=" +
-			"&template=CONTENT.yml" +
-			"&title=[Content]:" +
-			`&subject=${getEntryFileName()}` +
-			`&page=https://docs.solidjs.com${location.pathname}`
-		);
+	const mdPath = createMemo(() => {
+		const configPath = config().editPath;
+		const editLink = pageData()?.editLink;
+		const template =
+			typeof configPath === "string" ? configPath : configPath?.(":path");
+		if (!template || !editLink) return "";
+		const [before, after] = template.split(":path");
+
+		return editLink.slice(before.length, editLink.length - after.length);
 	});
+
+	const reportLink = createMemo(
+		() =>
+			config()
+				.themeConfig?.reportPagePath?.replace(":path", mdPath)
+				.replace(":url", location.pathname) ?? ""
+	);
 
 	return (
 		<a
 			class="flex no-underline hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-300"
-			href={srcPath()}
+			href={reportLink()}
 			target="_blank"
 		>
 			<Icon
@@ -33,7 +39,7 @@ export const PageIssueLink: Component = () => {
 				class="mr-1 w-[16px]"
 				path={exclamationTriangle}
 			/>
-			{i18n.t("contribute.report")}
+			Report an issue with this page
 		</a>
 	);
 };

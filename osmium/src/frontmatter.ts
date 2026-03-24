@@ -34,6 +34,7 @@ export type RelativePageConfig =
 	  };
 
 interface OsmiumThemeBaseFrontmatter {
+	category?: string;
 	sidebar?: boolean;
 	footer?: boolean;
 	toc?: boolean;

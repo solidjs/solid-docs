@@ -1,7 +1,5 @@
 import { Icon } from "solid-heroicons";
 import { JSXElement, ParentComponent, Show } from "solid-js";
-import { A } from "~/ui/i18n-anchor";
-import { isExternalURL } from "~/i18n/helpers";
 
 import {
 	academicCap,
@@ -37,16 +35,12 @@ export const QuickLinks: ParentComponent<QuickLinksProps> = (props) => {
 					/>
 					<div class="pl-3 text-xl capitalize text-slate-900 no-underline dark:text-white">
 						<Show
-							when={isExternalURL(props.href)}
+							when={props.href.includes("://")}
 							fallback={
-								<A
-									href={props.href}
-									class="font-semibold no-underline"
-									addLocale
-								>
+								<a href={props.href} class="font-semibold no-underline">
 									<span class="absolute -inset-px rounded-xl" />
 									{props.title}
-								</A>
+								</a>
 							}
 						>
 							<a

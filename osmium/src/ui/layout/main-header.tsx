@@ -9,15 +9,14 @@ import {
 } from "solid-js";
 import { isServer } from "solid-js/web";
 
-import { Logo, GitHubIcon, DiscordIcon } from "~/ui/logo";
+import { ProjectLogo, GitHubIcon, DiscordIcon } from "~/ui/logo";
 import { ThemeSelector } from "./theme-selector";
 import { MobileNavigation } from "./mobile-navigation";
 import { useMatch } from "@solidjs/router";
 import { LanguageSelector } from "./language-selector";
 
 import { clientOnly } from "@solidjs/start";
-import { useProject } from "~/ui/use-project";
-import { useRouteConfig } from "~/utils";
+import { useCurrentProject, useRouteConfig } from "~/utils";
 import { useLocale } from "@kobalte/solidbase/client";
 import { useOsmiumThemeState } from "~/context";
 
@@ -56,19 +55,13 @@ interface MainHeaderProps {}
 
 export function MainHeader(props: MainHeaderProps) {
 	const [isScrolled, setIsScrolled] = createSignal(false);
-	const project = useProject();
 
 	const config = useRouteConfig();
 	const locale = useLocale();
 
-	const {
-		tocOpen,
-		setTocOpen,
-		setSidebarOpen,
-		frontmatter,
-		navOpen,
-		setNavOpen,
-	} = useOsmiumThemeState();
+	const project = useCurrentProject();
+
+	const { setNavOpen } = useOsmiumThemeState();
 
 	if (!isServer) {
 		const onScroll = () => {
@@ -85,19 +78,6 @@ export function MainHeader(props: MainHeaderProps) {
 		});
 	}
 
-	const homePageUrl = createMemo(() => {
-		switch (project()) {
-			case "solid-start":
-				return "/solid-start/";
-			case "solid-router":
-				return "/solid-router/";
-			case "solid-meta":
-				return "/solid-meta/";
-			default:
-				return "/";
-		}
-	});
-
 	return (
 		<header
 			class="sticky top-0 z-50 flex items-center justify-between bg-blue-50/80 shadow-md shadow-slate-900/5 backdrop-blur transition duration-500 dark:shadow-none"
@@ -112,8 +92,8 @@ export function MainHeader(props: MainHeaderProps) {
 					<div class="flex lg:hidden">
 						<MobileNavigation />
 					</div>
-					<a href={homePageUrl()} aria-label="Home page">
-						<Logo class="h-9" />
+					<a href={project()?.path} aria-label="Home page">
+						<ProjectLogo class="h-9" />
 					</a>
 				</div>
 
@@ -135,7 +115,7 @@ export function MainHeader(props: MainHeaderProps) {
 											onClick={() => setNavOpen(false)}
 										>
 											{item.text}
-										</NavLink>{" "}
+										</NavLink>
 									</li>
 								);
 							}}

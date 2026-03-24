@@ -9,7 +9,6 @@ import {
 } from "solid-js";
 import { isServer } from "solid-js/web";
 
-import { A } from "~/ui/i18n-anchor";
 import { clientOnly } from "@solidjs/start";
 import { Callout } from "~/ui/callout";
 import { Tabs, TabList, TabPanel, Tab } from "~/ui/tabs";
@@ -18,7 +17,6 @@ export { EditPageLink } from "~/ui/edit-page-link";
 export { PageIssueLink } from "~/ui/page-issue-link";
 export { Callout } from "~/ui/callout";
 export { QuickLinks } from "~/ui/quick-links";
-export { ImageLinks } from "~/ui/image-links";
 
 const EraserLinkImpl = clientOnly(() => import("./ui/eraser-link"));
 
@@ -172,23 +170,21 @@ export const a = (props: ParentProps & { href: string }) => {
 			resolvedArray[0].nodeName === "CODE")
 	) {
 		return (
-			<A
-				addLocale
+			<a
 				class="[&>code]:shadow-[0_0_0_1.5px_#2563eb] hover:[&>code]:shadow-[0_0_0_2px_#1e3a8a] dark:[&>code]:shadow-[0_0_0_1.5px_#38bdf8] dark:hover:[&>code]:shadow-[0_0_0_2px_#7dd3fc]"
 				{...rest}
 			>
 				{resolved()}
-			</A>
+			</a>
 		);
 	} else {
 		return (
-			<A
-				addLocale
+			<a
 				class="font-semibold text-blue-800 no-underline shadow-[inset_0_calc(-1*(var(--tw-prose-underline-size,0.5px)+2px))_0_0_var(--tw-prose-underline,theme(colors.blue.400))] [--tw-prose-background:theme(colors.slate.50)] hover:[--tw-prose-underline-size:4px] dark:text-blue-300 dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,theme(colors.blue.500))] dark:[--tw-prose-background:theme(colors.slate.900)] dark:hover:[--tw-prose-underline-size:6px]"
 				{...rest}
 			>
 				{resolved()}
-			</A>
+			</a>
 		);
 	}
 };
@@ -215,12 +211,7 @@ export const ol = (props: ParentProps) => (
 export const nav = (props: ParentProps) => (
 	<nav {...props}>{props.children}</nav>
 );
-export const TesterComponent = () => (
-	<p>
-		Remove This Now!!! If you see this it means that markdown custom components
-		does work
-	</p>
-);
+
 export const pre = (props: ParentProps) => {
 	return (
 		<pre
@@ -252,9 +243,6 @@ export const hr = (props: ParentProps) => {
 export const response = (props: ParentProps) => {
 	return <span>{props.children}</span>;
 };
-// export const void = (props: ParentProps) => {
-// 	return <span>{props.children}</span>;
-// }
 export const unknown = (props: ParentProps) => {
 	return <span>{props.children}</span>;
 };

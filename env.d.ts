@@ -16,13 +16,3 @@ declare namespace NodeJS {
 		readonly ORAMA_PRIVATE_API_KEY: string;
 	}
 }
-
-declare module "solid:collection" {
-	// eslint-disable-next-line
-	const component: any;
-	export default component;
-}
-
-declare module "solid:hero-code-snippet" {
-	export const highlightedCode: string;
-}

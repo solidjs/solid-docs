@@ -3,16 +3,23 @@ import { SidebarConfig } from "@kobalte/solidbase/config/sidebar";
 import { fileURLToPath } from "node:url";
 
 export interface OsmiumThemeConfig {
+	projects?: ProjectConfig[];
 	sidebar?: SidebarConfig;
 	nav?: Array<NavItem>;
+	reportPagePath?: string;
 	fonts?: { [K in keyof typeof allFonts]?: false } | false;
 }
 
-export type NavItem = {
+export interface ProjectConfig {
+	path: string;
+	name: string;
+}
+
+export interface NavItem {
 	text: string;
 	link: string;
 	activeMatch?: string;
-};
+}
 
 type Font = { cssPath: string; preloadFontPath: string; fontType: string };
 

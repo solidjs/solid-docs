@@ -1,10 +1,12 @@
-import { createSignal, For, Show, Suspense } from "solid-js";
-import { useBeforeLeave, useLocation, useMatch } from "@solidjs/router";
-import { Collapsible, Tabs } from "@kobalte/core";
+import { createEffect, createSignal, For, Show } from "solid-js";
+import { A, useBeforeLeave, useLocation, useMatch } from "@solidjs/router";
 import { Icon } from "solid-heroicons";
 import { chevronDown } from "solid-heroicons/solid";
 import { setIsOpen } from "./mobile-navigation";
 import { Dynamic } from "solid-js/web";
+import { SidebarItem, useSidebar } from "@kobalte/solidbase/client";
+import { Collapsible } from "@kobalte/core/collapsible";
+import { Tabs } from "@kobalte/core/tabs";
 
 interface Entry {
 	title: string;
@@ -69,7 +71,7 @@ function DirList(props: { list: Entry[]; sortAlphabeticaly?: boolean }) {
 										return Array.isArray(child.children) ? (
 											<>
 												<li>
-													<Collapsible.Root defaultOpen={true}>
+													<Collapsible defaultOpen={true}>
 														<Collapsible.Trigger class="group relative flex w-full justify-between pl-3.5 hover:cursor-pointer dark:text-slate-300">
 															<span class="font-semibold dark:text-slate-100">
 																{child.title}
@@ -91,7 +93,7 @@ function DirList(props: { list: Entry[]; sortAlphabeticaly?: boolean }) {
 																/>
 															</ul>
 														</Collapsible.Content>
-													</Collapsible.Root>
+													</Collapsible>
 												</li>
 											</>
 										) : (
@@ -110,6 +112,15 @@ function DirList(props: { list: Entry[]; sortAlphabeticaly?: boolean }) {
 	);
 }
 
+interface NavigationProps {
+	sidebar: { prefix: string; items: SidebarItem[] };
+}
+interface NavigationItemProps {
+	prefix: string;
+	item: SidebarItem;
+	depth?: number;
+}
+
 export function MainNavigation(props: MainNavigationProps) {
 	const isReference = useMatch(() => "/:project?/reference/*?", {
 		project: ["solid-router", "solid-meta", "solid-start"],
@@ -118,6 +129,10 @@ export function MainNavigation(props: MainNavigationProps) {
 	const initialTab = () => (isReference() ? "reference" : "learn");
 
 	const [selectedTab, setSelectedTab] = createSignal(initialTab());
+
+	const sidebar = useSidebar();
+
+	createEffect(() => console.log(sidebar()));
 
 	/**
 	 * Re-syncs the selected tab with the chosen route.
@@ -134,7 +149,7 @@ export function MainNavigation(props: MainNavigationProps) {
 
 	return (
 		<nav class="custom-scrollbar h-full overflow-y-auto pb-20 md:h-[calc(100vh-7rem)]">
-			<Tabs.Root value={selectedTab()}>
+			<Tabs value={selectedTab()}>
 				<Tabs.List class="sticky top-0 z-10 grid w-full grid-cols-2 md:bg-slate-50 md:dark:bg-slate-900">
 					<Tabs.Trigger
 						value="learn"
@@ -158,22 +173,25 @@ export function MainNavigation(props: MainNavigationProps) {
 				</Tabs.List>
 				<Tabs.Content value="learn" class="relative mt-5 w-full">
 					<Show
-						when={learn()}
-						fallback={<p class="text-white">{i18n.t("main.nav.no.routes")}</p>}
+						when={true}
+						fallback={<p class="text-white">No routes found</p>}
 					>
 						<ul role="list" class="space-y-3 px-4">
-							<DirList list={learn()} />
+							<DirList list={[]} />
 						</ul>
 					</Show>
 				</Tabs.Content>
 				<Tabs.Content value="reference" class="relative top-8 w-full">
-					<Show when={reference()} fallback={<p>No routes found</p>}>
+					<Show
+						when={true}
+						fallback={<p class="text-white">No routes found</p>}
+					>
 						<ul role="list" class="space-y-3 px-4">
-							<DirList list={reference()} />
+							<DirList list={[]} />
 						</ul>
 					</Show>
 				</Tabs.Content>
-			</Tabs.Root>
+			</Tabs>
 		</nav>
 	);
 }

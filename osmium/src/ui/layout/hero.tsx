@@ -1,8 +1,6 @@
-import { Component, Index, Match, Switch, createMemo } from "solid-js";
+import { Component, Match, Switch, createMemo } from "solid-js";
 import { ButtonLink } from "../button-link";
-import { snippetLines } from "./hero-code-snippet";
 import { useMatch } from "@solidjs/router";
-import { useI18n } from "~/i18n/i18n-context";
 import RenderedCode from "./hero-code-snippet";
 
 const TrafficLightsIcon: Component<{ class: string }> = (props) => {
@@ -20,6 +18,8 @@ export const Hero: Component = () => {
 	const isRouter = useMatch(() => "/solid-router/*");
 	const isMeta = useMatch(() => "/solid-meta/*");
 
+	const i18n = { t: (s: string) => s };
+
 	const buttonHref = createMemo(() => {
 		if (isStart()) {
 			return "solid-start/getting-started";
@@ -32,8 +32,6 @@ export const Hero: Component = () => {
 		}
 		return "/quick-start";
 	});
-
-	const i18n = useI18n();
 
 	return (
 		<div class="mb-10 overflow-hidden border border-sky-200 bg-sky-100/80 dark:border-none dark:bg-slate-900">
@@ -92,19 +90,7 @@ export const Hero: Component = () => {
 									</div>
 									<div class="mt-6 flex items-start px-1 text-sm">
 										<div
-											aria-hidden="true"
-											class="select-none border-r border-slate-300/5 pb-6 pr-4 font-mono text-slate-300"
-										>
-											<Index each={snippetLines}>
-												{(_, index) => (
-													<pre>{(index + 1).toString().padStart(2, "0")}</pre>
-												)}
-											</Index>
-										</div>
-										<div
-											class={`flex overflow-x-auto px-4 min-h-[${
-												snippetLines.length + 5
-											}em] custom-scrollbar text-white`}
+											class={`custom-scrollbar flex min-h-[10em] overflow-x-auto px-4 text-white`}
 										>
 											<RenderedCode />
 										</div>

@@ -1,4 +1,3 @@
-import { A } from "~/ui/i18n-anchor";
 import { Show, Suspense } from "solid-js";
 import { usePrevNext } from "@kobalte/solidbase/client";
 import { RelativePageConfig, useOsmiumThemeFrontmatter } from "~/frontmatter";
@@ -30,12 +29,12 @@ export function Pagination(props: Pagination) {
 						<span class="font-display text-sm font-medium text-slate-900 dark:text-white">
 							Previous
 						</span>
-						<A
+						<a
 							class="flex flex-row-reverse items-center gap-x-1 text-base font-medium text-slate-500 no-underline hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-300"
 							href={customLink(frontmatter()?.prev) ?? prevNext.prevLink().link}
 						>
 							← {customTitle(frontmatter()?.prev) ?? prevNext.prevLink().title}
-						</A>
+						</a>
 					</div>
 				</Show>
 				<Show when={hasNext()}>
@@ -43,12 +42,12 @@ export function Pagination(props: Pagination) {
 						<span class="font-display text-sm font-medium text-slate-900 dark:text-white">
 							Next
 						</span>
-						<A
+						<a
 							class="flex flex-row-reverse items-center gap-x-1 text-base font-medium text-slate-500 no-underline hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-300"
 							href={customLink(frontmatter()?.next) ?? prevNext.nextLink().link}
 						>
 							{customLink(frontmatter()?.next) ?? prevNext.nextLink().title} →
-						</A>
+						</a>
 					</div>
 				</Show>
 			</nav>

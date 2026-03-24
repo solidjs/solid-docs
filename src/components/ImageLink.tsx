@@ -1,5 +1,5 @@
-import { ParentComponent, Show, untrack } from "solid-js";
-import { A } from "~/ui/i18n-anchor";
+import { useLocale } from "@kobalte/solidbase/client";
+import { ParentComponent, untrack } from "solid-js";
 
 /**
  * @todo
@@ -30,7 +30,9 @@ export type ImageLinksProps = {
 	href: string;
 };
 
-export const ImageLinks: ParentComponent<ImageLinksProps> = (props) => {
+export const ImageLink: ParentComponent<ImageLinksProps> = (props) => {
+	const locale = useLocale();
+
 	const logoImage = untrack(() => props.logo);
 	const { file, style } = logos[logoImage];
 
@@ -49,26 +51,17 @@ export const ImageLinks: ParentComponent<ImageLinksProps> = (props) => {
 						/>
 					</div>
 					<div class="pt-1 text-lg text-slate-900 no-underline dark:text-white">
-						<Show
-							when={props.href.match(/https?:\/\//)}
-							fallback={
-								<A
-									href={props.href}
-									class="inline-block bg-gradient-to-br from-blue-400 to-blue-700 bg-clip-text text-center font-semibold text-transparent no-underline"
-								>
-									<span class="absolute -inset-px rounded-xl" />
-									{props.title}
-								</A>
+						<a
+							href={
+								props.href.includes("://")
+									? props.href
+									: locale.applyPathPrefix(props.href)
 							}
+							class="inline-block bg-gradient-to-br from-blue-400 to-blue-700 bg-clip-text text-center font-semibold text-transparent no-underline"
 						>
-							<a
-								href={props.href}
-								class="inline-block bg-gradient-to-br from-blue-400 to-blue-700 bg-clip-text text-center font-semibold text-transparent no-underline"
-							>
-								<span class="absolute -inset-px rounded-xl" />
-								{props.title}
-							</a>
-						</Show>
+							<span class="absolute -inset-px rounded-xl" />
+							{props.title}
+						</a>
 					</div>
 				</div>
 			</div>

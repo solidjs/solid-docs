@@ -15,6 +15,28 @@ export default defineConfig({
 				"Documentation for SolidJS, the signals-powered UI framework",
 			siteUrl: "https://docs.solidjs.com",
 			editPath: "https://github.com/solidjs/solid-docs/edit/main/:path",
+			themeConfig: {
+				projects: [
+					{
+						path: "/",
+						name: "Solid",
+					},
+					{
+						path: "solid-router",
+						name: "Solid Router",
+					},
+					{
+						path: "solid-start",
+						name: "SolidStart",
+					},
+					{
+						path: "solid-meta",
+						name: "Solid Meta",
+					},
+				],
+				reportPagePath:
+					"https://github.com/solidjs/solid-docs-next/issues/new?assignees=ladybluenotes&labels=improve+documentation%2Cpending+review&projects=&template=CONTENT.yml&title=[Content]:&subject=:path&page=:url",
+			},
 			markdown: {
 				expressiveCode: {
 					themes: ["min-light", "material-theme-ocean"],

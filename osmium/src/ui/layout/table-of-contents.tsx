@@ -6,13 +6,9 @@ import {
 import { createEventListener } from "@solid-primitives/event-listener";
 import { isServer } from "solid-js/web";
 
-import { useI18n } from "~/i18n/i18n-context";
-
 export const TableOfContents = () => {
 	const data = useCurrentPageData();
 	const toc = () => data()?.toc;
-
-	const i18n = useI18n();
 
 	const [currentSection, setCurrentSection] = createSignal<string>();
 
@@ -53,7 +49,7 @@ export const TableOfContents = () => {
 	return (
 		<aside aria-label="table of contents" class="w-full pt-5">
 			<span class="text-base font-semibold text-slate-900 dark:text-white">
-				{i18n.t("toc.this.page")}
+				On this page
 			</span>
 			<ol
 				role="list"
@@ -68,9 +64,9 @@ export const TableOfContents = () => {
 								"text-blue-800 dark:text-blue-300 font-bold hover:text-slate-700 dark:hover:text-slate-200":
 									currentSection() === undefined,
 							}}
-							class="no-underline hover:text-slate-800"
+							class="no-underline hover:text-slate-700 dark:hover:text-blue-300"
 						>
-							{i18n.t("toc.overview")}
+							Overview
 						</a>
 					</span>
 				</li>

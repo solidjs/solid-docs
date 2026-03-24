@@ -93,4 +93,5 @@ This will start your the app at [localhost:3000](http://localhost:3000) or the n
 ### Framework and Theme
 
 The docs are built on [SolidBase](https://solidbase.dev) and uses the [Osmium Theme](./osmium).
+
 This repo should only contain content as mdx files, features should be implemented upstream and UI changes in the theme.

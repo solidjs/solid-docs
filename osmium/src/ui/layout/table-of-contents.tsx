@@ -51,11 +51,8 @@ export const TableOfContents = () => {
 			<span class="text-base font-semibold text-slate-900 dark:text-white">
 				On this page
 			</span>
-			<ol
-				role="list"
-				class="mt-2 flex list-none flex-col space-y-2 p-0 pl-2.5 text-sm"
-			>
-				<li class="mb-0 mt-0 pl-0">
+			<ol role="list" class="mt-2 flex list-none flex-col p-0 pl-2.5 text-sm">
+				<li class="not-prose mt-0 mb-0 pl-0">
 					<span>
 						<a
 							href="#_top"
@@ -64,7 +61,7 @@ export const TableOfContents = () => {
 								"text-blue-800 dark:text-blue-300 font-bold hover:text-slate-700 dark:hover:text-slate-200":
 									currentSection() === undefined,
 							}}
-							class="no-underline hover:text-slate-700 dark:hover:text-blue-300"
+							class="not-prose no-underline hover:text-slate-700 dark:hover:text-blue-300"
 						>
 							Overview
 						</a>
@@ -72,7 +69,7 @@ export const TableOfContents = () => {
 				</li>
 				<Index each={toc()}>
 					{(section) => (
-						<li class="space-y-2 pl-0 pt-0">
+						<li class="not-prose mt-2 pt-0 pl-0">
 							<span>
 								<a
 									href={section().href}
@@ -81,7 +78,7 @@ export const TableOfContents = () => {
 										"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-bold":
 											currentSection() === section().href,
 									}}
-									class="no-underline hover:text-slate-700 dark:hover:text-blue-300"
+									class="not-prose no-underline hover:text-slate-700 dark:hover:text-blue-300"
 								>
 									{section().title}
 								</a>
@@ -89,7 +86,7 @@ export const TableOfContents = () => {
 							<Show when={section().children.length !== 0}>
 								<ol
 									role="list"
-									class="list-none space-y-2 pl-2.5 font-bold text-slate-500 hover:text-slate-700 active:font-bold active:text-blue-600 dark:text-slate-300 dark:hover:text-blue-200"
+									class="mt-2 list-none pl-2.5 font-bold text-slate-500 hover:text-slate-700 active:font-bold active:text-blue-600 dark:text-slate-300 dark:hover:text-blue-200"
 								>
 									<Index each={section().children}>
 										{(subSection) => (
@@ -102,7 +99,7 @@ export const TableOfContents = () => {
 														"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-bold":
 															currentSection() === subSection().href,
 													}}
-													class="no-underline hover:text-blue-700 dark:hover:text-blue-300"
+													class="not-prose no-underline hover:text-blue-700 dark:hover:text-blue-300"
 												>
 													{subSection().title}
 												</a>

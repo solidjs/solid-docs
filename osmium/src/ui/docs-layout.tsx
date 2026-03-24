@@ -46,7 +46,7 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 			</span>
 			<div class="w-full px-1">{props.children}</div>
 			<Show when={frontmatter()?.lastUpdated}>
-				<span class="text-sm">
+				<span class="mt-2 block w-full text-right text-sm">
 					Last updated:{" "}
 					<Show when={!Number.isNaN(pageData()?.lastUpdated)} fallback="?">
 						{formatter().format(date())}

@@ -33,7 +33,10 @@ export function useCurrentProject() {
 
 	return createMemo(() => {
 		for (const project of projects().filter((p) => p.path !== "/")) {
-			if (location.pathname.includes(`/${project}/`)) {
+			if (
+				location.pathname.includes(`${project.path}/`) ||
+				location.pathname.endsWith(project.path)
+			) {
 				return project;
 			}
 		}

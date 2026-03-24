@@ -5,6 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 import { createSolidBase } from "@kobalte/solidbase/config";
 import { osmium } from "solidbase-osmium";
+import { createFilesystemSidebar } from "@kobalte/solidbase/config/sidebar";
 
 const solidBase = createSolidBase(osmium);
 
@@ -39,6 +40,7 @@ export default defineConfig({
 						name: "Solid Meta",
 					},
 				],
+				sidebar: createFilesystemSidebar("./src/routes/"),
 				reportPagePath:
 					"https://github.com/solidjs/solid-docs-next/issues/new?assignees=ladybluenotes&labels=improve+documentation%2Cpending+review&projects=&template=CONTENT.yml&title=[Content]:&subject=:path&page=:url",
 			},

@@ -1,12 +1,18 @@
-import { createEffect, createSignal, For, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, For, Show } from "solid-js";
 import { A, useBeforeLeave, useLocation, useMatch } from "@solidjs/router";
 import { Icon } from "solid-heroicons";
 import { chevronDown } from "solid-heroicons/solid";
 import { setIsOpen } from "./mobile-navigation";
 import { Dynamic } from "solid-js/web";
-import { SidebarItem, useSidebar } from "@kobalte/solidbase/client";
+import {
+	SidebarItem,
+	SidebarItemLink,
+	useLocale,
+	useSidebar,
+} from "@kobalte/solidbase/client";
 import { Collapsible } from "@kobalte/core/collapsible";
 import { Tabs } from "@kobalte/core/tabs";
+import { useRouteConfig, useSolidBaseContext } from "../../utils";
 
 interface Entry {
 	title: string;
@@ -19,94 +25,67 @@ interface Entry {
 
 interface MainNavigationProps {}
 
-function ListItemLink(props: { item: Entry }) {
+function ListItemLink(props: { item: SidebarItemLink; prefix?: string }) {
 	const location = useLocation();
+	const locale = useLocale();
+
 	const linkStyles = () =>
-		location.pathname === props.item.path.replace(/\\/g, "/")
+		location.pathname === props.item.link.replace(/\\/g, "/")
 			? "font-semibold text-blue-700 before:bg-blue-700 dark:before:bg-blue-200 dark:text-blue-300 before:block"
 			: "text-slate-700 before:hidden before:bg-blue-600 before:dark:bg-blue-200 hover:text-blue-700 hover:before:block dark:text-slate-300 ";
 	return (
-		<Show when={!props.item.mainNavExclude}>
-			<li class="relative">
-				<Dynamic
-					component={props.item.isTranslated ? A : "a"}
-					onClick={() => setIsOpen(false)}
-					href={props.item.path}
-					class={`block w-full pl-3.5 before:pointer-events-none before:absolute before:-left-1 before:top-1/2 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full hover:text-blue-700 lg:text-sm dark:hover:text-blue-300 ${linkStyles()}`}
-				>
-					{props.item.title}
-					<Show when={props.item.isDeprecated}> (deprecated)</Show>
-					<Show when={!props.item.isTranslated}>
-						<span>
-							<abbr
-								title="english"
-								class="relative -top-2 left-2 text-[0.7em] text-neutral-400 no-underline"
-							>
-								EN
-							</abbr>
-						</span>
-					</Show>
-				</Dynamic>
-			</li>
-		</Show>
+		<li class="relative">
+			<a
+				onClick={() => setIsOpen(false)}
+				href={locale.applyPathPrefix(
+					`${props.prefix === "/" ? "" : (props.prefix ?? "")}${props.item.link === "/" ? "" : props.item.link}`
+				)}
+				class={`block w-full pl-3.5 before:pointer-events-none before:absolute before:top-1/2 before:-left-1 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full hover:text-blue-700 lg:text-sm dark:hover:text-blue-300 ${linkStyles()}`}
+			>
+				{props.item.title}
+			</a>
+		</li>
 	);
 }
 
-function DirList(props: { list: Entry[]; sortAlphabeticaly?: boolean }) {
+function DirList(props: { items: SidebarItem[] }) {
 	return (
-		<For each={props.list}>
-			{(item) => {
-				if (Array.isArray(item.children)) {
+		<For each={props.items}>
+			{(child) => {
+				if ("items" in child) {
 					return (
-						<li>
-							<span class="font-semibold text-slate-800 dark:text-slate-100">
-								{item.title}
-							</span>
-							<ul
-								role="list"
-								class="ml-2 mt-2 space-y-3 border-l border-slate-400 lg:border-slate-400 dark:border-slate-700"
-							>
-								<For each={item.children}>
-									{(child) => {
-										return Array.isArray(child.children) ? (
-											<>
-												<li>
-													<Collapsible defaultOpen={true}>
-														<Collapsible.Trigger class="group relative flex w-full justify-between pl-3.5 hover:cursor-pointer dark:text-slate-300">
-															<span class="font-semibold dark:text-slate-100">
-																{child.title}
-															</span>
-															<Icon
-																aria-hidden="true"
-																path={chevronDown}
-																class="my-auto h-4 transition-transform kb-group-closed:rotate-180"
-															/>
-														</Collapsible.Trigger>
-														<Collapsible.Content class="navigation_collapsible">
-															<ul
-																role="list"
-																class="ml-4 mt-3 space-y-3 border-l border-slate-400 dark:border-slate-700 dark:lg:border-slate-700"
-															>
-																<DirList
-																	sortAlphabeticaly={props.sortAlphabeticaly}
-																	list={child.children}
-																/>
-															</ul>
-														</Collapsible.Content>
-													</Collapsible>
-												</li>
-											</>
-										) : (
-											<ListItemLink item={child} />
-										);
-									}}
-								</For>
-							</ul>
-						</li>
+						<>
+							<li>
+								<Collapsible defaultOpen={true}>
+									<Collapsible.Trigger class="group relative flex w-full justify-between pl-3.5 hover:cursor-pointer dark:text-slate-300">
+										<span class="font-semibold dark:text-slate-100">
+											{child.title}
+										</span>
+										<Icon
+											aria-hidden="true"
+											path={chevronDown}
+											class="kb-group-closed:rotate-180 my-auto h-4 transition-transform"
+										/>
+									</Collapsible.Trigger>
+									<Collapsible.Content class="navigation_collapsible">
+										<ul
+											role="list"
+											class="mt-3 ml-4 space-y-3 border-l border-slate-400 dark:border-slate-700 dark:lg:border-slate-700"
+										>
+											<DirList items={child.items} />
+										</ul>
+									</Collapsible.Content>
+								</Collapsible>
+							</li>
+						</>
 					);
-				} else {
-					return <ListItemLink item={item} />;
 				}
+
+				if ("link" in child) {
+					return <ListItemLink item={child} />;
+				}
+
+				return "";
 			}}
 		</For>
 	);
@@ -122,9 +101,7 @@ interface NavigationItemProps {
 }
 
 export function MainNavigation(props: MainNavigationProps) {
-	const isReference = useMatch(() => "/:project?/reference/*?", {
-		project: ["solid-router", "solid-meta", "solid-start"],
-	});
+	const isReference = useMatch(() => "*/reference/*?");
 
 	const initialTab = () => (isReference() ? "reference" : "learn");
 
@@ -132,7 +109,18 @@ export function MainNavigation(props: MainNavigationProps) {
 
 	const sidebar = useSidebar();
 
-	createEffect(() => console.log(sidebar()));
+	const sidebarEntries = createMemo(() => {
+		const projects = useSolidBaseContext().config().themeConfig?.projects ?? [];
+		const projectNames = projects.map((p) => p.name.replaceAll(" ", ""));
+
+		return sidebar().items.filter(
+			(i) =>
+				!projectNames.includes(i.title.replaceAll(" ", "")) &&
+				(!("link" in i) || i.link !== "/")
+		);
+	});
+
+	createEffect(() => console.log(sidebar(), sidebarEntries()));
 
 	/**
 	 * Re-syncs the selected tab with the chosen route.
@@ -142,7 +130,7 @@ export function MainNavigation(props: MainNavigationProps) {
 
 		if (to.includes("/reference/")) {
 			setSelectedTab("reference");
-		} else if (to.includes("/learn/")) {
+		} else {
 			setSelectedTab("learn");
 		}
 	});
@@ -169,7 +157,7 @@ export function MainNavigation(props: MainNavigationProps) {
 					>
 						Reference
 					</Tabs.Trigger>
-					<Tabs.Indicator class="duration-250 absolute bottom-0 h-[2px] bg-blue-500 transition-all dark:bg-blue-500" />
+					<Tabs.Indicator class="absolute bottom-0 h-[2px] bg-blue-500 transition-all duration-250 dark:bg-blue-500" />
 				</Tabs.List>
 				<Tabs.Content value="learn" class="relative mt-5 w-full">
 					<Show
@@ -177,7 +165,9 @@ export function MainNavigation(props: MainNavigationProps) {
 						fallback={<p class="text-white">No routes found</p>}
 					>
 						<ul role="list" class="space-y-3 px-4">
-							<DirList list={[]} />
+							<DirList
+								items={sidebarEntries().filter((e) => e.title !== "Reference")}
+							/>
 						</ul>
 					</Show>
 				</Tabs.Content>
@@ -187,7 +177,11 @@ export function MainNavigation(props: MainNavigationProps) {
 						fallback={<p class="text-white">No routes found</p>}
 					>
 						<ul role="list" class="space-y-3 px-4">
-							<DirList list={[]} />
+							<DirList
+								items={sidebarEntries().flatMap((e) =>
+									e.title === "Reference" && "items" in e ? e.items : []
+								)}
+							/>
 						</ul>
 					</Show>
 				</Tabs.Content>

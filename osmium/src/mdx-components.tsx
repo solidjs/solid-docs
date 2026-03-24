@@ -13,8 +13,6 @@ import { clientOnly } from "@solidjs/start";
 import { Callout } from "./ui/callout";
 import { Tabs, TabList, TabPanel, Tab } from "./ui/tabs";
 
-export { EditPageLink } from "./ui/edit-page-link";
-export { PageIssueLink } from "./ui/page-issue-link";
 export { Callout } from "./ui/callout";
 export { QuickLinks } from "./ui/quick-links";
 
@@ -102,7 +100,7 @@ export const h1 = (props: ParentProps) => (
 export const h2 = (props: ParentProps) => {
 	return (
 		<>
-			<hr class="my-8 border-slate-400 dark:prose-hr:border-slate-800" />
+			<hr class="dark:prose-hr:border-slate-800 my-8 border-slate-400" />
 			<h2
 				{...props}
 				class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-34"
@@ -225,7 +223,7 @@ export const pre = (props: ParentProps) => {
 export const code = (props: ParentProps) => {
 	return (
 		<code
-			class="not-prose inline-flex rounded-lg bg-blue-200 px-1 py-0.5 font-mono! text-[0.8em] font-semibold leading-snug text-slate-900 dark:bg-slate-600/60 dark:text-white"
+			class="not-prose inline-flex rounded-lg bg-blue-200 px-1 py-0.5 font-mono! text-[0.8em] leading-snug font-semibold text-slate-900 dark:bg-slate-600/60 dark:text-white"
 			{...props}
 		>
 			{props.children}

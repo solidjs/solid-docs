@@ -98,25 +98,28 @@ export function MainHeader(props: MainHeaderProps) {
 
 				<Show when={config().themeConfig?.projects}>
 					{(projects) => (
-						<For each={projects()}>
-							{(p) => {
-								const match = useMatch(() =>
-									locale.applyPathPrefix(`${p.path}/*rest`)
-								);
+						<ul class="order-2 col-span-2 flex w-full justify-center gap-5 pt-6 lg:col-span-1 lg:w-auto lg:pt-0">
+							<For each={projects()}>
+								{(p) => {
+									const match = useMatch(() =>
+										locale.applyPathPrefix(`${p.path}/*rest`)
+									);
 
-								return (
-									<li>
-										<NavLink
-											href={locale.applyPathPrefix(p.path)}
-											data-matched={match() !== undefined ? true : undefined}
-											onClick={() => setNavOpen(false)}
-										>
-											{p.name}
-										</NavLink>
-									</li>
-								);
-							}}
-						</For>
+									return (
+										<li>
+											<NavLink
+												href={locale.applyPathPrefix(p.path)}
+												data-matched={match() !== undefined ? true : undefined}
+												onClick={() => setNavOpen(false)}
+												active={project()?.name === p.name}
+											>
+												{p.name}
+											</NavLink>
+										</li>
+									);
+								}}
+							</For>
+						</ul>
 					)}
 				</Show>
 

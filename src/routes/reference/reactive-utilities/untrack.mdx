@@ -16,9 +16,46 @@ description: >-
   by excluding non-updating props from reactive tracking scope.
 ---
 
-Ignores tracking any of the dependencies in the executing code block and returns the value. This helper is useful when a certain `prop` will never update and thus it is ok to use it outside of the tracking scope.
+`untrack` executes a function without collecting dependencies from the current reactive scope.
 
-```tsx title="component.tsx"
+## Import
+
+```ts
+import { untrack } from "solid-js";
+```
+
+## Type
+
+```ts
+function untrack<T>(fn: () => T): T;
+```
+
+## Parameters
+
+### `fn`
+
+- **Type:** `() => T`
+- **Required:** Yes
+
+Function executed outside the current tracking context.
+
+## Return value
+
+- **Type:** `T`
+
+Returns the value produced by `fn`.
+
+## Behavior
+
+- Signals read inside `untrack` do not become dependencies of the surrounding computation.
+- `untrack` does not disable reactivity globally; it only affects reads inside the provided function.
+- Surrounding effects and memos do not subscribe to values read only inside `untrack`.
+
+## Examples
+
+### Read a prop without tracking
+
+```tsx
 import { untrack } from "solid-js";
 
 export function Component(props) {
@@ -28,12 +65,32 @@ export function Component(props) {
 }
 ```
 
-## Initial and Default Values
+### Avoid tracking part of an effect
 
-It is not necessary to manually untrack values that are suppose to serve as a default or initial value to a signal. Even with the linter configured to enforce tracking, the linter will accept it when a `prop` is prefixed with `default` or `initial` as it is a common pattern to use them as such.
+```tsx
+import { createEffect, createSignal, untrack } from "solid-js";
+
+function Example() {
+	const [count, setCount] = createSignal(0);
+	const [label] = createSignal("count");
+
+	createEffect(() => {
+		console.log(
+			untrack(() => label()),
+			count()
+		);
+	});
+
+	return <button onClick={() => setCount((c) => c + 1)}>Increment</button>;
+}
+```
+
+## Notes
+
+Default and initial prop values can be read directly when initializing a signal.
+This pattern commonly appears with names such as `initialName` and `defaultName`.
 
 ```tsx tab title="initialValue" {5}
-// component.tsx
 import { createSignal } from "solid-js";
 
 export function Component(props) {
@@ -44,7 +101,6 @@ export function Component(props) {
 ```
 
 ```tsx tab title="defaultValue" {5}
-// component.tsx
 import { createSignal } from "solid-js";
 
 export function Component(props) {
@@ -53,3 +109,9 @@ export function Component(props) {
 	return <div>{name()}</div>;
 }
 ```
+
+## Related
+
+- [`onMount`](/reference/lifecycle/on-mount)
+- [`createEffect`](/reference/basic-reactivity/create-effect)
+- [`on`](/reference/reactive-utilities/on-util)

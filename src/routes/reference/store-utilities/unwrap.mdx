@@ -1,25 +1,61 @@
 ---
 title: unwrap
 use_cases: >-
-  raw data access, proxy removal, debugging, third-party integration, data
-  serialization
+  reading store data without proxies, passing plain data to other APIs
 tags:
   - store
   - proxy
   - data
-  - debugging
-  - utilities
 version: "1.0"
 description: >-
-  Extract raw data from Solid stores without proxy wrapping. Essential for
-  debugging, serialization, or third-party integrations.
+  Remove store proxy wrapping from a store or store subtree.
 ---
 
-`unwrap` returns the underlying data in the store without a proxy.
+`unwrap` removes store proxy wrapping from a store or store subtree.
 
-```tsx
+## Import
+
+```ts
 import { unwrap } from "solid-js/store";
-import type { Store } from "solid-js/store";
-
-function unwrap(store: Store<T>): T;
 ```
+
+## Type
+
+```ts
+function unwrap<T>(item: T): T;
+```
+
+## Parameters
+
+### `item`
+
+- **Type:** `T`
+
+Store value or store subtree to unwrap.
+
+## Return value
+
+- **Type:** `T`
+
+Unwrapped value.
+
+## Behavior
+
+- Store proxies are removed recursively from returned objects and arrays.
+- Returned objects and arrays are plain values rather than reactive store proxies.
+- Non-proxy input values are returned unchanged.
+
+## Examples
+
+### Basic usage
+
+```ts
+import { createStore, unwrap } from "solid-js/store";
+
+const [state] = createStore({ user: { name: "John" } });
+const user = unwrap(state.user);
+```
+
+## Related
+
+- [`createStore`](/reference/store-utilities/create-store)

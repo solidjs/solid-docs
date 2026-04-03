@@ -1,44 +1,74 @@
 ---
 title: render
 use_cases: >-
-  app initialization, mounting components, spa entry point, client-side
-  rendering, dom manipulation
+  mounting a client app, browser entry points, attaching a root to the DOM
 tags:
   - mounting
-  - initialization
-  - spa
-  - dom
+  - rendering
   - client
-  - entry
+  - dom
 version: "1.0"
 description: >-
-  Mount your Solid app to the DOM with render. The essential browser entry point
-  for initializing and disposing client-side applications.
+  Mount a Solid root into a DOM node in the browser.
 ---
+
+`render` mounts a Solid root into a DOM node in the browser.
+
+## Import
 
 ```ts
 import { render } from "solid-js/web";
-import type { JSX } from "solid-js";
-import type { MountableElement } from "solid-js/web";
+```
+
+## Type
+
+```ts
+type MountableElement =
+	| Element
+	| Document
+	| ShadowRoot
+	| DocumentFragment
+	| Node;
 
 function render(code: () => JSX.Element, element: MountableElement): () => void;
 ```
 
-This is the browser app entry point.
-Provide a top-level component function and an element to mount to.
-It is recommended this element be empty: while `render` will just append children, the returned dispose function will remove all children.
-
-```ts
-const dispose = render(App, document.getElementById("app"))
-// or
-const dispose = render(() => <App />, document.getElementById("app"))
-```
-
-It's important that the first argument is a function: do not pass JSX directly (as in `render(<App/>, ...)`), because this will call App before render can set up a root to track signal dependencies within App.
-
 ## Parameters
 
-| Argument | Type                | Description                                 |
-| -------- | ------------------- | ------------------------------------------- |
-| code     | `() => JSX.Element` | Function that returns the application code. |
-| element  | MountableElement    | DOM Element to mount the application to     |
+### `code`
+
+- **Type:** `() => JSX.Element`
+
+Function that returns the root JSX to mount.
+
+### `element`
+
+- **Type:** `MountableElement`
+
+DOM node that receives the rendered output.
+
+## Return value
+
+- **Type:** `() => void`
+
+Dispose function for the mounted root.
+
+## Behavior
+
+- `render` creates a new root and appends its output to `element`.
+- The first argument must be a function so Solid can establish the root before evaluating JSX.
+- The returned function disposes the root and removes the rendered content.
+
+## Examples
+
+### Basic usage
+
+```ts
+import { render } from "solid-js/web";
+
+const dispose = render(() => <App />, document.getElementById("app")!);
+```
+
+## Related
+
+- [`hydrate`](/reference/rendering/hydrate)

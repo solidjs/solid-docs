@@ -1,46 +1,104 @@
 ---
 title: renderToStringAsync
 use_cases: >-
-  ssr with async data, suspense resolution, complete page rendering, data
-  serialization, seo optimization
+  async server rendering, waiting for suspense boundaries, HTML generation with
+  async data
 tags:
   - ssr
   - async
   - suspense
-  - serialization
   - rendering
 version: "1.0"
 description: >-
-  Render complete HTML with async data using renderToStringAsync. Waits for all
-  Suspense boundaries before returning serialized results.
+  Render HTML to a string after async suspense boundaries settle.
 ---
+
+`renderToStringAsync` renders HTML to a string after async suspense boundaries settle.
+
+## Import
 
 ```ts
 import { renderToStringAsync } from "solid-js/web";
+```
 
+## Type
+
+```ts
 function renderToStringAsync<T>(
 	fn: () => T,
 	options?: {
 		timeoutMs?: number;
-		renderId?: string;
 		nonce?: string;
+		renderId?: string;
+		noScripts?: boolean;
+		onError?: (err: any) => void;
 	}
 ): Promise<string>;
 ```
 
-Same as `renderToString` except that it will wait for all `<Suspense>` boundaries to resolve before returning the results.
-Resource data is automatically serialized into the script tag and will be hydrated on client load.
+## Parameters
 
-`renderId` is used to namespace renders when having multiple top level roots.
+### `fn`
+
+- **Type:** `() => T`
+
+Function that returns the root output to render.
+
+### `options`
+
+#### `timeoutMs`
+
+- **Type:** `number`
+
+Maximum wait time for suspense boundaries before the render resolves.
+
+#### `nonce`
+
+- **Type:** `string`
+
+Nonce applied to inline scripts emitted during rendering.
+
+#### `renderId`
+
+- **Type:** `string`
+
+Identifier used to namespace the render output.
+
+#### `noScripts`
+
+- **Type:** `boolean`
+
+Disables script emission in the rendered output.
+
+#### `onError`
+
+- **Type:** `(err: any) => void`
+
+Callback invoked when a rendering error is encountered.
+
+## Return value
+
+- **Type:** `Promise<string>`
+
+Promise that resolves to the rendered HTML string.
+
+## Behavior
+
+- `renderToStringAsync` waits for server suspense boundaries to settle before resolving.
+- Resource data is serialized for client hydration unless scripts are disabled.
+- `renderId` namespaces the render output when multiple top-level roots are present.
+
+## Examples
+
+### Basic usage
 
 ```ts
-const html = await renderToStringAsync(App);
+import { renderToStringAsync } from "solid-js/web";
+
+const html = await renderToStringAsync(() => <App />);
 ```
 
-## Options
+## Related
 
-| Name        | Type     | Description                                                                                  |
-| ----------- | -------- | -------------------------------------------------------------------------------------------- |
-| `timeoutMs` | `number` | The number of milliseconds to wait for a `<Suspense>` boundary to resolve before timing out. |
-| `renderId`  | `string` | The id to use for the render.                                                                |
-| `nonce`     | `string` | The nonce to use for the script tag.                                                         |
+- [`renderToString`](/reference/rendering/render-to-string)
+- [`renderToStream`](/reference/rendering/render-to-stream)

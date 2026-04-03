@@ -1,72 +1,88 @@
 ---
 title: createStore
 use_cases: >-
-  complex state management, nested data, arrays and objects, derived values,
-  application state
+  object state, array state, nested state, structured application state
 tags:
   - store
   - state
-  - data-structures
   - objects
   - arrays
 version: "1.0"
 description: >-
-  Manage complex application state with createStore. Handle nested objects,
-  arrays, and derived values with fine-grained reactivity.
+  Create a reactive store and a setter function for structured state.
 ---
 
-Stores were intentionally designed to manage data structures like objects and arrays but are capable of handling other data types, such as strings and numbers.
+`createStore` creates a reactive store and setter function for structured state.
 
-## Types Signature
+## Import
 
-```tsx
+```ts
 import { createStore } from "solid-js/store";
-import type { StoreNode, Store, SetStoreFunction } from "solid-js/store";
-
-function createStore<T extends StoreNode>(
-	state: T | Store<T>
-): [get: Store<T>, set: SetStoreFunction<T>];
-
-type Store<T> = T; // conceptually readonly, but not typed as such
 ```
 
-## Usage
+## Type
+
+```ts
+type Store<T> = T;
+
+interface SetStoreFunction<T> {
+	(setter: T | Partial<T> | ((prev: T) => T | Partial<T>)): void;
+}
+
+function createStore<T extends object = {}>(
+	store?: T | Store<T>,
+	options?: { name?: string }
+): [Store<T>, SetStoreFunction<T>];
+```
+
+## Parameters
+
+### `store`
+
+- **Type:** `T | Store<T>`
+
+Initial store value.
+
+### `options`
+
+#### `name`
+
+- **Type:** `string`
+
+Debug name used by development tooling.
+
+## Return value
+
+- **Type:** `[Store<T>, SetStoreFunction<T>]`
+
+Tuple containing the store proxy and its setter.
+
+## Behavior
+
+- The returned store is read through a proxy.
+- The setter can update the whole store or specific paths.
+- Object updates are shallowly merged by the setter.
+- Getters defined on the initial object remain available on the store.
+
+## Examples
+
+### Basic usage
 
 ```tsx
 import { createStore } from "solid-js/store";
 
-// Initialize store
-const [store, setStore] = createStore({
-	userCount: 3,
-	users: [
-		{
-			id: 0,
-			username: "felix909",
-			location: "England",
-			loggedIn: false,
-		},
-		{
-			id: 1,
-			username: "tracy634",
-			location: "Canada",
-			loggedIn: true,
-		},
-		{
-			id: 1,
-			username: "johny123",
-			location: "India",
-			loggedIn: true,
-		},
-	],
+const [state, setState] = createStore({
+	firstName: "John",
+	lastName: "Smith",
 });
 ```
 
-## Getter
-
-Store objects support the use of getters to store derived values.
+### Getter
 
 ```tsx
-const [state, setState] = createStore({
+import { createStore } from "solid-js/store";
+
+const [state] = createStore({
 	user: {
 		firstName: "John",
 		lastName: "Smith",
@@ -77,25 +93,7 @@ const [state, setState] = createStore({
 });
 ```
 
-## Setter
+## Related
 
-Changes can take the form of function that passes previous state and returns new state or a value.
-Objects are always shallowly merged. Set values to undefined to delete them from the Store.
-In TypeScript, you can delete a value by using a non-null assertion, like `undefined!`.
-
-```tsx
-const [state, setState] = createStore({
-	firstName: "John",
-	lastName: "Miller",
-});
-
-setState({ firstName: "Johnny", middleName: "Lee" });
-// ({ firstName: 'Johnny', middleName: 'Lee', lastName: 'Miller' })
-
-setState((state) => ({ preferredName: state.firstName, lastName: "Milner" }));
-// ({ firstName: 'Johnny', preferredName: 'Johnny', middleName: 'Lee', lastName: 'Milner' })
-```
-
----
-
-To learn more about using stores check the [Stores Guide](/concepts/stores), and the **Store utilities** section for more advanced APIs.
+- [`createMutable`](/reference/store-utilities/create-mutable)
+- [Stores](/concepts/stores)

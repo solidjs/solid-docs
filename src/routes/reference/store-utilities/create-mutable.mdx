@@ -1,38 +1,67 @@
 ---
 title: createMutable
 use_cases: >-
-  mobx migration, vue compatibility, external system integration, mutable state
-  patterns, proxy-based reactivity
+  mutable proxy state, interop with mutable systems, object mutation through a
+  store proxy
 tags:
   - store
   - mutable
   - proxy
   - state
-  - compatibility
 version: "1.0"
 description: >-
-  Create mutable proxy stores with automatic deep tracking. Ideal for MobX/Vue
-  compatibility or integrating external mutable systems.
+  Create a mutable store proxy.
 ---
 
-`createMutable` creates a new mutable Store proxy object that provides a way to selectively trigger updates only when values change.
+`createMutable` creates a mutable store proxy.
 
-By intercepting property access, it allows automatic tracking of deep nesting via proxy making it useful for integrating external systems or serving as a compatibility layer with frameworks like MobX or Vue.
+## Import
 
-```tsx
+```ts
 import { createMutable } from "solid-js/store";
-import type { Store, StoreNode } from "solid-js/store";
-
-function createMutable<T extends StoreNode>(state: T | Store<T>): Store<T>;
 ```
 
-:::note
-It's important to recognize that a mutable state, which can be passed around and modified anywhere, may complicate the code structure and increase the risk of breaking unidirectional flow.
+## Type
 
-    For a more robust alternative, it is generally recommended to use `createStore` instead.
-    Additionally, the [`produce`](/reference/store-utilities/produce) utility can provide many of these same benefits without the associated downsides.
+```ts
+function createMutable<T extends Record<PropertyKey, any>>(
+	state: T,
+	options?: { name?: string }
+): T;
+```
 
-:::
+## Parameters
+
+### `state`
+
+- **Type:** `T`
+
+Initial mutable state.
+
+### `options`
+
+#### `name`
+
+- **Type:** `string`
+
+Debug name used by development tooling.
+
+## Return value
+
+- **Type:** `T`
+
+Mutable store proxy.
+
+## Behavior
+
+- Property reads and writes go through a proxy.
+- Nested property access is reactive.
+- Mutations update the store in place.
+- Getters and setters defined on the initial object remain available on the mutable store.
+
+## Examples
+
+### Basic usage
 
 ```tsx
 import { createMutable } from "solid-js/store";
@@ -42,18 +71,15 @@ const state = createMutable({
 	list: [],
 });
 
-// read value
-state.someValue;
-
-// set value
 state.someValue = 5;
-
-state.list.push(anotherValue);
+state.list.push("item");
 ```
 
-Mutables support setters along with getters.
+### Getter and setter
 
 ```tsx
+import { createMutable } from "solid-js/store";
+
 const user = createMutable({
 	firstName: "John",
 	lastName: "Smith",
@@ -65,3 +91,8 @@ const user = createMutable({
 	},
 });
 ```
+
+## Related
+
+- [`modifyMutable`](/reference/store-utilities/modify-mutable)
+- [`createStore`](/reference/store-utilities/create-store)

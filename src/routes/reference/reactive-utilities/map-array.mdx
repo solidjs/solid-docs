@@ -11,47 +11,92 @@ tags:
   - optimization
 version: "1.0"
 description: >-
-  Efficiently map reactive arrays in SolidJS with cached transformations.
-  Reduces unnecessary re-renders by tracking items by reference.
+  Reactively map an array by item identity and return an accessor for the mapped
+  result.
 ---
+
+`mapArray` reactively maps an array and caches mapped items by value identity.
+
+## Import
 
 ```ts
 import { mapArray } from "solid-js";
+```
 
+## Type
+
+```ts
 function mapArray<T, U>(
-	list: () => readonly T[],
-	mapFn: (v: T, i: () => number) => U
+	list: () => readonly T[] | undefined | null | false,
+	mapFn: (value: T, index: () => number) => U,
+	options?: { fallback?: () => any }
 ): () => U[];
 ```
 
-Reactive map helper that caches each item by reference to reduce unnecessary mapping on updates.
-It only runs the mapping function once per value and then moves or removes it as needed.
-The index argument is a signal. The map function itself is not tracking.
+## Parameters
 
-Underlying helper for the `<For>` control flow.
+### `list`
+
+- **Type:** `() => readonly T[] | undefined | null | false`
+- **Required:** Yes
+
+Accessor that returns the source array.
+
+### `mapFn`
+
+- **Type:** `(value: T, index: () => number) => U`
+- **Required:** Yes
+
+Mapping function for each item.
+
+### `options`
+
+- **Type:** `{ fallback?: () => any }`
+- **Required:** No
+
+Optional configuration object.
+
+#### `fallback`
+
+- **Type:** `() => any`
+- **Required:** No
+
+Fallback accessor used when the source array is empty or falsy.
+
+## Return value
+
+- **Type:** `() => U[]`
+
+Returns an accessor for the mapped array.
+
+## Behavior
+
+- Items are cached by value identity.
+- The index argument is an accessor.
+- `mapFn` is not a tracking scope.
+- Reordering reuses existing mapped items when their source values are retained.
+- This is the underlying helper for [`<For>`](/reference/components/for).
+
+## Examples
+
+### Map an array with cached items
 
 ```ts
-const mapped = mapArray(source, (model) => {
-	const [name, setName] = createSignal(model.name);
-	const [description, setDescription] = createSignal(model.description);
+import { createSignal, mapArray } from "solid-js";
 
-	return {
-		id: model.id,
-		get name() {
-			return name();
-		},
-		get description() {
-			return description();
-		},
-		setName,
-		setDescription,
-	};
-});
+const [source] = createSignal([
+	{ id: 1, name: "A" },
+	{ id: 2, name: "B" },
+]);
+
+const mapped = mapArray(source, (item, index) => ({
+	id: item.id,
+	name: item.name,
+	position: index,
+}));
 ```
 
-## Arguments
+## Related
 
-| Name  | Type                           | Description              |
-| :---- | :----------------------------- | :----------------------- |
-| list  | `() => readonly T[]`           | The source array to map. |
-| mapFn | `(v: T, i: () => number) => U` | The mapping function.    |
+- [`<For>`](/reference/components/for)
+- [`indexArray`](/reference/reactive-utilities/index-array)

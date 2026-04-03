@@ -12,29 +12,59 @@ tags:
   - streams
 version: "1.0"
 description: >-
-  Convert SolidJS signals to Observables for seamless integration with RxJS and
-  other reactive libraries using the observable utility function.
+  Convert a Solid accessor into an Observable-compatible object.
 ---
+
+`observable` creates an Observable-compatible object from a Solid accessor.
+
+## Import
 
 ```ts
 import { observable } from "solid-js";
+```
 
+## Type
+
+```ts
 function observable<T>(input: () => T): Observable<T>;
 ```
 
-This method takes a signal and produces an Observable.
-You can consume it from another Observable library of your choice, typically with the `from` operator.
+## Parameters
+
+### `input`
+
+- **Type:** `() => T`
+- **Required:** Yes
+
+Accessor used as the observable source.
+
+## Return value
+
+- **Type:** `Observable<T>`
+
+Returns an object with `subscribe()` and `[Symbol.observable]()`.
+
+## Behavior
+
+- The returned object is compatible with Observable interop based on `Symbol.observable`.
+- Subscriptions receive values from the accessor.
+- Observable libraries can consume the returned object through standard Observable interop.
+
+## Examples
+
+### Convert an accessor to an Observable-compatible source
 
 ```ts
-// How to integrate rxjs with a Solid signal
-import { observable } from "solid-js";
+import { createSignal, observable } from "solid-js";
 import { from } from "rxjs";
 
-const [s, set] = createSignal(0);
+const [value] = createSignal(0);
 
-const obsv$ = from(observable(s));
+const value$ = from(observable(value));
 
-obsv$.subscribe((v) => console.log(v));
+value$.subscribe((next) => console.log(next));
 ```
 
-You can also use `from` without rxjs; check out this [page](/reference/reactive-utilities/from).
+## Related
+
+- [`from`](/reference/reactive-utilities/from)

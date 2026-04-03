@@ -11,45 +11,85 @@ tags:
   - integration
 version: "1.0"
 description: >-
-  Convert RxJS observables and external producers into SolidJS signals. Seamless
-  integration with third-party reactive libraries and state managers.
+  Convert an external producer or subscribable into a Solid accessor.
 ---
 
-```tsx
+`from` creates an accessor from an external producer or subscribable source.
+
+## Import
+
+```ts
+import { from } from "solid-js";
+```
+
+## Type
+
+```ts
+function from<T>(producer: Producer<T>, initialValue: T): () => T;
+function from<T>(producer: Producer<T | undefined>): () => T | undefined;
+
+type Producer<T> =
+	| ((setter: Setter<T>) => () => void)
+	| {
+			subscribe: (
+				fn: (value: T) => void
+			) => (() => void) | { unsubscribe: () => void };
+	  };
+```
+
+## Parameters
+
+### `producer`
+
+- **Type:** `Producer<T>` or `Producer<T | undefined>`
+- **Required:** Yes
+
+Producer function or subscribable object.
+
+### `initialValue`
+
+- **Type:** `T`
+- **Required:** No
+
+Initial value for the accessor.
+
+## Return value
+
+- **Type:** `() => T` or `() => T | undefined`
+
+Returns an accessor backed by the external source.
+
+## Behavior
+
+- A producer function receives a Solid setter and returns a cleanup function.
+- A subscribable source must expose `subscribe()`.
+- Returned subscriptions are cleaned up with the owning Solid scope.
+- When `initialValue` is omitted, the accessor can return `undefined`.
+
+## Examples
+
+### Create an accessor from a subscribable source
+
+```ts
 import { from } from "solid-js";
 
-function from<T>(
-	producer:
-		| ((setter: (v: T) => T) => () => void)
-		| {
-				subscribe: (
-					fn: (v: T) => void
-				) => (() => void) | { unsubscribe: () => void };
-		  }
-): () => T | undefined;
+const signal = from(observableSource);
 ```
 
-A helper to make it easier to interop with external producers like RxJS observables or with Svelte Stores.
-This basically turns any subscribable (object with a subscribe method) into a Signal and manages subscription and disposal.
+### Create an accessor from a producer function
 
-```tsx
-const signal = from(obsv$);
-```
+```ts
+import { from } from "solid-js";
 
-It can also take a custom producer function where the function is passed a setter function that returns an unsubscribe function:
-
-```tsx
 const clock = from((set) => {
 	const interval = setInterval(() => {
-		set((v) => v + 1);
+		set((value) => value + 1);
 	}, 1000);
 
 	return () => clearInterval(interval);
-});
+}, 0);
 ```
 
-## Arguments
+## Related
 
-| Name     | Type                                                                                                                           | Description                                  |
-| :------- | :----------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------- |
-| producer | `((setter: (v: T) => T) => () => void) \| { subscribe: (fn: (v: T) => void) => (() => void) \| { unsubscribe: () => void }; }` | The producer function or subscribable object |
+- [`observable`](/reference/reactive-utilities/observable)

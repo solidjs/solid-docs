@@ -1,35 +1,57 @@
 ---
 title: <NoHydration>
 use_cases: >-
-  static content, ssr optimization, performance, reducing bundle size,
-  server-only rendering
+  static content, server-rendered content, skipping hydration for a subtree
 tags:
   - ssr
   - hydration
-  - optimization
-  - performance
-  - static
   - server-rendering
+  - components
 version: "1.0"
 description: >-
-  Prevent client-side hydration for static content in SolidJS. Optimize
-  performance by skipping hydration for server-rendered static elements.
+  Render children during server rendering and skip hydration for that subtree
+  on the client.
 ---
 
-The `<NoHydration>` component prevents the client-side hydration process from being applied to its children.
-During server-side rendering, components and elements wrapped within `<NoHydration>` will render normally on the server, contributing to the initial HTML output.
-However, during client-side hydration, Solid bypasses the hydration process for the content within `<NoHydration>`.
-This means that elements within `<NoHydration>` will not have event listeners attached by Solid, and their state will not be managed reactively on the client-side after the initial render.
+`<NoHydration>` skips hydration for its subtree on the client.
 
-:::note
-Placing a `<Hydration>` component inside `<NoHydration>` has no effect and will not override the `<NoHydration>` behavior.
-:::
+## Import
 
-## Example
+```ts
+import { NoHydration } from "solid-js/web";
+```
+
+## Type
+
+```ts
+function NoHydration(props: { children?: JSX.Element }): JSX.Element;
+```
+
+## Props
+
+### `children`
+
+- **Type:** `JSX.Element`
+
+Content inside the boundary.
+
+## Return value
+
+- **Type:** `JSX.Element`
+
+## Behavior
+
+- During server rendering, children inside `<NoHydration>` render normally.
+- During client hydration, Solid skips hydrating that subtree.
+- Event listeners and reactive updates are not attached to content inside the boundary during hydration.
+- Placing `<Hydration>` inside `<NoHydration>` does not override the no-hydration behavior.
+
+## Examples
+
+### Basic usage
 
 ```tsx
 import { NoHydration } from "solid-js/web";
-import { InteractiveComponent, StaticContent } from "./components";
 
 function Example() {
 	return (
@@ -42,3 +64,7 @@ function Example() {
 	);
 }
 ```
+
+## Related
+
+- [`<Portal>`](/reference/components/portal)

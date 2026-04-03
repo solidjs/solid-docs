@@ -2,8 +2,8 @@
 title: <SuspenseList>
 order: 5
 use_cases: >-
-  coordinating loading, multiple async, loading sequences, layout stability,
-  parallel data fetching
+  coordinating suspense boundaries, controlling reveal order, coordinating
+  fallback display
 tags:
   - suspense
   - async
@@ -13,16 +13,20 @@ tags:
   - components
 version: "1.0"
 description: >-
-  Coordinate multiple Suspense components in SolidJS. Control reveal order and
-  manage loading states for parallel async operations smoothly.
+  Coordinate how multiple suspense boundaries reveal their content.
 ---
 
-SuspenseList allows for coordinating multiple parallel Suspense and SuspenseList components. It controls the order in which content is revealed to reduce layout thrashing and has an option to collapse or hide fallback states.
+`<SuspenseList>` coordinates nested suspense boundaries.
+
+## Import
 
 ```ts
 import { SuspenseList } from "solid-js";
-import type { JSX } from "solid-js";
+```
 
+## Type
+
+```ts
 function SuspenseList(props: {
 	children: JSX.Element;
 	revealOrder: "forwards" | "backwards" | "together";
@@ -30,37 +34,59 @@ function SuspenseList(props: {
 }): JSX.Element;
 ```
 
-**Note**: SuspenseList is still in the experimental stage and does not have full `SSR` support.
-
-Here's an example of how to use SuspenseList:
-
-```tsx
-<SuspenseList revealOrder="forwards" tail="collapsed">
-	<ProfileDetails user={resource.user} />
-	<Suspense fallback={<h2>Loading posts...</h2>}>
-		<ProfileTimeline posts={resource.posts} />
-	</Suspense>
-	<Suspense fallback={<h2>Loading fun facts...</h2>}>
-		<ProfileTrivia trivia={resource.trivia} />
-	</Suspense>
-</SuspenseList>
-```
-
 ## Props
 
-| Name          | Type                                      | Default      | Description                                                                 |
-| ------------- | ----------------------------------------- | ------------ | --------------------------------------------------------------------------- |
-| `revealOrder` | `"forwards" \| "backwards" \| "together"` | `"forwards"` | Determines the order in which the SuspenseList children should be revealed. |
-| `tail`        | `"collapsed" \| "hidden"`                 | `undefined`  | TODO                                                                        |
+### `children`
+
+- **Type:** `JSX.Element`
+
+Suspense and suspense-list children inside the list.
 
 ### `revealOrder`
 
-`"forwards" | "backwards" | "together"`
+- **Type:** `"forwards" | "backwards" | "together"`
 
-- `"forwards"`: Reveals each item in the list once the previous item has finished rendering. This is the default.
-- `"backwards"`: Reveals each item in the list once the next item has finished rendering.
-- `"together"`: Reveals all items in the list at the same time.
+Order used to reveal child boundaries.
 
 ### `tail`
 
-`"collapsed" | "hidden"`
+- **Type:** `"collapsed" | "hidden"`
+
+Controls fallback visibility for later items after the first still-pending item.
+
+## Return value
+
+- **Type:** `JSX.Element`
+
+## Behavior
+
+- `revealOrder="forwards"` reveals items from first to last.
+- `revealOrder="backwards"` reveals items from last to first.
+- `revealOrder="together"` reveals all items only after all coordinated boundaries are ready.
+- With `tail="collapsed"`, later pending items can keep a fallback visible after the first pending item.
+- With `tail="hidden"`, later pending items hide their fallback after the first pending item.
+
+## Notes
+
+- `<SuspenseList>` is experimental.
+
+## Examples
+
+### Basic usage
+
+```tsx
+import { Suspense, SuspenseList } from "solid-js";
+
+<SuspenseList revealOrder="forwards" tail="collapsed">
+	<Suspense fallback={<h2>Loading profile...</h2>}>
+		<ProfileDetails user={resource.user} />
+	</Suspense>
+	<Suspense fallback={<h2>Loading posts...</h2>}>
+		<ProfileTimeline posts={resource.posts} />
+	</Suspense>
+</SuspenseList>;
+```
+
+## Related
+
+- [`<Suspense>`](/reference/components/suspense)

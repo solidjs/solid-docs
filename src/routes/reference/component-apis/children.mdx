@@ -10,13 +10,10 @@ tags:
   - utilities
 version: "1.0"
 description: >-
-  Resolve and normalize a component's `children` prop into a stable accessor.
-  Useful when you need to read or transform children imperatively inside a
-  component.
+  Resolve a component's `children` prop into a stable accessor.
 ---
 
-`children` normalizes a component's `children` prop into a stable accessor that returns resolved JSX elements.
-It accepts functions, arrays, fragments, and nested structures.
+`children` resolves a component's `children` prop and returns an accessor for the resolved result.
 
 ## Import
 
@@ -41,46 +38,40 @@ type ChildrenReturn = Accessor<ResolvedChildren> & {
 - **Type:** `() => JSX.Element`
 - **Required:** Yes
 
-An accessor that returns the `children` value (typically `props.children`).
+Accessor that returns the component's `children` value.
 
 ## Return value
 
 - **Type:** `ChildrenReturn`
 
-The function returns a callable accessor.
-Calling it yields the resolved children, either a single element or an array.
+Returns an accessor for the resolved children.
+The accessor also exposes `toArray()`.
 
-## Helpers
+## Behavior
 
-### `toArray()`
-
-- **Type:** `() => ResolvedChildren[]`
-
-- **Description:** Returns a flattened array of resolved child elements.
-
-This method is exposed on the returned accessor and is useful for iteration or index-based logic.
+- `children` resolves functions, arrays, fragments, and nested child structures.
+- The returned accessor reads the current resolved value of `props.children`.
+- `toArray()` returns a flattened array of resolved child elements.
 
 ## Examples
 
 ### Basic usage
 
 ```tsx
+import { children } from "solid-js";
+
 function Wrapper(props) {
 	const resolved = children(() => props.children);
 
 	return <div>{resolved()}</div>;
 }
-
-// Usage
-<Wrapper>
-	<span>one</span>
-	<span>two</span>
-</Wrapper>;
 ```
 
-### `.toArray()` example
+### Flatten children into an array
 
 ```tsx
+import { children } from "solid-js";
+
 function List(props) {
 	const resolved = children(() => props.children);
 	const items = resolved.toArray();
@@ -93,28 +84,8 @@ function List(props) {
 		</ul>
 	);
 }
-
-// Usage
-<List>
-	<span>one</span>
-	<span>two</span>
-</List>;
 ```
 
-> [!NOTE]
-> `children` resolves the current value of `props.children`.
-> If `props.children` is reactive, the resolved accessor reflects updates.
+## Related
 
-### Working with function-as-children
-
-If `children` is a function, the helper evaluates it and returns its rendered result.
-
-```tsx
-function Slot(props) {
-	const resolved = children(() => props.children);
-	return <div>{resolved()}</div>;
-}
-
-// Usage
-<Slot>{() => <span>dynamic</span>}</Slot>;
-```
+- [`createContext`](/reference/component-apis/create-context)

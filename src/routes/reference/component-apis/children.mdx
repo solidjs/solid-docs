@@ -13,7 +13,7 @@ description: >-
   Resolve a component's `children` prop into a stable accessor.
 ---
 
-`children` resolves a component's `children` prop and returns an accessor for the resolved result.
+`children` resolves a component's `children` prop and returns a stable accessor for the resolved result.
 
 ## Import
 
@@ -24,10 +24,8 @@ import { children } from "solid-js";
 ## Type
 
 ```ts
-function children(fn: Accessor<JSX.Element>): ChildrenReturn;
-
-type ChildrenReturn = Accessor<ResolvedChildren> & {
-	toArray: () => ResolvedChildren[];
+function children(fn: Accessor<JSX.Element>): Accessor<JSX.Element> & {
+	toArray: () => JSX.Element[];
 };
 ```
 
@@ -42,16 +40,16 @@ Accessor that returns the component's `children` value.
 
 ## Return value
 
-- **Type:** `ChildrenReturn`
+- **Type:** `Accessor<JSX.Element> & { toArray: () => JSX.Element[] }`
 
 Returns an accessor for the resolved children.
 The accessor also exposes `toArray()`.
 
 ## Behavior
 
-- `children` resolves functions, arrays, fragments, and nested child structures.
-- The returned accessor reads the current resolved value of `props.children`.
-- `toArray()` returns a flattened array of resolved child elements.
+- The returned accessor memoizes the resolved children, so repeated reads use the resolved result instead of recreating the child structure.
+- `children` resolves functions, arrays, fragments, and nested child structures from `props.children`.
+- `toArray()` returns the resolved children as an array. It returns `[]` when the resolved value is `null` or `undefined`.
 
 ## Examples
 
@@ -63,7 +61,12 @@ import { children } from "solid-js";
 function Wrapper(props) {
 	const resolved = children(() => props.children);
 
-	return <div>{resolved()}</div>;
+	return (
+		<div>
+			<header>{resolved()}</header>
+			<div>{resolved()}</div>
+		</div>
+	);
 }
 ```
 
@@ -74,11 +77,10 @@ import { children } from "solid-js";
 
 function List(props) {
 	const resolved = children(() => props.children);
-	const items = resolved.toArray();
 
 	return (
 		<ul>
-			{items.map((child) => (
+			{resolved.toArray().map((child) => (
 				<li>{child}</li>
 			))}
 		</ul>
@@ -88,4 +90,4 @@ function List(props) {
 
 ## Related
 
-- [`createContext`](/reference/component-apis/create-context)
+- [Props](/concepts/components/props)

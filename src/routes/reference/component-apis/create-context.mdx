@@ -16,7 +16,7 @@ description: >-
 ---
 
 `createContext` creates a context object.
-The returned object contains a `Provider` component and a `defaultValue`; [`useContext`](/reference/component-apis/use-context) reads the nearest matching provider value.
+The returned object contains a `Provider` component and an optional `defaultValue`; [`useContext`](/reference/component-apis/use-context) reads the nearest matching provider value.
 
 ## Import
 
@@ -37,6 +37,11 @@ function createContext<T>(
 	defaultValue?: undefined,
 	options?: { name?: string }
 ): Context<T | undefined>;
+
+function createContext<T>(
+	defaultValue: T,
+	options?: { name?: string }
+): Context<T>;
 ```
 
 ## Parameters
@@ -64,9 +69,8 @@ Returns a context object containing `id`, `Provider`, and `defaultValue`.
 ## Behavior
 
 - `Context.Provider` passes its `value` prop to descendant calls to [`useContext`](/reference/component-apis/use-context).
-- If no matching provider is found, `useContext` returns `defaultValue` when one was supplied.
-- If no matching provider is found and no default value was supplied, `useContext` returns `undefined`.
-- Calling `useContext` outside the owner tree of a matching provider also returns the default value or `undefined`.
+- `useContext` reads the nearest matching provider in the current owner tree.
+- If no matching provider is found, `useContext` returns `defaultValue` when one was supplied, or `undefined` otherwise.
 
 ## Notes
 
@@ -91,11 +95,11 @@ const ThemeContext = createContext<Theme>("light");
 ```tsx
 import { createContext } from "solid-js";
 
-const CounterContext = createContext<number>();
+const CounterContext = createContext<{ count: number }>();
 
 function CounterProvider(props) {
 	return (
-		<CounterContext.Provider value={1}>
+		<CounterContext.Provider value={{ count: 1 }}>
 			{props.children}
 		</CounterContext.Provider>
 	);

@@ -14,7 +14,7 @@ description: >-
   Read the current value of a context object created by `createContext`.
 ---
 
-`useContext` returns the current value for a context object.
+`useContext` reads the nearest provider value for a context object in the current owner tree.
 
 ## Import
 
@@ -48,14 +48,14 @@ Context object created by [`createContext`](/reference/component-apis/create-con
 - **Type:** `T`
 
 Returns the value provided by the nearest matching `Context.Provider`.
+If the context was created without a default value, `T` can include `undefined`.
 If no provider is found, it returns the context's default value or `undefined`.
 
 ## Behavior
 
 - `useContext` reads the nearest matching provider in the current owner tree.
-- When no provider is found, it returns the default value from [`createContext`](/reference/component-apis/create-context).
-- When no provider is found and no default value was supplied, the result is `undefined`.
-- Calling `useContext` outside the owner tree of a matching provider returns the default value or `undefined`.
+- If no matching provider is found, it returns the default value from [`createContext`](/reference/component-apis/create-context), or `undefined` when no default value was supplied.
+- A provider value of `undefined` is treated the same as a missing provider and returns the default value or `undefined`.
 
 ## Examples
 
@@ -74,6 +74,8 @@ function CounterValue() {
 ```
 
 ### Throw when a provider is missing
+
+This example checks for `undefined` when the context was created without a default value.
 
 ```ts
 import { createContext, useContext } from "solid-js";

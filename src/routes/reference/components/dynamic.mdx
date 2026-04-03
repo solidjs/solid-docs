@@ -2,45 +2,109 @@
 title: <Dynamic>
 order: 5
 use_cases: >-
-  dynamic components, conditional rendering, polymorphic components, runtime
-  component selection, flexible ui, component switching
+  dynamic components, runtime component selection, polymorphic components,
+  rendering custom components or intrinsic elements
 tags:
   - dynamic
   - components
   - jsx
   - polymorphic
   - rendering
-  - conditional
 version: "1.0"
 description: >-
-  Render components dynamically at runtime with the Dynamic component. Perfect
-  for polymorphic components and conditional component rendering.
+  Render a component or intrinsic element selected at runtime, and access the
+  lower-level `createDynamic` helper.
 ---
 
-This component lets you insert an arbitrary Component or tag and passes the props through to it.
+`<Dynamic>` renders the value of its `component` prop as either a custom component or an intrinsic element. `createDynamic` provides the same behavior as a function.
 
-```tsx
-import { Dynamic } from "solid-js/web";
-import type { JSX } from "solid-js";
+## Import
 
-function Dynamic<T>(
-	props: T & {
-		children?: any;
-		component?: Component<T> | string | keyof JSX.IntrinsicElements;
-	}
-): () => JSX.Element;
+```ts
+import { Dynamic, createDynamic } from "solid-js/web";
 ```
 
-Here's an example of how you can use it:
+## Type
 
-```tsx
-<Dynamic component={MyComponent} someProp={state.something} />
+```ts
+type ValidComponent =
+	| keyof JSX.IntrinsicElements
+	| ((props: any) => JSX.Element);
+
+type DynamicProps<T extends ValidComponent> = {
+	component: T | undefined;
+} & Record<string, unknown>;
+
+function createDynamic<T extends ValidComponent>(
+	component: () => T | undefined,
+	props: Record<string, unknown>
+): JSX.Element;
+
+function Dynamic<T extends ValidComponent>(props: DynamicProps<T>): JSX.Element;
 ```
 
 ## Props
 
-| Name        | Type                                                        | Description                               |
-| :---------- | :---------------------------------------------------------- | :---------------------------------------- |
-| `component` | `Component<T>` \| `string` \| `keyof JSX.IntrinsicElements` | The component to render.                  |
-| `children`  | `any`                                                       | The children to pass to the component.    |
-| `...`       | `T`                                                         | Any other props to pass to the component. |
+### `component`
+
+- **Type:** `T | undefined`
+
+Component or intrinsic element to render.
+
+### remaining props
+
+- **Type:** props accepted by the rendered component or element
+
+Props forwarded to the rendered value of `component`.
+
+## Parameters
+
+### `component`
+
+- **Type:** `() => T | undefined`
+
+Accessor that returns the component or intrinsic element to render.
+
+### `props`
+
+- **Type:** `Record<string, unknown>`
+
+Props passed to the rendered component or element.
+
+## Return value
+
+- **Type:** `JSX.Element`
+
+Returns the rendered component or element.
+
+## Behavior
+
+- When `component` resolves to a function, Solid calls that component with the provided props.
+- When `component` resolves to a string, Solid creates an intrinsic element of that type and spreads the provided props onto it.
+- `<Dynamic>` calls `createDynamic(() => props.component, others)` internally after separating the `component` prop from the remaining props.
+
+## Examples
+
+### Basic usage
+
+```tsx
+import { Dynamic } from "solid-js/web";
+
+function Example(props) {
+	return <Dynamic component={props.as} value={props.value} />;
+}
+```
+
+### `createDynamic`
+
+```tsx
+import { createDynamic } from "solid-js/web";
+
+function Example(props) {
+	return createDynamic(() => props.as, { value: props.value });
+}
+```
+
+## Related
+
+- [`<Portal>`](/reference/components/portal)

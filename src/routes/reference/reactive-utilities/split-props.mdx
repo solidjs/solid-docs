@@ -1,8 +1,8 @@
 ---
 title: splitProps
 use_cases: >-
-  prop forwarding, component composition, prop separation, child components,
-  prop destructuring
+  prop forwarding, component composition, prop separation, splitting props into
+  multiple groups
 tags:
   - props
   - components
@@ -11,27 +11,61 @@ tags:
   - reactive
 version: "1.0"
 description: >-
-  Split reactive props objects by keys in SolidJS. Perfect for consuming
-  specific props while forwarding others to child components efficiently.
+  Split a reactive props object into multiple reactive subsets and a remainder
+  object.
 ---
+
+`splitProps` partitions a props object by key groups and returns a reactive object for each group plus a final object containing the remaining keys.
+
+## Import
 
 ```ts
 import { splitProps } from "solid-js";
-
-function splitProps<T>(
-	props: T,
-	...keys: Array<(keyof T)[]>
-): [...parts: Partial<T>];
 ```
 
-Splits a reactive object by keys.
+## Type
 
-It takes a reactive object and any number of arrays of keys; for each array of keys, it will return a reactive object with just those properties of the original object.
-The last reactive object in the returned array will have any leftover properties of the original object.
+```ts
+function splitProps<T extends Record<string, unknown>>(
+	props: T,
+	...keys: (readonly (keyof T)[])[]
+): Record<string, unknown>[];
+```
 
-This can be useful if you want to consume a subset of props and pass the rest to a child.
+## Parameters
+
+### `props`
+
+- **Type:** `T`
+
+Source props object.
+
+### `keys`
+
+- **Type:** `(readonly (keyof T)[])[]`
+
+Arrays of keys that determine each returned subset.
+
+## Return value
+
+- **Type:** `Record<string, unknown>[]`
+
+Returns one reactive object for each key array and a final object containing keys not assigned to any earlier group.
+
+## Behavior
+
+- Each returned object preserves reactive property access.
+- Keys are assigned to the first matching group.
+- The last returned object contains keys not included in the provided key arrays.
+- When the source props object is proxy-backed, the returned objects use proxy-backed property access.
+
+## Examples
+
+### Basic usage
 
 ```tsx
+import { splitProps } from "solid-js";
+
 function MyComponent(props) {
 	const [local, others] = splitProps(props, ["children"]);
 
@@ -44,23 +78,24 @@ function MyComponent(props) {
 }
 ```
 
-Because `splitProps` takes any number of arrays, we can split a props object as much as we wish (if, for example, we had multiple child components that each required a subset of the props).
-
-Let's say a component was passed six props:
+### Split multiple groups
 
 ```tsx
-<MyComponent a={1} b={2} c={3} d={4} e={5} foo="bar" />;
-// ...
+import { splitProps } from "solid-js";
 
 function MyComponent(props) {
-	console.log(props); // {a: 1, b: 2, c: 3, d: 4, e: 5, foo: "bar"}
 	const [vowels, consonants, leftovers] = splitProps(
 		props,
 		["a", "e"],
 		["b", "c", "d"]
 	);
-	console.log(vowels); // {a: 1, e: 5}
-	console.log(consonants); // {b: 2, c: 3, d: 4}
-	console.log(leftovers.foo); // bar
+
+	return (
+		<Child vowels={vowels} consonants={consonants} leftovers={leftovers} />
+	);
 }
 ```
+
+## Related
+
+- [`mergeProps`](/reference/reactive-utilities/merge-props)

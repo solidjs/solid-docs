@@ -1,41 +1,75 @@
 ---
 title: mergeProps
 use_cases: >-
-  component props, default values, prop cloning, prop merging, component
-  configuration
+  component props, default values, prop cloning, combining multiple prop
+  sources
 tags:
   - props
   - components
   - reactivity
   - defaults
-  - cloning
   - merging
 version: "1.0"
 description: >-
-  Learn how to merge reactive props in SolidJS for setting component defaults,
-  cloning props objects, and combining multiple prop sources dynamically.
+  Merge multiple prop sources into a single object while preserving reactive
+  property access.
 ---
+
+`mergeProps` merges prop sources from left to right and resolves reads from the last source that defines each property.
+
+## Import
+
+```ts
+import { mergeProps } from "solid-js";
+```
+
+## Type
+
+```ts
+function mergeProps<T extends unknown[]>(
+	...sources: T
+): Record<string, unknown>;
+```
+
+## Parameters
+
+### `sources`
+
+- **Type:** `unknown[]`
+
+Prop sources to merge.
+
+## Return value
+
+- **Type:** `Record<string, unknown>`
+
+Returns an object that resolves each property from the last source that defines it.
+
+## Behavior
+
+- Later sources override earlier sources for the same property.
+- Function sources are wrapped so property reads stay reactive.
+- When reactive proxies are involved, the merged result uses proxy-backed property resolution.
+- Property lookups are resolved when read rather than copied eagerly from every source.
+
+## Examples
+
+### Basic usage
 
 ```ts
 import { mergeProps } from "solid-js";
 
-function mergeProps(...sources: any): any;
+const props = mergeProps({ name: "Smith" }, incomingProps);
 ```
 
-A reactive object **merge** method.
-Useful for setting default props for components in case caller doesn't provide them.
-Or cloning the props object including reactive properties.
-
-This method works by using a proxy and resolving properties in reverse order.
-This allows for dynamic tracking of properties that aren't present when the prop object is first merged.
+### Clone props
 
 ```ts
-// default props
-props = mergeProps({ name: "Smith" }, props);
+import { mergeProps } from "solid-js";
 
-// clone props
-newProps = mergeProps(props);
-
-// merge props
-props = mergeProps(props, otherProps);
+const clonedProps = mergeProps(props);
 ```
+
+## Related
+
+- [`splitProps`](/reference/reactive-utilities/split-props)

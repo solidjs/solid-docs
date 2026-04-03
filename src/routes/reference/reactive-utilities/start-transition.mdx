@@ -11,16 +11,66 @@ tags:
   - batching
 version: "1.0"
 description: >-
-  Start transitions in SolidJS without pending state tracking. Batch async
-  updates for improved performance and smoother user interactions.
+  Start a transition and return a promise that resolves when the transition
+  completes.
 ---
 
+`startTransition` starts a transition without exposing a pending-state accessor.
+
+## Import
+
 ```ts
-import { startTransition } from "solid-js"
-
-function startTransition: (fn: () => void) => Promise<void>
-
+import { startTransition } from "solid-js";
 ```
 
-Similar to `useTransition` except there is no associated pending state.
-This one can just be used directly to start the Transition.
+## Type
+
+```ts
+function startTransition(fn: () => unknown): Promise<void>;
+```
+
+## Parameters
+
+### `fn`
+
+- **Type:** `() => unknown`
+- **Required:** Yes
+
+Function executed inside the transition.
+
+## Return value
+
+- **Type:** `Promise<void>`
+
+Resolves when the transition completes.
+
+## Behavior
+
+- Updates scheduled inside `fn` run as a transition.
+- The returned promise resolves after transition work completes.
+- This API does not provide a pending-state accessor.
+
+## Examples
+
+### Start a transition
+
+```tsx
+import { createSignal, startTransition } from "solid-js";
+
+function Example() {
+	const [value, setValue] = createSignal("");
+
+	async function update(next: string) {
+		await startTransition(() => {
+			setValue(next);
+		});
+	}
+
+	return <button onClick={() => update("next")}>{value()}</button>;
+}
+```
+
+## Related
+
+- [`useTransition`](/reference/reactive-utilities/use-transition)
+- [`Suspense`](/reference/components/suspense)

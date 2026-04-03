@@ -1,35 +1,49 @@
 ---
 title: isServer
 use_cases: >-
-  conditional rendering, ssr vs client code, bundle optimization,
-  environment-specific logic, code splitting
+  server-only branches, client-only branches, bundle-level environment checks
 tags:
   - ssr
   - environment
   - bundling
-  - optimization
   - conditional
 version: "1.0"
 description: >-
-  Detect server or browser environment with isServer. Optimize bundle sizes by
-  conditionally including code for specific runtime environments.
+  Read whether the current `solid-js/web` bundle is the server bundle.
 ---
+
+`isServer` is a constant boolean that indicates whether code is running in the server bundle.
+
+## Import
 
 ```ts
 import { isServer } from "solid-js/web";
+```
 
+## Type
+
+```ts
 const isServer: boolean;
 ```
 
-This indicates that the code is being run as the server or browser bundle.
-As the underlying runtimes export this as a constant boolean it allows bundlers to eliminate the code and their used imports from the respective bundles.
+## Behavior
+
+- `isServer` is `true` in the server bundle and `false` in the browser bundle.
+- Because it is exported as a constant, bundlers can eliminate unreachable branches.
+
+## Examples
+
+### Basic usage
 
 ```ts
 import { isServer } from "solid-js/web";
 
 if (isServer) {
-	// I will never make it to the browser bundle
-} else {
-	// won't be run on the server;
+	serverOnlyWork();
 }
 ```
+
+## Related
+
+- [`DEV`](/reference/rendering/dev)
+- [`isDev`](/reference/rendering/is-dev)

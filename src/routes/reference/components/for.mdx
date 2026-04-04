@@ -49,7 +49,7 @@ Source list.
 
 - **Type:** `JSX.Element`
 
-Content rendered when `each` is empty or falsy.
+Content rendered when `each` is an empty array, `undefined`, `null`, or `false`.
 
 ### `children`
 
@@ -64,8 +64,8 @@ Child function. It receives the current item and an index accessor.
 ## Behavior
 
 - `<For>` maps items by value identity.
+- If the same item value appears at a new position, its rendered node can be moved instead of recreated.
 - The `index` argument is an accessor.
-- Reordering reuses rendered items whose source values are retained.
 - `<For>` uses [`mapArray`](/reference/reactive-utilities/map-array) internally.
 
 ## Examples
@@ -73,9 +73,7 @@ Child function. It receives the current item and an index accessor.
 ### Basic usage
 
 ```tsx
-import { For } from "solid-js";
-
-<For each={state.list} fallback={<div>No items</div>}>
+<For each={items()} fallback={<div>No items</div>}>
 	{(item) => <div>{item}</div>}
 </For>;
 ```
@@ -83,9 +81,7 @@ import { For } from "solid-js";
 ### Access the index
 
 ```tsx
-import { For } from "solid-js";
-
-<For each={state.list}>
+<For each={items()}>
 	{(item, index) => (
 		<div>
 			#{index()} {item}

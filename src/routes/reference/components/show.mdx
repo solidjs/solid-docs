@@ -67,37 +67,38 @@ Content rendered when `when` is falsy.
 
 ### `children`
 
-- **Type:** `JSX.Element | ((item) => JSX.Element)`
+- **Type:** `JSX.Element | ((item: Accessor<NonNullable<T>>) => JSX.Element) | ((item: NonNullable<T>) => JSX.Element)`
 
-Content rendered when `when` is truthy. Function children receive an accessor or value based on `keyed`.
+Content rendered when `when` is truthy.
 
 ## Return value
 
 - **Type:** `JSX.Element`
 
+Returns the rendered children or `fallback` content.
+
 ## Behavior
 
-- With `keyed` omitted or `false`, `<Show>` re-renders only when the truthiness of `when` changes.
-- With `keyed={true}`, changes to the `when` value itself trigger a new render even when the value remains truthy.
+- With `keyed` omitted or `false`, `<Show>` updates only when the truthiness of `when` changes. Replacing one truthy value with another truthy value does not recreate the child block, and function children receive an accessor that can only be read while the condition remains truthy.
+- With `keyed={true}`, changes to the `when` value trigger a new render even when the value remains truthy, and function children receive the value directly.
 - Function children are wrapped in [`untrack`](/reference/reactive-utilities/untrack).
-- With `keyed={false}`, function children receive an accessor for the current non-nullish value; with `keyed={true}`, they receive the value directly.
 
 ## Examples
 
 ### Basic usage
 
 ```tsx
-import { Show } from "solid-js";
+const loading = () => false;
 
-<Show when={value()} fallback={<div>Fallback Element</div>}>
-	<div>Child Element</div>
+<Show when={!loading()} fallback={<div>Loading...</div>}>
+	<div>Loaded</div>
 </Show>;
 ```
 
 ### Function child
 
 ```tsx
-import { Show } from "solid-js";
+const user = () => ({ name: "Ada" });
 
 <Show when={user()}>{(user) => <div>{user().name}</div>}</Show>;
 ```
@@ -105,7 +106,7 @@ import { Show } from "solid-js";
 ### Keyed function child
 
 ```tsx
-import { Show } from "solid-js";
+const user = () => ({ name: "Ada" });
 
 <Show when={user()} keyed>
 	{(user) => <div>{user.name}</div>}

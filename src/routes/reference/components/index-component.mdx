@@ -1,14 +1,13 @@
 ---
 title: <Index>
 use_cases: >-
-  primitive arrays, non-keyed lists, index-based rendering, static positions,
+  non-keyed lists, index-based rendering, fixed positions, changing values,
   simple lists
 tags:
   - lists
   - iteration
   - components
   - arrays
-  - primitives
   - index
 version: "1.0"
 description: >-
@@ -48,7 +47,7 @@ Source list.
 
 - **Type:** `JSX.Element`
 
-Content rendered when `each` is empty or falsy.
+Content rendered when `each` is an empty array, `undefined`, `null`, or `false`.
 
 ### `children`
 
@@ -66,6 +65,7 @@ Child function. It receives an accessor for the item at that index and the index
 - The `item` argument is an accessor.
 - The `index` argument is a number.
 - Updating a value at the same index updates the corresponding rendered item.
+- When the array is reordered, rendered positions stay tied to indexes, and `item()` updates to the current value at that index.
 - `<Index>` uses [`indexArray`](/reference/reactive-utilities/index-array) internally.
 
 ## Examples
@@ -73,9 +73,9 @@ Child function. It receives an accessor for the item at that index and the index
 ### Basic usage
 
 ```tsx
-import { Index } from "solid-js";
+const items = ["A", "B", "C"];
 
-<Index each={state.list} fallback={<div>No items</div>}>
+<Index each={items} fallback={<div>No items</div>}>
 	{(item) => <div>{item()}</div>}
 </Index>;
 ```
@@ -83,9 +83,9 @@ import { Index } from "solid-js";
 ### Access the index
 
 ```tsx
-import { Index } from "solid-js";
+const items = ["A", "B", "C"];
 
-<Index each={state.list}>
+<Index each={items}>
 	{(item, index) => (
 		<div>
 			#{index} {item()}

@@ -77,45 +77,38 @@ Controls whether function children receive the current value directly instead of
 
 ### `children`
 
-- **Type:** `JSX.Element | ((item) => JSX.Element)`
+- **Type:** `JSX.Element | ((item: Accessor<NonNullable<T>>) => JSX.Element) | ((item: NonNullable<T>) => JSX.Element)`
 
-Content rendered when the branch matches. Function children receive an accessor or value based on `keyed`.
+Content rendered when the branch matches.
 
 ## Return value
 
 - **Type:** `JSX.Element`
 
+Returns the selected branch or the `fallback` content.
+
 ## Behavior
 
-- `<Switch>` evaluates its child `<Match>` elements in order and renders the first truthy branch.
+- `<Switch>` evaluates its child `<Match>` elements in order and renders only the first truthy branch.
 - If no branch matches, `<Switch>` renders `fallback`.
-- Function children in `<Match>` follow the same keyed behavior as [`<Show>`](/reference/components/show): with `keyed={false}`, they receive an accessor; with `keyed={true}`, they receive the value directly.
+- With `keyed={false}`, function children in `<Match>` receive an accessor that can only be read while that branch remains selected. With `keyed={true}`, they receive the value directly.
 
 ## Examples
 
 ### Basic usage
 
 ```tsx
-import { Match, Switch } from "solid-js";
-
-<Switch fallback={<div>Not Found</div>}>
-	<Match when={state.route === "home"}>
-		<Home />
+<Switch fallback={<p>Unknown status</p>}>
+	<Match when={state.status === "loading"}>
+		<p>Loading...</p>
 	</Match>
-	<Match when={state.route === "settings"}>
-		<Settings />
+	<Match when={state.status === "success"}>
+		<p>Saved</p>
 	</Match>
-</Switch>;
-```
-
-### Function child
-
-```tsx
-import { Match, Switch } from "solid-js";
-
-<Switch>
-	<Match when={user()}>{(user) => <div>{user().name}</div>}</Match>
-</Switch>;
+	<Match when={state.status === "error"}>
+		<p>Failed</p>
+	</Match>
+</Switch>
 ```
 
 ## Related

@@ -15,7 +15,7 @@ description: >-
   Render fallback content while resources read under the boundary are pending.
 ---
 
-`<Suspense>` tracks resources read under its boundary.
+`<Suspense>` renders `fallback` while resources read under its boundary are pending.
 
 ## Import
 
@@ -50,11 +50,13 @@ Subtree inside the suspense boundary.
 
 - **Type:** `JSX.Element`
 
+Returns the rendered subtree or `fallback` content depending on pending tracked resources.
+
 ## Behavior
 
 - `<Suspense>` is triggered when a resource is read inside the boundary.
 - The boundary waits until pending tracked resources resolve.
-- `<Suspense>` is non-blocking: the subtree still runs while the fallback is rendered.
+- `<Suspense>` is non-blocking: the subtree can continue running before the boundary reveals the resolved content in the DOM.
 - Nested suspense boundaries handle resources read under the nearest boundary.
 - `onMount` and `createEffect` inside the suspended subtree run after the boundary resolves.
 
@@ -63,8 +65,6 @@ Subtree inside the suspense boundary.
 ### Basic usage
 
 ```tsx
-import { Suspense } from "solid-js";
-
 <Suspense fallback={<LoadingSpinner />}>
 	<AsyncComponent />
 </Suspense>;
@@ -73,9 +73,7 @@ import { Suspense } from "solid-js";
 ### Nested suspense
 
 ```tsx
-import { Suspense } from "solid-js";
-
-<Suspense fallback={<div>Loading page</div>}>
+<Suspense fallback={<div>Loading page...</div>}>
 	<h1>{title()}</h1>
 	<Suspense fallback={<div>Loading details</div>}>
 		<DataComponent>{data()}</DataComponent>

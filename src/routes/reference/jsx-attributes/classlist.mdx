@@ -27,17 +27,19 @@ description: >-
 
 ## Value
 
-- **Type:** `Record<string, boolean | undefined | null>`
+- **Type:** `Record<string, boolean | undefined>`
 
 Object whose keys are class names and whose values control whether each class is present.
 
 ## Behavior
 
 - Each key is treated as a class name.
+- Keys can contain multiple space-separated class names, which are toggled individually.
 - Truthy values add the class and falsy values remove it.
 - Updates are applied per class rather than replacing the whole `class` attribute.
-- `classList` is a compile-time pseudo-attribute and does not work through prop spreads or `<Dynamic>`.
+- `classList` works through normal DOM prop assignment, including prop spreads and `<Dynamic>` when it renders an intrinsic element.
 - If both `class` and `classList` are reactive, updates to `class` can overwrite classes managed by `classList`.
+- SSR output merges `class`, `className`, and `classList` into the emitted `class` attribute.
 
 ## Examples
 
@@ -57,3 +59,7 @@ Object whose keys are class names and whose values control whether each class is
 ```tsx
 <div classList={{ [className()]: classOn() }} />
 ```
+
+## Related
+
+- [`class`](/reference/jsx-attributes/class)

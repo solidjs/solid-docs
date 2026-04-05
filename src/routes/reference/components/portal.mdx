@@ -61,7 +61,7 @@ Creates an SVG `<g>` container instead of an HTML `<div>`.
 
 - **Type:** `HTMLDivElement | SVGGElement | ((el: HTMLDivElement | SVGGElement) => void)`
 
-Receives the portal container element.
+Receives the created portal container element. This is a `<div>` by default or a `<g>` when `isSVG` is `true`.
 
 ### `children`
 
@@ -80,6 +80,7 @@ Returns a marker node used to preserve the portal position in the component tree
 - `<Portal>` renders its children outside the parent DOM hierarchy, but events still propagate through the Solid component hierarchy.
 - When the mount target is not `document.head`, the portal creates a container element and appends it to the mount target.
 - When the mount target is `document.head`, the portal inserts its children without creating that container element.
+- During server rendering, `<Portal>` returns no output.
 - Portals render only on the client and are skipped during hydration.
 
 ## Examples
@@ -87,17 +88,34 @@ Returns a marker node used to preserve the portal position in the component tree
 ### Basic usage
 
 ```tsx
+import { createSignal, Show } from "solid-js";
 import { Portal } from "solid-js/web";
 
-function Example() {
-	return (
-		<Portal mount={document.getElementById("modal-root")!}>
-			<div>My Content</div>
-		</Portal>
+function App() {
+  const [open, setOpen] = createSignal(false);
+
+return (
+		<>
+			<button onClick={() => setOpen(true)}>Open</button>
+
+			<Show when={open()}>
+				<Portal>
+					<div
+						style={{
+							position: "fixed",
+							top: "2rem",
+							left: "2rem",
+							padding: "1rem",
+							background: "white",
+							border: "1px solid #ccc",
+						}}
+					>
+						<div>Popup</div>
+						<button onClick={() => setOpen(false)}>Close</button>
+					</div>
+				</Portal>
+			</Show>
+		</>
 	);
 }
 ```
-
-## Related
-
-- [`<Dynamic>`](/reference/components/dynamic)

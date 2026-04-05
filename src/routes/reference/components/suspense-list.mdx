@@ -20,7 +20,7 @@ description: >-
 This is an experimental component
 :::
 
-`<SuspenseList>` coordinates nested suspense boundaries.
+`<SuspenseList>` coordinates how multiple child suspense boundaries reveal their content.
 
 ## Import
 
@@ -62,20 +62,25 @@ Controls fallback visibility for later items after the first still-pending item.
 
 - **Type:** `JSX.Element`
 
+Returns the coordinated suspense boundaries.
+
 ## Behavior
 
 - `revealOrder="forwards"` reveals items from first to last.
 - `revealOrder="backwards"` reveals items from last to first.
 - `revealOrder="together"` reveals all items only after all coordinated boundaries are ready.
-- With `tail="collapsed"`, later pending items can keep a fallback visible after the first pending item.
-- With `tail="hidden"`, later pending items hide their fallback after the first pending item.
+- With `tail="collapsed"`, the first still-pending item can keep its fallback visible, while later pending items hide theirs.
+- With `tail="hidden"`, pending items after the first still-pending item hide their fallbacks.
 
 ## Examples
 
 ### Basic usage
 
 ```tsx
-import { Suspense, SuspenseList } from "solid-js";
+const resource = {
+	user: { name: "Ada" },
+	posts: ["First post"],
+};
 
 <SuspenseList revealOrder="forwards" tail="collapsed">
 	<Suspense fallback={<h2>Loading profile...</h2>}>

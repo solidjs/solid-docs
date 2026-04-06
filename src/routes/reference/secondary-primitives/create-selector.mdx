@@ -62,13 +62,15 @@ Debug name used by development tooling.
 
 - **Type:** `(key: U) => boolean`
 
-Returns an accessor function that reports whether the provided key matches the current source value.
+Returns an accessor function that reports whether the provided key matches the current source value. Each subscriber tracks only its own key.
 
 ## Behavior
 
-- The returned function compares each key against the current source value.
-- With the default comparison, matching uses strict equality.
-- Subscribers update when their key starts or stops matching the source value.
+- The returned function compares each key against the current source value. With the default comparison, matching uses strict equality.
+- Solid tracks subscribers by key, so only subscribers whose key starts or stops matching need to update.
+- On the server, `createSelector` compares each key directly against `source()` without keyed subscriber bookkeeping.
+
+Compared with checking equality directly in every subscriber, `createSelector` keeps subscriptions keyed by the compared value.
 
 ## Examples
 

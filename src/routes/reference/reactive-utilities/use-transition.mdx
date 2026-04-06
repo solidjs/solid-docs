@@ -48,6 +48,7 @@ Returns a tuple containing:
 ## Behavior
 
 - `start` is the same transition-starting function exposed by [`startTransition`](/reference/reactive-utilities/start-transition).
+- On the client, `start` schedules its callback asynchronously in a microtask.
 - `pending()` reflects whether that transition is still pending.
 - Transition state integrates with Suspense and resource reads under Suspense boundaries.
 - On the server, `pending()` is `false` and transitions run synchronously.
@@ -57,22 +58,34 @@ Returns a tuple containing:
 ### Basic usage
 
 ```tsx
-import { createSignal, useTransition } from "solid-js";
+import {
+	Suspense,
+	createResource,
+	createSignal,
+	useTransition,
+} from "solid-js";
 
 function Example() {
-	const [value, setValue] = createSignal("");
+	const [userId, setUserId] = createSignal(1);
+	const [user] = createResource(userId, async (id) => {
+		const response = await fetch(`/api/users/${id}`);
+		return response.json();
+	});
 	const [pending, start] = useTransition();
 
 	return (
 		<>
 			<button
 				onClick={async () => {
-					await start(() => setValue("next"));
+					await start(() => setUserId(2));
 				}}
 			>
-				Update
+				Load next user
 			</button>
-			<div>{pending() ? "pending" : value()}</div>
+			<div>{pending() ? "Loading transition..." : "Ready"}</div>
+			<Suspense fallback={<p>Loading user...</p>}>
+				<pre>{JSON.stringify(user(), null, 2)}</pre>
+			</Suspense>
 		</>
 	);
 }

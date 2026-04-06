@@ -30,7 +30,7 @@ type Owner = unknown;
 function getOwner(): Owner | null;
 ```
 
-The concrete owner shape is internal and is primarily useful with [`runWithOwner`](/reference/reactive-utilities/run-with-owner).
+The `Owner` interface is public, but its concrete shape is mostly useful for advanced interop such as [`runWithOwner`](/reference/reactive-utilities/run-with-owner).
 
 ## Parameters
 
@@ -47,7 +47,7 @@ Returns the current owner or `null` when no owner is active.
 - `getOwner` returns the current owner and does not create or modify ownership.
 - Owners determine cleanup and context lookup for descendant computations.
 - A computation created inside the current scope becomes part of the current owner tree unless ownership is overridden.
-- Components are not computations and do not create owner nodes themselves.
+- Component functions run under an owner created for that subtree.
 - Calling `getOwner` inside component code returns the owner responsible for rendering and disposing that component subtree.
 - Turning off tracking with [`untrack`](/reference/reactive-utilities/untrack) does not create a new owner.
 
@@ -55,17 +55,21 @@ Returns the current owner or `null` when no owner is active.
 
 ### Capture an owner for later use
 
-```ts
+```tsx
 import { getOwner, runWithOwner } from "solid-js";
 
-const owner = getOwner();
+function Example() {
+	const owner = getOwner();
 
-if (owner) {
 	queueMicrotask(() => {
-		runWithOwner(owner, () => {
-			console.log("owner restored");
-		});
+		if (owner) {
+			runWithOwner(owner, () => {
+				console.log("owner restored");
+			});
+		}
 	});
+
+	return null;
 }
 ```
 

@@ -61,39 +61,55 @@ Returns an accessor backed by the external source.
 
 ## Behavior
 
+- `from` subscribes to the producer immediately when it runs.
 - A producer function receives a Solid setter and returns a cleanup function.
 - A subscribable source must expose `subscribe()`, and that subscription may return either a cleanup function or an object with `unsubscribe()`.
 - Emitted values are not deduplicated by equality.
-- Returned subscriptions are cleaned up with the current Solid owner when one exists.
+- Cleanup is registered on the current Solid owner when one exists.
+- When `from` runs without an owner, the subscription still starts but is not cleaned up automatically.
 - When `initialValue` is omitted, the accessor can return `undefined`.
 
 ## Examples
 
 ### Create an accessor from a subscribable source
 
-```ts
+```tsx
 import { from } from "solid-js";
 
-const counter = from({
-	subscribe(next) {
-		const interval = setInterval(() => next(Date.now()), 1000);
-		return () => clearInterval(interval);
-	},
-});
+function Clock() {
+	const time = from(
+		{
+			subscribe(next) {
+				const interval = setInterval(
+					() => next(new Date().toLocaleTimeString()),
+					1000
+				);
+				return () => clearInterval(interval);
+			},
+		},
+		""
+	);
+
+	return <div>{time()}</div>;
+}
 ```
 
 ### Create an accessor from a producer function
 
-```ts
+```tsx
 import { from } from "solid-js";
 
-const clock = from((set) => {
-	const interval = setInterval(() => {
-		set((value) => value + 1);
-	}, 1000);
+function Counter() {
+	const count = from((set) => {
+		const interval = setInterval(() => {
+			set((value = 0) => value + 1);
+		}, 1000);
 
-	return () => clearInterval(interval);
-}, 0);
+		return () => clearInterval(interval);
+	}, 0);
+
+	return <div>{count()}</div>;
+}
 ```
 
 ## Related

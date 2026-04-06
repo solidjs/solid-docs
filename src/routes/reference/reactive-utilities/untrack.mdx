@@ -48,19 +48,24 @@ Returns the value produced by `fn` unchanged.
 ## Behavior
 
 - `untrack` only affects reads inside the provided function. Signals read there do not become dependencies of the surrounding computation.
-- On the server, `untrack` runs through the server runtime's `batch` implementation.
+- `untrack` does not create or restore an owner.
 
 ## Examples
 
-### Read a prop without tracking
+### Read part of an effect without tracking
 
 ```tsx
-import { untrack } from "solid-js";
+import { createEffect, untrack } from "solid-js";
 
 export function Component(props) {
-	const value = untrack(() => props.value);
+	createEffect(() => {
+		console.log(
+			props.id,
+			untrack(() => props.label)
+		);
+	});
 
-	return <div>{value}</div>;
+	return <div>{props.id}</div>;
 }
 ```
 
@@ -86,8 +91,7 @@ function Example() {
 
 ## Notes
 
-Default and initial prop values can be read directly when initializing a signal.
-This pattern commonly appears with names such as `initialName` and `defaultName`.
+Default and initial prop values can be read directly when initializing a signal. This pattern commonly appears with names such as `initialName` and `defaultName`.
 
 ```tsx tab title="initialValue" {5}
 import { createSignal } from "solid-js";

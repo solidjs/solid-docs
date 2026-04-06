@@ -58,32 +58,33 @@ Returns the value produced by `fn`, or `undefined` when an error is routed throu
 
 - During the synchronous execution of `fn`, `runWithOwner` restores the provided owner for cleanup, context lookup, and descendant computations created inside `fn`.
 - `runWithOwner` does not restore dependency tracking because the current tracking listener is cleared while `fn` runs.
-- Code after the first `await` in an `async` function runs without reactive dependency tracking.
+- Code after the first `await` in an `async` function runs without the restored owner or reactive dependency tracking.
 
 ## Examples
 
 ### Restore an owner in a callback
 
-```ts
-import { createEffect, getOwner, runWithOwner, useContext } from "solid-js";
+```tsx
+import { createEffect, getOwner, runWithOwner } from "solid-js";
 
-const owner = getOwner();
+function Example() {
+	const owner = getOwner();
 
-if (owner) {
-	setTimeout(() => {
-		runWithOwner(owner, () => {
-			const value = useContext(FooContext);
-
-			createEffect(() => {
-				console.log(value);
+	queueMicrotask(() => {
+		if (owner) {
+			runWithOwner(owner, () => {
+				createEffect(() => {
+					console.log("effect created under the captured owner");
+				});
 			});
-		});
-	}, 1000);
+		}
+	});
+
+	return null;
 }
 ```
 
 ## Related
 
 - [`getOwner`](/reference/reactive-utilities/get-owner)
-- [`useContext`](/reference/component-apis/use-context)
 - [`onCleanup`](/reference/lifecycle/on-cleanup)

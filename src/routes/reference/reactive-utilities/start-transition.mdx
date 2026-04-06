@@ -46,7 +46,8 @@ Resolves when the transition completes.
 
 ## Behavior
 
-- Updates scheduled inside `fn` run as a transition. Nested calls inside an active transition reuse that transition and return its existing promise, which resolves after transition work completes.
+- On the client, `fn` runs asynchronously in a microtask and its updates run as a transition.
+- Nested calls inside an active transition reuse that transition and return its existing promise, which resolves after transition work completes.
 - On the server, `startTransition(fn)` runs `fn()` synchronously.
 - `startTransition` is the transition-starting function exposed by [`useTransition`](/reference/reactive-utilities/use-transition), without the `pending` accessor.
 
@@ -55,18 +56,34 @@ Resolves when the transition completes.
 ### Basic usage
 
 ```tsx
-import { createSignal, startTransition } from "solid-js";
+import {
+	Suspense,
+	createResource,
+	createSignal,
+	startTransition,
+} from "solid-js";
 
 function Example() {
-	const [value, setValue] = createSignal("");
+	const [userId, setUserId] = createSignal(1);
+	const [user] = createResource(userId, async (id) => {
+		const response = await fetch(`/api/users/${id}`);
+		return response.json();
+	});
 
-	async function update(next: string) {
+	async function showNextUser() {
 		await startTransition(() => {
-			setValue(next);
+			setUserId(2);
 		});
 	}
 
-	return <button onClick={() => update("next")}>{value()}</button>;
+	return (
+		<>
+			<button onClick={showNextUser}>Load next user</button>
+			<Suspense fallback={<p>Loading user...</p>}>
+				<pre>{JSON.stringify(user(), null, 2)}</pre>
+			</Suspense>
+		</>
+	);
 }
 ```
 

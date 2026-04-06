@@ -62,8 +62,9 @@ Returns an accessor backed by the external source.
 ## Behavior
 
 - A producer function receives a Solid setter and returns a cleanup function.
-- A subscribable source must expose `subscribe()`.
-- Returned subscriptions are cleaned up with the owning Solid scope.
+- A subscribable source must expose `subscribe()`, and that subscription may return either a cleanup function or an object with `unsubscribe()`.
+- Emitted values are not deduplicated by equality.
+- Returned subscriptions are cleaned up with the current Solid owner when one exists.
 - When `initialValue` is omitted, the accessor can return `undefined`.
 
 ## Examples
@@ -73,7 +74,12 @@ Returns an accessor backed by the external source.
 ```ts
 import { from } from "solid-js";
 
-const signal = from(observableSource);
+const counter = from({
+	subscribe(next) {
+		const interval = setInterval(() => next(Date.now()), 1000);
+		return () => clearInterval(interval);
+	},
+});
 ```
 
 ### Create an accessor from a producer function

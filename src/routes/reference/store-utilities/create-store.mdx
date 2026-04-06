@@ -27,6 +27,7 @@ type Store<T> = T;
 
 interface SetStoreFunction<T> {
 	(setter: T | Partial<T> | ((prev: T) => T | Partial<T>)): void;
+	(...path: unknown[]): void;
 }
 
 function createStore<T extends object = {}>(
@@ -59,9 +60,9 @@ Tuple containing the store proxy and its setter.
 
 ## Behavior
 
-- The returned store is read through a proxy.
-- The setter can replace the whole store or update nested paths.
-- Object updates shallow-merge by default, and setting a property to `undefined` deletes it.
+- The returned store is read through a proxy, and property reads track at the property level.
+- The setter supports both top-level updates and path syntax for nested updates.
+- Object updates shallow-merge by default, while single-array updates replace array contents. Setting a property to `undefined` deletes it.
 - Getters defined on the initial object remain available on the store.
 
 ## Examples
@@ -78,7 +79,7 @@ const [state, setState] = createStore({
 	},
 });
 
-setStore("user", "firstName", "Jane");
+setState("user", "firstName", "Jane");
 ```
 
 ### Getter

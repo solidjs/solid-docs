@@ -25,20 +25,20 @@ description: >-
 ```ts
 type Accessor<T> = () => T;
 
-function directive(element: Element, accessor: Accessor<any>): void;
+function directive(element: Element, accessor?: Accessor<any>): void;
 ```
 
 ## Value
 
 - **Type:** directive argument
 
-Value exposed to the directive through an accessor.
-When no explicit value is passed, the accessor returns `true`.
+The directive reads the value through an accessor. Without an explicit value, the accessor returns `true`.
 
 ## Behavior
 
-- The compiler lowers `use:name={value}` to a directive helper call with the element and an accessor for `value`. Without an explicit value, the accessor returns `true`.
-- The directive runs during rendering before the element is connected to the DOM.
+- `use:name={value}` passes the element and an accessor for `value` to the directive.
+- Without an explicit value, the accessor returns `true`.
+- The directive runs during rendering in the current owner, before the element is connected to the DOM, so it can create effects and register cleanup.
 - `use:*` works only on native elements, including custom elements, and is not forwarded through user-defined components.
 
 ## Examples
@@ -48,8 +48,11 @@ When no explicit value is passed, the accessor returns `true`.
 ```tsx
 function model(element, value) {
 	const [field, setField] = value();
+	const onInput = ({ currentTarget }) => setField(currentTarget.value);
+
 	createRenderEffect(() => (element.value = field()));
-	element.addEventListener("input", ({ target }) => setField(target.value));
+	element.addEventListener("input", onInput);
+	onCleanup(() => element.removeEventListener("input", onInput));
 }
 
 const [name, setName] = createSignal("");

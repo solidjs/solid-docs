@@ -32,11 +32,10 @@ function renderToStream<T>(
 		renderId?: string;
 		onCompleteShell?: (info: { write: (v: string) => void }) => void;
 		onCompleteAll?: (info: { write: (v: string) => void }) => void;
-		onError?: (err: any) => void;
 	}
 ): {
 	pipe: (writable: { write: (v: string) => void }) => void;
-	pipeTo: (writable: WritableStream) => Promise<void>;
+	pipeTo: (writable: WritableStream) => void;
 };
 ```
 
@@ -74,21 +73,16 @@ Callback invoked when the shell is ready to flush.
 
 Callback invoked after all server suspense boundaries have settled.
 
-#### `onError`
-
-- **Type:** `(err: any) => void`
-
-Callback invoked when a rendering error is encountered.
-
 ## Return value
 
 - **Type:** `{ pipe: ..., pipeTo: ... }`
 
-Streaming controller with `pipe` and `pipeTo` methods. The runtime implementation is also thenable and can resolve to the complete HTML string.
+Streaming controller with `pipe` and `pipeTo` methods.
 
 ## Behavior
 
-- `renderToStream` is a server rendering API and is unsupported in browser bundles. It buffers the shell HTML, including suspense fallback content, and can flush it before later async fragments and serialized data stream as resources resolve.
+- `renderToStream` is a server rendering API and is unsupported in browser bundles.
+- It renders the shell first, including suspense fallback content, and can flush that output before later async fragments and serialized data stream as resources resolve.
 - `onCompleteShell` and `onCompleteAll` receive a `write()` helper for injecting additional output into the stream.
 - `pipe` writes to Node-style writable targets.
 - `pipeTo` writes to a `WritableStream`.
@@ -97,7 +91,7 @@ Streaming controller with `pipe` and `pipeTo` methods. The runtime implementatio
 
 ### `pipe`
 
-```ts
+```tsx
 import { renderToStream } from "solid-js/web";
 
 renderToStream(() => <App />).pipe(response);
@@ -105,11 +99,11 @@ renderToStream(() => <App />).pipe(response);
 
 ### `pipeTo`
 
-```ts
+```tsx
 import { renderToStream } from "solid-js/web";
 
 const { writable } = new TransformStream();
-await renderToStream(() => <App />).pipeTo(writable);
+renderToStream(() => <App />).pipeTo(writable);
 ```
 
 ## Related

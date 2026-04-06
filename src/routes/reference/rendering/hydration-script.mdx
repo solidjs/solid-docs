@@ -72,6 +72,7 @@ Delegated event names captured before client scripts load.
 
 - The generated script initializes `window._$HY` and bootstraps delegated event replay before the runtime loads.
 - The default captured delegated events are `"click"` and `"input"` unless `eventNames` is overridden.
+- Place the generated script once in the server-rendered document when the page will hydrate on the client.
 - `HydrationScript` returns JSX for server-rendered HTML output, and `generateHydrationScript` returns a string for manual HTML generation.
 - In browser bundles, these exports are placeholders that return `undefined`.
 
@@ -81,11 +82,18 @@ Delegated event names captured before client scripts load.
 
 ```tsx
 import { HydrationScript } from "solid-js/web";
+import type { JSX } from "solid-js";
 
-// Use when generating HTML on the server
-<head>
-	<HydrationScript />
-</head>;
+function Html(props: { children: JSX.Element }) {
+	return (
+		<html lang="en">
+			<head>
+				<HydrationScript />
+			</head>
+			<body>{props.children}</body>
+		</html>
+	);
+}
 ```
 
 ### `generateHydrationScript`

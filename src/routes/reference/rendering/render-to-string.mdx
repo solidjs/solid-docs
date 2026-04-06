@@ -28,7 +28,6 @@ function renderToString<T>(
 	options?: {
 		nonce?: string;
 		renderId?: string;
-		onError?: (err: any) => void;
 	}
 ): string;
 ```
@@ -55,12 +54,6 @@ Nonce applied to inline scripts emitted during rendering.
 
 Identifier used to namespace the render output.
 
-#### `onError`
-
-- **Type:** `(err: any) => void`
-
-Callback invoked when a rendering error is encountered.
-
 ## Return value
 
 - **Type:** `string`
@@ -70,6 +63,7 @@ Rendered HTML string.
 ## Behavior
 
 - `renderToString` is a server rendering API, is unsupported in browser bundles, and completes synchronously.
+- It returns the current render output without waiting for async suspense boundaries to settle.
 - The output includes hydration markup. Inline serialized scripts are emitted only when serializer data is produced.
 - Registered assets are injected into the HTML output, typically before `</head>`.
 - `renderId` namespaces the render output when multiple top-level roots are present.
@@ -78,7 +72,7 @@ Rendered HTML string.
 
 ### Basic usage
 
-```ts
+```tsx
 import { renderToString } from "solid-js/web";
 
 const html = renderToString(() => <App />);

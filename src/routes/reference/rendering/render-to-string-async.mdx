@@ -30,8 +30,6 @@ function renderToStringAsync<T>(
 		timeoutMs?: number;
 		nonce?: string;
 		renderId?: string;
-		noScripts?: boolean;
-		onError?: (err: any) => void;
 	}
 ): Promise<string>;
 ```
@@ -64,18 +62,6 @@ Nonce applied to inline scripts emitted during rendering.
 
 Identifier used to namespace the render output.
 
-#### `noScripts`
-
-- **Type:** `boolean`
-
-Disables script emission, including serialized data used for hydration continuation.
-
-#### `onError`
-
-- **Type:** `(err: any) => void`
-
-Callback invoked when a rendering error is encountered.
-
 ## Return value
 
 - **Type:** `Promise<string>`
@@ -84,16 +70,17 @@ Promise that resolves to the rendered HTML string.
 
 ## Behavior
 
-- `renderToStringAsync` is a server rendering API and is unsupported in browser bundles. It builds on [`renderToStream`](/reference/rendering/render-to-stream) and waits for the full stream result before resolving.
-- If the timeout elapses, the returned promise rejects instead of resolving partial HTML.
-- Resource data is serialized for client hydration unless scripts are disabled.
+- `renderToStringAsync` is a server rendering API and is unsupported in browser bundles.
+- It waits for server suspense boundaries to settle before resolving the final HTML string.
+- `timeoutMs` limits how long the render waits for async suspense work to finish.
+- Resource data is serialized for client hydration.
 - `renderId` namespaces the render output when multiple top-level roots are present.
 
 ## Examples
 
 ### Basic usage
 
-```ts
+```tsx
 import { renderToStringAsync } from "solid-js/web";
 
 const html = await renderToStringAsync(() => <App />);

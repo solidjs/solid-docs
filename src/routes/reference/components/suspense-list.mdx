@@ -56,7 +56,7 @@ Order used to reveal child boundaries.
 
 - **Type:** `"collapsed" | "hidden"`
 
-Controls fallback visibility for later items after the first still-pending item.
+Controls fallback visibility for later items after the first still-pending item in ordered reveal modes.
 
 ## Return value
 
@@ -71,23 +71,36 @@ Returns the coordinated suspense boundaries.
 - `revealOrder="together"` reveals all items only after all coordinated boundaries are ready.
 - With `tail="collapsed"`, the first still-pending item can keep its fallback visible, while later pending items hide theirs.
 - With `tail="hidden"`, pending items after the first still-pending item hide their fallbacks.
+- `<SuspenseList>` coordinates child suspense boundaries. It does not suspend by itself.
 
 ## Examples
 
 ### Basic usage
 
 ```tsx
-const resource = {
-	user: { name: "Ada" },
-	posts: ["First post"],
+import { createResource, Suspense } from "solid-js";
+
+const delayed = async <T,>(value: T, ms: number) => {
+	await new Promise((resolve) => setTimeout(resolve, ms));
+	return value;
 };
+
+function ProfileDetails() {
+	const [user] = createResource(() => delayed({ name: "Ada" }, 500));
+	return <h2>{user()?.name}</h2>;
+}
+
+function ProfileTimeline() {
+	const [posts] = createResource(() => delayed(["First post"], 1000));
+	return <ul>{posts()?.map((post) => <li>{post}</li>)}</ul>;
+}
 
 <SuspenseList revealOrder="forwards" tail="collapsed">
 	<Suspense fallback={<h2>Loading profile...</h2>}>
-		<ProfileDetails user={resource.user} />
+		<ProfileDetails />
 	</Suspense>
 	<Suspense fallback={<h2>Loading posts...</h2>}>
-		<ProfileTimeline posts={resource.posts} />
+		<ProfileTimeline />
 	</Suspense>
 </SuspenseList>;
 ```

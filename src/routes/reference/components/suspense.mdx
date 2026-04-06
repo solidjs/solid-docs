@@ -12,10 +12,10 @@ tags:
   - components
 version: "1.0"
 description: >-
-  Render fallback content while resources read under the boundary are pending.
+  Render fallback content while suspense-tracked async dependencies under the boundary are pending.
 ---
 
-`<Suspense>` renders `fallback` while resources read under its boundary are pending.
+`<Suspense>` renders `fallback` while suspense-tracked async dependencies under its boundary are pending.
 
 ## Import
 
@@ -38,7 +38,7 @@ function Suspense(props: {
 
 - **Type:** `JSX.Element`
 
-Content rendered while tracked resources are pending.
+Content rendered while suspense-tracked async dependencies are pending.
 
 ### `children`
 
@@ -50,13 +50,13 @@ Subtree inside the suspense boundary.
 
 - **Type:** `JSX.Element`
 
-Returns the rendered subtree or `fallback` content depending on pending tracked resources.
+Returns the rendered subtree or `fallback` content depending on pending suspense-tracked async dependencies.
 
 ## Behavior
 
-- When a resource is read inside the boundary, `<Suspense>` renders `fallback` until the pending tracked resources resolve.
-- `<Suspense>` is non-blocking: the subtree can continue running before the boundary reveals the resolved content in the DOM.
-- Nested suspense boundaries handle resources read under the nearest boundary.
+- When a suspense-tracked async dependency is read inside the boundary, `<Suspense>` renders `fallback` until the pending work resolves.
+- `<Suspense>` is non-blocking: the subtree can continue running and create reactive owners before the boundary reveals the resolved content in the DOM.
+- Nested suspense boundaries handle suspense-tracked async dependencies under the nearest boundary.
 - `onMount` and `createEffect` inside the suspended subtree run after the boundary resolves.
 
 ## Examples
@@ -64,20 +64,54 @@ Returns the rendered subtree or `fallback` content depending on pending tracked 
 ### Basic usage
 
 ```tsx
-<Suspense fallback={<LoadingSpinner />}>
-	<AsyncComponent />
-</Suspense>
+import { createResource } from "solid-js";
+
+const fetchMessage = async () => {
+	await new Promise((resolve) => setTimeout(resolve, 1000));
+	return "Loaded";
+};
+
+function AsyncMessage() {
+	const [message] = createResource(fetchMessage);
+	return <p>{message()}</p>;
+}
+
+<Suspense fallback={<p>Loading...</p>}>
+	<AsyncMessage />
+</Suspense>;
 ```
 
 ### Nested suspense
 
 ```tsx
+import { createResource } from "solid-js";
+
+const fetchTitle = async () => {
+	await new Promise((resolve) => setTimeout(resolve, 500));
+	return "Profile";
+};
+
+const fetchDetails = async () => {
+	await new Promise((resolve) => setTimeout(resolve, 1000));
+	return "Details loaded";
+};
+
+function Title() {
+	const [title] = createResource(fetchTitle);
+	return <h1>{title()}</h1>;
+}
+
+function Details() {
+	const [details] = createResource(fetchDetails);
+	return <p>{details()}</p>;
+}
+
 <Suspense fallback={<div>Loading page...</div>}>
-	<h1>{title()}</h1>
-	<Suspense fallback={<div>Loading details</div>}>
-		<DataComponent>{data()}</DataComponent>
+	<Title />
+	<Suspense fallback={<div>Loading details...</div>}>
+		<Details />
 	</Suspense>
-</Suspense>
+</Suspense>;
 ```
 
 ## Related

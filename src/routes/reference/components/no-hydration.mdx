@@ -39,14 +39,14 @@ Content inside the boundary.
 
 - **Type:** `JSX.Element`
 
-Returns the server-rendered children.
+Returns the children during server and client-only rendering.
 
 ## Behavior
 
 - During server rendering, children inside `<NoHydration>` render normally.
 - During client hydration, Solid leaves the existing server-rendered DOM in place and does not hydrate that subtree.
+- In client-only rendering, `<NoHydration>` renders its children normally.
 - Interactive behavior inside the boundary does not hydrate on the client.
-- Placing `<Hydration>` inside `<NoHydration>` does not override the no-hydration behavior.
 
 ## Examples
 
@@ -56,9 +56,11 @@ Returns the server-rendered children.
 function Example() {
 	return (
 		<div>
-			<button>Interactive button</button>
+			<button onClick={() => console.log("hydrated")}>Hydrated button</button>
 			<NoHydration>
-				<div innerHTML={"<strong>Server-rendered only</strong>"} />
+				<div>
+					<strong>Rendered on the server without hydration</strong>
+				</div>
 			</NoHydration>
 		</div>
 	);

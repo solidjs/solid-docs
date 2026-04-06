@@ -91,26 +91,41 @@ Returns the selected branch or the `fallback` content.
 
 - `<Switch>` evaluates its child `<Match>` elements in order and renders only the first truthy branch.
 - If no branch matches, `<Switch>` renders `fallback`.
-- With `keyed={false}`, function children in `<Match>` receive an accessor that can only be read while that branch remains selected. With `keyed={true}`, they receive the value directly.
+- Function children in `<Match>` are wrapped in [`untrack`](/reference/reactive-utilities/untrack).
+- With `keyed={false}`, function children in `<Match>` receive an accessor that can only be read while that branch remains selected. Replacing one truthy value with another truthy value does not recreate the child block.
+- With `keyed={true}`, function children receive the current value directly, and changing the `when` value recreates the child block even when it remains truthy.
 
 ## Examples
 
 ### Basic usage
 
 ```tsx
-<Switch fallback={<p>Unknown status</p>}>
-	<Match when={state.status === "loading"}>
-		<p>Loading...</p>
-	</Match>
-	<Match when={state.status === "success"}>
-		<p>Saved</p>
-	</Match>
-	<Match when={state.status === "error"}>
-		<p>Failed</p>
-	</Match>
-</Switch>
+import { createSignal } from "solid-js";
+
+const [status, setStatus] = createSignal<"loading" | "success" | "error">(
+	"loading"
+);
+
+<>
+	<button onClick={() => setStatus("loading")}>Loading</button>
+	<button onClick={() => setStatus("success")}>Success</button>
+	<button onClick={() => setStatus("error")}>Error</button>
+
+	<Switch fallback={<p>Unknown status</p>}>
+		<Match when={status() === "loading"}>
+			<p>Loading...</p>
+		</Match>
+		<Match when={status() === "success"}>
+			<p>Saved</p>
+		</Match>
+		<Match when={status() === "error"}>
+			<p>Failed</p>
+		</Match>
+	</Switch>
+</>;
 ```
 
 ## Related
 
 - [`<Show>`](/reference/components/show)
+- [`untrack`](/reference/reactive-utilities/untrack)

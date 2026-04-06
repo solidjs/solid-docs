@@ -23,10 +23,7 @@ import { getRequestEvent } from "solid-js/web";
 ## Type
 
 ```ts
-interface RequestEvent {
-	request: Request;
-	locals?: Record<string | number | symbol, any>;
-}
+import type { RequestEvent } from "solid-js/web";
 
 function getRequestEvent(): RequestEvent | undefined;
 ```
@@ -38,7 +35,8 @@ function getRequestEvent(): RequestEvent | undefined;
 ## Behavior
 
 - `getRequestEvent` is for managed server/request scope.
-- When available, the returned event includes the current `Request`. In the server type, it also includes `locals`.
+- When available, the returned event includes the current `Request` as `event.request`.
+- Depending on the server integration, the event can also expose request-scoped fields such as `response`, `locals`, or router state.
 - If no current request event is available, including outside managed async scope, `getRequestEvent` returns `undefined`.
 
 ## Examples
@@ -48,9 +46,11 @@ function getRequestEvent(): RequestEvent | undefined;
 ```ts
 import { getRequestEvent } from "solid-js/web";
 
-const event = getRequestEvent();
+function readAuthorizationHeader() {
+	const event = getRequestEvent();
 
-if (event) {
-	const auth = event.request.headers.get("Authorization");
+	return event?.request.headers.get("Authorization") ?? null;
 }
 ```
+
+This example reads the event during request-scoped server execution.

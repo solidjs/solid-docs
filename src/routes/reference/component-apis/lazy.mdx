@@ -12,12 +12,11 @@ tags:
   - imports
 version: "1.0"
 description: >-
-  Lazy load components with code splitting to reduce bundle size and improve
-  performance. Components load on-demand and integrate with Suspense.
+  Create a component that loads its module lazily from a dynamic import.
 ---
 
-The `lazy` helper wraps a dynamic import and returns a component that loads on demand.
-Lazy components accept the same props as their eager counterparts and integrate with `<Suspense>` boundaries.
+`lazy` wraps a dynamic import and returns a component that loads its module on demand.
+The returned component accepts the same props as the loaded component and exposes `preload()`.
 
 ## Import
 
@@ -27,10 +26,10 @@ import { lazy } from "solid-js";
 
 ## Type
 
-```tsx
+```ts
 function lazy<T extends Component<any>>(
 	fn: () => Promise<{ default: T }>
-): T & { preload: () => Promise<T> };
+): T & { preload: () => Promise<{ default: T }> };
 ```
 
 ## Parameters
@@ -44,32 +43,42 @@ Dynamic import that resolves to the component module, exposing the component as 
 
 ## Return value
 
-`lazy` returns a renderable component compatible with `T`.
-The component exposes a `preload()` method that resolves the underlying module.
+- **Type:** `T & { preload: () => Promise<{ default: T }> }`
 
-| Property  | Type               | Description                                                            |
-| --------- | ------------------ | ---------------------------------------------------------------------- |
-| `preload` | `() => Promise<T>` | Loads the module without rendering and returns the resolved component. |
+Returns a renderable component compatible with `T`.
+The returned component also exposes `preload()`.
+
+`preload()` starts loading the module without rendering the component and returns the resolved module.
+
+## Behavior
+
+- Rendering a lazy component starts loading its module if it has not already been loaded.
+- Inside a [`<Suspense>`](/reference/components/suspense) boundary, the boundary shows its fallback while the module is loading.
+- Without a suspense boundary, the lazy component renders an empty string until the module resolves.
+- `preload()` starts the same module request without rendering the component.
 
 ## Examples
 
 ### Basic usage
 
-```tsx title="app.tsx"
-import { lazy } from "solid-js";
+```tsx
+import { lazy, Suspense } from "solid-js";
 
 const ComponentA = lazy(() => import("./ComponentA"));
 
 function App(props: { title: string }) {
-	return <ComponentA title={props.title} />;
+	return (
+		<Suspense fallback={<p>Loading...</p>}>
+			<ComponentA title={props.title} />
+		</Suspense>
+	);
 }
 ```
 
 ### Preloading nested lazy components
 
 ```tsx
-import { lazy } from "solid-js";
-import type { Component } from "solid-js";
+import { createSignal, lazy, Show, Suspense } from "solid-js";
 
 const Nested = lazy(() => import("./Nested"));
 
@@ -85,14 +94,16 @@ const ComponentWithPreload = () => {
 				Preload Nested Component
 			</button>
 			<Show when={showNested()}>
-				<Nested />
+				<Suspense fallback={<p>Loading nested component...</p>}>
+					<Nested />
+				</Suspense>
 			</Show>
 		</div>
 	);
 };
 ```
 
-## See also
+## Related
 
-- [`Suspense`](https://docs.solidjs.com/reference/components/suspense)
+- [`Suspense`](/reference/components/suspense)
 - [Router preloading guide](/solid-router/advanced-concepts/preloading)

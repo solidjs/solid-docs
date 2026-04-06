@@ -49,7 +49,7 @@ Returns the value produced by `fn`.
 - Downstream computations are deferred until the batch completes.
 - Nested `batch` calls behave like a single larger batch.
 - If you read a stale memo or signal inside the batch, Solid updates it on demand before returning the value.
-- If `fn` is asynchronous, only the updates before the first `await` are batched.
+- If `fn` is asynchronous, batching applies only to updates before the first `await` or other async suspension point.
 
 ## Automatic batching
 
@@ -61,49 +61,40 @@ Solid automatically batches updates in several cases, including:
 
 ## Examples
 
-### Batch multiple signal updates
+### Basic usage
 
 ```ts
-import { batch, createEffect, createMemo, createSignal } from "solid-js";
+const [count, setCount] = createSignal(0);
+const [total, setTotal] = createSignal(0);
 
-const [up1, setUp1] = createSignal(1);
-const [up2, setUp2] = createSignal(2);
-const [up3, setUp3] = createSignal(3);
-
-const down = createMemo(() => up1() + up2() + up3());
-createEffect(() => console.log(down())); // outputs 6
+const summary = createMemo(() => `${count()} / ${total()}`);
+createEffect(() => console.log(summary())); // logs "0 / 0"
 ```
 
-Without `batch`, each setter can trigger downstream work:
+Outside `batch`:
 
 ```ts
-setUp1(4); // recomputes down, outputs 9
-setUp2(5); // recomputes down, outputs 12
-setUp3(6); // recomputes down, outputs 15
+setCount(1); // logs "1 / 0"
+setTotal(5); // logs "1 / 5"
 ```
 
-With `batch`, the memo recomputes once at the end:
+Inside `batch`:
 
 ```ts
 batch(() => {
-	setUp1(10); // doesn't update down yet
-	setUp2(10); // doesn't update down yet
-	setUp3(10); // doesn't update down yet
-}); // recomputes down, outputs 30
+	setCount(1);
+	setTotal(5);
+}); // logs "1 / 5"
 ```
 
-### Read a memo inside a batch
+### Read inside a batch
 
 ```ts
 batch(() => {
-	setUp1(11); // doesn't update down yet
-	setUp2(11); // doesn't update down yet
-	setUp3(11); // doesn't update down yet
-	console.log(down()); // recomputes down, outputs 33
-	setUp1(12); // doesn't update down yet
-	setUp2(12); // doesn't update down yet
-	setUp3(12); // doesn't update down yet
-}); // recomputes down, outputs 36
+	setCount(2);
+	console.log(summary()); // logs "2 / 5"
+	setTotal(10);
+}); // logs "2 / 10"
 ```
 
 ## Related

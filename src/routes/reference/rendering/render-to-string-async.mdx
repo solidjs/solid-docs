@@ -50,7 +50,7 @@ Function that returns the root output to render.
 
 - **Type:** `number`
 
-Maximum wait time for suspense boundaries before the render resolves.
+Maximum wait time before the returned promise rejects.
 
 #### `nonce`
 
@@ -68,7 +68,7 @@ Identifier used to namespace the render output.
 
 - **Type:** `boolean`
 
-Disables script emission in the rendered output.
+Disables script emission, including serialized data used for hydration continuation.
 
 #### `onError`
 
@@ -84,7 +84,8 @@ Promise that resolves to the rendered HTML string.
 
 ## Behavior
 
-- `renderToStringAsync` waits for server suspense boundaries to settle before resolving.
+- `renderToStringAsync` is a server rendering API and is unsupported in browser bundles. It builds on [`renderToStream`](/reference/rendering/render-to-stream) and waits for the full stream result before resolving.
+- If the timeout elapses, the returned promise rejects instead of resolving partial HTML.
 - Resource data is serialized for client hydration unless scripts are disabled.
 - `renderId` namespaces the render output when multiple top-level roots are present.
 

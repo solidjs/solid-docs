@@ -24,8 +24,11 @@ import { children } from "solid-js";
 ## Type
 
 ```ts
-function children(fn: Accessor<JSX.Element>): Accessor<JSX.Element> & {
-	toArray: () => JSX.Element[];
+type ResolvedJSXElement = Exclude<JSX.Element, JSX.ArrayElement>;
+type ResolvedChildren = ResolvedJSXElement | ResolvedJSXElement[];
+
+function children(fn: Accessor<JSX.Element>): Accessor<ResolvedChildren> & {
+	toArray: () => ResolvedJSXElement[];
 };
 ```
 
@@ -40,7 +43,7 @@ Accessor that returns the component's `children` value.
 
 ## Return value
 
-- **Type:** `Accessor<JSX.Element> & { toArray: () => JSX.Element[] }`
+- **Type:** `Accessor<ResolvedChildren> & { toArray: () => ResolvedJSXElement[] }`
 
 Returns an accessor for the resolved children.
 The accessor also exposes `toArray()`.
@@ -48,7 +51,7 @@ The accessor also exposes `toArray()`.
 ## Behavior
 
 - The returned accessor memoizes the resolved children, so repeated reads use the resolved result instead of recreating the child structure.
-- `children` resolves functions, arrays, fragments, and nested child structures from `props.children`.
+- `children` resolves nested arrays, fragments, and zero-argument child accessors from `props.children`.
 - `toArray()` returns the resolved children as an array. It returns `[]` when the resolved value is `null` or `undefined`.
 
 ## Examples

@@ -28,7 +28,7 @@ import { mergeProps } from "solid-js";
 ```ts
 function mergeProps<T extends unknown[]>(
 	...sources: T
-): Record<string, unknown>;
+): MergeProps<T>;
 ```
 
 ## Parameters
@@ -41,13 +41,13 @@ Prop sources to merge.
 
 ## Return value
 
-- **Type:** `Record<string, unknown>`
+- **Type:** `MergeProps<T>`
 
-Returns an object that resolves each property from the last source that defines it.
+Returns a merged object with lazy reactive property resolution across the provided sources.
 
 ## Behavior
 
-- Later sources override earlier sources for the same property.
+- The last source with a non-`undefined` value for a property wins.
 - Function sources are wrapped so property reads stay reactive.
 - When reactive proxies are involved, the merged result uses proxy-backed property resolution.
 - Property lookups are resolved when read rather than copied eagerly from every source.
@@ -59,15 +59,14 @@ Returns an object that resolves each property from the last source that defines 
 ```ts
 import { mergeProps } from "solid-js";
 
-const props = mergeProps({ name: "Smith" }, incomingProps);
-```
+// default props
+props = mergeProps({ name: "Smith" }, props);
 
-### Clone props
+// clone props
+newProps = mergeProps(props);
 
-```ts
-import { mergeProps } from "solid-js";
-
-const clonedProps = mergeProps(props);
+// merge props
+props = mergeProps(props, otherProps);
 ```
 
 ## Related

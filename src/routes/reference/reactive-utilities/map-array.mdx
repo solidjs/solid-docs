@@ -55,7 +55,7 @@ Mapping function for each item.
 
 - **Type:** `() => any`
 
-Fallback accessor used when the source array is empty or falsy.
+Fallback accessor used when the source array is empty or falsy. The mapped result becomes a single fallback entry.
 
 ## Return value
 
@@ -67,8 +67,8 @@ Returns an accessor for the mapped array.
 
 - Items are cached by value identity.
 - The index argument is an accessor.
-- `mapFn` is not a tracking scope.
-- Reordering reuses existing mapped items when their source values are retained.
+- `mapFn` is not a tracking scope, so reads inside the callback do not track unless they happen inside nested JSX or another reactive scope.
+- Reordering reuses existing mapped items for retained source values and updates their index accessors.
 - This is the underlying helper for [`<For>`](/reference/components/for).
 
 ## Examples
@@ -79,14 +79,14 @@ Returns an accessor for the mapped array.
 import { createSignal, mapArray } from "solid-js";
 
 const [source] = createSignal([
-	{ id: 1, name: "A" },
-	{ id: 2, name: "B" },
+	{ id: 1, status: "pending" },
+	{ id: 2, status: "done" },
 ]);
 
 const mapped = mapArray(source, (item, index) => ({
 	id: item.id,
-	name: item.name,
-	position: index,
+	status: item.status,
+	position: () => index(),
 }));
 ```
 

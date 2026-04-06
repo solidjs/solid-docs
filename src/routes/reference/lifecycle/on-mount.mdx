@@ -37,7 +37,7 @@ function onMount(fn: () => void): void;
 - **Type:** `() => void`
 - **Required:** Yes
 
-Function executed once on mount.
+Non-tracking function executed once on mount.
 
 ## Return value
 
@@ -45,10 +45,10 @@ Function executed once on mount.
 
 ## Behavior
 
-- Runs once after the initial render.
-- Does not track reactive dependencies inside `fn`.
+- On the client, `onMount` runs once after the initial render. It does not run during server rendering.
+- `fn` does not track reactive dependencies.
 - Internally, `onMount(fn)` is equivalent to `createEffect(() => untrack(fn))`.
-- Runs after refs have been assigned.
+- By the time `onMount` runs, refs have already been assigned.
 
 ## Examples
 
@@ -75,6 +75,7 @@ import { onMount } from "solid-js";
 
 function Example() {
 	onMount(() => {
+		// Browser-only code
 		console.log(window.location.pathname);
 	});
 

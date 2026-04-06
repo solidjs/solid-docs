@@ -52,14 +52,12 @@ Function executed under `owner`.
 
 - **Type:** `T | undefined`
 
-Returns the value produced by `fn`.
+Returns the value produced by `fn`, or `undefined` when an error is routed through Solid's error handling.
 
 ## Behavior
 
-- Computations created inside `fn` are attached to the provided owner.
-- Context lookup inside `fn` walks the provided owner tree.
-- Ownership affects cleanup and context resolution.
-- Ownership does not restore dependency tracking across asynchronous boundaries.
+- During the synchronous execution of `fn`, `runWithOwner` restores the provided owner for cleanup, context lookup, and descendant computations created inside `fn`.
+- `runWithOwner` does not restore dependency tracking because the current tracking listener is cleared while `fn` runs.
 - Code after the first `await` in an `async` function runs without reactive dependency tracking.
 
 ## Examples
@@ -71,15 +69,17 @@ import { createEffect, getOwner, runWithOwner, useContext } from "solid-js";
 
 const owner = getOwner();
 
-setTimeout(() => {
-	runWithOwner(owner, () => {
-		const value = useContext(FooContext);
+if (owner) {
+	setTimeout(() => {
+		runWithOwner(owner, () => {
+			const value = useContext(FooContext);
 
-		createEffect(() => {
-			console.log(value);
+			createEffect(() => {
+				console.log(value);
+			});
 		});
-	});
-}, 1000);
+	}, 1000);
+}
 ```
 
 ## Related

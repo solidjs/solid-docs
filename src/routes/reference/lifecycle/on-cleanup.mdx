@@ -44,25 +44,24 @@ Cleanup function registered on the current reactive scope.
 
 - **Type:** `T`
 
-Returns the same function that was passed in.
+Returns `fn` unchanged.
 
 ## Behavior
 
 - In a component, the cleanup runs when that component is unmounted.
 - In a tracking scope such as [`createEffect`](/reference/basic-reactivity/create-effect), [`createMemo`](/reference/basic-reactivity/create-memo), or [`createRoot`](/reference/reactive-utilities/create-root), the cleanup runs when that scope is disposed or re-executes.
 - Multiple cleanup functions run when the owning scope is cleaned up.
-- On the server, cleanup also runs when server-side reactive branches are disposed.
+- On the server, cleanup also runs when server-side owners or reactive branches are disposed.
 
 ## Examples
 
 ### Remove an event listener
 
 ```tsx
-import { createSignal, onCleanup } from "solid-js";
+import { onCleanup } from "solid-js";
 
 const Component = () => {
-	const [count, setCount] = createSignal(0);
-	const handleClick = () => setCount((value) => value + 1);
+	const handleClick = () => console.log("clicked");
 
 	document.addEventListener("click", handleClick);
 
@@ -70,7 +69,7 @@ const Component = () => {
 		document.removeEventListener("click", handleClick);
 	});
 
-	return <main>Document has been clicked {count()} times</main>;
+	return <main>Listening for document clicks</main>;
 };
 ```
 

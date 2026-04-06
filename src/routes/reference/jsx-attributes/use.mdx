@@ -25,21 +25,21 @@ description: >-
 ```ts
 type Accessor<T> = () => T;
 
-function directive(element: HTMLElement, accessor: Accessor<any>): void;
+function directive(element: Element, accessor: Accessor<any>): void;
 ```
 
 ## Value
 
 - **Type:** directive argument
 
-Value exposed to the directive through its accessor.
+Value exposed to the directive through an accessor.
+When no explicit value is passed, the accessor returns `true`.
 
 ## Behavior
 
-- `use:name={value}` calls the directive named `name` with the element and an accessor for `value`.
-- Directive functions run during rendering before the element is connected to the DOM.
-- Directives only work on native elements, including custom elements.
-- Directives are not forwarded through user-defined components.
+- The compiler lowers `use:name={value}` to a directive helper call with the element and an accessor for `value`. Without an explicit value, the accessor returns `true`.
+- The directive runs during rendering before the element is connected to the DOM.
+- `use:*` works only on native elements, including custom elements, and is not forwarded through user-defined components.
 
 ## Examples
 
@@ -58,5 +58,15 @@ const [name, setName] = createSignal("");
 ```
 
 :::note
-When using TypeScript, custom directives may require extending Solid's JSX directive typings.
+When using TypeScript, custom directives may require extending Solid's JSX directive typings:
+
+```ts
+declare module "solid-js" {
+	namespace JSX {
+		interface Directives {
+			model: [Accessor<string>, Setter<string>];
+		}
+	}
+}
+```
 :::

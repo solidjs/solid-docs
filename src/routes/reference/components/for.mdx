@@ -13,53 +13,88 @@ tags:
   - performance
 version: "1.0"
 description: >-
-  Efficiently render lists in SolidJS with the For component. Provides keyed
-  iteration with minimal DOM updates for dynamic array rendering.
+  Render a list by item identity with a child function that receives the item
+  and an index accessor.
 ---
 
-The `<For>` component is used to render a list of items. It is similar to the `.map()` function in JavaScript.
+`<For>` renders a list by item identity.
+
+## Import
 
 ```ts
 import { For } from "solid-js";
-import type { JSX } from "solid-js";
+```
 
-function For<T, U extends JSX.Element>(props: {
-	each: readonly T[];
+## Type
+
+```ts
+type Accessor<T> = () => T;
+
+function For<T extends readonly any[], U extends JSX.Element>(props: {
+	each: T | undefined | null | false;
 	fallback?: JSX.Element;
-	children: (item: T, index: () => number) => U;
-}): () => U[];
+	children: (item: T[number], index: Accessor<number>) => U;
+}): JSX.Element;
 ```
 
-A referentially keyed loop with efficient updating of only changed items. The callback takes the current item as the first argument:
+## Props
 
-```jsx
-<For each={state.list} fallback={<div>Loading...</div>}>
+### `each`
+
+- **Type:** `T | undefined | null | false`
+
+Source list.
+
+### `fallback`
+
+- **Type:** `JSX.Element`
+
+Content rendered when `each` is an empty array, `undefined`, `null`, or `false`.
+
+### `children`
+
+- **Type:** `(item: T[number], index: Accessor<number>) => U`
+
+Child function. It receives the current item and an index accessor.
+
+## Return value
+
+- **Type:** `JSX.Element`
+
+## Behavior
+
+- `<For>` maps items by value identity.
+- If the same item value appears at a new position, its rendered node can be moved instead of recreated.
+- The `index` argument is an accessor.
+- `<For>` uses [`mapArray`](/reference/reactive-utilities/map-array) internally.
+
+## Examples
+
+### Basic usage
+
+```tsx
+const items = ["A", "B", "C"];
+
+<For each={items} fallback={<div>No items</div>}>
 	{(item) => <div>{item}</div>}
-</For>
+</For>;
 ```
 
-The `each` prop can also be a function that returns a list. This is useful for creating a loop that depends on a state value:
+### Access the index
 
-```jsx
-<For each={stateSignal()}>{(item) => <div>{item}</div>}</For>
-```
+```tsx
+const items = ["A", "B", "C"];
 
-The optional second argument is an index signal:
-
-```jsx
-<For each={state.list} fallback={<div>Loading...</div>}>
+<For each={items}>
 	{(item, index) => (
 		<div>
 			#{index()} {item}
 		</div>
 	)}
-</For>
+</For>;
 ```
 
-## Props
+## Related
 
-| Name       | Type                                  | Description                                                      |
-| :--------- | :------------------------------------ | :--------------------------------------------------------------- |
-| `each`     | `readonly T[]`                        | The list of items to render.                                     |
-| `fallback` | `JSX.Element`                         | A fallback element to render while the list is loading.          |
-| `children` | `(item: T, index: () => number) => U` | A callback that returns a JSX element for each item in the list. |
+- [`<Index>`](/reference/components/index-component)
+- [`mapArray`](/reference/reactive-utilities/map-array)

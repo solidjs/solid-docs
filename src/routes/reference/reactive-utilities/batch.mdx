@@ -11,79 +11,94 @@ tags:
   - updates
 version: "1.0"
 description: >-
-  Batch multiple signal updates in SolidJS to improve performance by reducing
-  recalculations. Essential for optimizing complex state changes.
+  Group reactive updates so downstream computations run after the batch
+  completes.
 ---
+
+`batch` groups multiple reactive updates so downstream computations run once after the batch completes instead of after each individual update.
+
+## Import
 
 ```ts
 import { batch } from "solid-js";
+```
 
+## Type
+
+```ts
 function batch<T>(fn: () => T): T;
 ```
 
-`batch` is a low-level API that batches updates together.
-More precisely, `batch(fn)` holds the execution of downstream computations during the `fn` block, executing them all together once the block `fn` returns.
-Thus, instead of a downstream computation executing after every dependency update, it will update just once at the end of the batch.
+## Parameters
 
-Batching improves performance by avoiding unnecessary recalculation.
-Suppose you have a downstream memo `down` that depends on multiple upstream signals `up1`, `up2`, and `up3`:
+### `fn`
+
+- **Type:** `() => T`
+- **Required:** Yes
+
+Function executed inside the batch.
+
+## Return value
+
+- **Type:** `T`
+
+Returns the value produced by `fn`.
+
+## Behavior
+
+- Downstream computations are deferred until the batch completes.
+- Nested `batch` calls behave like a single larger batch.
+- If you read a stale memo or signal inside the batch, Solid updates it on demand before returning the value.
+- If `fn` is asynchronous, batching applies only to updates before the first `await` or other async suspension point.
+
+## Automatic batching
+
+Solid automatically batches updates in several cases, including:
+
+- inside [`createEffect`](/reference/basic-reactivity/create-effect) and [`onMount`](/reference/lifecycle/on-mount)
+- inside the setter returned by [`createStore`](/reference/store-utilities/create-store)
+- inside array mutation methods on [`createMutable`](/reference/store-utilities/create-mutable)
+
+## Examples
+
+### Basic usage
 
 ```ts
-import { createSignal, createMemo, createEffect } from "solid-js";
-const [up1, setUp1] = createSignal(1);
-const [up2, setUp2] = createSignal(2);
-const [up3, setUp3] = createSignal(3);
-const down = createMemo(() => up1() + up2() + up3());
-// For illustration, monitor when `down` gets recomputed:
-createEffect(() => console.log(down())); // outputs 6
+const [count, setCount] = createSignal(0);
+const [total, setTotal] = createSignal(0);
+
+const summary = createMemo(() => `${count()} / ${total()}`);
+createEffect(() => console.log(summary())); // logs "0 / 0"
 ```
 
-If you directly update all of the upstream signals outside of batch mode, then `down` will recompute every time.
+Outside `batch`:
 
 ```ts
-setUp1(4); // recomputes down, outputs 9
-setUp2(5); // recomputes down, outputs 12
-setUp3(6); // recomputes down, outputs 15
+setCount(1); // logs "1 / 0"
+setTotal(5); // logs "1 / 5"
 ```
 
-If instead you update the upstream signals within a `batch`, then `down` will update only once at the end:
+Inside `batch`:
 
 ```ts
 batch(() => {
-	setUp1(10); // doesn't update down yet
-	setUp2(10); // doesn't update down yet
-	setUp3(10); // doesn't update down yet
-}); // recomputes down, outputs 30
+	setCount(1);
+	setTotal(5);
+}); // logs "1 / 5"
 ```
 
-The impact is even more dramatic if you have _m_ downstream computations (memos, effects, etc.) that each depends on _n_ upstream signals.
-Without batching, modifying all _n_ upstream signals would cause _m n_ updates to the downstream computations.
-With batching, modifying all _n_ upstream signals would cause _m_ updates to the downstream computations.
-Given that each update takes at least _n_ time (just to read the upstream signals), this cost savings can be significant.
-Batching is also especially helpful when the downstream effects include DOM updates, which can be expensive.
-
-Solid uses `batch` internally to automatically batch updates for you in a few cases:
-
-- Within [`createEffect`](/reference/basic-reactivity/create-effect) and [`onMount`](/reference/lifecycle/on-mount) (unless they are outside a [root](/reference/reactive-utilities/create-root))
-- Within the [setter of a store](/reference/store-utilities/create-store#setter) (which can update several properties at once)
-- Within array methods (e.g. `Array.prototype.splice`) of a [mutable store](/reference/store-utilities/create-mutable) (which can update several elements at once)
-
-These save you from having to use `batch` yourself in many cases.
-For the most part, automatic batching should be transparent to you, because accessing a signal or memo will cause it to update if it is out of date (as of Solid 1.4).
-For example:
+### Read inside a batch
 
 ```ts
 batch(() => {
-	setUp1(11); // doesn't update down yet
-	setUp2(11); // doesn't update down yet
-	setUp3(11); // doesn't update down yet
-	console.log(down()); // recomputes down, outputs 33
-	setUp1(12); // doesn't update down yet
-	setUp2(12); // doesn't update down yet
-	setUp3(12); // doesn't update down yet
-}); // recomputes down, outputs 36
+	setCount(2);
+	console.log(summary()); // logs "2 / 5"
+	setTotal(10);
+}); // logs "2 / 10"
 ```
 
-You can think of `batch(fn)` as setting a global "batch mode" variable, calling the function `fn`, and then restoring the global variable to its previous value.
-This means that you can nest `batch` calls, and they will form one big batch.
-It also means that, if `fn` is asynchronous, only the updates before the first `await` will be batched.
+## Related
+
+- [`createEffect`](/reference/basic-reactivity/create-effect)
+- [`createStore`](/reference/store-utilities/create-store)
+- [`createMutable`](/reference/store-utilities/create-mutable)

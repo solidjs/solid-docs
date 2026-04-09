@@ -11,40 +11,89 @@ tags:
   - consumption
 version: "1.0"
 description: >-
-  Access context values with useContext to consume data from parent providers.
-  Avoid prop drilling and access shared state throughout your component tree.
+  Read the current value of a context object created by `createContext`.
 ---
 
-Used to grab context within a context provider scope to allow for deep passing of props without having to pass them through each Component function.
-It's therefore used in conjunction with [`createContext`](/reference/component-apis/create-context) to consume the data from a Provider scope and thus avoid passing data through intermediate components (prop drilling).
+`useContext` reads the nearest provider value for a context object in the current owner tree.
+
+## Import
 
 ```ts
-const [state, { increment, decrement }] = useContext(CounterContext);
+import { useContext } from "solid-js";
 ```
 
-## Recommended usage
+## Type
 
-It is often a good idea to wrap `useContext` in a function like so:
+```ts
+interface Context<T> {
+	id: symbol;
+	Provider: (props: { value: T; children: any }) => any;
+	defaultValue: T;
+}
 
-```ts title="/context/counter-component.tsx"
+function useContext<T>(context: Context<T>): T;
+```
+
+## Parameters
+
+### `context`
+
+- **Type:** `Context<T>`
+- **Required:** Yes
+
+Context object created by [`createContext`](/reference/component-apis/create-context).
+
+## Return value
+
+- **Type:** `T`
+
+Returns the value provided by the nearest matching `Context.Provider`.
+If the context was created without a default value, `T` can include `undefined`.
+If no provider is found, it returns the context's default value or `undefined`.
+
+## Behavior
+
+- `useContext` reads the nearest matching provider in the current owner tree.
+- If no matching provider is found, it returns the default value from [`createContext`](/reference/component-apis/create-context), or `undefined` when no default value was supplied.
+- A provider value of `undefined` is treated the same as a missing provider and returns the default value or `undefined`.
+
+## Examples
+
+### Read a context value
+
+```tsx
+import { createContext, useContext } from "solid-js";
+
+const CounterContext = createContext<number>(0);
+
+function CounterValue() {
+	const value = useContext(CounterContext);
+
+	return <span>{value}</span>;
+}
+```
+
+### Throw when a provider is missing
+
+This example checks for `undefined` when the context was created without a default value.
+
+```ts
+import { createContext, useContext } from "solid-js";
+
+const CounterContext = createContext<number>();
+
 function useCounterContext() {
 	const context = useContext(CounterContext);
 
-	if (!context) {
-		throw new Error("useCounterContext: cannot find a CounterContext");
+	if (context === undefined) {
+		throw new Error("CounterContext is missing");
 	}
 
 	return context;
 }
 ```
 
-See the API reference of [createContext](/reference/component-apis/create-context) the API on how to generate a Provider scope.
-And check the [Context concepts](/concepts/context) for more information on how to architecture your contexts.
+## Related
 
-## Type signature
-
-```ts
-import { type Context } from "solid-js";
-
-function useContext<T>(context: Context<T>): T;
-```
+- [`createContext`](/reference/component-apis/create-context)
+- [Context](/concepts/context)

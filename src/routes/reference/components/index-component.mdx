@@ -1,75 +1,100 @@
 ---
 title: <Index>
 use_cases: >-
-  primitive arrays, non-keyed lists, index-based rendering, static positions,
+  non-keyed lists, index-based rendering, fixed positions, changing values,
   simple lists
 tags:
   - lists
   - iteration
   - components
   - arrays
-  - primitives
   - index
 version: "1.0"
 description: >-
-  Render non-keyed lists in SolidJS with Index component. Perfect for primitive
-  arrays where index position matters more than item identity.
+  Render a list by index with a child function that receives an item accessor
+  and a numeric index.
 ---
 
-Non-keyed list iteration (rendered nodes are keyed to an array index). This is useful when there is no conceptual key, like if the data consists of primitives and it is the index that is fixed rather than the value.
+`<Index>` renders a list by index.
+
+## Import
 
 ```ts
 import { Index } from "solid-js";
-import type { JSX } from "solid-js";
-
-function Index<T, U extends JSX.Element>(props: {
-	each: readonly T[];
-	fallback?: JSX.Element;
-	children: (item: () => T, index: number) => U;
-}): () => U[];
 ```
 
-A super simple implementation of this component might look like this:
+## Type
 
-```tsx
-function Index<T, U extends JSX.Element>(props: {
-	each: readonly T[];
+```ts
+type Accessor<T> = () => T;
+
+function Index<T extends readonly any[], U extends JSX.Element>(props: {
+	each: T | undefined | null | false;
 	fallback?: JSX.Element;
-	children: (item: () => T, index: number) => U;
-}) {
-	return () => {
-		const [items, setItems] = createSignal(props.each);
-		return props.each.map((_, i) => props.children(() => items()[i], i));
-	};
-}
+	children: (item: Accessor<T[number]>, index: number) => U;
+}): JSX.Element;
 ```
 
-Here's a look at the implementation of the `Index` component in Solid:
+## Props
+
+### `each`
+
+- **Type:** `T | undefined | null | false`
+
+Source list.
+
+### `fallback`
+
+- **Type:** `JSX.Element`
+
+Content rendered when `each` is an empty array, `undefined`, `null`, or `false`.
+
+### `children`
+
+- **Type:** `(item: Accessor<T[number]>, index: number) => U`
+
+Child function. It receives an accessor for the item at that index and the index number.
+
+## Return value
+
+- **Type:** `JSX.Element`
+
+## Behavior
+
+- `<Index>` maps items by index rather than by value identity.
+- The `item` argument is an accessor.
+- The `index` argument is a number.
+- Updating a value at the same index updates the corresponding rendered item.
+- When the array is reordered, rendered positions stay tied to indexes, and `item()` updates to the current value at that index.
+- `<Index>` uses [`indexArray`](/reference/reactive-utilities/index-array) internally.
+
+## Examples
+
+### Basic usage
 
 ```tsx
-<Index each={state.list} fallback={<div>Loading...</div>}>
+const items = ["A", "B", "C"];
+
+<Index each={items} fallback={<div>No items</div>}>
 	{(item) => <div>{item()}</div>}
-</Index>
+</Index>;
 ```
 
-Notice that the item is a signal unlike the `For` component. This is because the `Index` component is not keyed to the item itself but rather the index.
-
-Optional second argument is an index number:
+### Access the index
 
 ```tsx
-<Index each={state.list} fallback={<div>Loading...</div>}>
+const items = ["A", "B", "C"];
+
+<Index each={items}>
 	{(item, index) => (
 		<div>
 			#{index} {item()}
 		</div>
 	)}
-</Index>
+</Index>;
 ```
 
-## Props
+## Related
 
-| Name     | Type                                  | Description                                                     |
-| :------- | :------------------------------------ | :-------------------------------------------------------------- |
-| each     | `readonly T[]`                        | The array to iterate over.                                      |
-| fallback | `JSX.Element`                         | Optional fallback element to render while the array is loading. |
-| children | `(item: () => T, index: number) => U` | The function that renders the children.                         |
+- [`<For>`](/reference/components/for)
+- [`indexArray`](/reference/reactive-utilities/index-array)

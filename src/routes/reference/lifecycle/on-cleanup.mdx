@@ -12,42 +12,92 @@ tags:
   - disposal
 version: "1.0"
 description: >-
-  Register cleanup methods in SolidJS to prevent memory leaks. Executes when
-  components unmount or tracking scopes dispose. Essential for proper cleanup.
+  Register a cleanup function on the current reactive scope. The cleanup runs
+  when the scope is disposed or refreshed.
 ---
 
-`onCleanup` registers a cleanup method that executes on disposal and recalculation of the current tracking scope.
-Can be used anywhere to clean up any side effects left behind by initialization.
+`onCleanup` registers a cleanup function on the current reactive scope.
+The cleanup runs when that scope is disposed or refreshed.
 
-When used in a Component, it runs when the component is unmounted.
-When used in tracking scope, such [`createEffect`](/reference/basic-reactivity/create-effect), [`createMemo`](/reference/basic-reactivity/create-memo) or a [`createRoot`](/reference/reactive-utilities/create-root), it runs when the tracking scope is disposed or refreshed.
+## Import
 
 ```ts
 import { onCleanup } from "solid-js";
-
-function onCleanup(fn: () => void): void;
 ```
 
-Without the `onCleanup` function, the event listener would remain attached to the `document` even after the component is removed from the page.
-This can cause memory leaks and other issues.
+## Type
+
+```ts
+function onCleanup<T extends () => any>(fn: T): T;
+```
+
+## Parameters
+
+### `fn`
+
+- **Type:** `() => any`
+- **Required:** Yes
+
+Cleanup function registered on the current reactive scope.
+
+## Return value
+
+- **Type:** `T`
+
+Returns `fn` unchanged.
+
+## Behavior
+
+- In a component, the cleanup runs when that component is unmounted.
+- In a tracking scope such as [`createEffect`](/reference/basic-reactivity/create-effect), [`createMemo`](/reference/basic-reactivity/create-memo), or [`createRoot`](/reference/reactive-utilities/create-root), the cleanup runs when that scope is disposed or re-executes.
+- Multiple cleanup functions run when the owning scope is cleaned up.
+- Calling `onCleanup` outside a reactive owner does not register a cleanup. In development, Solid warns that the cleanup will never run.
+- On the server, cleanup also runs when server-side owners or reactive branches are disposed.
+
+## Examples
+
+### Remove an event listener
 
 ```tsx
-import { createSignal, onCleanup } from "solid-js";
+import { onCleanup } from "solid-js";
 
 const Component = () => {
-	const [count, setCount] = createSignal(0);
-
-	const handleClick = () => setCount((value) => value + 1);
+	const handleClick = () => console.log("clicked");
 
 	document.addEventListener("click", handleClick);
 
-	/**
-	 * Remove the event listener when the component is removed/unmounted from the page.
-	 */
 	onCleanup(() => {
 		document.removeEventListener("click", handleClick);
 	});
 
-	return <main>Document has been clicked {count()} times</main>;
+	return <main>Listening for document clicks</main>;
 };
 ```
+
+### Clean up before an effect re-runs
+
+```tsx
+import { createEffect, createSignal, onCleanup } from "solid-js";
+
+function Example() {
+	const [topic, setTopic] = createSignal("news");
+
+	createEffect(() => {
+		const currentTopic = topic();
+
+		console.log("subscribing to", currentTopic);
+
+		onCleanup(() => {
+			console.log("cleaning up", currentTopic);
+		});
+	});
+
+	return <button onClick={() => setTopic("sports")}>Change topic</button>;
+}
+```
+
+## Related
+
+- [`onMount`](/reference/lifecycle/on-mount)
+- [`createEffect`](/reference/basic-reactivity/create-effect)
+- [`createRoot`](/reference/reactive-utilities/create-root)

@@ -2,67 +2,84 @@
 title: <ErrorBoundary>
 order: 5
 use_cases: >-
-  error handling, production apps, preventing crashes, user experience,
-  debugging, fallback ui
+  error handling, rendering fallbacks, preventing subtree crashes, recovering
+  from render errors
 tags:
   - error-handling
   - components
-  - debugging
   - fallback
-  - production
   - stability
 version: "1.0"
 description: >-
-  Catch and handle rendering errors in SolidJS components with ErrorBoundary.
-  Display fallback UI when errors occur in children components.
+  Catch errors thrown while rendering or updating a subtree and render fallback
+  content.
 ---
 
-The `<ErrorBoundary>` component catches errors that occur during the rendering or updating of its children and shows a fallback UI instead.
-This includes:
+`<ErrorBoundary>` catches errors thrown while rendering or updating its children.
 
-- Errors that occur while rendering JSX.
-- Errors that occur within `createEffect`, `createMemo`, and other state management primitives.
-- Errors that occur within `createResource` and other asynchronous state management or data-fetching primitives.
+## Import
 
-However, errors occurring outside the rendering process are **not** captured by error boundaries.
-For instance:
+```ts
+import { ErrorBoundary } from "solid-js";
+```
 
-- Errors that occur inside event handlers.
-- Errors that occur after a `setTimeout`.
+## Type
+
+```ts
+function ErrorBoundary(props: {
+	fallback: JSX.Element | ((err: any, reset: () => void) => JSX.Element);
+	children: JSX.Element;
+}): JSX.Element;
+```
 
 ## Props
 
 ### `fallback`
 
-**Type**: `JSX.Element | ((err: any, reset: () => void) => JSX.Element)`
+- **Type:** `JSX.Element | ((err: any, reset: () => void) => JSX.Element)`
 
-`fallback` provides content to display when an error occurs.
-If a function is passed, it receives two parameters:
+Fallback content. Function fallbacks receive the caught error and a reset function.
 
-- `err`: The caught error object.
-- `reset`: A function that forces the `<ErrorBoundary>` to re-render its children and clear the error state.
+### `children`
 
-If there's an error within the `fallback` itself, however, it is not caught by the same `<ErrorBoundary>`.
-Instead, it will bubble up to any parent error boundaries.
+- **Type:** `JSX.Element`
 
-## Example
+Subtree wrapped by the boundary.
+
+## Return value
+
+- **Type:** `JSX.Element`
+
+Returns the rendered children or fallback content.
+
+## Behavior
+
+- `<ErrorBoundary>` catches errors thrown while rendering JSX and while updating reactive computations in its subtree, including reactive async primitives when they surface through the same rendering or update flow.
+- Errors thrown from event handlers or from callbacks scheduled outside Solid's rendering and update flow are not caught by the boundary.
+- Function fallbacks receive `reset`, which clears the current error state and re-renders the children.
+- Errors thrown by the fallback itself can be caught by a parent error boundary.
+
+## Examples
+
+### Basic usage
 
 ```tsx
-import { ErrorBoundary } from "solid-js";
-import { ErrorProne } from "./components";
-
-function Example() {
-	return (
-		<ErrorBoundary
-			fallback={(error, reset) => (
-				<div>
-					<p>{error.message}</p>
-					<button onClick={reset}>Try Again</button>
-				</div>
-			)}
-		>
-			<ErrorProne />
-		</ErrorBoundary>
-	);
+function ErrorProne() {
+	throw new Error("Broken");
 }
+
+<ErrorBoundary
+	fallback={(error, reset) => (
+		<div>
+			<p>{String(error)}</p>
+			<button onClick={reset}>Try Again</button>
+		</div>
+	)}
+>
+	<ErrorProne />
+</ErrorBoundary>;
 ```
+
+## Related
+
+- [`catchError`](/reference/reactive-utilities/catch-error)

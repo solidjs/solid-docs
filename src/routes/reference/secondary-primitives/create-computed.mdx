@@ -11,12 +11,12 @@ tags:
   - tracking
 version: "1.0"
 description: >-
-  Create immediate reactive computations with createComputed. Build custom
-  primitives and handle side effects that respond to dependencies.
+  Create an immediate reactive computation that runs synchronously when created
+  and whenever its dependencies change.
 ---
 
-The `createComputed` function creates a reactive computation that runs _before_ the rendering phase.
-It is primarily used to synchronize state before rendering begins.
+`createComputed` creates an immediate reactive computation.
+It runs synchronously in the current execution context when created, then re-runs whenever its tracked dependencies change.
 
 ## Import
 
@@ -83,41 +83,39 @@ It is used for identification in debugging tools like the [Solid Debugger](https
 
 `createComputed` does not return a value.
 
+## Behavior
+
+- `createComputed` runs immediately when it is created.
+- It tracks reactive reads inside `fn` and re-runs synchronously when those dependencies change.
+- Unlike [`createMemo`](/reference/basic-reactivity/create-memo), it does not expose a derived accessor.
+- `createComputed` is primarily used to build reactive primitives. Application code that derives state usually wants [`createMemo`](/reference/basic-reactivity/create-memo) instead.
+
 ## Examples
 
-### Basic usage
+### Build a writable derived signal
 
 ```tsx
-import { createComputed } from "solid-js";
-import { createStore } from "solid-js/store";
+import { createComputed, createSignal } from "solid-js";
 
-type User = {
-	name?: string;
-};
+function createWritableMemo<T>(fn: () => T) {
+	const [value, setValue] = createSignal(fn());
 
-type UserEditorProps = {
-	user: User;
-};
-
-function UserEditor(props: UserEditorProps) {
-	const [formData, setFormData] = createStore<User>({
-		name: "",
-	});
-
-	// Update the store synchronously when props change.
-	// This prevents a second render cycle.
 	createComputed(() => {
-		setFormData("name", props.user.name);
+		setValue(fn());
 	});
+
+	return value;
+}
+
+function Counter() {
+	const [count, setCount] = createSignal(1);
+	const double = createWritableMemo(() => count() * 2);
 
 	return (
-		<form>
-			<h1>Editing: {formData.name}</h1>
-			<input
-				value={formData.name}
-				onInput={(e) => setFormData("name", e.currentTarget.value)}
-			/>
-		</form>
+		<>
+			<p>{double()}</p>
+			<button onClick={() => setCount((value) => value + 1)}>Increment</button>
+		</>
 	);
 }
 ```

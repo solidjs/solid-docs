@@ -1,39 +1,59 @@
 ---
 title: "bool:*"
 use_cases: >-
-  web components, custom elements, conditional attributes, boolean attributes,
-  dynamic attribute presence
+  boolean attributes, custom elements, controlling attribute presence
 tags:
   - attributes
-  - web-components
   - boolean
-  - conditional
-  - dynamic
+  - custom-elements
 version: "1.0"
 description: >-
-  Control attribute presence with bool:* directive in SolidJS. Add or remove
-  attributes dynamically based on truthy/falsy values for web components.
+  Control whether an attribute is present by writing through `bool:*`.
 ---
 
-`bool:*` controls the presence of an attribute in an element.
-When the value is `truthy` it adds the `attribute` to the element.
-Alternatively, when the value is `falsy` it removes the `attribute` from the element.
-This attribute is most useful for Web Components.
-
-```tsx
-<my-element bool:status={prop.value} />
-```
-
-```tsx
-// Assuming `prop.value` is `truthy`, then it becomes
-<my-element status />
-
-// And when `falsy`, then it becomes
-<my-element />
-
-```
+`bool:*` controls whether an attribute is present on an element.
 
 :::note[Strong-Typing Custom Boolean Attributes]
 Type definitions are required when using TypeScript.
 See the [TypeScript](/configuration/typescript#forcing-properties-and-custom-attributes) page for examples.
 :::
+
+## Syntax
+
+```tsx
+<my-element bool:status={value} />
+```
+
+## Value
+
+- **Type:** any truthy or falsy value
+
+Any JavaScript value is coerced by truthiness.
+
+## Behavior
+
+- `bool:name={value}` writes `name=""` when `value` is truthy.
+- `bool:name={value}` removes `name` when `value` is falsy.
+- SSR output follows the same presence-or-absence behavior.
+
+## Examples
+
+### Basic usage
+
+```tsx
+<my-element bool:status={props.value} />
+```
+
+### Resulting markup
+
+```tsx
+// props.value is truthy
+<my-element status />
+
+// props.value is falsy
+<my-element />
+```
+
+## Related
+
+- [`attr:*`](/reference/jsx-attributes/attr)

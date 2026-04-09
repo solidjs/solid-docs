@@ -11,26 +11,70 @@ tags:
   - debugging
 version: "1.0"
 description: >-
-  Access the current tracking scope owner in SolidJS for advanced control over
-  cleanup and disposal. Essential for custom reactive primitives.
+  Return the owner for the currently executing reactive scope.
 ---
 
-```tsx
-import { getOwner } from "solid-js";
-import type { Owner } from "solid-js";
+`getOwner` returns the owner for the currently executing reactive scope.
 
-function getOwner(): Owner;
+## Import
+
+```ts
+import { getOwner } from "solid-js";
 ```
 
-Gets the tracking scope that owns the currently running code, e.g., for passing into a later call to `runWithOwner` outside of the current scope.
+## Type
 
-Internally, computations (effects, memos, etc.) create owners which are children of their owner, all the way up to the root owner created by `createRoot` or `render`.
-In particular, this ownership tree lets Solid automatically clean up a disposed computation by traversing its subtree and calling all `onCleanup` callbacks.
-For example, when a createEffect's dependencies change, the effect calls all descendant `onCleanup` callbacks before running the effect function again.
-Calling `getOwner` returns the current owner node that is responsible for disposal of the current execution block.
+```ts
+type Owner = unknown;
 
-Components are not computations, so do not create an owner node, but they are typically rendered from a `createEffect` which does, so the result is similar: when a component gets unmounted, all descendant `onCleanup` callbacks get called.
-Calling `getOwner` from a component scope returns the owner that is responsible for rendering and unmounting that component.
+function getOwner(): Owner | null;
+```
 
-Note that the owning tracking scope isn't necessarily tracking.
-For example, untrack turns off tracking for the duration of a function (without creating a new tracking scope), as do components created via JSX (`<Component ...>`).
+The `Owner` interface is public, but its concrete shape is mostly useful for advanced interop such as [`runWithOwner`](/reference/reactive-utilities/run-with-owner).
+
+## Parameters
+
+`getOwner` does not take any parameters.
+
+## Return value
+
+- **Type:** `Owner | null`
+
+Returns the current owner or `null` when no owner is active.
+
+## Behavior
+
+- `getOwner` returns the current owner and does not create or modify ownership.
+- Owners determine cleanup and context lookup for descendant computations.
+- A computation created inside the current scope becomes part of the current owner tree unless ownership is overridden.
+- Component functions run under an owner created for that subtree.
+- Calling `getOwner` inside component code returns the owner responsible for rendering and disposing that component subtree.
+- Turning off tracking with [`untrack`](/reference/reactive-utilities/untrack) does not create a new owner.
+
+## Examples
+
+### Capture an owner for later use
+
+```tsx
+import { getOwner, runWithOwner } from "solid-js";
+
+function Example() {
+	const owner = getOwner();
+
+	queueMicrotask(() => {
+		if (owner) {
+			runWithOwner(owner, () => {
+				console.log("owner restored");
+			});
+		}
+	});
+
+	return null;
+}
+```
+
+## Related
+
+- [`runWithOwner`](/reference/reactive-utilities/run-with-owner)
+- [`onCleanup`](/reference/lifecycle/on-cleanup)
+- [`untrack`](/reference/reactive-utilities/untrack)

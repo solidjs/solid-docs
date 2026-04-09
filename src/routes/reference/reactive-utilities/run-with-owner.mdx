@@ -13,45 +13,78 @@ tags:
   - effects
 version: "1.0"
 description: >-
-  Execute code under a specific owner in SolidJS for proper cleanup and context
-  access, especially in async operations and setTimeout callbacks.
+  Execute a function under the provided owner.
 ---
 
-```ts
-import { runWithOwner } from "solid-js"
-import type { Owner } from "solid-js"
+`runWithOwner` executes a function under the provided owner.
 
-function runWithOwner<T>(owner: Owner, fn: (() => void) => T): T
+## Import
+
+```ts
+import { runWithOwner } from "solid-js";
 ```
 
-Executes the given function under the provided owner, instead of (and without affecting) the owner of the outer scope.
-By default, computations created by `createEffect`, `createMemo`, etc. are owned by the owner of the currently executing code (the return value of `getOwner`), so in particular these will get disposed when their owner does.
-Calling `runWithOwner` provides a way to override this default to a manually specified owner (typically, the return value from a previous call to `getOwner`), enabling more precise control of when computations get disposed.
-
-Having a (correct) owner is important for two reasons:
-
-- Computations without an owner cannot be cleaned up.
-  For example, if you call `createEffect` without an owner (e.g., in the global scope), the effect will continue running forever, instead of being disposed when its owner gets disposed.
-
-- `useContext` obtains context by walking up the owner tree to find the nearest ancestor providing the desired context.
-  So without an owner you cannot look up any provided context (and with the wrong owner, you might obtain the wrong context).
-
-Manually setting the owner is especially helpful when doing reactivity outside of any owner scope.
-In particular, asynchronous computation (via either `async` functions or callbacks like `setTimeout`) lose their automatically set owner, so remembering the original owner via `getOwner` and restoring it via `runWithOwner` is necessary in these cases.
-For example:
+## Type
 
 ```ts
-const owner = getOwner();
-setTimeout(() => {
-	// This callback gets run without owner.
-	// Restore owner via runWithOwner:
-	runWithOwner(owner, () => {
-		const foo = useContext(FooContext);
-		createEffect(() => {
-			console.log(foo);
-		});
+type Owner = unknown;
+
+function runWithOwner<T>(owner: Owner | null, fn: () => T): T | undefined;
+```
+
+## Parameters
+
+### `owner`
+
+- **Type:** `Owner | null`
+- **Required:** Yes
+
+Owner used while executing `fn`.
+
+### `fn`
+
+- **Type:** `() => T`
+- **Required:** Yes
+
+Function executed under `owner`.
+
+## Return value
+
+- **Type:** `T | undefined`
+
+Returns the value produced by `fn`, or `undefined` when an error is routed through Solid's error handling.
+
+## Behavior
+
+- During the synchronous execution of `fn`, `runWithOwner` restores the provided owner for cleanup, context lookup, and descendant computations created inside `fn`.
+- `runWithOwner` does not restore dependency tracking because the current tracking listener is cleared while `fn` runs.
+- Code after the first `await` in an `async` function runs without the restored owner or reactive dependency tracking.
+
+## Examples
+
+### Restore an owner in a callback
+
+```tsx
+import { createEffect, getOwner, runWithOwner } from "solid-js";
+
+function Example() {
+	const owner = getOwner();
+
+	queueMicrotask(() => {
+		if (owner) {
+			runWithOwner(owner, () => {
+				createEffect(() => {
+					console.log("effect created under the captured owner");
+				});
+			});
+		}
 	});
-}, 1000);
+
+	return null;
+}
 ```
 
-**Note:** that owners are not what determines dependency tracking, so `runWithOwner` does not help with tracking in asynchronous functions; use of reactive state in the asynchronous part (e.g. after the first `await`) will not be tracked as a dependency.
+## Related
+
+- [`getOwner`](/reference/reactive-utilities/get-owner)
+- [`onCleanup`](/reference/lifecycle/on-cleanup)

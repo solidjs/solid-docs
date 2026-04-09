@@ -2,29 +2,40 @@
 title: "@once"
 order: 5
 use_cases: >-
-  performance optimization, static props, non-reactive values, compile-time
-  optimization, reducing overhead
+  non-reactive JSX expressions, compile-time opt-out from reactive wrapping
 tags:
-  - optimization
-  - performance
-  - static
   - compiler
   - jsx
+  - optimization
 version: "1.0"
 description: >-
-  Optimize SolidJS components with @once decorator for static values. Prevent
-  unnecessary reactive wrapping and improve runtime performance.
+  Mark a JSX expression as static at compile time.
 ---
 
-Solid's compiler uses a heuristic for reactive wrapping and lazy evaluation of JSX expressions. Does it contain a function call, a property access, or JSX? If yes we wrap it in a getter when passed to components or in an effect if passed to native elements.
+`/*@once*/` is a compiler marker comment that marks a JSX expression as static.
 
-Knowing this heuristic and its limitations, we can reduce overhead of things we know will never change by accessing them outside of the JSX. A lone variable will never be wrapped. We can also tell the compiler not to wrap them by starting the expression with a comment decorator `/* @once */`.
+## Syntax
+
+```tsx
+<MyComponent value={/*@once*/ expr} />
+```
+
+## Behavior
+
+- `/*@once*/` applies to the expression that follows it.
+- Marked expressions are compiled as static and do not update when reactive dependencies change.
+- It can be used in props and in children.
+- Some compiler transforms, including parts of `classList` and `style` handling, do not fully respect `/*@once*/`.
+
+## Examples
+
+### Prop value
 
 ```tsx
 <MyComponent static={/*@once*/ state.wontUpdate} />
 ```
 
-This also works on children.
+### Child value
 
 ```tsx
 <MyComponent>{/*@once*/ state.wontUpdate}</MyComponent>

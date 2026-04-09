@@ -2,8 +2,8 @@
 title: MetaProvider
 order: 6
 use_cases: >-
-  initializing meta tags, wrapping app, head management setup, meta context,
-  always in meta apps
+  head management setup, metadata context, SSR head collection, provider setup,
+  wrapping head tags
 tags:
   - provider
   - meta
@@ -13,15 +13,83 @@ tags:
   - head
 version: "1.0"
 description: >-
-  MetaProvider wraps your Solid app to enable head tag management. Essential
-  parent component for all metadata components to function properly.
+  Provide the context used by `@solidjs/meta` components and `useHead`.
 ---
 
-`MetaProvider` is a parent component responsible for wrapping all the metadata components.
-All components that are contained within this will be added to the application `<head/>`
+`MetaProvider` provides the context used to register and render head tags from `@solidjs/meta`.
 
-```tsx twoslash
+## Import
+
+```tsx
 import { MetaProvider } from "@solidjs/meta";
-
-<MetaProvider>// add meta components</MetaProvider>;
 ```
+
+## Type
+
+```tsx
+const MetaProvider: ParentComponent;
+```
+
+## Props
+
+### `children`
+
+- **Type:** `JSX.Element`
+- **Optional:** No
+
+Tree that can render `@solidjs/meta` components or call [`useHead`](/solid-meta/reference/meta/use-head).
+
+## Behavior
+
+- `MetaProvider` is required. [`useHead`](/solid-meta/reference/meta/use-head) throws if no provider is found.
+- On the server, `MetaProvider` collects registered tags and exposes them through Solid's asset pipeline with `useAssets`.
+- In SSR output, those tags render where the app calls `getAssets()` from `solid-js/web`.
+- On the client, tags rendered by `@solidjs/meta` are managed in `document.head`.
+- During hydration, the provider reuses server-rendered tags marked with `data-sm`.
+- On a client-only render, existing `data-sm` tags in `document.head` are removed before new tags are mounted.
+
+## Examples
+
+### Basic usage
+
+```tsx
+import { MetaProvider, Title, Meta } from "@solidjs/meta";
+
+function App() {
+	return (
+		<MetaProvider>
+			<Title>Solid Docs</Title>
+			<Meta name="description" content="Solid documentation" />
+		</MetaProvider>
+	);
+}
+```
+
+### Server rendering with `getAssets()`
+
+```tsx
+import { renderToString, getAssets } from "solid-js/web";
+import { MetaProvider } from "@solidjs/meta";
+import App from "./App";
+
+const html = renderToString(() => (
+	<MetaProvider>
+		<App />
+	</MetaProvider>
+));
+
+const documentHtml = `<!doctype html>
+<html>
+	<head>${getAssets()}</head>
+	<body><div id="root">${html}</div></body>
+</html>`;
+```
+
+## Related
+
+- [`useHead`](/solid-meta/reference/meta/use-head)
+- [`<Title />`](/solid-meta/reference/meta/title)
+- [`<Meta />`](/solid-meta/reference/meta/meta)
+- [`<Link />`](/solid-meta/reference/meta/link)
+- [`<Style />`](/solid-meta/reference/meta/style)
+- [`<Base />`](/solid-meta/reference/meta/base)

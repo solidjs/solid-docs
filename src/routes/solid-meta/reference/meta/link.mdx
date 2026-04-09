@@ -1,7 +1,7 @@
 ---
 title: Link
 order: 2
-use_cases: "adding favicon, stylesheets, external resources, preloading assets, web fonts"
+use_cases: "favicons, stylesheets, preload hints, canonical URLs, head links"
 tags:
   - link
   - favicon
@@ -11,30 +11,224 @@ tags:
   - resources
 version: "1.0"
 description: >-
-  Add external resources like stylesheets and favicons to your Solid app. Learn
-  to use the Link component for optimal resource loading and icons.
+  Render a `link` element in the current `MetaProvider`.
 ---
 
-The Link component establishes a connection between the page and an external resource.
-Commonly, this is used for linking stylesheets and other associations.
+`Link` renders a [`link`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link) element in the current [`MetaProvider`](/solid-meta/reference/meta/metaprovider) to register an external resource or relationship in the document head.
 
-This component renders a [`link`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link) element within the document's `<head>`.
+## Import
 
-```tsx twoslash
+```tsx
 import { Link } from "@solidjs/meta";
-<Link rel="icon" href="/favicon.ico" />;
 ```
 
-## Usage
+## Type
 
-### Adding a favicon
+```tsx
+function Link(props: JSX.LinkHTMLAttributes<HTMLLinkElement>): null;
+```
 
-To add a favicon in an app, `<Link>` can be used to point to the asset:
+## Props
 
-```tsx twoslash
+### `href`
+
+- **Type:** `string`
+- **Optional:** Yes
+
+Resource URL.
+
+### `rel`
+
+- **Type:** `string`
+- **Optional:** Yes
+
+Relationship between the current document and the linked resource.
+Value is a space-separated set of link-relation keywords.
+
+Common values:
+
+| Value | Meaning |
+| --- | --- |
+| `alternate` | Identifies an alternate representation of the current document. |
+| `canonical` | Identifies the preferred URL for the current document. |
+| `icon` | Identifies an icon for the current document. |
+| `manifest` | Links a web app manifest. |
+| `modulepreload` | Requests early loading of a JavaScript module graph. |
+| `preconnect` | Requests an early connection to another origin. |
+| `dns-prefetch` | Requests early DNS resolution for another origin. |
+| `prefetch` | Hints that the resource may be needed for a future navigation. |
+| `preload` | Hints that the resource is likely needed for the current navigation. |
+| `stylesheet` | Identifies an external stylesheet. |
+
+For the full set of relation keywords, see MDN's [`rel`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link#rel) reference.
+
+### `as`
+
+- **Type:** `string`
+- **Optional:** Yes
+
+Resource destination type.
+
+Common values include `"audio"`, `"document"`, `"fetch"`, `"font"`, `"image"`, `"script"`, `"style"`, `"track"`, `"video"`, and `"worker"`.
+
+For the full set of destination values, see MDN's [`as`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link#as) reference.
+
+### `blocking`
+
+- **Type:** `"render"`
+- **Optional:** Yes
+
+Blocking behavior for the linked resource.
+
+### `color`
+
+- **Type:** `string`
+- **Optional:** Yes
+
+Color hint for the linked resource.
+
+### `crossorigin`
+
+- **Type:** `string`
+- **Optional:** Yes
+
+Cross-origin request mode.
+
+Common values include `""`, `"anonymous"`, and `"use-credentials"`.
+
+For request-mode details and credential behavior, see MDN's [`crossorigin`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link#crossorigin) reference.
+
+### `crossOrigin`
+
+- **Type:** `string`
+- **Optional:** Yes
+
+Camel-case form of `crossorigin`.
+
+### `disabled`
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Optional:** Yes
+
+Whether the link is disabled.
+
+### `fetchpriority`
+
+- **Type:** `"high" | "low" | "auto"`
+- **Default:** `"auto"`
+- **Optional:** Yes
+
+Fetch priority hint.
+
+For priority values and fetch behavior, see MDN's [`fetchpriority`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link#fetchpriority) reference.
+
+### `hreflang`
+
+- **Type:** `string`
+- **Optional:** Yes
+
+Language of the linked resource.
+
+### `imagesizes`
+
+- **Type:** `string`
+- **Optional:** Yes
+
+Sizes hint used with responsive image links.
+
+For syntax and responsive image selection behavior, see MDN's [`imagesizes`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link#imagesizes) reference.
+
+### `imagesrcset`
+
+- **Type:** `string`
+- **Optional:** Yes
+
+Source set used with responsive image links.
+
+For syntax and responsive image candidate behavior, see MDN's [`imagesrcset`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link#imagesrcset) reference.
+
+### `integrity`
+
+- **Type:** `string`
+- **Optional:** Yes
+
+Subresource Integrity metadata.
+
+For integrity token syntax and validation behavior, see MDN's [`integrity`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link#integrity) reference.
+
+### `media`
+
+- **Type:** `string`
+- **Optional:** Yes
+
+Media condition for when the linked resource applies.
+
+For media query syntax and matching behavior, see MDN's [`media`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link#media) reference.
+
+### `referrerpolicy`
+
+- **Type:** `string`
+- **Default:** `"strict-origin-when-cross-origin"`
+- **Optional:** Yes
+
+Referrer policy for requests made for the linked resource.
+
+Common values:
+
+| Value | Meaning |
+| --- | --- |
+| `"no-referrer"` | Do not send the `Referer` header. |
+| `"no-referrer-when-downgrade"` | Send the referrer except when navigating from HTTPS to HTTP. |
+| `"origin"` | Send only the origin as the referrer. |
+| `"origin-when-cross-origin"` | Send the full referrer on same-origin requests and only the origin on cross-origin requests. |
+| `"same-origin"` | Send the referrer on same-origin requests only. |
+| `"strict-origin"` | Send only the origin when the security level stays the same, and send no referrer to less secure destinations. |
+| `"strict-origin-when-cross-origin"` | Send the full referrer on same-origin requests, send only the origin on cross-origin requests when the security level stays the same, and send no referrer to less secure destinations. |
+| `"unsafe-url"` | Send the origin and path as the referrer on all requests. |
+
+For the full set of policy values and their behavior, see MDN's [`referrerpolicy`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link#referrerpolicy) reference.
+
+### `referrerPolicy`
+
+- **Type:** `string`
+- **Default:** `"strict-origin-when-cross-origin"`
+- **Optional:** Yes
+
+Camel-case form of `referrerpolicy`.
+
+### `sizes`
+
+- **Type:** `string`
+- **Optional:** Yes
+
+Icon sizes metadata.
+
+For icon size syntax and matching behavior, see MDN's [`sizes`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link#sizes) reference.
+
+### `type`
+
+- **Type:** `string`
+- **Optional:** Yes
+
+MIME type of the linked resource.
+
+For MIME type usage and processing details, see MDN's [`type`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link#type) reference.
+
+## Behavior
+
+- `Link` requires a surrounding [`MetaProvider`](/solid-meta/reference/meta/metaprovider).
+- `Link` tags append in render order. `@solidjs/meta` does not deduplicate them.
+- During SSR, `Link` renders as a self-closing tag.
+
+## Examples
+
+### Basic usage
+
+```tsx
 import { MetaProvider, Link } from "@solidjs/meta";
 
-export default function Root() {
+function App() {
 	return (
 		<MetaProvider>
 			<Link rel="icon" href="/favicon.ico" />
@@ -43,29 +237,7 @@ export default function Root() {
 }
 ```
 
-### Using an emoji as a favicon
+## Related
 
-To use an emoji as a favicon, first create a function that returns a data URI containing an SVG image:
-
-```jsx
-const emojiSvg = (emoji) => {
-	return (
-		`data:image/svg+xml;utf8,` +
-		`<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${emoji}</text></svg>`
-	);
-};
-```
-
-Following this, include the emoji as an argument within that function in the `href` property of the Link component:
-
-```jsx
-import { MetaProvider, Link } from "@solidjs/meta";
-
-export default function Root() {
-	return (
-		<MetaProvider>
-			<Link rel="icon" href={emojiSvg("😎")} />
-		</MetaProvider>
-	);
-}
-```
+- [`<MetaProvider />`](/solid-meta/reference/meta/metaprovider)
+- [`useHead`](/solid-meta/reference/meta/use-head)

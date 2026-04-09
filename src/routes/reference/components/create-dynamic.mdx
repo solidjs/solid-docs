@@ -1,9 +1,8 @@
 ---
-title: <Dynamic>
-order: 5
+title: createDynamic
 use_cases: >-
   dynamic components, runtime component selection, polymorphic components,
-  rendering custom components or intrinsic elements
+  lower-level rendering helpers, library components
 tags:
   - dynamic
   - components
@@ -12,15 +11,15 @@ tags:
   - rendering
 version: "1.0"
 description: >-
-  Render a component or intrinsic element selected at runtime.
+  Render a component or intrinsic element selected at runtime from an accessor.
 ---
 
-`<Dynamic>` renders the value of its `component` prop as either a custom component or an intrinsic element.
+`createDynamic` renders the value returned by its `component` accessor as either a custom component or an intrinsic element.
 
 ## Import
 
 ```ts
-import { Dynamic } from "solid-js/web";
+import { createDynamic } from "solid-js/web";
 ```
 
 ## Type
@@ -30,28 +29,25 @@ type ValidComponent =
 	| keyof JSX.IntrinsicElements
 	| ((props: any) => JSX.Element);
 
-type DynamicProps<T extends ValidComponent, P = ComponentProps<T>> = {
-	[K in keyof P]: P[K];
-} & {
-	component: T | undefined;
-};
-
-function Dynamic<T extends ValidComponent>(props: DynamicProps<T>): JSX.Element;
+function createDynamic<T extends ValidComponent>(
+	component: () => T | undefined,
+	props: ComponentProps<T>
+): JSX.Element;
 ```
 
-## Props
+## Parameters
 
 ### `component`
 
-- **Type:** `T | undefined`
+- **Type:** `() => T | undefined`
 
-Component or intrinsic element to render.
+Accessor that returns the component or intrinsic element to render.
 
-### remaining props
+### `props`
 
 - **Type:** props accepted by the rendered component or element
 
-Props forwarded to the rendered value of `component`.
+Props passed to the rendered component or element.
 
 ## Return value
 
@@ -61,7 +57,7 @@ Returns the rendered component or element.
 
 ## Behavior
 
-- When `component` is `undefined`, nothing is rendered.
+- If `component()` is `undefined`, nothing is rendered.
 
 ## Example
 
@@ -85,7 +81,7 @@ function App() {
 			<button onClick={() => setSelected("red")}>Red</button>
 			<button onClick={() => setSelected("blue")}>Blue</button>
 
-			<Dynamic component={views[selected()]} label="Selected view" />
+			{createDynamic(() => views[selected()], { label: "Selected view" })}
 		</>
 	);
 }
@@ -93,4 +89,4 @@ function App() {
 
 ## Related
 
-- [`createDynamic`](/reference/components/create-dynamic)
+- [`<Dynamic>`](/reference/components/dynamic)

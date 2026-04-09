@@ -12,32 +12,80 @@ tags:
   - initialization
 version: "1.0"
 description: >-
-  Run code after SolidJS components mount to the DOM. Perfect for accessing
-  refs, setting up third-party libraries, and one-time initializations.
+  Register a function that runs once after the initial render of the current
+  component or root.
 ---
 
-Registers a method that runs after initial rendering is done and the elements are mounted to the page.
-Ideal for using [refs](/reference/jsx-attributes/ref) and managing other one-time setup.
+`onMount` registers a function that runs once after the initial render for the current component or root.
 
-```tsx
+## Import
+
+```ts
 import { onMount } from "solid-js";
+```
 
+## Type
+
+```ts
 function onMount(fn: () => void): void;
 ```
 
-This is an alias for an effect that is non-tracking, meaning that it is equivalent to a [`createEffect`](/reference/basic-reactivity/create-effect) with no dependencies.
+## Parameters
+
+### `fn`
+
+- **Type:** `() => void`
+- **Required:** Yes
+
+Non-tracking function executed once on mount.
+
+## Return value
+
+`onMount` does not return a value.
+
+## Behavior
+
+- On the client, `onMount` runs once after the initial render. It does not run during server rendering.
+- `fn` does not track reactive dependencies.
+- Internally, `onMount(fn)` is equivalent to `createEffect(() => untrack(fn))`.
+- By the time `onMount` runs, refs have already been assigned.
+- Returning a function from `fn` does not register cleanup. Use [`onCleanup`](/reference/lifecycle/on-cleanup) inside `onMount` when cleanup is needed.
+
+## Examples
+
+### Access a ref after mount
 
 ```tsx
-// example that shows how to use onMount to get a reference to an element
 import { onMount } from "solid-js";
 
 function MyComponent() {
 	let ref: HTMLButtonElement;
 
-	// when the component is mounted, the button will be disabled
 	onMount(() => {
 		ref.disabled = true;
 	});
+
 	return <button ref={ref}>Focus me!</button>;
 }
 ```
+
+### Run one-time browser setup
+
+```tsx
+import { onMount } from "solid-js";
+
+function Example() {
+	onMount(() => {
+		// Browser-only code
+		console.log(window.location.pathname);
+	});
+
+	return <div>Mounted</div>;
+}
+```
+
+## Related
+
+- [`onCleanup`](/reference/lifecycle/on-cleanup)
+- [`createEffect`](/reference/basic-reactivity/create-effect)
+- [`untrack`](/reference/reactive-utilities/untrack)

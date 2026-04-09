@@ -1,24 +1,35 @@
 ---
 title: hydrate
 use_cases: >-
-  ssr hydration, client initialization, server-rendered apps, spa startup, dom
-  rehydration
+  hydrating server-rendered HTML, attaching client behavior to an SSR subtree
 tags:
   - hydration
   - ssr
   - rendering
-  - initialization
   - dom
 version: "1.0"
 description: >-
-  Hydrate server-rendered HTML with SolidJS client-side code. Essential for
-  initializing SSR applications and attaching interactivity to static HTML.
+  Hydrate server-rendered HTML and attach Solid's client-side behavior to an
+  existing DOM subtree.
 ---
+
+`hydrate` attaches Solid's client-side behavior to DOM that was already rendered on the server.
+
+## Import
 
 ```ts
 import { hydrate } from "solid-js/web";
-import type { JSX } from "solid-js";
-import type { MountableElement } from "solid-js/web";
+```
+
+## Type
+
+```ts
+type MountableElement =
+	| Element
+	| Document
+	| ShadowRoot
+	| DocumentFragment
+	| Node;
 
 function hydrate(
 	fn: () => JSX.Element,
@@ -27,18 +38,59 @@ function hydrate(
 ): () => void;
 ```
 
-This method is similar to `render` except that it attempts to rehydrate what is already rendered to the DOM.
-When initializing in the browser a page has already been server rendered.
-
-```ts
-const dispose = hydrate(App, document.getElementById("app"));
-```
-
 ## Parameters
 
-| Prop             | type                | description                                 |
-| ---------------- | ------------------- | ------------------------------------------- |
-| fn               | `() => JSX.Element` | Function that returns the application code. |
-| node             | MountableElement    | DOM Element to mount the application to     |
-| options.renderId | string              |                                             |
-| options.owner    | unknown             |                                             |
+### `fn`
+
+- **Type:** `() => JSX.Element`
+
+Function that returns the root JSX to hydrate.
+
+### `node`
+
+- **Type:** `MountableElement`
+
+DOM node that contains the server-rendered markup.
+
+### `options`
+
+#### `renderId`
+
+- **Type:** `string`
+
+Scopes hydration lookup to a specific rendered subtree.
+
+#### `owner`
+
+- **Type:** `unknown`
+
+Owner used for the created hydration root.
+
+## Return value
+
+- **Type:** `() => void`
+
+Dispose function for the hydrated root.
+
+## Behavior
+
+- `hydrate` is a client-only API.
+- `hydrate` reuses DOM produced by Solid's server renderer instead of creating a new subtree, locating nodes through Solid's hydration markers and optionally scoping that lookup with `renderId`.
+- The hydrated DOM and the JSX returned by `fn` must match the server output for hydration to succeed.
+- The returned function disposes the hydrated root.
+
+## Examples
+
+### Basic usage
+
+```tsx
+import { hydrate } from "solid-js/web";
+
+// #app already contains server-rendered Solid markup
+const dispose = hydrate(() => <App />, document.getElementById("app")!);
+```
+
+## Related
+
+- [`render`](/reference/rendering/render)
+- [`HydrationScript`](/reference/rendering/hydration-script)

@@ -16,8 +16,122 @@ description: >-
   context and configuration for all child routes and navigation.
 ---
 
-The `Router` component is a top level component that manages the routing of your application.
-There is an optional `root` prop that can be used to wrap the entire application in a layout component, which will not be updated when the page changes.
+`Router` is the top-level component that manages routing for the application.
+It provides the routing context used by route matching, navigation, link interception, and route preloading.
+
+## Import
+
+```tsx
+import { Router } from "@solidjs/router";
+```
+
+## Type
+
+```tsx
+type RouterProps = BaseRouterProps & {
+	url?: string;
+	actionBase?: string;
+	explicitLinks?: boolean;
+	preload?: boolean;
+};
+
+type BaseRouterProps = {
+	base?: string;
+	root?: Component<RouteSectionProps>;
+	rootPreload?: RoutePreloadFunc;
+	singleFlight?: boolean;
+	children?: JSX.Element | RouteDefinition | RouteDefinition[];
+	transformUrl?: (url: string) => string;
+	/* @deprecated use rootPreload */
+	rootLoad?: RoutePreloadFunc;
+};
+```
+
+## Props
+
+### `base`
+
+- **Type:** `string`
+- **Optional:** Yes
+
+Base URL used for route matching and path resolution.
+
+### `root`
+
+- **Type:** `Component<RouteSectionProps>`
+- **Optional:** Yes
+
+Layout component that wraps the matched route and stays mounted while the matched route subtree changes. It receives `params`, `location`, `data`, and `children` through `RouteSectionProps`.
+
+### `rootPreload`
+
+- **Type:** `RoutePreloadFunc`
+- **Optional:** Yes
+
+Preload function for the root route context. Its return value is passed to the `root` component through the `data` field in `RouteSectionProps`.
+
+### `singleFlight`
+
+- **Type:** `boolean`
+- **Default:** `true`
+- **Optional:** Yes
+
+Enables or disables single-flight handling for actions. This only affects actions that support `withOptions`.
+
+### `children`
+
+- **Type:** `JSX.Element | RouteDefinition | RouteDefinition[]`
+- **Optional:** Yes
+
+Route definitions.
+
+### `transformUrl`
+
+- **Type:** `(url: string) => string`
+- **Optional:** Yes
+
+Transforms the pathname before route matching and anchor preloading.
+
+### `rootLoad`
+
+- **Type:** `RoutePreloadFunc`
+- **Optional:** Yes
+
+Deprecated alias for `rootPreload`.
+
+### `actionBase`
+
+- **Type:** `string`
+- **Default:** `"/_server"`
+- **Optional:** Yes
+
+Base path for intercepted action form submissions. Only `POST` forms whose normalized action path starts with this base are intercepted.
+
+### `explicitLinks`
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Optional:** Yes
+
+When `true`, only anchors marked with the `link` attribute are intercepted. When `false`, matching same-origin anchors are intercepted automatically.
+
+### `preload`
+
+- **Type:** `boolean`
+- **Default:** `true`
+- **Optional:** Yes
+
+Enables or disables link and focus-based route preloading. When enabled, preloading is triggered from mouse move, focus, and touchstart on intercepted anchors.
+
+## Behavior
+
+- On the server, `Router` delegates to `StaticRouter`, which is the only path where `url` is used.
+- On the client, `Router` reads from and writes to the browser history using the current `pathname`, `search`, and `hash`.
+- When navigation writes history state, `Router` preserves the internal history depth metadata used by blocked back and forward navigation.
+- `rootLoad` is still supported and is used as a fallback when `rootPreload` is not provided.
+- Link interception, route preloading, and action form interception are handled through delegated document-level event listeners.
+
+## Examples
 
 ```tsx
 import { render } from "solid-js/web";
@@ -35,13 +149,3 @@ render(
 	document.getElementById("root")
 );
 ```
-
-| prop          | type                                                     | description                                                                                                                                                                               |
-| ------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| children      | `JSX.Element`, `RouteDefinition`, or `RouteDefinition[]` | The route definitions                                                                                                                                                                     |
-| root          | Component                                                | Top level layout component                                                                                                                                                                |
-| base          | string                                                   | Base url to use for matching routes                                                                                                                                                       |
-| actionBase    | string                                                   | Root url for server actions, default: `/_server`                                                                                                                                          |
-| preload       | boolean                                                  | Enables/disables preloads globally, default: `true`                                                                                                                                       |
-| explicitLinks | boolean                                                  | Disables all anchors being intercepted and instead requires `<A>`. default: `false`. (To disable interception for a specific link, set `target` to any value, e.g. `<a target="_self">`.) |
-| url           | string                                                   | The initial route to render                                                                                                                                                               |

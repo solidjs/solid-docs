@@ -16,14 +16,7 @@ description: >-
   prefetching for instant page transitions.
 ---
 
-The `preload` function is a property on a route definition that initiates data fetching before a user navigates to the route.
-
-`preload` runs in two separate phases:
-
-- **Preload phase:**
-  Triggered by user intent (e.g., hovering over a link), the function is called to initiate data fetching.
-- **Rendering phase:**
-  Triggered by actual navigation, the function is called a second time to provide the fetched data to the component.
+`preload` is a route-definition property that runs during route preloading and rendering.
 
 ## Import
 
@@ -65,19 +58,27 @@ It corresponds to the value returned by the [`useLocation` primitive](/solid-rou
 
 A string indicating the context in which the function is called.
 
-- `"preload"`:
-  The function is running to initiate data fetching.
-- `"navigate"`:
-  The function is running during navigation to the route.
-- `"initial"`:
-  The function is running for the first route on page load.
+| Value      | Meaning                                                            |
+| ---------- | ------------------------------------------------------------------ |
+| `preload`  | Preloading route code or data.                                     |
+| `navigate` | Client navigation to the route.                                    |
+| `native`   | Native history navigation, such as back or forward.                |
+| `initial`  | The first render for the current request or page load.             |
 
 ## Return value
 
 The value returned by `preload` is passed to the route's component as the `data` prop.
 
-- In the **preload phase** (`intent: "preload"`), the return value is **ignored**.
-- In the **rendering phase** (`intent: "navigate"` or `"initial"`), the return value is **captured** and provided to the component.
+| Intent                              | Return value behavior                         |
+| ----------------------------------- | --------------------------------------------- |
+| `preload`                           | Ignored.                                      |
+| `initial`, `navigate`, or `native`  | Captured and passed to the component as `data`. |
+
+## Behavior
+
+- During route preloading, the router calls `preload` for each matched route.
+- `load` is a deprecated alias for `preload` on route definitions.
+- Route component preloads run before the route's `preload` function when the component exposes a `.preload()` method.
 
 ## Examples
 

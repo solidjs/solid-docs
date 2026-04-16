@@ -2,21 +2,19 @@
 title: MetaProvider
 order: 6
 use_cases: >-
-  head management setup, metadata context, SSR head collection, provider setup,
-  wrapping head tags
+  head context, metadata context, document head management
 tags:
   - provider
   - meta
-  - setup
-  - context
-  - wrapper
   - head
+  - context
+  - component
 version: "1.0"
 description: >-
-  Provide the context used by `@solidjs/meta` components and `useHead`.
+  MetaProvider provides the context used by Solid Meta head tags.
 ---
 
-`MetaProvider` provides the context used to register and render head tags from `@solidjs/meta`.
+`MetaProvider` supplies the context that Solid Meta components and [`useHead`](/solid-meta/reference/meta/use-head) use to add head tags.
 
 ## Import
 
@@ -35,18 +33,16 @@ const MetaProvider: ParentComponent;
 ### `children`
 
 - **Type:** `JSX.Element`
-- **Optional:** No
+- **Optional:** Yes
 
-Tree that can render `@solidjs/meta` components or call [`useHead`](/solid-meta/reference/meta/use-head).
+Content rendered inside the provider.
 
 ## Behavior
 
-- `MetaProvider` is required. [`useHead`](/solid-meta/reference/meta/use-head) throws if no provider is found.
-- On the server, `MetaProvider` collects registered tags and exposes them through Solid's asset pipeline with `useAssets`.
-- In SSR output, those tags render where the app calls `getAssets()` from `solid-js/web`.
-- On the client, tags rendered by `@solidjs/meta` are managed in `document.head`.
-- During hydration, the provider reuses server-rendered tags marked with `data-sm`.
-- On a client-only render, existing `data-sm` tags in `document.head` are removed before new tags are mounted.
+- Creates a `MetaContext.Provider` for its children.
+- On the client, active head tags are appended to `document.head` and removed during cleanup.
+- During server rendering, rendered head tags are registered through `useAssets`.
+- Solid Meta components and [`useHead`](/solid-meta/reference/meta/use-head) throw if they run without a `MetaProvider` in the component tree.
 
 ## Examples
 
@@ -55,7 +51,7 @@ Tree that can render `@solidjs/meta` components or call [`useHead`](/solid-meta/
 ```tsx
 import { MetaProvider, Title, Meta } from "@solidjs/meta";
 
-function App() {
+export default function Root() {
 	return (
 		<MetaProvider>
 			<Title>Solid Docs</Title>
@@ -65,31 +61,11 @@ function App() {
 }
 ```
 
-### Server rendering with `getAssets()`
-
-```tsx
-import { renderToString, getAssets } from "solid-js/web";
-import { MetaProvider } from "@solidjs/meta";
-import App from "./App";
-
-const html = renderToString(() => (
-	<MetaProvider>
-		<App />
-	</MetaProvider>
-));
-
-const documentHtml = `<!doctype html>
-<html>
-	<head>${getAssets()}</head>
-	<body><div id="root">${html}</div></body>
-</html>`;
-```
-
 ## Related
 
+- [`Title`](/solid-meta/reference/meta/title)
+- [`Meta`](/solid-meta/reference/meta/meta)
+- [`Link`](/solid-meta/reference/meta/link)
+- [`Style`](/solid-meta/reference/meta/style)
+- [`Base`](/solid-meta/reference/meta/base)
 - [`useHead`](/solid-meta/reference/meta/use-head)
-- [`<Title />`](/solid-meta/reference/meta/title)
-- [`<Meta />`](/solid-meta/reference/meta/meta)
-- [`<Link />`](/solid-meta/reference/meta/link)
-- [`<Style />`](/solid-meta/reference/meta/style)
-- [`<Base />`](/solid-meta/reference/meta/base)

@@ -1,4 +1,4 @@
-import { Show, onMount, JSX, createMemo } from "solid-js";
+import { Show, JSX, createMemo } from "solid-js";
 import { Pagination } from "./pagination";
 import { EditPageLink } from "./edit-page-link";
 import { PageIssueLink } from "./page-issue-link";
@@ -41,9 +41,6 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 			<h1 class="prose-headings:text-[2.8rem] text-slate-900 dark:text-white">
 				{frontmatter()?.title}
 			</h1>
-			<span class="-mt-[15px] block text-sm xl:hidden">
-				<EditPageLink />
-			</span>
 			<div class="w-full px-1">{props.children}</div>
 			<Show when={frontmatter()?.lastUpdated}>
 				<span class="mt-2 block w-full text-right text-sm">
@@ -53,6 +50,9 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 					</Show>
 				</span>
 			</Show>
+			<span class="-mt-[15px] block text-sm xl:hidden">
+				<EditPageLink />
+			</span>
 			<span class="text-sm xl:hidden">
 				<PageIssueLink />
 			</span>

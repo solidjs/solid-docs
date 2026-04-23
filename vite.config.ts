@@ -21,28 +21,68 @@ export default defineConfig({
 				"Documentation for SolidJS, the signals-powered UI framework",
 			siteUrl: "https://docs.solidjs.com",
 			editPath: "https://github.com/solidjs/solid-docs/edit/main/:path",
-			themeConfig: {
-				projects: [
+			routes: {
+				path: "/{version}/{project}",
+				project: {
+					default: "solid",
+					values: {
+						solid: { path: "", label: "Solid" },
+						router: { path: "solid-router", label: "Solid Router" },
+						start: { path: "solid-start", label: "SolidStart" },
+						meta: { path: "solid-meta", label: "Solid Meta" },
+					},
+				},
+				version: {
+					default: "latest",
+					values: {
+						latest: { path: "", label: "Latest" },
+						v1: { path: "v1", label: "v1" },
+					},
+				},
+				include: [
 					{
-						path: "/",
-						name: "Solid",
+						project: "solid",
+						version: ["latest", "v1"],
 					},
 					{
-						path: "solid-router",
-						name: "Solid Router",
-					},
-					{
-						path: "solid-start",
-						name: "SolidStart",
-					},
-					{
-						path: "solid-meta",
-						name: "Solid Meta",
+						project: ["router", "start", "meta"],
+						version: "latest",
 					},
 				],
-				sidebar: createFilesystemSidebar("./src/routes/"),
+			},
+			overrides: [
+				{
+					project: "router",
+					title: "Solid Router",
+					themeConfig: {
+						sidebar: createFilesystemSidebar("./src/routes/solid-router"),
+					},
+				},
+				{
+					project: "start",
+					title: "SolidStart",
+					themeConfig: {
+						sidebar: createFilesystemSidebar("./src/routes/solid-start"),
+					},
+				},
+				{
+					project: "meta",
+					title: "Solid Meta",
+					themeConfig: {
+						sidebar: createFilesystemSidebar("./src/routes/solid-meta"),
+					},
+				},
+			],
+			themeConfig: {
+				sidebar: createFilesystemSidebar("./src/routes/", {
+					filter: (item) => {
+						return !["solid-router", "solid-start", "solid-meta"].some(
+							(project) => item.filePath.includes(`/src/routes/${project}`)
+						);
+					},
+				}),
 				reportPagePath:
-					"https://github.com/solidjs/solid-docs-next/issues/new?assignees=ladybluenotes&labels=improve+documentation%2Cpending+review&projects=&template=CONTENT.yml&title=[Content]:&subject=:path&page=:url",
+					"https://github.com/solidjs/solid-docs/issues/new?assignees=ladybluenotes&labels=improve+documentation%2Cpending+review&projects=&template=CONTENT.yml&title=[Content]:&subject=:path&page=:url",
 			},
 			markdown: {
 				expressiveCode: {

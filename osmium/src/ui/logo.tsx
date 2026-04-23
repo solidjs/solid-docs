@@ -1,7 +1,9 @@
-import { useCurrentProject } from "../utils";
+import { useProject } from "../utils";
 
 export function ProjectLogo(props: { class?: string }) {
-	const project = useCurrentProject();
+	const project = useProject();
+
+	const current = () => project().projects[project().current];
 
 	return (
 		<div class="text-primary dark:text-primary-dark inline-flex w-full items-center space-x-1 py-2">
@@ -9,17 +11,17 @@ export function ProjectLogo(props: { class?: string }) {
 				srcset={["svg", "png"]
 					.map(
 						(f) =>
-							`/images/logos/${project.name.replaceAll(" ", "-").toLowerCase()}.${f} 1x`
+							`/images/logos/${current().label.replaceAll(" ", "-").toLowerCase()}.${f} 1x`
 					)
 					.join(", ")}
-				alt={project.name}
+				alt={current().label}
 				class="text-link dark:text-link-dark -mt-1 h-9 w-9"
 				{...props}
 			/>
-			<span class="inactive hidden text-2xl font-normal leading-none md:block dark:text-white">
-				<b>{project()?.name.split(/(?=[A-Z])/)[0]}</b>
-				{project()
-					?.name.split(/(?=[A-Z])/)
+			<span class="inactive hidden text-2xl leading-none font-normal md:block dark:text-white">
+				<b>{current().label.split(/(?=[A-Z])/)[0]}</b>
+				{current()
+					.label.split(/(?=[A-Z])/)
 					.slice(1)
 					.join("")}
 			</span>

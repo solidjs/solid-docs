@@ -2,6 +2,7 @@ import {
 	ComponentProps,
 	For,
 	Show,
+	createMemo,
 	createSignal,
 	onCleanup,
 	onMount,
@@ -11,12 +12,15 @@ import { isServer } from "solid-js/web";
 import { ProjectLogo, GitHubIcon, DiscordIcon } from "../logo";
 import { ThemeSelector } from "./theme-selector";
 import { MobileNavigation } from "./mobile-navigation";
-import { useMatch } from "@solidjs/router";
 import { LanguageSelector } from "./language-selector";
 
 import { clientOnly } from "@solidjs/start";
-import { useCurrentProject, useRouteConfig } from "../../utils";
-import { useLocale } from "@kobalte/solidbase/client";
+import { useProject, useRouteConfig } from "../../utils";
+import {
+	useLocale,
+	useSolidBaseRoute,
+	useSolidBaseRouteOptions,
+} from "@kobalte/solidbase/client";
 import { useOsmiumThemeState } from "../../context";
 
 const ClientSearch = clientOnly(() =>
@@ -58,7 +62,9 @@ export function MainHeader(props: MainHeaderProps) {
 	const config = useRouteConfig();
 	const locale = useLocale();
 
-	const project = useCurrentProject();
+	const project = useProject();
+
+	console.log(project());
 
 	const { setNavOpen } = useOsmiumThemeState();
 
@@ -91,24 +97,27 @@ export function MainHeader(props: MainHeaderProps) {
 					<div class="flex lg:hidden">
 						<MobileNavigation />
 					</div>
-					<a href={project()?.path} aria-label="Home page">
+					<a
+						href={project().projects[project().current].path}
+						aria-label="Home page"
+					>
 						<ProjectLogo class="h-9" />
 					</a>
 				</div>
 
-				<Show when={config().themeConfig?.projects}>
+				<Show when={project().projects}>
 					{(projects) => (
 						<ul class="order-2 col-span-2 flex w-full justify-center gap-5 pt-6 lg:col-span-1 lg:w-auto lg:pt-0">
-							<For each={projects()}>
-								{(p) => {
+							<For each={Object.entries(projects())}>
+								{([p, conf]) => {
 									return (
 										<li>
 											<NavLink
-												href={locale.applyPathPrefix(p.path)}
+												href={`/${conf.path}`}
 												onClick={() => setNavOpen(false)}
-												active={project()?.name === p.name}
+												active={project()?.current === p}
 											>
-												{p.name}
+												{conf.label}
 											</NavLink>
 										</li>
 									);

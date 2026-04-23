@@ -110,14 +110,10 @@ export function MainNavigation(props: MainNavigationProps) {
 	const sidebar = useSidebar();
 
 	const sidebarEntries = createMemo(() => {
-		const projects = useSolidBaseContext().config().themeConfig?.projects ?? [];
-		const projectNames = projects.map((p) => p.name.replaceAll(" ", ""));
-
-		return sidebar().items.filter(
-			(i) =>
-				!projectNames.includes(i.title.replaceAll(" ", "")) &&
-				(!("link" in i) || i.link !== "/")
-		);
+		return sidebar().items.sort((a, b) => {
+			// @ts-expect-error: shorthand
+			return !!a.items - !!b.items;
+		});
 	});
 
 	createEffect(() => console.log(sidebar(), sidebarEntries()));

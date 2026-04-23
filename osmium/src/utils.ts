@@ -1,11 +1,11 @@
 import {
 	useRouteSolidBaseConfig as _useRouteConfig,
 	useSolidBaseContext as _useSolidBaseContext,
+	useSolidBaseRoute,
 } from "@kobalte/solidbase/client";
-import { OsmiumThemeConfig, ProjectConfig } from "./index.jsx";
+import { OsmiumThemeConfig } from "./index.jsx";
 import { Accessor, createMemo } from "solid-js";
 import { SolidBaseResolvedConfig } from "@kobalte/solidbase/config";
-import { useLocation } from "@solidjs/router";
 
 export interface SolidBaseContextValue {
 	config: Accessor<SolidBaseResolvedConfig<OsmiumThemeConfig>>;
@@ -20,27 +20,17 @@ export function useRouteConfig() {
 	return _useRouteConfig<OsmiumThemeConfig>();
 }
 
-export function useCurrentProject() {
-	const location = useLocation();
-	const projects = createMemo(() => {
-		const p = useSolidBaseContext().config().themeConfig?.projects ?? [];
-
-		return p.map((p) => ({
-			name: p.name,
-			path: p.path.startsWith("/") ? p.path : `/${p.path}`,
-		})) as ProjectConfig[];
-	});
+export function useProject() {
+	const config = useRouteConfig();
 
 	return createMemo(() => {
-		for (const project of projects().filter((p) => p.path !== "/")) {
-			if (
-				location.pathname.includes(`${project.path}/`) ||
-				location.pathname.endsWith(project.path)
-			) {
-				return project;
-			}
-		}
+		const projectConfig = config().routes?.project ?? {};
 
-		return projects().find((p) => p.path === "/");
+		return {
+			current: useSolidBaseRoute()().project,
+			projects: ("values" in projectConfig
+				? projectConfig.values
+				: []) as Record<string, { path: string; label: string }>,
+		};
 	});
 }

@@ -3,15 +3,9 @@ import type { SidebarConfig } from "@kobalte/solidbase/config/sidebar";
 import { fileURLToPath } from "node:url";
 
 export interface OsmiumThemeConfig {
-	projects?: ProjectConfig[];
 	sidebar?: SidebarConfig;
 	reportPagePath?: string;
 	fonts?: { [K in keyof typeof allFonts]?: false } | false;
-}
-
-export interface ProjectConfig {
-	path: string;
-	name: string;
 }
 
 type Font = { cssPath: string; preloadFontPath: string; fontType: string };

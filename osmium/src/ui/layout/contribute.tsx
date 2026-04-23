@@ -10,15 +10,15 @@ export const Contribute: Component = () => {
 			</span>
 			<ol
 				role="list"
-				class="mt-1.5 flex list-none flex-col p-0 pl-2.5 text-sm prose-a:text-slate-600 prose-li:my-1"
+				class="prose-a:text-slate-600 prose-li:my-1 mt-1.5 flex list-none flex-col p-0 pl-2.5 text-sm"
 			>
 				<li class="pl-0">
-					<span class="[&>a>svg]:w-[15px] [&>a]:gap-x-1">
+					<span class="[&>a]:gap-x-1 [&>a>svg]:w-3.75">
 						<EditPageLink />
 					</span>
 				</li>
 				<li class="pl-0">
-					<span class="[&>a>svg]:w-[15px] [&>a]:gap-x-1">
+					<span class="[&>a]:gap-x-1 [&>a>svg]:w-3.75">
 						<PageIssueLink />
 					</span>
 				</li>

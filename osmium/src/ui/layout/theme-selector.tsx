@@ -58,15 +58,15 @@ export const ThemeSelector: Component = () => {
 			placement="bottom-end"
 			itemComponent={(props) => (
 				<Select.Item
-					class="group flex cursor-pointer select-none items-center rounded-[0.625rem] p-1 outline-none hover:bg-slate-200 kb-selected:bg-slate-200 kb-selected:font-semibold hover:dark:bg-slate-600 kb-selected:dark:bg-slate-700"
+					class="group kb-selected:bg-slate-200 kb-selected:font-semibold kb-selected:dark:bg-slate-700 flex cursor-pointer items-center rounded-[0.625rem] p-1 outline-none select-none hover:bg-slate-200 hover:dark:bg-slate-600"
 					item={props.item}
 				>
 					<Select.ItemLabel>
 						<Icon
-							class="mr-2 inline-block h-6 w-6 rounded-md bg-white fill-slate-700 p-1 shadow ring-1 ring-slate-900/5 kb-selected:fill-slate-800 dark:bg-slate-700 dark:fill-slate-200 dark:ring-inset dark:ring-white/5 kb-selected:dark:fill-white"
+							class="kb-selected:fill-slate-800 kb-selected:dark:fill-white mr-2 inline-block h-6 w-6 rounded-md bg-white fill-slate-700 p-1 shadow ring-1 ring-slate-900/5 dark:bg-slate-700 dark:fill-slate-200 dark:ring-white/5 dark:ring-inset"
 							path={props.item.rawValue.icon}
 						/>
-						<span class="prose prose-slate text-sm text-slate-700 kb-selected:text-blue-500 dark:text-slate-300 group-hover:dark:text-white kb-selected:group-hover:dark:text-white">
+						<span class="prose prose-slate kb-selected:text-blue-500 kb-selected:group-hover:dark:text-white text-sm text-slate-700 dark:text-slate-300 group-hover:dark:text-white">
 							{props.item.rawValue.label}
 						</span>
 					</Select.ItemLabel>
@@ -74,7 +74,7 @@ export const ThemeSelector: Component = () => {
 			)}
 		>
 			<Select.Trigger
-				class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg shadow-md shadow-black/5 ring-1 ring-black/10 dark:bg-slate-800 dark:ring-inset dark:ring-white/60"
+				class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg shadow-md ring-1 shadow-black/5 ring-black/10 dark:bg-slate-800 dark:ring-white/60 dark:ring-inset"
 				aria-label="Change theme mode"
 			>
 				<Select.Value<ThemeOption>>
@@ -89,7 +89,7 @@ export const ThemeSelector: Component = () => {
 				</Select.Value>
 			</Select.Trigger>
 			<Select.Portal>
-				<Select.Content class="z-50 w-36 space-y-1 rounded-xl bg-white p-2 text-sm shadow-md shadow-black/5 ring-1 ring-black/5 dark:bg-slate-800 dark:ring-white/5">
+				<Select.Content class="z-50 w-36 space-y-1 rounded-xl bg-white p-2 text-sm shadow-md ring-1 shadow-black/5 ring-black/5 dark:bg-slate-800 dark:ring-white/5">
 					<Select.Listbox />
 				</Select.Content>
 			</Select.Portal>

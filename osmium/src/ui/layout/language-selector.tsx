@@ -1,4 +1,4 @@
-import { Component, For, Show } from "solid-js";
+import { Component, Show } from "solid-js";
 import { Icon } from "solid-heroicons";
 import { language } from "solid-heroicons/solid";
 import { ResolvedLocale, useLocale } from "@kobalte/solidbase/client";
@@ -24,7 +24,7 @@ export const LanguageSelector: Component = () => {
 						placement="bottom"
 						itemComponent={(props) => (
 							<Select.Item
-								class="ui-selected:bg-slate-200 ui-selected:dark:bg-slate-700 ui-selected:font-medium group flex cursor-pointer select-none items-center rounded-[0.625rem] p-1 hover:bg-slate-200 hover:dark:bg-slate-600"
+								class="ui-selected:bg-slate-200 ui-selected:dark:bg-slate-700 ui-selected:font-medium group flex cursor-pointer items-center rounded-[0.625rem] p-1 select-none hover:bg-slate-200 hover:dark:bg-slate-600"
 								item={props.item}
 							>
 								<Select.ItemLabel class="prose prose-slate pl-1 text-sm text-slate-700 dark:text-slate-300 group-hover:dark:text-white">
@@ -34,7 +34,7 @@ export const LanguageSelector: Component = () => {
 						)}
 					>
 						<Select.Trigger
-							class="flex h-6 w-18 items-center rounded-lg text-left shadow-md shadow-black/5 ring-1 ring-black/10 dark:bg-slate-800 dark:ring-inset dark:ring-white/60"
+							class="flex h-6 w-18 items-center rounded-lg text-left shadow-md ring-1 shadow-black/5 ring-black/10 dark:bg-slate-800 dark:ring-white/60 dark:ring-inset"
 							aria-label="change locale"
 						>
 							<Icon
@@ -48,7 +48,7 @@ export const LanguageSelector: Component = () => {
 							</Select.Value>
 						</Select.Trigger>
 						<Select.Portal>
-							<Select.Content class="z-50 w-44 space-y-1 rounded-xl bg-white p-2 text-sm shadow-md shadow-black/5 ring-1 ring-black/5 dark:bg-slate-800 dark:ring-white/5">
+							<Select.Content class="z-50 w-44 space-y-1 rounded-xl bg-white p-2 text-sm shadow-md ring-1 shadow-black/5 ring-black/5 dark:bg-slate-800 dark:ring-white/5">
 								<Select.Listbox />
 							</Select.Content>
 						</Select.Portal>

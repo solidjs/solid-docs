@@ -2,7 +2,6 @@ import {
 	ComponentProps,
 	For,
 	Show,
-	createMemo,
 	createSignal,
 	onCleanup,
 	onMount,
@@ -16,11 +15,6 @@ import { LanguageSelector } from "./language-selector";
 
 import { clientOnly } from "@solidjs/start";
 import { useProject, useRouteConfig } from "../../utils";
-import {
-	useLocale,
-	useSolidBaseRoute,
-	useSolidBaseRouteOptions,
-} from "@kobalte/solidbase/client";
 import { useOsmiumThemeState } from "../../context";
 
 const ClientSearch = clientOnly(() =>
@@ -46,21 +40,12 @@ function NavLink(props: NavLinkProps) {
 	);
 }
 
-interface Entry {
-	title: string;
-	path: string;
-	children?: Entry[];
-	mainNavExclude: boolean;
-	isTranslated?: boolean;
-}
-
 interface MainHeaderProps {}
 
-export function MainHeader(props: MainHeaderProps) {
+export function MainHeader(_props: MainHeaderProps) {
 	const [isScrolled, setIsScrolled] = createSignal(false);
 
 	const config = useRouteConfig();
-	const locale = useLocale();
 
 	const project = useProject();
 
@@ -98,7 +83,7 @@ export function MainHeader(props: MainHeaderProps) {
 						<MobileNavigation />
 					</div>
 					<a
-						href={project().projects[project().current].path}
+						href={`/${project().projects[project().current].path}`}
 						aria-label="Home page"
 					>
 						<ProjectLogo class="h-9" />
@@ -130,7 +115,7 @@ export function MainHeader(props: MainHeaderProps) {
 				<div class="order- flex basis-0 items-center justify-end gap-4 lg:order-2">
 					<ClientSearch />
 					<a
-						href={`https://github.com/solidjs`}
+						href={`${config().themeConfig?.discord}/${project().projects[project().current].path || "solid"}`}
 						class="group"
 						aria-label="GitHub"
 						target="_blank"
@@ -139,7 +124,7 @@ export function MainHeader(props: MainHeaderProps) {
 						<GitHubIcon class="h-6 w-6 fill-slate-800 dark:fill-slate-200 dark:group-hover:fill-slate-300" />
 					</a>
 					<a
-						href="https://discord.com/invite/solidjs"
+						href={config().themeConfig?.discord}
 						class="group"
 						aria-label="Discord"
 						target="_blank"

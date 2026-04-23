@@ -81,8 +81,12 @@ export default defineConfig({
 						);
 					},
 				}),
+				discord: "https://discord.com/invite/solidjs",
+				github: "https://github.com/solidjs",
 				reportPagePath:
 					"https://github.com/solidjs/solid-docs/issues/new?assignees=ladybluenotes&labels=improve+documentation%2Cpending+review&projects=&template=CONTENT.yml&title=[Content]:&subject=:path&page=:url",
+				missingPagePath:
+					"https://github.com/solidjs/solid-docs/issues/new?title=[Search]+Missing+results+for+query+%22:path",
 			},
 			markdown: {
 				expressiveCode: {

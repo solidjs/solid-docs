@@ -14,7 +14,7 @@ export const EditPageLink: Component = () => {
 					href={editLink()}
 					target="_blank"
 				>
-					<Icon aria-hidden="true" class="mr-1 w-[16px]" path={pencilSquare} />
+					<Icon aria-hidden="true" class="mr-1 w-3.75" path={pencilSquare} />
 					Edit this page
 				</a>
 			)}

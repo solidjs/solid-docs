@@ -5,6 +5,9 @@ import { fileURLToPath } from "node:url";
 export interface OsmiumThemeConfig {
 	sidebar?: SidebarConfig;
 	reportPagePath?: string;
+	missingPagePath?: string;
+	discord?: string;
+	github?: string;
 	fonts?: { [K in keyof typeof allFonts]?: false } | false;
 }
 

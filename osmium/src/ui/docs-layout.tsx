@@ -50,7 +50,7 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 					</Show>
 				</span>
 			</Show>
-			<span class="-mt-[15px] block text-sm xl:hidden">
+			<span class="-mt-3.75 block text-sm xl:hidden">
 				<EditPageLink />
 			</span>
 			<span class="text-sm xl:hidden">

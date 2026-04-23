@@ -14,6 +14,7 @@ import { createList } from "solid-list";
 import { createMarker, makeSearchRegex } from "@solid-primitives/marker";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { isAppleDevice } from "@solid-primitives/platform";
+import { useRouteConfig } from "../utils";
 
 function getOramaClient({
 	projectId,
@@ -41,6 +42,8 @@ const client = getOramaClient({
 
 export function Search() {
 	if (!client) return null;
+
+	const config = useRouteConfig();
 
 	const navigate = useNavigate();
 	const preload = usePreloadRoute();
@@ -106,7 +109,7 @@ export function Search() {
 		if (ref) ref.scrollIntoView({ block: "nearest" });
 		const path = resultArray()[_active]?.document.path;
 		if (!path) return;
-		preload(new URL(path, "https://docs.solidjs.com"), { preloadData: true });
+		preload(new URL(path, config().siteUrl), { preloadData: true });
 	});
 
 	createEventListener(window, "keydown", (e: KeyboardEvent) => {
@@ -151,14 +154,14 @@ export function Search() {
 					<path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
 				</svg>
 				<span class="ml-1 hidden text-sm md:block">Search</span>
-				<kbd class="ml-2 hidden min-w-6 rounded border border-black/5 px-1 pb-px pt-1 text-center font-mono text-xs md:block dark:bg-slate-700">
+				<kbd class="ml-2 hidden min-w-6 rounded border border-black/5 px-1 pt-1 pb-px text-center font-mono text-xs md:block dark:bg-slate-700">
 					<kbd>{isAppleDevice ? "⌘" : "Ctrl"}</kbd>
 					<kbd class="ml-0.5">K</kbd>
 				</kbd>
 			</Dialog.Trigger>
 			<Dialog.Portal>
 				<Dialog.Overlay class="fixed inset-0 z-50 bg-black/50" />
-				<Dialog.Content class="fixed inset-0 z-50 flex w-full flex-col overflow-hidden border border-black/5 bg-white pt-4 lg:bottom-auto lg:left-1/2 lg:top-14 lg:max-h-[calc(100%-56px-56px)] lg:max-w-[550px] lg:-translate-x-1/2 lg:rounded-2xl dark:border-white/60 dark:bg-slate-800">
+				<Dialog.Content class="fixed inset-0 z-50 flex w-full flex-col overflow-hidden border border-black/5 bg-white pt-4 lg:top-14 lg:bottom-auto lg:left-1/2 lg:max-h-[calc(100%-56px-56px)] lg:max-w-173.5 lg:-translate-x-1/2 lg:rounded-2xl dark:border-white/60 dark:bg-slate-800">
 					<div class="mr-4 flex items-center lg:mx-4">
 						<Dialog.CloseButton tabIndex={-1} class="px-4 py-3 lg:hidden">
 							<svg
@@ -227,10 +230,15 @@ export function Search() {
 								<p class="mt-2 text-center text-sm">
 									No results for "<span class="font-bold">{searchTerm()}</span>"
 								</p>
-								<p class="mb-3! mt-4! text-center text-sm">
+								<p class="mt-4! mb-3! text-center text-sm">
 									Believe this query should return results?{" "}
 									<A
-										href={`https://github.com/solidjs/solid-docs/issues/new?title=[Search]+Missing+results+for+query+%22${encodeURIComponent(searchTerm())}%22`}
+										href={
+											config().themeConfig?.missingPagePath?.replace(
+												":path",
+												encodeURIComponent(searchTerm())
+											) ?? ""
+										}
 										target="_blank"
 										class="font-bold text-blue-400"
 									>
@@ -242,7 +250,7 @@ export function Search() {
 							<For each={Object.entries(result())}>
 								{([section, hits]) => (
 									<section>
-										<p class="pl-2 pt-2 text-sm capitalize text-black/70 dark:text-white/70">
+										<p class="pt-2 pl-2 text-sm text-black/70 capitalize dark:text-white/70">
 											{section
 												.replace(/^Enum\('(.+)'\)$/, "$1")
 												.replace(/-/g, " ")}
@@ -299,7 +307,7 @@ export function Search() {
 							</For>
 						</Suspense>
 					</div>
-					<div class="flex items-center justify-center border-t border-black/10 px-4 pb-3 pt-2 text-sm lg:justify-between dark:border-slate-700">
+					<div class="flex items-center justify-center border-t border-black/10 px-4 pt-2 pb-3 text-sm lg:justify-between dark:border-slate-700">
 						<div class="hidden lg:block">
 							<KeyboardShortcut key="↩" />
 							<span class="ml-1">to select</span>
@@ -320,7 +328,7 @@ export function Search() {
 									xmlns="http://www.w3.org/2000/svg"
 									fill="none"
 									viewBox="0 0 4053 1000"
-									class="h-[18px] dark:hidden"
+									class="h-4.5 dark:hidden"
 								>
 									<g clip-path="url(#a)">
 										<path
@@ -571,7 +579,7 @@ export function Search() {
 									xmlns="http://www.w3.org/2000/svg"
 									fill="none"
 									viewBox="0 0 4053 1000"
-									class="hidden h-[18px] dark:block"
+									class="hidden h-4.5 dark:block"
 								>
 									<g clip-path="url(#a-dark)">
 										<path

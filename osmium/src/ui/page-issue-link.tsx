@@ -34,11 +34,7 @@ export const PageIssueLink: Component = () => {
 			href={reportLink()}
 			target="_blank"
 		>
-			<Icon
-				aria-hidden="true"
-				class="mr-1 w-[16px]"
-				path={exclamationTriangle}
-			/>
+			<Icon aria-hidden="true" class="mr-1 w-4" path={exclamationTriangle} />
 			Report an issue with this page
 		</a>
 	);

@@ -3,7 +3,7 @@ import { usePrevNext } from "@kobalte/solidbase/client";
 import { RelativePageConfig, useOsmiumThemeFrontmatter } from "../frontmatter";
 
 type Pagination = {};
-export function Pagination(props: Pagination) {
+export function Pagination(_props: Pagination) {
 	const frontmatter = useOsmiumThemeFrontmatter();
 	const prevNext = usePrevNext();
 
@@ -24,8 +24,8 @@ export function Pagination(props: Pagination) {
 	return (
 		<Suspense>
 			<nav class="mt-10 flex justify-between border-t border-slate-200 pt-6 dark:border-slate-800">
-				<Show when={hasPrev()}>
-					<div>
+				<div>
+					<Show when={hasPrev()}>
 						<span class="font-display text-sm font-medium text-slate-900 dark:text-white">
 							Previous
 						</span>
@@ -35,8 +35,8 @@ export function Pagination(props: Pagination) {
 						>
 							← {customTitle(frontmatter()?.prev) ?? prevNext.prevLink().title}
 						</a>
-					</div>
-				</Show>
+					</Show>
+				</div>
 				<Show when={hasNext()}>
 					<div>
 						<span class="font-display text-sm font-medium text-slate-900 dark:text-white">

@@ -55,7 +55,7 @@ const EraserLink = (
 			fallback={
 				<a
 					href={linkUrl}
-					class="dark:text-solid-darklink text-solid-lightlink break-normal font-semibold leading-normal transition duration-100 ease-in hover:underline"
+					class="dark:text-solid-darklink text-solid-lightlink leading-normal font-semibold break-normal transition duration-100 ease-in hover:underline"
 					rel="noopener noreferrer"
 				>
 					{props.children}
@@ -101,7 +101,7 @@ export default function EraserOrAnchor(props: ParentProps<{ href: string }>) {
 			fallback={
 				<a
 					{...props}
-					class="dark:text-solid-darklink text-solid-lightlink break-normal font-semibold leading-normal transition duration-100 ease-in hover:underline"
+					class="dark:text-solid-darklink text-solid-lightlink leading-normal font-semibold break-normal transition duration-100 ease-in hover:underline"
 					rel="noopener noreferrer"
 				>
 					{props.children}

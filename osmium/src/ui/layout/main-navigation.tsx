@@ -1,9 +1,8 @@
-import { createEffect, createMemo, createSignal, For, Show } from "solid-js";
-import { A, useBeforeLeave, useLocation, useMatch } from "@solidjs/router";
+import { createMemo, createSignal, For, Show } from "solid-js";
+import { useBeforeLeave, useLocation, useMatch } from "@solidjs/router";
 import { Icon } from "solid-heroicons";
 import { chevronDown } from "solid-heroicons/solid";
 import { setIsOpen } from "./mobile-navigation";
-import { Dynamic } from "solid-js/web";
 import {
 	SidebarItem,
 	SidebarItemLink,
@@ -12,16 +11,6 @@ import {
 } from "@kobalte/solidbase/client";
 import { Collapsible } from "@kobalte/core/collapsible";
 import { Tabs } from "@kobalte/core/tabs";
-import { useRouteConfig, useSolidBaseContext } from "../../utils";
-
-interface Entry {
-	title: string;
-	path: string;
-	children?: Entry[];
-	mainNavExclude: boolean;
-	isTranslated?: boolean;
-	isDeprecated?: boolean;
-}
 
 interface MainNavigationProps {}
 
@@ -91,16 +80,7 @@ function DirList(props: { items: SidebarItem[] }) {
 	);
 }
 
-interface NavigationProps {
-	sidebar: { prefix: string; items: SidebarItem[] };
-}
-interface NavigationItemProps {
-	prefix: string;
-	item: SidebarItem;
-	depth?: number;
-}
-
-export function MainNavigation(props: MainNavigationProps) {
+export function MainNavigation(_props: MainNavigationProps) {
 	const isReference = useMatch(() => "*/reference/*?");
 
 	const initialTab = () => (isReference() ? "reference" : "learn");
@@ -115,8 +95,6 @@ export function MainNavigation(props: MainNavigationProps) {
 			return !!a.items - !!b.items;
 		});
 	});
-
-	createEffect(() => console.log(sidebar(), sidebarEntries()));
 
 	/**
 	 * Re-syncs the selected tab with the chosen route.
@@ -153,7 +131,7 @@ export function MainNavigation(props: MainNavigationProps) {
 					>
 						Reference
 					</Tabs.Trigger>
-					<Tabs.Indicator class="absolute bottom-0 h-[2px] bg-blue-500 transition-all duration-250 dark:bg-blue-500" />
+					<Tabs.Indicator class="absolute bottom-0 h-0.5 bg-blue-500 transition-all duration-250 dark:bg-blue-500" />
 				</Tabs.List>
 				<Tabs.Content value="learn" class="relative mt-5 w-full">
 					<Show

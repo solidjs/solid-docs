@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { globSync } from "glob";
+import { glob } from "node:fs/promises";
 import { OramaCloud } from "@orama/core";
 import { generalPurposeCrawler } from "@orama/crawly";
 import "dotenv/config";
@@ -9,7 +9,7 @@ const ORAMA_DATASOURCE_ID = process.env.ORAMA_DATASOURCE_ID;
 const ORAMA_PROJECT_ID = process.env.ORAMA_PROJECT_ID;
 
 const baseURL = new URL("../dist", import.meta.url).pathname;
-const HTMLFiles = globSync("**/*.html", { cwd: baseURL });
+const HTMLFiles = await Array.fromAsync(glob("**/*.html", { cwd: baseURL }));
 
 const pagesToIndex = HTMLFiles.flatMap((file) => {
 	const path = file.replace(/\.html$/, "");

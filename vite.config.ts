@@ -89,7 +89,7 @@ export default defineConfig({
 			themeConfig: {
 				sidebar: createFilesystemSidebar("./src/routes/", {
 					filter: (item) => {
-						return !["solid-router", "solid-start", "solid-meta"].some(
+						return !["solid-router", "solid-start", "solid-meta", "v2"].some(
 							(project) => item.filePath.includes(`/src/routes/${project}`)
 						);
 					},

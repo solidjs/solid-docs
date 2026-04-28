@@ -27,9 +27,9 @@ export default defineConfig({
 					default: "solid",
 					values: {
 						solid: { path: "", label: "Solid" },
-						router: { path: "solid-router", label: "Solid Router" },
+						router: { path: "solid-router", label: "Router" },
 						start: { path: "solid-start", label: "SolidStart" },
-						meta: { path: "solid-meta", label: "Solid Meta" },
+						meta: { path: "solid-meta", label: "Meta" },
 					},
 				},
 				version: {

@@ -37,12 +37,12 @@ import { createOptimisticStore } from "solid-js";
 
 ```ts
 function createOptimisticStore<T extends object = {}>(
-  store: NoFn<T> | Store<NoFn<T>>
+	store: NoFn<T> | Store<NoFn<T>>
 ): [get: Store<T>, set: StoreSetter<T>];
 function createOptimisticStore<T extends object = {}>(
-  fn: (store: T) => void | T | Promise<void | T> | AsyncIterable<void | T>,
-  store: Partial<T> | Store<NoFn<T>>,
-  options?: ProjectionOptions
+	fn: (store: T) => void | T | Promise<void | T> | AsyncIterable<void | T>,
+	store: Partial<T> | Store<NoFn<T>>,
+	options?: ProjectionOptions
 ): [get: Refreshable<Store<T>>, set: StoreSetter<T>];
 ```
 
@@ -57,18 +57,20 @@ const [todos, setTodos] = createOptimisticStore<Todo[]>([]);
 
 // Mutation: optimistic add, then in-place reconcile to the saved row.
 const addTodo = action(function* (text: string) {
-  const tempId = crypto.randomUUID();
-  setTodos(t => { t.push({ id: tempId, text, pending: true }); });
-  const saved = yield api.createTodo(text);
-  setTodos(t => {
-    const i = t.findIndex(x => x.id === tempId);
-    if (i >= 0) t[i] = saved;
-  });
+	const tempId = crypto.randomUUID();
+	setTodos((t) => {
+		t.push({ id: tempId, text, pending: true });
+	});
+	const saved = yield api.createTodo(text);
+	setTodos((t) => {
+		const i = t.findIndex((x) => x.id === tempId);
+		if (i >= 0) t[i] = saved;
+	});
 });
 
 // Return form: filter is the natural shape for removal.
 const removeTodo = action(function* (id: string) {
-  setTodos(t => t.filter(x => x.id !== id));
-  yield api.removeTodo(id);
+	setTodos((t) => t.filter((x) => x.id !== id));
+	yield api.removeTodo(id);
 });
 ```

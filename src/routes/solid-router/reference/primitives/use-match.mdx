@@ -1,22 +1,17 @@
 ---
 title: useMatch
 use_cases: >-
-  active links, navigation highlighting, conditional rendering, path matching,
-  menu items
+  path matching, active states, route matching
 tags:
   - match
-  - active
-  - navigation
   - path
-  - conditional
-  - links
+  - routes
 version: "1.0"
 description: >-
-  Check if paths match current route with useMatch - create active navigation
-  links, conditional rendering based on route matching.
+  useMatch returns a memoized match for a path pattern.
 ---
 
-The `useMatch` function checks whether the current path matches a provided path pattern.
+`useMatch` returns an accessor for matching the current pathname against a route pattern.
 
 ## Import
 
@@ -27,19 +22,21 @@ import { useMatch } from "@solidjs/router";
 ## Type
 
 ```ts
-const useMatch: <S extends string>(
-	path: () => S,
-	matchFilters?: MatchFilters<S>
-): Accessor<PathMatch | undefined>;
+type MatchFilter = readonly string[] | RegExp | ((s: string) => boolean);
 
 type MatchFilters<P extends string | readonly string[] = any> = P extends string
 	? { [K in PathParams<P>[number]]?: MatchFilter }
 	: Record<string, MatchFilter>;
 
 interface PathMatch {
-  params: Params;
-  path: string;
+	params: Params;
+	path: string;
 }
+
+function useMatch<S extends string>(
+	path: () => S,
+	matchFilters?: MatchFilters<S>
+): Accessor<PathMatch | undefined>;
 ```
 
 ## Parameters
@@ -49,16 +46,14 @@ interface PathMatch {
 - **Type:** `() => S`
 - **Required:** Yes
 
-An accessor function that returns the path pattern to match against the current route.
-Uses the same syntax as the `path` prop in the [`<Route>`](/solid-router/reference/components/route) component.
-Supports [path parameters](/solid-router/concepts/path-parameters), [optional parameters](/solid-router/concepts/path-parameters#optional-parameters), and [wildcard parameters](/solid-router/concepts/path-parameters#wildcard-routes).
+Accessor that returns the path pattern to match.
 
-### `filters`
+### `matchFilters`
 
 - **Type:** `MatchFilters<S>`
 - **Required:** No
 
-An object where keys correspond to route parameter names and values define match filters.
+Filters applied to path parameters in the pattern. 
 Each filter can be:
 
 - An array of allowed strings
@@ -82,6 +77,12 @@ An object containing the matched path parameters as key-value pairs.
 - **Type:** `string`
 
 The matched path.
+
+## Behavior
+
+- Expands optional path segments before creating matchers.
+- Matchers test against [`useLocation`](/solid-router/reference/primitives/use-location)'s `pathname`.
+- The accessor returns the first match or `undefined`.
 
 ## Examples
 

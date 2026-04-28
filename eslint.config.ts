@@ -40,6 +40,7 @@ export default tseslint.config(
 		rules: {
 			quotes: ["error", "double"],
 			semi: "warn",
+			"@typescript-eslint/no-empty-object-type": ["off"],
 			"@typescript-eslint/no-unused-vars": [
 				"error",
 				{

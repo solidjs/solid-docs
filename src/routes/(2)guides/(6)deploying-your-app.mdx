@@ -1,0 +1,76 @@
+---
+title: Deploy your app
+category: Guides
+order: 9
+use_cases: "production deployment, hosting, going live, app publishing, cloud deployment"
+tags:
+  - deployment
+  - hosting
+  - production
+  - cloud
+  - publishing
+version: "1.0"
+description: >-
+  Deploy your Solid application to popular hosting platforms including
+  Cloudflare, Vercel, Netlify, AWS, and more with guides.
+---
+
+import { ImageLink } from "~/components/ImageLink";
+
+Are you ready to deploy your Solid application? Follow our guides for different deployment services.
+
+<div class="flex flex-col md:grid md:grid-cols-4 md:grid-rows-2  gap-3">
+
+<ImageLink
+	title="Cloudflare"
+	href="/guides/deployment-options/cloudflare"
+	logo="cloudflare"
+/>
+
+<ImageLink
+	title="Firebase"
+	href="/guides/deployment-options/firebase"
+	logo="firebase"
+/>
+
+<ImageLink
+	title="AWS with Flightcontrol"
+	href="/guides/deployment-options/aws-via-flightcontrol"
+	logo="flightControl"
+/>
+
+<ImageLink
+	title="AWS with SST"
+	href="/guides/deployment-options/aws-via-sst"
+	logo="sst"
+/>
+
+<ImageLink
+	title="Netlify"
+	href="/guides/deployment-options/netlify"
+	logo="netlify"
+/>
+<ImageLink
+	title="Railway"
+	href="/guides/deployment-options/railway"
+	logo="railway"
+/>
+
+<ImageLink
+	title="Vercel"
+	href="/guides/deployment-options/vercel"
+	logo="vercel"
+/>
+
+<ImageLink
+	title="Stormkit"
+	href="/guides/deployment-options/stormkit"
+	logo="stormkit"
+/>
+
+<ImageLink
+	title="Zerops"
+	href="/guides/deployment-options/zerops"
+	logo="zerops"
+/>
+</div>

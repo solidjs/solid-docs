@@ -1,0 +1,36 @@
+---
+title: Stormkit
+category: Guides / Deployment
+order: 7
+mainNavExclude: true
+use_cases: >-
+  spa deployment, serverless functions, static hosting, git deployment,
+  production hosting
+tags:
+  - stormkit
+  - deployment
+  - hosting
+  - serverless
+  - spa
+  - static
+version: "1.0"
+description: >-
+  Deploy Solid apps as static sites or SPAs on Stormkit with serverless
+  functions support and Git provider integration.
+---
+
+[Stormkit](https://www.stormkit.io) is a deployment platform for static websites, single-page applications (SPAs), and serverless functions.
+
+1. Log in to Stormkit.
+
+2. Using the user interface, import your Solid project from one of the three supported Git providers (GitHub, GitLab, or Bitbucket).
+
+3. Navigate to the project’s production environment in Stormkit or create a new environment if needed.
+
+4. Verify the build command in your Stormkit configuration. By default, Stormkit CI will run `npm run build` but you can specify a custom build command on this page.
+
+5. Check output folder, unless its specified Stormkit will try to upload contents of build folder.
+
+6. Click the “Deploy Now” button to deploy your site. Stormkit CI will build your code and upload contents of it.
+
+Find more details on [Stormkit Documentation](https://stormkit.io/docs).

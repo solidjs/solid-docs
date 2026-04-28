@@ -1,0 +1,120 @@
+---
+title: Macaron
+category: Guides / Styling Components
+order: 4
+mainNavExclude: true
+use_cases: >-
+  css-in-js styling, type-safe styles, styled components, variant-based styling,
+  compile-time css
+tags:
+  - styling
+  - css-in-js
+  - macaron
+  - styled-components
+  - typescript
+  - variants
+version: "1.0"
+description: >-
+  Style Solid components with Macaron's compile-time CSS-in-JS, offering
+  type-safe styled components and variant-based styling.
+---
+
+[Macaron](https://macaron.js.org/) is compile-time CSS-in-JS library that offers type safety.
+
+## Installation
+
+1. Install and set up the macaron plugin for your bundler:
+
+```package-install
+@macaron-css/core @macaron-css/solid
+```
+
+2. Within your `vite.config.js` folder, add the macaron plugin prior to other plugins:
+
+```js
+import { macaronVitePlugin } from "@macaron-css/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+	plugins: [
+		macaronVitePlugin(),
+		// other plugins
+	],
+});
+```
+
+## Usage
+
+1. Import `styled` from `@macaron-css/solid` and create a styled component:
+
+```jsx
+// button.tsx
+import { styled } from "@macaron-css/solid";
+
+const Button = styled("button", {});
+```
+
+2. Add styles that will be applied to the components by default:
+
+```jsx
+import { styled } from "@macaron-css/solid";
+
+const Button = styled("button", {
+	base: {
+		backgroundColor: "red",
+		borderRadius: "10px",
+	},
+});
+```
+
+Variants can be added using the `variants` key:
+
+```jsx
+import { styled } from "@macaron-css/solid";
+
+const Button = styled("button", {
+	base: {
+		backgroundColor: "red",
+		borderRadius: "10px",
+	},
+	variants: {
+		color: {
+			violet: {
+				backgroundColor: "violet",
+			},
+			gray: {
+				backgroundColor: "gray",
+			},
+		},
+	},
+});
+```
+
+Additionally, the `defaultVariants` feature is set to `variants` by default. This can be overridden at the time of usage:
+
+```jsx
+import { styled } from "@macaron-css/solid";
+
+const Button = styled("button", {
+	base: {
+		backgroundColor: "red",
+		borderRadius: "10px",
+	},
+	variants: {
+		color: {
+			violet: {
+				backgroundColor: "violet",
+			},
+			gray: {
+				backgroundColor: "gray",
+			},
+		},
+	},
+	defaultVariants: {
+		color: "blue",
+	},
+});
+```
+
+These components can be used like any other Solid component, with type-safe props derived from your variants.
+For more information on how to use macaron, visit their [documentation](https://macaron.js.org/docs/installation/).

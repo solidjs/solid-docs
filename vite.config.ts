@@ -22,7 +22,7 @@ export default defineConfig({
 			siteUrl: "https://docs.solidjs.com",
 			editPath: "https://github.com/solidjs/solid-docs/edit/main/:path",
 			routes: {
-				path: "/{version}/{project}",
+				path: "/{project}/{version}",
 				project: {
 					default: "solid",
 					values: {
@@ -36,13 +36,13 @@ export default defineConfig({
 					default: "latest",
 					values: {
 						latest: { path: "", label: "Latest" },
-						v1: { path: "v1", label: "v1" },
+						v2: { path: "v2", label: "v2" },
 					},
 				},
 				include: [
 					{
 						project: "solid",
-						version: ["latest", "v1"],
+						version: ["latest", "v2"],
 					},
 					{
 						project: ["router", "start", "meta"],
@@ -70,6 +70,19 @@ export default defineConfig({
 					title: "Solid Meta",
 					themeConfig: {
 						sidebar: createFilesystemSidebar("./src/routes/solid-meta"),
+					},
+				},
+				{
+					project: "solid",
+					version: "v2",
+					themeConfig: {
+						sidebar: createFilesystemSidebar("./src/routes/v2", {
+							filter: (item) => {
+								return !["solid-router", "solid-start", "solid-meta"].some(
+									(project) => item.filePath.includes(`/src/routes/${project}`)
+								);
+							},
+						}),
 					},
 				},
 			],

@@ -11,6 +11,7 @@ import {
 } from "@kobalte/solidbase/client";
 import { Collapsible } from "@kobalte/core/collapsible";
 import { Tabs } from "@kobalte/core/tabs";
+import VersionSelector from "./version-selector";
 
 interface MainNavigationProps {}
 
@@ -111,6 +112,7 @@ export function MainNavigation(_props: MainNavigationProps) {
 
 	return (
 		<nav class="custom-scrollbar h-full overflow-y-auto pb-20 md:h-[calc(100vh-7rem)]">
+			<VersionSelector />
 			<Tabs value={selectedTab()}>
 				<Tabs.List class="sticky top-0 z-10 grid w-full grid-cols-2 md:bg-slate-50 md:dark:bg-slate-900">
 					<Tabs.Trigger

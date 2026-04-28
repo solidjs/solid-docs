@@ -49,8 +49,6 @@ export function MainHeader(_props: MainHeaderProps) {
 
 	const project = useProject();
 
-	console.log(project());
-
 	const { setNavOpen } = useOsmiumThemeState();
 
 	if (!isServer) {
@@ -78,7 +76,7 @@ export function MainHeader(_props: MainHeaderProps) {
 			}}
 		>
 			<div class="max-w-8xl mx-auto grid w-full grid-cols-2 items-center px-4 py-2 lg:grid-cols-[1fr_2fr_1fr]">
-				<div class="flex justify-start gap-2">
+				<div class="flex items-center justify-start gap-2">
 					<div class="flex lg:hidden">
 						<MobileNavigation />
 					</div>

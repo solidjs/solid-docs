@@ -13,15 +13,15 @@ source_path: "packages/solid-signals/src/signals.ts"
 
 Creates a reactive effect with **separate compute and effect phases**.
 
-- `compute(prev)` runs reactively — *put all reactive reads here*. The
+- `compute(prev)` runs reactively — _put all reactive reads here_. The
   returned value is passed to `effect` and is also the new "previous" value
   for the next run.
 - `effect(next, prev?)` runs imperatively (untracked) after the queue
-  flushes. *Put DOM writes / fetch / logging / subscriptions here.* It may
+  flushes. _Put DOM writes / fetch / logging / subscriptions here._ It may
   return a cleanup function which runs before the next effect or on
   disposal.
 
-Reactive reads inside `effect` will *not* re-trigger this effect — that's
+Reactive reads inside `effect` will _not_ re-trigger this effect — that's
 intentional. If you need a single-phase tracked effect, use
 `createTrackedEffect` (with the tradeoffs noted there).
 
@@ -33,11 +33,11 @@ createEffect<T>(compute, effectFn | { effect, error }, options?: EffectOptions);
 ```
 
 > Deprecated: `createEffect(compute)` (single argument) is no longer supported.
-Pass a separate effect function as the second argument:
-`createEffect(compute, effect)`. See [MISSING_EFFECT_FN].
+> Pass a separate effect function as the second argument:
+> `createEffect(compute, effect)`. See [MISSING_EFFECT_FN].
 
 - For a side effect that reacts to changes, split the work:
-`createEffect(() => signal(), value => doWork(value))`.
+  `createEffect(() => signal(), value => doWork(value))`.
 - For a derived value, use `createMemo(() => signal())`.
 - For a one-shot side effect at construction time, just call the function.
 
@@ -51,11 +51,13 @@ import { createEffect } from "solid-js";
 
 ```ts
 function createEffect<T>(
-  compute: ComputeFunction<undefined | NoInfer<T>, T>,
-  effectFn: EffectFunction<NoInfer<T>, T> | EffectBundle<NoInfer<T>, T>,
-  options?: EffectOptions
+	compute: ComputeFunction<undefined | NoInfer<T>, T>,
+	effectFn: EffectFunction<NoInfer<T>, T> | EffectBundle<NoInfer<T>, T>,
+	options?: EffectOptions
 ): void;
-function createEffect<T>(compute: ComputeFunction<undefined | NoInfer<T>, T>): never;
+function createEffect<T>(
+	compute: ComputeFunction<undefined | NoInfer<T>, T>
+): never;
 ```
 
 ## Parameters
@@ -78,8 +80,8 @@ a function that receives the new value and is used to perform side effects (retu
 const [count, setCount] = createSignal(0);
 
 createEffect(
-  () => count(),                  // compute: tracks `count`
-  value => console.log(value)     // effect: side effect
+	() => count(), // compute: tracks `count`
+	(value) => console.log(value) // effect: side effect
 );
 
 setCount(1); // logs 1 after the next flush
@@ -87,11 +89,11 @@ setCount(1); // logs 1 after the next flush
 
 ```ts
 createEffect(
-  () => userId(),
-  id => {
-    const ctrl = new AbortController();
-    fetch(`/users/${id}`, { signal: ctrl.signal });
-    return () => ctrl.abort(); // cleanup before next run / disposal
-  }
+	() => userId(),
+	(id) => {
+		const ctrl = new AbortController();
+		fetch(`/users/${id}`, { signal: ctrl.signal });
+		return () => ctrl.abort(); // cleanup before next run / disposal
+	}
 );
 ```

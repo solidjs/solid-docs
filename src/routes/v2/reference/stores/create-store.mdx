@@ -16,7 +16,7 @@ accessed; only the parts that change trigger updates.
 
 Store properties hold **plain values**, not accessors. The proxy already
 tracks reads per-property — wrapping a value in `() => state.foo` produces
-a getter that *won't* track when called, which looks like a reactivity bug
+a getter that _won't_ track when called, which looks like a reactivity bug
 but is just a category error. If you have a signal-shaped piece of state,
 make it a property of the store (`{ foo: 1 }`) rather than nesting an
 accessor inside (`{ foo: () => signal() }`).
@@ -31,7 +31,7 @@ for that, use the derived/projection form (or `createProjection`).
 
 - Plain form: `createStore(initialValue)` — wraps a value in a reactive
   proxy.
-- Derived form: `createStore(fn, seed, options?)` — a *projection store*
+- Derived form: `createStore(fn, seed, options?)` — a _projection store_
   whose contents are computed by `fn(draft)`. `fn` may be sync, async, or
   an `AsyncIterable`; the projection's result reconciles against the
   existing store by `options.key` (default `"id"`) for stable identity.
@@ -46,12 +46,12 @@ import { createStore } from "solid-js";
 
 ```ts
 function createStore<T extends object = {}>(
-  store: NoFn<T> | Store<NoFn<T>>
+	store: NoFn<T> | Store<NoFn<T>>
 ): [get: Store<T>, set: StoreSetter<T>];
 function createStore<T extends object = {}>(
-  fn: (store: T) => void | T | Promise<void | T> | AsyncIterable<void | T>,
-  store: Partial<T> | Store<NoFn<T>>,
-  options?: ProjectionOptions
+	fn: (store: T) => void | T | Promise<void | T> | AsyncIterable<void | T>,
+	store: Partial<T> | Store<NoFn<T>>,
+	options?: ProjectionOptions
 ): [get: Refreshable<Store<T>>, set: StoreSetter<T>];
 ```
 
@@ -63,23 +63,27 @@ function createStore<T extends object = {}>(
 
 ```ts
 const [state, setState] = createStore({
-  user: { name: "Ada", age: 36 },
-  todos: [] as { id: string; text: string; done: boolean }[]
+	user: { name: "Ada", age: 36 },
+	todos: [] as { id: string; text: string; done: boolean }[],
 });
 
 // Canonical: mutate the draft in place.
-setState(s => { s.user.age = 37; });
-setState(s => { s.todos.push({ id: "1", text: "x", done: false }); });
+setState((s) => {
+	s.user.age = 37;
+});
+setState((s) => {
+	s.todos.push({ id: "1", text: "x", done: false });
+});
 
 // Return form: reach for it when mutation is awkward.
-setState(s => s.todos.filter(t => !t.done));               // remove items
-setState(s => ({ ...s, user: { name: "Grace", age: 85 } })); // shallow replace
+setState((s) => s.todos.filter((t) => !t.done)); // remove items
+setState((s) => ({ ...s, user: { name: "Grace", age: 85 } })); // shallow replace
 ```
 
 ```ts
 // Derived store — auto-fetches & reconciles by `id`.
 const [users] = createStore(
-  async () => fetch("/users").then(r => r.json()),
-  [] as User[]
+	async () => fetch("/users").then((r) => r.json()),
+	[] as User[]
 );
 ```

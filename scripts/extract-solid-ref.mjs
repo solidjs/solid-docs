@@ -56,7 +56,10 @@ const CANONICAL_ROUTES = {
 	refresh: ["lifecycle-actions/refresh.mdx", "Lifecycle & Actions"],
 
 	children: ["components-context/children.mdx", "Components & Context"],
-	createContext: ["components-context/create-context.mdx", "Components & Context"],
+	createContext: [
+		"components-context/create-context.mdx",
+		"Components & Context",
+	],
 	createUniqueId: [
 		"components-context/create-unique-id.mdx",
 		"Components & Context",

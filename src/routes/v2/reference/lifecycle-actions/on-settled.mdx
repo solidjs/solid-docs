@@ -18,7 +18,7 @@ does not create an ongoing subscription.
 
 The canonical lifecycle primitive in 2.0. Three main usages:
 
-- **Component-level setup-and-teardown** *(the most common shape)*: run
+- **Component-level setup-and-teardown** _(the most common shape)_: run
   setup after the component's first stable render and **return a cleanup
   function** to dispose it on owner disposal. This is the replacement for
   the 1.x `onMount` + `onCleanup` pairing — setup and teardown live in one
@@ -29,7 +29,7 @@ The canonical lifecycle primitive in 2.0. Three main usages:
 - **Inside an event handler:** schedule work to run after the action /
   transition triggered by the event has completed.
 
-Reactive reads inside the callback are *not* tracked — to react to
+Reactive reads inside the callback are _not_ tracked — to react to
 subsequent settles, register a new `onSettled` each time.
 
 `onCleanup` is **not** allowed inside the callback — return a cleanup
@@ -60,41 +60,45 @@ on owner disposal
 // Component-level setup + teardown — replaces onMount + onCleanup.
 // Subscribe to an external source on mount, unsubscribe on dispose.
 function useViewportWidth() {
-  const [width, setWidth] = createSignal(window.innerWidth);
-  onSettled(() => {
-    const onResize = () => setWidth(window.innerWidth);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  });
-  return width;
+	const [width, setWidth] = createSignal(window.innerWidth);
+	onSettled(() => {
+		const onResize = () => setWidth(window.innerWidth);
+		window.addEventListener("resize", onResize);
+		return () => window.removeEventListener("resize", onResize);
+	});
+	return width;
 }
 ```
 
 ```tsx
 // Post-settle "ready" hook — no cleanup needed.
 function Dashboard() {
-  const data = createMemo(async () => fetchData());
+	const data = createMemo(async () => fetchData());
 
-  onSettled(() => {
-    analytics.track("dashboard.ready");
-  });
+	onSettled(() => {
+		analytics.track("dashboard.ready");
+	});
 
-  return <Loading fallback={<Spinner />}><pre>{data()}</pre></Loading>;
+	return (
+		<Loading fallback={<Spinner />}>
+			<pre>{data()}</pre>
+		</Loading>
+	);
 }
 ```
 
 ```tsx
 // Event-handler — runs after the action settles.
 function SaveButton() {
-  const save = action(function* () {
-    yield api.save();
-  });
+	const save = action(function* () {
+		yield api.save();
+	});
 
-  const handleClick = () => {
-    save();
-    onSettled(() => toast("Saved!"));
-  };
+	const handleClick = () => {
+		save();
+		onSettled(() => toast("Saved!"));
+	};
 
-  return <button onClick={handleClick}>Save</button>;
+	return <button onClick={handleClick}>Save</button>;
 }
 ```

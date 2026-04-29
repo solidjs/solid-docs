@@ -36,7 +36,7 @@ import { action } from "solid-js";
 
 ```ts
 function action<Args extends any[], Y, R>(
-  genFn: (...args: Args) => Generator<Y, R, any> | AsyncGenerator<Y, R, any>
+	genFn: (...args: Args) => Generator<Y, R, any> | AsyncGenerator<Y, R, any>
 );
 ```
 
@@ -46,14 +46,16 @@ function action<Args extends any[], Y, R>(
 const [todos, setTodos] = createOptimisticStore<Todo[]>([]);
 
 const addTodo = action(function* (text: string) {
-  const tempId = crypto.randomUUID();
-  setTodos(t => { t.push({ id: tempId, text, pending: true }); }); // optimistic
-  const saved = yield api.createTodo(text); // network round-trip
-  setTodos(t => {
-    const i = t.findIndex(x => x.id === tempId);
-    if (i >= 0) t[i] = saved;
-  });
-  return saved;
+	const tempId = crypto.randomUUID();
+	setTodos((t) => {
+		t.push({ id: tempId, text, pending: true });
+	}); // optimistic
+	const saved = yield api.createTodo(text); // network round-trip
+	setTodos((t) => {
+		const i = t.findIndex((x) => x.id === tempId);
+		if (i >= 0) t[i] = saved;
+	});
+	return saved;
 });
 
 await addTodo("buy milk");

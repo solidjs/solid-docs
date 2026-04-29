@@ -5,9 +5,34 @@ import tailwindcss from "@tailwindcss/vite";
 
 import { createSolidBase } from "@kobalte/solidbase/config";
 import { osmium } from "solidbase-osmium";
-import { createFilesystemSidebar } from "@kobalte/solidbase/config/sidebar";
+import {
+	createFilesystemSidebar,
+	type SidebarItem,
+} from "@kobalte/solidbase/config/sidebar";
 
 const solidBase = createSolidBase(osmium);
+
+function createV2Sidebar() {
+	return createFilesystemSidebar("./src/routes/v2", {
+		filter: (item) => {
+			return !["solid-router", "solid-start", "solid-meta"].some((project) =>
+				item.filePath.includes(`/src/routes/${project}`)
+			);
+		},
+	}).map(collapseAdvancedReference);
+}
+
+function collapseAdvancedReference(item: SidebarItem): SidebarItem {
+	if (!("items" in item) || item.title !== "Reference") return item;
+	return {
+		...item,
+		items: item.items.map((child) =>
+			"items" in child && child.title === "Advanced"
+				? { ...child, collapsed: true }
+				: child
+		),
+	};
+}
 
 export default defineConfig({
 	resolve: {
@@ -76,13 +101,7 @@ export default defineConfig({
 					project: "solid",
 					version: "v2",
 					themeConfig: {
-						sidebar: createFilesystemSidebar("./src/routes/v2", {
-							filter: (item) => {
-								return !["solid-router", "solid-start", "solid-meta"].some(
-									(project) => item.filePath.includes(`/src/routes/${project}`)
-								);
-							},
-						}),
+						sidebar: createV2Sidebar(),
 					},
 				},
 			],

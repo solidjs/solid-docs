@@ -750,9 +750,7 @@ function getDocs(declarations) {
 function renderComment(comment) {
 	if (!comment) return "";
 	if (typeof comment === "string") return comment;
-	return comment
-		.map((part) => renderCommentPart(part))
-		.join("");
+	return comment.map((part) => renderCommentPart(part)).join("");
 }
 
 function renderCommentPart(part) {

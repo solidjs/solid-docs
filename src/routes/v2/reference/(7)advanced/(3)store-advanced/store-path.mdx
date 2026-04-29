@@ -132,29 +132,31 @@ type ArrayFilterFn<T> = (item: T, index: number) => boolean;
 
 ```ts
 type CustomPartial<T> = T extends readonly unknown[]
-  ? "0" extends keyof T
-    ? { [K in Extract<keyof T, `${number}`>]?: T[K] }
-    : { [x: number]: T[number] }
-  : Partial<T>;
+	? "0" extends keyof T
+		? { [K in Extract<keyof T, `${number}`>]?: T[K] }
+		: { [x: number]: T[number] }
+	: Partial<T>;
 ```
 
 ### `Part`
 
 ```ts
 type Part<T, K extends KeyOf<T> = KeyOf<T>> =
-  | K
-  | ([K] extends [never] ? never : readonly K[])
-  | ([T] extends [readonly unknown[]] ? ArrayFilterFn<T[number]> | StorePathRange : never);
+	| K
+	| ([K] extends [never] ? never : readonly K[])
+	| ([T] extends [readonly unknown[]]
+			? ArrayFilterFn<T[number]> | StorePathRange
+			: never);
 ```
 
 ### `PathSetter`
 
 ```ts
 type PathSetter<T> =
-  | T
-  | CustomPartial<T>
-  | ((prev: T) => T | CustomPartial<T>)
-  | typeof DELETE;
+	| T
+	| CustomPartial<T>
+	| ((prev: T) => T | CustomPartial<T>)
+	| typeof DELETE;
 ```
 
 ### `StorePathRange`

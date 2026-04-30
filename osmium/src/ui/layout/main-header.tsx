@@ -113,7 +113,7 @@ export function MainHeader(_props: MainHeaderProps) {
 				<div class="order- flex basis-0 items-center justify-end gap-4 lg:order-2">
 					<ClientSearch />
 					<a
-						href={`${config().themeConfig?.discord}/${project().projects[project().current].path || "solid"}`}
+						href={`${config().themeConfig?.github}/${project().projects[project().current].path || "solid"}`}
 						class="group"
 						aria-label="GitHub"
 						target="_blank"

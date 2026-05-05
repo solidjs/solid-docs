@@ -55,34 +55,47 @@ export default defineConfig({
 					project: "router",
 					title: "Solid Router",
 					themeConfig: {
-						sidebar: createFilesystemSidebar("./src/routes/solid-router"),
+						sidebar: {
+							"/solid-router": createFilesystemSidebar(
+								"./src/routes/solid-router"
+							),
+						},
 					},
 				},
 				{
 					project: "start",
 					title: "SolidStart",
 					themeConfig: {
-						sidebar: createFilesystemSidebar("./src/routes/solid-start"),
+						sidebar: {
+							"/solid-start": createFilesystemSidebar(
+								"./src/routes/solid-start"
+							),
+						},
 					},
 				},
 				{
 					project: "meta",
 					title: "Solid Meta",
 					themeConfig: {
-						sidebar: createFilesystemSidebar("./src/routes/solid-meta"),
+						sidebar: {
+							"/solid-meta": createFilesystemSidebar("./src/routes/solid-meta"),
+						},
 					},
 				},
 				{
 					project: "solid",
 					version: "v2",
 					themeConfig: {
-						sidebar: createFilesystemSidebar("./src/routes/v2", {
-							filter: (item) => {
-								return !["solid-router", "solid-start", "solid-meta"].some(
-									(project) => item.filePath.includes(`/src/routes/${project}`)
-								);
-							},
-						}),
+						sidebar: {
+							"/v2": createFilesystemSidebar("./src/routes/v2", {
+								filter: (item) => {
+									return !["solid-router", "solid-start", "solid-meta"].some(
+										(project) =>
+											item.filePath.includes(`/src/routes/${project}`)
+									);
+								},
+							}),
+						},
 					},
 				},
 			],

@@ -1,53 +1,74 @@
 ---
 title: HttpHeader
 use_cases: >-
-  security headers, cors configuration, cache control, seo headers, custom
-  headers, api responses
+  response headers, server rendering, header cleanup
 tags:
+  - server
   - headers
-  - http
-  - response
-  - security
-  - cors
-  - meta
+  - component
 version: "1.0"
 description: >-
-  Set custom HTTP headers in SolidStart responses. Configure security, caching,
-  CORS, and SEO headers for server-rendered pages.
+  HttpHeader sets or appends a response header during server rendering.
 ---
 
-`HttpHeader` provides a way to set headers on HTTP responses sent by the server.
+`HttpHeader` is a component that sets or appends a response header on the server.
+
+## Import
+
+```tsx
+import { HttpHeader } from "@solidjs/start";
+```
+
+## Type
+
+```tsx
+interface HttpHeaderProps {
+	name: string;
+	value: string;
+	append?: boolean;
+}
+
+const HttpHeader: (props: HttpHeaderProps) => null;
+```
+
+## Props
+
+### `name`
+
+- **Type:** `string`
+- **Optional:** No
+
+Header name.
+
+### `value`
+
+- **Type:** `string`
+- **Optional:** No
+
+Header value.
+
+### `append`
+
+- **Type:** `boolean`
+- **Optional:** Yes
+
+Controls whether the value is appended instead of set.
+
+## Behavior
+
+- On the server, the current request event is read.
+- Truthy `append` calls `event.response.headers.append(name, value)`, while falsy `append` calls `event.response.headers.set(name, value)`.
+- During cleanup, its own header value is removed unless the event has already completed or been handled.
+- Client rendering returns `null`.
+
+## Examples
+
+### Basic usage
 
 ```tsx
 import { HttpHeader } from "@solidjs/start";
 
-<HttpHeader name="x-robots-tag" value="noindex" />;
-```
-
-## Setting a header for catch-all routes
-
-```tsx title="routes/*404.tsx"
-import { HttpHeader, HttpStatusCode } from "@solidjs/start";
-
-export default function NotFound() {
-	return (
-		<div>
-			<HttpStatusCode code={404} />
-			<HttpHeader name="my-header" value="header-value" />
-		</div>
-	);
+export default function Page() {
+	return <HttpHeader name="cache-control" value="max-age=60" />;
 }
 ```
-
-As a page is rendered, you may want to add additional HTTP headers to the response and the `HttpHeader` component will do that for you.
-By passing it a `name` and `value`, they will get added to the `Response` headers sent back to the browser.
-
-When streaming responses with [`renderToStream`](/reference/rendering/render-to-stream), HTTP headers can only be added before the stream is first flushed.
-This requires adding `deferStream` to any resources that need to be loaded before responding.
-
-## Parameters
-
-| Property | Type   | Description                    |
-| -------- | ------ | ------------------------------ |
-| name     | string | The name of the header to set  |
-| value    | string | The value of the header to set |

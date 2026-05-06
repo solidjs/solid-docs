@@ -1,22 +1,17 @@
 ---
 title: useSubmissions
 use_cases: >-
-  multiple forms, submission history, batch operations, optimistic lists, error
-  recovery
+  action submissions, submission arrays, pending actions
 tags:
-  - forms
   - submissions
-  - multiple
-  - history
-  - optimistic
-  - batch
+  - actions
+  - pending
 version: "1.0"
 description: >-
-  Manage multiple form submissions simultaneously with useSubmissions. Track
-  history, handle errors, and show optimistic updates.
+  useSubmissions returns tracked submissions for an action.
 ---
 
-The `useSubmissions` primitive returns the state of all submissions for a given [action](/solid-router/concepts/actions).
+`useSubmissions` returns a reactive array-like proxy for submissions created by a matching action.
 
 ## Import
 
@@ -27,60 +22,92 @@ import { useSubmissions } from "@solidjs/router";
 ## Type
 
 ```tsx
+type Submission<T, U> = {
+	readonly input: T;
+	readonly result?: U;
+	readonly error: any;
+	readonly pending: boolean;
+	readonly url: string;
+	clear: () => void;
+	retry: () => void;
+};
+
 function useSubmissions<T extends Array<any>, U, V>(
 	fn: Action<T, U, V>,
 	filter?: (input: V) => boolean
-): Submission<T, NarrowResponse<U>>[] & {
-	pending: boolean;
-};
+): Submission<T, NarrowResponse<U>>[] & { pending: boolean };
 ```
 
 ## Parameters
 
-### `action`
+### `fn`
 
 - **Type:** `Action<T, U, V>`
 - **Required:** Yes
 
-The action to track.
+Action whose submissions are returned.
 
 ### `filter`
 
 - **Type:** `(input: V) => boolean`
 - **Required:** No
 
-A function that filters submissions.
-It is executed for each submission in the order of creation.
-It receives an array of the action's inputs as a parameter and must return `true` to select the submission or `false` otherwise.
+Function that receives each submission input.
+Records are included when it returns `true`.
 
 ## Return value
 
-`useSubmissions` returns a reactive array of submission objects.
-Each submission object has the following properties:
-
-### `input`
-
-The reactive input data of the action.
-
-### `result`
-
-A reactive value representing the successful return value of the action.
-
-### `error`
-
-A reactive value for any error thrown by the action.
+`useSubmissions` returns an array-like object of submissions with an additional `pending` property.
 
 ### `pending`
 
-A reactive boolean indicating if the action is currently running.
+- **Type:** `boolean`
 
-### `clear`
+`true` when at least one matching submission has no result value.
 
-A function to clear the submission's state.
+### Submission records
 
-### `retry`
+#### `input`
 
-A function to re-execute the submission with the same input.
+- **Type:** `T`
+
+Arguments from the original call.
+
+#### `result`
+
+- **Type:** `NarrowResponse<U> | undefined`
+
+Value returned by the action.
+
+#### `error`
+
+- **Type:** `any`
+
+Error thrown or rejected by the action.
+
+#### `url`
+
+- **Type:** `string`
+
+URL used to match the record to its action.
+
+#### `clear`
+
+- **Type:** `() => void`
+
+Function that removes the record.
+
+#### `retry`
+
+- **Type:** `() => void`
+
+Function that runs the same call again.
+
+## Behavior
+
+- Filters router submissions by action URL.
+- When `filter` is provided, only submissions whose input passes the filter are returned.
+- The returned value is a proxy over the filtered submissions.
 
 ## Examples
 
@@ -159,3 +186,6 @@ function FailedTodos() {
 	);
 }
 ```
+
+- [`action`](/solid-router/reference/data-apis/action)
+- [`useSubmission`](/solid-router/reference/data-apis/use-submission)

@@ -1,24 +1,18 @@
 ---
 title: redirect
 use_cases: >-
-  authentication flows, login redirects, form submissions, route guards, user
-  authorization, navigation control
+  redirects, response redirects, navigation responses, revalidation headers
 tags:
   - redirect
-  - authentication
+  - response
   - navigation
-  - routing
-  - authorization
-  - forms
+  - revalidation
 version: "1.0"
 description: >-
-  Redirect users between routes with proper status codes. Handle authentication
-  flows, form submissions, and protected route access.
+  redirect returns a custom redirect response.
 ---
 
-The `redirect` function returns a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object that instructs the router to navigate to a different route when returned or thrown from a [query](/solid-router/reference/data-apis/query) or [action](/solid-router/concepts/actions).
-
-This works both in client and server (e.g., using a server function) environments.
+`redirect` is a response helper that returns a [`Response` object](https://developer.mozilla.org/en-US/docs/Web/API/Response) object that instructs the router to navigate to a different route when returned or thrown from a [query](/solid-router/reference/data-apis/query) or [action](/solid-router/concepts/actions).
 
 ## Import
 
@@ -29,6 +23,10 @@ import { redirect } from "@solidjs/router";
 ## Type
 
 ```ts
+type RouterResponseInit = Omit<ResponseInit, "body"> & {
+	revalidate?: string | string[];
+};
+
 function redirect(
 	url: string,
 	init?:
@@ -53,17 +51,18 @@ The absolute or relative URL to which the redirect should occur.
 
 ### `init`
 
-- **Type:** `number | { revalidate?: string | string[]; headers?: HeadersInit; status?: number; statusText?: string; }`
+- **Type:** `number | RouterResponseInit`
+- **Default:** `302`
 - **Required:** No
 
-Either a number representing the status code or a configuration object with the following properties:
+Redirect status code or response options.
 
-#### `revalidate`
+### `revalidate`
 
 - **Type:** `string | string[]`
 - **Required:** No
 
-A query key or an array of query keys to revalidate on the destination route.
+Key or keys written to the `X-Revalidate` response header.
 
 #### `status`
 
@@ -73,43 +72,38 @@ A query key or an array of query keys to revalidate on the destination route.
 The HTTP status code for the redirect.
 Defaults to [`302 Found`)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/302).
 
+## Return value
+
+- **Type:** `CustomResponse<never>`
+
+Returns a `Response` object with a `Location` header.
+
+## Behavior
+
+- A numeric `init` is used as the response status.
+- Object `init` values default `status` to `302` when `status` is undefined.
+- Writes `url` to the `Location` header.
+- Defined `revalidate` values are written to the `X-Revalidate` header with `toString()`.
+
 ## Examples
 
-### Basic Usage
+### Basic usage
 
 ```ts
 import { query, redirect } from "@solidjs/router";
 
-const getCurrentUserQuery = query(async () => {
+const getCurrentUser = query(async () => {
 	const response = await fetch("/api/me");
 
 	if (response.status === 401) {
 		return redirect("/login");
 	}
 
-	return await response.json();
+	return response.json();
 }, "currentUser");
-```
-
-### Configuring Query Revalidation
-
-```ts
-import { action, redirect } from "@solidjs/router";
-
-const loginAction = action(async (formData: FormData) => {
-	const username = formData.get("username")?.toString();
-	const password = formData.get("password")?.toString();
-
-	await fetch("/api/login", {
-		method: "POST",
-		body: JSON.stringify({ username, password }),
-	}).then((response) => response.json());
-
-	return redirect("/users", { revalidate: ["currentUser"] });
-}, "login");
 ```
 
 ## Related
 
-- [`query`](/solid-router/reference/data-apis/query)
-- [`action`](/solid-router/reference/data-apis/action)
+- [`json`](/solid-router/reference/response-helpers/json)
+- [`reload`](/solid-router/reference/response-helpers/reload)

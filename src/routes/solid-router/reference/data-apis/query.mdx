@@ -1,39 +1,19 @@
 ---
 title: query
 use_cases: >-
-  api calls, data fetching, caching, deduplication, preloading routes,
-  preventing waterfalls, ssr
+  data queries, cache keys, route data, revalidation
 tags:
   - query
   - cache
-  - data-fetching
-  - deduplication
-  - preload
-  - ssr
-  - api
+  - data
+  - revalidation
 version: "1.0"
 description: >-
-  Cache and deduplicate API calls with query. Prevent waterfalls, enable
-  preloading, and manage server-side rendering efficiently.
+  query wraps a function with router cache metadata.
 ---
 
-The `query` function wraps an asynchronous function (the fetcher) and returns a query.
-
-The primary purpose of a query is to prevent redundant data fetching.
-When a query is called, a key is generated from its name and arguments.
-This key is used to internally cache the result of the fetcher.
-If a query with the same key is called, the cached result is used in these scenarios:
-
-- **For preloading:**
-  After a route's data is preloaded, a subsequent call to the same query within a 5-second window uses the preloaded data.
-- **For active subscriptions:**
-  When a query is actively being used by a component (e.g., via [`createAsync`](/solid-router/reference/data-apis/create-async)), its data is reused without expiration.
-- **On native history navigation:**
-  When navigating with the browser's back or forward buttons, the data is reused instead of being re-fetched.
-- **For server-side deduplication:**
-  Within a single server-side rendering (SSR) request, repeated calls to the same query reuse the same value.
-- **During client hydration:**
-  If SSR has provided data for a key, that data is used immediately on the client without a new network request.
+`query` caches the result of a function call by name and arguments.
+Calls with the same name and serialized arguments share the same cache entry.
 
 ## Import
 
@@ -44,60 +24,161 @@ import { query } from "@solidjs/router";
 ## Type
 
 ```tsx
+type CachedFunction<T extends (...args: any) => any> = T extends (
+	...args: infer A
+) => infer R
+	? ((
+			...args: A
+		) => R extends Promise<infer P>
+			? Promise<NarrowResponse<P>>
+			: NarrowResponse<R>) & {
+			keyFor: (...args: A) => string;
+			key: string;
+		}
+	: never;
+
 function query<T extends (...args: any) => any>(
 	fn: T,
 	name: string
 ): CachedFunction<T>;
+
+namespace query {
+	function get(key: string): any;
+	function set<T>(
+		key: string,
+		value: T extends Promise<any> ? never : T
+	): void;
+	function delete(key: string): boolean;
+	function clear(): void;
+}
 ```
 
 ## Parameters
 
-### `fetcher`
+### `fn`
 
 - **Type:** `T extends (...args: any) => any`
 - **Required:** Yes
 
-An asynchronous function that handles the logic for fetching data.
-All arguments passed to this function must be JSON-serializable.
+Function whose result is cached.
+Arguments passed to the wrapped function are included in the cache key.
+Arguments should serialize consistently with `JSON.stringify`.
 
 ### `name`
 
 - **Type:** `string`
 - **Required:** Yes
 
-A string used as a namespace for the query.
-Solid Router combines this with the query's arguments to generate a unique key for deduplication.
+Base key combined with the serialized argument list.
+Functions with the same `name` and serialized arguments share a cache entry.
 
 ## Return value
 
-`query` returns a new function with the same call signature as the fetcher.
-This returned function has the following properties attached to it:
+`query` returns a function with the same call signature as `fn`.
+The returned function has the following properties:
 
 ### `key`
 
-The base key for the query, derived from its name.
+- **Type:** `string`
+
+Base key for the query.
 
 ### `keyFor`
 
-A function that takes the same arguments as the fetcher and returns a string representing a specific key for that set of arguments.
+- **Type:** `(...args: Parameters<T>) => string`
 
-## Example
+Returns the cache key for a specific argument list.
+
+## Static methods
+
+The `query` namespace has methods for reading and mutating the active cache.
+Pass a cache key from a query function's `key` or `keyFor` property.
+
+### `get`
+
+- **Type:** `(key: string) => any`
+
+Returns the resolved value for an existing cache entry.
+
+### `set`
+
+- **Type:** `<T>(key: string, value: T extends Promise<any> ? never : T) => void`
+
+Stores a resolved, non-promise value for `key`.
+
+### `delete`
+
+- **Type:** `(key: string) => boolean`
+
+Deletes the cache entry for `key`.
+
+### `clear`
+
+- **Type:** `() => void`
+
+Clears the active cache.
+
+## Behavior
+
+### Cache keys
+
+- Cache keys are built from `name` plus the serialized argument list.
+- Argument serialization uses `JSON.stringify` and sorts keys for plain objects.
+- When `fn` has a `GET` property, `fn.GET` is wrapped.
+
+### Cache reuse
+
+- Preloaded route data is reused for `5000` milliseconds when a later call has the same cache key.
+- Active subscriptions keep matching cache entries reusable while subscribed.
+- Native history navigation reuses matching cache entries instead of calling `fn` again.
+- During server rendering, repeated calls with the same cache key reuse the same request-scoped cache entry.
+- During hydration, a matching serialized value from Solid's shared config is loaded instead of calling `fn`.
+
+### Cache storage
+
+- During server rendering, cache entries are stored on the request event router cache.
+- On the client, cache entries are stored in a module-level map.
+- Client cache entries with no active subscribers can be deleted after `180000` milliseconds.
+- Static methods read or mutate the active cache.
+
+### Response handling
+
+- Returned `Response` headers are copied to the request event response during server rendering.
+- Returned `Response` objects with a `Location` header trigger navigation on the client or set a `302` response status during server rendering.
+
+## Examples
 
 ### Basic usage
 
 ```tsx
 import { query } from "@solidjs/router";
 
-const getUserProfileQuery = query(async (userId: string) => {
-	const response = await fetch(
-		`https://api.example.com/users/${encodeURIComponent(userId)}`
-	);
+const getUserProfile = query(async (userId: string) => {
+	const response = await fetch(`/api/users/${encodeURIComponent(userId)}`);
 	const json = await response.json();
 
 	if (!response.ok) {
 		throw new Error(json?.message ?? "Failed to load user profile.");
 	}
 
-	return json;
+	return json as { name: string };
 }, "userProfile");
+
+const key = getUserProfile.keyFor("123");
 ```
+
+### Reading and writing cache entries
+
+```tsx
+const key = getUserProfile.keyFor("123");
+
+query.set(key, { name: "Ada" });
+const cached = query.get(key);
+
+query.delete(key);
+```
+
+## Related
+
+- [`createAsync`](/solid-router/reference/data-apis/create-async)
+- [`revalidate`](/solid-router/reference/data-apis/revalidate)

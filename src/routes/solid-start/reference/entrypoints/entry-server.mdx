@@ -1,46 +1,68 @@
 ---
 title: entry-server.tsx
 use_cases: >-
-  server initialization, ssr setup, html document structure, meta tags, server
-  bootstrap
+  server entry, request handler, document rendering
 tags:
-  - entry
+  - entrypoint
   - server
-  - ssr
-  - initialization
-  - document
-  - html
+  - rendering
 version: "1.0"
 description: >-
-  Define server entry point and HTML document structure for SolidStart.
-  Configure SSR modes and set up server-side rendering bootstrap.
+  entry-server.tsx exports the server handler.
 ---
 
-`entry-server.tsx` is where an application starts on the server.
-This happens by `entry-server.tsx` providing a document component to [`<StartServer>`](/solid-start/reference/server/start-server) and passing it into [`createHandler`](/solid-start/reference/server/create-handler) for server side rendering.
-A typical `entry-server.tsx` for a new project looks like this:
+`entry-server.tsx` is the server entry module.
+
+## Import
+
+```tsx
+import { createHandler, StartServer } from "@solidjs/start/server";
+```
+
+## Type
+
+```tsx
+export default createHandler((event) => <StartServer document={Document} />);
+```
+
+## Parameters
+
+The handler callback receives a `PageEvent`.
+
+## Return value
+
+The default export is the event handler returned by [`createHandler`](/solid-start/reference/server/create-handler).
+
+## Behavior
+
+- `defineConfig` uses `${appRoot}/entry-server${entryExtension}` as the server handler.
+- The default `appRoot` is `"./src"`.
+- Entry extension is `.jsx` when `${appRoot}/app.jsx` exists; otherwise it is `.tsx`.
+- For setting different SSR modes (sync | async | stream), see [`createHandler`](/solid-start/reference/server/create-handler).
+
+## Examples
+
+### Basic usage
 
 ```tsx
 import { createHandler, StartServer } from "@solidjs/start/server";
 
-export default createHandler(() => (
-	<StartServer
-		document={({ assets, children, scripts }) => (
-			<html lang="en">
-				<head>
-					<meta charset="utf-8" />
-					<meta name="viewport" content="width=device-width, initial-scale=1" />
-					<link rel="icon" href="/favicon.ico" />
-					{assets}
-				</head>
-				<body>
-					<div id="app">{children}</div>
-					{scripts}
-				</body>
-			</html>
-		)}
-	/>
-));
+function Document(props) {
+	return (
+		<html>
+			<head>{props.assets}</head>
+			<body>
+				<div id="app">{props.children}</div>
+				{props.scripts}
+			</body>
+		</html>
+	);
+}
+
+export default createHandler((event) => <StartServer document={Document} />);
 ```
 
-For setting different SSR modes (sync | async | stream), see [`createHandler`](/solid-start/reference/server/create-handler).
+## Related
+
+- [`createHandler`](/solid-start/reference/server/create-handler)
+- [`StartServer`](/solid-start/reference/server/start-server)

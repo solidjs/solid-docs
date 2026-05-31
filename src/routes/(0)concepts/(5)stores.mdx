@@ -59,6 +59,50 @@ const [store, setStore] = createStore({
 });
 ```
 
+### Top-level array stores
+
+While the examples above show a store as an object with properties, stores can also be arrays directly.
+When creating a top-level array store, the setter syntax differs slightly since you target indices directly rather than navigating through property keys first.
+
+```jsx
+import { createStore } from "solid-js/store";
+
+// Store as a top-level array
+const [users, setUsers] = createStore([
+	{ id: 0, username: "felix909", location: "England", loggedIn: false },
+	{ id: 1, username: "tracy634", location: "Canada", loggedIn: true },
+	{ id: 2, username: "johny123", location: "India", loggedIn: true },
+]);
+```
+
+To append a new item to a top-level array store, use the array's length as the index:
+
+```jsx
+setUsers(users.length, {
+	id: 3,
+	username: "michael584",
+	location: "Nigeria",
+	loggedIn: false,
+});
+```
+
+To modify an existing item by index:
+
+```jsx
+// Update username of the first user
+setUsers(0, "username", "felix_updated");
+
+// Update multiple properties at once
+setUsers(1, { location: "USA", loggedIn: false });
+```
+
+You can also use filtering functions to update items based on conditions:
+
+```jsx
+// Log out all users from Canada
+setUsers((user) => user.location === "Canada", "loggedIn", false);
+```
+
 ## Accessing store values
 
 Store properties can be accessed directly from the state proxy through directly referencing the targeted property:

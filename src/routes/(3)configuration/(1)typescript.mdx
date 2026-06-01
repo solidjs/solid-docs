@@ -451,10 +451,7 @@ The `on:___` attribute provides low-level access to native DOM `addEventListener
 To handle custom events, extend Solid's JSX namespace with the `CustomEvents` interface:
 
 ```tsx
-class NameEvent extends CustomEvent {
-	type: "Name";
-	detail: { name: string };
-
+class NameEvent extends CustomEvent<{ name: string }> {
 	constructor(name: string) {
 		super("Name", { detail: { name } });
 	}
@@ -480,9 +477,9 @@ declare module "solid-js" {
 It is now possible to use the intersection `EventListenerObject & AddEventListenerOptions` to provide listener options as follows:
 
 ```tsx
-import type { JSX } from "solid-js"
+import type { JSX } from "solid-js";
 
-const handler: JSX.EventHandlerWithOptions<HTMLDivElement, Event> =  {
+const handler: JSX.EventHandlerWithOptions<HTMLDivElement, Event> = {
 	once: true,
 	handleEvent: (event) => {
 		console.log("will fire only once");
@@ -495,9 +492,9 @@ const handler: JSX.EventHandlerWithOptions<HTMLDivElement, Event> =  {
 
 ##### Using native events with `on:`
 
-By default, using native events like `mousemove` with the `on` prefix — for example, `<div on:mousemove={e => {}} />` — will trigger a TypeScript error.
+By default, using native events like `mousemove` with the `on:` prefix — for example, `<div on:mousemove={e => {}} />` — will trigger a TypeScript error.
 This occurs because these native events are not part of Solid's custom event type definitions.
-To solve this, the `CustomEvents` interface can be extended to include events from the `HTMLElementEventMap`.
+To solve this, the `CustomEvents` interface can be extended to include events from the `HTMLElementEventMap` (which covers HTML element events — not `Document` or `Window` events).
 
 To include all native events:
 

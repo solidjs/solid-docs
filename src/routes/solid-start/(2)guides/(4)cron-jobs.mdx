@@ -1,0 +1,86 @@
+---
+title: Cron jobs
+use_cases: >-
+  background tasks, scheduled jobs, periodic jobs, cron, automation
+tags:
+  - cron
+  - nitro
+  - tasks
+  - solidstart
+version: "1.0"
+description: >-
+  Schedule background tasks in SolidStart using Nitro's Tasks API for periodic
+  jobs and automated server-side operations.
+---
+
+SolidStart supports scheduled background tasks through [Nitro's Tasks API](https://nitro.build/guide/tasks).
+Tasks run on the server and are not exposed to the client.
+
+:::note
+Scheduled tasks are only supported in the `dev`, `node-server`, `bun`, and `deno-server` Nitro presets.
+:::
+
+## Configuration
+
+Enable the tasks feature in `app.config.ts`:
+
+```ts title="app.config.ts"
+import { defineConfig } from "@solidjs/start/config";
+
+export default defineConfig({
+	server: {
+		experimental: {
+			tasks: true,
+		},
+		scheduledTasks: {
+			"* * * * *": ["cron"], // run every minute
+		},
+	},
+});
+```
+
+The `scheduledTasks` object maps [cron expressions](https://crontab.guru/) to arrays of task names to run on that schedule.
+
+## Creating a task
+
+Create your task file inside the `tasks/` directory at the project root (not inside `src/`):
+
+```ts title="tasks/cron.ts"
+import { defineTask } from "nitropack/runtime";
+
+export default defineTask({
+	meta: {
+		name: "cron",
+		description: "Scheduled background job",
+	},
+	run() {
+		console.log("Running scheduled job...");
+		// put your server-side logic here
+		return { result: "Success" };
+	},
+});
+```
+
+The task name in `meta.name` must match the name used in `scheduledTasks` in `app.config.ts`.
+
+:::note
+`nitropack` is a transitive dependency of SolidStart. If TypeScript cannot resolve the
+import, add `nitropack` as an explicit dev dependency:
+
+```bash
+npm install -D nitropack
+# or
+pnpm add -D nitropack
+```
+
+:::
+
+## Running tasks on demand
+
+You can trigger a task manually by calling the Nitro task endpoint during development:
+
+```
+/_nitro/tasks/cron
+```
+
+This is useful for testing your task logic without waiting for the scheduled time.

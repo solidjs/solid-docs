@@ -224,7 +224,7 @@ export function Search() {
 							</Show>
 						</div>
 					</div>
-					<div class="scrollbar-thin mt-1 space-y-2 overflow-y-auto px-4 py-2 lg:grow">
+					<div class="mt-1 scrollbar-thin space-y-2 overflow-y-auto px-4 py-2 lg:grow">
 						<Suspense>
 							<Show when={searchTerm() && Object.keys(result()).length === 0}>
 								<p class="mt-2 text-center text-sm">

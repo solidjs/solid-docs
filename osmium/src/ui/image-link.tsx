@@ -24,13 +24,13 @@ export const logos: { [key: string]: { file: string; style?: string } } = {
 	uno: { file: "uno.svg" },
 };
 
-export type ImageLinksProps = {
+export type ImageLinkProps = {
 	title: string;
 	logo: keyof typeof logos;
 	href: string;
 };
 
-export const ImageLink: ParentComponent<ImageLinksProps> = (props) => {
+export const ImageLink: ParentComponent<ImageLinkProps> = (props) => {
 	const locale = useLocale();
 
 	const logoImage = untrack(() => props.logo);

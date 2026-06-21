@@ -16,12 +16,7 @@ export default function (props: ParentProps) {
 	return (
 		<OsmiumThemeStateProvider>
 			<SidebarProvider config={config().themeConfig?.sidebar}>
-				<ErrorBoundary
-					fallback={(err) => {
-						console.log({ err });
-						return <NotFound />;
-					}}
-				>
+				<ErrorBoundary fallback={() => <NotFound />}>
 					<Layout>{props.children}</Layout>
 				</ErrorBoundary>
 			</SidebarProvider>

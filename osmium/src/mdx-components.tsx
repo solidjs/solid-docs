@@ -15,6 +15,7 @@ import { Tabs, TabList, TabPanel, Tab } from "./ui/tabs";
 
 export { Callout } from "./ui/callout";
 export { QuickLinks } from "./ui/quick-links";
+export { ImageLink } from "./ui/image-link";
 
 const EraserLinkImpl = clientOnly(() => import("./ui/eraser-link"));
 

@@ -14,8 +14,8 @@ description: >-
   Migrate your SolidStart project from v1 to v2.
 ---
 
-This guide covers the package-level changes that are verified for `@solidjs/start@2.0.0-alpha.3`.
-It focuses on the parts of the migration that are confirmed in this session from the published package surface and current repository configuration.
+This guide covers the package-level migration changes for SolidStart 2.0.
+It focuses on the parts of the upgrade that already have corresponding v2 docs in this site.
 
 Some ecosystem packages may still target v1-only APIs.
 Audit those dependencies before shipping a production upgrade.
@@ -32,13 +32,12 @@ Audit those dependencies before shipping a production upgrade.
 vinxi
 ```
 
-The published `2.0.0-alpha.3` package exports its framework plugin from `@solidjs/start/config`.
-That is the verified entry point for configuring a v2 app.
+The framework plugin now comes from `@solidjs/start/config`.
 
 ### Move framework configuration into `vite.config.ts`
 
 V1 projects centered their framework configuration around `app.config.ts`.
-For the current v2 alpha, move that setup into a Vite config that calls `solidStart()`.
+Move that setup into a Vite config that calls `solidStart()`.
 
 ```tsx title="vite.config.ts"
 import { defineConfig } from "vite";
@@ -49,7 +48,7 @@ export default defineConfig({
 });
 ```
 
-If your app already has custom middleware, the published v2 config type also exposes a `middleware` option:
+If your app already has custom middleware, `solidStart()` also exposes a `middleware` option:
 
 ```tsx title="vite.config.ts"
 import { defineConfig } from "vite";
@@ -62,18 +61,18 @@ export default defineConfig({
 
 ### Update server runtime imports
 
-The current v2 package exports HTTP helpers from `@solidjs/start/http`.
+HTTP helpers are exported from `@solidjs/start/http`.
 Replace imports from `vinxi/http` with that module.
 
 ```tsx
 import { getCookie, setCookie, useSession } from "@solidjs/start/http";
 ```
 
-The published HTTP entrypoint exposes helpers such as `readBody`, `getQuery`, `getRequestHeader`, `setResponseHeader`, `useSession`, and related cookie/session utilities.
+The HTTP entrypoint exposes helpers such as `readBody`, `getQuery`, `getRequestHeader`, `setResponseHeader`, `useSession`, and related cookie/session utilities.
 
 ### Update TypeScript environment types
 
-The current package also publishes `@solidjs/start/env` for type support.
+Environment types ship in `@solidjs/start/env`.
 Make sure your TypeScript config includes it.
 
 ```json
@@ -86,7 +85,7 @@ Make sure your TypeScript config includes it.
 
 ### Revisit middleware syntax
 
-The v2 middleware entrypoint exports `createMiddleware`, and its published types now prefer H3 middleware arrays.
+The v2 middleware entrypoint exports `createMiddleware`, and its types now prefer H3 middleware arrays.
 The older `onRequest` and `onBeforeResponse` object form is still present but marked deprecated in the package types.
 
 ```tsx
@@ -99,10 +98,10 @@ export default createMiddleware([
 ]);
 ```
 
-## Still unknown in this session
+## Still in the v1 docs
 
-- The full replacement guidance for every v1 entrypoint file is Unknown.
-- The recommended production `start` script for generated apps is Unknown.
-- The exact v2 equivalents for advanced topics like auth, prerendering, metadata, and background tasks are Unknown.
+A few topics keep their v1 guidance until the v2 pages land:
 
-Keep those areas on the v1 docs until the current v2 API and examples are verified.
+- Entrypoint file replacements
+- Production `start` script names for generated apps
+- Auth, prerendering, metadata, and background tasks

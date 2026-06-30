@@ -84,7 +84,7 @@ export default defineConfig({
 					themeConfig: {
 						sidebar: {
 							"/v2/solid-start": createFilesystemSidebar(
-								"./src/routes/v2/solid-start"
+								"./src/routes/solid-start/v2"
 							),
 						},
 					},

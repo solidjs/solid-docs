@@ -45,7 +45,11 @@ export default defineConfig({
 						version: ["latest", "v2"],
 					},
 					{
-						project: ["router", "start", "meta"],
+						project: "start",
+						version: ["latest", "v2"],
+					},
+					{
+						project: ["router", "meta"],
 						version: "latest",
 					},
 				],
@@ -69,6 +73,18 @@ export default defineConfig({
 						sidebar: {
 							"/solid-start": createFilesystemSidebar(
 								"./src/routes/solid-start"
+							),
+						},
+					},
+				},
+				{
+					project: "start",
+					version: "v2",
+					title: "SolidStart",
+					themeConfig: {
+						sidebar: {
+							"/v2/solid-start": createFilesystemSidebar(
+								"./src/routes/solid-start/v2"
 							),
 						},
 					},

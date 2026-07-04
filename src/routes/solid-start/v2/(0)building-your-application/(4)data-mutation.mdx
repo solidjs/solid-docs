@@ -1,0 +1,112 @@
+---
+title: Data mutation
+use_cases: >-
+  form submission, server writes, data updates, user input handling,
+  validation, actions
+tags:
+  - forms
+  - actions
+  - mutations
+  - server
+  - validation
+version: "2.0"
+description: >-
+  Mutate data in SolidStart v2 with Solid Router actions and server-only action
+  bodies compiled from the use server directive.
+---
+
+Mutations run through Solid Router's [`action`](/solid-router/reference/data-apis/action) API.
+When a mutation must run on the server, place the [`"use server"`](/v2/solid-start/reference/server/use-server) directive inside the action body.
+
+## Handle form submissions with actions
+
+An action can be passed directly to a form element, with named actions and form-driven submission tracking.
+
+```tsx title="src/routes/posts/new.tsx"
+import { action } from "@solidjs/router";
+
+const createPost = action(async (formData: FormData) => {
+	"use server";
+
+	const title = formData.get("title")?.toString() ?? "";
+	return { created: title.length > 0, title };
+}, "createPost");
+
+export default function NewPostPage() {
+	return (
+		<form action={createPost} method="post">
+			<input name="title" />
+			<button>Create post</button>
+		</form>
+	);
+}
+```
+
+## Show pending and error state
+
+Use [`useSubmission`](/solid-router/reference/data-apis/use-submission) from `@solidjs/router` to observe the active submission.
+
+```tsx title="src/routes/profile.tsx"
+import { Show } from "solid-js";
+import { action, useSubmission } from "@solidjs/router";
+
+const saveProfile = action(async (formData: FormData) => {
+	"use server";
+
+	const displayName = formData.get("displayName")?.toString();
+	if (!displayName) {
+		throw new Error("Display name is required.");
+	}
+
+	return { ok: true };
+}, "saveProfile");
+
+export default function ProfilePage() {
+	const submission = useSubmission(saveProfile);
+
+	return (
+		<form action={saveProfile} method="post">
+			<Show when={submission.error}>
+				<p>{submission.error?.message}</p>
+			</Show>
+			<input name="displayName" />
+			<button disabled={submission.pending}>
+				{submission.pending ? "Saving..." : "Save"}
+			</button>
+		</form>
+	);
+}
+```
+
+## Prefill action arguments
+
+Use `.with(...)` to prefill leading arguments.
+
+```tsx title="src/routes/projects/[id].tsx"
+import { action } from "@solidjs/router";
+
+const archiveProject = action(async (projectId: string, formData: FormData) => {
+	"use server";
+
+	return {
+		projectId,
+		reason: formData.get("reason")?.toString() ?? null,
+	};
+}, "archiveProject");
+
+export default function ProjectPage(props: { params: { id: string } }) {
+	return (
+		<form action={archiveProject.with(props.params.id)} method="post">
+			<input name="reason" />
+			<button>Archive</button>
+		</form>
+	);
+}
+```
+
+## Pair actions with route data
+
+When a mutation changes data that is also loaded by a route `query`, keep the read path and write path close together.
+That makes it easier to reason about revalidation behavior through the Solid Router data APIs.
+
+Read this page together with [Data fetching](/v2/solid-start/building-your-application/data-fetching).

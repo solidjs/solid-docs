@@ -1,0 +1,46 @@
+---
+title: Serialization
+use_cases: >-
+  server function payloads, data transfer, csp, security, performance
+tags:
+  - serialization
+  - server-functions
+  - csp
+  - security
+  - performance
+version: "2.0"
+description: >-
+  How SolidStart serializes server function payloads and the CSP tradeoff
+  between json and js modes.
+---
+
+Server function arguments and return values are serialized so they can travel between server and client.
+
+## Configuration
+
+Set the mode on `solidStart()` in `vite.config.ts`:
+
+```tsx title="vite.config.ts"
+import { defineConfig } from "vite";
+import { solidStart } from "@solidjs/start/config";
+
+export default defineConfig({
+	plugins: [
+		solidStart({
+			serialization: { mode: "json" },
+		}),
+	],
+});
+```
+
+## Modes
+
+- `json`: deserializes with `JSON.parse` on the client. It avoids `eval`, so it fits a strict CSP. This is the default.
+- `js`: a smaller binary format that needs `eval` on the client, which a strong CSP blocks.
+
+If your app enforces a Content Security Policy, keep `json`.
+
+## Related
+
+- [Data fetching](/v2/solid-start/building-your-application/data-fetching)
+- [Data mutation](/v2/solid-start/building-your-application/data-mutation)

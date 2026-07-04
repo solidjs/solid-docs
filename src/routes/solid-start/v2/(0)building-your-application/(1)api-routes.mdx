@@ -1,0 +1,90 @@
+---
+title: API routes
+use_cases: >-
+  rest api, webhooks, oauth callbacks, server endpoints, route handlers,
+  request handling
+tags:
+  - api
+  - http
+  - server
+  - handlers
+  - endpoints
+version: "2.0"
+description: >-
+  SolidStart v2 API routes are filesystem routes that export HTTP method
+  handlers and receive typed APIEvent objects from @solidjs/start/server.
+---
+
+Use an API route when you need a route that returns data or handles incoming HTTP requests instead of rendering page UI.
+
+A file becomes an API route when it exports one or more HTTP method names such as [`GET`](/v2/solid-start/reference/server/get), `POST`, `PATCH`, or `DELETE`.
+
+## Create an API route
+
+An API route lives in `src/routes` and exports handler functions named after the HTTP methods it handles.
+
+```tsx title="src/routes/api/ping.ts"
+export function GET() {
+	return new Response("pong");
+}
+```
+
+The package exports `APIEvent` from `@solidjs/start/server`.
+That type includes:
+
+- `request` for the incoming `Request`
+- `params` for dynamic path parameters
+- `response` for the mutable response stub
+- `locals` for request-scoped locals
+- `nativeEvent` for the underlying H3 event
+
+```tsx title="src/routes/api/users/[id].ts"
+import type { APIEvent } from "@solidjs/start/server";
+
+export async function GET({ params }: APIEvent) {
+	return Response.json({ userId: params.id });
+}
+```
+
+## File naming follows the same router
+
+API routes use the same path conventions as UI routes.
+For example:
+
+- `src/routes/api/users.ts` becomes `/api/users`
+- `src/routes/api/users/[id].ts` becomes `/api/users/:id`
+- `src/routes/api/files/[...slug].ts` becomes `/api/files/*slug`
+
+## HEAD fallback
+
+If a route exports `GET` but not `HEAD`, `HEAD` requests are handled by the `GET` handler.
+Export `HEAD` explicitly when you need custom behavior.
+
+## Request helpers
+
+Cookie, session, header, and request helpers are exported from `@solidjs/start/http`.
+
+```tsx title="src/routes/api/session.ts"
+import { getCookie } from "@solidjs/start/http";
+import type { APIEvent } from "@solidjs/start/server";
+
+export function GET(_event: APIEvent) {
+	const userId = getCookie("userId");
+	if (!userId) {
+		return new Response("Not logged in", { status: 401 });
+	}
+
+	return Response.json({ userId });
+}
+```
+
+## When to use an API route
+
+API routes are a good fit when you need:
+
+- endpoints for other clients
+- webhook receivers
+- auth callback handlers
+- routes that return non-HTML responses
+
+If the data is only needed by your route UI, prefer [Data fetching](/v2/solid-start/building-your-application/data-fetching) or [Data mutation](/v2/solid-start/building-your-application/data-mutation) before introducing a separate API boundary.

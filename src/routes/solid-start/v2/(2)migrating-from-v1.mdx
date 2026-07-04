@@ -1,0 +1,107 @@
+---
+title: Migrating from v1
+use_cases: >-
+  existing project, migration, upgrade
+tags:
+  - setup
+  - installation
+  - starter
+  - template
+  - quickstart
+  - init
+version: "2.0"
+description: >-
+  Migrate your SolidStart project from v1 to v2.
+---
+
+This guide covers the package-level migration changes for SolidStart 2.0.
+It focuses on the parts of the upgrade that already have corresponding v2 docs in this site.
+
+Some ecosystem packages may still target v1-only APIs.
+Audit those dependencies before shipping a production upgrade.
+
+## Migration steps
+
+### Update dependencies
+
+```package-install
+@solidjs/start@2.0.0-alpha.3
+```
+
+```package-remove
+vinxi
+```
+
+The framework plugin now comes from `@solidjs/start/config`.
+
+### Move framework configuration into `vite.config.ts`
+
+V1 projects centered their framework configuration around `app.config.ts`.
+Move that setup into a Vite config that calls `solidStart()`.
+
+```tsx title="vite.config.ts"
+import { defineConfig } from "vite";
+import { solidStart } from "@solidjs/start/config";
+
+export default defineConfig({
+	plugins: [solidStart()],
+});
+```
+
+If your app already has custom middleware, `solidStart()` also exposes a `middleware` option:
+
+```tsx title="vite.config.ts"
+import { defineConfig } from "vite";
+import { solidStart } from "@solidjs/start/config";
+
+export default defineConfig({
+	plugins: [solidStart({ middleware: "./src/middleware/index.ts" })],
+});
+```
+
+### Update server runtime imports
+
+HTTP helpers are exported from `@solidjs/start/http`.
+Replace imports from `vinxi/http` with that module.
+
+```tsx
+import { getCookie, setCookie, useSession } from "@solidjs/start/http";
+```
+
+The HTTP entrypoint exposes helpers such as `readBody`, `getQuery`, `getRequestHeader`, `setResponseHeader`, `useSession`, and related cookie/session utilities.
+
+### Update TypeScript environment types
+
+Environment types ship in `@solidjs/start/env`.
+Make sure your TypeScript config includes it.
+
+```json
+{
+	"compilerOptions": {
+		"types": ["@solidjs/start/env"]
+	}
+}
+```
+
+### Revisit middleware syntax
+
+The v2 middleware entrypoint exports `createMiddleware`, and its types now prefer H3 middleware arrays.
+The older `onRequest` and `onBeforeResponse` object form is still present but marked deprecated in the package types.
+
+```tsx
+import { createMiddleware } from "@solidjs/start/middleware";
+
+export default createMiddleware([
+	async (_event, next) => {
+		return await next();
+	},
+]);
+```
+
+## Still in the v1 docs
+
+A few topics keep their v1 guidance until the v2 pages land:
+
+- Entrypoint file replacements
+- Production `start` script names for generated apps
+- Auth, prerendering, metadata, and background tasks

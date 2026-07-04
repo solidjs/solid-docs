@@ -1355,7 +1355,10 @@ function toReferenceHref(routePath) {
 }
 
 function escapeLinkLabel(value) {
-	return String(value).replace(/\[/g, "\\[").replace(/\]/g, "\\]");
+	return String(value)
+		.replace(/\\/g, "\\\\")
+		.replace(/\[/g, "\\[")
+		.replace(/\]/g, "\\]");
 }
 
 function printDryRun(files, reference, sourceSha) {

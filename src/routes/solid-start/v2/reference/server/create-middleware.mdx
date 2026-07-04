@@ -1,0 +1,68 @@
+---
+title: createMiddleware
+use_cases: >-
+  request middleware, response middleware, h3 middleware
+tags:
+  - server
+  - middleware
+  - request
+  - response
+version: "2.0"
+description: >-
+  createMiddleware composes H3 middleware for SolidStart.
+---
+
+`createMiddleware` composes middleware for handling requests and responses. It takes an array of [H3 middleware](https://h3.dev/guide/basics/middleware).
+
+## Import
+
+```tsx
+import { createMiddleware } from "@solidjs/start/middleware";
+```
+
+## Type
+
+```tsx
+function createMiddleware(args: Middleware[]): Middleware[];
+```
+
+## Parameters
+
+### `args`
+
+- **Type:** `Middleware[]`
+- **Required:** Yes
+
+An array of [H3 middleware](https://h3.dev/guide/basics/middleware). To run logic before the response, `await next()` inside the middleware.
+
+## Return value
+
+- **Type:** `Middleware[]`
+
+Returns the composed middleware array.
+
+## Behavior
+
+- Each middleware receives the event and a `next` function.
+- A returned `Response` ends the chain.
+- The object form with `onRequest` and `onBeforeResponse` still works but is deprecated.
+
+## Examples
+
+### Basic usage
+
+```tsx
+import { createMiddleware } from "@solidjs/start/middleware";
+
+export default createMiddleware([
+	async (event, next) => {
+		const response = await next();
+		if (response instanceof Response) return response;
+		return new Response("Not found", { status: 404 });
+	},
+]);
+```
+
+## Related
+
+- [API routes](/v2/solid-start/building-your-application/api-routes)

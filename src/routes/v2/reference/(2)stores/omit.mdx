@@ -34,27 +34,33 @@ import { omit } from "solid-js";
 
 ```ts
 function omit<T extends Record<any, any>, K extends readonly (keyof T)[]>(
-  props: T,
-  ...keys: K
+	props: T,
+	...keys: K
 ): Omit<T, K>;
 ```
 
 ## Examples
 
 ```tsx
-function Input(props: { label: string; value: string; onInput: (v: string) => void } & JSX.HTMLAttributes<HTMLInputElement>) {
-  const rest = omit(props, "label", "value", "onInput");
+function Input(
+	props: {
+		label: string;
+		value: string;
+		onInput: (v: string) => void;
+	} & JSX.HTMLAttributes<HTMLInputElement>
+) {
+	const rest = omit(props, "label", "value", "onInput");
 
-  return (
-    <label>
-      {props.label}
-      <input
-        {...rest}
-        value={props.value}
-        onInput={e => props.onInput(e.currentTarget.value)}
-      />
-    </label>
-  );
+	return (
+		<label>
+			{props.label}
+			<input
+				{...rest}
+				value={props.value}
+				onInput={(e) => props.onInput(e.currentTarget.value)}
+			/>
+		</label>
+	);
 }
 ```
 
@@ -64,6 +70,6 @@ function Input(props: { label: string; value: string; onInput: (v: string) => vo
 
 ```ts
 type Omit<T, K extends readonly (keyof T)[]> = {
-  [P in keyof T as Exclude<P, K[number]>]: T[P];
+	[P in keyof T as Exclude<P, K[number]>]: T[P];
 };
 ```

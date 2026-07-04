@@ -42,9 +42,9 @@ import { createProjection } from "solid-js";
 
 ```ts
 function createProjection<T extends object = {}>(
-  fn: (draft: T) => void | T | Promise<void | T> | AsyncIterable<void | T>,
-  seed: Partial<T>,
-  options?: ProjectionOptions
+	fn: (draft: T) => void | T | Promise<void | T> | AsyncIterable<void | T>,
+	seed: Partial<T>,
+	options?: ProjectionOptions
 ): Refreshable<Store<T>>;
 ```
 
@@ -71,18 +71,18 @@ The backing store value to wrap and reconcile into
 ```ts
 // Mutation form — update individual fields on the draft.
 const summary = createProjection<{ total: number; active: number }>(
-  draft => {
-    draft.total = users().length;
-    draft.active = users().filter(u => u.active).length;
-  },
-  { total: 0, active: 0 }
+	(draft) => {
+		draft.total = users().length;
+		draft.active = users().filter((u) => u.active).length;
+	},
+	{ total: 0, active: 0 }
 );
 
 // Return form — produce a derived collection. Reconciled by `id` so each
 // surviving user keeps the same store identity across recomputes.
 const activeUsers = createProjection<User[]>(
-  () => allUsers().filter(u => u.active),
-  []
+	() => allUsers().filter((u) => u.active),
+	[]
 );
 ```
 
@@ -98,8 +98,8 @@ Options for derived/projected stores created with `createStore(fn)`, `createProj
 
 ```ts
 interface ProjectionOptions extends StoreOptions {
-  key?: string | ((item: NonNullable<any>) => any);
-};
+	key?: string | ((item: NonNullable<any>) => any);
+}
 ```
 
 #### `key`
@@ -113,7 +113,10 @@ Key property name or function for reconciliation identity
 Tuple returned by the derived `createStore(fn, seed, options?)` form.
 
 ```ts
-type ProjectionStoreReturn<T> = [get: Refreshable<Store<T>>, set: StoreSetter<T>];
+type ProjectionStoreReturn<T> = [
+	get: Refreshable<Store<T>>,
+	set: StoreSetter<T>,
+];
 ```
 
 ### `Refreshable`

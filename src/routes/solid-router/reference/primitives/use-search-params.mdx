@@ -1,20 +1,18 @@
 ---
 title: useSearchParams
-use_cases: "pagination, filters, search forms, url state management, query string updates"
+use_cases: >-
+  query parameters, search params, pagination, filters
 tags:
   - search
   - query
   - params
-  - pagination
-  - filters
   - url
 version: "1.0"
 description: >-
-  Manage URL query parameters with useSearchParams - handle pagination, filters,
-  and search state directly in the URL query string.
+  useSearchParams returns current query parameters and a query update function.
 ---
 
-The `useSearchParams` function reads the URL query parameters for the current route and provides a function to update them.
+`useSearchParams` returns current query parameters and a setter for the URL search string.
 
 ## Import
 
@@ -25,7 +23,14 @@ import { useSearchParams } from "@solidjs/router";
 ## Type
 
 ```ts
-function useSearchParams<T extends Record<string, string | string[]>>(): [
+type SearchParams = Record<string, string | string[] | undefined>;
+
+type SetSearchParams = Record<
+	string,
+	string | string[] | number | number[] | boolean | boolean[] | null | undefined
+>;
+
+function useSearchParams<T extends SearchParams>(): [
 	Partial<T>,
 	(params: SetSearchParams, options?: Partial<NavigateOptions>) => void,
 ];
@@ -37,19 +42,27 @@ function useSearchParams<T extends Record<string, string | string[]>>(): [
 
 ## Return value
 
-- **Type:** `[ Partial<T>, (params: SetSearchParams, options?: Partial<NavigateOptions>) => void ]`
+`useSearchParams` returns a tuple with the following:
 
-`useSearchParams` returns an array with two items.
+### `params`
 
-The first item is a reactive object containing the current query parameters.
-Accessing a property within a tracking scope registers a dependency, causing the computation to re-run when the parameter changes.
-Values are always strings.
+- **Type:** `Partial<T>`
 
-The second item is a function that updates the query string.
-It merges the object provided as its first argument with the current query parameters.
-Passing an empty string (`""`), an empty array (`[]`), `undefined`, or `null` as a value removes the key.
-It accepts the same options as [`useNavigate`](/solid-router/reference/primitives/use-navigate) as the second parameter.
-By default, the `resolve` and `scroll` options are set to `false`.
+Reactive object containing the current query parameters.
+
+### `setParams`
+
+- **Type:** `(params: SetSearchParams, options?: Partial<NavigateOptions>) => void`
+
+Function that merges values into the current search string, then navigates to the result.
+
+## Behavior
+
+- New values are merged with [`useLocation`](/solid-router/reference/primitives/use-location)'s `search`.
+- Keys are deleted when the new value is `null`, `undefined`, an empty string, or an empty array.
+- Array values append each item. Other values set the key to `String(value)`.
+- The current hash is preserved after the merged search string.
+- Navigation uses `scroll: false` and `resolve: false` unless those options are overridden.
 
 ## Examples
 

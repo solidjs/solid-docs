@@ -1,25 +1,18 @@
 ---
 title: json
 use_cases: >-
-  returning api data, action responses, cache control, revalidation strategies,
-  server actions
+  json responses, action responses, query responses, revalidation headers
 tags:
   - json
-  - api
-  - actions
-  - queries
-  - revalidation
   - response
+  - revalidation
 version: "1.0"
 description: >-
-  Return JSON data from actions with query revalidation control. Configure how
-  route data updates after mutations for optimal performance.
+  json returns a custom JSON response.
 ---
 
-The `json` function returns a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object that contains the provided data.
+`json` is a response helper that returns a returns a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) with a JSON body and a `customBody` reader for the original data.
 It is intended for sending JSON data from a [query](/solid-router/reference/data-apis/query) or [action](/solid-router/concepts/actions) while also allowing configuration of query revalidation.
-
-This works both in client and server (e.g., using a server function) environments.
 
 ## Import
 
@@ -53,12 +46,13 @@ It must be a value that can be serialized with [`JSON.stringify`](https://develo
 
 ### `init`
 
-- **Type:** `{ revalidate?: string | string[]; headers?: HeadersInit; status?: number; statusText?: string; }`
+- **Type:** `RouterResponseInit`
+- **Default:** `{}`
 - **Required:** No
 
-An optional configuration object with the following properties:
+A configuration object with the following properties:
 
-#### `revalidate`
+### `revalidate`
 
 - **Type:** `string | string[]`
 - **Required:** No
@@ -87,6 +81,19 @@ Defaults to [`200 OK`](http://developer.mozilla.org/en-US/docs/Web/HTTP/Referenc
 - **Required:** No
 
 The status text associated with the status code.
+
+## Return value
+
+- **Type:** `CustomResponse<T>`
+
+Returns a `Response` object with a `customBody` function that returns `data`.
+
+## Behavior
+
+- Sets the `Content-Type` header to `"application/json"`.
+- Serializes `data` with `JSON.stringify`.
+- When `init.revalidate` is defined, `json` writes it to the `X-Revalidate` header with `toString()`.
+- Values from `init.headers` are preserved unless overwritten by `json`.
 
 ## Examples
 

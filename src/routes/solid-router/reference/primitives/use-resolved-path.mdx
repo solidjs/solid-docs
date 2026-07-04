@@ -1,55 +1,65 @@
 ---
 title: useResolvedPath
 use_cases: >-
-  modular routing, nested routers, relative paths, dynamic base paths, component
-  isolation
+  resolved paths, relative paths, route paths
 tags:
   - path
-  - modular
-  - nested
   - routing
-  - base
   - resolved
 version: "1.0"
 description: >-
-  Resolve relative paths with useResolvedPath - build modular routers, handle
-  nested routes, and create isolated routing components.
+  useResolvedPath returns an accessor for a path resolved against the current route.
 ---
 
-`useResolvedPath` retrieves a signal\<string\>.
-It contains the current resolved path as defined in the Route.
+`useResolvedPath` returns an accessor for resolving a path against the current route.
 
-```js
-const path = useResolvedPath(() => "");
+## Import
 
-// Parent Route path: /user/*
-console.log(path()); // /user
-
-const path = useResolvedPath(() => "a/b/c");
-
-// Parent Route path: /user/*
-console.log(path()); // /user/a/b/c
-
-const path = useResolvedPath(() => "/a/b/c"); // Note: /
-
-// Parent Route path: /user/*
-console.log(path()); // a/b/c
+```ts
+import { useResolvedPath } from "@solidjs/router";
 ```
 
-Useful for making modular routers
+## Type
 
-```js
-const parentRoutePath = useResolvedPath(() => "");
-
-return (
-	<>
-		<h1>Module component layer</h1>
-		<Router base={parentRoutePath()}>
-			{" "}
-			// Modular magic
-			<Route path="/" component={() => <div>Index</div>} />
-			<Route path="/a" component={() => <div>AComponent</div>} />
-		</Router>
-	</>
-);
+```ts
+function useResolvedPath(path: () => string): () => string | undefined;
 ```
+
+## Parameters
+
+### `path`
+
+- **Type:** `() => string`
+- **Required:** Yes
+
+Accessor that returns the path to resolve.
+
+## Return value
+
+- **Type:** `() => string | undefined`
+
+Returns an accessor containing the resolved path, or `undefined` when the path cannot be resolved.
+
+## Behavior
+
+- Resolves the current `path()` value through the active route context.
+- Returns `undefined` when the path cannot be resolved.
+
+## Examples
+
+### Basic usage
+
+```tsx
+import { A, useResolvedPath } from "@solidjs/router";
+
+function SettingsLink() {
+	const settingsPath = useResolvedPath(() => "settings");
+
+	return <A href={settingsPath() || ""}>Settings</A>;
+}
+```
+
+## Related
+
+- [`A`](/solid-router/reference/components/a)
+- [`Router`](/solid-router/reference/components/router)

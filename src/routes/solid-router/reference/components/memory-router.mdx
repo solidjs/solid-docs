@@ -1,88 +1,173 @@
 ---
 title: MemoryRouter
 use_cases: >-
-  testing routing, controlled navigation, internal history, unit tests,
-  programmatic routing
+  memory routing, controlled history, tests, internal navigation state
 tags:
-  - testing
   - memory
   - history
   - component
-  - navigation
-  - programmatic
+  - router
 version: "1.0"
 description: >-
-  MemoryRouter keeps routing history in memory for complete control, ideal for
-  testing scenarios and programmatic navigation management.
+  MemoryRouter stores route paths in a memory history object.
 ---
 
-The `MemoryRouter` can be used to route while keeping the entire routing history within internal memory.
-Other routers keep history externally such as in the url like the [`<HashRouter>`](/solid-router/reference/components/hash-router) or in the browser history like [`<Router>`](/solid-router/reference/components/memory-router).
+`MemoryRouter` keeps the router location in a `MemoryHistory` object instead of the browser address bar. It is for route state owned by code, with navigation controlled through `history.get`, `history.set`, `history.go`, and `history.listen`.
 
-Keeping the history in memory is useful when you want full control over the routing history.
-Since `MemoryRouter` can manipulate `MemoryHistory`, it is often used for testing purposes.
+## Import
 
-```jsx
-import { MemoryRouter, createMemoryHistory, A } from "@solidjs/router";
-import { Suspense } from "solid-js";
+```tsx
+import { MemoryRouter, createMemoryHistory } from "@solidjs/router";
+```
+
+## Type
+
+```tsx
+type BaseRouterProps = {
+	base?: string;
+	root?: Component<RouteSectionProps>;
+	rootPreload?: RoutePreloadFunc;
+	singleFlight?: boolean;
+	children?: JSX.Element | RouteDefinition | RouteDefinition[];
+	transformUrl?: (url: string) => string;
+	rootLoad?: RoutePreloadFunc;
+};
+
+type MemoryHistory = {
+	get: () => string;
+	set: (change: LocationChange) => void;
+	go: (delta: number) => void;
+	listen: (listener: (value: string) => void) => () => void;
+};
+
+type MemoryRouterProps = BaseRouterProps & {
+	history?: MemoryHistory;
+	actionBase?: string;
+	explicitLinks?: boolean;
+	preload?: boolean;
+};
+
+function createMemoryHistory(): MemoryHistory & {
+	back: () => void;
+	forward: () => void;
+};
+
+function MemoryRouter(props: MemoryRouterProps): JSX.Element;
+```
+
+## Props
+
+### `history`
+
+- **Type:** `MemoryHistory`
+- **Default:** `createMemoryHistory()`
+- **Optional:** Yes
+
+Memory history object used as the router source.
+
+### `children`
+
+- **Type:** `JSX.Element | RouteDefinition | RouteDefinition[]`
+- **Optional:** Yes
+
+Route definitions rendered by the router.
+
+### `base`
+
+- **Type:** `string`
+- **Default:** `""`
+- **Optional:** Yes
+
+Base path used when creating route branches.
+
+### `root`
+
+- **Type:** `Component<RouteSectionProps>`
+- **Optional:** Yes
+
+Component rendered around matched routes.
+
+### `rootPreload`
+
+- **Type:** `RoutePreloadFunc`
+- **Optional:** Yes
+
+Preload function called for the root route context.
+
+### `singleFlight`
+
+- **Type:** `boolean`
+- **Default:** `true`
+- **Optional:** Yes
+
+Controls the router context `singleFlight` setting.
+
+### `transformUrl`
+
+- **Type:** `(url: string) => string`
+- **Optional:** Yes
+
+Function applied to the location pathname before route matching.
+
+### `actionBase`
+
+- **Type:** `string`
+- **Default:** `"/_server"`
+- **Optional:** Yes
+
+Base path used by native form action handling.
+
+### `explicitLinks`
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Optional:** Yes
+
+Controls whether native anchor interception requires the `link` attribute.
+
+### `preload`
+
+- **Type:** `boolean`
+- **Default:** `true`
+- **Optional:** Yes
+
+Controls router-managed anchor preloading.
+
+## Return value
+
+- **Type:** `MemoryHistory & { back: () => void; forward: () => void }`
+
+`createMemoryHistory` returns a memory history object.
+
+## Behavior
+
+- Uses the provided `history` prop. If `history` is omitted, it creates a new memory history.
+- `createMemoryHistory` starts with `"/"` at index `0`.
+- `history.set` replaces the current entry when `replace` is truthy. Otherwise, it removes entries after the current index and appends the next value.
+- `history.go` clamps the next index between the first and last history entries.
+- `history.listen` registers a listener and returns a cleanup function that removes it.
+
+## Examples
+
+### Basic usage
+
+```tsx
+import { MemoryRouter, Route, createMemoryHistory } from "@solidjs/router";
 
 export default function App() {
 	const history = createMemoryHistory();
 
-	const toHome = () => {
-		history.set({ value: "/" });
-	};
-	const toAbout = () => {
-		history.set({ value: "/about" });
-	};
-
 	return (
-		<>
-			<button onClick={toHome}>{'"/"'}</button>
-			<button onClick={toAbout}>{'"/about"'}</button>
-
-			<MemoryRouter
-				history={history}
-				root={(props) => <Suspense>{props.children}</Suspense>}
-			>
-				{/*... routes */}
-			</MemoryRouter>
-		</>
+		<MemoryRouter history={history}>
+			<Route path="/" component={() => <h1>Home</h1>} />
+			<Route path="/about" component={() => <h1>About</h1>} />
+		</MemoryRouter>
 	);
 }
 ```
 
-In this example, a history object is pre-filled to navigate to the `/about` route, which is then passed to the `MemoryRouter`.
+## Related
 
-## Manipulating the history
-
-The `MemoryHistory` object contains the following methods, which you can use to control the navigation of your app.
-
-- The `get` method retrieves the current route as a string, while the `set` method navigates to a new route, allowing for optional parameters like replacing the current history entry or scrolling to a DOM element id.
-- The `back` and `forward` methods mimic the browser's back and forward buttons, respectively, and the `go` method navigates a specific number of steps in the history, either backward or forward.
-- The `listen` method registers a callback to be called on navigation change.
-
-## Properties
-
-### `MemoryHistory`
-
-| Method    | Signature                                                     | Description                                                                                                                                                                     |
-| --------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `get`     | `get(): string`                                               | Returns the current route.                                                                                                                                                      |
-| `set`     | `set({ value: string, scroll?: boolean, replace?: boolean })` | Navigates to a new route. `value`: URL to navigate to. `scroll`: Scrolls to element by ID (default: `false`). `replace`: Replaces the current history entry (default: `false`). |
-| `back`    | `back(): void`                                                | Navigates 1 step back in the history. Corresponds to `go(-1)`.                                                                                                                  |
-| `forward` | `forward(): void`                                             | Navigates 1 step forward in the history. Corresponds to `go(1)`.                                                                                                                |
-| `go`      | `go(n: number): void`                                         | Navigates n steps in the history. Negative for back, positive for forward. Clamped to history length.                                                                           |
-| `listen`  | `listen(listener: (value: string) => void): () => void`       | Registers a listener that will be called on navigation.                                                                                                                         |
-
-### `MemoryRouter`
-
-| Property      | Type                                                     | Description                                                                                |
-| ------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| children      | `JSX.Element`, `RouteDefinition`, or `RouteDefinition[]` | The route definitions                                                                      |
-| root          | Component                                                | Top level layout component                                                                 |
-| base          | string                                                   | Base url to use for matching routes                                                        |
-| actionBase    | string                                                   | Root url for server actions, default: `/_server`                                           |
-| preload       | boolean                                                  | Enables/disables preloads globally, default: `true`                                        |
-| explicitLinks | boolean                                                  | Disables all anchors being intercepted and instead requires `<A>`. default: `false`        |
-| history       | MemoryHistory                                            | An optionally pre-filled and mutable history object which will store any navigation events |
+- [`Router`](/solid-router/reference/components/router)
+- [`HashRouter`](/solid-router/reference/components/hash-router)
+- [`Route`](/solid-router/reference/components/route)

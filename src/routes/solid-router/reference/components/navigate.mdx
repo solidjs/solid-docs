@@ -1,30 +1,96 @@
 ---
 title: Navigate
 use_cases: >-
-  automatic redirects, programmatic navigation, conditional routing, auth
-  redirects, dynamic routing
+  redirects, programmatic navigation, render-time navigation
 tags:
   - component
   - redirects
   - navigation
-  - programmatic
-  - dynamic
 version: "1.0"
 description: >-
-  Navigate component provides immediate programmatic navigation and redirects,
-  perfect for authentication flows and conditional routing logic.
+  Navigate performs router navigation when it renders.
 ---
 
-Solid Router provides a `Navigate` component that works similarly to [`<A>`](/solid-router/reference/components/a), but it will _immediately_ navigate to the provided path as soon as the component is rendered.
-It also uses the `href` prop, but with the additional option of passing a function to `href` that returns a path to navigate to:
+`Navigate` performs router navigation during render and returns no UI. It is the component form of a redirect, not an anchor link.
 
-```jsx
-function getPath({ navigate, location }) {
-	// navigate is the result of calling useNavigate(); location is the result of calling useLocation().
-	// You can use those to dynamically determine a path to navigate to
-	return "/some-path";
+## Import
+
+```tsx
+import { Navigate } from "@solidjs/router";
+```
+
+## Type
+
+```tsx
+interface NavigateProps {
+	href:
+		| ((args: { navigate: Navigator; location: Location }) => string)
+		| string;
+	state?: unknown;
 }
 
-// Navigating to /redirect will redirect you to the result of getPath
-<Route path="/redirect" component={() => <Navigate href={getPath} />} />;
+function Navigate(props: NavigateProps): null;
 ```
+
+## Props
+
+### `href`
+
+- **Type:** `((args: { navigate: Navigator; location: Location }) => string) | string`
+- **Optional:** No
+
+Path to navigate to, or a function that receives the router navigator and current location and returns a path.
+
+### `state`
+
+- **Type:** `unknown`
+- **Optional:** Yes
+
+State passed to the router navigator.
+
+## Behavior
+
+- Calls `useNavigate` and `useLocation` when rendered.
+- If `href` is a function, it receives `{ navigate, location }` before navigation.
+- Navigation uses `{ replace: true, state }`.
+- Renders `null`.
+
+## Examples
+
+### Basic usage
+
+```tsx
+import { Navigate, Route, Router } from "@solidjs/router";
+
+export default function App() {
+	return (
+		<Router>
+			<Route path="/old" component={() => <Navigate href="/new" />} />
+		</Router>
+	);
+}
+```
+
+### Function href
+
+```tsx
+import { Navigate, Route, Router } from "@solidjs/router";
+
+function getPath({ location }) {
+	return location.pathname === "/old" ? "/new" : "/";
+}
+
+export default function App() {
+	return (
+		<Router>
+			<Route path="/old" component={() => <Navigate href={getPath} />} />
+		</Router>
+	);
+}
+```
+
+## Related
+
+- [`A`](/solid-router/reference/components/a)
+- [`useNavigate`](/solid-router/reference/primitives/use-navigate)
+- [`useLocation`](/solid-router/reference/primitives/use-location)

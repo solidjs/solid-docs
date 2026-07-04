@@ -1,53 +1,145 @@
 ---
 title: HashRouter
 use_cases: >-
-  static file hosting, single html file apps, no server routing, github pages,
-  static deployment
+  hash routing, client routing, static deployments
 tags:
   - hash-routing
-  - static-hosting
   - client-side
-  - spa
-  - deployment
   - component
+  - router
 version: "1.0"
 description: >-
-  HashRouter enables client-side routing using URL hash values, perfect for
-  static file hosting where server-side routing isn't available.
+  HashRouter stores route paths in the URL hash.
 ---
 
-The `HashRouter` is a top level component that manages the routing of your application.
-It is a client side router that uses hash-values in the URL - providing a single-page application a way to replicate the experience of a multi-page application.
+`HashRouter` is the browser router variant that keeps the route in the URL fragment. It reads and writes `window.location.hash`, so routed URLs render as hash paths such as `#/docs` instead of pathname URLs such as `/docs`.
 
-Since hash-routing provides a way for an application to run from a single HTML file, it can be used when hosting on a static file server.
+## Import
 
-Compared to a browser-router, such as [`Router`](/solid-router/reference/components/router), is that this approach is not SEO friendly.
-Because most search engines do not index the hash portion of a URL, they are only able to see the index page of your application when using this approach.
+```tsx
+import { HashRouter } from "@solidjs/router";
+```
 
-The `root` property is used for components that wrap a matched route and require access to the router context, relevant with navigation components that use [`<A>`](/solid-router/reference/components/a) links.
+## Type
+
+```tsx
+type BaseRouterProps = {
+	base?: string;
+	root?: Component<RouteSectionProps>;
+	rootPreload?: RoutePreloadFunc;
+	singleFlight?: boolean;
+	children?: JSX.Element | RouteDefinition | RouteDefinition[];
+	transformUrl?: (url: string) => string;
+	rootLoad?: RoutePreloadFunc;
+};
+
+type HashRouterProps = BaseRouterProps & {
+	actionBase?: string;
+	explicitLinks?: boolean;
+	preload?: boolean;
+};
+
+function HashRouter(props: HashRouterProps): JSX.Element;
+```
+
+## Props
+
+### `children`
+
+- **Type:** `JSX.Element | RouteDefinition | RouteDefinition[]`
+- **Optional:** Yes
+
+Route definitions rendered by the router.
+
+### `base`
+
+- **Type:** `string`
+- **Default:** `""`
+- **Optional:** Yes
+
+Base path used when creating route branches.
+
+### `root`
+
+- **Type:** `Component<RouteSectionProps>`
+- **Optional:** Yes
+
+Component rendered around matched routes.
+
+### `rootPreload`
+
+- **Type:** `RoutePreloadFunc`
+- **Optional:** Yes
+
+Preload function called for the root route context.
+
+### `singleFlight`
+
+- **Type:** `boolean`
+- **Default:** `true`
+- **Optional:** Yes
+
+Controls the router context `singleFlight` setting.
+
+### `transformUrl`
+
+- **Type:** `(url: string) => string`
+- **Optional:** Yes
+
+Function applied to the location pathname before route matching.
+
+### `actionBase`
+
+- **Type:** `string`
+- **Default:** `"/_server"`
+- **Optional:** Yes
+
+Base path used by native form action handling.
+
+### `explicitLinks`
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Optional:** Yes
+
+Controls whether native anchor interception requires the `link` attribute.
+
+### `preload`
+
+- **Type:** `boolean`
+- **Default:** `true`
+- **Optional:** Yes
+
+Controls router-managed anchor preloading.
+
+## Behavior
+
+- Reads the route source from `window.location.hash.slice(1)`.
+- Navigation writes `"#" + value` with `window.history.pushState` or `window.history.replaceState`.
+- Rendered paths have a leading `#`.
+- Listens for `hashchange` events.
+- Hash-only hrefs that do not start with `/` are parsed as hashes on the current path.
+
+## Examples
+
+### Basic usage
 
 ```tsx
 import { render } from "solid-js/web";
 import { HashRouter, Route } from "@solidjs/router";
 
-const App = (props) => (
-	<>
-		<h1>Root header</h1>
-		{props.children}
-	</>
-);
-
 render(
-	() => <HashRouter root={App}>{/*... routes */}</HashRouter>,
-	document.getElementById("app")
+	() => (
+		<HashRouter>
+			<Route path="/" component={() => <h1>Home</h1>} />
+		</HashRouter>
+	),
+	document.getElementById("root")!
 );
 ```
 
-| prop          | type                                                     | description                                                                                                                 |
-| ------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| children      | `JSX.Element`, `RouteDefinition`, or `RouteDefinition[]` | The route definitions                                                                                                       |
-| root          | Component                                                | Top level layout component                                                                                                  |
-| base          | string                                                   | Base url to use for matching routes                                                                                         |
-| actionBase    | string                                                   | Root url for server actions, default: `/_server`                                                                            |
-| preload       | boolean                                                  | Enables/disables preloads globally, default: `true`                                                                         |
-| explicitLinks | boolean                                                  | Disables all anchors being intercepted and instead requires [`<A>`](/solid-router/reference/components/a). default: `false` |
+## Related
+
+- [`Router`](/solid-router/reference/components/router)
+- [`Route`](/solid-router/reference/components/route)
+- [`A`](/solid-router/reference/components/a)

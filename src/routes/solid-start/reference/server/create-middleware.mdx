@@ -1,63 +1,81 @@
 ---
 title: createMiddleware
 use_cases: >-
-  request interception, logging, authentication checks, cors setup, response
-  modification, api middleware
+  request middleware, response middleware, h3 middleware
 tags:
+  - server
   - middleware
   - request
   - response
-  - lifecycle
-  - interceptor
-  - hooks
 version: "1.0"
 description: >-
-  Add middleware to SolidStart request lifecycle. Intercept requests and
-  responses for logging, auth, CORS, and custom processing.
+  createMiddleware creates middleware definitions.
 ---
 
-`createMiddleware` creates a configuration object for SolidStart that specifies when middleware functions are executed during the request lifecycle.
+`createMiddleware` wraps request and response middleware functions with fetch events.
 
-There are two lifecycle events available: `onRequest` and `onBeforeResponse`.
+## Import
 
-- The `onRequest` event is triggered at the beginning of the request lifecycle, before the request is handled by the route handler.
-- The `onBeforeResponse` event is triggered after a request has been processed by the route handler but before the response is sent to the client.
+```tsx
+import { createMiddleware } from "@solidjs/start/middleware";
+```
 
-:::note
-SolidStart will only execute the middleware functions if the path to the middleware file is configured within `app.config.ts` using the `middleware` option.
-This file must export the configuration using `export default`.
-:::
+## Type
 
-Learn more about middleware in the [Middleware documentation](/solid-start/advanced/middleware).
+```tsx
+type RequestMiddleware = (
+	event: FetchEvent
+) => Response | Promise<Response> | void | Promise<void | Response>;
+
+type ResponseMiddleware = (
+	event: FetchEvent,
+	response: { body?: unknown }
+) => Response | Promise<Response> | void | Promise<void>;
+
+function createMiddleware(args: {
+	onRequest?: RequestMiddleware | RequestMiddleware[];
+	onBeforeResponse?: ResponseMiddleware | ResponseMiddleware[];
+}): {
+	onRequest?: _RequestMiddleware | _RequestMiddleware[];
+	onBeforeResponse?: _ResponseMiddleware | _ResponseMiddleware[];
+};
+```
 
 ## Parameters
 
-`createMiddleware` takes an object with the following keys:
+### `args`
 
-- `onRequest` (optional): A middleware function or an array of functions to execute at the `onRequest` event.
-  If an array is provided, the middleware functions will be executed one by one, in the order they appear in the array.
-- `onBeforeResponse` (optional): A middleware function or an array of functions to execute at the `onBeforeResponse` event.
-  If an array is provided, the middleware functions will be executed one by one, in the order they appear in the array.
+- **Type:** `{ onRequest?: RequestMiddleware | RequestMiddleware[]; onBeforeResponse?: ResponseMiddleware | ResponseMiddleware[] }`
+- **Required:** Yes
 
-## Example
+Middleware functions grouped by request phase.
 
-```ts title="src/middleware/index.ts"
+## Return value
+
+- **Type:** `{ onRequest?: _RequestMiddleware | _RequestMiddleware[]; onBeforeResponse?: _ResponseMiddleware | _ResponseMiddleware[] }`
+
+Returns the value from Vinxi `defineMiddleware`.
+
+## Behavior
+
+- `onRequest` functions are wrapped so that a returned response ends the middleware.
+- `onBeforeResponse` functions are wrapped with the current fetch event and response object.
+- Single middleware inputs produce single wrapped functions.
+- Array inputs are mapped to arrays of wrapped functions.
+
+## Examples
+
+### Basic usage
+
+```tsx
 import { createMiddleware } from "@solidjs/start/middleware";
 
 export default createMiddleware({
-	onRequest: (event) => {
-		console.log("Request received:", event.request.url);
+	onRequest: async (event) => {
+		event.response.headers.set(
+			"x-request-path",
+			new URL(event.request.url).pathname
+		);
 	},
-	onBeforeResponse: (event) => {
-		console.log("Sending response:", event.response.status);
-	},
-});
-```
-
-```ts title="app.config.ts"
-import { defineConfig } from "@solidjs/start/config";
-
-export default defineConfig({
-	middleware: "src/middleware/index.ts",
 });
 ```

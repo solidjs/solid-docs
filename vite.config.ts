@@ -99,8 +99,7 @@ export default defineConfig({
 							"/solid-start": createFilesystemSidebar(
 								"./src/routes/solid-start",
 								{
-									filter: (item) =>
-										!item.filePath.includes("/solid-start/v2"),
+									filter: (item) => !item.filePath.includes("/solid-start/v2"),
 								}
 							),
 						},

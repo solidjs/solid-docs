@@ -97,7 +97,11 @@ export default defineConfig({
 					themeConfig: {
 						sidebar: {
 							"/solid-start": createFilesystemSidebar(
-								"./src/routes/solid-start"
+								"./src/routes/solid-start",
+								{
+									filter: (item) =>
+										!item.filePath.includes("/solid-start/v2"),
+								}
 							),
 						},
 					},
@@ -108,7 +112,7 @@ export default defineConfig({
 					title: "SolidStart",
 					themeConfig: {
 						sidebar: {
-							"/v2/solid-start": createFilesystemSidebar(
+							"/solid-start/v2": createFilesystemSidebar(
 								"./src/routes/solid-start/v2"
 							),
 						},

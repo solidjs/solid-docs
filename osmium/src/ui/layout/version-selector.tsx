@@ -68,7 +68,7 @@ export default function VersionSelector() {
 
 									return (
 										<a
-											class="group flex cursor-pointer items-center rounded-[0.625rem] p-1 select-none hover:bg-slate-200 focus:bg-slate-200 focus:font-medium focus:outline-hidden hover:dark:bg-slate-600 focus:dark:bg-slate-700"
+											class="group flex cursor-pointer items-center rounded-[0.625rem] p-1 select-none hover:bg-slate-200 focus-visible:bg-slate-200 focus-visible:font-medium focus-visible:outline-hidden aria-[current]:bg-blue-50 hover:dark:bg-slate-600 focus-visible:dark:bg-slate-700 dark:aria-[current]:bg-blue-900/30"
 											target={outbound() ? "_blank" : undefined}
 											rel={outbound() ? "noopener noreferrer" : undefined}
 											aria-current={option === currentOption() || undefined}

@@ -1,0 +1,201 @@
+---
+title: CSS and styling
+use_cases: >-
+  styling components, css modules, scoped styles, component styling, design
+  system setup, visual customization
+tags:
+  - css
+  - styling
+  - modules
+  - components
+  - design
+  - vite
+version: "2.0"
+description: >-
+  Style your SolidStart components with CSS, CSS modules, and other styling
+  solutions. Implement scoped styles and design systems.
+---
+
+SolidStart 2.0 introduces a completely revamped CSS rendering mechanism:
+- CSS deduplication during server-side rendering works more consistently across the board.
+- Hot module replacement (HMR) of route CSS is now directly managed by Vite instead of SolidStart / Vinxi.
+- CSS in `lazy`-loaded components is now properly server-side rendered and does not result in flashes of unstyled content.
+- Client-side navigation now mounts new CSS directly via Vite instead of SolidStart.
+	- Server HTML responses no longer have to include the whole assets manifest.
+- Client-side navigation no longer unmounts old CSS, more closely following Vite's native behaviour.
+
+## Styling components
+
+You can import CSS using ESM syntax anywhere within the component tree. Styles imported as such, are globally mounted in your app.
+
+```tsx title="Card.tsx" tab="component"
+import "./Card.css";
+
+const Card = (props) => {
+	return (
+		<div class="card">
+			<h1>{props.title}</h1>
+			<p>{props.text}</p>
+		</div>
+	);
+};
+```
+
+```css title="Card.css" tab="component"
+.card {
+	background-color: #446b9e;
+}
+
+h1 {
+	font-size: 1.5em;
+	font-weight: bold;
+}
+
+p {
+	font-size: 1em;
+	font-weight: normal;
+}
+```
+
+
+## Locally scoped styles
+
+SolidStart supports [CSS modules](https://github.com/css-modules/css-modules), allowing you to locally scope the imported CSS.
+
+As is standard with [Vite](https://vitejs.dev/guide/features.html#css-modules), any file ending with `.module.css`, `.module.scss` or `.module.sass` is considered a CSS module. Reference the generated css class names via the imported object, e.g. `styles.card`.
+
+```tsx title="Card.tsx" tab="component"
+import styles from "./Card.module.css";
+
+const Card = (props) => {
+	return (
+		<div class={styles.card}>
+			<h1>{props.title}</h1>
+			<p>{props.text}</p>
+		</div>
+	);
+};
+```
+
+```css title="Card.module.css" tab="component"
+.card {
+	background-color: #446b9e;
+}
+
+div.card > h1 {
+	font-size: 1.5em;
+	font-weight: bold;
+}
+
+div.card > p {
+	font-size: 1em;
+	font-weight: normal;
+}
+```
+
+## Route-specific global styles
+
+Imported CSS stays in the document when navigating to different routes. Therefore routes with different global styles will overlap each other. There exist several strategies to get around this limitation:
+
+### Apply \:has pseudo-class
+
+If you only have to apply few global CSS rules for one specific route, you can use the CSS [\:has](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Selectors/:has) pseudo-class, to tie the global CSS to the route:
+
+```tsx title="routes/about.tsx" tab="component"
+import "./about.css";
+
+export default function About () {
+	return (
+		<main data-route="about">
+			<h1>About us</h1>
+		</main>
+	);
+};
+```
+
+```css title="routes/about.css" tab="component"
+body:has(main[data-route="about"]) {
+	background-color: #446b9e;
+	color: white;
+}
+```
+
+### Import with ?url
+
+If the route depends on complex global CSS (e.g. using Tailwind only in one specific route), optimizing all selectors with `:has` might not always be possible. Instead you can import the CSS file by URL and mount it through JSX:
+
+```tsx title="routes/about.tsx" tab="component"
+import { Link } from "@solidjs/meta";
+import styleUrl from "./about.css?url";
+
+export default function About () {
+	return (
+		<main>
+			<Link rel="stylesheet" href={styleUrl} />
+			<h1>About us</h1>
+		</main>
+	);
+};
+```
+
+```css title="routes/about.css" tab="component"
+@import "tailwindcss";
+```
+
+## Lazy loading
+
+[Lazy](https://docs.solidjs.com/reference/component-apis/lazy) loading components with CSS is now fully supported in SolidStart 2.0 and no longer results in flashes of unstyled content (FOUC): 
+
+```tsx title="App.tsx" tab="component"
+import { lazy } from "solid-js";
+
+// Lazy with dynamic import
+const Card = lazy(() => import("./Card.tsx"));
+
+// Lazy with glob import
+const components = import.meta.glob("./Car*.tsx");
+const Card2 = lazy(Object.values(components)[0]);
+
+const App = (props) => {
+	return (
+		<main>
+			<Card />
+			<Card2 />
+		</main>
+	);
+};
+```
+
+```tsx title="Card.tsx" tab="component"
+import "./Card.css";
+
+const Card = (props) => {
+	return (
+		<div class="card">
+			<h1>{props.title}</h1>
+			<p>{props.text}</p>
+		</div>
+	);
+};
+```
+
+```css title="Card.css" tab="component"
+.card {
+	background-color: #446b9e;
+}
+
+h1 {
+	font-size: 1.5em;
+	font-weight: bold;
+}
+
+p {
+	font-size: 1em;
+	font-weight: normal;
+}
+```
+
+## Other ways to style components
+
+SolidStart is built on top of Solid, meaning styling is not limited to CSS.
+To see other ways to style components, see the [styling section in the Solid documentation](/guides/styling-your-components).

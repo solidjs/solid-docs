@@ -18,6 +18,7 @@ export const logos: { [key: string]: { file: string; style?: string } } = {
 	less: { file: "less.svg" },
 	cssmodules: { file: "css-modules.svg", style: "invert" },
 	macaron: { file: "macaron.svg" },
+	panda: { file: "panda.svg" },
 	tailwind: { file: "tailwind.svg" },
 	stormkit: { file: "stormkit.svg" },
 	sst: { file: "sst.svg" },

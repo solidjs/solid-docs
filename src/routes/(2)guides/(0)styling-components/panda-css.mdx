@@ -1,0 +1,109 @@
+---
+title: Panda CSS
+category: Guides / Styling Components
+order: 5
+mainNavExclude: true
+use_cases: >-
+  styling components, css-in-js, build-time styles, design tokens, type-safe
+  styles
+tags:
+  - styling
+  - css
+  - panda
+  - css-in-js
+  - postcss
+  - tokens
+version: "1.0"
+description: >-
+  Set up Panda CSS in your Solid app for build-time CSS-in-JS. Configure
+  PostCSS, define design tokens, and write type-safe styles.
+---
+
+[Panda CSS](https://panda-css.com/) is a build-time CSS-in-JS library that combines the developer experience of CSS-in-JS with the performance of atomic CSS.
+Styles are extracted at build time through PostCSS, so no runtime styling code ships to the browser.
+
+## Installation
+
+1. Install Panda CSS as a development dependency:
+
+```package-install-dev
+@pandacss/dev
+```
+
+2. Initialize Panda CSS in your project.
+   This creates a `panda.config.ts` file and a `postcss.config.cjs` file:
+
+```package-exec
+panda init --postcss
+```
+
+3. Add the `prepare` script to your `package.json`, which generates the `styled-system` directory after installs:
+
+```json title="package.json"
+{
+	"scripts": {
+		"prepare": "panda codegen",
+		"dev": "vite",
+		"build": "vite build"
+	}
+}
+```
+
+## Configure Panda CSS
+
+Open `panda.config.ts` and make sure the `include` patterns match your source files.
+Setting `jsxFramework` to `"solid"` enables Solid-specific JSX style props support:
+
+```ts title="panda.config.ts"
+import { defineConfig } from "@pandacss/dev";
+
+export default defineConfig({
+	preflight: true,
+	include: ["./src/**/*.{js,jsx,ts,tsx}"],
+	exclude: [],
+	jsxFramework: "solid",
+	outdir: "styled-system",
+});
+```
+
+## Import the cascade layers
+
+Add the Panda CSS cascade layers to your `src/index.css` file:
+
+```css title="src/index.css"
+@layer reset, base, tokens, recipes, utilities;
+```
+
+Then import your `index.css` file into the root `index.jsx` or `index.tsx` file:
+
+```jsx
+/* @refresh reload */
+import { render } from "solid-js/web"
+import "./index.css"
+import App from "./App"
+
+render(() => <App />, document.getElementById('root') as HTMLElement);
+```
+
+## Usage
+
+With Panda CSS set up, use the `css` function from the generated `styled-system` directory to style your components:
+
+```jsx
+/* src/App.jsx */
+import { css } from "../styled-system/css";
+
+function App() {
+	return (
+		<div class={css({ fontSize: "2xl", fontWeight: "bold" })}>
+			Hello from Panda! 🐼
+		</div>
+	);
+}
+
+export default App;
+```
+
+## Support
+
+For additional assistance, refer to the [Panda CSS installation guide](https://panda-css.com/docs/installation/vite).

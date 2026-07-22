@@ -1,0 +1,144 @@
+---
+title: solidStart
+use_cases: >-
+  solidstart configuration, vite plugin, ssr mode, middleware, serialization,
+  environment variables, server functions
+tags:
+  - config
+  - vite
+  - plugin
+  - ssr
+  - middleware
+  - environment
+version: "2.0"
+description: >-
+  Configure the SolidStart v2 Vite plugin and its application options.
+---
+
+`solidStart` returns the Vite plugins that build and run a SolidStart application with Vite's Environment API.
+
+## Import
+
+```tsx
+import { solidStart } from "@solidjs/start/config";
+```
+
+## Type
+
+```tsx
+function solidStart(options?: SolidStartOptions): PluginOption[];
+```
+
+## Basic configuration
+
+Use `solidStart()` together with a server plugin such as Nitro v3.
+
+```tsx title="vite.config.ts"
+import { nitro } from "nitro/vite";
+import { defineConfig } from "vite";
+import { solidStart } from "@solidjs/start/config";
+
+export default defineConfig({
+	plugins: [solidStart(), nitro()],
+});
+```
+
+Nitro settings do not belong inside `solidStart()`. Configure them with the top-level `nitro` property. See [`vite.config.ts`](/solid-start/v2/reference/entrypoints/vite-config).
+
+## Options
+
+### `ssr`
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Set to `false` for client-side rendering. SolidStart swaps its server and client entrypoints to their SPA implementations while retaining file routing and server functions.
+
+### `routeDir`
+
+- **Type:** `string`
+- **Default:** `"./routes"`
+
+Route directory relative to the application root (`./src`).
+
+### `extensions`
+
+- **Type:** `string[]`
+- **Default:** `[]`
+
+Additional file extensions that the filesystem router and Solid compiler should process.
+
+### `middleware`
+
+- **Type:** `string`
+
+Path to the module that default-exports middleware created with [`createMiddleware`](/solid-start/v2/reference/server/create-middleware).
+
+```tsx
+solidStart({ middleware: "./src/middleware/index.ts" });
+```
+
+### `serialization`
+
+- **Type:** `{ mode?: "json" | "js" }`
+- **Default:** `{ mode: "json" }`
+
+Controls server-function argument and result serialization. `json` avoids `eval` and works with a strict Content Security Policy. `js` produces a smaller payload but requires `unsafe-eval`.
+
+See [Serialization](/solid-start/v2/advanced/serialization).
+
+### `solid`
+
+- **Type:** `Partial<SolidOptions>`
+
+Options forwarded to `vite-plugin-solid`.
+
+### `serverFunctions.filter`
+
+- **Type:** `{ include?: FilterPattern; exclude?: FilterPattern }`
+
+Customizes which files the `"use server"` compiler scans. By default, it includes source JavaScript and TypeScript files under `src` and excludes `node_modules`.
+
+```tsx
+solidStart({
+	serverFunctions: {
+		filter: {
+			include: ["src/**/*.{ts,tsx}", "packages/shared/**/*.ts"],
+			exclude: ["**/*.test.ts"],
+		},
+	},
+});
+```
+
+### `env`
+
+Configures SolidStart's environment-variable virtual modules.
+
+By default:
+
+- `env:server` exposes build-time variables prefixed with `SERVER_` and fails if imported by client code.
+- `env:client` exposes build-time variables prefixed with `CLIENT_` to both environments.
+- `env:server/runtime` reads runtime variables from `process.env` and is server-only.
+
+```tsx title="vite.config.ts"
+solidStart({
+	env: {
+		server: { prefix: "PRIVATE_", runtime: "node" },
+		client: { prefix: "PUBLIC_" },
+	},
+});
+```
+
+The `server.runtime` option also accepts `"cloudflare-workers"`, `"netlify-edge"`, or custom loader source code. `server.load` and `client.load` can provide custom build-time values for the current mode.
+
+## Environment boundaries
+
+SolidStart v2 recognizes `server-only` and `client-only` marker imports. Add one to a module to make an accidental import from the wrong Vite environment fail during development or build.
+
+```ts title="src/lib/db.ts"
+import "server-only";
+
+export const db = createDatabaseClient();
+```
+
+`@solidjs/start/http` and `@solidjs/start/middleware` are already marked server-only.

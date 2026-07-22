@@ -14,8 +14,7 @@ description: >-
   Migrate your SolidStart project from v1 to v2.
 ---
 
-This guide covers the package-level migration changes for SolidStart 2.0.
-It focuses on the parts of the upgrade that already have corresponding v2 docs in this site.
+This guide covers the changes needed to move a SolidStart v1 application from Vinxi and Nitro v2 to SolidStart v2, Vite's Environment API, and Nitro v3.
 
 Some ecosystem packages may still target v1-only APIs.
 Audit those dependencies before shipping a production upgrade.
@@ -25,14 +24,38 @@ Audit those dependencies before shipping a production upgrade.
 ### Update dependencies
 
 ```package-install
-@solidjs/start@2.0.0-alpha.3
+@solidjs/start@2.0.0-rc.1 nitro@3 vite@8
 ```
 
 ```package-remove
-vinxi
+vinxi @solidjs/vite-plugin-nitro-2 nitropack
 ```
 
-The framework plugin now comes from `@solidjs/start/config`.
+`@solidjs/vite-plugin-nitro-2` was a temporary compatibility layer for using Nitro v2 through Vite. It is deprecated and is not part of the RC setup. Use Nitro v3's own `nitro()` plugin from `nitro/vite`.
+
+SolidStart v2 requires Node.js 24 or newer. Update the `engines` field and your local, CI, and deployment runtimes before installing:
+
+```json title="package.json"
+{
+	"engines": {
+		"node": ">=24"
+	}
+}
+```
+
+Replace the Vinxi scripts with Vite scripts:
+
+```json title="package.json"
+{
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview"
+	}
+}
+```
+
+`vite preview` is for locally checking a production build. Run or deploy Nitro's generated output according to the selected preset in production.
 
 ### Move framework configuration into `vite.config.ts`
 
@@ -41,10 +64,29 @@ Move that setup into a Vite config that calls `solidStart()`.
 
 ```tsx title="vite.config.ts"
 import { defineConfig } from "vite";
+import { nitro } from "nitro/vite";
 import { solidStart } from "@solidjs/start/config";
 
 export default defineConfig({
-	plugins: [solidStart()],
+	plugins: [solidStart(), nitro()],
+});
+```
+
+Remove `app.config.ts` after moving its settings. SolidStart options go to `solidStart()`. Options that were nested under v1's `server` property go to the top-level `nitro` property:
+
+```tsx title="vite.config.ts"
+import { nitro } from "nitro/vite";
+import { defineConfig } from "vite";
+import { solidStart } from "@solidjs/start/config";
+
+export default defineConfig({
+	plugins: [solidStart(), nitro()],
+	nitro: {
+		preset: "cloudflare_module",
+		prerender: {
+			routes: ["/", "/about"],
+		},
+	},
 });
 ```
 
@@ -52,10 +94,11 @@ If your app already has custom middleware, `solidStart()` also exposes a `middle
 
 ```tsx title="vite.config.ts"
 import { defineConfig } from "vite";
+import { nitro } from "nitro/vite";
 import { solidStart } from "@solidjs/start/config";
 
 export default defineConfig({
-	plugins: [solidStart({ middleware: "./src/middleware/index.ts" })],
+	plugins: [solidStart({ middleware: "./src/middleware/index.ts" }), nitro()],
 });
 ```
 
@@ -69,6 +112,8 @@ import { getCookie, setCookie, useSession } from "@solidjs/start/http";
 ```
 
 The HTTP entrypoint exposes helpers such as `readBody`, `getQuery`, `getRequestHeader`, `setResponseHeader`, `useSession`, and related cookie/session utilities.
+
+Nitro v3 uses H3 v2 and Web standard `Request`, `Response`, and `Headers` objects. Code that directly used `event.node`, `event.web`, or H3 v1 response helpers must follow the [Nitro v3 migration guide](https://nitro.build/docs/migration).
 
 ### Update TypeScript environment types
 
@@ -85,23 +130,45 @@ Make sure your TypeScript config includes it.
 
 ### Revisit middleware syntax
 
-The v2 middleware entrypoint exports `createMiddleware`, and its types now prefer H3 middleware arrays.
-The older `onRequest` and `onBeforeResponse` object form is still present but marked deprecated in the package types.
+The v2 middleware entrypoint exports `createMiddleware`, and its preferred form is an array of H3 v2 middleware.
+The older `onRequest` and `onBeforeResponse` object form still works but is deprecated.
 
 ```tsx
 import { createMiddleware } from "@solidjs/start/middleware";
 
 export default createMiddleware([
-	async (_event, next) => {
-		return await next();
+	async (event, next) => {
+		event.context.startedAt = Date.now();
+		const response = await next();
+		console.log(`Request took ${Date.now() - event.context.startedAt}ms`);
+		return response;
 	},
 ]);
 ```
 
-## Still in the v1 docs
+### Update Nitro v2 APIs
 
-A few topics keep their v1 guidance until the v2 pages land:
+If your app uses Nitro directly, apply these common v3 changes:
 
-- Entrypoint file replacements
-- Production `start` script names for generated apps
-- Auth, prerendering, metadata, and background tasks
+- Replace the `nitropack` package and `nitropack/*` imports with `nitro` and its documented subpath exports.
+- Replace H3 v1 `eventHandler` or `defineEventHandler` with `defineHandler` from `nitro`.
+- Return response bodies, streams, and redirects instead of calling the removed `send*` helpers.
+- Revisit renamed deployment presets, especially Cloudflare, Vercel Edge, Firebase, and the old Node middleware preset.
+
+### Check serialization
+
+SolidStart v2 defaults to JSON serialization. V1 defaulted to the smaller JavaScript format, which requires `unsafe-eval` in your Content Security Policy. Set `serialization: { mode: "js" }` on `solidStart()` only if you intentionally want the v1 behavior.
+
+### Verify the application
+
+Run the development server and production build after migrating:
+
+```package-run
+dev
+```
+
+```package-run
+build
+```
+
+Test API routes, middleware order, session cookies, prerendered routes, deployment output, and any direct Nitro or H3 integrations before shipping.

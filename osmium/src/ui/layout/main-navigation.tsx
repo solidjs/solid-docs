@@ -18,18 +18,25 @@ interface MainNavigationProps {}
 function ListItemLink(props: { item: SidebarItemLink; prefix?: string }) {
 	const location = useLocation();
 	const locale = useLocale();
+	const href = () =>
+		locale.applyPathPrefix(
+			`${props.prefix === "/" ? "" : (props.prefix ?? "")}${props.item.link === "/" ? "" : props.item.link}`.replace(
+				/\\/g,
+				"/"
+			)
+		);
+	const isActive = () => location.pathname === href();
 
 	const linkStyles = () =>
-		location.pathname === props.item.link.replace(/\\/g, "/")
+		isActive()
 			? "font-semibold text-blue-700 before:bg-blue-700 dark:before:bg-blue-200 dark:text-blue-300 before:block"
 			: "text-slate-700 before:hidden before:bg-blue-600 before:dark:bg-blue-200 hover:text-blue-700 hover:before:block dark:text-slate-300 ";
 	return (
 		<li class="relative">
 			<a
 				onClick={() => setIsOpen(false)}
-				href={locale.applyPathPrefix(
-					`${props.prefix === "/" ? "" : (props.prefix ?? "")}${props.item.link === "/" ? "" : props.item.link}`
-				)}
+				href={href()}
+				aria-current={isActive() ? "page" : undefined}
 				class={`block w-full pl-3.5 before:pointer-events-none before:absolute before:top-1/2 before:-left-1 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full hover:text-blue-700 lg:text-sm dark:hover:text-blue-300 ${linkStyles()}`}
 			>
 				{props.item.title}

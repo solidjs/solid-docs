@@ -62,6 +62,8 @@ export default defineConfig({
 					values: {
 						latest: { path: "", label: "Latest" },
 						v2: { path: "v2", label: "v2" },
+						startLatest: { path: "", label: "v1 (Latest)" },
+						startV2: { path: "v2", label: "v2 (RC)" },
 					},
 				},
 				include: [
@@ -71,7 +73,7 @@ export default defineConfig({
 					},
 					{
 						project: "start",
-						version: ["latest", "v2"],
+						version: ["startLatest", "startV2"],
 					},
 					{
 						project: ["router", "meta"],
@@ -107,7 +109,7 @@ export default defineConfig({
 				},
 				{
 					project: "start",
-					version: "v2",
+					version: "startV2",
 					title: "SolidStart",
 					themeConfig: {
 						sidebar: {

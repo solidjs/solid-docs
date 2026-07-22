@@ -4,7 +4,6 @@ import { fileURLToPath } from "node:url";
 
 export interface OsmiumThemeConfig {
 	sidebar?: SidebarConfig;
-	versionLabels?: Record<string, string>;
 	reportPagePath?: string;
 	missingPagePath?: string;
 	discord?: string;

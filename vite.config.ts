@@ -95,10 +95,6 @@ export default defineConfig({
 					project: "start",
 					title: "SolidStart",
 					themeConfig: {
-						versionLabels: {
-							latest: "v1 (Latest)",
-							v2: "v2 (RC)",
-						},
 						sidebar: {
 							"/solid-start": createFilesystemSidebar(
 								"./src/routes/solid-start",

@@ -23,10 +23,9 @@ export default function VersionSelector() {
 	);
 
 	const getOptionLabel = (option: SolidBaseRouteOption) => {
-		return (
-			config().themeConfig?.versionLabels?.[option.name] ??
-			(typeof option.meta.label === "string" ? option.meta.label : option.name)
-		);
+		return typeof option.meta.label === "string"
+			? option.meta.label
+			: option.name;
 	};
 
 	return (

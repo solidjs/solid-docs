@@ -1,5 +1,5 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
-import { useBeforeLeave, useLocation, useMatch } from "@solidjs/router";
+import { useBeforeLeave, useLocation } from "@solidjs/router";
 import { Icon } from "solid-heroicons";
 import { chevronDown } from "solid-heroicons/solid";
 import { setIsOpen } from "./mobile-navigation";
@@ -12,6 +12,7 @@ import {
 import { Collapsible } from "@kobalte/core/collapsible";
 import { Tabs } from "@kobalte/core/tabs";
 import VersionSelector from "./version-selector";
+import { getNavigationTabForPath } from "./navigation-tab";
 
 interface MainNavigationProps {}
 
@@ -89,9 +90,8 @@ function DirList(props: { items: SidebarItem[] }) {
 }
 
 export function MainNavigation(_props: MainNavigationProps) {
-	const isReference = useMatch(() => "*/reference/*?");
-
-	const initialTab = () => (isReference() ? "reference" : "learn");
+	const location = useLocation();
+	const initialTab = () => getNavigationTabForPath(location.pathname);
 
 	const [selectedTab, setSelectedTab] = createSignal(initialTab());
 
@@ -110,11 +110,7 @@ export function MainNavigation(_props: MainNavigationProps) {
 	useBeforeLeave(({ to }) => {
 		if (typeof to === "number") return;
 
-		if (to.includes("/reference/")) {
-			setSelectedTab("reference");
-		} else {
-			setSelectedTab("learn");
-		}
+		setSelectedTab(getNavigationTabForPath(to));
 	});
 
 	return (

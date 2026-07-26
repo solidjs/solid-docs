@@ -2,7 +2,7 @@
 title: solidStart
 use_cases: >-
   solidstart configuration, vite plugin, ssr mode, middleware, serialization,
-  environment variables, server functions
+  environment variables, server functions, app root, development toolbar
 tags:
   - config
   - vite
@@ -47,6 +47,13 @@ Nitro settings do not belong inside `solidStart()`. Configure them with the top-
 
 ## Options
 
+### `appRoot`
+
+- **Type:** `string`
+- **Default:** `"./src"`
+
+Path to the directory that contains `app.tsx` or `app.jsx`. Relative paths such as `routeDir` are resolved from this directory.
+
 ### `ssr`
 
 - **Type:** `boolean`
@@ -54,12 +61,26 @@ Nitro settings do not belong inside `solidStart()`. Configure them with the top-
 
 Set to `false` for client-side rendering. SolidStart swaps its server and client entrypoints to their SPA implementations while retaining file routing and server functions.
 
+### `devOverlay`
+
+- **Type:** `boolean`
+- **Default:** `true`
+
+Controls the development toolbar, which shows application errors and server function calls. Set it to `false` to hide the toolbar during development.
+
+### `experimental.islands`
+
+- **Type:** `false`
+- **Default:** `false`
+
+Reserved for islands architecture support. Islands are not currently supported, so this option only accepts `false`.
+
 ### `routeDir`
 
 - **Type:** `string`
 - **Default:** `"./routes"`
 
-Route directory relative to the application root (`./src`).
+Route directory relative to `appRoot`.
 
 ### `extensions`
 
@@ -80,10 +101,12 @@ solidStart({ middleware: "./src/middleware/index.ts" });
 
 ### `serialization`
 
-- **Type:** `{ mode?: "json" | "js" }`
+- **Type:** `{ mode?: "json" | "js"; plugins?: string }`
 - **Default:** `{ mode: "json" }`
 
 Controls server-function argument and result serialization. `json` avoids `eval` and works with a strict Content Security Policy. `js` produces a smaller payload but requires `unsafe-eval`.
+
+The `plugins` option points to a module containing custom Seroval plugins for values that Seroval does not support by default.
 
 See [Serialization](/solid-start/v2/advanced/serialization).
 

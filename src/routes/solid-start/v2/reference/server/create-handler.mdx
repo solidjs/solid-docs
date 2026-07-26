@@ -31,18 +31,19 @@ type HandlerOptions = {
 };
 
 function createHandler(
-	fn: (context: PageEvent) => unknown,
+	fn: (context: PageEvent) => JSX.Element,
 	options?:
 		| HandlerOptions
-		| ((context: PageEvent) => HandlerOptions | Promise<HandlerOptions>)
-): H3;
+		| ((context: PageEvent) => HandlerOptions | Promise<HandlerOptions>),
+	routerLoad?: (event: FetchEvent) => Promise<void>
+): StartHandler;
 ```
 
 ## Parameters
 
 ### `fn`
 
-- **Type:** `(context: PageEvent) => unknown`
+- **Type:** `(context: PageEvent) => JSX.Element`
 - **Required:** Yes
 
 Function that returns the server-rendered document.
@@ -54,7 +55,6 @@ Function that returns the server-rendered document.
 - **Required:** No
 
 Rendering options or a function that returns rendering options.
-The supported options are:
 
 The `options` object supports these fields:
 
@@ -66,11 +66,18 @@ The `options` object supports these fields:
 | `onCompleteAll`   | `(options: { write: (value: any) => void }) => void` | No       | None       | Callback used when all stream content is ready. |
 | `onCompleteShell` | `(options: { write: (value: any) => void }) => void` | No       | None       | Callback used when the shell stream is ready.   |
 
+### `routerLoad`
+
+- **Type:** `(event: FetchEvent) => Promise<void>`
+- **Required:** No
+
+Optional setup function for a custom router. SolidStart calls it before creating the page event and rendering the route. Router integrations such as TanStack Router can use it to load their server-side routing state.
+
 ## Return value
 
-- **Type:** `H3`
+- **Type:** `StartHandler`
 
-Returns the H3 application used by the server entry.
+Returns the H3 application used by the server entry. `StartHandler` extends H3's `H3` type while keeping generated declaration files portable.
 
 ## Behavior
 

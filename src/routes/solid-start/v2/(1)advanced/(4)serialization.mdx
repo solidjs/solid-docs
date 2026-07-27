@@ -1,7 +1,8 @@
 ---
 title: Serialization
 use_cases: >-
-  server function payloads, data transfer, csp, security, performance
+  server function payloads, data transfer, custom types, seroval plugins, csp,
+  security, performance
 tags:
   - serialization
   - server-functions
@@ -39,6 +40,57 @@ export default defineConfig({
 - `js`: a smaller binary format that needs `eval` on the client, which a strong CSP blocks.
 
 If your app enforces a Content Security Policy, keep `json`.
+
+## Custom types
+
+Use a custom Seroval plugin when a server function needs to accept or return a value that Seroval does not support, such as a database identifier, decimal type, or another custom class.
+
+Set `serialization.plugins` to a module whose default export is an array of plugins:
+
+```tsx title="vite.config.ts"
+import { defineConfig } from "vite";
+import { solidStart } from "@solidjs/start/config";
+
+export default defineConfig({
+	plugins: [
+		solidStart({
+			serialization: {
+				plugins: "src/seroval-plugins.ts",
+			},
+		}),
+	],
+});
+```
+
+Create plugins with the API exported by `@solidjs/start/serialization`. The entrypoint exports `createPlugin`, `OpaqueReference`, and the related plugin types. Importing from it keeps the plugin on the same Seroval version that SolidStart uses.
+
+```ts title="src/seroval-plugins.ts"
+import { createPlugin } from "@solidjs/start/serialization";
+import { Money } from "./lib/money";
+
+const moneyPlugin = createPlugin<Money, { cents: any }>({
+	tag: "app/Money",
+	test: (value) => value instanceof Money,
+	parse: {
+		sync: (value, ctx) => ({ cents: ctx.parse(value.cents) }),
+		async: async (value, ctx) => ({
+			cents: await ctx.parse(value.cents),
+		}),
+		stream: (value, ctx) => ({ cents: ctx.parse(value.cents) }),
+	},
+	serialize: (node, ctx) =>
+		`new globalThis.Money(${ctx.serialize(node.cents)})`,
+	deserialize: (node, ctx) => new Money(ctx.deserialize(node.cents) as number),
+});
+
+export default [moneyPlugin];
+```
+
+SolidStart bundles the plugin module into both the client and server builds, so it must not import server-only code. Built-in SolidStart plugins run before custom plugins.
+
+Custom plugins apply to server function and action payloads. They do not affect the hydration payload produced by `solid-js/web`.
+
+With the default `json` mode, `deserialize` rebuilds the value. If you use `js` mode, the code returned by `serialize` can only refer to globals available in the client. In the example above, `Money` must be assigned to `globalThis.Money` before deserialization.
 
 ## Server function payloads
 

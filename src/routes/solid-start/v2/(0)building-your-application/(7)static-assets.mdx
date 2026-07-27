@@ -1,0 +1,93 @@
+---
+title: Static assets
+use_cases: >-
+  images, fonts, documents, favicon, robots.txt, service workers, media files,
+  public resources
+tags:
+  - assets
+  - images
+  - public
+  - static
+  - media
+  - files
+version: "2.0"
+description: >-
+  Manage static assets in SolidStart using the public directory or imports.
+  Serve images, fonts, documents, and media files.
+---
+
+Within SolidStart there are two ways to import static assets into your project: using the public directory and using imports.
+
+## Public directory
+
+Rich web applications use assets to create visuals.
+In SolidStart, the `/public` directory can be used to store static assets.
+These assets are served at the exact path they are in, relative to the public directory:
+
+```
+|-- public
+|   favicon.ico                   ->  /favicon.ico
+|   |-- images
+|   |   |-- logo.png              ->  /images/logo.png
+|   |   |-- background.png        ->  /images/background.png
+|   |-- models
+|   |   |-- player.gltf           ->  /models/player.gltf
+|   |-- documents
+|   |   |-- report.pdf            ->  /documents/report.pdf
+```
+
+If you would like to reference an asset in the public directory, you can use the absolute path to the asset:
+
+```tsx { 5 }
+export default function About() {
+	return (
+		<>
+			<h1>About</h1>
+			<img src="/images/logo.png" alt="Solid logo" />
+		</>
+	);
+}
+```
+
+This is ideal when you want to have human-readable, stable references to static assets.
+This can be useful for assets such as:
+
+- documents
+- service workers
+- images, audio, and video
+- manifest files
+- metadata files (e.g., `robots.txt`, sitemaps)
+- favicon
+
+## Importing assets
+
+Vite provides a way to import assets directly into your Solid components:
+
+```tsx
+import logo from "./solid.png";
+
+export default function About() {
+	return (
+		<>
+			<h1>About</h1>
+			<img src={logo} alt="Solid logo" />
+			// Renders
+			<img src="/assets/solid.2d8efhg.png" alt="Solid logo" />
+		</>
+	);
+}
+```
+
+When you use imports, Vite will create a hashed filename.
+For example, `solid.png` will become `solid.2d8efhg.png`.
+
+## Public directory versus imports
+
+The public directory and imports are both valid ways to include static assets in your project.
+The driver to use one over the other is based on your use case.
+
+For dynamic updates to your assets, using the public directory is the best choice.
+It allows you to maintain full control over the asset URL paths, ensuring that the links remain consistent even when the assets are updated.
+
+When using imports, the filename is hashed and therefore will not be predictable over time.
+This can be beneficial for cache busting but detrimental if you want to send someone a link to the asset.

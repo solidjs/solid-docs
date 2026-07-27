@@ -16,7 +16,7 @@ description: >-
 ---
 
 The easiest way to start a new SolidStart project is with `create-solid`.
-It can scaffold a new app from the SolidStart template or from one of the official examples.
+SolidStart v2 requires Node.js 24 or newer.
 
 ## Create a project
 
@@ -42,14 +42,15 @@ dev
 
 ## Configuration
 
-Configuration lives in `vite.config.ts`, where the `solidStart()` plugin from `@solidjs/start/config` does the work.
+Configuration lives in `vite.config.ts`. SolidStart configures the application and Nitro v3 supplies the server and deployment integration.
 
 ```tsx title="vite.config.ts"
 import { defineConfig } from "vite";
+import { nitro } from "nitro/vite";
 import { solidStart } from "@solidjs/start/config";
 
 export default defineConfig({
-	plugins: [solidStart()],
+	plugins: [solidStart(), nitro()],
 });
 ```
 
@@ -57,11 +58,24 @@ If your app already has middleware, `solidStart()` also accepts a `middleware` o
 
 ```tsx title="vite.config.ts"
 import { defineConfig } from "vite";
+import { nitro } from "nitro/vite";
 import { solidStart } from "@solidjs/start/config";
 
 export default defineConfig({
-	plugins: [solidStart({ middleware: "./src/middleware/index.ts" })],
+	plugins: [solidStart({ middleware: "./src/middleware/index.ts" }), nitro()],
 });
+```
+
+Use the top-level `nitro` property for Nitro options such as deployment presets, prerendering, tasks, and WebSockets.
+
+## Development toolbar
+
+During development, SolidStart adds a toolbar for inspecting application errors and server function calls. The toolbar is not included in production builds.
+
+To hide it during development, set `devOverlay` to `false`:
+
+```tsx title="vite.config.ts"
+solidStart({ devOverlay: false });
 ```
 
 ## Start adding routes

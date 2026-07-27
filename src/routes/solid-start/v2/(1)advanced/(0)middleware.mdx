@@ -1,0 +1,155 @@
+---
+title: Middleware
+use_cases: >-
+  request interception, header management, global data sharing, request
+  preprocessing, logging, redirects
+tags:
+  - middleware
+  - headers
+  - interceptors
+  - logging
+  - preprocessing
+  - locals
+version: "2.0"
+description: >-
+  Compose H3 v2 middleware for authentication, logging, headers, and
+  request-scoped data in SolidStart.
+---
+
+Middleware runs around SolidStart's request handler. It is useful for logging, redirects, request preprocessing, response headers, and initializing request-scoped data.
+
+Do not rely on middleware alone for authorization. Client-side navigation can reuse data and server functions independently of a page request, so authorization must also be enforced close to each protected query, action, or API route.
+
+## Configure middleware
+
+Create a middleware module and pass its path to `solidStart()`.
+
+```ts title="src/middleware/index.ts"
+import { createMiddleware } from "@solidjs/start/middleware";
+
+export default createMiddleware([
+	async (event, next) => {
+		console.log("Request received:", event.req.url);
+		const startedAt = Date.now();
+
+		const response = await next();
+
+		console.log(`Request took ${Date.now() - startedAt}ms`);
+		return response;
+	},
+]);
+```
+
+```tsx title="vite.config.ts" {7}
+import { nitro } from "nitro/vite";
+import { defineConfig } from "vite";
+import { solidStart } from "@solidjs/start/config";
+
+export default defineConfig({
+	plugins: [solidStart({ middleware: "./src/middleware/index.ts" }), nitro()],
+});
+```
+
+Each entry is an [H3 middleware](https://h3.dev/guide/basics/middleware). Code before `await next()` runs before the downstream handler. Code after it runs as the response unwinds.
+
+## Request-scoped locals
+
+SolidStart decorates configured middleware with its request context. Use `getRequestEvent()` to read or update `event.locals` for later server code.
+
+```ts title="src/middleware/index.ts"
+import { createMiddleware } from "@solidjs/start/middleware";
+import { getRequestEvent } from "solid-js/web";
+
+export default createMiddleware([
+	async (_event, next) => {
+		const requestEvent = getRequestEvent();
+		if (requestEvent) {
+			requestEvent.locals.requestId = crypto.randomUUID();
+		}
+		return next();
+	},
+]);
+```
+
+Augment `App.RequestEventLocals` to type custom fields. See [Request events](/solid-start/v2/advanced/request-events#locals).
+
+## Headers and cookies
+
+H3 v2 uses Web standard `Request`, `Response`, and `Headers` objects. You can access them through the H3 event or use SolidStart's context-aware HTTP helpers.
+
+```ts title="src/middleware/index.ts"
+import { getCookie, setCookie } from "@solidjs/start/http";
+import { createMiddleware } from "@solidjs/start/middleware";
+
+export default createMiddleware([
+	async (event, next) => {
+		const theme = getCookie("theme") ?? "system";
+		setCookie("theme", theme, {
+			httpOnly: true,
+			secure: true,
+			sameSite: "lax",
+		});
+
+		const response = await next();
+		event.res.headers.set("x-theme", theme);
+		return response;
+	},
+]);
+```
+
+`@solidjs/start/http` and `@solidjs/start/middleware` are server-only entrypoints. Importing them from client-reachable code causes a clear development or build error.
+
+## Short-circuit the request
+
+Return a `Response` before calling `next()` to stop the chain.
+
+```ts
+import { createMiddleware } from "@solidjs/start/middleware";
+
+export default createMiddleware([
+	(event, next) => {
+		if (!event.req.headers.get("authorization")) {
+			return new Response("Unauthorized", { status: 401 });
+		}
+		return next();
+	},
+]);
+```
+
+Redirect responses from Solid Router work the same way:
+
+```ts
+import { redirect } from "@solidjs/router";
+import { createMiddleware } from "@solidjs/start/middleware";
+
+export default createMiddleware([
+	(event, next) => {
+		if (new URL(event.req.url).pathname === "/login") {
+			return redirect("/auth/login", 301);
+		}
+		return next();
+	},
+]);
+```
+
+## Middleware order
+
+Middleware uses an onion model. Before-`next()` logic runs in declaration order; after-`next()` logic runs in reverse order.
+
+The v1 object form with `onRequest` and `onBeforeResponse` remains available for migration but is deprecated. In `2.0.0-rc.1`, deprecated `onBeforeResponse` arrays run in their declared order. Remove any manual reversal added as a workaround for earlier prereleases.
+
+## Custom H3 handlers
+
+The experimental `decorateHandler` and `decorateMiddleware` exports from `@solidjs/start/server` provide Solid's request context to custom H3 code that runs outside the configured middleware chain.
+
+```ts
+import { decorateHandler } from "@solidjs/start/server";
+import { defineHandler } from "nitro";
+
+export default defineHandler(
+	decorateHandler(() => {
+		// getRequestEvent() is available here
+		return { ok: true };
+	})
+);
+```

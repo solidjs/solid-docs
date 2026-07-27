@@ -1,0 +1,57 @@
+---
+title: vite.config.ts
+use_cases: >-
+  app config, solidstart config, vite config, nitro config, deployment config
+tags:
+  - config
+  - vite
+  - nitro
+  - entrypoint
+version: "2.0"
+description: >-
+  Configure SolidStart v2, Vite, and Nitro from vite.config.ts.
+---
+
+`vite.config.ts` is the configuration entrypoint for a SolidStart v2 application. It replaces v1's `app.config.ts`.
+
+```tsx title="vite.config.ts"
+import { nitro } from "nitro/vite";
+import { defineConfig } from "vite";
+import { solidStart } from "@solidjs/start/config";
+
+export default defineConfig({
+	plugins: [solidStart(), nitro()],
+});
+```
+
+## Responsibilities
+
+- Pass application, routing, middleware, environment, and serialization settings to [`solidStart()`](/solid-start/v2/reference/config/solid-start).
+- Add ordinary Vite plugins and options at the Vite config level.
+- Pass server, deployment, prerendering, task, and WebSocket settings through the top-level `nitro` property.
+
+```tsx title="vite.config.ts"
+import { nitro } from "nitro/vite";
+import { defineConfig } from "vite";
+import { solidStart } from "@solidjs/start/config";
+
+export default defineConfig({
+	plugins: [
+		solidStart({
+			middleware: "./src/middleware/index.ts",
+			serialization: { mode: "json" },
+		}),
+		nitro(),
+	],
+	nitro: {
+		preset: "node_server",
+		prerender: {
+			routes: ["/"],
+		},
+	},
+});
+```
+
+SolidStart v2 requires Vite 8 or 9. The default scripts are `vite dev` and `vite build`; `vite preview` locally serves a completed production build.
+
+For the available server options and deployment presets, see the [Nitro configuration reference](https://nitro.build/config).

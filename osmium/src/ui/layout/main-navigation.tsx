@@ -1,5 +1,5 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
-import { useBeforeLeave, useLocation, useMatch } from "@solidjs/router";
+import { useBeforeLeave, useLocation } from "@solidjs/router";
 import { Icon } from "solid-heroicons";
 import { chevronDown } from "solid-heroicons/solid";
 import { setIsOpen } from "./mobile-navigation";
@@ -89,8 +89,8 @@ function DirList(props: { items: SidebarItem[] }) {
 }
 
 export function MainNavigation(_props: MainNavigationProps) {
-	const isReference = useMatch(() => "*/reference/*?");
-
+	const location = useLocation();
+	const isReference = () => location.pathname.includes("/reference/");
 	const initialTab = () => (isReference() ? "reference" : "learn");
 
 	const [selectedTab, setSelectedTab] = createSignal(initialTab());

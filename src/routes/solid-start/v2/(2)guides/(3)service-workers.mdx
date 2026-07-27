@@ -1,0 +1,34 @@
+---
+title: Service workers
+use_cases: >-
+  offline support, pwa, caching, background sync, push notifications,
+  performance optimization
+tags:
+  - service-workers
+  - pwa
+  - offline
+  - caching
+  - performance
+version: "2.0"
+description: >-
+  Register and configure service workers in SolidStart for offline support,
+  caching strategies, and progressive web app features.
+---
+
+To register a service worker:
+
+1. Place your service-worker file in the `public` directory (e.g., `public/sw.js`), making it available at the root URL (`/sw.js`).
+2. Add registration logic to the `entry-client.tsx` file.
+
+```tsx {6-11} title="src/entry-client.tsx"
+// @refresh reload
+import { mount, StartClient } from "@solidjs/start/client";
+
+mount(() => <StartClient />, document.getElementById("app")!);
+
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
+	window.addEventListener("load", () => {
+		navigator.serviceWorker.register("/sw.js");
+	});
+}
+```

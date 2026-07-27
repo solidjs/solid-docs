@@ -118,7 +118,7 @@ export function MainNavigation(_props: MainNavigationProps) {
 	});
 
 	return (
-		<nav class="custom-scrollbar h-full overflow-y-auto pb-20 md:h-[calc(100vh-7rem)]">
+		<nav class="custom-scrollbar h-full scrollbar-gutter-stable overflow-y-auto pr-4 pb-20 md:h-[calc(100vh-7rem)]">
 			<VersionSelector />
 			<Tabs value={selectedTab()}>
 				<Tabs.List class="sticky top-0 z-10 grid w-full grid-cols-2 md:bg-slate-50 md:dark:bg-slate-900">
@@ -140,7 +140,7 @@ export function MainNavigation(_props: MainNavigationProps) {
 					>
 						Reference
 					</Tabs.Trigger>
-					<Tabs.Indicator class="absolute bottom-0 h-0.5 bg-blue-500 transition-all duration-250 dark:bg-blue-500" />
+					<Tabs.Indicator class="absolute bottom-0 h-0.5 bg-blue-500 transition-all duration-250" />
 				</Tabs.List>
 				<Tabs.Content value="learn" class="relative mt-5 w-full">
 					<Show

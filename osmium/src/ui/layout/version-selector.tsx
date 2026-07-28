@@ -38,28 +38,26 @@ export default function VersionSelector() {
 					sameWidth
 					placement="bottom-start"
 				>
-					<div class="mx-1">
-						<Popover.Trigger
-							class="flex h-10 w-full items-center justify-between rounded-lg text-left shadow-md ring-1 shadow-black/5 ring-black/90 ring-inset dark:ring-white/10"
-							aria-label="Change version"
-							disabled={options().length <= 1}
-						>
-							<span class="prose prose-slate flex items-center truncate pl-2 text-lg text-slate-700 dark:text-slate-300">
-								<Icon
-									class="mr-2 w-5 fill-slate-700 pl-1 dark:fill-slate-200"
-									path={tag}
-								/>
-								{getOptionLabel(current())}
-							</span>
+					<Popover.Trigger
+						class="flex h-10 w-full items-center justify-between rounded-lg text-left shadow-md ring-1 shadow-black/5 ring-black/90 ring-inset dark:ring-white/10"
+						aria-label="Change version"
+						disabled={options().length <= 1}
+					>
+						<span class="prose prose-slate flex items-center truncate pl-2 text-lg text-slate-700 dark:text-slate-300">
+							<Icon
+								class="mr-2 w-5 fill-slate-700 pl-1 dark:fill-slate-200"
+								path={tag}
+							/>
+							{getOptionLabel(current())}
+						</span>
 
-							<Show when={options().length > 1}>
-								<Icon
-									class="mr-2 w-6 fill-slate-700 pl-1 dark:fill-slate-200"
-									path={chevronUpDown}
-								/>
-							</Show>
-						</Popover.Trigger>
-					</div>
+						<Show when={options().length > 1}>
+							<Icon
+								class="mr-2 w-6 fill-slate-700 pl-1 dark:fill-slate-200"
+								path={chevronUpDown}
+							/>
+						</Show>
+					</Popover.Trigger>
 					<Popover.Portal>
 						<Popover.Content class="z-50 space-y-1 rounded-xl bg-white p-2 text-sm shadow-md ring-1 shadow-black/5 ring-black/5 dark:bg-slate-800 dark:ring-white/5">
 							<For each={options()}>

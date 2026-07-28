@@ -133,6 +133,38 @@ solidStart({
 });
 ```
 
+### `serverFunctions.onError`
+
+- **Type:** `string`
+
+Path to a module whose default export handles values thrown by server functions before SolidStart serializes them into a response.
+
+The handler can report the original value and return a safer replacement for the client. Return `undefined` to preserve the original value. The module is bundled only into the server, so it can import server-only code.
+
+```tsx title="vite.config.ts"
+solidStart({
+	serverFunctions: {
+		onError: "src/server-function-error.ts",
+	},
+});
+```
+
+```ts title="src/server-function-error.ts"
+import type { ServerFunctionErrorHandler } from "@solidjs/start/server";
+
+const onServerFunctionError: ServerFunctionErrorHandler = (thrown) => {
+	console.error(thrown);
+
+	if (thrown instanceof Error) {
+		return new Error("The server function failed.");
+	}
+
+	return undefined;
+};
+
+export default onServerFunctionError;
+```
+
 ### `env`
 
 Configures SolidStart's environment-variable virtual modules.

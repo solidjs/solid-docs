@@ -137,9 +137,13 @@ solidStart({
 
 - **Type:** `string`
 
-Path to a module whose default export handles values thrown by server functions before SolidStart serializes them into a response.
+Path to a module whose default export handles values thrown by server functions before SolidStart serializes them into a response. Only calls arriving over the network reach it. The module is bundled only into the server, so it can import server-only code.
 
-The handler can report the original value and return a safer replacement for the client. Return `undefined` to preserve the original value. The module is bundled only into the server, so it can import server-only code.
+The export runs synchronously, and its return value is not awaited.
+
+- Return `undefined` or `null` to preserve the original value.
+- Return a `Response` unchanged to pass it through, which keeps a thrown `redirect` working. See [Return Responses](/solid-start/v2/advanced/return-responses).
+- Return any other value to send it in place of the original, serialized to the client along with its own properties.
 
 ```tsx title="vite.config.ts"
 solidStart({
@@ -149,17 +153,21 @@ solidStart({
 });
 ```
 
+The module it names, `src/server-function-error.ts`:
+
 ```ts title="src/server-function-error.ts"
 import type { ServerFunctionErrorHandler } from "@solidjs/start/server";
+import { captureException } from "./your-monitoring-client";
 
 const onServerFunctionError: ServerFunctionErrorHandler = (thrown) => {
-	console.error(thrown);
-
-	if (thrown instanceof Error) {
-		return new Error("The server function failed.");
+	// redirect() throws a Response, so returning it preserves that control flow.
+	if (thrown instanceof Response) {
+		return thrown;
 	}
 
-	return undefined;
+	captureException(thrown); // or console.error, or any reporter
+
+	return new Error("The server function failed.");
 };
 
 export default onServerFunctionError;

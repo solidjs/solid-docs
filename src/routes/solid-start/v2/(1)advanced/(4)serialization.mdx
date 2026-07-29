@@ -41,6 +41,38 @@ export default defineConfig({
 
 If your app enforces a Content Security Policy, keep `json`.
 
+## Temporal values
+
+SolidStart preserves JavaScript [`Temporal`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal) values in server function and action payloads. The value is reconstructed as the same Temporal type on the receiving side.
+
+SolidStart does not install a Temporal implementation. Native server-runtime availability is:
+
+| Runtime | Unflagged global `Temporal` support                              |
+| ------- | ---------------------------------------------------------------- |
+| Node.js | [26 and later](https://nodejs.org/en/blog/release/v26.0.0/)      |
+| Deno    | [2.7 and later](https://deno.com/blog/v2.7)                      |
+| Bun     | [No stable release](https://github.com/oven-sh/bun/issues/15853) |
+
+Server-runtime support does not guarantee browser support. Both the client and server must provide a compatible global `Temporal` before a payload is serialized or deserialized. Check `typeof globalThis.Temporal !== "undefined"` in each target environment.
+
+If any runtime targeted by your app does not provide `Temporal` natively, install a global polyfill:
+
+```sh
+pnpm add temporal-polyfill
+```
+
+```ts title="src/temporal.ts"
+import "temporal-polyfill/global";
+```
+
+Import the shared module before application initialization in both entrypoints:
+
+```tsx title="src/entry-client.tsx and src/entry-server.tsx"
+import "./temporal";
+```
+
+Use the polyfill's global entrypoint. A local import such as `import { Temporal } from "temporal-polyfill"` does not define the global that serialization requires. Without a compatible global on either side, sending a Temporal value causes serialization or deserialization to fail.
+
 ## Custom types
 
 Use a custom Seroval plugin when a server function needs to accept or return a value that Seroval does not support, such as a database identifier, decimal type, or another custom class.

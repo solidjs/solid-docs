@@ -141,13 +141,11 @@ solidStart({
 
 Path to a module whose default export handles values thrown by server functions before SolidStart serializes them into a response. Only calls arriving over the network reach it. The module is bundled only into the server, so it can import server-only code.
 
-The handler can report the original value and provide a safer replacement for the client. It may be asynchronous, and SolidStart awaits it before serializing the response, allowing a monitoring service to flush first.
+The handler can report the original value and provide a safer replacement for the client. It may be `async`: SolidStart awaits it before serializing the response, so a monitoring service can flush first. If the handler itself throws or rejects, it is ignored and the original value is sent.
 
-The value it returns, or resolves to, decides what the client sees:
-
-- `undefined` or `null` preserves the original value.
-- A `Response` is passed through unchanged, which keeps a thrown `redirect` working. See [Return Responses](/solid-start/v2/advanced/return-responses).
-- Any other value is sent in place of the original, serialized to the client along with its own properties.
+- Return `undefined` or `null` to preserve the original value.
+- Return a `Response` unchanged to pass it through, which keeps a thrown `redirect` working. See [Return Responses](/solid-start/v2/advanced/return-responses).
+- Return any other value to send it in place of the original, serialized to the client along with its own properties.
 
 ```tsx title="vite.config.ts"
 solidStart({

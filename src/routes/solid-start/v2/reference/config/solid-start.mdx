@@ -108,6 +108,8 @@ Controls server-function argument and result serialization. `json` avoids `eval`
 
 The `plugins` option points to a module containing custom Seroval plugins for values that Seroval does not support by default.
 
+Built-in serialization of `Temporal` values requires a compatible global `Temporal` implementation on both the client and server. SolidStart does not install a polyfill.
+
 See [Serialization](/solid-start/v2/advanced/serialization).
 
 ### `solid`
@@ -139,11 +141,13 @@ solidStart({
 
 Path to a module whose default export handles values thrown by server functions before SolidStart serializes them into a response. Only calls arriving over the network reach it. The module is bundled only into the server, so it can import server-only code.
 
-The export runs synchronously, and its return value is not awaited.
+The handler can report the original value and provide a safer replacement for the client. It may be asynchronous, and SolidStart awaits it before serializing the response, allowing a monitoring service to flush first.
 
-- Return `undefined` or `null` to preserve the original value.
-- Return a `Response` unchanged to pass it through, which keeps a thrown `redirect` working. See [Return Responses](/solid-start/v2/advanced/return-responses).
-- Return any other value to send it in place of the original, serialized to the client along with its own properties.
+The value it returns, or resolves to, decides what the client sees:
+
+- `undefined` or `null` preserves the original value.
+- A `Response` is passed through unchanged, which keeps a thrown `redirect` working. See [Return Responses](/solid-start/v2/advanced/return-responses).
+- Any other value is sent in place of the original, serialized to the client along with its own properties.
 
 ```tsx title="vite.config.ts"
 solidStart({

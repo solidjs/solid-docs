@@ -96,7 +96,7 @@ export function MainHeader(_props: MainHeaderProps) {
 									return (
 										<li>
 											<NavLink
-												href={`/${conf.path}`}
+												href={`/${conf.path}${p === "start" ? "/v2" : ""}`}
 												onClick={() => setNavOpen(false)}
 												active={project()?.current === p}
 											>

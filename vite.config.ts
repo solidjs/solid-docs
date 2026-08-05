@@ -61,6 +61,7 @@ export default defineConfig({
 					default: "latest",
 					values: {
 						latest: { path: "", label: "Latest" },
+						v1: { path: "v1", label: "v1" },
 						v2: { path: "v2", label: "v2" },
 					},
 				},
@@ -74,8 +75,12 @@ export default defineConfig({
 						version: ["latest", "v2"],
 					},
 					{
-						project: ["router", "meta"],
+						project: "router",
 						version: "latest",
+					},
+					{
+						project: "meta",
+						version: ["latest", "v1"],
 					},
 				],
 			},
@@ -122,7 +127,24 @@ export default defineConfig({
 					title: "Solid Meta",
 					themeConfig: {
 						sidebar: {
-							"/solid-meta": createFilesystemSidebar("./src/routes/solid-meta"),
+							"/solid-meta": createFilesystemSidebar(
+								"./src/routes/solid-meta",
+								{
+									filter: (item) => !item.filePath.includes("/solid-meta/v1"),
+								}
+							),
+						},
+					},
+				},
+				{
+					project: "meta",
+					version: "v1",
+					title: "Solid Meta",
+					themeConfig: {
+						sidebar: {
+							"/solid-meta/v1": createFilesystemSidebar(
+								"./src/routes/solid-meta/v1"
+							),
 						},
 					},
 				},

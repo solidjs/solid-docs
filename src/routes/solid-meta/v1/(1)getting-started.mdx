@@ -1,0 +1,84 @@
+---
+title: Getting started
+use_cases: >-
+  installation, setup, first head tags, page titles, meta tags, ssr setup
+tags:
+  - setup
+  - installation
+  - quickstart
+  - head
+  - meta
+version: "1.0"
+description: >-
+  Install Solid Meta 1.0 and manage document head tags from anywhere in your
+  Solid 2.0 application.
+---
+
+## Installation
+
+```package-install
+@solidjs/meta
+```
+
+Solid Meta 1.x requires `solid-js` and `@solidjs/web` 2.0 (`2.0.0-beta.31` or later).
+
+## Usage
+
+There is no provider and no other setup.
+Render head components anywhere in your component tree:
+
+```tsx
+import { Title, Link, Meta } from "@solidjs/meta";
+
+function Home() {
+	return (
+		<div class="Home">
+			<Title>Title of page</Title>
+			<Link rel="canonical" href="https://solidjs.com/" />
+			<Meta name="description" content="A description of this page" />
+		</div>
+	);
+}
+```
+
+Head tags follow a few consistent rules:
+
+- **Later wins.**
+  Tags deduplicate by identity (each [component's reference page](/solid-meta/v1/reference/meta/title) documents its identity rule); the last-registered tag for an identity is the one in the document.
+- **Disposal restores.**
+  When the winning tag's component unmounts, the previous registration for that identity is restored — navigating away from a page undoes its head changes automatically.
+- **Reactive.**
+  Attribute values and text children can be reactive expressions; updates apply in place without losing the tag's position in the override order.
+
+Every component accepts a `key` prop that overrides the default identity — use it to make otherwise-distinct tags override each other, or to fork an identity that would otherwise collide:
+
+```tsx
+{/* These override each other despite different attributes: */}
+<Meta key="social-image" name="twitter:image" content="/twitter.png" />
+<Meta key="social-image" property="og:image" content="/og.png" />
+```
+
+To manage a _set_ of tags as one unit — several `og:image`s, a block of social tags that should override together — wrap them in [`<Head>`](/solid-meta/v1/reference/meta/head).
+
+## Server rendering
+
+Server rendering requires no wiring.
+Render your document with Solid and the head manages itself:
+
+```tsx
+import { renderToStream } from "@solidjs/web";
+import App from "./App";
+
+// ... within the context of a request ...
+renderToStream(() => <App />).pipe(res);
+```
+
+Winning tags are spliced into `<head>` on the first flush (`<base>` and `<meta charset>` go right after `<head>` opens; resource links go early).
+Tags registered under a suspense boundary that completes later stream to the client as patches that apply when the boundary reveals.
+If you assemble the document yourself, use the `onHead` render option to receive the head markup instead.
+
+On the client, hydration adopts server-rendered head tags in place — there is no removal/re-insertion flicker.
+
+:::note[Static shell tags]
+A static `<title>` in your server shell acts as the fallback when no `<Title>` is mounted. Don't hardcode other tags that Solid Meta should manage — the registry leaves foreign head tags alone, so a hardcoded `<meta name="description">` would coexist with a rendered one.
+:::

@@ -1,0 +1,96 @@
+---
+title: Head
+order: 8
+use_cases: >-
+  grouped meta tags, multiple og images, social tag blocks, atomic head
+  replacement
+tags:
+  - head
+  - group
+  - og-tags
+  - component
+version: "1.0"
+description: >-
+  Head groups its child head tags into one replacement set through Solid Meta.
+---
+
+`Head` groups its child head tags into one replacement set.
+Some head state is a _set_, not a single tag — multiple `og:image`s, or a block of social tags that should override together.
+
+:::note[New in 1.0]
+`Head` did not exist in `@solidjs/meta` 0.x.
+:::
+
+## Import
+
+```tsx
+import { Head } from "@solidjs/meta";
+```
+
+## Type
+
+```tsx
+const Head: ParentComponent;
+```
+
+## Props
+
+### `children`
+
+- **Type:** `JSX.Element`
+- **Optional:** Yes
+
+Head tag components (and any components that render them).
+
+## Behavior
+
+- **Within the group, same-identity tags coexist.**
+  Two `<Meta property="og:image">` tags inside one `<Head>` both render.
+- **Groups replace wholesale.**
+  A later group replaces an earlier group's set for an identity as a unit, and unmounting restores the earlier set.
+- **Membership is reactive.**
+  Tags rendered conditionally (or by child components) inside a `<Head>` join and leave the set as they mount and unmount.
+  Group scope propagates via context through component calls.
+- **Nesting starts a new group.**
+  A `<Head>` inside another `<Head>`'s children forms its own independent group; to contribute tags _into_ the surrounding group, render bare tag components instead.
+
+## Examples
+
+### Overriding a default set
+
+```tsx
+// Layout
+<Head>
+	<Meta property="og:image" content="/default-1.png" />
+	<Meta property="og:image" content="/default-2.png" />
+</Head>
+
+// Page — replaces BOTH defaults while mounted, restores them on leave
+<Head>
+	<Meta property="og:image" content={product().image} />
+</Head>
+```
+
+### Social tag block
+
+```tsx
+import { Head, Meta, Title } from "@solidjs/meta";
+
+export default function Article(props: {
+	article: () => { title: string; image: string };
+}) {
+	return (
+		<Head>
+			<Title>{props.article().title}</Title>
+			<Meta property="og:title" content={props.article().title} />
+			<Meta property="og:image" content={props.article().image} />
+			<Meta name="twitter:card" content="summary_large_image" />
+		</Head>
+	);
+}
+```
+
+## Related
+
+- [`Meta`](/solid-meta/v1/reference/meta/meta)
+- [`Title`](/solid-meta/v1/reference/meta/title)

@@ -86,6 +86,14 @@ export default defineConfig({
 			},
 			overrides: [
 				{
+					project: "start",
+					route: {
+						version: {
+							v1: { label: "v1 (legacy)" },
+						},
+					},
+				},
+				{
 					project: "router",
 					title: "Solid Router",
 					themeConfig: {

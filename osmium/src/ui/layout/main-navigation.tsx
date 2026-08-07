@@ -55,7 +55,7 @@ function DirList(props: { items: SidebarItem[] }) {
 							<li>
 								<Collapsible defaultOpen={true}>
 									<Collapsible.Trigger class="group relative flex w-full justify-between pl-3.5 hover:cursor-pointer dark:text-slate-300">
-										<span class="font-semibold dark:text-slate-100 text-left">
+										<span class="text-left font-semibold dark:text-slate-100">
 											{child.title}
 										</span>
 										<Icon

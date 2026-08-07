@@ -61,8 +61,8 @@ export default defineConfig({
 					default: "latest",
 					values: {
 						latest: { path: "", label: "Latest" },
-						v1: { path: "v1", label: "v1" },
 						v2: { path: "v2", label: "v2" },
+						v1: { path: "v1", label: "v1" },
 					},
 				},
 				include: [
@@ -72,7 +72,7 @@ export default defineConfig({
 					},
 					{
 						project: "start",
-						version: ["v1", "v2"],
+						version: ["v2", "v1"],
 					},
 					{
 						project: "router",

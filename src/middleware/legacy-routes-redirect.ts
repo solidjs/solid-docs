@@ -198,9 +198,15 @@ export const handleLegacyRoutes = (event: FetchEvent) => {
 		return redirect(LEGACY_ROUTES[pathname], 301);
 	}
 
+	if (pathname === SOLID_START_PATH || pathname === `${SOLID_START_PATH}/`) {
+		return redirect(
+			`${SOLID_START_PATH}/v2${pathname.endsWith("/") ? "/" : ""}`,
+			301
+		);
+	}
+
 	if (
-		(pathname === SOLID_START_PATH ||
-			pathname.startsWith(`${SOLID_START_PATH}/`)) &&
+		pathname.startsWith(`${SOLID_START_PATH}/`) &&
 		!SOLID_START_VERSIONED_ROUTE.test(pathname)
 	) {
 		return redirect(

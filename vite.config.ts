@@ -61,8 +61,8 @@ export default defineConfig({
 					default: "latest",
 					values: {
 						latest: { path: "", label: "Latest" },
-						v1: { path: "v1", label: "v1" },
 						v2: { path: "v2", label: "v2" },
+						v1: { path: "v1", label: "v1" },
 					},
 				},
 				include: [
@@ -72,7 +72,7 @@ export default defineConfig({
 					},
 					{
 						project: "start",
-						version: ["latest", "v2"],
+						version: ["v2", "v1"],
 					},
 					{
 						project: "router",
@@ -86,6 +86,14 @@ export default defineConfig({
 			},
 			overrides: [
 				{
+					project: "start",
+					route: {
+						version: {
+							v1: { label: "v1 (legacy)" },
+						},
+					},
+				},
+				{
 					project: "router",
 					title: "Solid Router",
 					themeConfig: {
@@ -98,14 +106,12 @@ export default defineConfig({
 				},
 				{
 					project: "start",
+					version: "v1",
 					title: "SolidStart",
 					themeConfig: {
 						sidebar: {
-							"/solid-start": createFilesystemSidebar(
-								"./src/routes/solid-start",
-								{
-									filter: (item) => !item.filePath.includes("/solid-start/v2"),
-								}
+							"/solid-start/v1": createFilesystemSidebar(
+								"./src/routes/solid-start/v1"
 							),
 						},
 					},
@@ -257,7 +263,9 @@ export default defineConfig({
 				],
 			},
 		}),
-		solidStart(solidBase.startConfig()),
+		solidStart(
+			solidBase.startConfig({ middleware: "./src/middleware/index.ts" })
+		),
 		nitro({
 			preset: "netlify",
 			prerender: {
@@ -265,7 +273,7 @@ export default defineConfig({
 				autoSubfolderIndex: false,
 				// failOnError: true,
 				// eslint-disable-next-line no-useless-escape
-				ignore: [/\{\getPath}/, /.*?emojiSvg\(.*/],
+				ignore: [/^\/solid-start$/, /\{\getPath}/, /.*?emojiSvg\(.*/],
 			},
 		}),
 	],

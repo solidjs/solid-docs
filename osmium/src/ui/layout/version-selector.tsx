@@ -1,23 +1,18 @@
 import { Popover } from "@kobalte/core/popover";
 import { createMemo, createSignal, For, Show } from "solid-js";
-import { useRouteConfig } from "../../utils";
-import { useSolidBaseRoute } from "@kobalte/solidbase/client";
 import {
-	getSolidBaseRouteFallbackOptions,
-	SolidBaseRouteOption,
-} from "@kobalte/solidbase/config/route";
+	useSolidBaseRoute,
+	useSolidBaseRouteFallbackOptions,
+} from "@kobalte/solidbase/client";
+import type { SolidBaseRouteOption } from "@kobalte/solidbase/config/route";
 import { Icon } from "solid-heroicons";
 import { chevronUpDown, tag } from "solid-heroicons/solid";
 
 export default function VersionSelector() {
 	const [open, setOpen] = createSignal(false);
 
-	const config = useRouteConfig();
-
 	const current = useSolidBaseRoute();
-	const options = createMemo(() =>
-		getSolidBaseRouteFallbackOptions(config().routes, "version", current())
-	);
+	const options = useSolidBaseRouteFallbackOptions("version");
 	const currentOption = createMemo(() =>
 		options().find((option) => option.name === current().version)
 	);

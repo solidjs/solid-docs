@@ -181,8 +181,11 @@ const LEGACY_ROUTES = {
 	"/solid-router/reference/response-helpers/revalidate":
 		"/solid-router/reference/data-apis/revalidate",
 
-	"/solid-start/guides/data-loading": "/solid-start/guides/data-fetching",
+	"/solid-start/guides/data-loading": "/solid-start/v1/guides/data-fetching",
 } as const;
+
+const SOLID_START_PATH = "/solid-start";
+const SOLID_START_VERSIONED_ROUTE = /^\/solid-start\/v\d+(?:\/|$)/;
 
 function isLegacyRoute(path: string): path is keyof typeof LEGACY_ROUTES {
 	return path in LEGACY_ROUTES;
@@ -193,5 +196,22 @@ export const handleLegacyRoutes = (event: FetchEvent) => {
 
 	if (isLegacyRoute(pathname)) {
 		return redirect(LEGACY_ROUTES[pathname], 301);
+	}
+
+	if (pathname === SOLID_START_PATH || pathname === `${SOLID_START_PATH}/`) {
+		return redirect(
+			`${SOLID_START_PATH}/v2${pathname.endsWith("/") ? "/" : ""}`,
+			301
+		);
+	}
+
+	if (
+		pathname.startsWith(`${SOLID_START_PATH}/`) &&
+		!SOLID_START_VERSIONED_ROUTE.test(pathname)
+	) {
+		return redirect(
+			`${SOLID_START_PATH}/v1${pathname.slice(SOLID_START_PATH.length)}`,
+			301
+		);
 	}
 };

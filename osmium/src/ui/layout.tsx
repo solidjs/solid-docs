@@ -12,6 +12,13 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 
 	return (
 		<div class="relative bg-slate-50 dark:bg-slate-900">
+			<a
+				href="#main-content"
+				onClick={() => document.getElementById("main-content")?.focus()}
+				class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:rounded focus:bg-white focus:px-3 focus:py-2 focus:text-slate-900 focus:shadow-lg dark:focus:bg-slate-800 dark:focus:text-white"
+			>
+				Skip to main content
+			</a>
 			<MainHeader />
 			<Show when={frontmatter()?.hero}>
 				<Hero />
@@ -28,6 +35,8 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 					</div>
 				</Show>
 				<main
+					id="main-content"
+					tabIndex={-1}
 					class="prose prose-slate dark:prose-invert w-full flex-auto px-4 pt-2 md:max-w-2xl md:pb-16 lg:max-w-none dark:text-slate-300"
 					aria-live="polite"
 				>

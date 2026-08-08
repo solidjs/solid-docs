@@ -35,6 +35,20 @@ type OramaDocument = {
 	title: string;
 };
 
+function searchHitRank(document: OramaDocument, searchTerm: string) {
+	const title = document.title.toLocaleLowerCase();
+	const pathSegment = document.path
+		.split("#", 1)[0]
+		.split("/")
+		.filter(Boolean)
+		.at(-1)
+		?.toLocaleLowerCase();
+
+	if (title === searchTerm || pathSegment === searchTerm) return 0;
+	if (title.startsWith(searchTerm)) return 1;
+	return 2;
+}
+
 const client = getOramaClient({
 	projectId: import.meta.env.VITE_ORAMA_PROJECT_ID ?? null,
 	apiKey: import.meta.env.VITE_ORAMA_PUBLIC_API_KEY ?? null,
@@ -55,6 +69,7 @@ export function Search() {
 		async () => {
 			const _searchTerm = searchTerm();
 			if (!_searchTerm) return {};
+			const normalizedSearchTerm = _searchTerm.trim().toLocaleLowerCase();
 			const result = (await client.search({
 				term: _searchTerm,
 				mode: "fulltext",
@@ -70,6 +85,11 @@ export function Search() {
 					return hit;
 				}
 			});
+			result.hits.sort(
+				(a, b) =>
+					searchHitRank(a.document, normalizedSearchTerm) -
+					searchHitRank(b.document, normalizedSearchTerm)
+			);
 
 			const groupedHits = result.hits.reduce(
 				(groupedHits, hit) => {
@@ -141,6 +161,7 @@ export function Search() {
 			}}
 		>
 			<Dialog.Trigger
+				aria-label="Search"
 				aria-keyshortcuts={isAppleDevice ? "Meta+K" : "Control+K"}
 				class="flex items-center rounded-lg border-black/10 md:border md:px-2 md:py-1.5 dark:border-white/60 dark:bg-slate-800"
 			>
@@ -162,12 +183,18 @@ export function Search() {
 			<Dialog.Portal>
 				<Dialog.Overlay class="fixed inset-0 z-50 bg-black/50" />
 				<Dialog.Content class="fixed inset-0 z-50 flex w-full flex-col overflow-hidden border border-black/5 bg-white pt-4 lg:top-14 lg:bottom-auto lg:left-1/2 lg:max-h-[calc(100%-56px-56px)] lg:max-w-173.5 lg:-translate-x-1/2 lg:rounded-2xl dark:border-white/60 dark:bg-slate-800">
+					<Dialog.Title class="sr-only">Search documentation</Dialog.Title>
 					<div class="mr-4 flex items-center lg:mx-4">
-						<Dialog.CloseButton tabIndex={-1} class="px-4 py-3 lg:hidden">
+						<Dialog.CloseButton
+							aria-label="Close search"
+							tabIndex={-1}
+							class="px-4 py-3 lg:hidden"
+						>
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
 								fill="currentColor"
 								viewBox="0 0 256 256"
+								aria-hidden="true"
 								class="size-5"
 							>
 								<path d="M168.49,199.51a12,12,0,0,1-17,17l-80-80a12,12,0,0,1,0-17l80-80a12,12,0,0,1,17,17L97,128Z" />
@@ -184,6 +211,7 @@ export function Search() {
 							</svg>
 
 							<input
+								name="query"
 								placeholder="Search docs"
 								aria-label="Search docs"
 								role="searchbox"
@@ -199,7 +227,9 @@ export function Search() {
 								onBlur={() => setActive(null)}
 								onKeyDown={(e) => {
 									if (e.key === "Enter") {
-										navigate(resultArray()[active()!].document.path);
+										const selectedResult = resultArray()[active() ?? -1];
+										if (!selectedResult) return;
+										navigate(selectedResult.document.path);
 										setOpen(false);
 										setSearchTerm("");
 										return;
@@ -209,6 +239,7 @@ export function Search() {
 							/>
 							<Show when={searchTerm()}>
 								<button
+									aria-label="Clear search"
 									class="absolute inset-y-0 right-0 p-2"
 									onClick={() => setSearchTerm("")}
 								>
@@ -216,6 +247,7 @@ export function Search() {
 										xmlns="http://www.w3.org/2000/svg"
 										fill="currentColor"
 										viewBox="0 0 256 256"
+										aria-hidden="true"
 										class="size-4"
 									>
 										<path d="M208.49,191.51a12,12,0,0,1-17,17L128,145,64.49,208.49a12,12,0,0,1-17-17L111,128,47.51,64.49a12,12,0,0,1,17-17L128,111l63.51-63.52a12,12,0,0,1,17,17L145,128Z" />
@@ -277,8 +309,7 @@ export function Search() {
 															}
 															class="scroll-my-1.5"
 														>
-															<Dialog.CloseButton
-																as={A}
+															<A
 																href={hit.document.path}
 																classList={{
 																	"pl-4 rounded-md block p-2 text-sm": true,
@@ -286,6 +317,10 @@ export function Search() {
 																		itemIndex === active(),
 																}}
 																onMouseMove={() => setActive(itemIndex)}
+																onClick={() => {
+																	setOpen(false);
+																	setSearchTerm("");
+																}}
 															>
 																<span class="block">
 																	{highlightTitle(hit.document.title, regex())}
@@ -296,7 +331,7 @@ export function Search() {
 																		regex()
 																	)}
 																</span>
-															</Dialog.CloseButton>
+															</A>
 														</li>
 													);
 												}}

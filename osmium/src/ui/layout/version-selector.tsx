@@ -35,7 +35,7 @@ export default function VersionSelector() {
 				>
 					<Popover.Trigger
 						class="flex h-10 w-full items-center justify-between rounded-lg text-left shadow-md ring-1 shadow-black/5 ring-black/90 ring-inset dark:ring-white/10"
-						aria-label="Change version"
+						aria-label={`Change version, current version ${getOptionLabel(current())}`}
 						disabled={options().length <= 1}
 					>
 						<span class="prose prose-slate flex items-center truncate pl-2 text-lg text-slate-700 dark:text-slate-300">

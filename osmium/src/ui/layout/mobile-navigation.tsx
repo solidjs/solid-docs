@@ -21,12 +21,22 @@ export const MobileNavigation = (_props: MobileNavigationProps) => {
 				<div class="fixed inset-0 z-50 flex justify-start">
 					<Dialog.Overlay class="data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:fade-in fixed inset-0 z-50 bg-white/10 backdrop-blur-sm transition-all duration-100" />
 					<Dialog.Content class="z-50 flex h-full w-5/6 max-w-md scale-100 flex-col overflow-y-auto border border-none bg-slate-50 px-3 opacity-100 shadow-lg dark:bg-slate-900">
-						<Dialog.CloseButton class="sticky top-0 z-20 mb-3 self-end pt-4">
-							<Icon path={xMark} class="prose dark:prose-invert w-6" />
+						<Dialog.Title class="sr-only">
+							Documentation navigation
+						</Dialog.Title>
+						<Dialog.CloseButton
+							aria-label="Close navigation menu"
+							class="sticky top-0 z-20 mb-3 self-end pt-4"
+						>
+							<Icon
+								path={xMark}
+								aria-hidden="true"
+								class="prose dark:prose-invert w-6"
+							/>
 						</Dialog.CloseButton>
-						<Dialog.Description class="w-full pr-3">
+						<div class="w-full pr-3">
 							<MainNavigation />
-						</Dialog.Description>
+						</div>
 					</Dialog.Content>
 				</div>
 			</Dialog.Portal>

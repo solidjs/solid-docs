@@ -28,6 +28,8 @@ const dispose = render(() => <App />, root);
 // Call dispose() when this root must be unmounted.
 ```
 
+Pass a function to `render` so Solid creates the root before it evaluates the component tree.
+The root owns delegated event listeners for its container, and disposal removes those listeners.
 The initial attachment is scheduled through Solid's effect queue.
 When the initial render has no unresolved async read, `render` flushes that work before returning.
 If an uncaught async read is pending, the initial mount waits and attaches after it settles.
@@ -53,6 +55,8 @@ hydrate(() => <App />, root);
 
 The server and client must render the same initial structure in each hydrated region.
 Solid assigns hydration keys and serializes hydration state during SSR so the client build can claim the matching nodes.
+When the application owns the full document, include `HydrationScript` once before the application markup.
+It initializes hydration support and captures configured delegated events that occur before the client bundle hydrates.
 For multiple roots, give each server render a distinct `renderId` and pass the same value to its `hydrate` call.
 
 ```tsx
@@ -80,7 +84,7 @@ const html = renderToString(() => (
 ));
 ```
 
-When a pending read has no declared loading value, string rendering emits the enclosing `Loading` fallback.
+When a read is pending inside `Loading`, string rendering emits that boundary's fallback.
 Use streaming when the client must receive content after asynchronous work settles.
 
 ## Streaming rendering
@@ -113,97 +117,9 @@ Async reads without a surrounding `Loading` boundary block the shell until they 
 Inside a boundary, the shell can contain the fallback and a later stream fragment can replace it.
 The [Boundaries concept page](/concepts/boundaries) explains `Loading`, `Errored`, and reveal ordering.
 
-### Render commit #0
-
-An async source can declare the value that exists before its first computed value lands.
-Signal-family sources use `loadingValue`.
-Store-family sources use their seed with `seedLoadingValue: true`.
-Solid calls this declared value commit #0.
-
-Read [Async reactivity](/concepts/async-reactivity) for accessor behavior, pending state, and loading-state UI.
-This section covers the SSR and hydration sequence.
-
-When streaming SSR reads a pending source with commit #0, the read returns commit #0.
-The source does not suspend that read.
-The enclosing `Loading` boundary does not render its fallback for that source.
-The shell renders the component tree with commit #0 data.
-
-```tsx
-import { createMemo } from "solid-js";
-
-type UserView = {
-	name: string;
-	role: string;
-	activity: string;
-	provisional?: boolean;
-};
-
-const user = createMemo<UserView>(
-	async () => {
-		const response = await fetch("/api/user");
-		return (await response.json()) as UserView;
-	},
-	{
-		loadingValue: {
-			name: "Someone",
-			role: "Member",
-			activity: "Recent activity will appear here",
-			provisional: true,
-		},
-	}
-);
-
-function UserCard(props: { user: UserView }) {
-	return (
-		<article
-			class={props.user.provisional ? "user-card provisional" : "user-card"}
-			aria-busy={props.user.provisional ? "true" : "false"}
-		>
-			<h2>{props.user.name}</h2>
-			<p>{props.user.role}</p>
-			<p>{props.user.activity}</p>
-		</article>
-	);
-}
-
-function UserSummary() {
-	return <UserCard user={user()} />;
-}
-```
-
-Both values render through `UserCard`.
-The `provisional` field controls the busy state and styling without selecting another component tree.
-
-The server locks HTML-visible reads to commit #0 for that response.
-The first computed value is the landing.
-The landing travels through serialized stream data instead of changing later server HTML.
-The same sequence applies when a store seed is commit #0.
-
-Hydration creates the source with the same commit #0.
-The client first claims the server DOM against that value.
-The client then adopts the serialized landing after the claim walk.
-This order also applies when the stream finished before hydration started.
-
-### Choose where the source runs
-
-Set `ssrSource` on an async computation to choose its server and hydration policy.
-
-- Use `"server"` or omit the option to run the source on the server.
-  The client adopts the serialized async value and does not repeat the initial request.
-- Use `"hybrid"` to run the source on the server and serialize its first async value.
-  The client adopts that value and then runs the source to take over.
-- Use `"client"` to skip the source on the server.
-  The client waits for hydration to finish and then runs the source as a new mount.
-
-A client source must declare commit #0.
-Pass `loadingValue` to `createMemo`, function-form `createSignal`, or function-form `createOptimistic`.
-Pass `seedLoadingValue: true` to `createProjection`, derived `createStore`, or derived `createOptimisticStore`.
-An explicit `loadingValue: undefined` is valid when the accessor type includes `undefined`.
-Effects are exempt because they do not render a value.
-
-The server renders that declared client value without running the source.
-The client preserves the value through the hydration claim.
-After hydration, the client starts the first computation and keeps commit #0 until the landing.
+As an advanced exception, a source can declare `loadingValue` or `seedLoadingValue` to render provisional data through its normal component tree instead of a boundary fallback.
+When SSR also serializes a landed value, the client first claims the DOM against the declared value and then adopts the landing.
+See the [`createMemo`](/reference/solid-js/reactivity/create-memo) and [`createProjection`](/reference/solid-js/stores/create-projection) options for the full contract.
 
 ## Who owns the document
 
@@ -213,10 +129,14 @@ This choice determines how head content and render assets reach the document.
 When the rendered output includes a closing `</head>`, the renderer inserts registered head content and assets into that document.
 
 ```tsx
+import { HydrationScript, renderToString } from "@solidjs/web";
+import { App } from "./App";
+
 const html = renderToString(() => (
 	<html lang="en">
 		<head>
 			<meta charset="utf-8" />
+			<HydrationScript />
 		</head>
 		<body>
 			<div id="app">

@@ -1,0 +1,54 @@
+---
+title: Project shapes
+titleTemplate: ":title"
+mainNavExclude: true
+version: "2.0"
+---
+
+Solid projects come in three shapes, reflected in the official templates.
+Each tier is a strict superset of the last, and each comes with a deployment contract you can rely on.
+
+| Tier | Adds | Deployment contract |
+| --- | --- | --- |
+| `bare` | Solid, nothing else | `vite build` emits a purely static site |
+| `basic` | Router, file-system routes, per-page titles, testing | Still purely static; deploy `dist/client` to any static host |
+| `fullstack` | Streaming SSR, server functions, sessions, API routes | Static client assets plus a request handler in `dist/server` |
+
+Start with the smallest tier that does the job.
+Moving up a tier later does not change the structure of your app: the same `src/App.tsx` and `src/Document.tsx` conventions carry through all three.
+
+## The `ssr` flip
+
+Every tier can switch between client rendering and server rendering with one boolean in `vite.config.ts`:
+
+```ts
+import { defineConfig } from "vite";
+import solid from "vite-plugin-solid";
+
+export default defineConfig({
+	plugins: [
+		solid({
+			start: true,
+			ssr: true, // remove for a static shell rendered on the client
+		}),
+	],
+});
+```
+
+Your app code carries over unchanged.
+In client mode the document shell is prerendered as static HTML and pages render in the browser; with `ssr: true` pages stream from the server and hydrate.
+
+## Deploying `fullstack`
+
+The built server entry exports `handleRequest(request)`, an adapter-agnostic `Request -> Response` handler:
+
+```js
+import { handleRequest } from "./dist/server/server.js";
+
+// serve dist/client statically; everything else:
+const response = await handleRequest(request);
+```
+
+The template's included `server.js` is the Node version of exactly that.
+On web-native platforms (workers, Deno, `Bun.serve`) use `handleRequest` directly.
+See [Deployment](/building-apps/deployment) for platform specifics.

@@ -88,7 +88,11 @@ export function MainHeader(_props: MainHeaderProps) {
 					</a>
 				</div>
 
-				<Show when={project().projects}>
+				<Show
+					when={
+						Object.keys(project().projects).length > 1 && project().projects
+					}
+				>
 					{(projects) => (
 						<ul class="order-2 col-span-2 flex w-full justify-center gap-5 pt-6 lg:col-span-1 lg:w-auto lg:pt-0">
 							<For each={Object.entries(projects())}>

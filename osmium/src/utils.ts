@@ -27,10 +27,13 @@ export function useProject() {
 		const projectConfig = config().routes?.project ?? {};
 
 		return {
-			current: useSolidBaseRoute()().project,
+			current: useSolidBaseRoute()().project ?? "solid",
 			projects: ("values" in projectConfig
 				? projectConfig.values
-				: []) as Record<string, { path: string; label: string }>,
+				: { solid: { path: "", label: "Solid" } }) as Record<
+				string,
+				{ path: string; label: string }
+			>,
 		};
 	});
 }

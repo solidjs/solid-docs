@@ -12,26 +12,27 @@ import {
 
 const solidBase = createSolidBase(osmium);
 
-function createV2Sidebar() {
-	return createFilesystemSidebar("./src/routes/v2", {
-		filter: (item) => {
-			return !["solid-router", "solid-start", "solid-meta"].some((project) =>
-				item.filePath.includes(`/src/routes/${project}`)
-			);
-		},
-	}).map(collapseAdvancedReference);
-}
+// Reference groups are named by import specifier, which the filesystem
+// sidebar would otherwise title-case (e.g. "Solid Js").
+const REFERENCE_PACKAGE_TITLES: Record<string, string> = {
+	"Solid Js": "solid-js",
+	"Solid Web": "@solidjs/web",
+	"Solid Router": "@solidjs/router",
+	"Solid Meta": "@solidjs/meta",
+	"Vite Plugin Solid": "vite-plugin-solid",
+	"Filesystem Routing": "filesystem-routing",
+};
 
-function collapseAdvancedReference(item: SidebarItem): SidebarItem {
-	if (!("items" in item) || item.title !== "Reference") return item;
-	return {
-		...item,
-		items: item.items.map((child) =>
-			"items" in child && child.title === "Advanced"
-				? { ...child, collapsed: true }
-				: child
-		),
-	};
+function transformSidebarItem(item: SidebarItem): SidebarItem {
+	if (!("items" in item)) return item;
+	const packageTitle = REFERENCE_PACKAGE_TITLES[item.title];
+	if (packageTitle && item.filePath?.includes("/reference/")) {
+		return { ...item, title: packageTitle };
+	}
+	if (item.title === "Advanced") {
+		return { ...item, collapsed: true };
+	}
+	return item;
 }
 
 export default defineConfig({
@@ -45,130 +46,11 @@ export default defineConfig({
 			description:
 				"Documentation for SolidJS, the signals-powered UI framework",
 			siteUrl: "https://docs.solidjs.com",
-			editPath: "https://github.com/solidjs/solid-docs/edit/main/:path",
-			routes: {
-				path: "/{project}/{version}",
-				project: {
-					default: "solid",
-					values: {
-						solid: { path: "", label: "Solid" },
-						router: { path: "solid-router", label: "Router" },
-						start: { path: "solid-start", label: "SolidStart" },
-						meta: { path: "solid-meta", label: "Meta" },
-					},
-				},
-				version: {
-					default: "latest",
-					values: {
-						latest: { path: "", label: "Latest" },
-						v2: { path: "v2", label: "v2" },
-						v1: { path: "v1", label: "v1" },
-					},
-				},
-				include: [
-					{
-						project: "solid",
-						version: ["latest", "v2"],
-					},
-					{
-						project: "start",
-						version: ["v2", "v1"],
-					},
-					{
-						project: "router",
-						version: "latest",
-					},
-					{
-						project: "meta",
-						version: ["latest", "v1"],
-					},
-				],
-			},
-			overrides: [
-				{
-					project: "start",
-					route: {
-						version: {
-							v1: { label: "v1 (legacy)" },
-						},
-					},
-				},
-				{
-					project: "router",
-					title: "Solid Router",
-					themeConfig: {
-						sidebar: {
-							"/solid-router": createFilesystemSidebar(
-								"./src/routes/solid-router"
-							),
-						},
-					},
-				},
-				{
-					project: "start",
-					version: "v1",
-					title: "SolidStart",
-					themeConfig: {
-						sidebar: {
-							"/solid-start/v1": createFilesystemSidebar(
-								"./src/routes/solid-start/v1"
-							),
-						},
-					},
-				},
-				{
-					project: "start",
-					version: "v2",
-					title: "SolidStart",
-					themeConfig: {
-						sidebar: {
-							"/solid-start/v2": createFilesystemSidebar(
-								"./src/routes/solid-start/v2"
-							),
-						},
-					},
-				},
-				{
-					project: "meta",
-					title: "Solid Meta",
-					themeConfig: {
-						sidebar: {
-							"/solid-meta": createFilesystemSidebar(
-								"./src/routes/solid-meta",
-								{
-									filter: (item) => !item.filePath.includes("/solid-meta/v1"),
-								}
-							),
-						},
-					},
-				},
-				{
-					project: "meta",
-					version: "v1",
-					title: "Solid Meta",
-					themeConfig: {
-						sidebar: {
-							"/solid-meta/v1": createFilesystemSidebar(
-								"./src/routes/solid-meta/v1"
-							),
-						},
-					},
-				},
-				{
-					project: "solid",
-					version: "v2",
-					themeConfig: {
-						sidebar: createV2Sidebar(),
-					},
-				},
-			],
+			// TODO: point back at main when this branch becomes main
+			editPath: "https://github.com/solidjs/solid-docs/edit/v2-rebuild/:path",
 			themeConfig: {
 				sidebar: createFilesystemSidebar("./src/routes/", {
-					filter: (item) => {
-						return !["solid-router", "solid-start", "solid-meta", "v2"].some(
-							(project) => item.filePath.includes(`/src/routes/${project}`)
-						);
-					},
+					transform: transformSidebarItem,
 				}),
 				discord: "https://discord.com/invite/solidjs",
 				github: "https://github.com/solidjs",
@@ -273,7 +155,7 @@ export default defineConfig({
 				autoSubfolderIndex: false,
 				// failOnError: true,
 				// eslint-disable-next-line no-useless-escape
-				ignore: [/^\/solid-start$/, /\{\getPath}/, /.*?emojiSvg\(.*/],
+				ignore: [/\{\getPath}/, /.*?emojiSvg\(.*/],
 			},
 		}),
 	],

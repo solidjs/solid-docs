@@ -1,37 +1,37 @@
 import { Icon } from "solid-heroicons";
-import { mergeProps, type JSX, Show, untrack } from "solid-js";
+import { createUniqueId, mergeProps, type JSX, Show, untrack } from "solid-js";
 import {
 	lightBulb,
 	exclamationTriangle,
 	xCircle,
 	puzzlePiece,
 	bookOpen,
-} from "solid-heroicons/solid";
+} from "solid-heroicons/outline";
 
 const styles = {
 	note: {
 		container:
-			"bg-emerald-500/20 border-emerald-500 dark:border-emerald-400 dark:bg-emerald-800/20 dark:border-emerald-900",
+			"border-l-emerald-500 bg-emerald-500/10 dark:border-l-emerald-400 dark:bg-emerald-800/10",
 		title: "text-emerald-900 dark:text-emerald-300",
 	},
 	tip: {
 		container:
-			"bg-violet-800/20 border-violet-900 dark:border-violet-400 dark:bg-violet-800/10 dark:border-violet-900",
+			"border-l-violet-900 bg-violet-800/10 dark:border-l-violet-400 dark:bg-violet-800/10",
 		title: "text-violet-900 dark:text-violet-300",
 	},
 	advanced: {
 		container:
-			"bg-blue-400/20 border-blue-600 dark:border-blue-400 dark:bg-blue-400/20 dark:border-blue-600",
+			"border-l-blue-600 bg-blue-400/10 dark:border-l-blue-400 dark:bg-blue-400/10",
 		title: "text-blue-700 dark:text-blue-300",
 	},
 	caution: {
 		container:
-			"bg-amber-400/30 border-amber-600 dark:border-amber-400 dark:bg-amber-400/20 dark:border-amber-600",
+			"border-l-amber-600 bg-amber-400/10 dark:border-l-amber-400 dark:bg-amber-400/10",
 		title: "text-amber-900 dark:text-amber-400",
 	},
 	danger: {
 		container:
-			"bg-red-400/30 border-red-600 dark:border-red-400 dark:bg-red-400/20 dark:border-red-600",
+			"border-l-red-600 bg-red-400/10 dark:border-l-red-400 dark:bg-red-400/10",
 		title: "text-red-900 dark:text-red-400",
 	},
 };
@@ -41,35 +41,35 @@ const icons = {
 		<Icon
 			aria-hidden="true"
 			path={bookOpen}
-			class={`${props.class} fill-emerald-800 dark:fill-emerald-300`}
+			class={`${props.class} text-emerald-800 dark:text-emerald-300`}
 		/>
 	),
 	tip: (props: { class?: string }) => (
 		<Icon
 			aria-hidden="true"
 			path={lightBulb}
-			class={`${props.class} fill-violet-900 dark:fill-violet-300`}
+			class={`${props.class} text-violet-900 dark:text-violet-300`}
 		/>
 	),
 	advanced: (props: { class?: string }) => (
 		<Icon
 			aria-hidden="true"
 			path={puzzlePiece}
-			class={`${props.class} fill-blue-700 dark:fill-blue-300`}
+			class={`${props.class} text-blue-700 dark:text-blue-300`}
 		/>
 	),
 	caution: (props: { class?: string }) => (
 		<Icon
 			aria-hidden="true"
 			path={exclamationTriangle}
-			class={`${props.class} fill-amber-500 dark:fill-amber-400`}
+			class={`${props.class} text-amber-500 dark:text-amber-400`}
 		/>
 	),
 	danger: (props: { class?: string }) => (
 		<Icon
 			aria-hidden="true"
 			path={xCircle}
-			class={`${props.class} fill-red-500 dark:fill-red-400`}
+			class={`${props.class} text-red-500 dark:text-red-400`}
 		/>
 	),
 };
@@ -84,6 +84,7 @@ export type CalloutProps = {
 
 export function Callout(props: CalloutProps) {
 	const mergedProps = mergeProps({ type: "note" as CalloutType }, props);
+	const titleId = createUniqueId();
 
 	const iconType = untrack(() => mergedProps.type);
 
@@ -91,23 +92,37 @@ export function Callout(props: CalloutProps) {
 
 	return (
 		<div
-			class={`my-6 flex w-full rounded-3xl border p-4 ${
+			role="note"
+			aria-labelledby={titleId}
+			class={`not-prose my-5 grid w-full grid-cols-[auto_1fr] gap-x-2.5 rounded-md border border-l-4 border-slate-200 px-3 py-2.5 dark:border-slate-700 ${
 				styles[mergedProps.type].container
 			}`}
 		>
-			<IconComponent class="mt-1 h-6 w-8 flex-none" />
-			<div class={`m-0 w-full px-4 pb-1 ${styles[mergedProps.type].title}`}>
+			<IconComponent class="mt-0.5 h-4.5 w-4.5 flex-none" />
+			<div class="min-w-0">
 				<Show
 					when={props.title}
 					fallback={
-						<span class="text-xl font-semibold capitalize">
+						<span
+							id={titleId}
+							class={`text-base leading-6 font-semibold capitalize ${
+								styles[mergedProps.type].title
+							}`}
+						>
 							{props.type || "Note"}
 						</span>
 					}
 				>
-					<span class="text-xl font-semibold">{mergedProps.title}</span>
+					<span
+						id={titleId}
+						class={`text-base leading-6 font-semibold ${
+							styles[mergedProps.type].title
+						}`}
+					>
+						{mergedProps.title}
+					</span>
 				</Show>
-				<div class="prose dark:prose-invert pr-7 [&>*:first-child]:mt-1">
+				<div class="prose prose-slate dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 [&>*:first-child]:mt-1 [&>*:last-child]:mb-0">
 					{mergedProps.children}
 				</div>
 			</div>

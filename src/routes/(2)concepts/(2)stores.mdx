@@ -5,7 +5,176 @@ mainNavExclude: true
 version: "2.0"
 ---
 
-:::note[Planned]
-This page has not been written yet.
-It will cover `createStore`, projections, and optimistic updates for nested reactive state.
-:::
+A store represents object or array state through a reactive proxy.
+Store properties use property syntax rather than accessors, and nested objects and arrays are exposed through reactive proxies.
+Each property read is tracked, including reads from nested objects and arrays.
+Updates use a setter that exposes a mutable draft while keeping the store itself read-only.
+
+Use a signal when a value is read and replaced as one unit.
+Use a store when consumers need to read or update separate parts of a nested object or collection.
+
+## Create nested state
+
+`createStore` returns the store proxy and its setter.
+Reading `state.profile.name` in a tracking scope subscribes that scope to the nested `name` property.
+A write to another property does not notify that subscription.
+
+```ts
+import { createEffect, createRoot, createStore, flush } from "solid-js";
+
+type Todo = {
+  id: string;
+  text: string;
+  done: boolean;
+};
+
+const model = createRoot(dispose => {
+  const [state, setState] = createStore({
+    profile: { name: "Ada", online: false },
+    todos: [] as Todo[]
+  });
+
+  createEffect(
+    () => state.profile.name,
+    name => console.log(`Name: ${name}`)
+  );
+
+  return { state, setState, dispose };
+});
+
+flush(); // logs "Name: Ada"
+
+model.setState(draft => {
+  draft.profile.name = "Grace";
+  draft.todos.push({ id: "1", text: "Write docs", done: false });
+});
+
+flush(); // logs "Name: Grace"
+model.dispose();
+```
+
+Store properties are values rather than accessors, so read `state.profile.name` without calling it.
+Keep the property access inside JSX, a memo, or an effect compute function when future writes should update the consumer.
+
+See the [`createStore` reference](/reference/solid-js/stores/create-store) for options and return types.
+
+## Update with a draft
+
+The store setter receives a draft that can be changed with normal property assignments and array methods.
+This callback is the produce-style update API for stores in Solid 2.0.
+
+```ts
+model.setState(draft => {
+  draft.profile.online = true;
+
+  const todo = draft.todos.find(todo => todo.id === "1");
+  if (todo) todo.done = true;
+});
+```
+
+The callback may instead return a replacement value.
+For arrays, Solid writes the returned entries by index and adjusts the length.
+For objects, Solid shallowly writes present keys and deletes keys missing from the returned object.
+
+```ts
+const [todos, setTodos] = createStore<Todo[]>([
+  { id: "1", text: "Write docs", done: true },
+  { id: "2", text: "Review examples", done: false }
+]);
+
+setTodos(current => current.filter(todo => !todo.done));
+```
+
+Returning a collection does not perform keyed reconciliation.
+Use a projection when items that survive a replacement need to retain their store identity.
+
+[`storePath`](/reference/solid-js/advanced/store-advanced/store-path) remains available as an optional path-based helper.
+The draft callback is the primary setter form.
+
+```ts
+import { storePath } from "solid-js";
+
+model.setState(storePath("profile", "name", "Katherine"));
+```
+
+Store writes use the same microtask batching as signal writes, so ordinary reads see the committed state after the scheduled flush.
+
+## Derive a store with a projection
+
+A projection is derived state with store-shaped, per-property tracking.
+`createProjection` returns a read-only store, while the function form of `createStore` returns a projected store with a setter.
+For a derived scalar or another value consumed as one unit, use a memo instead.
+
+The projection function receives a draft and may mutate it or return a replacement.
+Returned collections are reconciled by `id` by default, which lets surviving items keep their proxy identity.
+Pass another key when the data uses a different identity field, or `null` for positional reconciliation.
+
+```ts
+import {
+  createProjection,
+  createRoot,
+  createSignal,
+  createStore,
+  flush
+} from "solid-js";
+
+type Todo = {
+  id: string;
+  text: string;
+  done: boolean;
+};
+
+const list = createRoot(dispose => {
+  const [todos] = createStore<Todo[]>([
+    { id: "1", text: "Write docs", done: true },
+    { id: "2", text: "Review examples", done: false }
+  ]);
+  const [includeDone, setIncludeDone] = createSignal(false);
+  const visible = createProjection(
+    () => todos.filter(todo => includeDone() || !todo.done),
+    []
+  );
+
+  return { visible, setIncludeDone, dispose };
+});
+
+console.log(list.visible.map(todo => todo.text)); // ["Review examples"]
+
+list.setIncludeDone(true);
+flush();
+console.log(list.visible.map(todo => todo.text)); // ["Write docs", "Review examples"]
+
+list.dispose();
+```
+
+See the [`createProjection` reference](/reference/solid-js/stores/create-projection) for mutation and return forms.
+
+## Optimistic stores
+
+`createOptimisticStore` has the same nested draft update model with a tentative overlay.
+A tentative write is visible immediately.
+When its action transition finishes, Solid removes the overlay and reveals the authoritative store value.
+
+```ts
+import { action, createOptimisticStore } from "solid-js";
+
+const [profile, setProfile] = createOptimisticStore({ name: "Ada" });
+
+const rename = action(function* (name: string) {
+  setProfile(draft => {
+    draft.name = name;
+  });
+
+  console.log(profile.name); // "Grace" during rename("Grace")
+  yield Promise.resolve();
+});
+
+await rename("Grace");
+console.log(profile.name); // "Ada"
+```
+
+The derived form recomputes an authoritative value through a projection.
+When fresh projected data lands, it updates the base state and clears stale optimistic overlays.
+This form is useful when an action shows an expected collection update before refreshing its source.
+
+See the [`createOptimisticStore` reference](/reference/solid-js/stores/create-optimistic-store) for both forms, and see [async reactivity](/concepts/async-reactivity) for actions and refresh behavior.

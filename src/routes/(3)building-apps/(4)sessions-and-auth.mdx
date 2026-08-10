@@ -5,7 +5,150 @@ mainNavExclude: true
 version: "2.0"
 ---
 
-:::note[Planned]
-This page has not been written yet.
-It will cover composing sessions from standard cookie libraries over the request event.
+Solid supplies the HTTP exchange that session and authentication code can use.
+It does not supply a built-in session store or authentication framework.
+
+## What the platform supplies
+
+Code running under start mode can read the current request event with `getRequestEvent()`.
+The event exposes:
+
+- `request`, including its `Cookie`, `Authorization`, and other request headers.
+- `locals`, where middleware can place request-scoped state such as an authenticated user.
+- `response`, whose headers collect outgoing `Set-Cookie` values before the response head commits.
+
+`@solidjs/web` also exports `parseCookieHeader()` and `serializeCookie()` for unsigned cookie encoding.
+Those functions do not sign, encrypt, rotate, persist, or revoke session data.
+
+## What a session library supplies
+
+A cookie or session library defines the application-level protocol.
+Depending on the library, that can include:
+
+- Signing or encryption.
+- Secret rotation.
+- Expiration and renewal rules.
+- Storage-backed session identifiers.
+- Cookie serialization options.
+
+The official `solid-v2/fullstack` templates compose `@remix-run/cookie` with the request event.
+Their session cookie is signed and tamper-evident, but it is not encrypted.
+Do not place secrets in a client-readable cookie payload.
+
+## A signed cookie session
+
+The following shape follows the fullstack template:
+
+```ts
+import { createCookie } from "@remix-run/cookie";
+import {
+	getRequestEvent,
+	type RequestEvent,
+	type ResponseStub,
+} from "@solidjs/web";
+import { env } from "virtual:env/server";
+
+interface SessionData {
+	userId?: string;
+}
+
+const maxAge = 60 * 60 * 24 * 7;
+
+const sessionCookie = createCookie("session", {
+	secrets: env.SESSION_SECRET.split(","),
+	httpOnly: true,
+	secure: true,
+	sameSite: "Lax",
+	maxAge,
+});
+
+function event(): RequestEvent & { response: ResponseStub } {
+	const event = getRequestEvent();
+	if (!event) throw new Error("Missing request event");
+	return event as RequestEvent & { response: ResponseStub };
+}
+
+export async function getSession(): Promise<SessionData | null> {
+	const raw = await sessionCookie.parse(event().request.headers.get("cookie"));
+	if (!raw) return null;
+
+	try {
+		const { data, exp } = JSON.parse(raw);
+		return Date.now() < exp * 1000 ? data : null;
+	} catch {
+		return null;
+	}
+}
+
+export async function setSession(data: SessionData): Promise<void> {
+	const exp = Math.floor(Date.now() / 1000) + maxAge;
+	event().response.headers.append(
+		"set-cookie",
+		await sessionCookie.serialize(
+			JSON.stringify({
+				data,
+				exp,
+			}),
+		),
+	);
+}
+
+export async function clearSession(): Promise<void> {
+	event().response.headers.append(
+		"set-cookie",
+		await sessionCookie.serialize("", { maxAge: 0 }),
+	);
+}
+```
+
+Set cookie attributes explicitly because library defaults may not match the application's security requirements.
+Use a server-only environment source for signing secrets.
+
+The first secret signs new cookies, and every listed secret can verify existing cookies.
+Prepend a new secret during rotation, then remove the old secret after existing cookies have expired.
+The example stores its own expiry timestamp because browser `Max-Age` alone does not stop a client from replaying an old cookie.
+
+Cookie reads and writes are separate views.
+`getSession()` reads the `Cookie` header that arrived with the request.
+Calling `setSession()` does not change that incoming header during the same request.
+
+## Authorize on the server
+
+Authentication identifies the caller.
+Authorization decides whether that caller may perform an operation.
+Both decisions belong in server code.
+
+```ts
+import { redirect } from "@solidjs/web";
+
+export async function renameUser(id: string, form: FormData) {
+	"use server";
+	const session = await getSession();
+	if (!session?.userId) throw redirect("/sign-in");
+
+	await database.users.rename(id, String(form.get("name") ?? ""));
+}
+```
+
+Hiding a control in the browser does not authorize the corresponding server function or API route.
+Check the session or other credentials again at every protected server entry point.
+
+Middleware can authenticate once and place the result on `event.locals`.
+Server functions, API handlers, and the page render can then read the same request-scoped value.
+Use TypeScript module augmentation on `RequestEventLocals` when the application needs a precise type for those fields.
+
+## Response behavior
+
+Session writes append `Set-Cookie` to the event response stub.
+Start mode folds those cookies onto page responses, middleware responses, API responses, and server-function responses.
+A session write followed by a thrown `redirect()` keeps both the cookie and redirect metadata.
+
+Write cookies before the response head commits.
+During streaming server rendering, the response head commits when the shell flushes.
+A late response-header write throws in development and reports an error without changing the response in production.
+
+:::note[Choose the session architecture]
+Cookie-backed sessions keep their payload in the browser and are limited by cookie size.
+Storage-backed sessions put only an opaque identifier in the cookie and keep revocable data in a database, key-value store, or other server storage.
+Solid supplies the same request and response seam for either architecture.
 :::

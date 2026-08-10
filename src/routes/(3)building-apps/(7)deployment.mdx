@@ -5,7 +5,119 @@ mainNavExclude: true
 version: "2.0"
 ---
 
-:::note[Planned]
-This page has not been written yet.
-It will cover the `handleRequest` contract, static hosting, Node, and web-native platforms.
+Start mode produces web-standard deployment artifacts.
+The official `solid-v2/fullstack` and `solid-v2/fullstack-tanstack` templates demonstrate the supported contract.
+
+## Build output
+
+Run the configured Vite build:
+
+```bash
+pnpm build
+```
+
+With `start` and `ssr: true`, one build produces:
+
+- `dist/client`, containing browser JavaScript, CSS, images, and other static assets.
+- `dist/server/server.js`, containing the server entry and its exported request handler.
+
+When server functions are enabled, the server bundle also dispatches their configured endpoint.
+The default endpoint is `/_server`.
+
+Without `ssr: true`, start mode prerenders a static document shell to `dist/client/index.html`.
+It removes `dist/server` when the application has no server functions.
+If server functions remain enabled, deploy `dist/client` for pages and keep `dist/server` for the function endpoint.
+
+## The request handler
+
+The built server entry exports `handleRequest`.
+Its deployment contract is one web `Request` in and a promise of one web `Response` out:
+
+```ts
+import { handleRequest } from "./dist/server/server.js";
+
+const response = await handleRequest(request);
+```
+
+The handler creates the request event, runs configured middleware, dispatches the server-function endpoint when enabled, renders pages, and commits response metadata.
+It also resolves built client entry and stylesheet URLs through the client build manifest.
+
+Serve files from `dist/client` before passing unmatched requests to `handleRequest`.
+Static assets should not enter the page renderer.
+Preserve the request URL, method, headers, and non-`GET` or non-`HEAD` body when adapting a host request.
+Preserve the response status, headers, separate `Set-Cookie` values, and streamed body when adapting the result.
+
+## Node
+
+The fullstack templates include `server.js` as the verified Node adapter example.
+It converts `node:http` requests to web `Request` objects, serves `dist/client`, calls `handleRequest`, and streams the resulting response.
+The template's start script runs that file:
+
+```json
+{
+	"scripts": {
+		"start": "node --env-file-if-exists=.env server.js"
+	}
+}
+```
+
+Use the template adapter as a reference when integrating another Node server.
+The bridge must use a streamed request body for methods other than `GET` and `HEAD`.
+It must forward multiple `Set-Cookie` headers as separate values instead of joining them with commas.
+
+## Web-native hosts
+
+A host that already uses the Fetch API can call the handler without a Node conversion layer:
+
+```ts
+import { handleRequest } from "./dist/server/server.js";
+
+export function fetch(request: Request): Promise<Response> {
+	return handleRequest(request);
+}
+```
+
+Map this function to the host's request entry point and configure its static asset service for `dist/client`.
+Workers, Deno servers, and `Bun.serve` use web `Request` and `Response` objects, but each host has its own module, asset, and environment-variable configuration.
+
+## Preview the production artifact
+
+The start-mode integration configures `vite preview` to serve `dist/client` and dispatch remaining requests through the built handler:
+
+```bash
+pnpm build
+pnpm exec vite preview
+```
+
+The official fullstack templates name the Vite preview script `serve` and reserve `start` for the included Node server:
+
+```bash
+pnpm build
+pnpm serve
+```
+
+Preview verifies the built request handler and static assets together.
+It does not replace the target host's deployment test.
+
+## External host integrations
+
+Set `start.external: true` only when a host integration owns both the server environment and HTTP serving:
+
+```ts
+solid({
+	start: {
+		external: true,
+	},
+	ssr: true,
+	serverFunctions: true,
+});
+```
+
+The plugin then leaves server build and serving ownership to that integration while continuing to provide generated entries and the client manifest.
+A provider-owned non-runnable server environment can also cause the plugin's development middleware to stand down automatically.
+
+:::note[Adapter status]
+The pinned Solid 2.0 sources define the `handleRequest(Request) -> Promise<Response>` boundary and include a Node example.
+They do not include a verified catalog of provider-specific deployment adapters.
+Treat provider adapters and `start.external` integrations as integration-specific until their packages test this exact handler contract and Solid 2.0 version.
 :::

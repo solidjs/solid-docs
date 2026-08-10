@@ -5,7 +5,142 @@ mainNavExclude: true
 version: "2.0"
 ---
 
-:::note[Planned]
-This page has not been written yet.
-It will cover fetch-style middleware chains and HTTP method handlers in route modules.
+Start mode accepts fetch-style middleware that runs before its request handler.
+Configure a server-only middleware module with `start.middleware`:
+
+```ts
+import { defineConfig } from "vite";
+import solid from "vite-plugin-solid";
+
+export default defineConfig({
+	plugins: [
+		solid({
+			start: {
+				middleware: "./src/middleware.ts",
+			},
+			ssr: true,
+		}),
+	],
+});
+```
+
+The module must default-export one middleware function or an array of middleware functions.
+
+## Middleware contract
+
+Each function receives a web `Request` and a `next` continuation:
+
+```ts
+type Middleware = (
+	request: Request,
+	next: (request?: Request) => Promise<Response>,
+) => Response | Promise<Response>;
+```
+
+Call `next()` to advance to the next middleware.
+Pass a `Request` to `next(request)` to replace the request for the remaining chain.
+Return a `Response` without calling `next()` to stop the chain.
+Do not call `next()` more than once from the same middleware invocation.
+
+Middleware runs in array order before the request handler and unwinds in reverse order:
+
+```ts
+import { getRequestEvent } from "@solidjs/web";
+
+async function authenticate(request: Request, next: () => Promise<Response>) {
+	const event = getRequestEvent()!;
+	event.locals.user = await readUser(request);
+
+	const response = await next();
+	response.headers.set("x-authenticated", String(Boolean(event.locals.user)));
+	return response;
+}
+
+async function catchErrors(_request: Request, next: () => Promise<Response>) {
+	try {
+		return await next();
+	} catch (error) {
+		return Response.json(
+			{ error: error instanceof Error ? error.message : "Unknown error" },
+			{ status: 500 },
+		);
+	}
+}
+
+export default [catchErrors, authenticate];
+```
+
+Nothing is written to the network until the outermost middleware returns.
+Middleware can therefore change headers on the returned `Response` after `await next()`, including responses with streamed bodies.
+
+The chain runs inside the request-event scope.
+`getRequestEvent()` exposes the same `locals` and response stub that the page render or server function sees.
+The chain fronts page rendering, server-function dispatch, and other requests handled by configured middleware in development, preview, and production.
+
+## API routes in the fullstack template
+
+API route discovery is supplied by the `filesystem-routing` integration used in the official fullstack templates.
+It is not part of the core middleware primitive.
+
+Enable HTTP method discovery and place its dispatcher in the middleware chain:
+
+```ts
+// vite.config.ts
+import { fileRoutes } from "filesystem-routing/vite";
+
+export default defineConfig({
+	plugins: [
+		solid({
+			start: { middleware: "./src/middleware.ts" },
+			ssr: true,
+		}),
+		fileRoutes({ httpMethods: true }),
+	],
+});
+```
+
+```ts
+// src/middleware.ts
+import { createAPIHandler } from "filesystem-routing/api";
+import routes from "virtual:file-routes";
+
+export default [createAPIHandler(routes)];
+```
+
+Export an uppercase HTTP method from a route module:
+
+```ts
+// src/routes/api/users.ts
+import type { APIHandler } from "filesystem-routing/api";
+
+export const GET: APIHandler = ({ request, params }) => {
+	return Response.json({
+		path: new URL(request.url).pathname,
+		params,
+	});
+};
+```
+
+A module with method exports and no default component is an API-only route.
+A module may also contain a page component and a `GET` handler.
+
+## API handler contract
+
+The dispatcher writes matched route parameters to the request event and passes that event to the method handler.
+Return a `Response` to control the full status, headers, and body.
+A returned string becomes a text `Response`, and another returned value becomes a JSON `Response`.
+
+Requests with no matching method continue to the next middleware.
+`HEAD` uses a route's `HEAD` handler when present and otherwise falls back to `GET`.
+A `GET` handler in a page module may return `undefined` to let the page render.
+An API-only `GET` handler that returns `undefined` produces a `404` response.
+Any other matched method that returns `undefined` throws because the handler did not provide a response.
+
+API handlers run under the same request event as the surrounding middleware.
+They can read authenticated state from `event.locals` and append cookies to `event.response.headers`.
+Keep authorization checks in the handler or in middleware that is guaranteed to run before it.
+
+:::note[Integration boundary]
+The method-export convention and route matching belong to `filesystem-routing`.
+The stable contract exposed by Solid's server runtime is the fetch-style `Request` and `Response` middleware shape.
 :::

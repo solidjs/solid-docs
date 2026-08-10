@@ -21,7 +21,7 @@ const RULES = [
 	{
 		name: "filler",
 		pattern:
-			/\b(actually|basically|obviously|of course|note that|it'?s worth noting|worth noting|keep in mind)\b/gi,
+			/\b(actually|basically|obviously|of course|in order to|note that|(?:it is|it's) worth noting|worth noting|keep in mind|there (?:are|is) several options?|this includes)\b/gi,
 		severity: "error",
 	},
 	{

@@ -331,6 +331,26 @@ Every behavioral claim must be traceable to the source on the branch being docum
 If you cannot point to the line, do not write the sentence.
 Code examples must run against the current release of the package they document.
 
+### Use clear sentence structure
+
+Follow a relaxed version of ASD-STE100.
+Keep standard developer terminology such as "plugin," "boolean," "render," "array," and "object."
+Do not replace familiar technical terms to satisfy a controlled vocabulary.
+
+- Prefer active voice.
+  Put the reader or the system that performs the action first.
+  Use passive voice when the actor is unknown or does not matter.
+- Start procedural steps with an imperative verb.
+  Write "Add the plugin" instead of "You can add the plugin."
+- Replace ambiguous pronouns with the noun they refer to.
+  Keep "it," "this," and "they" when the reference remains clear.
+- Do not start an instruction with an `-ing` verb.
+  Write "Add the plugin to enable SSR" instead of "Adding the plugin enables SSR."
+- Keep sentences short enough to read once.
+  Split a sentence when several clauses obscure the main point.
+- Convert a sequence of three or more items into a list when a list improves scanning.
+  Keep a compact sentence when splitting it would add noise.
+
 ### No filler
 
 These words add nothing and can make the reader feel talked down to.
@@ -338,7 +358,8 @@ Do not use them:
 
 - "actually", "basically", "obviously", "of course"
 - "simply", "just", "easy", "easily" (describing a task; "easy to confuse" is fine in a warning)
-- "note that", "it's worth noting", "keep in mind"
+- "in order to", "note that", "it is worth noting", "it's worth noting", "keep in mind"
+- "there are several options", "this includes"
 
 If removing the word does not change the meaning, remove the word.
 

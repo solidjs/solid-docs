@@ -5,7 +5,190 @@ mainNavExclude: true
 version: "2.0"
 ---
 
-:::note[Planned]
-This page has not been written yet.
-It will cover `Loading`, `Errored`, and `Reveal`, and their primitive forms.
-:::
+Boundaries turn status from the reactive graph into renderable UI.
+`Loading` handles unresolved async reads, `Errored` handles errors, and `Reveal` coordinates when sibling loading regions become visible.
+
+Each loading or error boundary creates an owner for its tracked subtree and attaches a status queue below the surrounding owner.
+Status travels outward through that queue chain until a matching boundary consumes it.
+An inner boundary consumes only its own status dimension, so a `Loading` boundary forwards errors and an `Errored` boundary forwards pending reads.
+
+This separation lets both boundaries cover the same branch.
+
+```tsx
+import { Errored, Loading, createMemo, createSignal } from "solid-js";
+
+type Account = {
+  id: number;
+  name: string;
+};
+
+function AccountPanel() {
+  const [accountId, setAccountId] = createSignal(1);
+  const account = createMemo(async (): Promise<Account> => {
+    const id = accountId();
+    const response = await fetch(`/api/accounts/${id}`);
+
+    if (!response.ok) {
+      throw new Error(`Could not load account ${id}`);
+    }
+
+    return response.json();
+  });
+
+  return (
+    <>
+      <button onClick={() => setAccountId(id => id + 1)}>Next account</button>
+      <Errored
+        fallback={(error, reset) => (
+          <section>
+            <p>{String(error())}</p>
+            <button onClick={reset}>Retry</button>
+          </section>
+        )}
+      >
+        <Loading on={accountId()} fallback={<p>Loading account...</p>}>
+          <h2>{account().name}</h2>
+        </Loading>
+      </Errored>
+    </>
+  );
+}
+```
+
+The first unresolved read is handled by `Loading`.
+A rejected request passes through `Loading` and is handled by `Errored`.
+Changing `accountId()` while the new request is pending changes the `on` value, so the loading fallback can appear for the new account.
+
+## Loading boundaries
+
+[`Loading`](/reference/solid-js/components-jsx/loading) renders its `fallback` while async values read by its subtree have not produced the content the boundary needs.
+It observes pending status from computations reached through that subtree.
+The nearest loading boundary that is eligible for the update owns the fallback.
+
+After a boundary has displayed content, it normally keeps that content visible during later async updates.
+Use `isPending` in the content for an updating indicator.
+Use the optional `on` prop when a change to a particular value should make an initialized boundary eligible to show its fallback again.
+
+The `on` prop is a value, not an accessor passed by reference.
+For example, `on={accountId()}` compares account identifiers across pending updates.
+Pending work caused by other values leaves the initialized content in place.
+
+Place a loading boundary around the data-dependent region whose output can be replaced.
+Content outside that owner does not become part of its fallback region.
+Nested loading boundaries let each region handle its own initial readiness.
+
+## Error boundaries
+
+[`Errored`](/reference/solid-js/components-jsx/errored) catches uncaught errors reported by its subtree and renders fallback content.
+Async rejections and synchronous computation errors use the same error status path.
+
+The fallback can be a static element or a function.
+The function receives an accessor for the captured error and a `reset` function.
+Calling `reset` recomputes the sources collected by the boundary and schedules the reactive queue so the branch can retry.
+
+An error thrown while rendering an `Errored` fallback is outside that boundary's protected subtree.
+A parent `Errored` boundary can catch it.
+Without a matching error boundary, an unhandled error is escalated instead of being consumed by a loading boundary.
+
+## Reveal order
+
+[`Reveal`](/reference/solid-js/components-jsx/reveal) coordinates loading boundaries registered directly in its ownership context.
+It changes reveal timing without changing which async sources each `Loading` boundary observes.
+
+The default `sequential` order reveals slots in registration order.
+A later slot stays on its fallback until every earlier slot is ready.
+With `collapsed`, sequential slots after the current frontier render no fallback, so only the frontier fallback remains visible.
+
+The `together` order holds every direct slot until all direct slots are minimally ready, then releases the group together.
+For a loading slot, minimal readiness means its content is ready.
+For a nested reveal group, minimal readiness follows that group's own order.
+
+The `natural` order lets each loading slot reveal when its own data resolves.
+At the top level this matches leaving the loading boundaries uncoordinated.
+Its purpose is nesting, where the natural group participates as one composite slot in an outer order.
+
+```tsx
+import { Loading, Reveal } from "solid-js";
+
+function ProfilePage() {
+  return (
+    <Reveal>
+      <Loading fallback={<HeaderSkeleton />}>
+        <ProfileHeader />
+      </Loading>
+      <Reveal order="natural">
+        <Loading fallback={<CardSkeleton />}>
+          <RecentPosts />
+        </Loading>
+        <Loading fallback={<CardSkeleton />}>
+          <Recommendations />
+        </Loading>
+      </Reveal>
+      <Loading fallback={<FooterSkeleton />}>
+        <ProfileFooter />
+      </Loading>
+    </Reveal>
+  );
+}
+```
+
+The outer group uses sequential order.
+The nested group occupies one position between the header and footer.
+When the outer frontier releases that position, the two inner loading regions follow natural order and reveal independently.
+The footer waits until the nested group is fully ready.
+
+### Which boundaries join a reveal group
+
+A `Loading` boundary registers with the nearest `Reveal` context present when the boundary is created.
+Creating any loading or error boundary clears reveal coordination for its own subtree.
+As a result, loading boundaries nested inside another `Loading` do not become additional slots in the outer group.
+A loading boundary wrapped by `Errored` also does not delay an ancestor reveal group.
+
+A nested `Reveal` is different because it registers its controller as one composite slot with the parent reveal group.
+An outer hold propagates through that nested group, keeping its descendant loading boundaries on their fallbacks until the parent releases the composite slot.
+The inner group then resumes its own order.
+
+These ownership rules make reveal membership structural.
+Wrapping a descendant in another loading boundary does not let it escape an outer reveal hold.
+Move the region outside the outer `Reveal` when it must reveal independently.
+
+## Primitive forms
+
+The JSX components are built from lower-level primitives.
+Use the primitives when implementing custom boundary components or renderer-level integrations.
+
+[`createLoadingBoundary(fn, fallback, options?)`](/reference/solid-js/advanced/jsx-component-primitives/create-loading-boundary) returns an accessor whose value switches between the tracked `fn` and the fallback.
+Its `on` option accepts an accessor because the primitive does not receive JSX props.
+
+[`createErrorBoundary(fn, fallback)`](/reference/solid-js/advanced/jsx-component-primitives/create-error-boundary) returns an accessor and passes the fallback an error accessor plus a reset function.
+
+[`createRevealOrder(fn, options?)`](/reference/solid-js/advanced/jsx-component-primitives/create-reveal-order) runs `fn` under a reveal controller.
+Its `order` and `collapsed` options are accessors, and nested controllers use the same composite-slot rules as `Reveal`.
+
+```tsx
+import {
+  createErrorBoundary,
+  createLoadingBoundary
+} from "solid-js";
+
+function StatusBoundary(props: {
+  children: JSX.Element;
+  loading: JSX.Element;
+}) {
+  const output = createErrorBoundary(
+    () =>
+      createLoadingBoundary(
+        () => props.children,
+        () => props.loading
+      )(),
+    (error, reset) => (
+      <section>
+        <p>{String(error())}</p>
+        <button onClick={reset}>Retry</button>
+      </section>
+    )
+  );
+
+  return output() as JSX.Element;
+}
+```

@@ -80,8 +80,8 @@ const html = renderToString(() => (
 ));
 ```
 
-When a read is pending inside `Loading`, string rendering emits that boundary's fallback.
-Use streaming when the response should include the content after asynchronous work settles.
+When a pending read has no declared loading value, string rendering emits the enclosing `Loading` fallback.
+Use streaming when the client must receive content after asynchronous work settles.
 
 ## Streaming rendering
 
@@ -112,6 +112,80 @@ const html = await renderToStream(() => <App />);
 Async reads without a surrounding `Loading` boundary block the shell until they settle.
 Inside a boundary, the shell can contain the fallback and a later stream fragment can replace it.
 The [Boundaries concept page](/concepts/boundaries) explains `Loading`, `Errored`, and reveal ordering.
+
+### Render commit #0
+
+An async source can declare the value that exists before its first computed value lands.
+Signal-family sources use `loadingValue`.
+Store-family sources use their seed with `seedLoadingValue: true`.
+Solid calls this declared value commit #0.
+
+Read [Async reactivity](/concepts/async-reactivity) for accessor behavior, pending state, and loading-state UI.
+This section covers the SSR and hydration sequence.
+
+When streaming SSR reads a pending source with commit #0, the read returns commit #0.
+The source does not suspend that read.
+The enclosing `Loading` boundary does not render its fallback for that source.
+The shell renders the UI branch selected by commit #0.
+
+```tsx
+import { Loading, Show, createMemo } from "solid-js";
+
+type UserView = {
+	loading: boolean;
+	name: string;
+};
+
+const user = createMemo<UserView>(
+	async () => {
+		const response = await fetch("/api/user");
+		const data = (await response.json()) as { name: string };
+		return { loading: false, name: data.name };
+	},
+	{ loadingValue: { loading: true, name: "" } }
+);
+
+function UserSummary() {
+	return (
+		<Loading fallback={<p>Loading boundary</p>}>
+			<Show when={!user().loading} fallback={<p>User skeleton</p>}>
+				<p>{user().name}</p>
+			</Show>
+		</Loading>
+	);
+}
+```
+
+The server locks HTML-visible reads to commit #0 for that response.
+The first computed value is the landing.
+The landing travels through serialized stream data instead of changing later server HTML.
+Store landings use serialized snapshots and patches.
+
+Hydration creates the source with the same commit #0.
+The client first claims the server DOM against that value.
+The client then adopts the serialized landing after the claim walk.
+This order also applies when the stream finished before hydration started.
+
+### Choose where the source runs
+
+Set `ssrSource` on an async computation to choose its server and hydration policy.
+
+- Use `"server"` or omit the option to run the source on the server.
+  The client adopts the serialized async value and does not repeat the initial request.
+- Use `"hybrid"` to run the source on the server and serialize its first async value.
+  The client adopts that value and then runs the source to take over.
+- Use `"client"` to skip the source on the server.
+  The client waits for hydration to finish and then runs the source as a new mount.
+
+A client source must declare commit #0.
+Pass `loadingValue` to `createMemo`, function-form `createSignal`, or function-form `createOptimistic`.
+Pass `seedLoadingValue: true` to `createProjection`, derived `createStore`, or derived `createOptimisticStore`.
+An explicit `loadingValue: undefined` is valid when the accessor type includes `undefined`.
+Effects are exempt because they do not render a value.
+
+The server renders that declared client value without running the source.
+The client preserves the value through the hydration claim.
+After hydration, the client starts the first computation and keeps commit #0 until the landing.
 
 ## Who owns the document
 

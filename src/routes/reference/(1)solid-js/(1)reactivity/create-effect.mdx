@@ -13,7 +13,7 @@ version: "2.0"
 description: "Creates a reactive effect with **separate compute and effect phases**."
 source_repo: "solidjs/solid"
 source_ref: "next"
-source_sha: "3740fded6ec09191a54bf19716a994305b149995"
+source_sha: "766ea30318710943450415ac6acb39d31c9d606c"
 source_path: "packages/solid-signals/src/signals.ts"
 ---
 
@@ -95,7 +95,7 @@ A function that receives the new value and is used to perform side effects (retu
 
 ### `options`
 
-`EffectOptions` -- name, defer, schedule
+`EffectOptions` -- name, defer, schedule, transparent
 
 ## Examples
 
@@ -176,6 +176,7 @@ interface EffectOptions extends BaseEffectOptions {
   defer?: boolean;
   schedule?: boolean;
   sync?: boolean;
+  transparent?: boolean;
 };
 ```
 
@@ -208,3 +209,27 @@ Intended for compiler emissions (`_$effect`) and library code that
 provably returns sync values. Returning a Promise or async iterable
 from a `sync: true` effect is undefined behavior — the value will be
 stored as-is and never awaited.
+
+#### `transparent`
+
+- **Type:** `boolean`
+
+Advanced (integration tier). When true, the effect is invisible to the
+hydration id scheme: it inherits its parent's id instead of consuming a
+child slot, and during hydration its compute runs live instead of
+adopting the serialized server value (its first run is not frozen to
+the server's decision).
+
+For **client-only effects created while hydrating** — effects with no
+server-rendered counterpart (a router wiring link state, scroll
+restoration, etc.). An id-consuming node the server never created would
+shift every later sibling's hydration id, making serialized lookups and
+template claims after it miss. `transparent` is also the supported
+alternative to branching on hydration state
+(`if (hydrating) createEffect(...)`), which freezes whatever the first
+run decided: create the effect unconditionally and let it observe live
+state instead.
+
+SSR ignores this option (a server-side effect always allocates its id
+slot), so only mark effects the server does not create. Outside
+hydration it is a no-op.

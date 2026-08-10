@@ -13,7 +13,7 @@ version: "2.0"
 description: "Creates a readonly derived reactive memoized signal."
 source_repo: "solidjs/solid"
 source_ref: "next"
-source_sha: "3740fded6ec09191a54bf19716a994305b149995"
+source_sha: "766ea30318710943450415ac6acb39d31c9d606c"
 source_path: "packages/solid-signals/src/signals.ts"
 ---
 
@@ -35,6 +35,10 @@ import { createMemo } from "solid-js";
 
 ```ts
 function createMemo<T>(
+  compute: ComputeFunction<NoInfer<T>, T>,
+  options: MemoOptions<T> & { loadingValue: T }
+): SourceAccessor<T>;
+function createMemo<T>(
   compute: ComputeFunction<undefined | NoInfer<T>, T>,
   options?: MemoOptions<T>
 ): SourceAccessor<T>;
@@ -48,7 +52,7 @@ A function that receives its previous value and returns a new value used to reac
 
 ### `options`
 
-`MemoOptions` -- id, name, equals, unobserved, lazy
+`MemoOptions` -- id, name, equals, unobserved, lazy, transparent
 
 ## Examples
 
@@ -92,6 +96,7 @@ interface MemoOptions<T> {
   unobserved?: () => void;
   lazy?: boolean;
   sync?: boolean;
+  loadingValue?: T;
 };
 ```
 
@@ -111,7 +116,12 @@ Debug name (dev mode only)
 
 - **Type:** `boolean`
 
-When true, the owner is invisible to the ID scheme -- inherits parent ID and doesn't consume a childCount slot
+Advanced (integration tier). When true, the memo is invisible to the
+hydration id scheme: it inherits its parent's id instead of consuming a
+child slot, and during hydration it computes live instead of adopting
+the serialized server value. For client-only memos with no
+server-rendered counterpart — see `EffectOptions.transparent` for
+the full semantics. No-op outside hydration.
 
 #### `equals`
 
@@ -150,6 +160,32 @@ Intended for compiler emissions (`_$memo`) and library code that
 provably returns sync values. Returning a Promise or async iterable
 from a `sync: true` memo is undefined behavior — the value will be
 stored as-is and never awaited.
+
+#### `loadingValue`
+
+- **Type:** `T`
+
+Commit #0: a committed value the memo is born with, shown until the
+compute's first real answer lands. While that first answer is in flight
+the memo reads as a settled value everywhere — nothing suspends to a
+`<Loading>` boundary, no transition is held (first-flight work is
+loading-class, like a boundary fallback), and `isPending(memo)` stays
+**false**: commit #0 answers the question by declaration, so first-load
+affordances are driven from the value itself (a `null` placeholder, a
+`skeleton: true` field, etc.). Once the first answer lands, the loading
+value leaves the lineage forever: refetches use normal pending semantics
+(stale value shown, `isPending` true, boundaries/transitions coordinate)
+— the canonical guard is `data.skeleton || isPending(data)`, whose two
+terms cover the two disjoint states.
+
+Typed strictly as `T`: to use `null`/`undefined` as the placeholder,
+declare it in the memo's type (e.g. `createMemo<User | null>(...)`), so
+every consumer sees the nullable window honestly. If the placeholder is
+shaped data standing in for real data, encode its provenance in the data
+(e.g. A `skeleton: true` field) rather than letting it impersonate truth.
+
+The loading value is also the compute's first `prev`, so `prev`-based
+memos fold from it.
 
 ### `SignalOptions`
 

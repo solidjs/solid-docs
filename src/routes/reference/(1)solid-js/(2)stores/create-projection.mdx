@@ -13,7 +13,7 @@ version: "2.0"
 description: "Creates a derived (projected) store. Like `createMemo` but for stores: the\nderive function receives a mutable draft and either mutates it in place\n(canonical) or returns a new value. Either way the result is reconciled\nagainst the previous draft by `options.key` (default `\"id\"`), so surviving\nitems keep their proxy identity — only added/removed items are\ncreated/disposed."
 source_repo: "solidjs/solid"
 source_ref: "next"
-source_sha: "3740fded6ec09191a54bf19716a994305b149995"
+source_sha: "766ea30318710943450415ac6acb39d31c9d606c"
 source_path: "packages/solid-signals/src/store/projection.ts"
 ---
 
@@ -105,6 +105,7 @@ Options for derived/projected stores created with `createStore(fn)`, `createProj
 interface ProjectionOptions extends StoreOptions {
   key?: string | ((item: NonNullable<any>) => any) | null;
   shallow?: boolean;
+  seedLoadingValue?: boolean;
 };
 ```
 
@@ -119,6 +120,22 @@ Key property name or function for reconciliation identity; `null` merges positio
 - **Type:** `boolean`
 
 Single-layer store: root keys reactive, values raw records replaced by reference
+
+#### `seedLoadingValue`
+
+- **Type:** `boolean`
+
+Treat the seed as commit #0: the store is born committed with the seed's
+contents, shown until the derive's first real answer lands. While that
+first answer is in flight, reads serve the seed everywhere — nothing
+suspends to a `<Loading>` boundary, no transition is held, and
+`isPending` stays false (the seed answers by declaration; first-load
+affordances belong to the data, e.g. A `skeleton: true` field in the
+seed). Once the first answer lands (reconciled into the seed), refetches
+use normal pending semantics with `isPending` true.
+
+The store equivalent of `MemoOptions.loadingValue`; the seed already
+carries the placeholder shape, so this is just the opt-in.
 
 ### `ProjectionStoreReturn`
 

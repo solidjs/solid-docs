@@ -77,6 +77,20 @@ Place a loading boundary around the data-dependent region whose output can be re
 Content outside that owner does not become part of its fallback region.
 Nested loading boundaries let each region handle its own initial readiness.
 
+### Sources with commit #0
+
+A source with `loadingValue` returns a committed value during its first async flight.
+A projected store with `seedLoadingValue: true` returns its committed seed during that flight.
+These reads do not report a not-ready state, so they do not activate a `Loading` fallback or hold a transition.
+
+Render commit #0 directly when the first screen can use the same content shape as the landed data.
+Put skeleton or provisional state in the value instead of constructing a parallel fallback tree.
+The [async reactivity guide](/concepts/async-reactivity#declare-a-first-committed-value) shows signal and store forms of this pattern.
+
+Keep `Loading` for branches that have no committed first value or for other unresolved sources in the same subtree.
+After commit #0 receives its first real landing, later refetches follow normal pending behavior.
+An initialized `Loading` boundary continues to show its existing content during those refetches unless its `on` value changes.
+
 ## Error boundaries
 
 [`Errored`](/reference/solid-js/components-jsx/errored) catches uncaught errors reported by its subtree and renders fallback content.

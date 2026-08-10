@@ -1,0 +1,99 @@
+---
+title: "Manifest module"
+category: "filesystem-routing"
+order: 6
+version: "2.0"
+description: "Reference for virtual:file-routes runtime output and TypeScript declarations."
+source_repo: "solidjs/filesystem-routing"
+source_ref: "b9fd4fad9e453bf40e50780bf6623af357df4306"
+source_sha: "b9fd4fad9e453bf40e50780bf6623af357df4306"
+source_path: "types.d.ts"
+---
+
+The Vite adapter serves the neutral route manifest from `virtual:file-routes` by default.
+
+## Imports
+
+```ts
+import routes, { pageRoutes } from "virtual:file-routes";
+```
+
+`routes` is the flat manifest in scan order.
+Its paths retain route groups.
+
+`pageRoutes` contains only entries with `page: true`.
+It nests entries by manifest path, removes groups from URL paths, and changes child paths to be relative to their parent.
+Both exports reuse the same serialized entry objects.
+
+## Delivered refs
+
+```ts
+interface FileRouteLazyRef<M = Record<string, unknown>> {
+	src: string;
+	import(): Promise<M>;
+}
+
+interface FileRouteEagerRef<M = Record<string, unknown>> {
+	src?: string;
+	require(): M;
+}
+
+interface FileRouteEntry {
+	path: string;
+	page?: boolean;
+	$component?: FileRouteLazyRef | FileRouteEagerRef;
+	$$route?: FileRouteEagerRef;
+	[key: string]: unknown;
+}
+
+interface FileRouteTreeEntry extends FileRouteEntry {
+	id: string;
+	children?: readonly FileRouteTreeEntry[];
+}
+```
+
+With default code splitting, `$` keys contain `{ src, import }` and `$$` keys contain `{ require }`.
+With `codeSplitting: false`, both forms contain `require`, while delivered component and handler refs also retain `src`.
+
+`$component` selects the route component exports and CSS.
+`$$route` selects the eager `route` export.
+With HTTP methods enabled, `$GET`, `$POST`, and equivalent keys select handler exports.
+
+## Environment output
+
+When one shared router enables HTTP methods:
+
+- Server-consumer environments receive page, route config, and handler refs.
+- Client-consumer environments remove handler refs.
+- Handler-only entries are absent from client-consumer output.
+- Page entries that also have handlers remain, without their handler refs.
+
+A router explicitly assigned through `fileRoutes({ routers })` is serialized unchanged for that environment.
+
+## `filesystem-routing/types`
+
+Add the packaged general declaration when generated tuple types are disabled:
+
+```ts
+/// <reference types="filesystem-routing/types" />
+```
+
+It declares `routes` as `FileRouteEntry[]` and `pageRoutes` as `FileRouteTreeEntry[]`.
+It applies only to the default module ID.
+
+## Generated literal-tuple declaration
+
+Enable type generation to preserve literal paths and module export types:
+
+```ts
+fileRoutes({ types: true });
+```
+
+The default output is `file-routes.d.ts` in the Vite root.
+It declares the configured module ID, types JavaScript and TypeScript refs with `typeof import(...)`, and reproduces the nested page tuple.
+Modules whose extensions TypeScript cannot resolve use generic ref types.
+
+The generated declaration is self-contained.
+Do not reference `filesystem-routing/types` at the same time because both declare the default virtual module.
+
+The file is regenerated at build start and after route changes, and it is written only when its content changes.

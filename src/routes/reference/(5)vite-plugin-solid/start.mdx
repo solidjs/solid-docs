@@ -1,0 +1,206 @@
+---
+title: "StartOptions"
+category: "vite-plugin-solid"
+order: 2
+version: "2.0"
+description: "Configures vite-plugin-solid turnkey client rendering or streaming SSR."
+source_repo: "solidjs/vite-plugin-solid"
+source_ref: "519da14d20a51dd0a856eb9acfdae784a567bf10"
+source_sha: "519da14d20a51dd0a856eb9acfdae784a567bf10"
+source_path: "src/ssr/index.ts"
+---
+
+`StartOptions` configures the serving layer enabled by `solidPlugin({ start })`.
+
+## Import
+
+```ts
+import solidPlugin, { type StartOptions } from "vite-plugin-solid";
+```
+
+## Type
+
+```ts
+interface StartOptions {
+	app?: string;
+	entryServer?: string;
+	entryClient?: string;
+	document?: string;
+	middleware?: string;
+	setup?: string;
+	env?: boolean | string;
+	external?: boolean;
+}
+```
+
+All paths resolve relative to the Vite root and must exist.
+The `app`, entry, document, middleware, setup, and environment schema paths must remain inside that root.
+
+## Options
+
+### `app`
+
+- **Type:** `string`
+- **Default:** First match from `src/App.{tsx,jsx,ts,js}` or `src/app.{tsx,jsx,ts,js}`
+
+Specifies the default-exporting root component used by generated entries.
+It is required when the plugin cannot use an authored client entry in client mode or an authored entry pair in SSR mode.
+
+### `entryServer`
+
+- **Type:** `string`
+- **Default:** First existing `src/entry-server.{tsx,jsx,ts,js,mjs}`, otherwise generated
+
+Specifies an authored server entry for turnkey SSR.
+It must export:
+
+```ts
+function render(
+	request?: Request,
+	context?: { clientEntry: string; [key: string]: unknown }
+): RenderToStreamResult | string | Response | Promise<string | Response>;
+```
+
+The option and conventional server entry are ignored in turnkey client mode.
+
+### `entryClient`
+
+- **Type:** `string`
+- **Default:** First existing `src/entry-client.{tsx,jsx,ts,js,mjs}`, otherwise generated
+
+Specifies the browser entry.
+In SSR mode, authored server and client entries must both exist.
+In client mode, an authored client entry can stand alone.
+
+Generated client entries call `hydrate()` in SSR mode and `render()` into `document.body` in client mode.
+
+### `document`
+
+- **Type:** `string`
+- **Default:** First existing `src/Document.{tsx,jsx}`, otherwise a built-in document
+
+Specifies the default-exporting full-document component used by generated server entries.
+It receives the application as `props.children`.
+In SSR mode, an authored document must emit the `<html>` document and `<HydrationScript />`.
+The handler injects the client entry into `<head>`.
+
+In client mode, the document renders without the application.
+The handler removes an authored hydration script from that static shell.
+
+### `middleware`
+
+- **Type:** `string`
+- **Default:** `undefined`
+
+Specifies a server-only module whose default export is one middleware function or an array.
+
+```ts
+type Middleware = (
+	request: Request,
+	next: (request?: Request) => Response | Promise<Response>
+) => Response | Promise<Response>;
+```
+
+Middleware runs in array order inside the request-event scope.
+It fronts every request dispatched by the generated handler, including pages and the server-function endpoint.
+
+### `setup`
+
+- **Type:** `string`
+- **Default:** `undefined`
+
+Specifies a server-only module whose default export prepares the application before generated SSR begins.
+
+```ts
+type Setup = (
+	event: RequestEvent,
+	App: Component
+) => Component | void | Promise<Component | void>;
+```
+
+A returned component replaces `App` for that request.
+Returning nothing keeps `App`.
+The option is ignored in client mode and is rejected when SSR uses authored entries.
+It does not run for server-function endpoint dispatch.
+
+### `env`
+
+- **Type:** `boolean | string`
+- **Default:** Probe `env.ts`, then `env.js`; disable the feature when neither exists
+
+Configures Standard Schema environment validation.
+`true` requires a conventional schema file, a string selects a schema file, and `false` disables probing.
+
+The schema must default-export only `server` and `client` maps.
+Every value must implement Standard Schema's `~standard.validate`.
+Client keys must start with Vite's `envPrefix`, which defaults to `VITE_`, and a key cannot appear in both maps.
+
+```ts
+export default {
+	server: {
+		DATABASE_URL: z.url(),
+	},
+	client: {
+		VITE_APP_NAME: z.string(),
+	},
+};
+```
+
+The plugin writes `solid-env.d.ts` next to the schema.
+`virtual:env/client` contains validated client values baked into the client bundle.
+`virtual:env/server` contains server and client values, reads server values from `process.env` at server startup, and is rejected from client module graphs.
+
+Client validation errors fail development and builds.
+Server validation errors fail development, warn during builds, and fail when the built server module starts.
+
+### `external`
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Hands turnkey SSR build wiring and HTTP serving to a host integration.
+The plugin keeps generated entries, the client manifest, and `virtual:solid-ssr-handler`, but does not configure `dist/server` or its development middlewares.
+The option is ignored in client mode.
+
+A host-owned, non-runnable `ssr` development environment is detected without this option.
+Use `serverFunctions.devMiddleware: false` to hand over only development endpoint dispatch.
+
+## Valid mode combinations
+
+### Transform only
+
+```ts
+solidPlugin();
+solidPlugin({ ssr: true });
+```
+
+Without `start`, the plugin configures transforms only.
+`ssr: true` enables the client and server transforms, while the application supplies entries and serving.
+
+### Turnkey client mode
+
+```ts
+solidPlugin({ start: true });
+```
+
+- Development serves the document shell for HTML `GET` requests and mounts the application with `render()`.
+- `vite build` writes the prerendered shell and client assets to `dist/client`.
+- `dist/server` is removed unless server functions require its handler.
+- `vite preview` uses static SPA fallback and dispatches the server-function endpoint when enabled.
+
+### Turnkey SSR
+
+```ts
+solidPlugin({ start: true, ssr: true });
+```
+
+- Development streams HTML through the runnable `ssr` environment.
+- `vite build` builds the client first, writes client assets and a Vite manifest to `dist/client`, and writes `dist/server/server.js`.
+- The server bundle exports `handleRequest(request, options?)`.
+- `vite preview` serves client assets and sends other requests through the built handler.
+
+### Server functions
+
+`serverFunctions` composes with either turnkey mode.
+In client mode, pages remain static while `dist/server/server.js` remains available for endpoint requests.
+In SSR mode, the same handler dispatches the endpoint before rendering a page.

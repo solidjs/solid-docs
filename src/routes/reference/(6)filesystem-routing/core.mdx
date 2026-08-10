@@ -1,0 +1,154 @@
+---
+title: "filesystem-routing core"
+category: "filesystem-routing"
+order: 3
+version: "2.0"
+description: "Reference for the bundler-neutral scanner, manifest types, and module analysis exports."
+source_repo: "solidjs/filesystem-routing"
+source_ref: "b9fd4fad9e453bf40e50780bf6623af357df4306"
+source_sha: "b9fd4fad9e453bf40e50780bf6623af357df4306"
+source_path: "src/index.ts"
+---
+
+The root import exposes the bundler-neutral scanner and manifest-building utilities.
+
+## `BaseFileSystemRouter`
+
+```ts
+import { BaseFileSystemRouter } from "filesystem-routing";
+
+class BaseFileSystemRouter extends EventTarget {
+	routes: RouteManifestEntry[];
+	config: FileSystemRouterConfig;
+
+	constructor(config: FileSystemRouterConfig);
+	glob(): string;
+	buildRoutes(): Promise<RouteManifestEntry[]>;
+	isRoute(src: string): boolean;
+	toPath(src: string): string | undefined;
+	toRoute(src: string): RouteManifestEntry | undefined;
+	addRoute(src: string): Promise<void>;
+	updateRoute(src: string): Promise<void>;
+	removeRoute(src: string): void;
+	reload(route: string, type: "update" | "remove" | "add"): void;
+	on(type: string, callback: (event: RouterEvent) => void): () => void;
+	getRoutes(): Promise<RouteManifestEntry[]>;
+}
+```
+
+The constructor resolves `config.dir` against the current working directory and normalizes separators.
+The base `toPath` and `toRoute` methods call configured functions and otherwise throw `"Not implemented"`.
+Subclasses provide conventions by overriding either method.
+
+`getRoutes()` starts one cached directory scan and returns the mutable route array.
+Add, update, and remove operations emit `reload` events.
+When an added route has the same manifest path as an existing entry, it replaces that entry.
+
+## `FileSystemRouterConfig`
+
+```ts
+interface FileSystemRouterConfig {
+	dir: string;
+	extensions: string[];
+	toPath?: (
+		routeFile: string,
+		config: FileSystemRouterConfig
+	) => string | undefined;
+	toRoute?: (
+		src: string,
+		router: BaseFileSystemRouter
+	) => RouteManifestEntry | undefined;
+}
+```
+
+`dir` is required.
+`extensions` contains extension names without dots.
+`toPath` receives a path relative to `dir` with its extension removed.
+Either callback can return `undefined` to skip a file.
+
+## Manifest types
+
+### `ModuleRef`
+
+```ts
+interface ModuleRef {
+	src: string;
+	pick: string[];
+}
+```
+
+`src` is an absolute source path.
+`pick` names the exports selected from that module.
+
+### `RouteManifestEntry`
+
+```ts
+interface RouteManifestEntry {
+	path: string;
+	page?: boolean;
+	$component?: ModuleRef;
+	$$route?: ModuleRef;
+	[key: string]: unknown;
+}
+```
+
+`path` uses `:param`, optional `:param?`, catch-all `*rest`, and retained `(group)` segments.
+Delivery adapters materialize `$`-prefixed refs lazily and `$$`-prefixed refs eagerly.
+A delivery adapter can materialize either form eagerly; consumers branch on the delivered `import()` or `require()` shape.
+
+## Path and scan helpers
+
+### `cleanPath`
+
+```ts
+function cleanPath(src: string, config: FileSystemRouterConfig): string;
+```
+
+Removes the configured route directory prefix and a configured extension.
+
+### `glob`
+
+```ts
+const glob: (path: string) => string[];
+```
+
+Runs a synchronous `fast-glob` scan with absolute results.
+
+### `normalizePath`
+
+```ts
+function normalizePath(path: string): string;
+```
+
+Converts Windows separators to forward slashes and leaves other paths unchanged.
+
+## Static export analysis
+
+### `analyzeModule`
+
+```ts
+function analyzeModule(src: string): StaticExportEntry[];
+```
+
+Parses a source file as TSX with `oxc-parser` and returns non-type static exports.
+A parse error throws `SyntaxError` with the source code frame or parser message.
+
+### `getExportName`
+
+```ts
+function getExportName(entry: StaticExportEntry): string;
+```
+
+Returns the exported name and returns `"default"` for a default export.
+
+### `getLocalExportName`
+
+```ts
+function getLocalExportName(entry: StaticExportEntry): string | undefined;
+```
+
+Returns a non-default export name only when the export refers to a same-named local or imported binding.
+
+### `StaticExportEntry`
+
+The exported type comes from `oxc-parser`.

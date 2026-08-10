@@ -5,7 +5,229 @@ mainNavExclude: true
 version: "2.0"
 ---
 
-:::note[Planned]
-This page has not been written yet.
-It will cover the rendering model: `render`, `hydrate`, streaming SSR, and hydration control.
-:::
+Solid uses the same component source for client rendering and server-side rendering (SSR).
+The JSX build target selects DOM operations for the browser or HTML-producing operations for the server.
+
+## Client rendering
+
+Use [`render`](/reference/solid-web/rendering-ssr/render) to mount a client-rendered tree into a DOM container.
+It returns a disposer that tears down the tree and its reactive scopes.
+
+```tsx
+import { render } from "@solidjs/web";
+import { App } from "./App";
+
+const root = document.getElementById("app");
+
+if (!root) {
+	throw new Error("Missing #app");
+}
+
+const dispose = render(() => <App />, root);
+
+// Call dispose() when this root must be unmounted.
+```
+
+The initial attachment is scheduled through Solid's effect queue.
+When the initial render has no unresolved async read, `render` flushes that work before returning.
+If an uncaught async read is pending, the initial mount waits and attaches after it settles.
+
+## Hydrating server HTML
+
+Use [`hydrate`](/reference/solid-web/rendering-ssr/hydrate) when the container already holds HTML produced by `renderToString` or `renderToStream`.
+Hydration claims the existing server-rendered nodes and attaches event handlers and reactive bindings without reconstructing those nodes.
+It also returns a disposer for the reactive tree, while leaving the DOM nodes in place.
+
+```tsx
+import { hydrate } from "@solidjs/web";
+import { App } from "./App";
+
+const root = document.getElementById("app");
+
+if (!root) {
+	throw new Error("Missing #app");
+}
+
+hydrate(() => <App />, root);
+```
+
+The server and client must render the same initial structure in each hydrated region.
+Solid assigns hydration keys and serializes hydration state during SSR so the client build can claim the matching nodes.
+For multiple roots, give each server render a distinct `renderId` and pass the same value to its `hydrate` call.
+
+```tsx
+// Server
+const accountHtml = renderToString(() => <Account />, { renderId: "account" });
+
+// Client
+hydrate(() => <Account />, accountRoot, { renderId: "account" });
+```
+
+## Synchronous string rendering
+
+[`renderToString`](/reference/solid-web/rendering-ssr/render-to-string) runs a component tree synchronously and returns an HTML string.
+Use it when the tree can complete synchronously or when pending content is enclosed by a `Loading` boundary whose fallback is suitable for the response.
+
+```tsx
+import { Loading } from "solid-js";
+import { renderToString } from "@solidjs/web";
+import { App } from "./App";
+
+const html = renderToString(() => (
+	<Loading fallback={<main>Loading…</main>}>
+		<App />
+	</Loading>
+));
+```
+
+When a read is pending inside `Loading`, string rendering emits that boundary's fallback.
+Use streaming when the response should include the content after asynchronous work settles.
+
+## Streaming rendering
+
+[`renderToStream`](/reference/solid-web/rendering-ssr/render-to-stream) emits the synchronous shell first.
+It then emits fragments as pending `Loading` boundaries settle.
+
+The returned object can pipe to a Node writable, pipe to a Web `WritableStream`, expose a `ReadableStream<Uint8Array>`, or be awaited for the fully settled HTML.
+Choose one output form for each render.
+
+```tsx
+import { renderToStream } from "@solidjs/web";
+import { App } from "./App";
+
+export function handleRequest(): Response {
+	const stream = renderToStream(() => <App />);
+	return new Response(stream.readable, {
+		headers: { "content-type": "text/html; charset=utf-8" },
+	});
+}
+```
+
+Awaiting the result collects the completed render as a string.
+
+```tsx
+const html = await renderToStream(() => <App />);
+```
+
+Async reads without a surrounding `Loading` boundary block the shell until they settle.
+Inside a boundary, the shell can contain the fallback and a later stream fragment can replace it.
+The [Boundaries concept page](/concepts/boundaries) explains `Loading`, `Errored`, and reveal ordering.
+
+## Who owns the document
+
+A server render can produce a complete document or a fragment embedded in a document owned by another host.
+This choice determines how head content and render assets reach the document.
+
+When the rendered output includes a closing `</head>`, the renderer inserts registered head content and assets into that document.
+
+```tsx
+const html = renderToString(() => (
+	<html lang="en">
+		<head>
+			<meta charset="utf-8" />
+		</head>
+		<body>
+			<div id="app">
+				<App />
+			</div>
+		</body>
+	</html>
+));
+```
+
+When another host owns the document, render the application fragment and use `onHead` to receive the head HTML.
+For `renderToString`, `onHead` runs synchronously before the function returns.
+For `renderToStream`, it runs before the shell is emitted.
+
+```tsx
+let head = "";
+
+const body = renderToString(() => <App />, {
+	onHead(value) {
+		head = value;
+	},
+});
+
+const documentHtml = `<!doctype html>
+<html>
+  <head>${head}</head>
+  <body><div id="app">${body}</div></body>
+</html>`;
+```
+
+The renderer manages HTML generation and head delivery in these examples.
+Server adapters, routing, response creation, and deployment belong to the application layer.
+
+## Controlling hydration
+
+[`NoHydration`](/reference/solid-js/advanced/manual-hydration/no-hydration) renders its children on the server without hydration keys or serialized signals.
+During client hydration, Solid skips that subtree and leaves its DOM untouched.
+After hydration, the client can render the children fresh.
+
+```tsx
+import { NoHydration } from "solid-js";
+
+<NoHydration>
+	<aside>This server-rendered content is not hydrated.</aside>
+</NoHydration>;
+```
+
+[`Hydration`](/reference/solid-js/advanced/manual-hydration/hydration) re-enables hydration inside a `NoHydration` region.
+On the server, it establishes a new hydration ID namespace.
+Pass the same value to the independent client root's `renderId`.
+
+```tsx
+import { Hydration, NoHydration } from "solid-js";
+
+<NoHydration>
+	<div id="account">
+		<Hydration id="account">
+			<Account />
+		</Hydration>
+	</div>
+</NoHydration>;
+```
+
+The client can hydrate that inner region as its own root.
+
+```tsx
+import { hydrate } from "@solidjs/web";
+
+const accountRoot = document.getElementById("account")!;
+
+hydrate(() => <Account />, accountRoot, { renderId: "account" });
+```
+
+These controls divide hydration ownership rather than choose visible content.
+Use them only when the server and client intentionally manage different parts of the document.
+
+## Server and client boundaries
+
+[`isServer`](/reference/solid-web/rendering-ssr/is-server) is a build-time constant.
+The browser entry exports `false`, and the server entry exports `true`.
+Bundlers can remove the unreachable side of an environment guard.
+
+```tsx
+import { isServer } from "@solidjs/web";
+
+if (!isServer) {
+	window.addEventListener("online", reportOnline);
+}
+```
+
+Use [`clientOnly`](/reference/solid-web/rendering-ssr/client-only) for a dynamically imported component that must never execute on the server.
+The server renders only its fallback and does not start the import.
+The client hydrates that fallback, waits for the module and hydration to settle, and then swaps in the component.
+
+```tsx
+import { clientOnly } from "@solidjs/web";
+
+const Map = clientOnly(() => import("./Map"));
+
+export function Location() {
+	return <Map fallback={<div>Map unavailable during SSR</div>} />;
+}
+```
+
+By default, `clientOnly` starts loading when its declaration runs.
+Pass `{ lazy: true }` to defer the import until the component's first render.

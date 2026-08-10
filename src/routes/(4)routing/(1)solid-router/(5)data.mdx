@@ -1,0 +1,222 @@
+---
+title: "Data loading and mutations"
+version: "2.0"
+description: "Preload route work, cache reads with query, and submit mutations with Solid Router actions."
+---
+
+Solid Router's data APIs are optional.
+Route preloads start work for a match, `query` adds keyed caching and revalidation, and `action` adds URL-addressable mutations and submission records.
+
+## Start work in a route preload
+
+A route `preload` runs before its component is created.
+It receives the matched parameters, target location, and an intent that identifies why the work started.
+
+```tsx
+const userRoute = defineRoute({
+	path: "/users/:id",
+	preload: ({ params }) => getUser(params.id),
+	component: (props) => <User user={props.data} />,
+});
+```
+
+The preload return value becomes `props.data`.
+The intent is one of:
+
+- `"initial"` for the first render or server render.
+- `"navigate"` for router navigation.
+- `"native"` for browser history traversal.
+- `"preload"` for route warming without navigation.
+
+The factory-level `preload` runs for the root layout with parameters merged from the full match chain.
+Its result becomes the root render prop's `props.data`.
+
+## Preload from links
+
+By default, link hover, focus, and touch warm matched lazy components and route data.
+The router begins hover preloading after a short delay and deduplicates later query reads through the preload cache.
+
+Disable route-data preloading for one link with `preload="false"`:
+
+```tsx
+<a href={Router.paths.reports} preload="false">
+	Reports
+</a>
+```
+
+Set `preloadLinks: false` in the router config to disable automatic link preloading.
+Use `usePreloadRoute` for an explicit warm-up:
+
+```tsx
+const preloadRoute = usePreloadRoute();
+
+preloadRoute(Router.paths.users(42), { preloadData: true });
+```
+
+The route's lazy components always warm during explicit preloading.
+Set `preloadData: true` to run its preloads.
+
+## Cache reads with `query`
+
+Wrap a read function with `query` and give it a stable key name:
+
+```tsx
+import { query } from "@solidjs/router";
+
+export const getUser = query(async (id: string) => {
+	const response = await fetch(`/api/users/${id}`);
+	return response.json();
+}, "users");
+```
+
+Arguments are serialized after the name to form each cache key.
+The wrapped function exposes the broad key through `.key` and an argument-specific key through `.keyFor(...)`.
+
+```ts
+getUser.key;
+// "users"
+
+getUser.keyFor("42");
+// 'users["42"]'
+```
+
+The cache is request-scoped on the server and application-scoped in the browser.
+In the browser, a preload result is reused for five seconds so a preload and route render share work.
+Tracked consumers keep their cache entry live.
+Native back and forward navigation can reuse retained entries.
+Unused browser entries older than three minutes are removed by the periodic cache sweep.
+
+Read the query through a Solid async-aware primitive:
+
+```tsx
+import { createMemo } from "solid-js";
+
+const user = createMemo(() => getUser(params.id));
+
+return <h1>{user().name}</h1>;
+```
+
+When `query` wraps an undeclared server function, it declares that reference as a GET operation through the Solid server-function transport.
+Plain functions are called without that transport behavior.
+
+:::note[Local-only source]
+The late-bound transport lookup used by this query integration comes from router commit `c2fddb0`, which is ahead of `origin/next`.
+:::
+
+## Revalidate cached reads
+
+Call `revalidate` with a broad query key or an argument-specific key:
+
+```tsx
+revalidate(getUser.key);
+revalidate(getUser.keyFor("42"));
+```
+
+Omitting the key revalidates every client cache entry.
+Keys use prefix matching, so a broad key reaches every argument combination for that query.
+The default forced revalidation marks matching entries stale and retriggers live consumers.
+
+## Define an action
+
+`action` wraps an asynchronous mutation.
+The returned action has a URL and can be serialized into a form's `action` or `formaction` attribute when its input shape supports form submission.
+
+```tsx
+import { action } from "@solidjs/router";
+import { redirect } from "@solidjs/web";
+
+const updateProfile = action(async (form: FormData) => {
+	await saveProfile(form);
+	return redirect("/account");
+}, "update-profile");
+```
+
+Submit actions with POST:
+
+```tsx
+<form action={updateProfile} method="post">
+	<label>
+		Display name
+		<input name="displayName" />
+	</label>
+	<button>Save</button>
+</form>
+```
+
+The delegated action pipeline marks the submitting form with `aria-busy="true"` until the action and its revalidation settle.
+Only POST forms are supported for actions.
+
+Client actions rendered on the server need a stable explicit name so the server and client serialize the same action URL.
+A server function already supplies its server-action URL.
+
+## Bind action arguments
+
+Use `.with(...)` to bind typed arguments ahead of form input:
+
+```tsx
+const deleteTodo = action(async (id: string, form: FormData) => {
+	await removeTodo(id);
+});
+
+<form action={deleteTodo.with(todo.id)} method="post">
+	<button>Delete</button>
+</form>;
+```
+
+The bound arguments are encoded in the action URL.
+
+## Add optimistic and settled behavior
+
+`.onSubmit` runs owner-scoped callbacks before the mutation settles.
+`.onSettled` receives a `Submission` after every completion, including void and redirect outcomes.
+Listeners registered under a reactive owner are removed when that owner is disposed.
+
+```tsx
+const addTodo = action(async (todo: TodoInput) => {
+	await saveTodo(todo);
+	return todo;
+}, "add-todo").onSubmit((todo) => {
+	setTodos((items) => {
+		items.push({ ...todo, pending: true });
+	});
+});
+```
+
+Use Solid's optimistic primitives to hold in-flight rendered state.
+Use `useSubmissions` for settled action results and errors.
+
+```tsx
+const submissions = useSubmissions(addTodo);
+const latest = () => submissions.at(-1);
+
+latest()?.result;
+latest()?.error;
+latest()?.clear();
+latest()?.retry();
+```
+
+Only outcomes with a result or an error are retained in the submissions list.
+A void or metadata-only completion still reaches `.onSettled`.
+
+## Invoke an action from code
+
+`useAction` binds an action to the current router context:
+
+```tsx
+const submit = useAction(updateSettings);
+
+await submit(settings());
+```
+
+Direct invocation requires client-side JavaScript and does not provide a browser form fallback.
+
+## Revalidate after a mutation
+
+Response metadata from `@solidjs/web` can carry revalidation keys and redirects.
+The router invalidates matching query entries and performs relative redirects through router navigation.
+
+With server functions and the router's single-flight integration, a mutation response can also contain fresh query values from the destination route's preloads.
+The client seeds those values before the action call resolves.
+See [Server rendering and hydration](/routing/solid-router/server-rendering#collect-fresh-data-with-mutations) for the server setup.
+
+See the [data API reference](/reference/solid-router/data) for signatures and cache controls.

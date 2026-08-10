@@ -1,0 +1,127 @@
+---
+title: "Nested routes and layouts"
+version: "2.0"
+description: "Compose nested Solid Router routes and render child content through layouts."
+---
+
+Nested route definitions build a path and component chain from the root to a leaf.
+A route with `children` can render a layout around the matched child.
+
+```tsx
+import { defineRoutes } from "@solidjs/router";
+
+function AccountLayout(props) {
+	return (
+		<section>
+			<h1>Account</h1>
+			<nav>
+				<a href="/account">Profile</a>
+				<a href="/account/security">Security</a>
+			</nav>
+			{props.children}
+		</section>
+	);
+}
+
+export const routes = defineRoutes([
+	{
+		path: "/account",
+		component: AccountLayout,
+		children: [
+			{ path: "/", component: Profile },
+			{ path: "/security", component: Security },
+		],
+	},
+]);
+```
+
+At `/account/security`, `AccountLayout` renders first and receives the `Security` route through `props.children`.
+Each matched route component receives its own `params`, `location`, `data`, and child content.
+
+## Add pathless layouts
+
+A route without `path` adds a component or preload to the match chain without adding a URL segment.
+
+```tsx
+const routes = defineRoutes([
+	{
+		component: AuthenticatedLayout,
+		children: [
+			{ path: "/dashboard", component: Dashboard },
+			{ path: "/settings", component: Settings },
+		],
+	},
+]);
+```
+
+Pathless routes keep the open `Params` type because they do not declare parameters of their own.
+
+## Share parent parameters
+
+Child routes inherit parameters from matched parents.
+
+```tsx
+const routes = defineRoutes([
+	{
+		path: "/teams/:teamId",
+		component: TeamLayout,
+		children: [
+			{ path: "/", component: TeamOverview },
+			{ path: "/members/:memberId", component: Member },
+		],
+	},
+]);
+```
+
+At `/teams/solid/members/42`, the leaf sees both `teamId` and `memberId`.
+`useParams()` returns the merged current parameters.
+A typed path witness can narrow the known keys:
+
+```tsx
+const params = useParams(Router.paths.teams("solid").members);
+params.teamId;
+params.memberId;
+```
+
+Runtime route parameters remain strings even when a typed match filter changes the argument accepted by `Router.paths`.
+
+## Keep shared layouts mounted
+
+Solid Router reuses a matched route context while its route definition remains in the next match chain.
+Moving between sibling child routes therefore keeps their shared parent layout mounted.
+
+Place shared navigation, providers, and route-independent state in the parent component.
+Place child-specific state in the leaf component.
+
+The root render prop passed to `<Router>` is outside the matched route chain and stays mounted across all routes.
+Use it for application-wide layout and providers.
+Use nested route components for section layouts.
+
+## Load nested data
+
+Every matched route can define a `preload`.
+The router calls the preloads while creating the corresponding route contexts, and each return value becomes that route component's `props.data`.
+
+```tsx
+const routes = defineRoutes([
+	defineRoute({
+		path: "/teams/:teamId",
+		preload: ({ params }) => getTeam(params.teamId),
+		component: (props) => (
+			<TeamContext.Provider value={props.data}>
+				{props.children}
+			</TeamContext.Provider>
+		),
+		children: [
+			defineRoute({
+				path: "/members/:memberId",
+				preload: ({ params }) => getMember(params.memberId),
+				component: (props) => <Member member={props.data} />,
+			}),
+		],
+	}),
+]);
+```
+
+Route preloads are also used by hover and focus preloading and by the optional single-flight server integration.
+See [Data loading and mutations](/routing/solid-router/data) for those behaviors.

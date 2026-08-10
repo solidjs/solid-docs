@@ -1,0 +1,150 @@
+---
+title: "Router factory"
+version: "2.0"
+description: "Reference for createRouter, defineRoute, defineRoutes, router configuration, and router instances."
+source_repo: "solidjs/solid-router"
+source_ref: "next"
+source_sha: "3daa4d071df288280eb0de996039cf591d8173f8"
+source_path: "src/routers/factory.tsx"
+---
+
+## Import
+
+```ts
+import { createRouter, defineRoute, defineRoutes } from "@solidjs/router";
+```
+
+## `createRouter`
+
+Creates an immutable router instance from a route tree.
+
+```ts
+function createRouter<const R extends readonly RouteDefinition[]>(
+	config: RouterConfig<R>
+): RouterInstance<R>;
+```
+
+### `RouterConfig`
+
+```ts
+interface RouterConfig<
+	R extends readonly RouteDefinition[] = RouteDefinition[],
+> {
+	routes: R;
+	base?: string;
+	preload?: RoutePreloadFunc;
+	history?: RouterHistory;
+	singleFlight?: boolean;
+	actionBase?: string;
+	explicitLinks?: boolean;
+	preloadLinks?: boolean;
+	scrollRestoration?: boolean;
+	transformUrl?: (url: string) => string;
+}
+```
+
+- `routes` is the route tree used for matching and path inference.
+- `base` prefixes matched and generated paths.
+- `preload` returns data for the root render prop.
+- `history` defaults to browser history on the client.
+- `singleFlight` defaults to `true`.
+- `actionBase` defaults to `/_server`.
+- `explicitLinks` defaults to `false`.
+- `preloadLinks` defaults to `true`.
+- `scrollRestoration` defaults to `true` with the default browser history.
+- `transformUrl` rewrites pathnames before matching and preloading.
+
+### Return value
+
+```ts
+interface RouterInstance<
+	R extends readonly RouteDefinition[] = RouteDefinition[],
+> {
+	(props: RouterProps): JSX.Element;
+	readonly paths: RoutePaths<R>;
+	readonly routes: R;
+	readonly config: RouterConfig<R>;
+	match(url: string): OutputMatch[];
+}
+```
+
+The instance is the provider component.
+`paths` is created on first access.
+`match(url)` returns root-to-leaf matches or an empty array.
+
+```tsx
+const Router = createRouter({
+	routes: [{ path: "/", component: Home }],
+});
+
+<Router>{(props) => <main>{props.children}</main>}</Router>;
+```
+
+### `RouterProps`
+
+```ts
+interface RouterProps {
+	url?: string;
+	children?: (props: RouteSectionProps) => JSX.Element;
+}
+```
+
+`url` selects a server-rendered location when no request event exists.
+A request event takes precedence.
+The client ignores `url`.
+
+## `defineRoutes`
+
+Preserves literal types for an extracted route tuple and returns the same value.
+
+```ts
+function defineRoutes<const R extends readonly RouteDefinition[]>(routes: R): R;
+```
+
+```ts
+const routes = defineRoutes([{ path: "/" }, { path: "/users/:id" }]);
+```
+
+## `defineRoute`
+
+Returns the supplied route object while typing its component and preload parameters from its path.
+
+```ts
+function defineRoute<
+	const S extends string | readonly string[],
+	T = unknown,
+	const F = DefinedRouteFilters<S>,
+	const C extends
+		| RouteDefinition
+		| readonly RouteDefinition[]
+		| LazyRouteChildren
+		| undefined,
+	Sch extends StandardSchemaV1<any, any> | undefined = undefined,
+>(route: {
+	path: S;
+	matchFilters?: F;
+	preload?: (args: RoutePreloadFuncArgs<RouteParams<S>>) => T;
+	component?: (
+		props: RouteSectionProps<T, RouteParams<S>> & { children?: any }
+	) => JSX.Element;
+	children?: C;
+	search?: Sch;
+	info?: RouteInfo;
+}): DefinedRoute<S, T, F, C, Sch>;
+```
+
+A pathless overload omits `path` and uses open `Params`.
+
+```tsx
+const route = defineRoute({
+	path: "/users/:id",
+	preload: ({ params }) => getUser(params.id),
+	component: (props) => <h1>{props.data.name}</h1>,
+});
+```
+
+## Related
+
+- [Routes and typed paths](/reference/solid-router/routes-and-paths)
+- [History adapters](/reference/solid-router/history)
+- [Server integration](/reference/solid-router/server)

@@ -4,7 +4,7 @@ version: "2.0"
 description: "Define static, parameterized, lazy, and file-system-backed Solid Router routes."
 ---
 
-A route definition connects a path pattern to a component, optional preload work, nested routes, search validation, and metadata.
+A route definition maps a path pattern to a component and route behavior.
 
 ```tsx
 import { defineRoutes } from "@solidjs/router";
@@ -17,7 +17,8 @@ export const routes = defineRoutes([
 ```
 
 Use `defineRoutes` for an extracted route array.
-Its `const` type parameter preserves path literals that TypeScript would otherwise widen, so `createRouter({ routes })` can infer typed paths from the array.
+The `const` type parameter preserves path literals that TypeScript would otherwise widen.
+`createRouter({ routes })` can then infer typed paths from the array.
 An inline array passed directly to `createRouter` already receives literal inference.
 
 ## Type a route at its definition
@@ -56,7 +57,12 @@ const Story: RouteComponent<typeof Router.paths.stories> = (props) => (
 
 ## Match path patterns
 
-Use `:name` for a required segment, `:name?` for an optional segment, and `*name` for the remaining path.
+Choose a path token for each parameter:
+
+- Use `:name` for a required segment.
+- Use `:name?` for an optional segment.
+- Use `*name` for the remaining path.
+
 A wildcard must be the final segment.
 
 ```tsx
@@ -77,7 +83,8 @@ The same route definition stays mounted when navigation moves between its matchi
 
 ## Filter parameters
 
-`matchFilters` rejects parameter values that do not satisfy an array, regular expression, or predicate.
+`matchFilters` rejects parameter values that do not satisfy the configured filter.
+Use an array, regular expression, or predicate as the filter.
 
 ```tsx
 import { defineRoute, int } from "@solidjs/router";
@@ -90,7 +97,7 @@ const userRoute = defineRoute({
 ```
 
 The built-in `int` filter accepts integer strings at runtime.
-It also changes the corresponding `Router.paths` argument to `number`.
+The `int` filter also changes the corresponding `Router.paths` argument to `number`.
 Route components still receive URL parameters as strings.
 
 ## Add route metadata
@@ -137,7 +144,7 @@ const Router = createRouter({
 ```
 
 The thunk runs when matching, navigation, or preloading reaches that subtree.
-Its resolution is cached and added to the compiled route tree.
+The router caches the resolved subtree and adds it to the compiled route tree.
 TypeScript infers paths through the import's promise type when the imported route array retains literal types.
 
 ```tsx
@@ -168,7 +175,12 @@ export const Router = createRouter({
 ```
 
 Each route module exports its component as `default`.
-An optional named `route` export supplies `preload`, `matchFilters`, `search`, and `info`.
+An optional named `route` export can supply:
+
+- `preload`
+- `matchFilters`
+- `search`
+- `info`
 
 ```tsx
 // routes/blog/[id].tsx
@@ -191,9 +203,5 @@ When the manifest has generated literal types, route paths, filters, and search 
 
 Code-split manifest components become Solid `lazy` components.
 An eagerly delivered component from a manifest built with `codeSplitting: false` is passed through without a `lazy` wrapper.
-
-:::note[Local-only source]
-Eager component passthrough comes from router commit `bae09cc`, which is ahead of `origin/next`.
-:::
 
 See the [`@solidjs/router/fs` reference](/reference/solid-router/filesystem) for adapter signatures.

@@ -14,7 +14,7 @@ version: "2.0"
 description: "A branch inside a `<Switch>`. The first `<Match>` whose `when` is truthy\nwins; remaining matches are skipped."
 source_repo: "solidjs/solid"
 source_ref: "next"
-source_sha: "bad66625e13abb5a86168b8be0db8638097f7b71"
+source_sha: "3740fded6ec09191a54bf19716a994305b149995"
 source_path: "packages/solid/src/client/flow.ts"
 ---
 
@@ -37,20 +37,20 @@ import { Match } from "solid-js";
 
 ```ts
 function Match<T>(props: {
-	when: T | undefined | null | false;
-	keyed: true;
-	children: SolidElement;
+  when: T | undefined | null | false;
+  keyed: true;
+  children: SolidElement;
 }): SolidElement;
 function Match<T, F extends KeyedConditionalRenderCallback<T>>(
-	props: KeyedMatchProps<T, F>
+  props: KeyedMatchProps<T, F>
 ): SolidElement;
 function Match<T>(props: {
-	when: T | undefined | null | false;
-	keyed?: false;
-	children: SolidElement;
+  when: T | undefined | null | false;
+  keyed?: false;
+  children: SolidElement;
 }): SolidElement;
 function Match<T, F extends ConditionalRenderCallback<T>>(
-	props: MatchProps<T, F>
+  props: MatchProps<T, F>
 ): SolidElement;
 function Match<T>(props: AnyMatchProps<T>): SolidElement;
 ```
@@ -59,10 +59,12 @@ function Match<T>(props: AnyMatchProps<T>): SolidElement;
 
 ```tsx
 <Switch fallback={<NotFound />}>
-	<Match when={user()}>{(u) => <Profile name={u().name} />}</Match>
-	<Match when={loading()}>
-		<Spinner />
-	</Match>
+  <Match when={user()}>
+    {u => <Profile name={u().name} />}
+  </Match>
+  <Match when={loading()}>
+    <Spinner />
+  </Match>
 </Switch>
 ```
 
@@ -81,22 +83,19 @@ import { Switch } from "solid-js";
 ## Type signature
 
 ```ts
-function Switch(props: {
-	fallback?: SolidElement;
-	children: SolidElement;
-}): SolidElement;
+function Switch(props: { fallback?: SolidElement; children: SolidElement }): SolidElement;
 ```
 
 ## Examples
 
 ```tsx
 <Switch fallback={<FourOhFour />}>
-	<Match when={state.route === "home"}>
-		<Home />
-	</Match>
-	<Match when={state.route === "settings"}>
-		<Settings />
-	</Match>
+  <Match when={state.route === 'home'}>
+    <Home />
+  </Match>
+  <Match when={state.route === 'settings'}>
+    <Settings />
+  </Match>
 </Switch>
 ```
 
@@ -106,26 +105,25 @@ function Switch(props: {
 
 ```ts
 type AnyMatchProps<T> =
-	| MatchProps<T>
-	| KeyedMatchProps<T>
-	| {
-			when: T | undefined | null | false;
-			keyed?: boolean;
-			children: SolidElement;
-	  };
+  | MatchProps<T>
+  | KeyedMatchProps<T>
+  | {
+      when: T | undefined | null | false;
+      keyed?: boolean;
+      children: SolidElement;
+    };
 ```
 
 ### `KeyedMatchProps`
 
 ```ts
 type KeyedMatchProps<
-	T,
-	F extends KeyedConditionalRenderCallback<T> =
-		KeyedConditionalRenderCallback<T>,
+  T,
+  F extends KeyedConditionalRenderCallback<T> = KeyedConditionalRenderCallback<T>
 > = {
-	when: T | undefined | null | false;
-	keyed: true;
-	children: KeyedConditionalRenderChildren<T, F>;
+  when: T | undefined | null | false;
+  keyed: true;
+  children: KeyedConditionalRenderChildren<T, F>;
 };
 ```
 
@@ -144,13 +142,10 @@ type KeyedMatchProps<
 ### `MatchProps`
 
 ```ts
-type MatchProps<
-	T,
-	F extends ConditionalRenderCallback<T> = ConditionalRenderCallback<T>,
-> = {
-	when: T | undefined | null | false;
-	keyed?: false;
-	children: ConditionalRenderChildren<T, F>;
+type MatchProps<T, F extends ConditionalRenderCallback<T> = ConditionalRenderCallback<T>> = {
+  when: T | undefined | null | false;
+  keyed?: false;
+  children: ConditionalRenderChildren<T, F>;
 };
 ```
 

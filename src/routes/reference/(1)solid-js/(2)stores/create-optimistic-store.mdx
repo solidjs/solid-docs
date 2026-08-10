@@ -14,7 +14,7 @@ version: "2.0"
 description: "The store equivalent of `createOptimistic`. Writes inside an `action`\ntransition are tentative — they show up immediately but auto-revert (or\nreconcile to the action's resolved value) once the transition finishes."
 source_repo: "solidjs/solid"
 source_ref: "next"
-source_sha: "bad66625e13abb5a86168b8be0db8638097f7b71"
+source_sha: "3740fded6ec09191a54bf19716a994305b149995"
 source_path: "packages/solid-signals/src/store/optimistic.ts"
 ---
 
@@ -33,8 +33,8 @@ optimistic state, prefer `createOptimistic`.
   optimistic overlay reverts after each transition.
 
 `options.key` defaults to `"id"`; specify it only when your data uses a
-different identity field (e.g. `{ key: "uuid" }` or `{ key: t => t.slug }`).
-Restating the default just adds noise.
+different identity field (e.g. `{ key: "uuid" }` or `{ key: t => t.slug }`),
+or `null` to merge positionally. Restating the default just adds noise.
 
 ## Import
 
@@ -46,12 +46,13 @@ import { createOptimisticStore } from "solid-js";
 
 ```ts
 function createOptimisticStore<T extends object = {}>(
-	store: NoFn<T> | Store<NoFn<T>>
+  store: NoFn<T> | Store<NoFn<T>>,
+  options?: ProjectionOptions
 ): [get: Store<T>, set: StoreSetter<T>];
 function createOptimisticStore<T extends object = {}>(
-	fn: (store: T) => void | T | Promise<void | T> | AsyncIterable<void | T>,
-	store: Partial<T> | Store<NoFn<T>>,
-	options?: ProjectionOptions
+  fn: (store: T) => void | T | Promise<void | T> | AsyncIterable<void | T>,
+  store: Partial<T> | Store<NoFn<T>>,
+  options?: ProjectionOptions
 ): [get: Refreshable<Store<T>>, set: StoreSetter<T>];
 ```
 
@@ -66,21 +67,19 @@ const [todos, setTodos] = createOptimisticStore<Todo[]>([]);
 
 // Mutation: optimistic add, then in-place reconcile to the saved row.
 const addTodo = action(function* (text: string) {
-	const tempId = crypto.randomUUID();
-	setTodos((t) => {
-		t.push({ id: tempId, text, pending: true });
-	});
-	const saved = yield api.createTodo(text);
-	setTodos((t) => {
-		const i = t.findIndex((x) => x.id === tempId);
-		if (i >= 0) t[i] = saved;
-	});
+  const tempId = crypto.randomUUID();
+  setTodos(t => { t.push({ id: tempId, text, pending: true }); });
+  const saved = yield api.createTodo(text);
+  setTodos(t => {
+    const i = t.findIndex(x => x.id === tempId);
+    if (i >= 0) t[i] = saved;
+  });
 });
 
 // Return form: filter is the natural shape for removal.
 const removeTodo = action(function* (id: string) {
-	setTodos((t) => t.filter((x) => x.id !== id));
-	yield api.removeTodo(id);
+  setTodos(t => t.filter(x => x.id !== id));
+  yield api.removeTodo(id);
 });
 ```
 

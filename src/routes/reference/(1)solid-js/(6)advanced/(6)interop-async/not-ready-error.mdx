@@ -16,7 +16,7 @@ version: "2.0"
 description: "Thrown by a tracked read whose value is currently pending (an async memo /\n`createSignal(asyncFn)` / projection / store derivation that hasn't settled\nyet). Surfacing through the reactive graph is what suspends the consumer\nscope — the nearest enclosing `<Loading>` boundary catches the throw and\nrenders its fallback until the source resolves."
 source_repo: "solidjs/solid"
 source_ref: "next"
-source_sha: "bad66625e13abb5a86168b8be0db8638097f7b71"
+source_sha: "3740fded6ec09191a54bf19716a994305b149995"
 source_path: "packages/solid-signals/src/core/error.ts"
 ---
 
@@ -43,10 +43,28 @@ import { NotReadyError } from "solid-js";
 
 ```ts
 class NotReadyError extends Error {
-	constructor(public source: any) {
-		super();
-	}
-}
+  /**
+   * Tags a visibility-only notification on the affects() boundary channel:
+   * boundaries update display state from it, but the root queue never
+   * registers a reporter — marks are invisible to completion accounting by
+   * construction.
+   */
+  declare _markVisual?: boolean;
+  source: any;
+  constructor(source: any) {
+    // Control-flow throw: it happens on every read of a pending source, so in
+    // production skip V8's eager stack capture (proportional to stack depth —
+    // real cost under SSR) by zeroing the V8-specific stackTraceLimit around
+    // super(). Dev keeps the stack for debuggability; non-V8 engines (no
+    // stackTraceLimit) take the plain path.
+    const ErrorCtor = Error as unknown as { stackTraceLimit?: number };
+    const limit = !__DEV__ ? ErrorCtor.stackTraceLimit : undefined;
+    if (limit !== undefined) ErrorCtor.stackTraceLimit = 0;
+    super();
+    if (limit !== undefined) ErrorCtor.stackTraceLimit = limit;
+    this.source = source;
+  }
+};
 ```
 
 ## Examples
@@ -55,9 +73,9 @@ class NotReadyError extends Error {
 // Advanced: distinguish "not ready yet" from a real error in custom
 // boundary plumbing. App code should rely on `<Loading>` / `<Errored>`.
 try {
-	const value = readReactiveSource();
+  const value = readReactiveSource();
 } catch (err) {
-	if (err instanceof NotReadyError) throw err; // re-throw to suspend
-	reportError(err);
+  if (err instanceof NotReadyError) throw err; // re-throw to suspend
+  reportError(err);
 }
 ```

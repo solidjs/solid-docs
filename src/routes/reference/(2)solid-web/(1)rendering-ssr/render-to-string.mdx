@@ -12,10 +12,10 @@ tags:
   - "api"
   - "v2"
 version: "2.0"
-description: "Renders a component tree synchronously to an HTML string. Async reads inside\n`<Loading>` boundaries emit their `fallback` content; for full-graph\nresolution use `renderToStringAsync` instead."
+description: "Renders a component tree synchronously to an HTML string. Async reads inside\n`<Loading>` boundaries emit their `fallback` content; for full-graph\nresolution await `renderToStream` instead."
 source_repo: "solidjs/solid"
 source_ref: "next"
-source_sha: "bad66625e13abb5a86168b8be0db8638097f7b71"
+source_sha: "3740fded6ec09191a54bf19716a994305b149995"
 source_path: "packages/solid-web/src/server-mock.ts"
 ---
 
@@ -23,7 +23,7 @@ source_path: "packages/solid-web/src/server-mock.ts"
 
 Renders a component tree synchronously to an HTML string. Async reads inside
 `<Loading>` boundaries emit their `fallback` content; for full-graph
-resolution use `renderToStringAsync` instead.
+resolution await `renderToStream` instead.
 
 Pair the returned HTML with `hydrate()` on the client.
 
@@ -37,24 +37,26 @@ import { renderToString } from "@solidjs/web";
 
 ```ts
 function renderToString<T>(
-	fn: () => T,
-	options?: {
-		nonce?: string;
-		renderId?: string;
-		noScripts?: boolean;
-		plugins?: any[];
-		manifest?: Record<
-			string,
-			{
-				file: string;
-				css?: string[];
-				isEntry?: boolean;
-				isDynamicEntry?: boolean;
-				imports?: string[];
-			}
-		>;
-		onError?: (err: any) => void;
-	}
+  fn: () => T,
+  options?: {
+    nonce?: string;
+    renderId?: string;
+    noScripts?: boolean;
+    plugins?: any[];
+    manifest?: AssetManifest | AssetResolver | AssetResolverFn;
+    onError?: (err: any) => void;
+    /**
+     * Embedded-render contract for hosts that own the document. When the
+     * render output contains no `</head>`, everything head-bound (resolved
+     * `useHead` winners, eager resources, tracked asset links, inline
+     * styles) is delivered here as one HTML string — prelude (charset/base)
+     * first — for the host to splice into its own `<head>` template, instead
+     * of being dropped. Called synchronously before `renderToString`
+     * returns; not called when the output has a `</head>` (splicing is
+     * automatic then).
+     */
+    onHead?: (head: string) => void;
+  }
 ): string;
 ```
 
@@ -64,7 +66,5 @@ function renderToString<T>(
 import { renderToString } from "@solidjs/web";
 
 const html = renderToString(() => <App />);
-res.send(
-	`<!doctype html><html><body><div id="root">${html}</div></body></html>`
-);
+res.send(`<!doctype html><html><body><div id="root">${html}</div></body></html>`);
 ```

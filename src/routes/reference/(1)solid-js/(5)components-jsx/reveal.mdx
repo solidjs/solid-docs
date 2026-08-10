@@ -13,7 +13,7 @@ version: "2.0"
 description: "Coordinates the reveal timing of sibling `<Loading>` boundaries."
 source_repo: "solidjs/solid"
 source_ref: "next"
-source_sha: "bad66625e13abb5a86168b8be0db8638097f7b71"
+source_sha: "3740fded6ec09191a54bf19716a994305b149995"
 source_path: "packages/solid/src/client/flow.ts"
 ---
 
@@ -22,7 +22,6 @@ source_path: "packages/solid/src/client/flow.ts"
 Coordinates the reveal timing of sibling `<Loading>` boundaries.
 
 The `order` prop picks the reveal policy:
-
 - `"sequential"` (default) — boundaries reveal in registration order; later boundaries
   stay on their fallback until earlier ones resolve.
 - `"together"` — every direct slot stays on its fallback until the whole group is
@@ -61,20 +60,12 @@ function Reveal(props: RevealProps): SolidElement;
 // Default order is "sequential"; the inner group composes as one slot
 // and runs its own "natural" order locally once the outer releases it.
 <Reveal>
-	<Loading fallback={<Skeleton />}>
-		<ProfileHeader />
-	</Loading>
-	<Reveal order="natural">
-		<Loading fallback={<Skeleton />}>
-			<PostA />
-		</Loading>
-		<Loading fallback={<Skeleton />}>
-			<PostB />
-		</Loading>
-	</Reveal>
-	<Loading fallback={<Skeleton />}>
-		<Comments />
-	</Loading>
+  <Loading fallback={<Skeleton />}><ProfileHeader /></Loading>
+  <Reveal order="natural">
+    <Loading fallback={<Skeleton />}><PostA /></Loading>
+    <Loading fallback={<Skeleton />}><PostB /></Loading>
+  </Reveal>
+  <Loading fallback={<Skeleton />}><Comments /></Loading>
 </Reveal>
 ```
 
@@ -90,9 +81,9 @@ type RevealOrder = "sequential" | "together" | "natural";
 
 ```ts
 type RevealProps = {
-	order?: RevealOrder;
-	collapsed?: boolean;
-	children: SolidElement;
+  order?: RevealOrder;
+  collapsed?: boolean;
+  children: SolidElement;
 };
 ```
 

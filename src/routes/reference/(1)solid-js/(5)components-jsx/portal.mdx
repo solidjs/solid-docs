@@ -13,7 +13,7 @@ version: "2.0"
 description: "Renders its children into a different part of the DOM (modal roots,\ntooltips, layers that need to escape an `overflow: hidden` ancestor)."
 source_repo: "solidjs/solid"
 source_ref: "next"
-source_sha: "bad66625e13abb5a86168b8be0db8638097f7b71"
+source_sha: "3740fded6ec09191a54bf19716a994305b149995"
 source_path: "packages/solid-web/src/index.ts"
 ---
 
@@ -26,6 +26,12 @@ If `mount` is omitted, the portal attaches to `document.body`. The portal
 still participates in the parent's reactive scope and disposes when the
 parent does.
 
+Portals are client-only islands: the server renders nothing for them, and
+under hydration the children render fresh once hydration settles. Async
+read inside a portal therefore starts on the client — data that should be
+fetched on the server belongs above the portal (hoist the read, not the
+render), and async UI inside one wants its own `<Loading>` boundary.
+
 ## Import
 
 ```ts
@@ -35,16 +41,13 @@ import { Portal } from "@solidjs/web";
 ## Type signature
 
 ```ts
-function Portal<T extends boolean = false, S extends boolean = false>(props: {
-	mount?: Element;
-	children: JSX.Element;
-}): JSX.Element;
+function Portal(props: { mount?: Element; children: JSX.Element }): JSX.Element;
 ```
 
 ## Examples
 
 ```tsx
 <Portal mount={document.getElementById("modal-root")!}>
-	<Dialog />
+  <Dialog />
 </Portal>
 ```

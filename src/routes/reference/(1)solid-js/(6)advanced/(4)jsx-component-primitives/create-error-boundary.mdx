@@ -17,7 +17,7 @@ version: "2.0"
 description: "Lower-level primitive that backs the `<Errored>` flow control. Catches\nthrown errors inside `fn` and invokes `fallback(error, reset)` instead.\n`error` is an accessor for the latest captured error; `reset()` recomputes\nthe failing sources so the boundary can attempt to recover."
 source_repo: "solidjs/solid"
 source_ref: "next"
-source_sha: "bad66625e13abb5a86168b8be0db8638097f7b71"
+source_sha: "3740fded6ec09191a54bf19716a994305b149995"
 source_path: "packages/solid-signals/src/boundaries.ts"
 ---
 
@@ -40,26 +40,23 @@ import { createErrorBoundary } from "solid-js";
 ## Type signature
 
 ```ts
-function createErrorBoundary<U>(
-	fn: () => any,
-	fallback: (error: Accessor<unknown>, reset: () => void) => U
-);
+function createErrorBoundary<T, U>(
+  fn: () => T,
+  fallback: (error: Accessor<unknown>, reset: () => void) => U
+): Accessor<T | U>;
 ```
 
 ## Examples
 
 ```tsx
 // Custom boundary that wraps the primitive and adds telemetry.
-function TracedErrored(props: {
-	fallback: (e: () => unknown) => JSX.Element;
-	children: JSX.Element;
-}) {
-	return createErrorBoundary(
-		() => props.children,
-		(err, reset) => {
-			reportError(err());
-			return props.fallback(err);
-		}
-	) as unknown as JSX.Element;
+function TracedErrored(props: { fallback: (e: () => unknown) => JSX.Element; children: JSX.Element }) {
+  return createErrorBoundary(
+    () => props.children,
+    (err, reset) => {
+      reportError(err());
+      return props.fallback(err);
+    }
+  ) as unknown as JSX.Element;
 }
 ```

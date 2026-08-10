@@ -15,7 +15,7 @@ version: "2.0"
 description: "Streams an HTML response, flushing the synchronous shell first and then\nprogressively emitting async-resolved fragments as their `<Loading>`\nboundaries settle. Good for time-to-first-byte sensitive pages."
 source_repo: "solidjs/solid"
 source_ref: "next"
-source_sha: "bad66625e13abb5a86168b8be0db8638097f7b71"
+source_sha: "3740fded6ec09191a54bf19716a994305b149995"
 source_path: "packages/solid-web/src/server-mock.ts"
 ---
 
@@ -26,7 +26,11 @@ progressively emitting async-resolved fragments as their `<Loading>`
 boundaries settle. Good for time-to-first-byte sensitive pages.
 
 Returns an object with `pipe`/`pipeTo` for piping to a Node `Writable` or
-a Web `WritableStream`, plus a `then` for awaiting full completion.
+a Web `WritableStream`, a lazy `readable` byte-stream view for
+`new Response(stream.readable)`, plus a thenable for awaiting full
+completion — `await renderToStream(...)` resolves with the settled HTML
+(the fully-resolved-string form of the render). `pipe`, `pipeTo`, and
+`readable` each consume the render — use exactly one of the three.
 
 ## Import
 
@@ -38,30 +42,42 @@ import { renderToStream } from "@solidjs/web";
 
 ```ts
 function renderToStream<T>(
-	fn: () => T,
-	options?: {
-		nonce?: string;
-		renderId?: string;
-		noScripts?: boolean;
-		plugins?: any[];
-		manifest?: Record<
-			string,
-			{
-				file: string;
-				css?: string[];
-				isEntry?: boolean;
-				isDynamicEntry?: boolean;
-				imports?: string[];
-			}
-		>;
-		onCompleteShell?: (info: { write: (v: string) => void }) => void;
-		onCompleteAll?: (info: { write: (v: string) => void }) => void;
-		onError?: (err: any) => void;
-	}
+  fn: () => T,
+  options?: {
+    nonce?: string;
+    renderId?: string;
+    noScripts?: boolean;
+    plugins?: any[];
+    manifest?: AssetManifest | AssetResolver | AssetResolverFn;
+    onCompleteShell?: (info: { write: (v: string) => void }) => void;
+    onCompleteAll?: (info: { write: (v: string) => void }) => void;
+    onError?: (err: any) => void;
+    /**
+     * Embedded-render contract for hosts that own the document. When the
+     * shell contains no `</head>`, everything head-bound at first flush
+     * (resolved `useHead` winners, eager resources, tracked asset links,
+     * inline styles) is delivered here as one HTML string — prelude first —
+     * before the shell chunk is emitted, so the host can write its own
+     * `<head>` ahead of piping the stream. Post-shell head updates flow
+     * through the stream itself and apply in the browser. Not called when
+     * the shell has a `</head>` (splicing is automatic then).
+     */
+    onHead?: (head: string) => void;
+  }
 ): {
-	then: (fn: (html: string) => void) => void;
-	pipe: (writable: { write: (v: string) => void; end: () => void }) => void;
-	pipeTo: (writable: WritableStream) => Promise<void>;
+  /**
+   * Awaiting the stream resolves with the complete HTML once every boundary
+   * settles — the fully-settled-string form of the render. Render errors
+   * route through `onError` and the promise resolves with whatever HTML the
+   * render produced; it never rejects.
+   */
+  then<TResult1 = string, TResult2 = never>(
+    onfulfilled?: ((html: string) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null
+  ): Promise<TResult1 | TResult2>;
+  pipe: (writable: { write: (v: string) => void; end: () => void }) => void;
+  pipeTo: (writable: WritableStream) => Promise<void>;
+  readonly readable: ReadableStream<Uint8Array>;
 };
 ```
 
@@ -74,5 +90,8 @@ import { renderToStream } from "@solidjs/web";
 renderToStream(() => <App />).pipe(res);
 
 // Web (Workers / Deno):
-await renderToStream(() => <App />).pipeTo(stream.writable);
+return new Response(renderToStream(() => <App />).readable);
+
+// Fully settled string:
+const html = await renderToStream(() => <App />);
 ```

@@ -11,10 +11,10 @@ tags:
   - "api"
   - "v2"
 version: "2.0"
-description: "Awaits a reactive expression and returns its first fully-settled value as a\n`Promise`. Pending async reads (`createMemo` returning a promise, etc.) are\nwaited on; once the expression returns synchronously without `NotReadyError`\nthe promise resolves with that value."
+description: "Awaits a reactive expression and returns its first fully-settled value as a\n`Promise`. Pending async reads (`createMemo` returning a promise, etc.) are\nwaited on; once the expression returns synchronously without `NotReadyError`\nthe promise resolves with that value. If the expression settles with an\nerror instead — including an async source that rejects — the promise\nrejects with it."
 source_repo: "solidjs/solid"
 source_ref: "next"
-source_sha: "bad66625e13abb5a86168b8be0db8638097f7b71"
+source_sha: "3740fded6ec09191a54bf19716a994305b149995"
 source_path: "packages/solid-signals/src/signals.ts"
 ---
 
@@ -23,9 +23,11 @@ source_path: "packages/solid-signals/src/signals.ts"
 Awaits a reactive expression and returns its first fully-settled value as a
 `Promise`. Pending async reads (`createMemo` returning a promise, etc.) are
 waited on; once the expression returns synchronously without `NotReadyError`
-the promise resolves with that value.
+the promise resolves with that value. If the expression settles with an
+error instead — including an async source that rejects — the promise
+rejects with it.
 
-Must be called _outside_ a tracking scope — it doesn't subscribe, it just
+Must be called *outside* a tracking scope — it doesn't subscribe, it just
 resolves the current value once.
 
 ## Import
@@ -49,7 +51,7 @@ A reactive expression to resolve
 ## Examples
 
 ```ts
-const user = createMemo(() => fetch(`/users/${id()}`).then((r) => r.json()));
+const user = createMemo(() => fetch(`/users/${id()}`).then(r => r.json()));
 
 // outside any reactive scope
 const initial = await resolve(() => user());

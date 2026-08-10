@@ -35,7 +35,7 @@ import { renderToStream } from "@solidjs/web";
 const html = await renderToStream(() => <Router url={request.url} />);
 ```
 
-Awaiting `renderToStream` returns the settled HTML in the source revision documented here.
+Await `renderToStream` to receive the settled HTML.
 The synchronous `renderToString` path does not support a matched lazy route subtree.
 
 ## Hydrate query results
@@ -44,7 +44,7 @@ During an asynchronous server render, `query` serializes its keyed result into S
 The client query with the same name and serialized arguments adopts that server result instead of starting a duplicate request.
 
 The adoption path remains available after global hydration completes because a lazy route module can make its first matching query read later.
-At this source revision, the server payload must be younger than the query cache retention limit of three minutes.
+The server payload must be younger than the query cache retention limit of three minutes.
 A first read after that limit runs the query again instead of presenting the old server value as newly fetched.
 
 Keep the query name and arguments stable between server and client.
@@ -67,12 +67,19 @@ configureServerFunctionsServer({
 ```
 
 The collector receives the mutation outcome from the server-function handler.
-It matches the URL the client will show after the mutation, resolves any matching lazy route subtrees, runs the root preload, and runs the matched route preloads in data-only mode.
-`query` calls made by those preloads become keyed values in the mutation response.
+The collector then:
+
+1. Matches the URL that the client will show after the mutation.
+2. Resolves matching lazy route subtrees.
+3. Runs the root preload.
+4. Runs the matched route preloads in data-only mode.
+
+When those preloads call `query`, the mutation response includes the keyed values.
 
 On the client, a mounted router subscribes to flight data when `singleFlight` is enabled.
-That subscription opts server-function mutations into the protocol.
-Delivered values seed the query cache, then response revalidation and redirect metadata are applied before the action caller receives its return value.
+The subscription opts server-function mutations into the protocol.
+The router seeds delivered values into the query cache.
+The router then applies response revalidation and redirect metadata before the action caller receives the return value.
 
 Set `singleFlight: false` to keep the router from subscribing.
 Without a consumer, the transport does not add the single-flight request header and the server does not run collection for that mutation.
@@ -96,8 +103,8 @@ export default {
 };
 ```
 
-The generated handler imports that module before it configures and dispatches server-function requests.
-This keeps the collector registration available for the first mutation in development and production.
+The generated handler imports the configuration module before it configures and dispatches server-function requests.
+The import makes the collector available for the first mutation in development and production.
 The default server-function endpoint is `/_server`; keep the router's `actionBase` aligned with a customized endpoint.
 
 Applications with a custom server-function handler can instead pass `collectFlightData` to `handleServerFunctionRequest` for each request.
@@ -109,14 +116,10 @@ The Solid server-function runtime handles that no-JavaScript post by redirecting
 During the redirected server render, the router clears and decodes that cookie into submission state.
 
 The router also intercepts server-action form URLs in clients where the action module was not loaded.
-It loads the action submit path on demand and sends the form through the server-function transport.
+The router loads the action submit path on demand.
+The router then sends the form through the server-function transport.
 
-This form path depends on the Solid server-function handler and its no-JavaScript handling.
+The no-JavaScript form path requires the Solid server-function handler.
 Plain client-only actions cannot run without their client module.
 
 See [`createFlightDataCollector`](/reference/solid-router/server#createflightdatacollector) for the collector options.
-
-:::caution[Local source dependencies]
-The hydration-age limit, eager file-route component handling, and late-bound server-function transport seam come from three router commits that are not yet in `origin/next` at the documented revision.
-Review those claims again before publishing against a different Router 2 build.
-:::

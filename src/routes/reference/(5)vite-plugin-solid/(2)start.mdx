@@ -5,7 +5,7 @@ order: 2
 version: "2.0"
 description: "Configures vite-plugin-solid turnkey client rendering or streaming SSR."
 source_repo: "solidjs/vite-plugin-solid"
-source_ref: "519da14d20a51dd0a856eb9acfdae784a567bf10"
+source_ref: "next"
 source_sha: "519da14d20a51dd0a856eb9acfdae784a567bf10"
 source_path: "src/ssr/index.ts"
 ---
@@ -44,7 +44,7 @@ The `app`, entry, document, middleware, setup, and environment schema paths must
 - **Default:** First match from `src/App.{tsx,jsx,ts,js}` or `src/app.{tsx,jsx,ts,js}`
 
 Specifies the default-exporting root component used by generated entries.
-It is required when the plugin cannot use an authored client entry in client mode or an authored entry pair in SSR mode.
+The plugin requires `app` when it cannot use an authored client entry in client mode or an authored entry pair in SSR mode.
 
 ### `entryServer`
 
@@ -52,7 +52,7 @@ It is required when the plugin cannot use an authored client entry in client mod
 - **Default:** First existing `src/entry-server.{tsx,jsx,ts,js,mjs}`, otherwise generated
 
 Specifies an authored server entry for turnkey SSR.
-It must export:
+The authored server entry must export:
 
 ```ts
 function render(
@@ -61,7 +61,7 @@ function render(
 ): RenderToStreamResult | string | Response | Promise<string | Response>;
 ```
 
-The option and conventional server entry are ignored in turnkey client mode.
+The plugin ignores `entryServer` and the conventional server entry in turnkey client mode.
 
 ### `entryClient`
 
@@ -80,7 +80,7 @@ Generated client entries call `hydrate()` in SSR mode and `render()` into `docum
 - **Default:** First existing `src/Document.{tsx,jsx}`, otherwise a built-in document
 
 Specifies the default-exporting full-document component used by generated server entries.
-It receives the application as `props.children`.
+The document receives the application as `props.children`.
 In SSR mode, an authored document must emit the `<html>` document and `<HydrationScript />`.
 The handler injects the client entry into `<head>`.
 
@@ -102,7 +102,7 @@ type Middleware = (
 ```
 
 Middleware runs in array order inside the request-event scope.
-It fronts every request dispatched by the generated handler, including pages and the server-function endpoint.
+The middleware fronts every request dispatched by the generated handler, including pages and the server-function endpoint.
 
 ### `setup`
 
@@ -118,10 +118,10 @@ type Setup = (
 ) => Component | void | Promise<Component | void>;
 ```
 
-A returned component replaces `App` for that request.
-Returning nothing keeps `App`.
-The option is ignored in client mode and is rejected when SSR uses authored entries.
-It does not run for server-function endpoint dispatch.
+Return a component to replace `App` for that request.
+Return nothing to keep `App`.
+The plugin ignores `setup` in client mode and rejects it when SSR uses authored entries.
+The setup function does not run for server-function endpoint dispatch.
 
 ### `env`
 
@@ -148,7 +148,8 @@ export default {
 
 The plugin writes `solid-env.d.ts` next to the schema.
 `virtual:env/client` contains validated client values baked into the client bundle.
-`virtual:env/server` contains server and client values, reads server values from `process.env` at server startup, and is rejected from client module graphs.
+`virtual:env/server` contains server and client values and reads server values from `process.env` at server startup.
+The plugin rejects `virtual:env/server` imports from client module graphs.
 
 Client validation errors fail development and builds.
 Server validation errors fail development, warn during builds, and fail when the built server module starts.
@@ -160,7 +161,7 @@ Server validation errors fail development, warn during builds, and fail when the
 
 Hands turnkey SSR build wiring and HTTP serving to a host integration.
 The plugin keeps generated entries, the client manifest, and `virtual:solid-ssr-handler`, but does not configure `dist/server` or its development middlewares.
-The option is ignored in client mode.
+The plugin ignores `external` in client mode.
 
 A host-owned, non-runnable `ssr` development environment is detected without this option.
 Use `serverFunctions.devMiddleware: false` to hand over only development endpoint dispatch.
@@ -185,7 +186,7 @@ solidPlugin({ start: true });
 
 - Development serves the document shell for HTML `GET` requests and mounts the application with `render()`.
 - `vite build` writes the prerendered shell and client assets to `dist/client`.
-- `dist/server` is removed unless server functions require its handler.
+- The build removes `dist/server` unless server functions require its handler.
 - `vite preview` uses static SPA fallback and dispatches the server-function endpoint when enabled.
 
 ### Turnkey SSR

@@ -5,7 +5,7 @@ order: 3
 version: "2.0"
 description: "Compiles use-server directives and emits server-function manifest and handler modules."
 source_repo: "solidjs/vite-plugin-solid"
-source_ref: "519da14d20a51dd0a856eb9acfdae784a567bf10"
+source_ref: "next"
 source_sha: "519da14d20a51dd0a856eb9acfdae784a567bf10"
 source_path: "src/server-functions/index.ts"
 ---
@@ -30,7 +30,7 @@ function serverFunctions(options?: ServerFunctionsOptions): Plugin[];
 ```
 
 The standalone export does not install development endpoint middleware.
-It is intended for hosts that control plugin ordering and request dispatch.
+Use the standalone export in hosts that control plugin ordering and request dispatch.
 
 ## `ServerFunctionsOptions`
 
@@ -62,7 +62,8 @@ interface ServerFunctionsFilter {
 
 Specifies the runtime imports emitted by the compiler.
 The server runtime must export `registerServerReference`, `createServerReference`, `handleServerFunctionRequest`, and `configureServerFunctionsServer`.
-The client runtime must export `registerServerReference`, `createServerReference`, and `configureServerFunctionsClient` when a non-default endpoint is used.
+The client runtime must export `registerServerReference` and `createServerReference`.
+The client runtime must also export `configureServerFunctionsClient` when the resolved endpoint differs from the default.
 
 ### `manifest`
 
@@ -94,7 +95,7 @@ Specifies the directive text recognized by the compiler.
 - **Default:** `"/_server"`
 
 Specifies the request path.
-A missing leading slash is added, then Vite's `base` is prefixed.
+The plugin adds a missing leading slash, then prefixes Vite's `base`.
 When the resolved path differs from `/_server`, compiled modules configure both runtime sides with that resolved endpoint.
 
 ### `devMiddleware`
@@ -107,7 +108,7 @@ Compilation and both virtual modules remain enabled.
 The standalone `serverFunctions()` export never installs this middleware, regardless of the value.
 
 When dispatch is host-owned, the host loads `virtual:solid-server-function-handler`.
-Its server entry should also import the manifest when functions referenced only by client code must register before dispatch.
+The host's server entry should also import the manifest when functions referenced only by client code must register before dispatch.
 
 ### `configure`
 
@@ -115,7 +116,8 @@ Its server entry should also import the manifest when functions referenced only 
 - **Default:** `undefined`
 
 Specifies a server-only module to import before handler configuration and dispatch.
-Relative paths resolve against the Vite root, and a missing file is rejected during configuration.
+Relative paths resolve against the Vite root.
+The plugin rejects a missing file during configuration.
 
 ```ts
 serverFunctions: {
@@ -153,7 +155,8 @@ export function handleServerFunctionRequest(
 ): Promise<Response>;
 ```
 
-This server-only module imports the configured setup module and the production manifest, configures request-event scoping, and dispatches through the selected runtime.
+`virtual:solid-server-function-handler` imports the configured setup module and the production manifest.
+The handler also configures request-event scoping and dispatches through the selected runtime.
 
 ## Main plugin form
 

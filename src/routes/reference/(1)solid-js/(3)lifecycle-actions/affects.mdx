@@ -33,6 +33,7 @@ a real change is in flight — a quiet `refresh()` re-ask under a mark still
 reads pending (declaring the reload is what makes it a real question).
 
 Targets:
+
 - `affects(store)` — a store proxy (any record, root or nested): every
   record reachable from it at declaration time reads pending, including
   through captured child proxies (e.g. `<For>` rows). Siblings are
@@ -63,14 +64,16 @@ function affects<T extends object>(target: Store<T>, key: keyof T): void;
 
 ```ts
 const send = action(function* (text: string) {
-  setState(s => { s.messages.push({ text, status: "sending" }); });
-  affects(state.messages.at(-1)!, "status"); // this slot pends until settle
-  yield api.send(text);
+	setState((s) => {
+		s.messages.push({ text, status: "sending" });
+	});
+	affects(state.messages.at(-1)!, "status"); // this slot pends until settle
+	yield api.send(text);
 });
 
 const reload = action(function* () {
-  affects(thing);      // the whole store pends…
-  refresh(thing);      // …over this otherwise-quiet re-ask
-  yield api.done();
+	affects(thing); // the whole store pends…
+	refresh(thing); // …over this otherwise-quiet re-ask
+	yield api.done();
 });
 ```

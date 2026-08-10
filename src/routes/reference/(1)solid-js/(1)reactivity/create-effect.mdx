@@ -21,15 +21,15 @@ source_path: "packages/solid-signals/src/signals.ts"
 
 Creates a reactive effect with **separate compute and effect phases**.
 
-- `compute(prev)` runs reactively — *put all reactive reads here*. The
+- `compute(prev)` runs reactively — _put all reactive reads here_. The
   returned value is passed to `effect` and is also the new "previous" value
   for the next run.
 - `effect(next, prev?)` runs imperatively (untracked) after the queue
-  flushes. *Put DOM writes / fetch / logging / subscriptions here.* It may
+  flushes. _Put DOM writes / fetch / logging / subscriptions here._ It may
   return a cleanup function which runs before the next effect or on
   disposal.
 
-Reactive reads inside `effect` will *not* re-trigger this effect — that's
+Reactive reads inside `effect` will _not_ re-trigger this effect — that's
 intentional. If you need a single-phase tracked effect, use
 `createTrackedEffect` (with the tradeoffs noted there).
 
@@ -39,7 +39,7 @@ from upstream reactive sources (including async rejections), which your own
 code has no frame to `try/catch`. The `error` handler is the error arm of
 the effect phase: it runs on the same schedule and in the same imperative,
 writable scope as `effect` (setting error state via signals is fine), and
-only for *settled* errors — a transient error that recovers before the
+only for _settled_ errors — a transient error that recovers before the
 effect phase runs `effect` with the recovered value instead, and a held
 transition defers it exactly as it defers `effect`. Without an `error`
 handler a compute-phase error is logged and the effect simply skips that
@@ -51,18 +51,18 @@ The **effect phase is different**: it is your own imperative code, so handle
 failures with `try/catch` where they occur. An uncaught effect-phase throw
 is treated as an unhandled application error — caught by the nearest
 `createErrorBoundary`/`<Errored>`, and permanently halting the reactive
-system if there is none. It is *not* routed to the bundle's `error` handler.
+system if there is none. It is _not_ routed to the bundle's `error` handler.
 
 ```typescript
 createEffect<T>(compute, effectFn | { effect, error }, options?: EffectOptions);
 ```
 
 > Deprecated: `createEffect(compute)` (single argument) is no longer supported.
-Pass a separate effect function as the second argument:
-`createEffect(compute, effect)`. See `MISSING_EFFECT_FN`.
+> Pass a separate effect function as the second argument:
+> `createEffect(compute, effect)`. See `MISSING_EFFECT_FN`.
 
 - For a side effect that reacts to changes, split the work:
-`createEffect(() => signal(), value => doWork(value))`.
+  `createEffect(() => signal(), value => doWork(value))`.
 - For a derived value, use `createMemo(() => signal())`.
 - For a one-shot side effect at construction time, just call the function.
 
@@ -76,11 +76,13 @@ import { createEffect } from "solid-js";
 
 ```ts
 function createEffect<T>(
-  compute: ComputeFunction<undefined | NoInfer<T>, T>,
-  effectFn: EffectFunction<NoInfer<T>, T> | EffectBundle<NoInfer<T>, T>,
-  options?: EffectOptions
+	compute: ComputeFunction<undefined | NoInfer<T>, T>,
+	effectFn: EffectFunction<NoInfer<T>, T> | EffectBundle<NoInfer<T>, T>,
+	options?: EffectOptions
 ): void;
-function createEffect<T>(compute: ComputeFunction<undefined | NoInfer<T>, T>): never;
+function createEffect<T>(
+	compute: ComputeFunction<undefined | NoInfer<T>, T>
+): never;
 ```
 
 ## Parameters
@@ -103,8 +105,8 @@ A function that receives the new value and is used to perform side effects (retu
 const [count, setCount] = createSignal(0);
 
 createEffect(
-  () => count(),                  // compute: tracks `count`
-  value => console.log(value)     // effect: side effect
+	() => count(), // compute: tracks `count`
+	(value) => console.log(value) // effect: side effect
 );
 
 setCount(1); // logs 1 after the next flush
@@ -112,12 +114,12 @@ setCount(1); // logs 1 after the next flush
 
 ```ts
 createEffect(
-  () => userId(),
-  id => {
-    const ctrl = new AbortController();
-    fetch(`/users/${id}`, { signal: ctrl.signal });
-    return () => ctrl.abort(); // cleanup before next run / disposal
-  }
+	() => userId(),
+	(id) => {
+		const ctrl = new AbortController();
+		fetch(`/users/${id}`, { signal: ctrl.signal });
+		return () => ctrl.abort(); // cleanup before next run / disposal
+	}
 );
 ```
 
@@ -127,7 +129,7 @@ createEffect(
 
 ```ts
 type ComputeFunction<Prev, Next extends Prev = Prev> = (
-  v: Prev
+	v: Prev
 ) => PromiseLike<Next> | AsyncIterable<Next> | Next;
 ```
 
@@ -135,8 +137,8 @@ type ComputeFunction<Prev, Next extends Prev = Prev> = (
 
 ```ts
 type EffectBundle<Prev, Next extends Prev = Prev> = {
-  effect: EffectFunction<Prev, Next>;
-  error: (err: unknown, cleanup: () => void) => void;
+	effect: EffectFunction<Prev, Next>;
+	error: (err: unknown, cleanup: () => void) => void;
 };
 ```
 
@@ -162,8 +164,8 @@ outcomes — an error that recovers before the effect phase runs the
 
 ```ts
 type EffectFunction<Prev, Next extends Prev = Prev> = (
-  v: Next,
-  p?: Prev
+	v: Next,
+	p?: Prev
 ) => (() => void) | void;
 ```
 
@@ -173,11 +175,11 @@ Options for effect primitives that support deferring/scheduling their initial ru
 
 ```ts
 interface EffectOptions extends BaseEffectOptions {
-  defer?: boolean;
-  schedule?: boolean;
-  sync?: boolean;
-  transparent?: boolean;
-};
+	defer?: boolean;
+	schedule?: boolean;
+	sync?: boolean;
+	transparent?: boolean;
+}
 ```
 
 #### `defer`

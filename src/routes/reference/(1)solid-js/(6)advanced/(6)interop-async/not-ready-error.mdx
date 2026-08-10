@@ -43,28 +43,28 @@ import { NotReadyError } from "solid-js";
 
 ```ts
 class NotReadyError extends Error {
-  /**
-   * Tags a visibility-only notification on the affects() boundary channel:
-   * boundaries update display state from it, but the root queue never
-   * registers a reporter — marks are invisible to completion accounting by
-   * construction.
-   */
-  declare _markVisual?: boolean;
-  source: any;
-  constructor(source: any) {
-    // Control-flow throw: it happens on every read of a pending source, so in
-    // production skip V8's eager stack capture (proportional to stack depth —
-    // real cost under SSR) by zeroing the V8-specific stackTraceLimit around
-    // super(). Dev keeps the stack for debuggability; non-V8 engines (no
-    // stackTraceLimit) take the plain path.
-    const ErrorCtor = Error as unknown as { stackTraceLimit?: number };
-    const limit = !__DEV__ ? ErrorCtor.stackTraceLimit : undefined;
-    if (limit !== undefined) ErrorCtor.stackTraceLimit = 0;
-    super();
-    if (limit !== undefined) ErrorCtor.stackTraceLimit = limit;
-    this.source = source;
-  }
-};
+	/**
+	 * Tags a visibility-only notification on the affects() boundary channel:
+	 * boundaries update display state from it, but the root queue never
+	 * registers a reporter — marks are invisible to completion accounting by
+	 * construction.
+	 */
+	declare _markVisual?: boolean;
+	source: any;
+	constructor(source: any) {
+		// Control-flow throw: it happens on every read of a pending source, so in
+		// production skip V8's eager stack capture (proportional to stack depth —
+		// real cost under SSR) by zeroing the V8-specific stackTraceLimit around
+		// super(). Dev keeps the stack for debuggability; non-V8 engines (no
+		// stackTraceLimit) take the plain path.
+		const ErrorCtor = Error as unknown as { stackTraceLimit?: number };
+		const limit = !__DEV__ ? ErrorCtor.stackTraceLimit : undefined;
+		if (limit !== undefined) ErrorCtor.stackTraceLimit = 0;
+		super();
+		if (limit !== undefined) ErrorCtor.stackTraceLimit = limit;
+		this.source = source;
+	}
+}
 ```
 
 ## Examples
@@ -73,9 +73,9 @@ class NotReadyError extends Error {
 // Advanced: distinguish "not ready yet" from a real error in custom
 // boundary plumbing. App code should rely on `<Loading>` / `<Errored>`.
 try {
-  const value = readReactiveSource();
+	const value = readReactiveSource();
 } catch (err) {
-  if (err instanceof NotReadyError) throw err; // re-throw to suspend
-  reportError(err);
+	if (err instanceof NotReadyError) throw err; // re-throw to suspend
+	reportError(err);
 }
 ```

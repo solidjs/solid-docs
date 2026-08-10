@@ -41,8 +41,8 @@ import { createErrorBoundary } from "solid-js";
 
 ```ts
 function createErrorBoundary<T, U>(
-  fn: () => T,
-  fallback: (error: Accessor<unknown>, reset: () => void) => U
+	fn: () => T,
+	fallback: (error: Accessor<unknown>, reset: () => void) => U
 ): Accessor<T | U>;
 ```
 
@@ -50,13 +50,16 @@ function createErrorBoundary<T, U>(
 
 ```tsx
 // Custom boundary that wraps the primitive and adds telemetry.
-function TracedErrored(props: { fallback: (e: () => unknown) => JSX.Element; children: JSX.Element }) {
-  return createErrorBoundary(
-    () => props.children,
-    (err, reset) => {
-      reportError(err());
-      return props.fallback(err);
-    }
-  ) as unknown as JSX.Element;
+function TracedErrored(props: {
+	fallback: (e: () => unknown) => JSX.Element;
+	children: JSX.Element;
+}) {
+	return createErrorBoundary(
+		() => props.children,
+		(err, reset) => {
+			reportError(err());
+			return props.fallback(err);
+		}
+	) as unknown as JSX.Element;
 }
 ```

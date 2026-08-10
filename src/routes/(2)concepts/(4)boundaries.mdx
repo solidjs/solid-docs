@@ -8,11 +8,10 @@ version: "2.0"
 Boundaries turn status from the reactive graph into renderable UI.
 `Loading` handles unresolved async reads, `Errored` handles errors, and `Reveal` coordinates when sibling loading regions become visible.
 
-Each loading or error boundary creates an owner for its tracked subtree and attaches a status queue below the surrounding owner.
-Status travels outward through that queue chain until a matching boundary consumes it.
-An inner boundary consumes only its own status dimension, so a `Loading` boundary forwards errors and an `Errored` boundary forwards pending reads.
-
-This separation lets both boundaries cover the same branch.
+A boundary handles status produced by the reactive work in its subtree.
+The nearest matching boundary handles that status.
+Loading and error status remain separate, so a `Loading` boundary does not hide errors and an `Errored` boundary does not replace loading UI.
+This lets both boundaries protect the same region.
 
 ```tsx
 import { Errored, Loading, createMemo, createSignal } from "solid-js";
@@ -58,11 +57,12 @@ function AccountPanel() {
 The first unresolved read is handled by `Loading`.
 A rejected request passes through `Loading` and is handled by `Errored`.
 Changing `accountId()` while the new request is pending changes the `on` value, so the loading fallback can appear for the new account.
+The navigation button remains outside both fallback regions, so it stays available while the account panel changes.
 
 ## Loading boundaries
 
 [`Loading`](/reference/solid-js/components-jsx/loading) renders its `fallback` while async values read by its subtree have not produced the content the boundary needs.
-It observes pending status from computations reached through that subtree.
+It observes not-ready reads from computations reached through that subtree.
 The nearest loading boundary that is eligible for the update owns the fallback.
 
 After a boundary has displayed content, it normally keeps that content visible during later async updates.
@@ -73,32 +73,21 @@ The `on` prop is a value, not an accessor passed by reference.
 For example, `on={accountId()}` compares account identifiers across pending updates.
 Pending work caused by other values leaves the initialized content in place.
 
-Place a loading boundary around the data-dependent region whose output can be replaced.
-Content outside that owner does not become part of its fallback region.
-Nested loading boundaries let each region handle its own initial readiness.
-
-### Sources with commit #0
-
-A source with `loadingValue` returns a committed value during its first async flight.
-A projected store with `seedLoadingValue: true` returns its committed seed during that flight.
-These reads do not report a not-ready state, so they do not activate a `Loading` fallback or hold a transition.
-
-Render commit #0 directly when the first screen can use the same content shape as the landed data.
-Put skeleton or provisional state in the value instead of constructing a parallel fallback tree.
-The [async reactivity guide](/concepts/async-reactivity#declare-a-first-committed-value) shows signal and store forms of this pattern.
-
-Keep `Loading` for branches that have no committed first value or for other unresolved sources in the same subtree.
-After commit #0 receives its first real landing, later refetches follow normal pending behavior.
-An initialized `Loading` boundary continues to show its existing content during those refetches unless its `on` value changes.
+Place a loading boundary around the smallest coherent region that its fallback should replace.
+Keep navigation, forms, and other controls outside when they must remain available during the load.
+Use nested loading boundaries when independent regions should become visible as soon as their own data is ready.
 
 ## Error boundaries
 
 [`Errored`](/reference/solid-js/components-jsx/errored) catches uncaught errors reported by its subtree and renders fallback content.
 Async rejections and synchronous computation errors use the same error status path.
 
+Place an error boundary around the smallest region that can fail and recover as one unit.
+Content outside that region remains visible when the fallback appears.
+
 The fallback can be a static element or a function.
 The function receives an accessor for the captured error and a `reset` function.
-Calling `reset` recomputes the sources collected by the boundary and schedules the reactive queue so the branch can retry.
+Calling `reset` retries the reactive sources collected by the boundary so the branch can render again.
 
 An error thrown while rendering an `Errored` fallback is outside that boundary's protected subtree.
 A parent `Errored` boundary can catch it.
@@ -106,8 +95,10 @@ Without a matching error boundary, an unhandled error is escalated instead of be
 
 ## Reveal order
 
-[`Reveal`](/reference/solid-js/components-jsx/reveal) coordinates loading boundaries registered directly in its ownership context.
+[`Reveal`](/reference/solid-js/components-jsx/reveal) coordinates loading boundaries created directly within it.
 It changes reveal timing without changing which async sources each `Loading` boundary observes.
+It does not fetch data or create loading state.
+Use it when independent regions should appear in a deliberate order instead of revealing in network completion order.
 
 The default `sequential` order reveals slots in registration order.
 A later slot stays on its fallback until every earlier slot is ready.
@@ -153,9 +144,9 @@ The footer waits until the nested group is fully ready.
 
 ### Which boundaries join a reveal group
 
-A `Loading` boundary registers with the nearest `Reveal` context present when the boundary is created.
-Creating any loading or error boundary clears reveal coordination for its own subtree.
-As a result, loading boundaries nested inside another `Loading` do not become additional slots in the outer group.
+A `Loading` boundary joins the nearest `Reveal` present when that boundary is created.
+A nested loading or error boundary starts a separate boundary scope for its subtree.
+As a result, loading boundaries nested inside another `Loading` do not become additional slots in the outer reveal group.
 A loading boundary wrapped by `Errored` also does not delay an ancestor reveal group.
 
 A nested `Reveal` is different because it registers its controller as one composite slot with the parent reveal group.

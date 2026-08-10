@@ -8,13 +8,13 @@ version: "2.0"
 Solid computations can return promises and async iterables.
 Consumers still read their accessors as reactive values instead of receiving the promise or iterator.
 
-Without a declared first committed value, reading a source before its first result reports that the value is not ready.
+Reading an async source before its first result reports that the value is not ready.
 A [`Loading` boundary](/reference/solid-js/components-jsx/loading) catches that state and renders its fallback.
 When the async work resolves, the computation stores the result and notifies its dependents.
-If the work rejects, the error travels through the reactive graph to an [`Errored` boundary](/reference/solid-js/components-jsx/errored).
+If the work rejects, the error travels through the reactive graph and can be handled by an [`Errored` boundary](/reference/solid-js/components-jsx/errored).
 
 ```tsx
-import { createMemo, createSignal, isPending } from "solid-js";
+import { Loading, createMemo, createSignal, isPending } from "solid-js";
 
 type User = {
   id: number;
@@ -22,169 +22,54 @@ type User = {
   bio: string;
 };
 
-type UserCard = User & {
-  provisional: boolean;
-};
-
 function UserProfile() {
   const [id, setId] = createSignal(1);
-  const user = createMemo<UserCard>(
-    async () => {
-      const requestedId = id();
-      const response = await fetch(`/api/users/${requestedId}`);
+  const user = createMemo(async (): Promise<User> => {
+    const requestedId = id();
+    const response = await fetch(`/api/users/${requestedId}`);
 
-      if (!response.ok) {
-        throw new Error(`Could not load user ${requestedId}`);
-      }
-
-      const result: User = await response.json();
-      return { ...result, provisional: false };
-    },
-    {
-      loadingValue: {
-        id: 0,
-        name: "Loading profile",
-        bio: "",
-        provisional: true
-      }
+    if (!response.ok) {
+      throw new Error(`Could not load user ${requestedId}`);
     }
-  );
+
+    return response.json();
+  });
 
   return (
     <section>
       <button onClick={() => setId(current => current + 1)}>Next user</button>
-      <article
-        aria-busy={user().provisional || isPending(user) ? "true" : "false"}
-        classList={{
-          skeleton: user().provisional,
-          updating: isPending(user)
-        }}
-      >
-        <h2>{user().name}</h2>
-        <p>{user().bio}</p>
-      </article>
+      <Loading fallback={<p>Loading profile...</p>}>
+        <article
+          aria-busy={isPending(user) ? "true" : "false"}
+          classList={{ updating: isPending(user) }}
+        >
+          <h2>{user().name}</h2>
+          <p>{user().bio}</p>
+        </article>
+      </Loading>
     </section>
   );
 }
 ```
 
-The `loadingValue` supplies the first committed `UserCard`, so the component renders one stable content shape from its first read.
-The `provisional` field identifies that value as a skeleton without using a fallback tree.
-During the first request, `isPending(user)` remains `false`.
-After the first real user lands, changing `id()` starts a normal pending update and keeps the previous user visible until the new one lands.
+The first read of `user()` has no value, so `Loading` shows its fallback.
+After the first user lands, changing `id()` starts a pending update while the existing profile remains visible.
+The `isPending(user)` read marks that existing profile as updating until the new user appears.
 
 ## Readiness, pending state, and the latest value
 
-Initial readiness and pending updates describe different parts of an async value's lifecycle.
-An unresolved first result follows the `Loading` path because there is no value to render.
-After initialization, [`isPending(fn)`](/reference/solid-js/reactivity/is-pending) reports whether the expression reads data with an unrevealed value change in flight.
+Treat first readiness and later updates as separate UI states.
+Before a source has a committed value, an unresolved read follows the `Loading` path because there is no content to render.
+After a source has committed a value, changing one of its tracked inputs asks a new question while the existing content remains visible.
+Use [`isPending(fn)`](/reference/solid-js/reactivity/is-pending) to indicate that the new answer has not appeared yet.
 
 `isPending` evaluates the expression passed to it.
 If that evaluation reaches an uninitialized async source inside a tracking scope, the not-ready state still reaches the surrounding `Loading` boundary.
 Reading only an upstream signal does not reveal whether a separate downstream computation is pending.
 
-[`latest(fn)`](/reference/solid-js/reactivity/latest) evaluates the same reactive expression through its in-flight value channel.
-It can expose a value already produced by the current update, and it falls back to the visible value while the newer value is still unavailable.
-This makes `latest` useful when stale content is preferable to replacing an initialized view with a loading indicator.
-
-## Declare a first committed value
-
-Use `loadingValue` when an async signal-family source has a useful value before its first computed answer.
-The option applies to [`createMemo`](/reference/solid-js/reactivity/create-memo), function-form [`createSignal`](/reference/solid-js/reactivity/create-signal), and function-form [`createOptimistic`](/reference/solid-js/reactivity/create-optimistic).
-Solid treats the declared value as commit #0 in the source's value history.
-
-While the first real answer is in flight:
-
-- Every read returns commit #0.
-- `Loading` does not show its fallback for that source.
-- The work does not start or extend a transition.
-- `isPending` returns `false` for the source and values derived from it.
-- `latest` and [`resolve`](/reference/solid-js/advanced/interop-async/resolve) return commit #0.
-
-Encode first-load state in the value.
-Use a nullable value when the UI has no data shape yet, or use shaped placeholder data when the UI can render its final structure immediately.
-Add a field such as `provisional: true` when shaped data must remain distinguishable from an authoritative result.
-The `loadingValue` must belong to the accessor's declared type.
-
-Projection and derived-store seeds are drafts by default, so outside reads do not see them during the first flight.
-Set `seedLoadingValue: true` to promote the seed to commit #0 for [`createStore(fn, seed, options)`](/reference/solid-js/stores/create-store), [`createProjection`](/reference/solid-js/stores/create-projection), or [`createOptimisticStore(fn, seed, options)`](/reference/solid-js/stores/create-optimistic-store).
-
-```tsx
-import { For, createStore, isPending } from "solid-js";
-
-type Feed = {
-  provisional: boolean;
-  items: Array<{
-    id: string;
-    title: string;
-  }>;
-};
-
-const [feed] = createStore<Feed>(
-  async draft => {
-    const response = await fetch("/api/feed");
-
-    if (!response.ok) {
-      throw new Error("Could not load the feed");
-    }
-
-    const result: Feed["items"] = await response.json();
-    draft.provisional = false;
-    draft.items = result;
-  },
-  {
-    provisional: true,
-    items: [
-      { id: "skeleton-1", title: "Loading item" },
-      { id: "skeleton-2", title: "Loading item" }
-    ]
-  },
-  { seedLoadingValue: true }
-);
-
-function FeedList() {
-  return (
-    <section
-      aria-busy={feed.provisional || isPending(() => feed.items) ? "true" : "false"}
-      classList={{
-        skeleton: feed.provisional,
-        updating: isPending(() => feed.items)
-      }}
-    >
-      <For each={feed.items}>{item => <article>{item.title}</article>}</For>
-    </section>
-  );
-}
-```
-
-The seed renders the list structure during the first request.
-The first landing reconciles the fetched items into the store and closes the loading-value window.
-Later input changes use normal pending behavior, and the seed does not reappear.
-
-A synchronous result, a fulfilled promise, or the first async-iterator yield can provide the first real landing.
-The landing closes the window even when its value compares equal to commit #0.
-A first-flight error propagates through the error path but leaves the loading-value window available.
-When a later tracked read retries that source, reads serve commit #0 again until a value lands.
-
-### Server rendering and hydration
-
-During server-side rendering, Solid renders commit #0 without activating a `Loading` fallback and sends a server-computed first landing through the serialization stream.
-During hydration, the client serves the same commit #0 while it claims that markup, then adopts the serialized landing after the claim.
-See [Rendering and SSR](/concepts/rendering-and-ssr) for the wider streaming and hydration model.
-
-An async source with `ssrSource: "client"` must declare what renders before its client-only computation runs.
-Signal-family sources require a `loadingValue`, and store-family sources require `seedLoadingValue: true`.
-Declare `undefined` explicitly when it is commit #0, and include `undefined` in the accessor type.
-
-```ts
-const browserDraft = createMemo<Draft | undefined>(
-  () => readDraftFromStorage(),
-  {
-    ssrSource: "client",
-    loadingValue: undefined
-  }
-);
-```
+Use [`latest(fn)`](/reference/solid-js/reactivity/latest) when a reader needs the freshest available value during an update.
+It returns a value produced by the current update when one exists.
+Until then, it returns the visible committed value.
 
 ## Refreshing the same question
 
@@ -192,18 +77,23 @@ const browserDraft = createMemo<Draft | undefined>(
 It is a write-like operation, so call it from an event handler, effect, or action instead of a pure computation.
 A plain signal is not a refreshable target.
 
+Changing a tracked input asks a new question, so `isPending` reports the unrevealed change.
 A refresh with unchanged inputs asks the same question again.
-The currently displayed answer still matches those inputs, so a bare refresh is quiet and `isPending` remains `false`.
+The displayed answer still matches those inputs, so a bare refresh is quiet and `isPending` remains `false`.
 The fresh result replaces the displayed value when it arrives.
 
 Use [`affects(target, key?)`](/reference/solid-js/lifecycle-actions/affects) when in-flight work is known to change data before the reactive graph can observe that change.
 The declaration makes the target and values derived from it read as pending until the surrounding transaction settles or reverts.
 It does not make the marked values unreadable.
-
-`affects` is additive.
-It can mark an accessor, a store record and its reachable records, or one property of a store record.
-A keyed call names one property rather than a path.
 Pairing `affects(source)` with `refresh(source)` turns an otherwise quiet reload into a declared pending update.
+
+:::note[Advanced: committed first values]
+Most applications should let unresolved first reads reach a `Loading` boundary.
+Use `loadingValue` only when a signal-family source must return a declared committed value during its first async flight instead.
+Use `seedLoadingValue: true` for the equivalent projected-store case.
+These options bypass `Loading` and remain `isPending`-false until the first real value lands, after which normal refetch behavior applies.
+See the [`createMemo`](/reference/solid-js/reactivity/create-memo) and [`createStore`](/reference/solid-js/stores/create-store) references for the complete option contracts.
+:::
 
 ## Actions and optimistic state
 

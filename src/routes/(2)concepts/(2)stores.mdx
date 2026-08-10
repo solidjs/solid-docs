@@ -18,6 +18,8 @@ Use a store when consumers need to read or update separate parts of a nested obj
 `createStore` returns the store proxy and its setter.
 Reading `state.profile.name` in a tracking scope subscribes that scope to the nested `name` property.
 A write to another property does not notify that subscription.
+Solid creates property tracking nodes lazily as tracked consumers read each property.
+The proxy keeps one nested object interface, so individual fields do not need accessor wrappers.
 
 ```ts
 import { createEffect, createRoot, createStore, flush } from "solid-js";
@@ -110,43 +112,11 @@ Returned collections are reconciled by `id` by default, which lets surviving ite
 Pass another key when the data uses a different identity field, or `null` for positional reconciliation.
 
 The required seed is the backing object or array for the projected store.
-By default, an async derive uses the seed as a draft but does not expose it as a committed first result.
-First-flight reads therefore follow the normal loading path.
-
-Set `seedLoadingValue: true` to promote the seed to a committed initial store.
-`createProjection`, the function form of `createStore`, and the function form of `createOptimisticStore` support this option.
-Consumers can read the seed while the first result is in flight.
-
-```ts
-import { createProjection } from "solid-js";
-
-type User = {
-  id: string;
-  name: string;
-};
-
-type UsersState = {
-  ready: boolean;
-  items: User[];
-};
-
-const users = createProjection<UsersState>(
-  async () => {
-    const response = await fetch("/api/users");
-    return {
-      ready: true,
-      items: (await response.json()) as User[]
-    };
-  },
-  { ready: false, items: [] },
-  { seedLoadingValue: true }
-);
-```
-
-Promotion changes the seed's visibility, not its role.
-The projected store keeps the same root proxy, and the first result reconciles into that store with the projection's key rules.
-Give the promoted seed every field that first-flight readers access.
-Add an explicit status or placeholder field when consumers must distinguish seed data from authoritative data.
+Each result reconciles into the same projected store, so the root proxy keeps its identity.
+For an async projection, the seed is not a committed first result by default.
+First-flight reads use the readiness and loading behavior described on the [async reactivity page](/concepts/async-reactivity).
+As an advanced escape hatch, `seedLoadingValue: true` promotes the seed to a committed first-flight value.
+See the [`createProjection` reference](/reference/solid-js/stores/create-projection) for the full contract.
 
 ```ts
 import {

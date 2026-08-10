@@ -14,10 +14,10 @@ The site is organized as four products (Solid, Router, Start, Meta), each with i
 
 Split into two sites, the way Vite handles major versions:
 
-| Site | Contents | Status |
-| --- | --- | --- |
+| Site                    | Contents                                                                                                                   | Status                                                 |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
 | **v1.docs.solidjs.com** | The current site as it stands: core at `/`, Router 1, Meta 0.29, Start v1 + v2 (Start 2 runs on Solid 1, so it lives here) | Branched off and frozen in shape, maintained for fixes |
-| **docs.solidjs.com** | One unified doc tree covering the Solid 2.0 platform, rebuilt from a clean starting point | The active effort |
+| **docs.solidjs.com**    | One unified doc tree covering the Solid 2.0 platform, rebuilt from a clean starting point                                  | The active effort                                      |
 
 Since everything is touched by Solid 2.0, branching the whole site beats threading version switches through every page. Each site links to the other from a banner. This is a one-time split for this transition, not a policy for every major version.
 
@@ -33,15 +33,15 @@ The sidebar keeps the existing Learn / Reference tab split.
 
 #### Learn
 
-| Section | Contents |
-| --- | --- |
-| **Overview** | What Solid 2.0 is, state of the beta, how the docs are organized |
-| **Getting started** | Quick start (degit a template tier, run it, tour `App.tsx` / `Document.tsx`). Project shapes: `bare` / `basic` / `fullstack`, the deployment contract of each tier, the `ssr` flip |
-| **Concepts** | The framework itself. No router, no server. Reactivity basics (signals, memos, effects). Async reactivity (`isPending`, `latest`, `flush`, `onSettled`, actions and `refresh`). Stores, projections, optimistic updates. Components and JSX control flow. Boundaries (`Loading`, `Errored`, `Reveal`). The rendering and SSR model |
-| **Building apps** | The platform layer, router-neutral throughout. App structure (`App` / `Document` conventions, generated entries, `start` options). Styling and assets. Head and metadata (the Meta 1.0 components). Server functions. Sessions and auth. Typed environment variables and `server-only` / `client-only`. Middleware and API routes. Deployment (`handleRequest`, adapters, hosts) |
-| **Routing** | The explicit choice point. An overview page documents the router seam: how a router mounts inside `App`, consumes `virtual:file-routes`, and participates in single-flight. Below it, two paths: **Solid Router** (the first-party default, full narrative docs written for 2.0) and **TanStack** (Router + Query integration guide, linking out for the router itself) |
-| **Guides** | Task how-tos: testing (client and server postures), custom hosts (workers, Cloudflare), progressive enhancement and no-JS forms, and so on |
-| **Migration** | One hub: from Solid 1.x (rename table, dropped APIs, the async model), from SolidStart (both the vinxi-era v1 and the released v2), from Router 0.x/1.x, from Meta 0.x |
+| Section             | Contents                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Overview**        | What Solid 2.0 is, state of the beta, how the docs are organized                                                                                                                                                                                                                                                                                                                 |
+| **Getting started** | Quick start (run the Solid CLI, choose a project shape, tour `App.tsx` / `Document.tsx`). Project shapes: `bare` / `basic` / `fullstack`, the deployment contract of each tier, the `ssr` flip                                                                                                                                                                                   |
+| **Concepts**        | The framework itself. No router, no server. Reactivity basics (signals, memos, effects). Async reactivity (`isPending`, `latest`, `flush`, `onSettled`, actions and `refresh`). Stores, projections, optimistic updates. Components and JSX control flow. Boundaries (`Loading`, `Errored`, `Reveal`). The rendering and SSR model                                               |
+| **Building apps**   | The platform layer, router-neutral throughout. App structure (`App` / `Document` conventions, generated entries, `start` options). Styling and assets. Head and metadata (the Meta 1.0 components). Server functions. Sessions and auth. Typed environment variables and `server-only` / `client-only`. Middleware and API routes. Deployment (`handleRequest`, adapters, hosts) |
+| **Routing**         | The explicit choice point. An overview page documents the router seam: how a router mounts inside `App`, consumes `virtual:file-routes`, and participates in single-flight. Below it, two paths: **Solid Router** (the first-party default, full narrative docs written for 2.0) and **TanStack** (Router + Query integration guide, linking out for the router itself)          |
+| **Guides**          | Task how-tos: testing (client and server postures), custom hosts (workers, Cloudflare), progressive enhancement and no-JS forms, and so on                                                                                                                                                                                                                                       |
+| **Migration**       | One hub: from Solid 1.x (rename table, dropped APIs, the async model), from SolidStart (both the vinxi-era v1 and the released v2), from Router 0.x/1.x, from Meta 0.x                                                                                                                                                                                                           |
 
 #### Reference
 
@@ -87,18 +87,18 @@ src/routes/
 
 **Reference splits `solid-js` from `@solidjs/web`.** The current v2 reference mixes them. Splitting by specifier matches what users import and where things now live (`useHead`, `clientOnly`, `redirect` / `respond` are all `@solidjs/web`).
 
-**Getting started leads with the template tiers.** They are real, maintained, and each is a deployment contract. That beats an abstract install page, and the tier READMEs already model the tone the docs want.
+**Getting started leads with the Solid CLI.** The CLI is the public entry point for selecting the maintained `bare`, `basic`, and `fullstack` project shapes. The templates define each shape and its deployment contract, but readers do not need to know the repository layout to create a project.
 
 ## What moves, what gets written
 
-| Content | Motion |
-| --- | --- |
-| 69 generated v2 reference pages | Re-sort into `reference/solid-js` and `reference/solid-web`; regenerate via `scripts/extract-solid-ref.mjs` |
-| `solid-meta/v1/*` | Relocates nearly as-is into Building Apps + `reference/solid-meta` |
-| `solid-start/v2` guides | Port into Building Apps, rewriting where the Start 2 API differs from start mode |
-| Router 2.0 narrative + reference | **Net-new writing** |
-| Concepts section | **Net-new writing** (adapted from v1 concepts against the 2.0 API) |
-| Migration guides (beyond core) | **Net-new writing** (Router README on `next` has a migration section to seed from) |
+| Content                          | Motion                                                                                                      |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| 69 generated v2 reference pages  | Re-sort into `reference/solid-js` and `reference/solid-web`; regenerate via `scripts/extract-solid-ref.mjs` |
+| `solid-meta/v1/*`                | Relocates nearly as-is into Building Apps + `reference/solid-meta`                                          |
+| `solid-start/v2` guides          | Port into Building Apps, rewriting where the Start 2 API differs from start mode                            |
+| Router 2.0 narrative + reference | **Net-new writing**                                                                                         |
+| Concepts section                 | **Net-new writing** (adapted from v1 concepts against the 2.0 API)                                          |
+| Migration guides (beyond core)   | **Net-new writing** (Router README on `next` has a migration section to seed from)                          |
 
 The true size of the writing effort is Concepts, Routing, and Migration. Everything else is reorganization.
 

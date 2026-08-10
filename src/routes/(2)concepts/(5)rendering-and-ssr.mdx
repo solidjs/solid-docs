@@ -126,40 +126,58 @@ This section covers the SSR and hydration sequence.
 When streaming SSR reads a pending source with commit #0, the read returns commit #0.
 The source does not suspend that read.
 The enclosing `Loading` boundary does not render its fallback for that source.
-The shell renders the UI branch selected by commit #0.
+The shell renders the component tree with commit #0 data.
 
 ```tsx
-import { Loading, Show, createMemo } from "solid-js";
+import { createMemo } from "solid-js";
 
 type UserView = {
-	loading: boolean;
 	name: string;
+	role: string;
+	activity: string;
+	provisional?: boolean;
 };
 
 const user = createMemo<UserView>(
 	async () => {
 		const response = await fetch("/api/user");
-		const data = (await response.json()) as { name: string };
-		return { loading: false, name: data.name };
+		return (await response.json()) as UserView;
 	},
-	{ loadingValue: { loading: true, name: "" } }
+	{
+		loadingValue: {
+			name: "Someone",
+			role: "Member",
+			activity: "Recent activity will appear here",
+			provisional: true,
+		},
+	}
 );
 
-function UserSummary() {
+function UserCard(props: { user: UserView }) {
 	return (
-		<Loading fallback={<p>Loading boundary</p>}>
-			<Show when={!user().loading} fallback={<p>User skeleton</p>}>
-				<p>{user().name}</p>
-			</Show>
-		</Loading>
+		<article
+			class={props.user.provisional ? "user-card provisional" : "user-card"}
+			aria-busy={props.user.provisional ? "true" : "false"}
+		>
+			<h2>{props.user.name}</h2>
+			<p>{props.user.role}</p>
+			<p>{props.user.activity}</p>
+		</article>
 	);
 }
+
+function UserSummary() {
+	return <UserCard user={user()} />;
+}
 ```
+
+Both values render through `UserCard`.
+The `provisional` field controls the busy state and styling without selecting another component tree.
 
 The server locks HTML-visible reads to commit #0 for that response.
 The first computed value is the landing.
 The landing travels through serialized stream data instead of changing later server HTML.
-Store landings use serialized snapshots and patches.
+The same sequence applies when a store seed is commit #0.
 
 Hydration creates the source with the same commit #0.
 The client first claims the server DOM against that value.

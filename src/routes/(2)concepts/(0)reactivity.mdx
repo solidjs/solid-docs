@@ -78,6 +78,38 @@ model.dispose();
 Use a memo when multiple consumers need the same derivation or when the derived value should form an equality boundary in the reactive graph.
 An expression used in only one JSX location can often read its sources directly.
 
+### Committed initial values for async computations
+
+An async memo normally has no committed value until its first result arrives.
+Set `loadingValue` when consumers need a value-shaped placeholder during that first flight.
+The option commits the placeholder immediately, so first-flight reads do not suspend to a loading boundary.
+The first real result replaces the placeholder.
+
+```ts
+import { createMemo } from "solid-js";
+
+type UserValue =
+  | { state: "loading" }
+  | { state: "ready"; name: string };
+
+const user = createMemo<UserValue>(
+  async () => {
+    const response = await fetch("/api/user");
+    const data = (await response.json()) as { name: string };
+    return { state: "ready", name: data.name };
+  },
+  { loadingValue: { state: "loading" } }
+);
+```
+
+`loadingValue` has the same type as the computed value.
+Include `null` or `undefined` in that type when either value represents the placeholder.
+For object placeholders, include a field that lets consumers distinguish the placeholder from authoritative data.
+
+The loading value is also the compute function's first `prev` value.
+With this option, TypeScript types `prev` as `T` instead of `T | undefined`.
+The function forms of `createSignal` and `createOptimistic` support the same option.
+
 See the [`createMemo` reference](/reference/solid-js/reactivity/create-memo) for its options.
 
 ## Effects

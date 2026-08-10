@@ -5,7 +5,181 @@ mainNavExclude: true
 version: "2.0"
 ---
 
-:::note[Planned]
-This page has not been written yet.
-It will cover `'use server'` functions, request events, and how reads and writes flow through `query` and `action`.
+Server functions let browser code call functions whose implementations stay in the server build.
+Enable the transform with the `serverFunctions` option in start mode:
+
+```ts
+import { defineConfig } from "vite";
+import solid from "vite-plugin-solid";
+
+export default defineConfig({
+	plugins: [
+		solid({
+			start: true,
+			ssr: true,
+			serverFunctions: true,
+		}),
+	],
+});
+```
+
+The official `solid-v2/fullstack` and `solid-v2/fullstack-tanstack` templates use this configuration.
+
+## The `use server` directive
+
+A function-level directive extracts that function into the server build:
+
+```ts
+export async function findUser(id: string) {
+	"use server";
+	return database.users.find(id);
+}
+```
+
+A module-level directive turns every exported function in that module into a server function:
+
+```ts
+"use server";
+
+export async function listUsers() {
+	return database.users.all();
+}
+
+export async function renameUser(id: string, name: string) {
+	return database.users.update(id, { name });
+}
+```
+
+Every export from a module-level server file must be a function.
+Function-level server functions may use module-scope bindings, but they cannot close over component or other local scope.
+Pass request-specific values as arguments instead.
+
+The transform replaces the implementation with a fetch-backed reference in the client build.
+The server build registers the implementation under a stable identifier.
+Calling the reference during server rendering runs the implementation in process instead of making an HTTP request.
+
+Treat every argument as untrusted input because the HTTP boundary does not enforce TypeScript types.
+Validate authorization and input inside the server function so the checks run for both HTTP dispatch and in-process calls.
+
+## Reads and writes
+
+Server functions use `POST` by default.
+Declare an HTTP `GET` read with the core `GET` wrapper:
+
+```ts
+import { GET } from "@solidjs/web/server-functions";
+
+export const getUser = GET(async (id: string) => {
+	"use server";
+	return database.users.find(id);
+});
+```
+
+The client places a `GET` function's arguments in the URL.
+The server accepts `GET` only for functions declared with `GET`, while `POST` remains available.
+Set response cache headers when HTTP caches may store the result.
+
+Leave writes on the default `POST` transport:
+
+```ts
+export async function updateUser(form: FormData) {
+	"use server";
+	const id = String(form.get("id") ?? "");
+	const name = String(form.get("name") ?? "");
+	await database.users.update(id, { name });
+}
+```
+
+A server function is a transport primitive and does not require a router or data cache.
+
+## The request event
+
+Start mode creates one request event for each dispatched request.
+Read it with `getRequestEvent()`:
+
+```ts
+import { getRequestEvent } from "@solidjs/web";
+
+export async function currentUserId() {
+	"use server";
+	const event = getRequestEvent();
+	if (!event) throw new Error("Missing request event");
+
+	const authorization = event.request.headers.get("authorization");
+	event.locals.authorization = authorization;
+	return event.locals.userId;
+}
+```
+
+The event contains the incoming web `Request`, a mutable `locals` bag, and a response-head stub.
+Middleware and server functions handling the same request see the same `locals`.
+Append outgoing cookies and other response metadata before the response head commits:
+
+```ts
+import { getRequestEvent, type RequestEvent, type ResponseStub } from "@solidjs/web";
+
+const event = getRequestEvent() as RequestEvent & { response: ResponseStub };
+event.response.headers.append("set-cookie", serializedCookie);
+```
+
+The handler folds the response stub into the outgoing response after dispatch.
+
+## Values, errors, and responses
+
+Return serializable values for ordinary results.
+The client reference resolves to the decoded value.
+
+Use `respond` when a value also needs status, headers, or revalidation metadata:
+
+```ts
+import { respond } from "@solidjs/web";
+
+export async function createUser(input: UserInput) {
+	"use server";
+	const user = await database.users.create(input);
+	return respond(user, {
+		status: 201,
+		headers: { "x-created-user": user.id },
+	});
+}
+```
+
+Scripted callers receive the carried value, while the transport forwards the response metadata.
+`redirect()` and `reload()` return standard `Response` objects carrying `Location` or revalidation headers.
+Returning or throwing those responses preserves their control-flow metadata for an integration to interpret.
+The core transport does not choose how an application navigates.
+
+A plain thrown error reaches the client with its details during development.
+Production builds replace unbranded thrown values with a generic `Internal Server Error`.
+Use `respond()` for an intentional structured failure, or `markSafeError()` only when the error details are safe to expose.
+
+## Optional Solid Router integration
+
+Solid Router can add caching, submissions, revalidation, forms, and single-flight data to server functions.
+These wrappers are optional:
+
+```ts
+import { action, query } from "@solidjs/router";
+
+export const getUsers = query(async () => {
+	"use server";
+	return database.users.all();
+}, "users");
+
+export const addUser = action(async (form: FormData) => {
+	"use server";
+	await database.users.create({
+		name: String(form.get("name") ?? ""),
+	});
+});
+```
+
+`query()` caches reads by its name and arguments and declares a wrapped server function as an HTTP `GET`.
+`action()` tracks mutation submissions and applies response metadata to the router's query cache.
+When the router registers its single-flight integration, an action response can carry refreshed route data with the mutation result.
+The server-function runtime treats that data as an opaque payload, so other routers and caches can integrate through the same transport hooks.
+
+:::note[API status]
+Server functions and the start-mode serving layer are part of the Solid 2.0 beta surface.
+The low-level handler hooks, codec extensions, and single-flight integration seams are intended for router and framework integrations and may still change before a stable release.
 :::

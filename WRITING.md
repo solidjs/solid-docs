@@ -316,6 +316,64 @@ Once again, ask yourself throughout your writing process: Who is this document f
 
 For more on what inclusive language looks like, [Google once again has a great breakdown](https://developers.google.com/style/inclusive-documentation).
 
+## AI-assisted writing
+
+Much of the Solid 2.0 documentation is drafted with AI assistance.
+The rules in the rest of this guide apply unchanged.
+The rules in this section exist because AI drafts fail in predictable ways, and we want those failures caught mechanically, not by tired reviewers.
+
+A tone lint (`pnpm lint:tone`) enforces the mechanical parts of this section over `src/routes/**/*.mdx`, skipping code blocks and inline code.
+
+### Every claim traces to source
+
+Docs describe what the code does, not what it should do.
+Every behavioral claim must be traceable to the source on the branch being documented (for Solid 2.0, the `next` branches).
+If you cannot point to the line, do not write the sentence.
+Code examples must run against the current release of the package they document.
+
+### No filler
+
+These words add nothing and can make the reader feel talked down to.
+Do not use them:
+
+- "actually", "basically", "obviously", "of course"
+- "simply", "just", "easy", "easily" (describing a task; "easy to confuse" is fine in a warning)
+- "note that", "it's worth noting", "keep in mind"
+
+If removing the word does not change the meaning, remove the word.
+
+### No marketing
+
+Documentation states facts; the reader decides whether they are impressive.
+Do not use:
+
+- "powerful", "blazing", "blazingly fast", "seamless", "seamlessly"
+- "elegant", "robust", "cutting-edge", "best-in-class", "delightful", "magic", "magical"
+- Exclamation marks
+- Performance claims without a number and a source
+
+Write what the thing does instead: "updates only the text node that changed" beats "blazingly fast rendering" in every way that matters.
+
+### Write for the reader, not the history
+
+The reader never saw the old design, the draft API, or the discussion where an alternative was rejected.
+
+- Do not justify the current API against alternatives that never shipped.
+- Do not write "we renamed X to Y" or "unlike the old X" outside a migration guide.
+- Do not warn against usage the reader would never think of ("do not pass locks as a store").
+
+The one exception is real migrations: if users had X in a shipped release, the migration guide covers X to Y.
+That content belongs in the Migration section, not scattered through the docs.
+
+### Patterns that read as generated
+
+Avoid the sentence shapes that mark text as machine-written:
+
+- The "It's not X, it's Y" and "Not just X, but Y" constructions.
+- Three-item lists used as rhythm rather than content.
+- A bold lead-in phrase on every list item when the items do not need labels.
+- Restating the heading as the first sentence under the heading.
+
 ## Solid Terms
 
 This is a list of Solid-specific words and what they mean. In the second column, we put:

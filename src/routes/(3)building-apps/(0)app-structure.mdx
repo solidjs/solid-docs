@@ -18,13 +18,14 @@ export default defineConfig({
 ```
 
 A start-mode project does not need an `index.html` file or a client mount file.
-The plugin generates those parts from `src/App.tsx` and, when present, `src/Document.tsx`.
+When no authored entry is selected, the plugin generates those parts from `src/App.tsx` and, when present, `src/Document.tsx`.
 
 ## Rendering mode
 
 Start mode uses client rendering unless `ssr: true` is set.
-Client mode prerenders an empty document shell to `dist/client/index.html`, then calls `render()` to mount the app into `document.body`.
-The resulting `dist/client` directory can be deployed to a static host.
+Client mode prerenders the document shell without `App` to `dist/client/index.html`, then calls `render()` to mount the app into `document.body`.
+Without server functions, the build removes `dist/server` and the resulting `dist/client` directory can be deployed to a static host.
+When server functions are enabled, pages remain static but their endpoint still uses the retained server handler.
 
 Add `ssr: true` to render the app for each request:
 
@@ -41,7 +42,7 @@ export default defineConfig({
 
 SSR mode streams the initial document and calls `hydrate()` in the browser.
 A production build emits browser assets under `dist/client` and a request handler under `dist/server`.
-The same `App` and `Document` conventions apply in both modes.
+The same `App` and `Document` conventions apply to generated entries in both modes.
 
 ## The app component
 
@@ -65,7 +66,8 @@ export default function App() {
 }
 ```
 
-Start mode also accepts `src/App.jsx`, `src/App.ts`, or `src/App.js`, and probes the lowercase `src/app` name after `src/App`.
+For `src/App`, start mode probes `.tsx`, `.jsx`, `.ts`, then `.js`.
+It repeats that extension order for lowercase `src/app` only when no uppercase stem matches.
 Set `start.app` to use another module inside the Vite project root.
 
 ## The document component
@@ -94,23 +96,31 @@ export default function Document(props: ParentProps) {
 }
 ```
 
-The plugin also accepts `src/Document.jsx` or a module selected by `start.document`.
+For the document convention, the plugin probes `src/Document.tsx` and then `src/Document.jsx`.
+A module selected by `start.document` takes precedence over that convention.
 If no document module exists, the generated entries use a minimal built-in document.
-The plugin injects the client entry script into the document head.
+With generated entries, the plugin injects the client entry script into the document head.
 In client mode, the app is omitted from the prerendered shell and any output from `<HydrationScript />` is removed because the browser mounts rather than hydrates.
 
 ## Generated and authored entries
 
 In SSR mode, the generated server entry renders `<Document><App /></Document>` and the generated client entry hydrates the same tree.
-The generation path is used when neither conventional entry file exists.
+The generation path is used when neither an explicit nor a conventional entry is selected.
 
-You can replace generated entries with `src/entry-server.*` and `src/entry-client.*`, or with `start.entryServer` and `start.entryClient`.
+The plugin probes conventional entries in `.tsx`, `.jsx`, `.ts`, `.js`, then `.mjs` order.
+Explicit `start.entryServer` and `start.entryClient` paths take precedence over the corresponding conventional files.
 SSR mode requires authored entries in pairs because both sides must render the same document tree.
-The server entry exports `render()`, and the client entry owns hydration.
+The server entry exports `render()`, which may return a stream result, an HTML string, or a `Response`.
+The authored client entry owns hydration.
+An authored SSR document also owns its client script element.
+The server render receives the resolved client-entry URL in its context, and the production handler also rewrites a literal root-relative reference to that authored client entry.
+
+An authored SSR pair bypasses the `App` and `Document` conventions because those modules belong to generated entries.
 
 Client mode always generates the server-side shell renderer.
 An authored client entry can stand alone and owns the browser mount in that mode.
 Authored server entries and `start.entryServer` are ignored in client mode.
+The selected `Document` still supplies the client-mode shell when the client entry is authored.
 
 ## Mounting a router
 
@@ -130,10 +140,12 @@ solid({
 });
 ```
 
-The setup module default-exports a function that receives the current request event and the `App` component.
-The generated server entry awaits it immediately before rendering.
-Return a component to render it in `App`'s place inside `Document`, or return nothing to keep `<App />`.
+The server-only setup module default-exports a function that receives the current request event and the `App` component.
+The generated server entry invokes it after middleware dispatch reaches the page render and before `renderToStream()` starts.
+The function may return a component, nothing, or a promise of either result.
+A returned component renders in `App`'s place inside `Document`, while no return keeps `<App />`.
 The browser-side `App` must produce the corresponding router tree so hydration matches.
 
 `start.setup` runs only for page renders made by a generated server entry.
-It is ignored in client mode, and combining it with an authored server entry is an error.
+It is ignored in client mode.
+In SSR mode, combining it with an authored server entry is an error.

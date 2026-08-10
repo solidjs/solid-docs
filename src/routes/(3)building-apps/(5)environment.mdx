@@ -11,7 +11,7 @@ This environment layer belongs to start mode and is not enabled by `ssr: true` a
 ## Define the schema
 
 Add `env.ts` or `env.js` at the Vite project root.
-Default-export `server` and `client` maps whose values implement Standard Schema.
+Default-export optional `server` and `client` maps whose values implement Standard Schema.
 The official `solid-v2/fullstack` template uses Zod:
 
 ```ts
@@ -47,7 +47,7 @@ Use `env: false` to disable the environment layer even when a conventional schem
 ## Generated types
 
 The plugin writes `solid-env.d.ts` next to the schema when development or a build starts.
-The declarations infer each value from the output type of its validator, including coercions and defaults.
+The declarations infer each value from the Standard Schema output type of its validator.
 Keep both the schema and generated declaration in the TypeScript project.
 
 Both virtual modules provide a named and a default `env` export:
@@ -64,9 +64,11 @@ Do not edit `solid-env.d.ts` because the plugin regenerates it from the schema.
 Each client key must start with Vite's public environment prefix, which is `VITE_` unless `envPrefix` changes it.
 The prefix requirement is enforced when the schema is loaded.
 
-Client values are validated during the build and serialized into the browser bundle as plain JSON.
-Defaults and coercions run before serialization, and the validator library is not included with the generated values.
+Client values are validated during development and production builds.
+The validated outputs are serialized into the browser bundle as plain JSON, so defaults and coercions run before serialization.
+The validator library is not included with those generated values.
 A client validation failure stops the build.
+During development, a validation failure is reported through Vite's error response or overlay.
 
 These values are public because anyone can inspect a browser bundle.
 Do not place credentials or other secrets in the `client` map, regardless of how the application uses them.
@@ -92,22 +94,26 @@ The plugin validates server values during development because the development se
 During a production build, a missing or invalid server value produces a warning and defers the failure to server boot.
 This lets build systems create artifacts before deployment-only secrets exist.
 
-In client mode, the static browser output receives only the client map.
+In client mode, only the client map is available to the static browser graph.
 The server virtual module remains unavailable to client code.
 
 ## Environment file loading
 
-The environment layer uses Vite's mode-specific `.env` merge and folds file-loaded values into `process.env`.
+When environment-file loading is enabled, the layer loads `.env`, `.env.local`, `.env.[mode]`, and `.env.[mode].local` from Vite's configured environment directory.
+It folds those file-loaded values into `process.env` during development and builds.
 Values already present in the process take precedence over values loaded from files.
 Application server libraries can therefore read the same file-loaded values from `process.env` without `loadEnv` setup in `vite.config.ts`.
+When a built server handler is retained, `vite preview` also folds the selected files before that module performs its boot validation.
 
-The production client build also checks its generated chunks for quoted copies of known validated server string values.
-That leak scan is a secondary check and does not make a client value secret.
+The production client build also performs a heuristic leak scan over non-vendor chunks.
+It checks exact quoted copies of validated server strings that are at least eight characters long and are not also client values.
+Shorter values, non-string values, and values unavailable on the build machine are outside that scan.
+The scan is a secondary check and does not make a client value secret.
 The server/client schema split and module-graph boundaries remain the controls that keep server data out of browser code.
 
 ## Server-only and client-only modules
 
-`vite-plugin-solid` always provides the `server-only` and `client-only` marker modules.
+`vite-plugin-solid` enables the `server-only` and `client-only` marker modules even when start mode and server functions are off.
 Import a marker for its side effect at the top of a module:
 
 ```ts
@@ -136,7 +142,8 @@ In a client graph, the marker resolves to an empty module.
 
 The markers assert where a module may be bundled.
 They do not move code between environments, create a runtime condition, or hide values that have already been copied into client code.
-Keep browser modules behind a client-only import path, and keep secrets in modules reached only from server entries, middleware, or server functions.
+The marker must be imported by the module that needs the assertion.
+Keep browser modules out of server import graphs, and keep secrets in modules reached only from server entries, middleware, or server functions.
 
 Add the plugin's boundary declarations when TypeScript does not already include them:
 

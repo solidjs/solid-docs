@@ -3,9 +3,54 @@ title: "filesystem-routing"
 titleTemplate: ":title"
 mainNavExclude: true
 version: "2.0"
+description: "Public exports for filesystem-routing scanning, conventions, Vite delivery, and API dispatch."
+source_repo: "solidjs/filesystem-routing"
+source_ref: "b9fd4fad9e453bf40e50780bf6623af357df4306"
+source_sha: "b9fd4fad9e453bf40e50780bf6623af357df4306"
+source_path: "package.json"
 ---
 
-:::note[Planned]
-This page has not been written yet.
-It will cover the API reference for the `filesystem-routing` package.
-:::
+`filesystem-routing` scans route files into a router-neutral manifest.
+Vite delivers that manifest, while each router owns its conversion to router-specific definitions.
+
+## Package exports
+
+### `filesystem-routing`
+
+- [`PageFileSystemRouter`, `FlatFileSystemRouter`, and filename helpers](/reference/filesystem-routing/conventions)
+- [`BaseFileSystemRouter`, scanning utilities, module analysis, and manifest types](/reference/filesystem-routing/core)
+- [`buildRouteTree`, `stripRouteGroups`, and `RouteTreeEntry`](/reference/filesystem-routing/tree)
+
+### `filesystem-routing/tree`
+
+Exports the [tree-building functions and type](/reference/filesystem-routing/tree) without loading the scanner.
+
+### `filesystem-routing/vite`
+
+Exports [`fileRoutes(options?)`](/reference/filesystem-routing/vite), its option type, and lower-level Vite adapter helpers.
+
+### `filesystem-routing/api`
+
+Exports the [API matcher and fetch-style middleware adapter](/reference/filesystem-routing/api).
+
+### `filesystem-routing/types`
+
+Provides the ambient declaration for [`virtual:file-routes`](/reference/filesystem-routing/manifest).
+
+### `virtual:file-routes`
+
+The generated module exports the flat manifest as default and nested page entries as `pageRoutes`.
+See [Manifest module](/reference/filesystem-routing/manifest).
+
+## Solid Router boundary
+
+`filesystem-routing` does not export a Solid Router adapter.
+Import `fileRoutes` from `@solidjs/router/fs` to convert `pageRoutes` into Solid Router route definitions.
+
+```tsx
+import { pageRoutes } from "virtual:file-routes";
+import { createRouter } from "@solidjs/router";
+import { fileRoutes } from "@solidjs/router/fs";
+
+const Router = createRouter({ routes: fileRoutes(pageRoutes) });
+```

@@ -1,0 +1,67 @@
+---
+title: "filesystem-routing/tree"
+category: "filesystem-routing"
+order: 4
+version: "2.0"
+description: "Builds nested route trees and removes route-group segments."
+source_repo: "solidjs/filesystem-routing"
+source_ref: "b9fd4fad9e453bf40e50780bf6623af357df4306"
+source_sha: "b9fd4fad9e453bf40e50780bf6623af357df4306"
+source_path: "src/tree.ts"
+---
+
+`filesystem-routing/tree` contains route-tree operations without Node or bundler imports.
+The same exports are available from `filesystem-routing`.
+
+## Import
+
+```ts
+import {
+	buildRouteTree,
+	stripRouteGroups,
+	type RouteTreeEntry,
+} from "filesystem-routing/tree";
+```
+
+## `RouteTreeEntry`
+
+```ts
+interface RouteTreeEntry extends RouteManifestEntry {
+	id: string;
+	children?: RouteTreeEntry[];
+}
+```
+
+`id` records the manifest path used for nesting, including route groups.
+For a nested child, `id` and `path` are relative to its parent.
+
+## `stripRouteGroups`
+
+```ts
+function stripRouteGroups(path: string): string;
+```
+
+Removes segments matching `(name)` and collapses repeated slashes.
+
+```ts
+stripRouteGroups("/(app)/dashboard"); // "/dashboard"
+stripRouteGroups("/(app)"); // "/"
+```
+
+## `buildRouteTree`
+
+```ts
+function buildRouteTree(
+	entries: readonly RouteManifestEntry[]
+): RouteTreeEntry[];
+```
+
+Copies and sorts entries by path length, then nests each entry under the first existing route whose `id` is its path prefix.
+Nested `path` values are relative to the parent, and group segments are removed from URL paths.
+The input is not mutated.
+
+Pass only entries that belong in the page tree:
+
+```ts
+const tree = buildRouteTree(entries.filter((entry) => entry.page));
+```

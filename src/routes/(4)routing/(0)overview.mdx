@@ -6,17 +6,16 @@ version: "2.0"
 ---
 
 Routing is an application integration rather than a requirement of Solid.
-A router owns URL matching, navigation, route components, and any route-level data policy.
-Solid renders the router as part of the component tree.
+A router integration owns URL matching, navigation, and route rendering.
+Route-level data can use the router's data APIs or a separate cache.
+The application renders the router as part of the component tree.
 
 ## Mount the router in `App`
 
-The generated entries in the `vite-plugin-solid` turnkey mode render `src/App.tsx` inside `src/Document.tsx`.
-Mount the router or its provider in `App` so the same application root is used for client rendering and server-side rendering (SSR).
+The `vite-plugin-solid` turnkey mode uses `src/App.tsx` as the root component for its generated entries.
+With server-side rendering (SSR) enabled, its generated server and client entries both render `App` inside `src/Document.tsx`.
+Mount the router or its provider in `App` so both entries use the same router root.
 Site-wide providers can wrap the router, and shared layouts can live in the router's root route or inside its provider.
-
-The router must produce the same initial component structure on the server and client when SSR is enabled.
-Router-specific providers, pending boundaries, and data hydration must therefore be configured on both sides of the handoff.
 
 ## Choose how routes are defined
 
@@ -39,9 +38,9 @@ Solid Router reads the request URL from that event when it creates its server in
 That behavior belongs to Solid Router.
 
 Routers that need an asynchronous preparation step can use the platform's `start.setup` option.
-The configured server-only module receives the shared request event after middleware dispatch and before `renderToStream`.
+The configured server-only module runs when the middleware chain reaches the page render and before `renderToStream`.
 It can create request-local router and cache instances, load the matched routes, and return a component to render in place of `App`.
-The hook runs once per request, applies only to generated server entries, and is ignored when SSR is disabled.
+The hook runs once each time a generated server entry renders an SSR request and is ignored when SSR is disabled.
 An authored server entry already owns the render function and must perform the same preparation itself.
 
 The separate `start.middleware` option installs fetch-style middleware in front of page renders, server-function calls, and other requests dispatched by the handler.
@@ -52,16 +51,18 @@ The middleware chain and `start.setup` share the same request event, including v
 Single-flight combines a mutation result and refreshed page data in one server-function response.
 The platform transport supplies two router-neutral extension points:
 
-- A client flight-data consumer opts mutation requests into collection and applies the returned payload.
-- A server `collectFlightData` hook receives the post-mutation target URL, revalidation keys, and request headers with mutation cookies already folded in.
+- Registering a client consumer with `subscribeFlightData` adds the single-flight request header to non-GET server-function calls.
+- A server `collectFlightData` hook receives the target URL, revalidation keys, and request headers with mutation cookies already folded in.
 
-The router integration decides how to match the target URL, rerun relevant loaders or preloads, serialize the result, and seed its client cache.
-The client consumer must be installed before mutations run, and the server collector must be registered before server-function dispatch.
+The server-function runtime awaits the consumer before resolving the call with the mutation value.
+The integration decides how to match the target URL, rerun relevant loaders or preloads, produce a serializable payload, and apply it on the client.
 `serverFunctions.configure` provides a server-only module that the generated handler imports before dispatch in development and production.
 
 Solid Router supplies `createFlightDataCollector` from `@solidjs/router/server`.
 It consumes the router's route tree, base, and root preload, then collects matched `query` results for the target URL.
-On the client, a mounted Solid Router with single-flight enabled subscribes to flight data when its action integration is installed and seeds the router query cache from the payload.
+On the client, Solid Router enables single-flight by default, registers the mounted router, and installs its flight consumer when the first router action is created.
+The router and action integrations use a rendezvous so either can load first.
+The consumer applies response metadata and seeds Solid Router's `query` cache from the payload.
 
 Other routers provide their own collection and cache-hydration policy.
-The [TanStack Router integration](./tanstack/) uses a dehydrated TanStack Query cache as the opaque flight payload.
+The [TanStack Router integration](/routing/tanstack) uses a dehydrated TanStack Query cache as the flight payload.

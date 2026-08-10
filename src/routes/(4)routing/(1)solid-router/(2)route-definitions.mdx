@@ -1,0 +1,199 @@
+---
+title: "Route definitions"
+version: "2.0"
+description: "Define static, parameterized, lazy, and file-system-backed Solid Router routes."
+---
+
+A route definition connects a path pattern to a component, optional preload work, nested routes, search validation, and metadata.
+
+```tsx
+import { defineRoutes } from "@solidjs/router";
+
+export const routes = defineRoutes([
+	{ path: "/", component: Home },
+	{ path: "/about", component: About },
+	{ path: "*404", component: NotFound },
+]);
+```
+
+Use `defineRoutes` for an extracted route array.
+Its `const` type parameter preserves path literals that TypeScript would otherwise widen, so `createRouter({ routes })` can infer typed paths from the array.
+An inline array passed directly to `createRouter` already receives literal inference.
+
+## Type a route at its definition
+
+`defineRoute` is an identity helper that types a route component and preload from the route's own path pattern.
+
+```tsx
+import { defineRoute } from "@solidjs/router";
+
+const storyRoute = defineRoute({
+	path: "/stories/:id/:tab?",
+	preload: ({ params }) => getStory(params.id),
+	component: (props) => (
+		<Story story={props.data} id={props.params.id} tab={props.params.tab} />
+	),
+});
+```
+
+Required parameters such as `:id` are typed as `string`.
+Optional parameters such as `:tab?` are typed as `string | undefined`.
+The return type of `preload` becomes the component's `props.data` type.
+Parameters inherited from a parent remain accessible as `string | undefined`.
+
+For a component declared in another module, annotate it with a path witness:
+
+```tsx
+import type { RouteComponent } from "@solidjs/router";
+import type { Router } from "../router";
+
+const Story: RouteComponent<typeof Router.paths.stories> = (props) => (
+	<h1>{props.params.id}</h1>
+);
+```
+
+`RouteProps<typeof Router.paths.stories>` provides the corresponding props-object type.
+
+## Match path patterns
+
+Use `:name` for a required segment, `:name?` for an optional segment, and `*name` for the remaining path.
+A wildcard must be the final segment.
+
+```tsx
+const routes = defineRoutes([
+	{ path: "/users/:id", component: User },
+	{ path: "/docs/:section?", component: Docs },
+	{ path: "/files/*path", component: FileViewer },
+]);
+```
+
+A route can also match any path in an array:
+
+```tsx
+{ path: ["/login", "/register"], component: AccountAccess }
+```
+
+The same route definition stays mounted when navigation moves between its matching paths.
+
+## Filter parameters
+
+`matchFilters` rejects parameter values that do not satisfy an array, regular expression, or predicate.
+
+```tsx
+import { defineRoute, int } from "@solidjs/router";
+
+const userRoute = defineRoute({
+	path: "/users/:id",
+	matchFilters: { id: int },
+	component: User,
+});
+```
+
+The built-in `int` filter accepts integer strings at runtime.
+It also changes the corresponding `Router.paths` argument to `number`.
+Route components still receive URL parameters as strings.
+
+## Add route metadata
+
+The `info` property stores application metadata on a route.
+Read matched metadata with `useRouteMatches()` or with `Router.match(url)`.
+
+```tsx
+const routes = defineRoutes([
+	{
+		path: "/account",
+		component: Account,
+		info: { breadcrumb: "Account" },
+	},
+]);
+```
+
+Augment `RouteInfo` to check shared metadata keys throughout the application:
+
+```ts
+declare module "@solidjs/router" {
+	interface RouteInfo {
+		breadcrumb?: string;
+	}
+}
+```
+
+## Load a route subtree lazily
+
+A `children` thunk can load an entire nested route table.
+The module may export the route array as `default` or as `routes`.
+
+```tsx
+const Router = createRouter({
+	routes: [
+		{ path: "/", component: Home },
+		{
+			path: "/admin",
+			component: AdminLayout,
+			children: () => import("./admin/routes"),
+		},
+	],
+});
+```
+
+The thunk runs when matching, navigation, or preloading reaches that subtree.
+Its resolution is cached and added to the compiled route tree.
+TypeScript infers paths through the import's promise type when the imported route array retains literal types.
+
+```tsx
+// src/admin/routes.ts
+import { defineRoutes } from "@solidjs/router";
+
+export default defineRoutes([
+	{ path: "/", component: AdminHome },
+	{ path: "/users/:id", component: AdminUser },
+]);
+```
+
+Use a deterministic thunk such as `() => import("./admin/routes")`.
+The resolved subtree is shared and does not switch based on later runtime state.
+
+## Convert a file-system manifest
+
+The `@solidjs/router/fs` entry converts the nested `pageRoutes` view from a `file-routes` manifest into route definitions.
+
+```tsx
+import { pageRoutes } from "virtual:file-routes";
+import { createRouter } from "@solidjs/router";
+import { fileRoutes } from "@solidjs/router/fs";
+
+export const Router = createRouter({
+	routes: fileRoutes(pageRoutes),
+});
+```
+
+Each route module exports its component as `default`.
+An optional named `route` export supplies `preload`, `matchFilters`, `search`, and `info`.
+
+```tsx
+// routes/blog/[id].tsx
+import { int, type RouteProps } from "@solidjs/router";
+import { defineFileRoute } from "@solidjs/router/fs";
+
+export const route = defineFileRoute("/blog/:id", {
+	matchFilters: { id: int },
+	preload: ({ params }) => getPost(params.id),
+});
+
+export default function Post(props: RouteProps<typeof route>) {
+	return <h1>{props.data.title}</h1>;
+}
+```
+
+The string passed to `defineFileRoute` is a type witness for the file's path.
+The manifest path remains the runtime source of truth.
+When the manifest has generated literal types, route paths, filters, and search schemas continue into `Router.paths`.
+
+Code-split manifest components become Solid `lazy` components.
+An eagerly delivered component from a manifest built with `codeSplitting: false` is passed through without a `lazy` wrapper.
+
+:::note[Local-only source]
+Eager component passthrough comes from router commit `bae09cc`, which is ahead of `origin/next`.
+:::
+
+See the [`@solidjs/router/fs` reference](/reference/solid-router/filesystem) for adapter signatures.

@@ -1,0 +1,214 @@
+---
+title: "Navigation primitives"
+version: "2.0"
+description: "Reference for Solid Router location, navigation, matching, search, preloading, link state, and leave guards."
+source_repo: "solidjs/solid-router"
+source_ref: "next"
+source_sha: "3daa4d071df288280eb0de996039cf591d8173f8"
+source_path: "src/routing.ts"
+---
+
+## Import
+
+```ts
+import {
+	useBeforeLeave,
+	useHref,
+	useIsRouting,
+	useLinkState,
+	useLocation,
+	useMatch,
+	useNavigate,
+	useParams,
+	usePreloadRoute,
+	useResolvedPath,
+	useRouteMatches,
+	useSearchParams,
+} from "@solidjs/router";
+```
+
+All primitives on this page require a mounted router context.
+
+## `useNavigate`
+
+```ts
+function useNavigate(): Navigator;
+
+interface Navigator {
+	(to: string | TypedPath | number, options?: Partial<NavigateOptions>): void;
+	(delta: number): void;
+}
+```
+
+```ts
+interface NavigateOptions<S = unknown> {
+	resolve: boolean;
+	replace: boolean;
+	scroll: boolean;
+	state: S;
+}
+```
+
+Defaults are `resolve: true`, `replace: false`, and `scroll: true`.
+
+```ts
+const navigate = useNavigate();
+navigate(Router.paths.users(42), { replace: true });
+navigate(-1);
+```
+
+## `useLocation`
+
+```ts
+function useLocation<S = unknown>(): Location<S>;
+```
+
+```ts
+interface Location<S = unknown> {
+	pathname: string;
+	search: string;
+	hash: string;
+	query: SearchParams;
+	state: Readonly<Partial<S>> | null;
+	key: string;
+}
+```
+
+Returns the reactive current location.
+
+## `useParams`
+
+```ts
+function useParams<T extends Params>(): T;
+function useParams<P extends Params>(
+	path: TypedPath<P>
+): { [K in keyof P]: P[K] };
+```
+
+Returns the reactive merged parameters for the current route chain.
+The path argument is a type witness and is not matched at runtime.
+
+## `useSearchParams`
+
+```ts
+function useSearchParams<T extends SearchParams>(): [
+	Partial<T>,
+	(params: SetSearchParams, options?: Partial<NavigateOptions>) => void,
+];
+
+function useSearchParams<In, Out>(
+	path: TypedSearchPath<In, Out>
+): [Out, (params: Partial<In>, options?: Partial<NavigateOptions>) => void];
+```
+
+The no-argument form reads raw query values.
+The path-witness form runs synchronous search schemas from the current matched routes.
+The setter merges values and defaults to `scroll: false` and `resolve: false`.
+
+## `useMatch`
+
+```ts
+function useMatch<S extends string | TypedPath>(
+	path: () => S,
+	matchFilters?: MatchFilters
+): () => PathMatch | undefined;
+```
+
+Matches the supplied path pattern against the current pathname.
+It does not consult the route tree.
+
+```ts
+const match = useMatch(() => "/docs/*rest");
+match()?.params.rest;
+```
+
+## `useRouteMatches`
+
+```ts
+function useRouteMatches(): () => RouteMatch[];
+```
+
+Returns a copied root-to-leaf array of the resolved route-tree matches.
+
+## `useIsRouting`
+
+```ts
+function useIsRouting(): () => boolean;
+```
+
+Returns an accessor for pending programmatic navigation, native history traversal, and lazy route resolution.
+
+## `usePreloadRoute`
+
+```ts
+function usePreloadRoute(): (
+	url: string | URL | TypedPath,
+	options?: { preloadData?: boolean }
+) => void;
+```
+
+Loads matched lazy components.
+Set `preloadData: true` to also run matched route preloads.
+
+## `useLinkState`
+
+```ts
+function useLinkState(
+	href: () => string | TypedPath,
+	options?: { end?: boolean }
+): LinkState;
+```
+
+```ts
+interface LinkState {
+	active: () => boolean;
+	current: () => boolean;
+	pending: () => boolean;
+}
+```
+
+`active` includes descendants unless `end` is true.
+`current` is exact.
+`pending` matches the active in-flight target.
+
+## `useResolvedPath`
+
+```ts
+function useResolvedPath(path: () => string): () => string | undefined;
+```
+
+Resolves a path against the current route context.
+
+## `useHref`
+
+```ts
+function useHref<T extends string | undefined>(to: () => T): () => string | T;
+```
+
+Applies the history adapter's output rendering, such as the `#` prefix from hash history.
+
+## `useBeforeLeave`
+
+```ts
+function useBeforeLeave(listener: (event: BeforeLeaveEventArgs) => void): void;
+```
+
+```ts
+interface BeforeLeaveEventArgs {
+	from: Location;
+	to: string | number;
+	options?: Partial<NavigateOptions>;
+	readonly defaultPrevented: boolean;
+	preventDefault(): void;
+	retry(force?: boolean): void;
+}
+```
+
+The listener is removed when its owner is disposed.
+Call `preventDefault()` to block navigation.
+Call `retry(true)` to retry without running leave handlers again.
+
+## Related
+
+- [Routes and typed paths](/reference/solid-router/routes-and-paths)
+- [History adapters](/reference/solid-router/history)

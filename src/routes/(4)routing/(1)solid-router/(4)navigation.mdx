@@ -1,0 +1,201 @@
+---
+title: "Navigation and typed paths"
+version: "2.0"
+description: "Build typed URLs, navigate with anchors or code, and read the active Solid Router location."
+---
+
+Solid Router uses regular anchors for declarative navigation.
+Same-origin anchors inside the router base are intercepted through delegated events.
+
+```tsx
+<nav>
+	<a href={Router.paths()}>Home</a>
+	<a href={Router.paths.users(42)}>User</a>
+	<a href="https://example.com">External site</a>
+</nav>
+```
+
+External URLs, non-HTTP schemes, downloads, `rel="external"`, and anchors with a `target` continue through browser behavior.
+
+## Build URLs with `Router.paths`
+
+The router instance's `paths` proxy is inferred from its literal route tree.
+Property access adds static segments, and calls bind route parameters.
+
+```tsx
+Router.paths();
+// "/"
+
+Router.paths.users(42).settings();
+// "/users/42/settings"
+
+Router.paths.search({ q: "solid", page: 2 }, "results");
+// "/search?q=solid&page=2#results"
+```
+
+Every path node converts to a string when used as an `href`, navigation target, or redirect target.
+Call a node with no arguments when an API requires a plain `string`.
+
+`matchFilters` can narrow path-builder inputs.
+For example, `{ id: int }` makes `paths.users(id)` accept a number while the route component receives `params.id` as a string.
+
+A route `search` schema changes the search object accepted by the corresponding path end.
+See [Typed search parameters](#type-search-parameters) for parsed reads.
+
+## Navigate from code
+
+`useNavigate` returns the navigator for the current router session.
+
+```tsx
+import { useNavigate } from "@solidjs/router";
+import { Router } from "../router";
+
+function SaveButton() {
+	const navigate = useNavigate();
+
+	return (
+		<button onClick={() => navigate(Router.paths.account, { replace: true })}>
+			Open account
+		</button>
+	);
+}
+```
+
+Navigation options control resolution, history replacement, scrolling, and location state.
+Relative strings resolve as URLs against the current location.
+Leading `/` strings resolve under the router base.
+Pass a number to move through history, such as `navigate(-1)`.
+
+Use an anchor when navigation is represented by a link in the interface.
+Use `useNavigate` for navigation caused by application logic.
+
+## Read location and parameters
+
+`useLocation` returns the reactive location object:
+
+```tsx
+const location = useLocation();
+
+location.pathname;
+location.search;
+location.hash;
+location.query;
+location.state;
+location.key;
+```
+
+`useParams` returns the merged parameters for the current route chain:
+
+```tsx
+const params = useParams();
+params.id;
+```
+
+Pass a typed path node to narrow the known parameter keys:
+
+```tsx
+const params = useParams(Router.paths.users);
+params.id;
+```
+
+## Type search parameters
+
+Without a schema, `useSearchParams()` reads raw string or string-array values.
+Its setter merges values into the current query string and navigates without scrolling by default.
+Empty strings, `undefined`, and `null` remove a key.
+
+```tsx
+const [search, setSearch] = useSearchParams();
+
+<button onClick={() => setSearch({ page: Number(search.page || 0) + 1 })}>
+	Next page
+</button>;
+```
+
+Pass a path node whose route defines a synchronous Standard Schema validator to parse and type search values:
+
+```tsx
+const [search, setSearch] = useSearchParams(Router.paths.search);
+
+search.page;
+setSearch({ page: search.page + 1 });
+```
+
+The router runs schemas from the current root-to-leaf match chain.
+Successful schema outputs merge over the raw query values.
+A schema result with issues is skipped.
+An asynchronous schema result throws because asynchronous search validation is not supported.
+
+## Style active and pending links
+
+Claimed route anchors receive state attributes:
+
+- `aria-current="page"` marks an exact match.
+- `data-active` marks an exact or descendant match.
+- `data-pending` marks the target of an in-flight navigation.
+
+The root path matches exactly for active state.
+
+```css
+nav a[aria-current="page"] {
+	font-weight: 600;
+}
+
+nav a[data-active] {
+	color: var(--accent);
+}
+
+a[data-pending] {
+	opacity: 0.6;
+}
+```
+
+Use `useLinkState` when a custom link component needs reactive `active`, `current`, or `pending` accessors.
+
+```tsx
+function TabLink(props: { href: string; children: JSX.Element }) {
+	const state = useLinkState(() => props.href, { end: true });
+
+	return (
+		<a href={props.href} data-selected={state.current() || undefined}>
+			{props.children}
+		</a>
+	);
+}
+```
+
+Anchors accept `replace`, `noscroll`, `state`, and `preload` attributes.
+Set `preload="false"` to keep route code preloading while skipping that link's route-data preload.
+Set `link` when the router uses `explicitLinks: true`.
+The `state` attribute contains JSON that becomes `location.state`.
+
+## Observe and guard navigation
+
+`useIsRouting()` returns an accessor that is true while a programmatic or native navigation waits for its route work to settle.
+`useMatch()` tests a supplied pattern against the current pathname.
+`useRouteMatches()` returns the resolved route-definition match chain.
+
+```tsx
+const section = useMatch(() => "/docs/*rest");
+const matches = useRouteMatches();
+const isRouting = useIsRouting();
+```
+
+Use `useBeforeLeave` to prevent a route change and retry it after confirmation:
+
+```tsx
+useBeforeLeave((event) => {
+	if (!dirty()) return;
+
+	event.preventDefault();
+
+	if (window.confirm("Discard unsaved changes?")) {
+		event.retry(true);
+	}
+});
+```
+
+The guard applies to router navigation and supported browser history traversal.
+Passing `true` to `retry` skips the leave handlers for the retried navigation.
+
+See the [navigation API reference](/reference/solid-router/navigation) for all primitive signatures.

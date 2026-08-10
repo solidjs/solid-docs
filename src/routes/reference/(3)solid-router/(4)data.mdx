@@ -1,0 +1,174 @@
+---
+title: "Data APIs"
+version: "2.0"
+description: "Reference for Solid Router query caching, revalidation, actions, action invocation, and settled submissions."
+source_repo: "solidjs/solid-router"
+source_ref: "next"
+source_sha: "3daa4d071df288280eb0de996039cf591d8173f8"
+source_path: "src/data/index.ts"
+---
+
+## Import
+
+```ts
+import {
+	action,
+	query,
+	revalidate,
+	useAction,
+	useSubmissions,
+} from "@solidjs/router";
+```
+
+## `query`
+
+```ts
+function query<T extends (...args: any[]) => any>(
+	fn: T,
+	name: string
+): CachedFunction<T>;
+```
+
+Returns a cached function with key helpers:
+
+```ts
+type CachedFunction<T extends (...args: any[]) => any> = ((
+	...args: Parameters<T>
+) => ReturnType<T>) & {
+	key: string;
+	keyFor(...args: Parameters<T>): string;
+};
+```
+
+```ts
+const getUser = query(fetchUser, "users");
+
+getUser.key;
+getUser.keyFor("42");
+```
+
+Cache keys combine `name` with a stable JSON serialization of the arguments.
+Plain object keys are sorted during serialization.
+
+When `fn` is a server function without a declared method, `query` wraps it as a GET server function.
+
+### Cache methods
+
+```ts
+query.get(key: string): any;
+query.set<T>(key: string, value: T): void;
+query.delete(key: string): boolean;
+query.clear(): void;
+```
+
+`query.get` returns the settled cached value.
+It throws when no entry exists.
+`query.set` does not accept a promise value.
+
+## `revalidate`
+
+```ts
+function revalidate(key?: string | string[] | void, force?: boolean): void;
+```
+
+Retriggers live matching cache entries.
+Keys match by prefix.
+Omitting `key` matches all entries.
+`force` defaults to `true` and marks the matched entries stale before retriggering them.
+
+## `action`
+
+```ts
+function action<T extends any[], U = void>(
+	fn: (...args: T) => Promise<U>,
+	name?: string
+): Action<T, U>;
+
+function action<T extends any[], U = void>(
+	fn: (...args: T) => Promise<U>,
+	options?: { name?: string }
+): Action<T, U>;
+```
+
+```ts
+type Action<T extends any[], U, V = T> = ((
+	...variables: T
+) => Promise<NarrowResponse<U>>) & {
+	url: string;
+	with<A extends any[], B extends any[]>(...args: A): Action<B, U, V>;
+	onSubmit(hook: (...args: V extends any[] ? V : T) => void): Action<T, U, V>;
+	onSettled(
+		hook: (
+			submission: Submission<V extends any[] ? V : T, NarrowResponse<U>>
+		) => void
+	): Action<T, U, V>;
+};
+```
+
+Form-compatible actions implement Solid's serializable JSX attribute value.
+Client actions need a stable name when rendered on the server.
+Server functions supply their own URL.
+
+### Form use
+
+```tsx
+<form action={save} method="post">
+	<button>Save</button>
+</form>
+```
+
+Only POST forms are accepted by delegated action handling.
+The form has `aria-busy="true"` while its delegated submission is running.
+
+### `with`
+
+Binds leading action arguments and returns an action for the remaining arguments.
+The bound arguments are represented in the action URL.
+
+### `onSubmit`
+
+Registers a callback that runs before the mutation call.
+Registration under an owner is removed when the owner is disposed.
+
+### `onSettled`
+
+Registers a callback for every completed invocation.
+The callback receives a `Submission`, including for void, redirect, and metadata-only outcomes.
+
+## `useAction`
+
+```ts
+function useAction<T extends any[], U, V>(
+	action: Action<T, U, V>
+): (...args: T) => Promise<NarrowResponse<U>>;
+```
+
+Binds direct action invocation to the current router context.
+
+## `useSubmissions`
+
+```ts
+function useSubmissions<T extends any[], U, V>(
+	action: Action<T, U, V>,
+	filter?: (input: V) => boolean
+): Submission<V, NarrowResponse<U>>[];
+```
+
+Returns a reactive array proxy of settled records for the action.
+Only records with a result or error are retained.
+
+```ts
+type Submission<T, U> = {
+	readonly input: T;
+	readonly result?: U;
+	readonly error: any;
+	readonly url: string;
+	clear(): void;
+	retry(): void;
+};
+```
+
+## Related
+
+- [Route preload types](/reference/solid-router/routes-and-paths#preload)
+- [Server integration](/reference/solid-router/server)

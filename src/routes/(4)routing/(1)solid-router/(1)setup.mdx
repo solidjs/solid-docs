@@ -1,0 +1,96 @@
+---
+title: "Setup"
+version: "2.0"
+description: "Install Solid Router, create a route tree, and mount the router instance."
+---
+
+Install Solid Router in a Solid 2 application:
+
+```sh
+pnpm add @solidjs/router
+```
+
+Define the route tree and create the router at module scope:
+
+```tsx
+// src/router.ts
+import { lazy } from "solid-js";
+import { createRouter } from "@solidjs/router";
+
+export const Router = createRouter({
+	routes: [
+		{ path: "/", component: lazy(() => import("./pages/Home")) },
+		{ path: "/about", component: lazy(() => import("./pages/About")) },
+		{ path: "*404", component: lazy(() => import("./pages/NotFound")) },
+	],
+});
+
+export const { paths } = Router;
+```
+
+The returned value is both the provider component and the application-wide static routing instance.
+Its `routes`, `config`, `paths`, and `match()` members do not represent one visitor's current location.
+Session-specific state comes from routing primitives inside the provider.
+
+Mount the instance at the application root:
+
+```tsx
+// src/index.tsx
+import { render } from "@solidjs/web";
+import { Router } from "./router";
+
+render(
+	() => (
+		<Router>
+			{(props) => (
+				<>
+					<header>
+						<a href={Router.paths()}>Home</a>
+						<a href={Router.paths.about}>About</a>
+					</header>
+					<main>{props.children}</main>
+				</>
+			)}
+		</Router>
+	),
+	document.getElementById("app")!
+);
+```
+
+The render-prop child is the root layout.
+It remains mounted while matched route components render through `props.children`.
+If the router config has a top-level `preload`, its return value is available as `props.data`.
+
+## Configure the router
+
+`createRouter` accepts these application-level options:
+
+- `routes` is the immutable route tree used for matching and type inference.
+- `base` prefixes matching and generated paths.
+- `preload` loads root-layout data once per mount or server request.
+- `history` selects a history adapter.
+- `preloadLinks` controls route code and data preloading from link hover, focus, and touch.
+- `explicitLinks` limits delegated routing to anchors with a `link` attribute.
+- `singleFlight` controls the server-function data consumer and defaults to `true`.
+- `actionBase` sets the server-action URL prefix and defaults to `/_server`.
+- `scrollRestoration` controls explicit back and forward scroll restoration.
+- `transformUrl` rewrites pathnames before matching.
+
+Browser history is the default on the client.
+The current request URL is the default location on the server.
+Pass `hashHistory()` or `memoryHistory()` through `history` for other client-side environments.
+
+```tsx
+import { createRouter, hashHistory } from "@solidjs/router";
+
+export const Router = createRouter({
+	routes,
+	history: hashHistory(),
+	base: "/app",
+});
+```
+
+A nested router is not supported.
+Compose one route tree instead, using extracted route arrays or [lazy route subtrees](/routing/solid-router/route-definitions#load-a-route-subtree-lazily).
+
+See [`createRouter`](/reference/solid-router/router-factory#createrouter) for the full signature.

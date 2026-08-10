@@ -6,7 +6,7 @@ version: "2.0"
 ---
 
 Solid source files use Vite's CSS and asset imports.
-Start mode keeps those import forms and processes them through its generated entries.
+Start mode keeps those import forms for generated and authored entries.
 
 ## CSS
 
@@ -95,23 +95,25 @@ export default defineConfig({
 
 ## Public files
 
-Put files that need stable root-relative URLs under `public`.
-The `basic` template serves `public/users.json` as `/users.json`, and its document refers to `public/favicon.ico` as `/favicon.ico`.
+The maintained `basic` template demonstrates fixed root-relative assets with files under `public`.
+Its route fetches `public/users.json` through `/users.json`, and its document refers to `public/favicon.ico` through `/favicon.ico`.
 
 ```tsx
 <link rel="icon" href="/favicon.ico" />
 ```
 
-Use an imported asset when Vite should resolve the URL from the module graph.
-Use `public` when the application or another system must address the file by its fixed root-relative name.
+These template files are addressed by their root-relative names rather than imported from the module graph.
+Import an asset instead when application code needs the URL produced for a module dependency.
 
 ## Start-mode output
 
-A normal Vite application can attach entry styles from `index.html`.
-A start-mode application has no `index.html`, so import application CSS from `App`, an authored entry, or another module reachable from them.
+The official start-mode templates have no `index.html`.
+Import application CSS from `App`, an authored entry, or another module reachable from them.
 
-During start-mode development, the generated shell includes entry-graph CSS in `<style>` elements before the body is displayed.
-Vite still handles CSS hot updates, and the start-mode style patch removes duplicate development style elements after the client loads.
+During start-mode development, the page response inlines CSS reachable from the generated `App` and `Document` roots.
+With authored entries, it uses the authored client entry plus `Document` in client mode, or the authored server entry in SSR mode.
+The style elements carry Vite development identifiers, and the start-mode patch removes the server-rendered copy when Vite's client-side style takes over.
+CSS hot updates continue through Vite without leaving both copies active.
 
 In production, entry CSS is emitted as built assets and the generated handler adds stylesheet links to the document head.
 Imported asset URLs point at their built output, including Vite's generated file names.

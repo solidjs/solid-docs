@@ -5,7 +5,132 @@ mainNavExclude: true
 version: "2.0"
 ---
 
-:::note[Planned]
-This page has not been written yet.
-It will cover signals, memos, and effects: how Solid tracks reads and schedules updates.
-:::
+Solid connects reactive values to the computations that read them.
+A computation records its dependencies while it runs, and Solid schedules it again when one of those dependencies changes.
+This read-based model applies to JSX expressions, memos, and the compute phase of effects.
+
+## A practical mental model
+
+1. A signal or store property is a source of reactive state.
+2. Reading a source inside a tracking scope subscribes that scope to the source.
+3. Writing to a source stages a new value and notifies its subscribers.
+4. Solid drains the pending work as one update pass on the microtask queue.
+
+Dependencies follow the reads taken during the latest run.
+If a computation takes a different branch, reads from the old branch stop being dependencies and reads from the new branch become dependencies.
+
+## Signals
+
+A signal provides an accessor for reading a value and a setter for changing it.
+Calling the accessor inside a tracking scope creates a dependency, while calling it outside a tracking scope returns the current value without creating a subscription.
+
+```tsx
+import { createMemo, createSignal } from "solid-js";
+
+export function Counter() {
+  const [count, setCount] = createSignal(0);
+  const doubled = createMemo(() => count() * 2);
+
+  return (
+    <button type="button" onClick={() => setCount(value => value + 1)}>
+      {count()} × 2 = {doubled()}
+    </button>
+  );
+}
+```
+
+The reads of `count()` and `doubled()` in JSX are tracked.
+The updater passed to `setCount` receives the latest staged value, so updater functions compose when several writes happen before a flush.
+
+Reactive reads belong in JSX or another tracking scope rather than at the top level of a component body.
+Component bodies run untracked, so a top-level read is a one-time snapshot and produces a development warning.
+
+See the [`createSignal` reference](/reference/solid-js/reactivity/create-signal) for setter forms and equality options.
+
+## Memos
+
+A memo is a read-only derived value.
+Its compute function tracks the reactive values it reads, and the memo caches its result for downstream readers.
+When the result changes according to the memo's equality rule, Solid notifies the computations that read the memo.
+
+```ts
+import { createMemo, createRoot, createSignal, flush } from "solid-js";
+
+const model = createRoot(dispose => {
+  const [first, setFirst] = createSignal("Ada");
+  const [last] = createSignal("Lovelace");
+  const fullName = createMemo(() => `${first()} ${last()}`);
+
+  return { fullName, setFirst, dispose };
+});
+
+console.log(model.fullName()); // "Ada Lovelace"
+
+model.setFirst("Grace");
+console.log(model.fullName()); // "Ada Lovelace"
+
+flush();
+console.log(model.fullName()); // "Grace Lovelace"
+
+model.dispose();
+```
+
+Use a memo when multiple consumers need the same derivation or when the derived value should form an equality boundary in the reactive graph.
+An expression used in only one JSX location can often read its sources directly.
+
+See the [`createMemo` reference](/reference/solid-js/reactivity/create-memo) for its options.
+
+## Effects
+
+An effect connects reactive computation to imperative work.
+In Solid 2.0, `createEffect` has a tracked compute phase and an untracked effect phase.
+The value returned by the compute function is passed to the effect function after the queue flushes.
+
+```ts
+import { createEffect, createRoot, createSignal, flush } from "solid-js";
+
+const counter = createRoot(dispose => {
+  const [count, setCount] = createSignal(0);
+
+  createEffect(
+    () => count(),
+    (value, previous) => console.log({ previous, value })
+  );
+
+  return { setCount, dispose };
+});
+
+flush(); // logs { previous: undefined, value: 0 }
+
+counter.setCount(value => value + 1);
+flush(); // logs { previous: 0, value: 1 }
+
+counter.dispose();
+```
+
+Put every reactive read that should retrigger the effect in the compute function.
+Reads in the effect function do not become dependencies.
+The effect function may return a cleanup function, which runs before the next effect invocation and when the effect is disposed.
+
+See the [`createEffect` reference](/reference/solid-js/reactivity/create-effect) for cleanup, scheduling, and error handling.
+
+## Update scheduling
+
+Signal and store writes are batched by default.
+A setter stages its value, and ordinary reads continue to return the committed value until Solid drains the queue in a microtask.
+Several writes in the same turn therefore update downstream computations together.
+
+Most application code can rely on this scheduled flush.
+Use [`flush()`](/reference/solid-js/reactivity/flush) when a test or imperative integration must observe pending writes synchronously.
+
+## Ownership and disposal
+
+Reactive computations are organized under owners.
+Memos, effects, and cleanups created while an owner is current attach to that owner, and disposing the owner removes its child computations and subscriptions.
+Children created by a computation are also disposed before that computation runs again.
+
+Components provide an owner for the reactive work created during their lifetime.
+Use [`createRoot`](/reference/solid-js/advanced/owner-introspection/create-root) to host a reactive scope outside a component, and call its disposer when that scope should end.
+Creating an effect without an owner leaves no lifecycle that can dispose it.
+
+Async computations, loading state, actions, and refresh behavior are covered on the [async reactivity page](/concepts/async-reactivity).

@@ -1,8 +1,9 @@
 import { Icon } from "solid-heroicons";
-import { JSXElement, ParentComponent, Show } from "solid-js";
+import { JSXElement, ParentComponent } from "solid-js";
 
 import {
 	academicCap,
+	arrowRight,
 	codeBracketSquare,
 	pencilSquare,
 	userGroup,
@@ -24,40 +25,28 @@ const icons = {
 
 export const QuickLinks: ParentComponent<QuickLinksProps> = (props) => {
 	return (
-		<div class="group relative rounded-xl border border-blue-600 dark:border-blue-800 dark:bg-transparent">
-			<div class="absolute -inset-px rounded-xl border-2 border-transparent opacity-0 [background:linear-gradient(var(--quick-links-hover-bg,var(--color-sky-200)),var(--quick-links-hover-bg,var(--color-sky-200)))_padding-box,linear-gradient(to_top,var(--color-indigo-400),var(--color-cyan-400),var(--color-sky-500))_border-box] group-hover:opacity-100 dark:[--quick-links-hover-bg:var(--color-slate-800)]" />
-			<div class="relative overflow-hidden rounded-xl px-5 py-4">
-				<div class="flex items-center">
-					<Icon
-						aria-hidden="true"
-						path={icons[props.icon as keyof typeof icons]}
-						class="h-7 w-7 fill-blue-500"
-					/>
-					<div class="pl-3 text-xl text-slate-900 capitalize no-underline dark:text-white">
-						<Show
-							when={props.href.includes("://")}
-							fallback={
-								<a href={props.href} class="font-semibold no-underline">
-									<span class="absolute -inset-px rounded-xl" />
-									{props.title}
-								</a>
-							}
-						>
-							<a
-								href={props.href}
-								class="inline-block bg-linear-to-br from-blue-400 to-blue-700 bg-clip-text font-semibold text-transparent no-underline"
-							>
-								<span class="absolute -inset-px rounded-xl" />
-								{props.title}
-							</a>
-						</Show>
-					</div>
-				</div>
-
-				<p class="-mb-2 pl-1 text-[0.91rem] text-balance text-slate-800 dark:text-slate-300">
+		<a
+			href={props.href}
+			class="group flex min-h-11 items-start gap-3 border-b border-slate-200 px-1 py-4 no-underline hover:border-blue-300 hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:border-slate-700 dark:hover:border-blue-700 dark:hover:bg-slate-800/60 dark:focus-visible:bg-slate-800/60 dark:focus-visible:outline-blue-400"
+		>
+			<Icon
+				aria-hidden="true"
+				path={icons[props.icon as keyof typeof icons]}
+				class="mt-0.5 h-6 w-6 shrink-0 fill-blue-600 dark:fill-blue-400"
+			/>
+			<span class="min-w-0 flex-1">
+				<span class="block font-semibold text-slate-900 group-hover:text-blue-700 dark:text-white dark:group-hover:text-blue-300">
+					{props.title}
+				</span>
+				<span class="mt-1 block text-sm leading-6 text-slate-600 dark:text-slate-300">
 					{props.children}
-				</p>
-			</div>
-		</div>
+				</span>
+			</span>
+			<Icon
+				aria-hidden="true"
+				path={arrowRight}
+				class="mt-1 h-4 w-4 shrink-0 fill-slate-400 group-hover:fill-blue-600 dark:fill-slate-500 dark:group-hover:fill-blue-400"
+			/>
+		</a>
 	);
 };

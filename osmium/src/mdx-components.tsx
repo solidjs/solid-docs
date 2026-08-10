@@ -91,61 +91,38 @@ export const EraserLink = (
 export const ssr = (props: ParentProps) => <>{props.children}</>;
 export const spa = () => <></>;
 export const h1 = (props: ParentProps) => (
-	<h1
-		{...props}
-		class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-34"
-	>
+	<h1 {...props} class="scroll-mt-28 lg:scroll-mt-34">
 		{props.children}
 	</h1>
 );
-export const h2 = (props: ParentProps) => {
-	return (
-		<>
-			<hr class="dark:prose-hr:border-slate-800 my-8 border-slate-400" />
-			<h2
-				{...props}
-				class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-34"
-			>
-				{props.children}
-			</h2>
-		</>
-	);
-};
+export const h2 = (props: ParentProps) => (
+	<h2 {...props} class="mt-12 mb-4 scroll-mt-28 font-semibold lg:scroll-mt-34">
+		{props.children}
+	</h2>
+);
 export const h3 = (props: ParentProps) => {
 	return (
-		<h3
-			{...props}
-			class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-34"
-		>
+		<h3 {...props} class="scroll-mt-28 lg:scroll-mt-34">
 			{props.children}
 		</h3>
 	);
 };
 export const h4 = (props: ParentProps) => {
 	return (
-		<h4
-			{...props}
-			class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-34"
-		>
+		<h4 {...props} class="scroll-mt-28 lg:scroll-mt-34">
 			{props.children}
 		</h4>
 	);
 };
 export const h5 = (props: ParentProps) => {
 	return (
-		<h5
-			{...props}
-			class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-34"
-		>
+		<h5 {...props} class="scroll-mt-28 lg:scroll-mt-34">
 			{props.children}
 		</h5>
 	);
 };
 export const h6 = (props: ParentProps) => (
-	<h6
-		{...props}
-		class="prose-headings:scroll-mt-28 prose-headings:font-normal lg:prose-headings:scroll-mt-34"
-	>
+	<h6 {...props} class="scroll-mt-28 lg:scroll-mt-34">
 		{props.children}
 	</h6>
 );

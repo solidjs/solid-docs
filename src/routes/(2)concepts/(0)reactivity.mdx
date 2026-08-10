@@ -25,11 +25,11 @@ A signal provides an accessor for reading a value and a setter for changing it.
 Calling the accessor inside a tracking scope creates a dependency, while calling it outside a tracking scope returns the current value without creating a subscription.
 
 ```tsx
-import { createMemo, createSignal } from "solid-js";
+import { createSignal } from "solid-js";
 
 export function Counter() {
   const [count, setCount] = createSignal(0);
-  const doubled = createMemo(() => count() * 2);
+  const doubled = () => count() * 2;
 
   return (
     <button type="button" onClick={() => setCount(value => value + 1)}>
@@ -39,7 +39,8 @@ export function Counter() {
 }
 ```
 
-The reads of `count()` and `doubled()` in JSX are tracked.
+The JSX expressions create tracking scopes.
+When JSX calls `doubled()`, its read of `count()` becomes a dependency of that JSX consumer.
 The updater passed to `setCount` receives the latest staged value, so updater functions compose when several writes happen before a flush.
 
 Reactive reads belong in JSX or another tracking scope rather than at the top level of a component body.
@@ -48,6 +49,9 @@ Component bodies run untracked, so a top-level read is a one-time snapshot and p
 See the [`createSignal` reference](/reference/solid-js/reactivity/create-signal) for setter forms and equality options.
 
 ## Memos
+
+Not every derived value needs a memo.
+The `doubled` function above runs in its caller's tracking scope and recalculates each time the caller invokes it.
 
 A memo is a read-only derived value.
 Its compute function tracks the reactive values it reads, and the memo caches its result for downstream readers.
@@ -78,45 +82,17 @@ model.dispose();
 Use a memo when multiple consumers need the same derivation or when the derived value should form an equality boundary in the reactive graph.
 An expression used in only one JSX location can often read its sources directly.
 
-### Committed initial values for async computations
-
-An async memo normally has no committed value until its first result arrives.
-Set `loadingValue` when consumers need a value-shaped placeholder during that first flight.
-The option commits the placeholder immediately, so first-flight reads do not suspend to a loading boundary.
-The first real result replaces the placeholder.
-
-```ts
-import { createMemo } from "solid-js";
-
-type UserValue =
-  | { state: "loading" }
-  | { state: "ready"; name: string };
-
-const user = createMemo<UserValue>(
-  async () => {
-    const response = await fetch("/api/user");
-    const data = (await response.json()) as { name: string };
-    return { state: "ready", name: data.name };
-  },
-  { loadingValue: { state: "loading" } }
-);
-```
-
-`loadingValue` has the same type as the computed value.
-Include `null` or `undefined` in that type when either value represents the placeholder.
-For object placeholders, include a field that lets consumers distinguish the placeholder from authoritative data.
-
-The loading value is also the compute function's first `prev` value.
-With this option, TypeScript types `prev` as `T` instead of `T | undefined`.
-The function forms of `createSignal` and `createOptimistic` support the same option.
-
-See the [`createMemo` reference](/reference/solid-js/reactivity/create-memo) for its options.
+Async memos normally use the readiness and loading behavior described on the [async reactivity page](/concepts/async-reactivity).
+As an advanced escape hatch, `loadingValue` can declare a committed first-flight placeholder that is part of the memo's type and becomes its first `prev` value.
+See the [`createMemo` reference](/reference/solid-js/reactivity/create-memo) for the full contract.
 
 ## Effects
 
 An effect connects reactive computation to imperative work.
 In Solid 2.0, `createEffect` has a tracked compute phase and an untracked effect phase.
 The value returned by the compute function is passed to the effect function after the queue flushes.
+Use an effect to send reactive output to code outside the reactive graph, such as a logger, DOM API, or subscription.
+Use a plain derived function or memo when other reactive code needs the result.
 
 ```ts
 import { createEffect, createRoot, createSignal, flush } from "solid-js";

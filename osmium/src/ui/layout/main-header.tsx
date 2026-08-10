@@ -1,12 +1,4 @@
-import {
-	ComponentProps,
-	For,
-	Show,
-	createSignal,
-	onCleanup,
-	onMount,
-} from "solid-js";
-import { isServer } from "solid-js/web";
+import { ComponentProps, For, Show, splitProps } from "solid-js";
 
 import { ProjectLogo, GitHubIcon, DiscordIcon } from "../logo";
 import { ThemeSelector } from "./theme-selector";
@@ -27,16 +19,21 @@ interface NavLinkProps extends ComponentProps<"a"> {
 }
 
 function NavLink(props: NavLinkProps) {
+	const [local, anchorProps] = splitProps(props, ["active", "children"]);
+
 	return (
 		<a
-			class="relative overflow-hidden border-b-2 px-1 text-sm whitespace-nowrap text-slate-900 drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] transition-all duration-250 lg:px-2 lg:text-base dark:text-slate-200"
+			{...anchorProps}
+			aria-current={local.active ? "page" : undefined}
+			class="relative inline-flex min-h-11 min-w-11 items-center justify-center border-b-2 px-2 text-sm whitespace-nowrap transition-[color,border-color] duration-200 focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 focus-visible:outline-none lg:min-h-0 lg:min-w-0 lg:py-2 lg:text-base dark:focus-visible:ring-blue-300 dark:focus-visible:ring-offset-slate-900"
 			classList={{
-				"border-b-blue-500 dark:border-b-blue-500": props.active,
-				"border-transparent": !props.active,
+				"border-b-blue-600 text-blue-700 dark:border-b-blue-400 dark:text-blue-300":
+					local.active,
+				"border-transparent text-slate-700 hover:border-slate-300 hover:text-slate-950 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-white":
+					!local.active,
 			}}
-			{...props}
 		>
-			{props.children}
+			{local.children}
 		</a>
 	);
 }
@@ -44,38 +41,14 @@ function NavLink(props: NavLinkProps) {
 interface MainHeaderProps {}
 
 export function MainHeader(_props: MainHeaderProps) {
-	const [isScrolled, setIsScrolled] = createSignal(false);
-
 	const config = useRouteConfig();
 
 	const project = useProject();
 
 	const { setNavOpen } = useOsmiumThemeState();
 
-	if (!isServer) {
-		const onScroll = () => {
-			setIsScrolled(window.scrollY > 0);
-		};
-
-		onMount(() => {
-			onScroll();
-			window.addEventListener("scroll", onScroll, { passive: true });
-		});
-
-		onCleanup(() => {
-			window.removeEventListener("scroll", onScroll);
-		});
-	}
-
 	return (
-		<header
-			class="sticky top-0 z-50 block bg-blue-50/80 shadow-md shadow-slate-900/5 backdrop-blur transition duration-500 dark:shadow-none"
-			classList={{
-				"dark:bg-slate-900/95 dark:[@supports(backdrop-filter:blur(0))]:bg-slate-900/75":
-					isScrolled(),
-				"dark:bg-transparent bg-transparent": !isScrolled(),
-			}}
-		>
+		<header class="sticky top-0 z-50 block border-b border-slate-200/80 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
 			<div class="max-w-8xl mx-auto grid w-full grid-cols-[auto_1fr] items-center px-2 py-1 lg:grid-cols-[1fr_2fr_1fr] lg:px-4 lg:py-2">
 				<div class="flex items-center justify-start lg:gap-2">
 					<div class="flex lg:hidden">
@@ -92,23 +65,28 @@ export function MainHeader(_props: MainHeaderProps) {
 
 				<Show when={project().projects}>
 					{(projects) => (
-						<ul class="order-2 col-span-2 mx-auto flex w-fit flex-nowrap items-center justify-center gap-4 pt-1 lg:col-span-1 lg:w-auto lg:gap-5 lg:pt-0">
-							<For each={Object.entries(projects())}>
-								{([p, conf]) => {
-									return (
-										<li>
-											<NavLink
-												href={`/${conf.path}${p === "start" ? "/v2" : ""}`}
-												onClick={() => setNavOpen(false)}
-												active={project()?.current === p}
-											>
-												{conf.label}
-											</NavLink>
-										</li>
-									);
-								}}
-							</For>
-						</ul>
+						<nav
+							aria-label="Products"
+							class="order-2 col-span-2 min-w-0 overflow-x-auto pt-1 lg:col-span-1 lg:overflow-visible lg:pt-0"
+						>
+							<ul class="mx-auto flex w-fit flex-nowrap items-center justify-center gap-4 lg:w-auto lg:gap-5">
+								<For each={Object.entries(projects())}>
+									{([p, conf]) => {
+										return (
+											<li>
+												<NavLink
+													href={`/${conf.path}${p === "start" ? "/v2" : ""}`}
+													onClick={() => setNavOpen(false)}
+													active={project()?.current === p}
+												>
+													{conf.label}
+												</NavLink>
+											</li>
+										);
+									}}
+								</For>
+							</ul>
+						</nav>
 					)}
 				</Show>
 
@@ -121,7 +99,7 @@ export function MainHeader(_props: MainHeaderProps) {
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						<GitHubIcon class="h-6 w-6 fill-slate-800 dark:fill-slate-200 dark:group-hover:fill-slate-300" />
+						<GitHubIcon class="h-6 w-6 fill-slate-800 transition-colors group-hover:fill-slate-600 dark:fill-slate-200 dark:group-hover:fill-slate-300" />
 					</a>
 					<a
 						href={config().themeConfig?.discord}
@@ -130,7 +108,7 @@ export function MainHeader(_props: MainHeaderProps) {
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						<DiscordIcon class="h-6 w-6 fill-slate-800 dark:fill-slate-200 dark:group-hover:fill-slate-300" />
+						<DiscordIcon class="h-6 w-6 fill-slate-800 transition-colors group-hover:fill-slate-600 dark:fill-slate-200 dark:group-hover:fill-slate-300" />
 					</a>
 					<ThemeSelector />
 					<LanguageSelector />

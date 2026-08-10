@@ -26,10 +26,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 			<div class="custom-scrollbar max-w-8xl relative mx-auto flex flex-auto justify-center pt-10">
 				<Show when={!props.isError}>
 					<div class="hidden md:relative lg:block lg:flex-none">
-						<div class="absolute inset-y-0 right-0 w-[50vw] dark:hidden" />
-						<div class="absolute top-16 right-0 bottom-0 hidden h-12 w-px bg-linear-to-t from-slate-800 dark:block" />
-						<div class="absolute top-28 right-0 bottom-0 hidden w-px bg-slate-800 dark:block" />
-						<div class="sticky top-19 h-[calc(100vh-7rem)] w-64 pr-2 pl-0.5 xl:w-72">
+						<div class="sticky top-19 h-[calc(100vh-7rem)] w-64 border-r border-slate-200 pr-2 pl-0.5 xl:w-72 dark:border-slate-800">
 							<MainNavigation />
 						</div>
 					</div>
@@ -45,7 +42,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 					</Show>
 				</main>
 				<Show when={!props.isError}>
-					<div class="prose prose-slate dark:prose-invert hidden w-48 shrink-0 pr-4 lg:block xl:w-56 2xl:w-72 dark:text-slate-300">
+					<div class="prose prose-slate dark:prose-invert hidden w-48 shrink-0 border-l border-slate-200 pr-4 lg:block xl:w-56 2xl:w-72 dark:border-slate-800 dark:text-slate-300">
 						<div class="custom-scrollbar sticky top-19 h-[calc(100vh-7rem)] overflow-y-auto">
 							<SidePanel />
 						</div>

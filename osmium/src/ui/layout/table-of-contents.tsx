@@ -16,6 +16,9 @@ import { isServer } from "solid-js/web";
 import { Icon } from "solid-heroicons";
 import { chevronDown } from "solid-heroicons/solid";
 
+const desktopTableOfContentsLinkClass =
+	"not-prose flex min-h-8 items-center rounded-sm px-1 py-1 text-sm leading-5 font-medium no-underline hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 focus-visible:outline-none dark:hover:bg-slate-800 dark:focus-visible:bg-slate-800 dark:focus-visible:ring-blue-300 dark:focus-visible:ring-offset-slate-900";
+
 export const TableOfContents = () => {
 	const data = useCurrentPageData();
 	const toc = () => data()?.toc;
@@ -82,59 +85,65 @@ export const TableOfContents = () => {
 	}
 
 	return (
-		<aside aria-label="table of contents" class="w-full pt-5">
+		<aside aria-label="table of contents" class="w-full pt-2">
 			<span class="text-base font-semibold text-slate-900 dark:text-white">
 				On this page
 			</span>
-			<ol role="list" class="mt-2 flex list-none flex-col p-0 pl-2.5 text-sm">
-				<li class="not-prose mt-0 mb-0 pl-0">
-					<span>
-						<a
-							href="#_top"
-							classList={{
-								"dark:text-slate-300": currentSection() !== undefined,
-								"text-blue-800 dark:text-blue-300 font-bold hover:text-slate-700 dark:hover:text-slate-200":
-									currentSection() === undefined,
-							}}
-							class="not-prose no-underline hover:text-slate-700 dark:hover:text-blue-300"
-						>
-							Overview
-						</a>
-					</span>
+			<ol role="list" class="mt-2 list-none p-0">
+				<li class="not-prose m-0 p-0">
+					<a
+						href="#_top"
+						aria-current={
+							currentSection() === undefined ? "location" : undefined
+						}
+						class={desktopTableOfContentsLinkClass}
+						classList={{
+							"text-slate-600 hover:text-slate-700 dark:text-slate-300 dark:hover:text-blue-300":
+								currentSection() !== undefined,
+							"text-blue-800 hover:text-slate-700 dark:text-blue-300 dark:hover:text-slate-200":
+								currentSection() === undefined,
+						}}
+					>
+						Overview
+					</a>
 				</li>
 				<Index each={toc()}>
 					{(section) => (
-						<li class="not-prose mt-2 pt-0 pl-0">
-							<span>
-								<a
-									href={section().href}
-									classList={{
-										"dark:text-slate-300": currentSection() !== section().href,
-										"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-bold":
-											currentSection() === section().href,
-									}}
-									class="not-prose no-underline hover:text-slate-700 dark:hover:text-blue-300"
-								>
-									{section().title}
-								</a>
-							</span>
+						<li class="not-prose m-0 p-0">
+							<a
+								href={section().href}
+								aria-current={
+									currentSection() === section().href ? "location" : undefined
+								}
+								class={desktopTableOfContentsLinkClass}
+								classList={{
+									"text-slate-600 hover:text-slate-700 dark:text-slate-300 dark:hover:text-blue-300":
+										currentSection() !== section().href,
+									"text-blue-800 hover:text-slate-700 dark:text-blue-300 dark:hover:text-slate-200":
+										currentSection() === section().href,
+								}}
+							>
+								{section().title}
+							</a>
 							<Show when={section().children.length !== 0}>
-								<ol
-									role="list"
-									class="mt-2 list-none pl-2.5 font-bold text-slate-500 hover:text-slate-700 active:font-bold active:text-blue-600 dark:text-slate-300 dark:hover:text-blue-200"
-								>
+								<ol role="list" class="m-0 list-none p-0 pl-3">
 									<Index each={section().children}>
 										{(subSection) => (
-											<li>
+											<li class="not-prose m-0 p-0">
 												<a
 													href={subSection().href}
+													aria-current={
+														currentSection() === subSection().href
+															? "location"
+															: undefined
+													}
+													class={desktopTableOfContentsLinkClass}
 													classList={{
-														"dark:text-slate-300":
+														"text-slate-600 hover:text-slate-700 dark:text-slate-300 dark:hover:text-blue-300":
 															currentSection() !== subSection().href,
-														"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-bold":
+														"text-blue-800 hover:text-slate-700 dark:text-blue-300 dark:hover:text-slate-200":
 															currentSection() === subSection().href,
 													}}
-													class="not-prose no-underline hover:text-blue-700 dark:hover:text-blue-300"
 												>
 													{subSection().title}
 												</a>

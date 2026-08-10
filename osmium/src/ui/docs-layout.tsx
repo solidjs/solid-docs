@@ -33,29 +33,27 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 		<article class="expressive-code-overrides mx-auto w-full max-w-2xl overflow-hidden pb-16">
 			<Show when={frontmatter()?.category}>
 				{(t) => (
-					<span class="my-1 text-sm font-semibold text-blue-700 dark:text-blue-300">
+					<span class="mb-2 block px-1 text-sm font-semibold text-blue-700 dark:text-blue-300">
 						{t()}
 					</span>
 				)}
 			</Show>
-			<h1 class="prose-headings:text-[2.8rem] text-slate-900 dark:text-white">
+			<h1 class="prose-headings:text-[2.8rem] px-1 text-slate-900 dark:text-white">
 				{frontmatter()?.title}
 			</h1>
 			<div class="w-full px-1">{props.children}</div>
 			<Show when={frontmatter()?.lastUpdated}>
-				<span class="mt-2 block w-full text-right text-sm">
+				<span class="mt-6 block w-full text-right text-sm">
 					Last updated:{" "}
 					<Show when={!Number.isNaN(pageData()?.lastUpdated)} fallback="?">
 						{formatter().format(date())}
 					</Show>
 				</span>
 			</Show>
-			<span class="-mt-3.75 block text-sm xl:hidden">
+			<div class="mt-6 flex flex-col gap-1 text-sm xl:hidden">
 				<EditPageLink />
-			</span>
-			<span class="text-sm xl:hidden">
 				<PageIssueLink />
-			</span>
+			</div>
 			<Pagination />
 		</article>
 	);

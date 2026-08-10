@@ -63,51 +63,65 @@ export function Search() {
 	const preload = usePreloadRoute();
 	const [open, setOpen] = createSignal(false);
 	const [searchTerm, setSearchTerm] = createSignal("");
+	const [searching, setSearching] = createSignal(false);
 	const [resultRefs, setResultRefs] = createSignal<HTMLElement[]>([]);
+	let searchGeneration = 0;
 
 	const result = createAsync(
 		async () => {
+			const generation = ++searchGeneration;
 			const _searchTerm = searchTerm();
-			if (!_searchTerm) return {};
-			const normalizedSearchTerm = _searchTerm.trim().toLocaleLowerCase();
-			const result = (await client.search({
-				term: _searchTerm,
-				mode: "fulltext",
-				datasources: [],
-			})) as SearchResult<OramaDocument>;
-			if (!result) return {};
+			if (!_searchTerm) {
+				setSearching(false);
+				return {};
+			}
 
-			const seen: Record<string, boolean> = {};
-			result.hits = result.hits.filter((hit) => {
-				hit.document.path = hit.document.path.replace("/index#", "#");
-				if (!seen[hit.document.path]) {
-					seen[hit.document.path] = true;
-					return hit;
-				}
-			});
-			result.hits.sort(
-				(a, b) =>
-					searchHitRank(a.document, normalizedSearchTerm) -
-					searchHitRank(b.document, normalizedSearchTerm)
-			);
+			setSearching(true);
+			try {
+				const normalizedSearchTerm = _searchTerm.trim().toLocaleLowerCase();
+				const result = (await client.search({
+					term: _searchTerm,
+					mode: "fulltext",
+					datasources: [],
+				})) as SearchResult<OramaDocument>;
+				if (!result) return {};
 
-			const groupedHits = result.hits.reduce(
-				(groupedHits, hit) => {
-					const section = hit.document.section.replace(
-						/(^|-)([a-z])/g,
-						(_, sep, letter) => sep + letter.toUpperCase()
-					);
-					if (!groupedHits[section]) {
-						groupedHits[section] = [];
+				const seen: Record<string, boolean> = {};
+				result.hits = result.hits.filter((hit) => {
+					hit.document.path = hit.document.path.replace("/index#", "#");
+					if (!seen[hit.document.path]) {
+						seen[hit.document.path] = true;
+						return hit;
 					}
-					groupedHits[section].push(hit);
-					return groupedHits;
-				},
-				{} as Record<string, SearchResult<OramaDocument>["hits"]>
-			);
-			setActive(0);
-			setResultRefs([]);
-			return groupedHits;
+				});
+				result.hits.sort(
+					(a, b) =>
+						searchHitRank(a.document, normalizedSearchTerm) -
+						searchHitRank(b.document, normalizedSearchTerm)
+				);
+
+				const groupedHits = result.hits.reduce(
+					(groupedHits, hit) => {
+						const section = hit.document.section.replace(
+							/(^|-)([a-z])/g,
+							(_, sep, letter) => sep + letter.toUpperCase()
+						);
+						if (!groupedHits[section]) {
+							groupedHits[section] = [];
+						}
+						groupedHits[section].push(hit);
+						return groupedHits;
+					},
+					{} as Record<string, SearchResult<OramaDocument>["hits"]>
+				);
+				setActive(0);
+				setResultRefs([]);
+				return groupedHits;
+			} finally {
+				if (generation === searchGeneration) {
+					setSearching(false);
+				}
+			}
 		},
 		{ initialValue: {} }
 	);
@@ -163,19 +177,19 @@ export function Search() {
 			<Dialog.Trigger
 				aria-label="Search"
 				aria-keyshortcuts={isAppleDevice ? "Meta+K" : "Control+K"}
-				class="flex items-center rounded-lg border-black/10 md:border md:px-2 md:py-1.5 dark:border-white/60 dark:bg-slate-800"
+				class="flex size-11 shrink-0 items-center justify-center rounded-lg border-black/10 focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 focus-visible:outline-none lg:h-auto lg:w-auto lg:border lg:px-2 lg:py-1.5 dark:border-white/60 dark:bg-slate-800 dark:focus-visible:ring-blue-300 dark:focus-visible:ring-offset-slate-900"
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					fill="currentColor"
 					viewBox="0 0 256 256"
 					aria-hidden="true"
-					class="size-6 md:size-4"
+					class="size-6 lg:size-4"
 				>
 					<path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
 				</svg>
-				<span class="ml-1 hidden text-sm md:block">Search</span>
-				<kbd class="ml-2 hidden min-w-6 rounded border border-black/5 px-1 pt-1 pb-px text-center font-mono text-xs md:block dark:bg-slate-700">
+				<span class="ml-1 hidden text-sm lg:block">Search</span>
+				<kbd class="ml-2 hidden min-w-6 rounded border border-black/5 px-1 pt-1 pb-px text-center font-mono text-xs lg:block dark:bg-slate-700">
 					<kbd>{isAppleDevice ? "⌘" : "Ctrl"}</kbd>
 					<kbd class="ml-0.5">K</kbd>
 				</kbd>
@@ -256,6 +270,17 @@ export function Search() {
 							</Show>
 						</div>
 					</div>
+					<p
+						role="status"
+						aria-live="polite"
+						class="mx-4 mt-2 text-sm text-black/70 dark:text-white/70"
+					>
+						<Show when={searchTerm()}>
+							{searching()
+								? "Searching..."
+								: `${resultArray().length} result${resultArray().length === 1 ? "" : "s"}`}
+						</Show>
+					</p>
 					<div class="mt-1 scrollbar-thin space-y-2 overflow-y-auto px-4 py-2 lg:grow">
 						<Suspense>
 							<Show when={searchTerm() && Object.keys(result()).length === 0}>

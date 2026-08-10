@@ -1,4 +1,4 @@
-import { createMemo, createSignal, For, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, For, Show } from "solid-js";
 import { useBeforeLeave, useLocation } from "@solidjs/router";
 import { Icon } from "solid-heroicons";
 import { chevronDown } from "solid-heroicons/solid";
@@ -15,15 +15,45 @@ import VersionSelector from "./version-selector";
 
 interface MainNavigationProps {}
 
+function resolveSidebarHref(
+	item: SidebarItemLink,
+	prefix: string | undefined,
+	applyPathPrefix: (path: string) => string
+) {
+	const path =
+		`${prefix === "/" ? "" : (prefix ?? "")}${item.link === "/" ? "" : item.link}`
+			.replace(/\\/g, "/")
+			.replace(/\/{2,}/g, "/");
+
+	return applyPathPrefix(path);
+}
+
+function sectionContainsPath(
+	items: SidebarItem[],
+	prefix: string | undefined,
+	pathname: string,
+	applyPathPrefix: (path: string) => string
+): boolean {
+	return items.some((item) => {
+		if ("link" in item) {
+			return pathname === resolveSidebarHref(item, prefix, applyPathPrefix);
+		}
+
+		return sectionContainsPath(
+			item.items,
+			`${prefix === "/" ? "" : (prefix ?? "")}${item.base ?? ""}`,
+			pathname,
+			applyPathPrefix
+		);
+	});
+}
+
 function ListItemLink(props: { item: SidebarItemLink; prefix?: string }) {
 	const location = useLocation();
 	const locale = useLocale();
 	const href = () =>
-		locale.applyPathPrefix(
-			`${props.prefix === "/" ? "" : (props.prefix ?? "")}${props.item.link === "/" ? "" : props.item.link}`.replace(
-				/\\/g,
-				"/"
-			)
+		resolveSidebarHref(props.item, props.prefix, (path) =>
+			locale.applyPathPrefix(path)
 		);
 	const isActive = () => location.pathname === href();
 
@@ -45,15 +75,37 @@ function ListItemLink(props: { item: SidebarItemLink; prefix?: string }) {
 	);
 }
 
-function DirList(props: { items: SidebarItem[] }) {
+function DirList(props: { items: SidebarItem[]; prefix?: string }) {
+	const location = useLocation();
+	const locale = useLocale();
+
 	return (
 		<For each={props.items}>
 			{(child) => {
 				if ("items" in child) {
+					const sectionPrefix = `${props.prefix === "/" ? "" : (props.prefix ?? "")}${child.base ?? ""}`;
+					const sectionIsActive = () =>
+						sectionContainsPath(
+							child.items,
+							sectionPrefix,
+							location.pathname,
+							(path) => locale.applyPathPrefix(path)
+						);
+					let wasActive = sectionIsActive();
+					const [open, setOpen] = createSignal(
+						wasActive || child.collapsed === false
+					);
+
+					createEffect(() => {
+						const isActive = sectionIsActive();
+						if (isActive && !wasActive) setOpen(true);
+						wasActive = isActive;
+					});
+
 					return (
 						<>
 							<li>
-								<Collapsible defaultOpen={true}>
+								<Collapsible open={open()} onOpenChange={setOpen}>
 									<Collapsible.Trigger class="group relative flex w-full justify-between pl-3.5 hover:cursor-pointer dark:text-slate-300">
 										<span class="text-left font-semibold dark:text-slate-100">
 											{child.title}
@@ -69,7 +121,7 @@ function DirList(props: { items: SidebarItem[] }) {
 											role="list"
 											class="mt-3 ml-4 space-y-3 border-l border-slate-400 dark:border-slate-700 dark:lg:border-slate-700"
 										>
-											<DirList items={child.items} />
+											<DirList items={child.items} prefix={sectionPrefix} />
 										</ul>
 									</Collapsible.Content>
 								</Collapsible>
@@ -79,7 +131,7 @@ function DirList(props: { items: SidebarItem[] }) {
 				}
 
 				if ("link" in child) {
-					return <ListItemLink item={child} />;
+					return <ListItemLink item={child} prefix={props.prefix} />;
 				}
 
 				return "";
@@ -118,7 +170,10 @@ export function MainNavigation(_props: MainNavigationProps) {
 	});
 
 	return (
-		<nav class="custom-scrollbar h-full scrollbar-gutter-stable overflow-y-auto pr-4 pb-20 md:h-[calc(100vh-7rem)]">
+		<nav
+			aria-label="Documentation navigation"
+			class="custom-scrollbar h-full scrollbar-gutter-stable overflow-y-auto pr-4 pb-20 md:h-[calc(100vh-7rem)]"
+		>
 			<VersionSelector />
 			<Tabs value={selectedTab()}>
 				<Tabs.List class="sticky top-0 z-10 grid w-full grid-cols-2 md:bg-slate-50 md:dark:bg-slate-900">
@@ -150,6 +205,7 @@ export function MainNavigation(_props: MainNavigationProps) {
 						<ul role="list" class="space-y-3 px-4">
 							<DirList
 								items={sidebarEntries().filter((e) => e.title !== "Reference")}
+								prefix={sidebar().prefix}
 							/>
 						</ul>
 					</Show>
@@ -164,6 +220,7 @@ export function MainNavigation(_props: MainNavigationProps) {
 								items={sidebarEntries().flatMap((e) =>
 									e.title === "Reference" && "items" in e ? e.items : []
 								)}
+								prefix={sidebar().prefix}
 							/>
 						</ul>
 					</Show>

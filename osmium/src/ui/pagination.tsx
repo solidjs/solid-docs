@@ -23,14 +23,17 @@ export function Pagination(_props: Pagination) {
 
 	return (
 		<Suspense>
-			<nav class="mt-10 flex justify-between border-t border-slate-200 pt-6 dark:border-slate-800">
-				<div>
+			<nav
+				aria-label="Documentation pagination"
+				class="mt-10 flex flex-col gap-6 border-t border-slate-200 pt-6 sm:flex-row sm:justify-between dark:border-slate-800"
+			>
+				<div class="max-w-full min-w-0 sm:max-w-[48%]">
 					<Show when={hasPrev()}>
 						<span class="font-display text-sm font-medium text-slate-900 dark:text-white">
 							Previous
 						</span>
 						<a
-							class="flex flex-row-reverse items-center gap-x-1 text-base font-medium text-slate-500 no-underline hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-300"
+							class="block max-w-full text-base font-medium [overflow-wrap:anywhere] text-slate-500 no-underline hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-300"
 							href={customLink(frontmatter()?.prev) ?? prevNext.prevLink().link}
 						>
 							← {customTitle(frontmatter()?.prev) ?? prevNext.prevLink().title}
@@ -38,12 +41,12 @@ export function Pagination(_props: Pagination) {
 					</Show>
 				</div>
 				<Show when={hasNext()}>
-					<div>
+					<div class="max-w-full min-w-0 self-end text-right sm:ml-auto sm:max-w-[48%]">
 						<span class="font-display text-sm font-medium text-slate-900 dark:text-white">
 							Next
 						</span>
 						<a
-							class="flex flex-row-reverse items-center gap-x-1 text-base font-medium text-slate-500 no-underline hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-300"
+							class="block max-w-full text-base font-medium [overflow-wrap:anywhere] text-slate-500 no-underline hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-300"
 							href={customLink(frontmatter()?.next) ?? prevNext.nextLink().link}
 						>
 							{customLink(frontmatter()?.next) ?? prevNext.nextLink().title} →

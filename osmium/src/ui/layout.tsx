@@ -45,7 +45,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 					</Show>
 				</main>
 				<Show when={!props.isError}>
-					<div class="prose prose-slate dark:prose-invert hidden w-56 shrink-0 pr-4 xl:block 2xl:w-72 dark:text-slate-300">
+					<div class="prose prose-slate dark:prose-invert hidden w-48 shrink-0 pr-4 lg:block xl:w-56 2xl:w-72 dark:text-slate-300">
 						<div class="custom-scrollbar sticky top-19 h-[calc(100vh-7rem)] overflow-y-auto">
 							<SidePanel />
 						</div>

@@ -74,7 +74,7 @@ export const ThemeSelector: Component = () => {
 			)}
 		>
 			<Select.Trigger
-				class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg shadow-md ring-1 shadow-black/5 ring-black/10 dark:bg-slate-800 dark:ring-white/60 dark:ring-inset"
+				class="flex size-11 shrink-0 items-center justify-center rounded-lg shadow-md ring-1 shadow-black/5 ring-black/10 focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 focus-visible:outline-none lg:size-6 dark:bg-slate-800 dark:ring-white/60 dark:ring-inset dark:focus-visible:ring-blue-300 dark:focus-visible:ring-offset-slate-900"
 				aria-label="Change theme mode"
 			>
 				<Select.Value<ThemeOption>>

@@ -38,7 +38,7 @@ export function Tab(props: TabProps) {
 	return (
 		<KobalteTabs.Trigger
 			{...props}
-			class="relative top-0.5 px-5 py-1 transition-colors duration-300 aria-selected:border-b-2 aria-selected:border-blue-400 aria-selected:font-bold aria-selected:text-blue-500 aria-selected:dark:text-slate-300"
+			class="relative top-0.5 px-5 py-1 transition-colors duration-300 aria-selected:border-b-2 aria-selected:border-blue-400 aria-selected:font-bold aria-selected:text-blue-700 aria-selected:dark:text-slate-300"
 		/>
 	);
 }

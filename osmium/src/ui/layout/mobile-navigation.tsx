@@ -14,6 +14,7 @@ export const MobileNavigation = (_props: MobileNavigationProps) => {
 			<Dialog.Trigger
 				aria-label="Open navigation menu"
 				title="Open navigation menu"
+				class="flex size-11 shrink-0 items-center justify-center rounded-lg focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 focus-visible:outline-none dark:focus-visible:ring-blue-300 dark:focus-visible:ring-offset-slate-900"
 			>
 				<Icon path={bars_3} class="prose dark:prose-invert h-6" />
 			</Dialog.Trigger>

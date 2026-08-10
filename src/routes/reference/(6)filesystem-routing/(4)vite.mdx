@@ -1,11 +1,11 @@
 ---
 title: "filesystem-routing/vite"
 category: "filesystem-routing"
-order: 1
+order: 4
 version: "2.0"
 description: "Configures Vite delivery of a file-system route manifest."
 source_repo: "solidjs/filesystem-routing"
-source_ref: "b9fd4fad9e453bf40e50780bf6623af357df4306"
+source_ref: "v0.2.1"
 source_sha: "b9fd4fad9e453bf40e50780bf6623af357df4306"
 source_path: "src/vite/index.ts"
 ---
@@ -74,18 +74,18 @@ An array supplies a different recognized set.
 
 On a shared router, server-consumer environments receive handler refs.
 Client-consumer environments remove those refs and remove handler-only entries.
-An explicit router in `routers` is delivered unchanged.
+The plugin delivers an explicit router in `routers` unchanged.
 
 ### `toPath`
 
 Overrides the default filename-to-path function.
-Returning `undefined` skips the file.
+Return `undefined` to skip the file.
 See [`FileSystemRouterConfig`](/reference/filesystem-routing/core#filesystemrouterconfig).
 
 ### `toRoute`
 
 Overrides module-to-manifest conversion.
-Returning `undefined` skips the file.
+Return `undefined` to skip the file.
 
 ### `router`
 
@@ -100,7 +100,7 @@ Supplies a scanner and convention for environments without an entry in `routers`
 - **Default:** `undefined`
 
 Supplies routers keyed by Vite environment name.
-Missing names fall back to `router`.
+Use `router` as the fallback for missing environment names.
 The `client` router supplies generated literal-tuple types.
 
 ### `moduleId`
@@ -116,7 +116,7 @@ Specifies the virtual manifest module ID.
 - **Default:** `[]`
 
 Names Vite environments whose builds add every delivered lazy module ref as a Rollup input.
-Existing inputs are retained.
+The plugin retains existing inputs.
 Eager refs and handler refs removed from client consumers are not added.
 The option has no effect when `codeSplitting` is `false`.
 
@@ -125,8 +125,9 @@ The option has no effect when `codeSplitting` is `false`.
 - **Type:** `boolean`
 - **Default:** `true`
 
-When enabled, `$` refs become dynamic `import()` functions and route modules become separate chunks.
-When disabled, they become static namespace imports behind `require()` functions, and the generated module contains no dynamic imports.
+Set `codeSplitting: true` to emit `$` refs as dynamic `import()` functions and separate route chunks.
+Set `codeSplitting: false` to emit static namespace imports behind `require()` functions.
+The generated module then contains no dynamic imports.
 
 With `@solidjs/router`, eager delivery requires a release newer than `2.0.0-next.14`.
 
@@ -165,7 +166,10 @@ Route source IDs use `?pick=` queries so each ref contains only selected exports
 JavaScript and TypeScript IDs end with a `lang.<extension>` marker so extension-based Vite plugins still match them.
 Route chunk names omit that query suffix.
 
-## Other exports
+## Adapter-building exports
+
+These low-level exports support custom delivery adapters.
+Application configurations normally use `fileRoutes()` instead.
 
 ### `DEFAULT_EXTENSIONS`
 

@@ -5,7 +5,7 @@ order: 6
 version: "2.0"
 description: "Reference for virtual:file-routes runtime output and TypeScript declarations."
 source_repo: "solidjs/filesystem-routing"
-source_ref: "b9fd4fad9e453bf40e50780bf6623af357df4306"
+source_ref: "v0.2.1"
 source_sha: "b9fd4fad9e453bf40e50780bf6623af357df4306"
 source_path: "types.d.ts"
 ---
@@ -19,10 +19,10 @@ import routes, { pageRoutes } from "virtual:file-routes";
 ```
 
 `routes` is the flat manifest in scan order.
-Its paths retain route groups.
+The `routes` paths retain route groups.
 
 `pageRoutes` contains only entries with `page: true`.
-It nests entries by manifest path, removes groups from URL paths, and changes child paths to be relative to their parent.
+`pageRoutes` nests entries by manifest path, removes groups from URL paths, and changes child paths to be relative to their parent.
 Both exports reuse the same serialized entry objects.
 
 ## Delivered refs
@@ -68,7 +68,7 @@ When one shared router enables HTTP methods:
 - Handler-only entries are absent from client-consumer output.
 - Page entries that also have handlers remain, without their handler refs.
 
-A router explicitly assigned through `fileRoutes({ routers })` is serialized unchanged for that environment.
+The plugin serializes a router assigned through `fileRoutes({ routers })` unchanged for that environment.
 
 ## `filesystem-routing/types`
 
@@ -78,8 +78,8 @@ Add the packaged general declaration when generated tuple types are disabled:
 /// <reference types="filesystem-routing/types" />
 ```
 
-It declares `routes` as `FileRouteEntry[]` and `pageRoutes` as `FileRouteTreeEntry[]`.
-It applies only to the default module ID.
+The packaged declaration types `routes` as `FileRouteEntry[]` and `pageRoutes` as `FileRouteTreeEntry[]`.
+The declaration applies only to the default module ID.
 
 ## Generated literal-tuple declaration
 
@@ -90,10 +90,11 @@ fileRoutes({ types: true });
 ```
 
 The default output is `file-routes.d.ts` in the Vite root.
-It declares the configured module ID, types JavaScript and TypeScript refs with `typeof import(...)`, and reproduces the nested page tuple.
+The generated declaration declares the configured module ID, types JavaScript and TypeScript refs with `typeof import(...)`, and reproduces the nested page tuple.
 Modules whose extensions TypeScript cannot resolve use generic ref types.
 
 The generated declaration is self-contained.
 Do not reference `filesystem-routing/types` at the same time because both declare the default virtual module.
 
-The file is regenerated at build start and after route changes, and it is written only when its content changes.
+The plugin regenerates the file at build start and after route changes.
+The plugin writes the file only when the content changes.

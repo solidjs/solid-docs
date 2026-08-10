@@ -5,7 +5,114 @@ mainNavExclude: true
 version: "2.0"
 ---
 
-:::note[Planned]
-This page has not been written yet.
-It will cover CSS, CSS modules, preprocessors, and static assets.
-:::
+Solid source files use Vite's CSS and asset imports.
+Start mode keeps those import forms and processes them through its generated entries.
+
+## CSS
+
+Import a stylesheet for its side effects to make its rules global.
+The official templates import the application stylesheet from `App`:
+
+```tsx
+import "./App.css";
+
+export default function App() {
+	return <main class="content">Hello Solid</main>;
+}
+```
+
+The stylesheet becomes part of the module graph at the point where it is imported.
+This applies to CSS imported by a component, a route module, or `App`.
+The import location does not scope ordinary CSS selectors.
+
+## CSS modules
+
+Name a file `*.module.css` and import its generated class-name map:
+
+```tsx
+import styles from "./route.module.css";
+
+export default function Route() {
+	return <p class={styles.message}>Scoped by CSS modules</p>;
+}
+```
+
+```css
+.message {
+	color: rebeccapurple;
+}
+```
+
+Vite replaces `styles.message` with the generated class name and includes the stylesheet in the same asset pipeline as global CSS.
+
+## CSS preprocessors
+
+Start mode uses Vite's preprocessor pipeline without additional start configuration.
+Install the preprocessor implementation required by the file type, then import the file from application code.
+
+The official `solid-v2/with-sass` template installs `sass`, renames `App.css` to `App.scss`, and keeps the same import:
+
+```tsx
+import "./App.scss";
+```
+
+Sass compiles to CSS during the Vite build and adds no Sass runtime to the browser.
+Use the `*.module.scss` name when a Sass file also needs CSS-module class names.
+
+## Imported asset URLs
+
+Import an asset when application code needs its resolved URL.
+The official templates import the Solid logo and pass that URL to an element:
+
+```tsx
+import logo from "../logo.svg";
+
+export default function Home() {
+	return <img src={logo} alt="Solid logo" />;
+}
+```
+
+Append `?url` when a file should be imported explicitly as a URL.
+This is useful when code creates the consuming element:
+
+```tsx
+import stylesheetUrl from "./theme.css?url";
+
+export default function ThemeLink() {
+	return <link rel="stylesheet" href={stylesheetUrl} />;
+}
+```
+
+The official templates set `build.assetsInlineLimit: 0` when images must remain emitted files instead of being inlined:
+
+```ts
+export default defineConfig({
+	build: {
+		assetsInlineLimit: 0,
+	},
+});
+```
+
+## Public files
+
+Put files that need stable root-relative URLs under `public`.
+The `basic` template serves `public/users.json` as `/users.json`, and its document refers to `public/favicon.ico` as `/favicon.ico`.
+
+```tsx
+<link rel="icon" href="/favicon.ico" />
+```
+
+Use an imported asset when Vite should resolve the URL from the module graph.
+Use `public` when the application or another system must address the file by its fixed root-relative name.
+
+## Start-mode output
+
+A normal Vite application can attach entry styles from `index.html`.
+A start-mode application has no `index.html`, so import application CSS from `App`, an authored entry, or another module reachable from them.
+
+During start-mode development, the generated shell includes entry-graph CSS in `<style>` elements before the body is displayed.
+Vite still handles CSS hot updates, and the start-mode style patch removes duplicate development style elements after the client loads.
+
+In production, entry CSS is emitted as built assets and the generated handler adds stylesheet links to the document head.
+Imported asset URLs point at their built output, including Vite's generated file names.
+CSS modules, preprocessors, and URL imports keep their normal Vite syntax in both client and SSR modes.

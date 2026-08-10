@@ -5,7 +5,135 @@ mainNavExclude: true
 version: "2.0"
 ---
 
-:::note[Planned]
-This page has not been written yet.
-It will cover the `App` and `Document` conventions, generated entries, and start mode options.
-:::
+Start mode lets `vite-plugin-solid` own the application entries, development serving, and production build.
+Enable it with `start: true` or the equivalent `start: {}` option:
+
+```ts
+import { defineConfig } from "vite";
+import solid from "vite-plugin-solid";
+
+export default defineConfig({
+	plugins: [solid({ start: true })],
+});
+```
+
+A start-mode project does not need an `index.html` file or a client mount file.
+The plugin generates those parts from `src/App.tsx` and, when present, `src/Document.tsx`.
+
+## Rendering mode
+
+Start mode uses client rendering unless `ssr: true` is set.
+Client mode prerenders an empty document shell to `dist/client/index.html`, then calls `render()` to mount the app into `document.body`.
+The resulting `dist/client` directory can be deployed to a static host.
+
+Add `ssr: true` to render the app for each request:
+
+```ts
+export default defineConfig({
+	plugins: [
+		solid({
+			start: true,
+			ssr: true,
+		}),
+	],
+});
+```
+
+SSR mode streams the initial document and calls `hydrate()` in the browser.
+A production build emits browser assets under `dist/client` and a request handler under `dist/server`.
+The same `App` and `Document` conventions apply in both modes.
+
+## The app component
+
+`src/App.tsx` default-exports the root component used by generated entries.
+The `solid-v2/bare` template keeps all application content under this component:
+
+```tsx
+import { createSignal } from "solid-js";
+import logo from "./logo.svg";
+import "./App.css";
+
+export default function App() {
+	const [count, setCount] = createSignal(0);
+
+	return (
+		<header class="header">
+			<img src={logo} class="logo" alt="Solid logo" />
+			<button onClick={() => setCount(count() + 1)}>Clicks: {count()}</button>
+		</header>
+	);
+}
+```
+
+Start mode also accepts `src/App.jsx`, `src/App.ts`, or `src/App.js`, and probes the lowercase `src/app` name after `src/App`.
+Set `start.app` to use another module inside the Vite project root.
+
+## The document component
+
+`src/Document.tsx` default-exports the full HTML document used by generated entries.
+It receives the app as `props.children`, so the body must render those children.
+An SSR-ready document includes `<HydrationScript />`:
+
+```tsx
+import type { ParentProps } from "solid-js";
+import { HydrationScript } from "@solidjs/web";
+
+export default function Document(props: ParentProps) {
+	return (
+		<html lang="en">
+			<head>
+				<meta charset="utf-8" />
+				<meta name="viewport" content="width=device-width, initial-scale=1" />
+				<link rel="icon" href="/favicon.ico" />
+				<title>Solid App</title>
+				<HydrationScript />
+			</head>
+			<body>{props.children}</body>
+		</html>
+	);
+}
+```
+
+The plugin also accepts `src/Document.jsx` or a module selected by `start.document`.
+If no document module exists, the generated entries use a minimal built-in document.
+The plugin injects the client entry script into the document head.
+In client mode, the app is omitted from the prerendered shell and any output from `<HydrationScript />` is removed because the browser mounts rather than hydrates.
+
+## Generated and authored entries
+
+In SSR mode, the generated server entry renders `<Document><App /></Document>` and the generated client entry hydrates the same tree.
+The generation path is used when neither conventional entry file exists.
+
+You can replace generated entries with `src/entry-server.*` and `src/entry-client.*`, or with `start.entryServer` and `start.entryClient`.
+SSR mode requires authored entries in pairs because both sides must render the same document tree.
+The server entry exports `render()`, and the client entry owns hydration.
+
+Client mode always generates the server-side shell renderer.
+An authored client entry can stand alone and owns the browser mount in that mode.
+Authored server entries and `start.entryServer` are ignored in client mode.
+
+## Mounting a router
+
+Start mode does not select a router.
+Mount the router or its provider under `App`, as shown by both router variants in the official templates.
+The route modules and route-table generation then remain concerns of the chosen router.
+
+Some routers need a request-specific instance to load matched routes before SSR begins.
+For generated SSR entries, `start.setup` can point to a server-only module that prepares that instance:
+
+```ts
+solid({
+	start: {
+		setup: "./src/setup.tsx",
+	},
+	ssr: true,
+});
+```
+
+The setup module default-exports a function that receives the current request event and the `App` component.
+The generated server entry awaits it immediately before rendering.
+Return a component to render it in `App`'s place inside `Document`, or return nothing to keep `<App />`.
+The browser-side `App` must produce the corresponding router tree so hydration matches.
+
+`start.setup` runs only for page renders made by a generated server entry.
+It is ignored in client mode, and combining it with an authored server entry is an error.

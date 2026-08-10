@@ -5,7 +5,141 @@ mainNavExclude: true
 version: "2.0"
 ---
 
-:::note[Planned]
-This page has not been written yet.
-It will cover typed environment variables, `virtual:env/server` and `virtual:env/client`, and the `server-only` / `client-only` boundary modules.
-:::
+Start mode can validate environment variables and expose their typed outputs through separate server and client modules.
+This environment layer belongs to start mode and is not enabled by `ssr: true` alone.
+
+## Define the schema
+
+Add `env.ts` or `env.js` at the Vite project root.
+Default-export `server` and `client` maps whose values implement Standard Schema.
+The official `solid-v2/fullstack` template uses Zod:
+
+```ts
+import { z } from "zod";
+
+export default {
+	server: {
+		SESSION_SECRET: z.string().min(32),
+	},
+	client: {
+		VITE_APP_NAME: z.string().min(1).default("Solid App"),
+	},
+};
+```
+
+The validators may come from different Standard Schema libraries because the plugin reads the shared Standard Schema interface.
+Only keys declared by the schema appear in the virtual modules.
+
+Start mode probes the root schema automatically.
+The `start.env` option can require the convention, select another schema inside the Vite root, or disable probing:
+
+```ts
+solid({
+	start: {
+		env: "./config/env.ts",
+	},
+});
+```
+
+Use `env: true` to report an error when neither root schema exists.
+Use `env: false` to disable the environment layer even when a conventional schema exists.
+
+## Generated types
+
+The plugin writes `solid-env.d.ts` next to the schema when development or a build starts.
+The declarations infer each value from the output type of its validator, including coercions and defaults.
+Keep both the schema and generated declaration in the TypeScript project.
+
+Both virtual modules provide a named and a default `env` export:
+
+```ts
+import { env } from "virtual:env/client";
+```
+
+Do not edit `solid-env.d.ts` because the plugin regenerates it from the schema.
+
+## Client environment
+
+`virtual:env/client` contains only values declared in the schema's `client` map.
+Each client key must start with Vite's public environment prefix, which is `VITE_` unless `envPrefix` changes it.
+The prefix requirement is enforced when the schema is loaded.
+
+Client values are validated during the build and serialized into the browser bundle as plain JSON.
+Defaults and coercions run before serialization, and the validator library is not included with the generated values.
+A client validation failure stops the build.
+
+These values are public because anyone can inspect a browser bundle.
+Do not place credentials or other secrets in the `client` map, regardless of how the application uses them.
+The client module can also be imported by isomorphic code because it contains only public values.
+
+## Server environment
+
+`virtual:env/server` exposes the schema's server values and its public client values to server module graphs.
+Server values are read from `process.env` and validated when the server bundle starts.
+They are not serialized into the server bundle, so a deployment platform can inject or rotate them without rebuilding.
+
+```ts
+import { env } from "virtual:env/server";
+
+const secret = env.SESSION_SECRET;
+```
+
+Import this module from middleware, a `"use server"` module, an authored server entry, or another server-only module.
+Importing it from the application root or another client module graph is a build error that names the importer.
+An SSR component is not automatically server-only because its module can also be included in the hydration bundle.
+
+The plugin validates server values during development because the development server is the running server.
+During a production build, a missing or invalid server value produces a warning and defers the failure to server boot.
+This lets build systems create artifacts before deployment-only secrets exist.
+
+In client mode, the static browser output receives only the client map.
+The server virtual module remains unavailable to client code.
+
+## Environment file loading
+
+The environment layer uses Vite's mode-specific `.env` merge and folds file-loaded values into `process.env`.
+Values already present in the process take precedence over values loaded from files.
+Application server libraries can therefore read the same file-loaded values from `process.env` without `loadEnv` setup in `vite.config.ts`.
+
+The production client build also checks its generated chunks for quoted copies of known validated server string values.
+That leak scan is a secondary check and does not make a client value secret.
+The server/client schema split and module-graph boundaries remain the controls that keep server data out of browser code.
+
+## Server-only and client-only modules
+
+`vite-plugin-solid` always provides the `server-only` and `client-only` marker modules.
+Import a marker for its side effect at the top of a module:
+
+```ts
+import "server-only";
+
+export function readFromDatabase() {
+	// Server implementation.
+}
+```
+
+If this module enters a client graph, resolution fails and reports the importing file.
+In a server graph, the marker resolves to an empty module.
+
+`client-only` enforces the reverse rule:
+
+```ts
+import "client-only";
+
+export function readBrowserStorage() {
+	return localStorage.getItem("preference");
+}
+```
+
+If this module enters an SSR graph, the build fails.
+In a client graph, the marker resolves to an empty module.
+
+The markers assert where a module may be bundled.
+They do not move code between environments, create a runtime condition, or hide values that have already been copied into client code.
+Keep browser modules behind a client-only import path, and keep secrets in modules reached only from server entries, middleware, or server functions.
+
+Add the plugin's boundary declarations when TypeScript does not already include them:
+
+```ts
+/// <reference types="vite-plugin-solid/boundary-modules" />
+```

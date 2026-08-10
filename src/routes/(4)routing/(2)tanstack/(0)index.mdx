@@ -5,7 +5,85 @@ mainNavExclude: true
 version: "2.0"
 ---
 
-:::note[Planned]
-This page has not been written yet.
-It will cover using TanStack Router and TanStack Query as the client half of a Solid app.
-:::
+The `fullstack-tanstack` template pairs [TanStack Router](https://tanstack.com/router) with [TanStack Query](https://tanstack.com/query) in the `vite-plugin-solid` turnkey mode.
+TanStack Router owns route matching and navigation, while TanStack Query owns the application data cache.
+The Solid plugin continues to own the generated entries, document stream, request event, server-function endpoint, and single-flight envelope.
+
+Use the [TanStack Router documentation](https://tanstack.com/router/latest/docs/framework/solid/overview) for route definitions, navigation, loaders, search parameters, and other router APIs.
+This page documents the integration boundary used by the template.
+
+## Route setup
+
+`@tanstack/router-plugin` scans `src/routes` and generates `src/routeTree.gen.ts`.
+The TanStack plugin is registered before `vite-plugin-solid` in `vite.config.ts`.
+
+The application creates each router through a shared `createAppRouter(queryClient, history?)` factory.
+The factory passes the generated route tree and the `QueryClient` through the router context.
+Route loaders use that context to prefetch query options, and route components read the same options with `useQuery`.
+
+The template configures intent preloading and disables TanStack Router's global catch boundary.
+Disabling that boundary keeps the provider tree used by this integration consistent between the server render and client hydration.
+
+The template reserves `src/routes` for TanStack Router.
+Its `filesystem-routing` plugin scans `src/api` instead, maps those files under `/api`, and exposes their handler manifest through `virtual:file-routes`.
+The middleware consumes that manifest to dispatch API requests.
+
+## Server-side rendering ownership
+
+The Solid plugin owns the HTML stream and renders the configured `Document` around the prepared application.
+The template does not use TanStack Router's `RouterServer`, `RouterClient`, or stream bootstrap protocol.
+It uses TanStack Router for matching and loading, then uses TanStack Query's public dehydration APIs for the data handoff.
+
+`start.setup` points to `src/setup.tsx` and runs once for each SSR request.
+The setup function creates a request-local `QueryClient` and a TanStack router with memory history initialized from the request pathname and search string.
+It awaits `router.load()`, waits for the queries started by matched loaders to settle, and stores `dehydrate(queryClient)` on `event.locals`.
+It then returns a `QueryClientProvider` and `RouterProvider` tree for the generated server entry to render in place of `App`.
+
+`src/Document.tsx` serializes the dehydrated state into `window.__QUERY_STATE__`.
+The serialization escapes `<` before placing the JSON in an inline script.
+On the client, `src/App.tsx` hydrates its session-long `QueryClient` from that state before the router provider renders.
+It then loads the client router before the provider renders.
+
+## Query ownership and hydration
+
+Each read in the template is declared as TanStack `queryOptions` around a Solid server function.
+Matched route loaders start `queryClient.prefetchQuery(...)` without returning its promise.
+The setup function therefore waits for pending query-cache promises after `router.load()` before dehydrating the cache.
+Components call `useQuery` with the same query options and read the hydrated or prefetched entries.
+
+The shared `QueryClient` factory sets a nonzero `staleTime` so data received from SSR or a mutation is not immediately refetched when observers mount.
+The template currently sets this interval to 30 seconds.
+
+## Single-flight mutations
+
+The integration uses a dehydrated `QueryClient` as its single-flight payload.
+The payload crosses only public extension points provided by the server-function runtime and TanStack Query.
+
+On the server, `serverFunctions.configure` imports `src/server-config.ts` before server-function dispatch.
+Its `collectFlightData` hook receives the target URL and headers containing the mutation's folded cookie effects.
+The hook creates a fresh TanStack router and `QueryClient` for that URL, loads the matched routes, waits for their queries, and returns `dehydrate(queryClient)`.
+
+On the client, `subscribeFlightData` opts mutation calls into collection.
+Its consumer passes each payload to TanStack Query's `hydrate(queryClient, data)`.
+The consumer runs before the mutation promise resolves, so components observing those query keys receive the refreshed cache entries without a follow-up invalidation request.
+
+Mutations remain Solid server functions invoked through TanStack Query's `useMutation`.
+Wrap a server function in a one-argument `mutationFn` when the mutation has variables because TanStack also passes a mutation context argument.
+
+Native form submission remains available by setting the form's `action` to the server function URL and using `method="post"`.
+The server-function runtime handles that request and redirects back to a server-rendered page.
+
+## Public seams and boundaries
+
+The integration depends on these application-level seams:
+
+- `start.setup` prepares the per-request provider tree before the Solid plugin starts rendering.
+- `event.locals` carries the dehydrated SSR cache from setup to the document.
+- TanStack Router context gives route loaders access to the request's `QueryClient`.
+- TanStack Query `dehydrate` and `hydrate` transfer cache state for both SSR and single-flight responses.
+- `serverFunctions.configure` registers the server collector before dispatch, while `subscribeFlightData` installs the client consumer.
+
+`start.setup` works only with generated server entries and is ignored when SSR is disabled.
+An authored server entry must own router preparation and rendering itself.
+The custom `window.__QUERY_STATE__` script is the template's SSR data bridge because the Solid plugin, rather than TanStack Router, owns the document stream.
+The template's `disableGlobalCatchBoundary: true` setting is part of this hydration structure and should be reevaluated if the provider tree or SSR protocol changes.

@@ -25,7 +25,7 @@ function NavLink(props: NavLinkProps) {
 		<a
 			{...anchorProps}
 			aria-current={local.active ? "page" : undefined}
-			class="relative inline-flex min-h-11 min-w-11 items-center justify-center border-b-2 px-2 text-sm whitespace-nowrap transition-[color,border-color] duration-200 focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 focus-visible:outline-none lg:min-h-0 lg:min-w-0 lg:py-2 lg:text-base dark:focus-visible:ring-blue-300 dark:focus-visible:ring-offset-slate-900"
+			class="relative inline-flex min-h-11 min-w-11 items-center justify-center border-b-2 px-2 text-base whitespace-nowrap transition-[color,border-color] duration-200 focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 focus-visible:outline-none lg:min-h-0 lg:min-w-0 lg:py-2 dark:focus-visible:ring-blue-300 dark:focus-visible:ring-offset-slate-900"
 			classList={{
 				"border-b-blue-600 text-blue-700 dark:border-b-blue-400 dark:text-blue-300":
 					local.active,

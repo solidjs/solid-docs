@@ -27,12 +27,12 @@ export const MobileNavigation = (_props: MobileNavigationProps) => {
 						</Dialog.Title>
 						<Dialog.CloseButton
 							aria-label="Close navigation menu"
-							class="sticky top-0 z-20 mb-3 self-end pt-4"
+							class="sticky top-1 z-20 mb-1 flex size-11 shrink-0 items-center justify-center self-end rounded-lg bg-slate-50 focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 focus-visible:outline-none dark:bg-slate-900 dark:focus-visible:ring-blue-300 dark:focus-visible:ring-offset-slate-900"
 						>
 							<Icon
 								path={xMark}
 								aria-hidden="true"
-								class="prose dark:prose-invert w-6"
+								class="prose dark:prose-invert h-6 w-6"
 							/>
 						</Dialog.CloseButton>
 						<div class="w-full pr-3">

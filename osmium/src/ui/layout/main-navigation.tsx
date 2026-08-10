@@ -59,15 +59,15 @@ function ListItemLink(props: { item: SidebarItemLink; prefix?: string }) {
 
 	const linkStyles = () =>
 		isActive()
-			? "font-semibold text-blue-700 before:bg-blue-700 dark:before:bg-blue-200 dark:text-blue-300 before:block"
-			: "text-slate-700 before:hidden before:bg-blue-600 before:dark:bg-blue-200 hover:text-blue-700 hover:before:block dark:text-slate-300 ";
+			? "bg-slate-100 text-blue-700 dark:bg-slate-800 dark:text-blue-300"
+			: "text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-slate-100";
 	return (
 		<li class="relative">
 			<a
 				onClick={() => setIsOpen(false)}
 				href={href()}
 				aria-current={isActive() ? "page" : undefined}
-				class={`block w-full pl-3.5 before:pointer-events-none before:absolute before:top-1/2 before:-left-1 before:h-1.5 before:w-1.5 before:-translate-y-1/2 before:rounded-full hover:text-blue-700 lg:text-sm dark:hover:text-blue-300 ${linkStyles()}`}
+				class={`flex min-h-11 w-full items-center rounded-sm px-2 py-1 leading-normal font-medium hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 focus-visible:outline-none lg:min-h-8 lg:px-1.5 lg:text-sm lg:leading-5 dark:hover:bg-slate-800 dark:focus-visible:bg-slate-800 dark:focus-visible:ring-blue-300 dark:focus-visible:ring-offset-slate-900 ${linkStyles()}`}
 			>
 				{props.item.title}
 			</a>
@@ -93,7 +93,7 @@ function DirList(props: { items: SidebarItem[]; prefix?: string }) {
 						);
 					let wasActive = sectionIsActive();
 					const [open, setOpen] = createSignal(
-						wasActive || child.collapsed === false
+						wasActive || child.collapsed !== true
 					);
 
 					createEffect(() => {
@@ -106,20 +106,19 @@ function DirList(props: { items: SidebarItem[]; prefix?: string }) {
 						<>
 							<li>
 								<Collapsible open={open()} onOpenChange={setOpen}>
-									<Collapsible.Trigger class="group relative flex w-full justify-between pl-3.5 hover:cursor-pointer dark:text-slate-300">
-										<span class="text-left font-semibold dark:text-slate-100">
-											{child.title}
-										</span>
+									<Collapsible.Trigger class="group relative flex min-h-11 w-full items-center justify-between rounded-sm px-2 py-1 leading-normal text-slate-700 hover:cursor-pointer hover:bg-slate-100 hover:text-slate-950 focus-visible:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 focus-visible:outline-none lg:min-h-8 lg:px-1.5 lg:text-sm lg:leading-5 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white dark:focus-visible:bg-slate-800 dark:focus-visible:ring-blue-300 dark:focus-visible:ring-offset-slate-900">
+										<span class="text-left font-semibold">{child.title}</span>
 										<Icon
 											aria-hidden="true"
 											path={chevronDown}
-											class="kb-group-closed:rotate-180 my-auto h-4 transition-transform"
+											class="my-auto h-4 transition-transform"
+											classList={{ "rotate-180": !open() }}
 										/>
 									</Collapsible.Trigger>
 									<Collapsible.Content class="navigation_collapsible">
 										<ul
 											role="list"
-											class="mt-3 ml-4 space-y-3 border-l border-slate-400 dark:border-slate-700 dark:lg:border-slate-700"
+											class="mt-0.5 ml-3 space-y-0.5 border-l border-slate-400 pl-2 dark:border-slate-700 dark:lg:border-slate-700"
 										>
 											<DirList items={child.items} prefix={sectionPrefix} />
 										</ul>
@@ -172,37 +171,44 @@ export function MainNavigation(_props: MainNavigationProps) {
 	return (
 		<nav
 			aria-label="Documentation navigation"
-			class="custom-scrollbar h-full scrollbar-gutter-stable overflow-y-auto pr-4 pb-20 md:h-[calc(100vh-7rem)]"
+			class="custom-scrollbar h-full scrollbar-gutter-stable overflow-y-auto pr-2 pb-20 md:h-[calc(100vh-7rem)]"
 		>
 			<VersionSelector />
-			<Tabs value={selectedTab()}>
-				<Tabs.List class="sticky top-0 z-10 grid w-full grid-cols-2 md:bg-slate-50 md:dark:bg-slate-900">
+			<Tabs value={selectedTab()} onChange={setSelectedTab}>
+				<Tabs.List
+					aria-label="Documentation section"
+					class="relative sticky top-0 z-10 grid w-full grid-cols-2 rounded-md border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-700 dark:bg-slate-800"
+				>
 					<Tabs.Trigger
 						value="learn"
-						class="inline-block py-3 font-medium outline-none hover:bg-blue-500/30 focus-visible:bg-blue-500/40 dark:text-slate-100 dark:hover:bg-blue-300/20 dark:focus-visible:bg-blue-800"
-						onClick={() => {
-							setSelectedTab("learn");
+						class="relative z-10 flex min-h-11 items-center justify-center rounded-sm px-1 py-1 font-medium focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:outline-none focus-visible:ring-inset lg:min-h-8 lg:text-sm lg:leading-5 dark:focus-visible:ring-blue-300"
+						classList={{
+							"text-blue-700 dark:text-blue-300": selectedTab() === "learn",
+							"text-slate-700 hover:bg-slate-200/70 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-700/70 dark:hover:text-slate-100":
+								selectedTab() !== "learn",
 						}}
 					>
 						Learn
 					</Tabs.Trigger>
 					<Tabs.Trigger
 						value="reference"
-						class="inline-block py-3 font-medium outline-none hover:bg-blue-500/30 focus-visible:bg-blue-500/40 dark:text-slate-100 dark:hover:bg-blue-300/20 dark:focus-visible:bg-blue-800"
-						onClick={() => {
-							setSelectedTab("reference");
+						class="relative z-10 flex min-h-11 items-center justify-center rounded-sm px-1 py-1 font-medium focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:outline-none focus-visible:ring-inset lg:min-h-8 lg:text-sm lg:leading-5 dark:focus-visible:ring-blue-300"
+						classList={{
+							"text-blue-700 dark:text-blue-300": selectedTab() === "reference",
+							"text-slate-700 hover:bg-slate-200/70 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-700/70 dark:hover:text-slate-100":
+								selectedTab() !== "reference",
 						}}
 					>
 						Reference
 					</Tabs.Trigger>
-					<Tabs.Indicator class="absolute bottom-0 h-0.5 bg-blue-500 transition-all duration-250" />
+					<Tabs.Indicator class="pointer-events-none absolute top-0.5 bottom-0.5 z-0 rounded-sm bg-white shadow-sm ring-1 ring-slate-200 transition-[transform,width] duration-250 dark:bg-slate-900 dark:ring-slate-700" />
 				</Tabs.List>
-				<Tabs.Content value="learn" class="relative mt-5 w-full">
+				<Tabs.Content value="learn" class="mt-2 w-full">
 					<Show
 						when={true}
 						fallback={<p class="text-white">No routes found</p>}
 					>
-						<ul role="list" class="space-y-3 px-4">
+						<ul role="list" class="space-y-0.5 px-2">
 							<DirList
 								items={sidebarEntries().filter((e) => e.title !== "Reference")}
 								prefix={sidebar().prefix}
@@ -210,12 +216,12 @@ export function MainNavigation(_props: MainNavigationProps) {
 						</ul>
 					</Show>
 				</Tabs.Content>
-				<Tabs.Content value="reference" class="relative top-8 w-full">
+				<Tabs.Content value="reference" class="mt-2 w-full">
 					<Show
 						when={true}
 						fallback={<p class="text-white">No routes found</p>}
 					>
-						<ul role="list" class="space-y-3 px-4">
+						<ul role="list" class="space-y-0.5 px-2">
 							<DirList
 								items={sidebarEntries().flatMap((e) =>
 									e.title === "Reference" && "items" in e ? e.items : []

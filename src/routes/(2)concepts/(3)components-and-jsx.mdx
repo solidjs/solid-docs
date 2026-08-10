@@ -5,9 +5,15 @@ mainNavExclude: true
 version: "2.0"
 ---
 
-Components organize JSX into functions that receive props and return elements.
+Components are reusable units that combine rendering structure with related behavior.
+They nest to form a component tree, from the application root down to individual controls.
+A component is a function that receives props and returns elements.
 
 ## How JSX executes
+
+JSX keeps element structure and JavaScript expressions in the same source.
+Use curly braces to place an expression inside an element.
+Lowercase JSX names describe native elements, while names that begin with a capital letter refer to components.
 
 Solid compiles JSX into renderer operations.
 In a browser build, those operations create or claim DOM nodes and connect reactive expressions to them.
@@ -36,7 +42,8 @@ The event handler runs when the button is clicked.
 
 ## Props
 
-Props are passed as one object.
+Parents pass data and configuration to child components through JSX props.
+The child receives those props as one object.
 Compiled component props can use getters so an expression such as `name={selected().name}` stays reactive until the receiving component reads `props.name`.
 Read reactive props inside JSX, a memo, or an effect.
 
@@ -70,6 +77,24 @@ function FullName(props: { first: string; last: string }) {
 ```
 
 See the [`Component`, `ParentProps`, and `FlowProps` types](/reference/solid-js/types/component-types) for typing component contracts.
+
+## Handling events
+
+Pass a function to a camelCase event prop such as `onClick` or `onInput`.
+Solid delegates supported events through the owning render or hydration root.
+The handler runs when the browser dispatches the event, so reactive reads inside the handler use current values.
+
+```tsx
+function SaveButton(props: { onSave: () => void }) {
+	return (
+		<button type="button" onClick={() => props.onSave()}>
+			Save
+		</button>
+	);
+}
+```
+
+Use a `ref` callback with `addEventListener` when you need native listener options such as capture or passive handling.
 
 ## Children and composition
 
@@ -109,6 +134,8 @@ The control-flow components use this pattern for narrowed values and list rows.
 ## Context
 
 Context passes a value through a component subtree without forwarding it through every intermediate component.
+Use it when a value belongs to one subtree and several descendants need that value.
+For state that is truly application-wide and does not need subtree scoping, a module-level signal or store can be simpler.
 [`createContext`](/reference/solid-js/components-context/create-context) returns a context that is also its provider component.
 [`useContext`](/reference/solid-js/components-context/use-context) reads the value associated with the current owner.
 

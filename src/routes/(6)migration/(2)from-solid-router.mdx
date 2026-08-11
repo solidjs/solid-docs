@@ -3,9 +3,710 @@ title: "From Solid Router 0.x/1.x"
 titleTemplate: ":title"
 mainNavExclude: true
 version: "2.0"
+description: "Migrate JSX routes and the Solid Router 0.x/1.x data APIs to a Solid Router 2 createRouter instance."
+source_repo: "solidjs/solid-router"
+source_ref: "next"
+source_sha: "3daa4d071df288280eb0de996039cf591d8173f8"
+source_path: "README.md"
 ---
 
-:::note[Planned]
-This page has not been written yet.
-It will cover moving from JSX route configuration to `createRouter`.
-:::
+Solid Router 2 replaces the component-based router configuration with one static router instance.
+The route tree becomes the source of truth for matching, generated paths, route props, and server integration.
+
+This guide starts with an application that uses the Router 0.x/1.x component API.
+Apply each section separately so that route matching, navigation, data, and server behavior can be checked after each change.
+
+## Check the compatibility boundary
+
+Upgrade the Solid runtime and Solid Router together.
+The Router 2 package at the source revision for this guide requires `solid-js` and `@solidjs/web` versions from `2.0.0-beta.32` up to, but not including, `2.0.0-experimental.0`.
+It cannot run as a compatibility layer around a Solid 1 application.
+
+Router 2 also supports one router instance per application.
+Do not mount a Router 2 instance inside an old `<Router>`.
+Move one complete route tree at a time, and remove the old router before mounting the new instance.
+
+The following old exports have no component-for-component replacement:
+
+- `Router`, `HashRouter`, and `MemoryRouter` as prebuilt router components
+- `Route`
+- `A`
+- `Navigate`
+- `createMemoryHistory`
+
+The new entry points are a factory, route-definition helpers, plain anchors, and history adapters.
+See [Solid Router setup](/routing/solid-router/setup) for the complete installation and mount pattern.
+
+## 1. Create the router instance
+
+Move the route topology out of rendered JSX and into a module-level `createRouter` call.
+
+Before:
+
+```tsx
+import { Route, Router } from "@solidjs/router";
+
+export function App() {
+	return (
+		<Router root={RootLayout} rootPreload={loadSession}>
+			<Route path="/" component={Home} />
+			<Route path="/users/:id" component={User} />
+			<Route path="*404" component={NotFound} />
+		</Router>
+	);
+}
+```
+
+After:
+
+```tsx
+// src/router.tsx
+import { createRouter } from "@solidjs/router";
+
+export const Router = createRouter({
+	routes: [
+		{ path: "/", component: Home },
+		{ path: "/users/:id", component: User },
+		{ path: "*404", component: NotFound },
+	],
+	preload: loadSession,
+});
+
+export const { paths } = Router;
+```
+
+Mount the returned instance as the provider component.
+Replace the old `root` prop with the provider's render-prop child.
+The factory-level `preload` result is available as `props.data`.
+
+```tsx
+// src/index.tsx
+import { render } from "@solidjs/web";
+import { Router } from "./router";
+
+render(
+	() => <Router>{(props) => <RootLayout {...props} />}</Router>,
+	document.getElementById("app")!
+);
+```
+
+Create the instance at module scope.
+Its `routes`, `config`, `paths`, and `match()` members describe the application and are shared across renders and server requests.
+Continue to read the current location through primitives such as `useLocation`, `useParams`, and `useNavigate`.
+
+If route definitions live in another module, wrap the array with `defineRoutes`.
+The helper preserves literal path types that a plain extracted array would widen to `string`.
+
+```tsx
+// src/routes.tsx
+import { defineRoutes } from "@solidjs/router";
+
+export const routes = defineRoutes([
+	{ path: "/", component: Home },
+	{ path: "/users/:id", component: User },
+]);
+```
+
+```tsx
+// src/router.tsx
+import { createRouter } from "@solidjs/router";
+import { routes } from "./routes";
+
+export const Router = createRouter({ routes });
+```
+
+Replace alternate router components with history adapters:
+
+```tsx
+import { createRouter, hashHistory, memoryHistory } from "@solidjs/router";
+
+const HashRouter = createRouter({
+	routes,
+	history: hashHistory(),
+});
+
+const MemoryRouter = createRouter({
+	routes,
+	history: memoryHistory("/initial"),
+});
+```
+
+## 2. Convert nesting and layouts
+
+Replace nested `<Route>` elements with `children` arrays.
+Keep an index child with path `/` when the parent layout also has deeper children.
+
+Before:
+
+```tsx
+function AccountLayout(props) {
+	return <section>{props.children}</section>;
+}
+
+<Router root={RootLayout}>
+	<Route path="/account" component={AccountLayout}>
+		<Route path="/" component={Profile} />
+		<Route path="/security" component={Security} />
+	</Route>
+</Router>;
+```
+
+After:
+
+```tsx
+const Router = createRouter({
+	routes: [
+		{
+			path: "/account",
+			component: AccountLayout,
+			children: [
+				{ path: "/", component: Profile },
+				{ path: "/security", component: Security },
+			],
+		},
+	],
+});
+
+<Router>{(props) => <RootLayout {...props} />}</Router>;
+```
+
+The parent component still renders the matched child through `props.children`.
+Shared parent layouts stay mounted while navigation moves between sibling children.
+
+Use a route without `path` for a layout that must not add a URL segment:
+
+```tsx
+const routes = defineRoutes([
+	{
+		component: AuthenticatedLayout,
+		children: [
+			{ path: "/dashboard", component: Dashboard },
+			{ path: "/settings", component: Settings },
+		],
+	},
+]);
+```
+
+Do not recreate old nested `<Routes>` boundaries with nested router instances.
+Compose arrays under one route tree or use a lazy `children` thunk for a code-split section:
+
+```tsx
+{
+	path: "/admin",
+	component: AdminLayout,
+	children: () => import("./admin/routes"),
+}
+```
+
+The imported module can export the route array as `default` or as `routes`.
+See [Nested routes and layouts](/routing/solid-router/nested-routes) for layout lifetime and lazy-subtree behavior.
+
+## 3. Replace link and redirect components
+
+Replace `<A>` with a plain `<a>`.
+Use the instance's `paths` proxy when the route tree has literal types.
+
+Before:
+
+```tsx
+import { A } from "@solidjs/router";
+
+<nav>
+	<A href="/" end activeClass="selected">
+		Home
+	</A>
+	<A href="/users/42" noScroll>
+		User
+	</A>
+</nav>;
+```
+
+After:
+
+```tsx
+import { Router } from "./router";
+
+<nav>
+	<a href={Router.paths()}>Home</a>
+	<a href={Router.paths.users(42)} noscroll>
+		User
+	</a>
+</nav>;
+```
+
+The router adds state attributes to anchors that it claims:
+
+```css
+nav a[data-active] {
+	color: var(--accent);
+}
+
+nav a[aria-current="page"] {
+	font-weight: 600;
+}
+
+a[data-pending] {
+	opacity: 0.6;
+}
+```
+
+Use `[data-active]` for an exact or descendant match.
+Use `[aria-current="page"]` for an exact match.
+The root path has exact-only active behavior.
+
+Move old link props to lowercase attributes:
+
+- `noScroll` becomes `noscroll`.
+- `replace`, `state`, and `preload` become anchor attributes.
+- `activeClass` and `inactiveClass` become CSS selectors for the state attributes.
+- `end` becomes an exact-match selector with `[aria-current="page"]`.
+
+Keep `useNavigate` for navigation caused by application logic.
+It accepts strings, history deltas, and typed path nodes.
+
+```tsx
+const navigate = useNavigate();
+
+navigate(Router.paths.account, { replace: true });
+navigate(-1);
+```
+
+Replace `<Navigate>` with a setup-time call to `useNavigate`, or return a redirect from a query or action.
+Import protocol response helpers from `@solidjs/web`.
+
+```tsx
+function LoginRedirect() {
+	const navigate = useNavigate();
+	navigate("/login", { replace: true });
+	return null;
+}
+```
+
+Rename `useCurrentMatches` to `useRouteMatches`.
+Use `useLinkState` when a custom link component needs reactive `active`, `current`, or `pending` values.
+See [Navigation and typed paths](/routing/solid-router/navigation) for the remaining anchor and navigation options.
+
+## 4. Type params and search values
+
+`useParams()` and an untyped `useSearchParams()` keep their runtime behavior.
+Path parameters remain strings, and search values remain strings or string arrays without a schema.
+
+Router 2 adds definition-driven types.
+Use `defineRoute` when the component or preload is declared with the route:
+
+```tsx
+import { defineRoute } from "@solidjs/router";
+
+const userRoute = defineRoute({
+	path: "/users/:id/:tab?",
+	preload: ({ params }) => getUser(params.id),
+	component: (props) => (
+		<User user={props.data} id={props.params.id} tab={props.params.tab} />
+	),
+});
+```
+
+In this example, `id` is `string` and `tab` is `string | undefined`.
+Parameters inherited from a parent remain available as `string | undefined`.
+
+Use a path witness when the component is declared in another module:
+
+```tsx
+import type { RouteComponent } from "@solidjs/router";
+import type { Router } from "../router";
+
+const User: RouteComponent<typeof Router.paths.users> = (props) => (
+	<h1>User {props.params.id}</h1>
+);
+```
+
+`RouteProps<typeof Router.paths.users>` provides the corresponding props-object type.
+Pass the same path node to `useParams` to narrow the known keys inside a descendant:
+
+```tsx
+const params = useParams(Router.paths.users);
+params.id;
+```
+
+Add a synchronous [Standard Schema](https://standardschema.dev/) validator to parse and type search values.
+Without a schema, keep the existing raw-value code.
+
+```tsx
+import * as v from "valibot";
+
+const searchRoute = defineRoute({
+	path: "/search",
+	search: v.object({
+		q: v.optional(v.string(), ""),
+		page: v.optional(v.pipe(v.unknown(), v.transform(Number)), 1),
+	}),
+	component: SearchPage,
+});
+
+export const Router = createRouter({
+	routes: [searchRoute],
+});
+```
+
+```tsx
+const [search, setSearch] = useSearchParams(Router.paths.search);
+
+search.page;
+setSearch({ page: search.page + 1 });
+
+<a href={Router.paths.search({ q: "solid", page: 2 })}>Search</a>;
+```
+
+The validator's input type controls URL construction and setters.
+Its output type controls parsed reads.
+Asynchronous search validation is not supported.
+
+## 5. Migrate data loading and caching
+
+Keep route `preload` functions as the place to start work before component creation.
+Move a top-level `rootPreload` to the factory's `preload` option.
+The argument still contains `params`, `location`, and `intent`.
+
+Do not move every old data read into a preload.
+A preload starts work for navigation and link warming, while a component read keeps the value connected to a reactive consumer.
+
+### Replace async wrappers
+
+Remove `createAsync` and `createAsyncStore` from `@solidjs/router`.
+Read a `query` through Solid 2 async-aware primitives.
+
+Before:
+
+```tsx
+import { createAsync, query } from "@solidjs/router";
+
+const getUser = query(fetchUser, "users");
+
+function User() {
+	const params = useParams();
+	const user = createAsync(() => getUser(params.id));
+
+	return <h1>{user()?.name}</h1>;
+}
+```
+
+After:
+
+```tsx
+import { createMemo } from "solid-js";
+import { query, useParams } from "@solidjs/router";
+
+const getUser = query(fetchUser, "users");
+
+function User() {
+	const params = useParams();
+	const user = createMemo(() => getUser(params.id));
+
+	return <h1>{user().name}</h1>;
+}
+```
+
+Use `createProjection` when a deeply reactive object or array is required.
+Use `createOptimistic` or `createOptimisticStore` for in-flight rendered state.
+
+Replace the deprecated `cache` alias with `query`.
+Keep stable query names and argument shapes because they form the cache key.
+Use `.key` to revalidate all argument combinations and `.keyFor(...)` for one combination.
+
+```tsx
+revalidate(getUser.key);
+revalidate(getUser.keyFor("42"));
+```
+
+When `query` wraps a server function that has no declared method, it obtains a GET wrapper from the server-function transport.
+A plain function passed to `query` remains a plain function and does not load or use that transport.
+This lookup is pinned to `solidjs/solid-router` source revision `c2fddb08ac1ab29bedc7c264e632a8b14d8af0dd`, `src/data/query.ts`.
+
+### Replace pending submissions
+
+Router 0.x/1.x submissions represented pending and completed action calls.
+Router 2 separates those concerns:
+
+- Use action `.onSubmit(...)` with Solid optimistic primitives for in-flight UI.
+- Use a form's `aria-busy="true"` state for form-level pending styling.
+- Use `useSubmissions()` for settled results and errors.
+- Use `.onSettled(...)` when every completion must be observed, including a void result or redirect.
+
+Before:
+
+```tsx
+const submission = useSubmission(addTodo);
+
+<form action={addTodo} method="post">
+	<input name="title" />
+	<button disabled={submission.pending}>
+		{submission.pending ? "Saving" : "Save"}
+	</button>
+</form>;
+```
+
+After:
+
+```tsx
+import { createOptimisticStore } from "solid-js";
+import { action, useSubmissions } from "@solidjs/router";
+
+const [todos, setTodos] = createOptimisticStore(() => getTodos(), []);
+
+const addTodo = action(async (form: URLSearchParams) => {
+	const todo = await saveTodo(form.get("title") ?? "");
+	return todo;
+}, "add-todo").onSubmit((form) => {
+	setTodos((items) => {
+		items.push({
+			id: "pending",
+			title: form.get("title") ?? "",
+			pending: true,
+		});
+	});
+});
+
+function TodoForm() {
+	const submissions = useSubmissions(addTodo);
+	const latest = () => submissions.at(-1);
+
+	return (
+		<form action={addTodo} method="post">
+			<input name="title" />
+			<button>Save</button>
+			<p>{latest()?.error?.message}</p>
+		</form>
+	);
+}
+```
+
+```css
+form[aria-busy] button {
+	opacity: 0.6;
+}
+```
+
+Router 2 retains a submission only when the action produces a result or error.
+A void or metadata-only completion still reaches `.onSettled(...)`.
+Keep `method="post"` on action forms, and give a server-rendered client action a stable name.
+
+### Move response helpers
+
+Import `redirect`, `reload`, and `respond` from `@solidjs/web`.
+Replace the old router `json(data, init)` helper with `respond(data, init)`.
+
+Before:
+
+```tsx
+import { action, json, redirect } from "@solidjs/router";
+
+const save = action(async (form: FormData) => {
+	const item = await saveItem(form);
+	return json(item, { revalidate: ["items"] });
+}, "save-item");
+```
+
+After:
+
+```tsx
+import { action } from "@solidjs/router";
+import { redirect, reload, respond } from "@solidjs/web";
+
+const save = action(async (form: FormData) => {
+	const item = await saveItem(form);
+	return respond(item, { revalidate: ["items"] });
+}, "save-item");
+```
+
+The response metadata carries revalidation keys and redirects.
+The router applies that metadata to its query cache and navigation session.
+See [Data loading and mutations](/routing/solid-router/data) for cache lifetime, action binding, and retry behavior.
+
+## 6. Migrate server rendering and hydration
+
+Use the same module-level router instance on the client and server.
+A request event supplies the server URL when the server harness provides one.
+Pass the `url` prop only for a server render without a request event, such as static generation or a test.
+
+Before:
+
+```tsx
+import { isServer } from "@solidjs/web";
+
+<Router url={isServer ? request.url : ""}>
+	<Route path="/users/:id" component={User} />
+</Router>;
+```
+
+After:
+
+```tsx
+import { renderToStream } from "@solidjs/web";
+import { Router } from "./router";
+
+const html = await renderToStream(() => <Router url={request.url} />);
+```
+
+A request event takes precedence over the `url` prop.
+Client history adapters do not select the URL for a server render.
+Use `renderToStream` when a matched route can cross a lazy `children` boundary.
+
+During an asynchronous server render, `query` writes keyed results to Solid's hydration registry.
+The client adopts the server result when the query name and serialized arguments match.
+Keep both values stable between server and client.
+
+Hydration adoption remains available after global hydration completes so that a lazy route module can make its first query read later.
+The client adopts that entry only while the page payload is younger than the three-minute query retention limit.
+A first read after that limit fetches current data instead.
+The age gate is pinned to `solidjs/solid-router` source revision `3daa4d071df288280eb0de996039cf591d8173f8`, `src/data/query.ts`.
+
+Configure the optional single-flight mutation collector from the same router instance:
+
+```tsx
+// src/server-config.ts
+import { createFlightDataCollector } from "@solidjs/router/server";
+import { configureServerFunctionsServer } from "@solidjs/web/server-functions/server";
+import { Router } from "./router";
+
+configureServerFunctionsServer({
+	collectFlightData: createFlightDataCollector(Router),
+});
+```
+
+Load that configuration before the first server-function request is dispatched.
+With `vite-plugin-solid`, set `serverFunctions.configure` to the server-only module:
+
+```tsx
+// vite.config.ts
+import solid from "vite-plugin-solid";
+
+export default {
+	plugins: [
+		solid({
+			serverFunctions: {
+				configure: "./src/server-config.ts",
+			},
+		}),
+	],
+};
+```
+
+The router subscribes to single-flight mutation data by default.
+Set `singleFlight: false` in `createRouter` when the application must not subscribe.
+Without the consumer, the transport does not request route-data collection for the mutation.
+
+Server-function action forms retain their no-JavaScript POST and redirect path.
+The server-function runtime stores the outcome in a one-shot flash cookie, and the router reads that outcome during the redirected server render.
+See [Server rendering and hydration](/routing/solid-router/server-rendering) for custom handler wiring.
+
+## 7. Migrate file-system routing
+
+Replace a component-like `<FileRoutes />` result with the `fileRoutes` adapter over the nested `pageRoutes` manifest.
+
+Before:
+
+```tsx
+import { Router } from "@solidjs/router";
+import { FileRoutes } from "@solidjs/start/router";
+
+<Router root={App}>
+	<FileRoutes />
+</Router>;
+```
+
+After:
+
+```tsx
+import { pageRoutes } from "virtual:file-routes";
+import { createRouter } from "@solidjs/router";
+import { fileRoutes } from "@solidjs/router/fs";
+
+export const Router = createRouter({
+	routes: fileRoutes(pageRoutes),
+});
+```
+
+Each route module default-exports its component.
+Move route options into a named `route` export:
+
+```tsx
+// routes/blog/[id].tsx
+import { int, type RouteProps } from "@solidjs/router";
+import { defineFileRoute } from "@solidjs/router/fs";
+
+export const route = defineFileRoute("/blog/:id", {
+	matchFilters: { id: int },
+	preload: ({ params }) => getPost(params.id),
+});
+
+export default function Post(props: RouteProps<typeof route>) {
+	return <h1>{props.data.title}</h1>;
+}
+```
+
+The string passed to `defineFileRoute` is a TypeScript witness.
+The manifest path remains the runtime source of truth.
+Generate literal manifest types to carry file paths, filters, and search schemas into `Router.paths`.
+
+Code-split manifest component references become Solid `lazy` components.
+When the manifest is delivered with `codeSplitting: false`, the adapter passes the eager component through without a `lazy` wrapper.
+This behavior is pinned to `solidjs/solid-router` source revision `bae09cc537eabf1b4b48b085885404a974285cce`, `src/fs.ts`.
+
+See [File-system route conversion](/routing/solid-router/route-definitions#convert-a-file-system-manifest) for the adapter contract.
+
+## 8. Remove old TypeScript workarounds
+
+Remove broad route-array annotations that erase literal paths.
+Use an inline array, `defineRoutes`, or `as const` instead.
+
+Before:
+
+```tsx
+const routes: RouteDefinition[] = [{ path: "/users/:id", component: User }];
+```
+
+After:
+
+```tsx
+const routes = defineRoutes([
+	defineRoute({
+		path: "/users/:id",
+		preload: ({ params }) => getUser(params.id),
+		component: User,
+	}),
+]);
+```
+
+Use the resulting types at these boundaries:
+
+- Use `Router.paths` to build route URLs with checked parameters.
+- Use `defineRoute` to type local component and preload parameters.
+- Use `RouteProps` or `RouteComponent` with a path witness for an external component.
+- Use `defineFileRoute` for a file-system route module.
+- Use a route `search` schema to type search builders, setters, and parsed reads.
+
+A typed match filter can narrow the value accepted by `Router.paths`.
+The built-in `int` filter makes a path-builder parameter a `number`, but the component still receives the URL parameter as a string.
+
+See the [router factory reference](/reference/solid-router/router-factory) and [route type reference](/reference/solid-router/types) for the complete signatures.
+
+## Removal checklist
+
+- [ ] Upgrade `solid-js`, `@solidjs/web`, and `@solidjs/router` to compatible Solid 2 versions.
+- [ ] Create one module-level router with `createRouter`.
+- [ ] Replace all JSX `<Route>` definitions with route objects.
+- [ ] Move `root` to the provider render prop and `rootPreload` to factory `preload`.
+- [ ] Convert nested routes to `children` arrays and keep layouts rendering `props.children`.
+- [ ] Replace `Router`, `HashRouter`, and `MemoryRouter` components with `createRouter` and a history adapter.
+- [ ] Replace `<A>` with `<a>` and move active styling to state-attribute selectors.
+- [ ] Replace `<Navigate>` and rename `useCurrentMatches`.
+- [ ] Replace `cache` with `query`.
+- [ ] Remove `createAsync`, `createAsyncStore`, and `useSubmission`.
+- [ ] Move pending UI to optimistic primitives or form `aria-busy`.
+- [ ] Import `redirect`, `reload`, and `respond` from `@solidjs/web`.
+- [ ] Keep query names, query arguments, and server-rendered client action names stable.
+- [ ] Render the same router instance on the server and client.
+- [ ] Register the single-flight collector before server-function dispatch when the application uses it.
+- [ ] Convert `<FileRoutes />` output through `fileRoutes(pageRoutes)`.
+- [ ] Replace widened route-array types with `defineRoutes`, `defineRoute`, and path witnesses.
+- [ ] Remove the final imports of `Route`, `A`, `Navigate`, `createAsync`, `createAsyncStore`, `useSubmission`, `cache`, and router response helpers.

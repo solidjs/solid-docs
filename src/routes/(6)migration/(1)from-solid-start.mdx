@@ -3,9 +3,480 @@ title: "From SolidStart"
 titleTemplate: ":title"
 mainNavExclude: true
 version: "2.0"
+description: "Move a SolidStart 1 or released SolidStart 2 application to Solid 2 through vite-plugin-solid start mode."
+source_repo: "solidjs/vite-plugin-solid"
+source_ref: "next"
+source_sha: "519da14d20a51dd0a856eb9acfdae784a567bf10"
+source_path: "src/ssr/index.ts"
 ---
 
-:::note[Planned]
-This page has not been written yet.
-It will cover moving a SolidStart 1 or 2 app to start mode.
+:::caution[This is not a SolidStart upgrade]
+Released SolidStart 2 runs on Solid 1 and does not support Solid 2.
+Do not install Solid 2 into an existing SolidStart application.
+
+Create a separate Solid 2 application that uses `vite-plugin-solid` 3 start mode, then move application code into that target.
+Start mode is a serving mode of the Vite plugin.
+It is not SolidStart and does not provide the SolidStart runtime.
 :::
+
+This guide has separate extraction steps for [SolidStart 1](#start-from-solidstart-1) and [released SolidStart 2](#start-from-released-solidstart-2).
+Both paths then use the same [Solid 2 target model](#build-the-solid-2-target).
+
+Keep the old application runnable during the migration.
+Move one route or server feature at a time, and compare its behavior in both applications before continuing.
+
+## Choose what to copy
+
+Copy these files after checking their imports:
+
+- Static files from `public/`.
+- CSS, images, fonts, and other browser assets.
+- Components whose imports are compatible with Solid 2.
+- Domain code that does not import SolidStart, Vinxi, Nitro, or H3.
+- Route component bodies after selecting a router and adapting their route exports.
+- Server-function bodies after restoring authorization and validation at the new server boundary.
+- Environment variable names and `.env.example` values that are not secrets.
+
+Rewrite these integration files:
+
+- `app.config.ts` or a SolidStart `vite.config.ts`.
+- `src/entry-client.*` and `src/entry-server.*`.
+- The document shell and application root.
+- The router bootstrap and the SolidStart `FileRoutes` usage.
+- Imports from `@solidjs/start/*`, `vinxi/*`, `nitropack/*`, or Nitro and H3 runtime modules.
+- Middleware, session helpers, API handler types, deployment adapters, and provider configuration.
+
+Do not copy a build output directory or a lockfile into the target.
+Install the target dependencies first, then add application dependencies as their callers move.
+
+## Start from SolidStart 1
+
+[SolidStart 1](https://docs.solidjs.com/solid-start) uses Vinxi, Nitro, `app.config.ts`, and framework-owned entries.
+Record the source behavior before changing files:
+
+1. Record the value of `ssr`, the `appRoot`, the route directory, middleware paths, route prerendering, and every option under `server` in `app.config.ts`.
+2. Record aliases supplied by the framework, including imports that start with `~/`.
+3. List custom code in `entry-client.*`, `entry-server.*`, and `app.*`.
+4. List all imports from `@solidjs/start`, `vinxi`, `nitropack`, and direct Nitro or H3 entrypoints.
+5. List API routes, server functions, session operations, middleware hooks, and deployment presets.
+6. Run the old development server and production deployment tests as a behavioral baseline.
+
+Do not migrate the application to released SolidStart 2 as an intermediate step.
+Move from the SolidStart 1 source directly into the separate Solid 2 target.
+
+Apply these source-specific rules:
+
+- Treat `app.config.ts` as a checklist only.
+  Do not copy its configuration object.
+- Split the SolidStart `app.*` file into the target `src/App.tsx` application tree and `src/Document.tsx` HTML shell.
+- Remove the old `StartClient`, `StartServer`, `mount`, and `createHandler` entry code.
+  Generated start-mode entries replace it.
+- Preserve route filenames only when the selected file-system convention produces the same paths.
+  Rewrite the `FileRoutes` integration and route-level types.
+- Preserve the code inside a `"use server"` function only after removing SolidStart runtime imports and checking its request, response, redirect, and serialization behavior.
+- Rewrite `onRequest` and `onBeforeResponse` middleware as fetch-style middleware.
+- Replace `vinxi/http` session and cookie calls with a session library over the Solid request event.
+- Replace Nitro presets, storage, tasks, WebSockets, and prerender options with host or Vite integrations selected for the new deployment.
+
+## Start from released SolidStart 2
+
+[Released SolidStart 2](https://docs.solidjs.com/solid-start/v2) uses Solid 1, `solidStart()`, Vite environment builds, and a deployment plugin such as Nitro.
+Its Vite configuration resembles the target, but the application and server contracts are different.
+
+Record the source behavior before changing files:
+
+1. Record every `solidStart()` option, including `middleware`, `serialization`, `devOverlay`, route locations, and rendering mode.
+2. Record the Nitro, Netlify, Cloudflare, or other deployment plugin configuration.
+3. List custom behavior in `src/app.*`, `src/entry-client.*`, and `src/entry-server.*`.
+4. List imports from `@solidjs/start/config`, `@solidjs/start/client`, `@solidjs/start/server`, `@solidjs/start/http`, and `@solidjs/start/middleware`.
+5. List API routes, H3 middleware, session helpers, request-event locals, and server functions.
+6. Run development, build, preview, and deployment tests as a behavioral baseline.
+
+Do not replace `solidStart()` with `solid()` in the existing application and assume that the result has the same runtime.
+Create the separate target, then apply these source-specific rules:
+
+- Remove `@solidjs/start`, `solidStart()`, and the SolidStart environment type reference.
+- Remove the deployment plugin until the start-mode build works through `vite preview`.
+  Add a host integration only after the web-standard handler works.
+- Rewrite H3 middleware and `@solidjs/start/http` calls against `Request`, `Response`, and the Solid request event.
+- Replace `StartClient`, `StartServer`, `createHandler`, and `FileRoutes`.
+- Treat `serialization`, `devOverlay`, islands, route prerendering, and Nitro configuration as features to redesign.
+  Start mode has no matching application options for them.
+- Recheck all router code.
+  Released SolidStart router versions and Solid 2 router versions do not have the same contracts.
+
+## Build the Solid 2 target
+
+The current source baselines are [`vite-plugin-solid` at `519da14d`](https://github.com/solidjs/vite-plugin-solid/tree/519da14d20a51dd0a856eb9acfdae784a567bf10) and the [official templates repository](https://github.com/solidjs/templates) at `cbbd8ba2`.
+Use the closest template as the target, or create an empty Vite project with the same dependency and script shape.
+
+Select a target before moving application files:
+
+- Use `solid-v2/bare` for a client-rendered application without server functions.
+- Use `solid-v2/basic` for Solid Router and file-system pages.
+- Use `solid-v2/fullstack` for streaming server-side rendering (SSR), server functions, sessions, middleware, and API routes.
+- Use `solid-v2/fullstack-tanstack` when TanStack Router owns routing and TanStack Query owns the data cache.
+
+The following checklist uses an SSR application with Solid Router.
+Omit `ssr: true` only when the source application is client-rendered.
+Omit `serverFunctions` and middleware when the application has no server behavior.
+
+### 1. Create the package boundary
+
+Start from the selected Solid 2 template's `package.json`.
+Keep the template's compatible versions of Solid 2, `@solidjs/web`, Vite, and `vite-plugin-solid`.
+Do not carry `@solidjs/start`, Vinxi, Nitro, or an old Solid Router release into the target.
+
+Use Vite scripts:
+
+```json title="package.json"
+{
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"serve": "vite preview"
+	}
+}
+```
+
+Copy application dependencies only after checking that each package supports Solid 2.
+Replace a package when it imports Solid 1 internals or requires SolidStart runtime modules.
+
+### 2. Configure start mode
+
+Add `vite-plugin-solid` start mode in `vite.config.ts`.
+The `start` option owns entries, development serving, preview serving, and production build wiring.
+The separate `ssr` boolean selects streaming SSR.
+
+```ts title="vite.config.ts"
+import { fileRoutes } from "filesystem-routing/vite";
+import { defineConfig } from "vite";
+import solid from "vite-plugin-solid";
+
+export default defineConfig({
+	plugins: [
+		solid({
+			start: {
+				middleware: "./src/middleware.ts",
+			},
+			ssr: true,
+			serverFunctions: true,
+			extensions: [".jsx", ".tsx"],
+		}),
+		fileRoutes({ httpMethods: true }),
+	],
+});
+```
+
+`start: true` and `start: {}` enable the same mode.
+Use the object form only when the application needs `app`, `entryServer`, `entryClient`, `document`, `middleware`, `setup`, `env`, or `external`.
+The `extensions` entry makes the Solid transform accept route module IDs generated with query suffixes by `filesystem-routing`.
+
+Map old configuration deliberately:
+
+- Map source SSR to the top-level `ssr` boolean.
+- Map the app root to `start.app` only when the target does not use the `src/App.*` convention.
+- Map the route directory to `fileRoutes({ dir })`, not to `start`.
+- Map middleware to `start.middleware`.
+- Add Vite aliases under `resolve.alias`; start mode does not add the SolidStart `~` alias.
+- Move host build and serving ownership behind the deployment boundary.
+  Do not place Nitro options in `start`.
+
+See the [`StartOptions` reference](/reference/vite-plugin-solid/start) for the complete option contracts.
+
+### 3. Let the plugin generate entries
+
+Delete or move the SolidStart `src/entry-client.*` and `src/entry-server.*` files before the first target build.
+If those conventional files remain, start mode selects them instead of generating entries.
+SolidStart entry modules cannot serve as start-mode entries because their imports and exports use different contracts.
+
+Generated SSR entries:
+
+- Render `<Document><App /></Document>` on the server.
+- Hydrate the same tree in the browser.
+- Inject the built client entry and styles.
+
+The start-mode handler creates the request event used by middleware, page rendering, and server functions.
+
+Keep generated entries unless the old entries contain behavior that cannot move into `App`, `Document`, middleware, `start.setup`, or a server function.
+When authored entries are necessary, rewrite both files as a pair.
+The server entry must export `render(request?, context?)`, and the client entry must hydrate the same document tree.
+
+### 4. Split `App.tsx` and `Document.tsx`
+
+Create `src/App.tsx` as the default-exporting application root.
+Move the router, providers, layouts, and application UI here.
+Do not put `<html>`, `<head>`, or `<body>` in `App`.
+
+```tsx title="src/App.tsx"
+import { Router } from "./router";
+
+export default function App() {
+	return <Router>{(props) => props.children}</Router>;
+}
+```
+
+Create `src/Document.tsx` as the default-exporting HTML shell.
+Move language, meta, icon, and document-level tags here.
+Render `props.children` in the body and include `<HydrationScript />` for SSR.
+
+```tsx title="src/Document.tsx"
+import type { ParentProps } from "solid-js";
+import { HydrationScript } from "@solidjs/web";
+
+export default function Document(props: ParentProps) {
+	return (
+		<html lang="en">
+			<head>
+				<meta charset="utf-8" />
+				<meta name="viewport" content="width=device-width, initial-scale=1" />
+				<HydrationScript />
+			</head>
+			<body>{props.children}</body>
+		</html>
+	);
+}
+```
+
+The generated entry injects its client script into the document head.
+Do not copy SolidStart `props.assets`, `props.scripts`, or an `#app` mount wrapper into this component.
+
+### 5. Select and mount a router
+
+Start mode does not select a router or discover pages.
+Choose the router before copying route files.
+
+For Solid Router:
+
+1. Add `filesystem-routing` and its Vite plugin when file-based routes are required.
+2. Convert `pageRoutes` with `fileRoutes()` from `@solidjs/router/fs`.
+3. Create one router and render it under `App`.
+4. Rewrite old `FileRoutes` imports and route configuration types.
+
+```ts title="src/router.ts"
+import { pageRoutes } from "virtual:file-routes";
+import { createRouter } from "@solidjs/router";
+import { fileRoutes } from "@solidjs/router/fs";
+
+export const Router = createRouter({
+	routes: fileRoutes(pageRoutes),
+});
+```
+
+The default nested file convention preserves common paths such as:
+
+- `routes/index.tsx` to `/`.
+- `routes/blog/index.tsx` to `/blog/`.
+- `routes/users/[id].tsx` to `/users/:id`.
+- `routes/docs/[...path].tsx` to `/docs/*path`.
+
+Pairing `routes/users.tsx` with `routes/users/` creates a layout and nested pages.
+Route groups remain available, but compare every generated path before moving the next route.
+See the [file-system route conventions](/reference/filesystem-routing/conventions) and [Solid Router route conversion](/routing/solid-router/route-definitions#convert-a-file-system-manifest).
+
+For TanStack Router, start from the pinned `fullstack-tanstack` template.
+Its router plugin owns `src/routes` and generates `routeTree.gen.ts`.
+For SSR, `start.setup` creates and loads a request-specific router before the generated entry renders.
+Do not reuse SolidStart's router server or client entry protocol.
+See the [TanStack Router integration](/routing/tanstack).
+
+### 6. Move route modules incrementally
+
+Move one layout and its child routes at a time.
+For each route:
+
+1. Confirm the generated path.
+2. Copy the component body.
+3. Rewrite router imports, route props, preload functions, search validation, and redirects.
+4. Replace SolidStart metadata or data APIs with APIs from the selected router and `@solidjs/meta`.
+5. Test direct SSR, client navigation, refresh, parameters, pending UI, errors, and `404` status.
+
+Do not copy `FileRoutes` or assume a SolidStart route export has the same type in Solid Router 2 or TanStack Router 2.
+The route component is usually reusable.
+The route registration and data boundary usually require changes.
+
+### 7. Move server functions
+
+Enable `serverFunctions: true` before moving any `"use server"` functions.
+The default endpoint remains `/_server`.
+
+Function-level and module-level directives are supported:
+
+```ts title="src/lib/users.ts"
+export async function findUser(id: string) {
+	"use server";
+	return database.users.find(id);
+}
+```
+
+Copy the implementation only after applying these checks:
+
+- Keep database and credential imports in server-only modules.
+- Replace SolidStart HTTP helpers with web `Request`, `Response`, and `getRequestEvent()` from `@solidjs/web`.
+- Validate arguments and authorization inside every callable function.
+- Retest values that depended on SolidStart serialization.
+- Replace old `query` and `action` wrappers with the selected router's Solid 2 APIs.
+- Replace response helpers with the current `@solidjs/web` or router contract.
+
+Server functions are transport primitives in the plugin.
+Router caching, submissions, revalidation, and single-flight behavior require the matching router integration.
+See [Server functions](/building-apps/server-functions).
+
+### 8. Rebuild environment handling
+
+Vite public variables that use the configured `VITE_` prefix remain available through `import.meta.env`.
+Keep secrets in server-only modules.
+
+Start mode also supports a typed Standard Schema file at `env.ts` or `env.js` in the project root:
+
+```ts title="env.ts"
+import { z } from "zod";
+
+export default {
+	server: {
+		SESSION_SECRET: z.string().min(32),
+	},
+	client: {
+		VITE_APP_NAME: z.string().min(1),
+	},
+};
+```
+
+Import validated values from `virtual:env/server` in server-only modules and from `virtual:env/client` in shared or client code.
+The plugin generates `solid-env.d.ts` next to the schema.
+Do not copy a SolidStart `@solidjs/start/env` type reference.
+
+The server module reads and validates server values from `process.env` when the server starts.
+Client values are validated and embedded in the browser bundle.
+Copy `.env.example`, but do not copy local secrets into source control.
+See [Environment](/building-apps/environment).
+
+### 9. Rewrite sessions and authentication
+
+Start mode supplies a request event, cookies on web headers, and response metadata.
+It does not supply SolidStart session helpers or an authentication system.
+
+Rewrite calls to `useSession`, `getSession`, `setCookie`, and related SolidStart, Vinxi, or H3 helpers.
+The official fullstack template composes `@remix-run/cookie` with:
+
+- `getRequestEvent()` from `@solidjs/web`.
+- The incoming `event.request.headers`.
+- Outgoing `Set-Cookie` values appended to `event.response.headers`.
+- A secret read from `virtual:env/server`.
+
+That template cookie is signed and tamper-evident, but it is not encrypted.
+Do not put secrets in its payload.
+Use a storage-backed session library when the application requires revocation, larger data, or server-owned session state.
+
+Keep authorization inside every protected server function and API handler.
+Middleware can populate `event.locals`, but hiding UI or checking a page request does not authorize another server entry point.
+See [Sessions and auth](/building-apps/sessions-and-auth).
+
+### 10. Rewrite middleware and API routes
+
+Configure a server-only module through `start.middleware`.
+Its default export is one fetch-style middleware function or an array:
+
+```ts
+type Middleware = (
+	request: Request,
+	next: (request?: Request) => Response | Promise<Response>
+) => Response | Promise<Response>;
+```
+
+Code before `await next()` runs in declaration order.
+Code after it runs while the chain unwinds.
+Return a `Response` without calling `next()` to stop dispatch.
+Use `getRequestEvent()` inside the chain to read or write request-scoped locals and response metadata.
+
+API route discovery is a separate `filesystem-routing` integration.
+Enable `fileRoutes({ httpMethods: true })`, then place its dispatcher in the middleware chain:
+
+```ts title="src/middleware.ts"
+import { createAPIHandler } from "filesystem-routing/api";
+import routes from "virtual:file-routes";
+
+export default [createAPIHandler(routes)];
+```
+
+An API module exports uppercase HTTP methods:
+
+```ts title="src/routes/api/users.ts"
+import type { APIHandler } from "filesystem-routing/api";
+
+export const GET: APIHandler = ({ request, params }) => {
+	return Response.json({
+		path: new URL(request.url).pathname,
+		params,
+	});
+};
+```
+
+A method-only module is an API route without a page.
+A module can also default-export a page and export methods.
+The handler result and fallback rules are not identical to SolidStart, so retest `HEAD`, missing methods, `undefined` results, route parameters, cookies, and errors.
+See [Middleware and API routes](/building-apps/middleware-and-api-routes).
+
+### 11. Rebuild the deployment boundary
+
+Run `vite build` before adding provider-specific integration.
+With `start` and `ssr: true`, the build writes:
+
+- Browser assets to `dist/client`.
+- A server module to `dist/server/server.js`.
+
+The server module exports `handleRequest`.
+Its contract is a web `Request` in and a promised web `Response` out:
+
+```ts
+import { handleRequest } from "./dist/server/server.js";
+
+const response = await handleRequest(request);
+```
+
+Serve `dist/client` before passing unmatched requests to the handler.
+Preserve the request URL, method, headers, and body.
+Preserve the response status, headers, separate `Set-Cookie` values, and streamed body.
+
+Do not deploy the old Nitro output or reuse a SolidStart provider preset.
+The pinned templates include a verified Node adapter.
+Other hosts need an adapter or Vite integration that implements this exact asset and handler boundary.
+
+Set `start.external: true` only when a host integration owns both server build wiring and HTTP serving.
+The plugin continues to provide generated entries, the client manifest, and its virtual handler.
+See [Deployment](/building-apps/deployment).
+
+### 12. Resolve removed framework features
+
+Start mode does not replace every SolidStart feature.
+Resolve each old dependency explicitly:
+
+- Replace the `~` alias with a Vite alias or relative imports.
+- Replace `appRoot` and route directory behavior with plugin paths and `fileRoutes({ dir })`.
+- Replace the SolidStart development toolbar with Vite and browser tooling.
+- Replace framework route prerendering with a host or build integration.
+- Replace Nitro tasks, storage, WebSockets, and deployment presets with runtime-specific services.
+- Replace islands and other SolidStart rendering modes with a supported Solid 2 application design.
+- Retest values that depended on SolidStart's `serialization` option against the Solid 2 server-function codec.
+- Replace `@solidjs/start/http` convenience helpers with web APIs, `@solidjs/web`, or focused libraries.
+- Replace framework API route dispatch with `filesystem-routing` middleware or another server integration.
+
+Keep an item unresolved when its target host has no verified Solid 2 adapter.
+Do not hide a host-specific gap behind `start.external`.
+
+## Verify each migration slice
+
+Run these checks after every route group or server feature moves:
+
+1. Open the route directly in a new browser request.
+2. Navigate to and from the route in the browser.
+3. Compare the rendered document head and status code.
+4. Exercise server-function success, validation failure, authorization failure, and redirects.
+5. Exercise API methods, middleware order, cookies, and session expiry.
+6. Run `vite build` and `vite preview`.
+7. Run the production adapter with streamed responses and multiple `Set-Cookie` headers.
+8. Check the client output for server-only modules and secret values.
+9. Remove the migrated source feature only after the target passes the same behavioral tests.
+
+Finish by testing the actual deployment host.
+Preview verifies the generated artifacts, but it does not verify provider routing, environment injection, asset rules, streaming, or cookie forwarding.

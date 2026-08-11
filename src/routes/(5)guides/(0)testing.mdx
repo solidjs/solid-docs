@@ -3,9 +3,315 @@ title: "Testing"
 titleTemplate: ":title"
 mainNavExclude: true
 version: "2.0"
+description: "Test Solid components in jsdom or a real browser, and test fullstack server code in a separate Node project."
+source_repo: "solidjs/templates"
+source_ref: "main"
+source_sha: "cbbd8ba26ed7f909455abe142de74e204b039974"
+source_path: "solid-v2"
 ---
 
-:::note[Planned]
-This page has not been written yet.
-It will cover component tests in the client posture and server tests in the Node posture with Vitest.
-:::
+Use the smallest test environment that exercises the behavior under test.
+
+1. Start component tests in jsdom.
+   The maintained `basic` template uses this configuration for component DOM tests.
+2. Use [Vitest browser mode](https://vitest.dev/guide/browser/) when the test depends on browser layout, CSS, focus, selection, or browser APIs.
+   The maintained browser-mode template runs the same component test in Chromium.
+3. Add a separate Node project for server code in a fullstack app.
+   The maintained `fullstack` template keeps DOM component tests and request-scoped server tests in different Vitest projects.
+
+Test the result that a user or caller can observe.
+For a component, query by an accessible role and assert its visible text or state.
+Do not inspect signal values, effect counts, or compiled output when the public behavior gives the same evidence.
+This approach follows the [Testing Library guiding principles](https://testing-library.com/docs/guiding-principles/).
+
+## Test components in jsdom
+
+The `basic` template pins Vitest 4, jsdom 25, Solid Testing Library 1.0 beta, and the jest-dom matchers.
+Add the same development dependencies to an existing Solid project:
+
+```sh
+pnpm add -D vitest@^4.0.0 jsdom@^25.0.1 @solidjs/testing-library@1.0.0-beta.2 @testing-library/jest-dom@^6.6.3
+```
+
+Add a test script to `package.json`:
+
+```json
+{
+	"scripts": {
+		"test": "vitest"
+	}
+}
+```
+
+Import `defineConfig` from `vitest/config` in the Vite configuration.
+Keep the existing Solid plugin and add the `test` block:
+
+```ts
+import { defineConfig } from "vitest/config";
+import solid from "vite-plugin-solid";
+
+export default defineConfig({
+	plugins: [solid()],
+	test: {
+		environment: "jsdom",
+		globals: false,
+		setupFiles: ["./vitest-setup.ts"],
+		// Remove this option when tests need module isolation.
+		isolate: false,
+	},
+});
+```
+
+Register the jest-dom matchers in `vitest-setup.ts`:
+
+```ts
+import "@testing-library/jest-dom/vitest";
+```
+
+The template sets `isolate: false` as an optional performance setting for a small suite.
+With that setting, module state can survive between test files.
+Remove the setting when tests mutate module-level state, or reset that state after each test.
+
+### Test a user-visible interaction
+
+This component exposes its state through the button label:
+
+```tsx
+import { createSignal } from "solid-js";
+
+export default function Counter() {
+	const [count, setCount] = createSignal(0);
+
+	return (
+		<button type="button" onClick={() => setCount(count() + 1)}>
+			Clicks: {count()}
+		</button>
+	);
+}
+```
+
+Pass a function to `render` so Solid Testing Library creates the component under a reactive owner.
+Query the button by role, interact with it, and assert the label that the user sees:
+
+```tsx
+import { cleanup, fireEvent, render } from "@solidjs/testing-library";
+import { flush } from "solid-js";
+import { afterEach, describe, expect, test } from "vitest";
+
+import Counter from "./Counter";
+
+afterEach(cleanup);
+
+describe("<Counter />", () => {
+	test("increments on click", () => {
+		const { getByRole } = render(() => <Counter />);
+		const button = getByRole("button");
+
+		expect(button).toHaveTextContent("Clicks: 0");
+		fireEvent.click(button);
+		flush();
+		expect(button).toHaveTextContent("Clicks: 1");
+	});
+});
+```
+
+Solid 2 stages reactive work on its queue so consecutive writes can share one update pass.
+The click changes the signal immediately, but the DOM update can remain queued when `fireEvent.click` returns.
+Call [`flush()`](/reference/solid-js/reactivity/flush) after a synchronous interaction to drain pending work before reading the DOM.
+Use asynchronous queries for behavior that is asynchronous by contract, such as a pending resource, rather than using `flush()` as a replacement for waiting on that work.
+
+Solid Testing Library tracks mounted containers and exports `cleanup`.
+The pinned release can register cleanup automatically when the test runner exposes a global `afterEach`.
+The configuration above sets `globals: false`, so the explicit `afterEach(cleanup)` keeps disposal independent of test-runner globals.
+
+## Test components in a real browser
+
+Choose browser mode when jsdom cannot provide the behavior that the test needs.
+The maintained browser-mode template uses the Playwright provider with headless Chromium.
+
+Replace jsdom with the browser dependencies:
+
+```sh
+pnpm add -D @vitest/browser-playwright@^4.0.0 playwright@^1.56.0
+pnpm exec playwright install chromium
+```
+
+Replace the jsdom environment in the `test` block:
+
+```ts
+import { playwright } from "@vitest/browser-playwright";
+import { defineConfig } from "vitest/config";
+import solid from "vite-plugin-solid";
+
+export default defineConfig({
+	plugins: [solid()],
+	test: {
+		globals: false,
+		setupFiles: ["./vitest-setup.ts"],
+		browser: {
+			enabled: true,
+			provider: playwright(),
+			headless: true,
+			instances: [{ browser: "chromium" }],
+		},
+	},
+});
+```
+
+The `Counter` test above runs unchanged in this configuration.
+The component still renders through Solid Testing Library, and `flush()` still drains the staged DOM update after the click.
+The difference is the host environment: Vitest runs the test in a Chromium page instead of a simulated jsdom document.
+
+The maintained templates demonstrate component tests, not browser-wide end-to-end flows.
+See the [Vitest browser-mode guide](https://vitest.dev/guide/browser/) for browser locators, interactions, and browser-mode limitations when a component test needs those APIs.
+
+## Test server code in a Node project
+
+A fullstack app needs separate client and server test environments.
+Use [Vitest projects](https://vitest.dev/guide/projects.html) to keep `*.test.tsx` component files in jsdom and `src/server/**/*.test.ts` files in Node.
+
+The fullstack template uses this project shape:
+
+```ts
+import { fileURLToPath } from "node:url";
+import { defineConfig } from "vitest/config";
+import solid from "vite-plugin-solid";
+
+export default defineConfig({
+	plugins: [solid({ start: true, ssr: true })],
+	test: {
+		globals: false,
+		setupFiles: ["./vitest-setup.ts"],
+		projects: [
+			{
+				extends: true,
+				test: {
+					name: "client",
+					environment: "jsdom",
+					include: ["src/**/*.test.tsx"],
+				},
+			},
+			{
+				extends: true,
+				test: {
+					name: "server",
+					environment: "node",
+					include: ["src/server/**/*.test.ts"],
+					server: { deps: { inline: [/@solidjs[+/]web/] } },
+					alias: [
+						{
+							find: /^@solidjs\/web$/,
+							replacement: fileURLToPath(
+								new URL(
+									"./node_modules/@solidjs/web/dist/server.js",
+									import.meta.url
+								)
+							),
+						},
+						{
+							find: /^@solidjs\/web\/storage$/,
+							replacement: fileURLToPath(
+								new URL(
+									"./node_modules/@solidjs/web/storage/dist/storage.js",
+									import.meta.url
+								)
+							),
+						},
+						{
+							find: "virtual:env/server",
+							replacement: fileURLToPath(
+								new URL("./vitest-env-server-stub.ts", import.meta.url)
+							),
+						},
+					],
+				},
+			},
+		],
+	},
+});
+```
+
+The Node project compiles server code and resolves the server runtime.
+The fullstack template also inlines and aliases its `@solidjs/web` entries so the request helper and request-event storage use the same server-build instance.
+Keep the server include pattern separate from the client pattern so a server test does not run under jsdom.
+
+### Stub the server environment module
+
+The fullstack template imports session secrets from `virtual:env/server`.
+Vitest runs the session test outside the turnkey server, so the template aliases that virtual module to this test stub:
+
+```ts
+export const env: Record<string, string | undefined> = new Proxy(
+	{},
+	{
+		get: (_, key) => (typeof key === "string" ? process.env[key] : undefined),
+	}
+);
+```
+
+The proxy reads `process.env` when code accesses a property.
+This behavior lets a test set `process.env.SESSION_SECRET` before it imports the session module.
+The stub only supplies the module contract needed by the template test.
+It does not run the application environment schema or the turnkey server boot process.
+
+### Exercise a session across requests
+
+Test request-scoped helpers through the server runtime instead of replacing the request event with a plain object.
+This concise version of the fullstack template pattern creates an event, provides it to the handler, commits the outgoing response, and carries the response cookie into the next request:
+
+```ts
+import { commitEventResponse, createRequestEvent } from "@solidjs/web";
+import { provideRequestEvent } from "@solidjs/web/storage";
+import { afterEach, expect, test, vi } from "vitest";
+
+type SessionModule = typeof import("./session");
+
+async function loadSession(secret: string): Promise<SessionModule> {
+	process.env.SESSION_SECRET = secret;
+	vi.resetModules();
+	return import("./session");
+}
+
+async function runRequest<T>(
+	request: Request,
+	handler: () => Promise<T>
+): Promise<{ result: T; response: Response }> {
+	const event = createRequestEvent(request);
+
+	return provideRequestEvent(event, async () => {
+		const result = await handler();
+		const response = commitEventResponse(new Response("ok"), event);
+		return { result, response };
+	});
+}
+
+afterEach(() => {
+	delete process.env.SESSION_SECRET;
+});
+
+test("reads a session on the next request", async () => {
+	const session = await loadSession("secret-one");
+	const login = await runRequest(new Request("http://localhost/login"), () =>
+		session.setSession({ userId: "user_1" })
+	);
+	const cookie = login.response.headers
+		.getSetCookie()
+		.find((value) => value.startsWith("session="))
+		?.split(";")[0];
+
+	expect(cookie).toBeDefined();
+
+	const current = await runRequest(
+		new Request("http://localhost/me", {
+			headers: { cookie: cookie! },
+		}),
+		() => session.getSession()
+	);
+
+	expect(current.result).toEqual({ userId: "user_1" });
+});
+```
+
+The test asserts the public request-to-response contract: one request writes a cookie, and the next request reads the session.
+Reset modules before importing code that captures environment values at module initialization.
+Restore fake timers and mocks, delete changed environment variables, and dispose any other process-wide state in `afterEach`.

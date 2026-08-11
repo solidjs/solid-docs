@@ -43,6 +43,7 @@ const TOP_LEVEL_ROUTE_ORDER = {
 	"components-context": "(1)solid-js/(4)components-context",
 	"components-jsx": "(1)solid-js/(5)components-jsx",
 	"rendering-ssr": "(2)solid-web/(1)rendering-ssr",
+	"web-components": "(2)solid-web/(3)components",
 	advanced: "(1)solid-js/(6)advanced",
 	types: "(1)solid-js/(7)types",
 };
@@ -88,16 +89,16 @@ const CANONICAL_ROUTES = {
 		"components-context/create-unique-id.mdx",
 		"Components & Context",
 	],
-	dynamic: ["components-context/dynamic.mdx", "Components & Context"],
+	dynamic: ["web-components/dynamic.mdx", "Components"],
 	lazy: ["components-context/lazy.mdx", "Components & Context"],
 	useContext: ["components-context/use-context.mdx", "Components & Context"],
 
-	Dynamic: ["components-jsx/dynamic.mdx", "Components (JSX)"],
+	Dynamic: ["web-components/dynamic-component.mdx", "Components"],
 	Errored: ["components-jsx/errored.mdx", "Components (JSX)"],
 	For: ["components-jsx/for.mdx", "Components (JSX)"],
 	Loading: ["components-jsx/loading.mdx", "Components (JSX)"],
 	Match: ["components-jsx/switch-and-match.mdx", "Components (JSX)"],
-	Portal: ["components-jsx/portal.mdx", "Components (JSX)"],
+	Portal: ["web-components/portal.mdx", "Components"],
 	Repeat: ["components-jsx/repeat.mdx", "Components (JSX)"],
 	Reveal: ["components-jsx/reveal.mdx", "Components (JSX)"],
 	Show: ["components-jsx/show.mdx", "Components (JSX)"],
@@ -365,7 +366,7 @@ const HIDDEN_EXPORTS = new Set([
 
 const ENTRY_CALLOUTS = {
 	clientOnly:
-		"> When the server encounters a transformed `clientOnly` call and an asset manifest is available, it emits early preload hints for the component's JavaScript and CSS. The server does not run the importer or wait for these assets. The hints also stay outside the hydration asset map because the fallback hydrates before the real component mounts.",
+		"> With the supported bundler transform, server rendering can emit preload hints for the component's JavaScript and CSS. The server does not run the importer or render the imported component.",
 	Dynamic:
 		"> `<Dynamic>` is a JSX convenience wrapper. General application code should use `dynamic()` to create a reusable stable component reference.",
 	createRoot:
@@ -377,6 +378,32 @@ const ENTRY_CALLOUTS = {
 	Repeat:
 		"> `Repeat` is positional list rendering over a store. It creates rows from numeric indexes without diffing array items or identities, so store reads remain fine-grained. Combine `from` and `count` for a sliding window; rows in the overlapping range are preserved.",
 };
+
+const ENTRY_SUMMARY_OVERRIDES = {
+	affects:
+		"Marks a reactive source or store location as pending while work that will change it is in flight. Marked values remain readable, and derived readers report the pending state until the surrounding transaction settles or the current flush ends.",
+	clientOnly:
+		"Creates a component that renders only in the browser. The server renders the fallback, and the client keeps that fallback through hydration before mounting the imported component.",
+	NotReadyError:
+		"Represents a read from an async reactive source before its first value is ready. Application code should normally let `Loading` and `Errored` boundaries handle this control flow.",
+	Owner:
+		"Represents the owner of a reactive scope. Treat its structure as opaque and use the public owner APIs to inspect or run code in that scope.",
+};
+
+const SIGNATURE_OVERRIDES = {
+	clientOnly: `function clientOnly<T extends Component<any>>(
+	fn: () => Promise<{ default: T }>,
+	options?: { lazy?: boolean }
+): Component<ComponentProps<T> & { fallback?: JSX.Element }>;`,
+	NotReadyError: `class NotReadyError extends Error {
+	readonly source: unknown;
+}`,
+	Owner: `interface Owner {
+	readonly id?: string;
+}`,
+};
+
+const OMIT_MEMBER_DOCS = new Set(["Owner"]);
 
 const scriptPath = fileURLToPath(import.meta.url);
 const repoRoot = path.resolve(path.dirname(scriptPath), "..");
@@ -661,15 +688,24 @@ function createEntry({
 	const line =
 		primary.getSourceFile().getLineAndCharacterOfPosition(primary.getStart())
 			.line + 1;
+	const summaryOverride = ENTRY_SUMMARY_OVERRIDES[name];
 	return {
 		name,
 		packageName: entrypoint.packageName,
 		kind: getKind(primary),
 		sourcePath,
 		line,
-		docs,
-		signature: getSignature(name, declarations, checker),
-		memberDocs: getMemberDocs(declarations),
+		docs: summaryOverride
+			? {
+					...docs,
+					summary: summaryOverride,
+					description: "",
+					remarks: "",
+				}
+			: docs,
+		signature:
+			SIGNATURE_OVERRIDES[name] ?? getSignature(name, declarations, checker),
+		memberDocs: OMIT_MEMBER_DOCS.has(name) ? [] : getMemberDocs(declarations),
 		route: disposition.route,
 		foldTargets: disposition.targets ?? [],
 		aliases: getExportAliases(name, exportedSymbol, symbol),

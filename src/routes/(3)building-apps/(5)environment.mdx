@@ -17,15 +17,26 @@ The official `solid-v2/fullstack` template uses Zod:
 ```ts
 import { z } from "zod";
 
+const signingKeys = z.preprocess(
+	(value) =>
+		typeof value === "string"
+			? value.split(",").map((key) => key.trim())
+			: value,
+	z.array(z.string().min(32)).min(1)
+);
+
 export default {
 	server: {
-		SESSION_SECRET: z.string().min(32),
+		SESSION_SECRET: signingKeys,
 	},
 	client: {
 		VITE_APP_NAME: z.string().min(1).default("Solid App"),
 	},
 };
 ```
+
+The `SESSION_SECRET` input is a comma-separated list.
+The schema validates every signing key after splitting the input, so a short or empty rotation key fails validation.
 
 The validators may come from different Standard Schema libraries because the plugin reads the shared Standard Schema interface.
 Only keys declared by the schema appear in the virtual modules.
@@ -83,7 +94,7 @@ They are not serialized into the server bundle, so a deployment platform can inj
 ```ts
 import { env } from "virtual:env/server";
 
-const secret = env.SESSION_SECRET;
+const signingKeys = env.SESSION_SECRET;
 ```
 
 Import this module from middleware, a `"use server"` module, an authored server entry, or another server-only module.

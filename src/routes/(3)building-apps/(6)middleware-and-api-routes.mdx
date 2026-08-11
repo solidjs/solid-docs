@@ -60,15 +60,16 @@ async function catchErrors(_request: Request, next: () => Promise<Response>) {
 	try {
 		return await next();
 	} catch (error) {
-		return Response.json(
-			{ error: error instanceof Error ? error.message : "Unknown error" },
-			{ status: 500 }
-		);
+		console.error(error);
+		return Response.json({ error: "Internal Server Error" }, { status: 500 });
 	}
 }
 
 export default [catchErrors, authenticate];
 ```
+
+Return details only for errors that the application explicitly marks as safe for clients.
+Do not expose arbitrary exception messages because they can contain database, filesystem, token, or internal-state details.
 
 Nothing is written to the network until the outermost middleware returns.
 Middleware can therefore change headers on the returned `Response` after `await next()`, including responses with streamed bodies.

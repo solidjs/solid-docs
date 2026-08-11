@@ -55,7 +55,7 @@ interface SessionData {
 const maxAge = 60 * 60 * 24 * 7;
 
 const sessionCookie = createCookie("session", {
-	secrets: env.SESSION_SECRET.split(","),
+	secrets: env.SESSION_SECRET,
 	httpOnly: true,
 	secure: true,
 	sameSite: "Lax",
@@ -120,18 +120,23 @@ Both decisions belong in server code.
 
 ```ts
 import { redirect } from "@solidjs/web";
+import { z } from "zod";
 
-export async function renameUser(id: string, form: FormData) {
+const UserName = z.string().trim().min(1).max(100);
+
+export async function renameCurrentUser(form: FormData) {
 	"use server";
 	const session = await getSession();
 	if (!session?.userId) throw redirect("/sign-in");
 
-	await database.users.rename(id, String(form.get("name") ?? ""));
+	const name = UserName.parse(form.get("name"));
+	await database.users.rename(session.userId, name);
 }
 ```
 
 Hiding a control in the browser does not authorize the corresponding server function or API route.
-Check the session or other credentials again at every protected server entry point.
+Check the session or other credentials again at every protected server entry point, then authorize access to the specific record.
+Do not accept a user ID from the browser when the operation should target the signed-in user.
 
 Middleware can authenticate once and place the result on `event.locals`.
 Server functions, API handlers, and the page render can then read the same request-scoped value.

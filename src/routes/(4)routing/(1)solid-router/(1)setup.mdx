@@ -35,12 +35,11 @@ Session-specific state comes from routing primitives inside the provider.
 Mount the instance at the application root:
 
 ```tsx
-// src/index.tsx
-import { render } from "@solidjs/web";
+// src/App.tsx
 import { Router } from "./router";
 
-render(
-	() => (
+export default function App() {
+	return (
 		<Router>
 			{(props) => (
 				<>
@@ -52,14 +51,26 @@ render(
 				</>
 			)}
 		</Router>
-	),
-	document.getElementById("app")!
-);
+	);
+}
 ```
 
 The render-prop child is the root layout.
 The root layout remains mounted while matched route components render through `props.children`.
 If the router config has a top-level `preload`, its return value is available as `props.data`.
+In start mode, the generated client and server entries render `src/App.tsx`.
+
+### Mount without start mode
+
+For a transform-only Vite application, render the same application component from a client entry:
+
+```tsx
+// src/index.tsx
+import { render } from "@solidjs/web";
+import App from "./App";
+
+render(() => <App />, document.getElementById("app")!);
+```
 
 ## Configure the router
 

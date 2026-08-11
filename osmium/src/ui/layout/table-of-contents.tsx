@@ -55,7 +55,7 @@ export const TableOfContents = () => {
 				<li class="not-prose mt-0 mb-0 pl-0">
 					<span>
 						<a
-							href="#_top"
+							href="#"
 							classList={{
 								"dark:text-slate-300": currentSection() !== undefined,
 								"text-blue-800 dark:text-blue-300 font-bold hover:text-slate-700 dark:hover:text-slate-200":

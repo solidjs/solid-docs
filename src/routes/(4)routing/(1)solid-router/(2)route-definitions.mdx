@@ -162,15 +162,28 @@ The resolved subtree is shared and does not switch based on later runtime state.
 
 ## Convert a file-system manifest
 
-The `@solidjs/router/fs` entry converts the nested `pageRoutes` view from a `file-routes` manifest into route definitions.
+Enable the `filesystem-routing` Vite plugin to generate `virtual:file-routes`:
+
+```ts
+// vite.config.ts
+import { defineConfig } from "vite";
+import { fileRoutes as fileRoutesPlugin } from "filesystem-routing/vite";
+import solid from "vite-plugin-solid";
+
+export default defineConfig({
+	plugins: [solid({ start: true }), fileRoutesPlugin()],
+});
+```
+
+The `@solidjs/router/fs` adapter converts the generated `pageRoutes` export into Solid Router route definitions.
 
 ```tsx
 import { pageRoutes } from "virtual:file-routes";
 import { createRouter } from "@solidjs/router";
-import { fileRoutes } from "@solidjs/router/fs";
+import { fileRoutes as routerFileRoutes } from "@solidjs/router/fs";
 
 export const Router = createRouter({
-	routes: fileRoutes(pageRoutes),
+	routes: routerFileRoutes(pageRoutes),
 });
 ```
 

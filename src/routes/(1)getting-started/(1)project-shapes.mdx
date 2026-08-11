@@ -17,9 +17,9 @@ Each tier is a strict superset of the last and defines its deployment output.
 Start with the smallest tier that does the job.
 Moving up a tier later does not change the structure of your app: the same `src/App.tsx` and `src/Document.tsx` conventions carry through all three.
 
-## The `ssr` flip
+## Enable server-side rendering
 
-Every tier can switch between client rendering and server rendering with one boolean in `vite.config.ts`:
+Every tier can enable server rendering with one boolean in `vite.config.ts`:
 
 ```ts
 import { defineConfig } from "vite";
@@ -35,12 +35,15 @@ export default defineConfig({
 });
 ```
 
-Your app code carries over unchanged.
+The `src/App.tsx` and `src/Document.tsx` structure remains the same.
+Application code must still be safe to evaluate and render on the server.
+Move browser-only APIs behind client lifecycle code or a client-only boundary, and make the initial server and client output deterministic.
 In client mode the document shell is prerendered as static HTML and pages render in the browser; with `ssr: true` pages stream from the server and hydrate.
+See [server and client boundaries](/concepts/rendering-and-ssr#server-and-client-boundaries).
 
 ## Deploying `fullstack`
 
-The built server entry exports `handleRequest(request)`, an adapter-agnostic `Request -> Response` handler:
+The built server entry exports `handleRequest(request)`, a fetch-compatible `Request -> Promise<Response>` handler:
 
 ```js
 import { handleRequest } from "./dist/server/server.js";
@@ -50,5 +53,6 @@ const response = await handleRequest(request);
 ```
 
 The template's included `server.js` is the Node version of exactly that.
-On web-native platforms (workers, Deno, `Bun.serve`) use `handleRequest` directly.
+On a fetch-native platform, map `handleRequest` to the host's request entry point and configure its static asset service for `dist/client`.
+Workers, Deno, and Bun have separate module, asset, and environment configuration requirements.
 See [Deployment](/building-apps/deployment) for platform specifics.

@@ -281,7 +281,7 @@ function Status(props: { code: number }) {
 ## Dynamic components
 
 Import `dynamic` from `@solidjs/web`.
-Use `dynamic` when a reactive source chooses the component or native element to render.
+`dynamic()` is the canonical API for selecting a component or native element from a reactive source.
 It returns a stable component reference that forwards props and children.
 
 ```tsx
@@ -295,12 +295,20 @@ const Detailed: Component<{ value: string }> = (props) => (
 	<strong>{props.value}</strong>
 );
 
-const [detailed] = createSignal(false);
+const [detailed, setDetailed] = createSignal(false);
 const Result = dynamic(() => (detailed() ? Detailed : Compact));
 
 export function Preview() {
-	return <Result value="Current result" />;
+	return (
+		<>
+			<button onClick={() => setDetailed((value) => !value)}>
+				Toggle detail
+			</button>
+			<Result value="Current result" />
+		</>
+	);
 }
 ```
 
 The source may also resolve to a native tag name or an async component.
+See the [`dynamic()` reference](/reference/solid-web/components/dynamic).

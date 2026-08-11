@@ -5,7 +5,7 @@ mainNavExclude: true
 version: "2.0"
 description: "Test Solid components in jsdom or a real browser, and test fullstack server code in a separate Node project."
 source_repo: "solidjs/templates"
-source_ref: "main"
+source_ref: "next"
 source_sha: "cbbd8ba26ed7f909455abe142de74e204b039974"
 source_path: "solid-v2"
 ---
@@ -249,18 +249,25 @@ The fullstack template imports session secrets from `virtual:env/server`.
 Vitest runs the session test outside the turnkey server, so the template aliases that virtual module to this test stub:
 
 ```ts
-export const env: Record<string, string | undefined> = new Proxy(
+export const env: Record<string, unknown> = new Proxy(
 	{},
 	{
-		get: (_, key) => (typeof key === "string" ? process.env[key] : undefined),
+		get: (_, key) => {
+			if (typeof key !== "string") return undefined;
+			const value = process.env[key];
+			if (key === "SESSION_SECRET") {
+				return value?.split(",").map((secret) => secret.trim());
+			}
+			return value;
+		},
 	}
 );
 ```
 
-The proxy reads `process.env` when code accesses a property.
+The proxy reads `process.env` when code accesses a property and reproduces the schema's parsed output for the signing-key list.
 This behavior lets a test set `process.env.SESSION_SECRET` before it imports the session module.
 The stub only supplies the module contract needed by the template test.
-It does not run the application environment schema or the turnkey server boot process.
+It does not validate key length or run the turnkey server boot process, so use a realistic test key that satisfies the production schema.
 
 ### Exercise a session across requests
 
@@ -298,7 +305,9 @@ afterEach(() => {
 });
 
 test("reads a session on the next request", async () => {
-	const session = await loadSession("secret-one");
+	const session = await loadSession(
+		"test-session-key-with-at-least-32-characters"
+	);
 	const login = await runRequest(new Request("http://localhost/login"), () =>
 		session.setSession({ userId: "user_1" })
 	);

@@ -22,6 +22,17 @@ It is not SolidStart and does not provide the SolidStart runtime.
 This guide has separate extraction steps for [SolidStart 1](#start-from-solidstart-1) and [released SolidStart 2](#start-from-released-solidstart-2).
 Both paths then use the same [Solid 2 target model](#build-the-solid-2-target).
 
+## Migrate platform dependencies first
+
+Apply the platform migrations as code moves into the separate Solid 2 target:
+
+1. Migrate core reactivity, lifecycle, boundaries, and rendering with [From Solid 1](/migration/from-solid-1).
+2. Migrate route definitions and router APIs with [From Solid Router](/migration/from-solid-router) when the source uses Solid Router.
+3. Migrate head management with [From Solid Meta 0.x](/migration/from-solid-meta) when the source uses Solid Meta.
+4. Apply the SolidStart extraction steps on this page for entries, server functions, middleware, sessions, and deployment.
+
+Do not copy Solid 1 component code into the target before checking its changed runtime APIs.
+
 Keep the old application runnable during the migration.
 Move one route or server feature at a time, and compare its behavior in both applications before continuing.
 
@@ -51,7 +62,7 @@ Install the target dependencies first, then add application dependencies as thei
 
 ## Start from SolidStart 1
 
-[SolidStart 1](https://docs.solidjs.com/solid-start) uses Vinxi, Nitro, `app.config.ts`, and framework-owned entries.
+[SolidStart 1](https://v1.docs.solidjs.com/solid-start) uses Vinxi, Nitro, `app.config.ts`, and framework-owned entries.
 Record the source behavior before changing files:
 
 1. Record the value of `ssr`, the `appRoot`, the route directory, middleware paths, route prerendering, and every option under `server` in `app.config.ts`.
@@ -80,7 +91,7 @@ Apply these source-specific rules:
 
 ## Start from released SolidStart 2
 
-[Released SolidStart 2](https://docs.solidjs.com/solid-start/v2) uses Solid 1, `solidStart()`, Vite environment builds, and a deployment plugin such as Nitro.
+[Released SolidStart 2](https://v1.docs.solidjs.com/solid-start/v2) uses Solid 1, `solidStart()`, Vite environment builds, and a deployment plugin such as Nitro.
 Its Vite configuration resembles the target, but the application and server contracts are different.
 
 Record the source behavior before changing files:
@@ -107,15 +118,15 @@ Create the separate target, then apply these source-specific rules:
 
 ## Build the Solid 2 target
 
-The current source baselines are [`vite-plugin-solid` at `519da14d`](https://github.com/solidjs/vite-plugin-solid/tree/519da14d20a51dd0a856eb9acfdae784a567bf10) and the [official templates repository](https://github.com/solidjs/templates) at `cbbd8ba2`.
+The current source baselines are [`vite-plugin-solid` at `519da14d`](https://github.com/solidjs/vite-plugin-solid/tree/519da14d20a51dd0a856eb9acfdae784a567bf10) and the [`solid-v2` templates at `cbbd8ba2`](https://github.com/solidjs/templates/tree/cbbd8ba26ed7f909455abe142de74e204b039974/solid-v2).
 Use the closest template as the target, or create an empty Vite project with the same dependency and script shape.
 
 Select a target before moving application files:
 
-- Use `solid-v2/bare` for a client-rendered application without server functions.
-- Use `solid-v2/basic` for Solid Router and file-system pages.
-- Use `solid-v2/fullstack` for streaming server-side rendering (SSR), server functions, sessions, middleware, and API routes.
-- Use `solid-v2/fullstack-tanstack` when TanStack Router owns routing and TanStack Query owns the data cache.
+- Use [`solid-v2/bare`](https://github.com/solidjs/templates/tree/cbbd8ba26ed7f909455abe142de74e204b039974/solid-v2/bare) for a client-rendered application without server functions.
+- Use [`solid-v2/basic`](https://github.com/solidjs/templates/tree/cbbd8ba26ed7f909455abe142de74e204b039974/solid-v2/basic) for Solid Router and file-system pages.
+- Use [`solid-v2/fullstack`](https://github.com/solidjs/templates/tree/cbbd8ba26ed7f909455abe142de74e204b039974/solid-v2/fullstack) for streaming server-side rendering (SSR), server functions, sessions, middleware, and API routes.
+- Use [`solid-v2/fullstack-tanstack`](https://github.com/solidjs/templates/tree/cbbd8ba26ed7f909455abe142de74e204b039974/solid-v2/fullstack-tanstack) when TanStack Router owns routing and TanStack Query owns the data cache.
 
 The following checklist uses an SSR application with Solid Router.
 Omit `ssr: true` only when the source application is client-rendered.
@@ -291,7 +302,7 @@ For each route:
 4. Replace SolidStart metadata or data APIs with APIs from the selected router and `@solidjs/meta`.
 5. Test direct SSR, client navigation, refresh, parameters, pending UI, errors, and `404` status.
 
-Do not copy `FileRoutes` or assume a SolidStart route export has the same type in Solid Router 2 or TanStack Router 2.
+Do not copy `FileRoutes` or assume a SolidStart route export has the same type in Solid Router 2 or TanStack Solid Router 1.
 The route component is usually reusable.
 The route registration and data boundary usually require changes.
 
@@ -332,9 +343,17 @@ Start mode also supports a typed Standard Schema file at `env.ts` or `env.js` in
 ```ts title="env.ts"
 import { z } from "zod";
 
+const signingKeys = z.preprocess(
+	(value) =>
+		typeof value === "string"
+			? value.split(",").map((key) => key.trim())
+			: value,
+	z.array(z.string().min(32)).min(1)
+);
+
 export default {
 	server: {
-		SESSION_SECRET: z.string().min(32),
+		SESSION_SECRET: signingKeys,
 	},
 	client: {
 		VITE_APP_NAME: z.string().min(1),

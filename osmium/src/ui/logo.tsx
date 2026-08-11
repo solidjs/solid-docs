@@ -8,12 +8,7 @@ export function ProjectLogo(props: { class?: string }) {
 	return (
 		<div class="text-primary dark:text-primary-dark inline-flex w-full items-center space-x-1 py-2">
 			<img
-				srcset={["svg", "png"]
-					.map(
-						(f) =>
-							`/images/logos/${current().label.replaceAll(" ", "-").toLowerCase()}.${f} 1x`
-					)
-					.join(", ")}
+				src={`/images/logos/${current().label.replaceAll(" ", "-").toLowerCase()}.svg`}
 				alt={current().label}
 				class="text-link dark:text-link-dark -mt-1 h-9 w-9"
 				{...props}

@@ -45,14 +45,15 @@ export async function listUsers() {
 	return database.users.all();
 }
 
-export async function renameUser(id: string, name: string) {
-	return database.users.update(id, { name });
+export async function countUsers() {
+	return database.users.count();
 }
 ```
 
 Every export from a module-level server file must be a function.
 Function-level server functions may use module-scope bindings, but they cannot close over component or other local scope.
-Pass request-specific values as arguments instead.
+Pass untrusted call data as arguments.
+Read trusted identity and other request context from `getRequestEvent()` instead of accepting credentials from the caller.
 
 The transform replaces the implementation with a fetch-backed reference in the client build.
 The server build registers the implementation under a stable identifier.
@@ -77,16 +78,29 @@ export const getUser = GET(async (id: string) => {
 
 The client places a `GET` function's arguments in the URL.
 The server accepts `GET` only for functions declared with `GET`, while `POST` remains available.
+Use `GET` only for safe, idempotent reads.
+Do not pass secrets or sensitive payloads because URLs can appear in browser history, server logs, and cache keys.
 Set response cache headers when HTTP caches may store the result.
 
 Leave writes on the default `POST` transport:
 
+The mutation examples assume authentication middleware has populated typed `userId` and `isAdmin` fields on `event.locals`.
+See [Sessions and authentication](/building-apps/sessions-and-auth) for the request-scoped pattern.
+
 ```ts
-export async function updateUser(form: FormData) {
+import { getRequestEvent, redirect } from "@solidjs/web";
+import { z } from "zod";
+
+const UserName = z.string().trim().min(1).max(100);
+
+export async function updateCurrentUser(form: FormData) {
 	"use server";
-	const id = String(form.get("id") ?? "");
-	const name = String(form.get("name") ?? "");
-	await database.users.update(id, { name });
+	const event = getRequestEvent();
+	const userId = event?.locals.userId;
+	if (!userId) throw redirect("/sign-in");
+
+	const name = UserName.parse(form.get("name"));
+	await database.users.update(userId, { name });
 }
 ```
 
@@ -136,11 +150,22 @@ The client reference resolves to the decoded value.
 Use `respond` when a value also needs status, headers, or revalidation metadata:
 
 ```ts
-import { respond } from "@solidjs/web";
+import { getRequestEvent, respond } from "@solidjs/web";
+import { z } from "zod";
 
-export async function createUser(input: UserInput) {
+const CreateUser = z.object({
+	name: z.string().trim().min(1).max(100),
+	email: z.string().email(),
+});
+
+export async function createUser(input: unknown) {
 	"use server";
-	const user = await database.users.create(input);
+	const event = getRequestEvent();
+	if (!event?.locals.isAdmin) {
+		return respond({ error: "Forbidden" }, { status: 403 });
+	}
+
+	const user = await database.users.create(CreateUser.parse(input));
 	return respond(user, {
 		status: 201,
 		headers: { "x-created-user": user.id },
@@ -164,16 +189,24 @@ These wrappers are optional:
 
 ```ts
 import { action, query } from "@solidjs/router";
+import { getRequestEvent, redirect } from "@solidjs/web";
+import { z } from "zod";
+
+const UserName = z.string().trim().min(1).max(100);
 
 export const getUsers = query(async () => {
 	"use server";
 	return database.users.all();
 }, "users");
 
-export const addUser = action(async (form: FormData) => {
+export const renameCurrentUser = action(async (form: FormData) => {
 	"use server";
-	await database.users.create({
-		name: String(form.get("name") ?? ""),
+	const event = getRequestEvent();
+	const userId = event?.locals.userId;
+	if (!userId) throw redirect("/sign-in");
+
+	await database.users.update(userId, {
+		name: UserName.parse(form.get("name")),
 	});
 });
 ```

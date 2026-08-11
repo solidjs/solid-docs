@@ -17,38 +17,38 @@ If the work rejects, the error travels through the reactive graph and can be han
 import { Loading, createMemo, createSignal, isPending } from "solid-js";
 
 type User = {
-  id: number;
-  name: string;
-  bio: string;
+	id: number;
+	name: string;
+	bio: string;
 };
 
 function UserProfile() {
-  const [id, setId] = createSignal(1);
-  const user = createMemo(async (): Promise<User> => {
-    const requestedId = id();
-    const response = await fetch(`/api/users/${requestedId}`);
+	const [id, setId] = createSignal(1);
+	const user = createMemo(async (): Promise<User> => {
+		const requestedId = id();
+		const response = await fetch(`/api/users/${requestedId}`);
 
-    if (!response.ok) {
-      throw new Error(`Could not load user ${requestedId}`);
-    }
+		if (!response.ok) {
+			throw new Error(`Could not load user ${requestedId}`);
+		}
 
-    return response.json();
-  });
+		return response.json();
+	});
 
-  return (
-    <section>
-      <button onClick={() => setId(current => current + 1)}>Next user</button>
-      <Loading fallback={<p>Loading profile...</p>}>
-        <article
-          aria-busy={isPending(user) ? "true" : "false"}
-          classList={{ updating: isPending(user) }}
-        >
-          <h2>{user().name}</h2>
-          <p>{user().bio}</p>
-        </article>
-      </Loading>
-    </section>
-  );
+	return (
+		<section>
+			<button onClick={() => setId((current) => current + 1)}>Next user</button>
+			<Loading fallback={<p>Loading profile...</p>}>
+				<article
+					aria-busy={isPending(user) ? "true" : "false"}
+					classList={{ updating: isPending(user) }}
+				>
+					<h2>{user().name}</h2>
+					<p>{user().bio}</p>
+				</article>
+			</Loading>
+		</section>
+	);
 }
 ```
 
@@ -110,73 +110,70 @@ The authoritative async result can reconcile the optimistic value, and a failed 
 
 ```tsx
 import {
-  For,
-  Loading,
-  action,
-  affects,
-  createOptimisticStore,
-  isPending,
-  refresh
+	For,
+	Loading,
+	action,
+	affects,
+	createOptimisticStore,
+	isPending,
+	refresh,
 } from "solid-js";
 
 type Todo = {
-  id: string;
-  text: string;
+	id: string;
+	text: string;
 };
 
-const [todos, setTodos] = createOptimisticStore<Todo[]>(
-  async () => {
-    const response = await fetch("/api/todos");
+const [todos, setTodos] = createOptimisticStore<Todo[]>(async () => {
+	const response = await fetch("/api/todos");
 
-    if (!response.ok) {
-      throw new Error("Could not load todos");
-    }
+	if (!response.ok) {
+		throw new Error("Could not load todos");
+	}
 
-    return response.json();
-  },
-  []
-);
+	return response.json();
+}, []);
 
 const addTodo = action(function* (text: string) {
-  const optimisticTodo = { id: crypto.randomUUID(), text };
+	const optimisticTodo = { id: crypto.randomUUID(), text };
 
-  setTodos(current => {
-    current.push(optimisticTodo);
-  });
-  affects(todos);
+	setTodos((current) => {
+		current.push(optimisticTodo);
+	});
+	affects(todos);
 
-  const response: Response = yield fetch("/api/todos", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ text })
-  });
+	const response: Response = yield fetch("/api/todos", {
+		method: "POST",
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify({ text }),
+	});
 
-  if (!response.ok) {
-    throw new Error("Could not save todo");
-  }
+	if (!response.ok) {
+		throw new Error("Could not save todo");
+	}
 
-  refresh(todos);
+	refresh(todos);
 });
 
 function TodoList() {
-  return (
-    <Loading fallback={<p>Loading todos...</p>}>
-      <form
-        onSubmit={event => {
-          event.preventDefault();
-          const data = new FormData(event.currentTarget);
-          void addTodo(String(data.get("text")));
-          event.currentTarget.reset();
-        }}
-      >
-        <input name="text" required />
-        <button aria-busy={isPending(() => todos.length)}>Add todo</button>
-      </form>
-      <ul>
-        <For each={todos}>{todo => <li>{todo.text}</li>}</For>
-      </ul>
-    </Loading>
-  );
+	return (
+		<Loading fallback={<p>Loading todos...</p>}>
+			<form
+				onSubmit={(event) => {
+					event.preventDefault();
+					const data = new FormData(event.currentTarget);
+					void addTodo(String(data.get("text")));
+					event.currentTarget.reset();
+				}}
+			>
+				<input name="text" required />
+				<button aria-busy={isPending(() => todos.length)}>Add todo</button>
+			</form>
+			<ul>
+				<For each={todos}>{(todo) => <li>{todo.text}</li>}</For>
+			</ul>
+		</Loading>
+	);
 }
 ```
 
@@ -202,25 +199,25 @@ When registered in an owned scope, the callback can return a cleanup function fo
 import { onSettled } from "solid-js";
 
 function SearchResults() {
-  let searchInput!: HTMLInputElement;
+	let searchInput!: HTMLInputElement;
 
-  onSettled(() => {
-    const controller = new AbortController();
-    const focusSearch = (event: KeyboardEvent) => {
-      if (event.key === "/") {
-        event.preventDefault();
-        searchInput.focus();
-      }
-    };
+	onSettled(() => {
+		const controller = new AbortController();
+		const focusSearch = (event: KeyboardEvent) => {
+			if (event.key === "/") {
+				event.preventDefault();
+				searchInput.focus();
+			}
+		};
 
-    window.addEventListener("keydown", focusSearch, {
-      signal: controller.signal
-    });
+		window.addEventListener("keydown", focusSearch, {
+			signal: controller.signal,
+		});
 
-    return () => controller.abort();
-  });
+		return () => controller.abort();
+	});
 
-  return <input ref={searchInput} type="search" aria-label="Search" />;
+	return <input ref={searchInput} type="search" aria-label="Search" />;
 }
 ```
 
@@ -234,13 +231,13 @@ Read every reactive input before the first async gap.
 
 ```ts
 const profile = createMemo(async () => {
-  const userId = id();
-  const permission = permissions();
+	const userId = id();
+	const permission = permissions();
 
-  const response = await fetch(`/api/users/${userId}`);
-  const user = await response.json();
+	const response = await fetch(`/api/users/${userId}`);
+	const user = await response.json();
 
-  return { user, permission };
+	return { user, permission };
 });
 ```
 

@@ -25,30 +25,30 @@ The proxy keeps one nested object interface, so individual fields do not need ac
 import { createEffect, createRoot, createStore, flush } from "solid-js";
 
 type Todo = {
-  id: string;
-  text: string;
-  done: boolean;
+	id: string;
+	text: string;
+	done: boolean;
 };
 
-const model = createRoot(dispose => {
-  const [state, setState] = createStore({
-    profile: { name: "Ada", online: false },
-    todos: [] as Todo[]
-  });
+const model = createRoot((dispose) => {
+	const [state, setState] = createStore({
+		profile: { name: "Ada", online: false },
+		todos: [] as Todo[],
+	});
 
-  createEffect(
-    () => state.profile.name,
-    name => console.log(`Name: ${name}`)
-  );
+	createEffect(
+		() => state.profile.name,
+		(name) => console.log(`Name: ${name}`)
+	);
 
-  return { state, setState, dispose };
+	return { state, setState, dispose };
 });
 
 flush(); // logs "Name: Ada"
 
-model.setState(draft => {
-  draft.profile.name = "Grace";
-  draft.todos.push({ id: "1", text: "Write docs", done: false });
+model.setState((draft) => {
+	draft.profile.name = "Grace";
+	draft.todos.push({ id: "1", text: "Write docs", done: false });
 });
 
 flush(); // logs "Name: Grace"
@@ -66,11 +66,11 @@ The store setter receives a draft that can be changed with normal property assig
 This callback is the produce-style update API for stores in Solid 2.0.
 
 ```ts
-model.setState(draft => {
-  draft.profile.online = true;
+model.setState((draft) => {
+	draft.profile.online = true;
 
-  const todo = draft.todos.find(todo => todo.id === "1");
-  if (todo) todo.done = true;
+	const todo = draft.todos.find((todo) => todo.id === "1");
+	if (todo) todo.done = true;
 });
 ```
 
@@ -80,11 +80,11 @@ For objects, Solid shallowly writes present keys and deletes keys missing from t
 
 ```ts
 const [todos, setTodos] = createStore<Todo[]>([
-  { id: "1", text: "Write docs", done: true },
-  { id: "2", text: "Review examples", done: false }
+	{ id: "1", text: "Write docs", done: true },
+	{ id: "2", text: "Review examples", done: false },
 ]);
 
-setTodos(current => current.filter(todo => !todo.done));
+setTodos((current) => current.filter((todo) => !todo.done));
 ```
 
 Returning a collection does not perform keyed reconciliation.
@@ -120,38 +120,38 @@ See the [`createProjection` reference](/reference/solid-js/stores/create-project
 
 ```ts
 import {
-  createProjection,
-  createRoot,
-  createSignal,
-  createStore,
-  flush
+	createProjection,
+	createRoot,
+	createSignal,
+	createStore,
+	flush,
 } from "solid-js";
 
 type Todo = {
-  id: string;
-  text: string;
-  done: boolean;
+	id: string;
+	text: string;
+	done: boolean;
 };
 
-const list = createRoot(dispose => {
-  const [todos] = createStore<Todo[]>([
-    { id: "1", text: "Write docs", done: true },
-    { id: "2", text: "Review examples", done: false }
-  ]);
-  const [includeDone, setIncludeDone] = createSignal(false);
-  const visible = createProjection(
-    () => todos.filter(todo => includeDone() || !todo.done),
-    []
-  );
+const list = createRoot((dispose) => {
+	const [todos] = createStore<Todo[]>([
+		{ id: "1", text: "Write docs", done: true },
+		{ id: "2", text: "Review examples", done: false },
+	]);
+	const [includeDone, setIncludeDone] = createSignal(false);
+	const visible = createProjection(
+		() => todos.filter((todo) => includeDone() || !todo.done),
+		[]
+	);
 
-  return { visible, setIncludeDone, dispose };
+	return { visible, setIncludeDone, dispose };
 });
 
-console.log(list.visible.map(todo => todo.text)); // ["Review examples"]
+console.log(list.visible.map((todo) => todo.text)); // ["Review examples"]
 
 list.setIncludeDone(true);
 flush();
-console.log(list.visible.map(todo => todo.text)); // ["Write docs", "Review examples"]
+console.log(list.visible.map((todo) => todo.text)); // ["Write docs", "Review examples"]
 
 list.dispose();
 ```
@@ -170,12 +170,12 @@ import { action, createOptimisticStore } from "solid-js";
 const [profile, setProfile] = createOptimisticStore({ name: "Ada" });
 
 const rename = action(function* (name: string) {
-  setProfile(draft => {
-    draft.name = name;
-  });
+	setProfile((draft) => {
+		draft.name = name;
+	});
 
-  console.log(profile.name); // "Grace" during rename("Grace")
-  yield Promise.resolve();
+	console.log(profile.name); // "Grace" during rename("Grace")
+	yield Promise.resolve();
 });
 
 await rename("Grace");

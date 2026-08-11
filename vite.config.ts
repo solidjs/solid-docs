@@ -7,7 +7,7 @@ import { createSolidBase } from "@kobalte/solidbase/config";
 import { osmium } from "solidbase-osmium";
 import {
 	createFilesystemSidebar,
-	type SidebarItem,
+	type SidebarItemWithMeta,
 } from "@kobalte/solidbase/config/sidebar";
 
 const solidBase = createSolidBase(osmium);
@@ -23,7 +23,7 @@ const REFERENCE_PACKAGE_TITLES: Record<string, string> = {
 	"Filesystem Routing": "filesystem-routing",
 };
 
-function transformSidebarItem(item: SidebarItem): SidebarItem {
+function transformSidebarItem(item: SidebarItemWithMeta): SidebarItemWithMeta {
 	if (!("items" in item)) return item;
 	const packageTitle = REFERENCE_PACKAGE_TITLES[item.title];
 	if (packageTitle && item.filePath?.includes("/reference/")) {

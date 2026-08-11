@@ -17,40 +17,40 @@ This lets both boundaries protect the same region.
 import { Errored, Loading, createMemo, createSignal } from "solid-js";
 
 type Account = {
-  id: number;
-  name: string;
+	id: number;
+	name: string;
 };
 
 function AccountPanel() {
-  const [accountId, setAccountId] = createSignal(1);
-  const account = createMemo(async (): Promise<Account> => {
-    const id = accountId();
-    const response = await fetch(`/api/accounts/${id}`);
+	const [accountId, setAccountId] = createSignal(1);
+	const account = createMemo(async (): Promise<Account> => {
+		const id = accountId();
+		const response = await fetch(`/api/accounts/${id}`);
 
-    if (!response.ok) {
-      throw new Error(`Could not load account ${id}`);
-    }
+		if (!response.ok) {
+			throw new Error(`Could not load account ${id}`);
+		}
 
-    return response.json();
-  });
+		return response.json();
+	});
 
-  return (
-    <>
-      <button onClick={() => setAccountId(id => id + 1)}>Next account</button>
-      <Errored
-        fallback={(error, reset) => (
-          <section>
-            <p>{String(error())}</p>
-            <button onClick={reset}>Retry</button>
-          </section>
-        )}
-      >
-        <Loading on={accountId()} fallback={<p>Loading account...</p>}>
-          <h2>{account().name}</h2>
-        </Loading>
-      </Errored>
-    </>
-  );
+	return (
+		<>
+			<button onClick={() => setAccountId((id) => id + 1)}>Next account</button>
+			<Errored
+				fallback={(error, reset) => (
+					<section>
+						<p>{String(error())}</p>
+						<button onClick={reset}>Retry</button>
+					</section>
+				)}
+			>
+				<Loading on={accountId()} fallback={<p>Loading account...</p>}>
+					<h2>{account().name}</h2>
+				</Loading>
+			</Errored>
+		</>
+	);
 }
 ```
 
@@ -116,24 +116,24 @@ Its purpose is nesting, where the natural group participates as one composite sl
 import { Loading, Reveal } from "solid-js";
 
 function ProfilePage() {
-  return (
-    <Reveal>
-      <Loading fallback={<HeaderSkeleton />}>
-        <ProfileHeader />
-      </Loading>
-      <Reveal order="natural">
-        <Loading fallback={<CardSkeleton />}>
-          <RecentPosts />
-        </Loading>
-        <Loading fallback={<CardSkeleton />}>
-          <Recommendations />
-        </Loading>
-      </Reveal>
-      <Loading fallback={<FooterSkeleton />}>
-        <ProfileFooter />
-      </Loading>
-    </Reveal>
-  );
+	return (
+		<Reveal>
+			<Loading fallback={<HeaderSkeleton />}>
+				<ProfileHeader />
+			</Loading>
+			<Reveal order="natural">
+				<Loading fallback={<CardSkeleton />}>
+					<RecentPosts />
+				</Loading>
+				<Loading fallback={<CardSkeleton />}>
+					<Recommendations />
+				</Loading>
+			</Reveal>
+			<Loading fallback={<FooterSkeleton />}>
+				<ProfileFooter />
+			</Loading>
+		</Reveal>
+	);
 }
 ```
 
@@ -171,29 +171,26 @@ Its `on` option accepts an accessor because the primitive does not receive JSX p
 Its `order` and `collapsed` options are accessors, and nested controllers use the same composite-slot rules as `Reveal`.
 
 ```tsx
-import {
-  createErrorBoundary,
-  createLoadingBoundary
-} from "solid-js";
+import { createErrorBoundary, createLoadingBoundary } from "solid-js";
 
 function StatusBoundary(props: {
-  children: JSX.Element;
-  loading: JSX.Element;
+	children: JSX.Element;
+	loading: JSX.Element;
 }) {
-  const output = createErrorBoundary(
-    () =>
-      createLoadingBoundary(
-        () => props.children,
-        () => props.loading
-      )(),
-    (error, reset) => (
-      <section>
-        <p>{String(error())}</p>
-        <button onClick={reset}>Retry</button>
-      </section>
-    )
-  );
+	const output = createErrorBoundary(
+		() =>
+			createLoadingBoundary(
+				() => props.children,
+				() => props.loading
+			)(),
+		(error, reset) => (
+			<section>
+				<p>{String(error())}</p>
+				<button onClick={reset}>Retry</button>
+			</section>
+		)
+	);
 
-  return output() as JSX.Element;
+	return output() as JSX.Element;
 }
 ```

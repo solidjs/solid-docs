@@ -1,5 +1,6 @@
 import {
 	For,
+	type JSX,
 	Match,
 	type ParentProps,
 	Switch,
@@ -208,11 +209,30 @@ export const code = (props: ParentProps) => {
 		</code>
 	);
 };
-export const table = (props: ParentProps) => <table>{props.children}</table>;
-export const th = (props: ParentProps) => <th>{props.children}</th>;
-export const thead = (props: ParentProps) => <thead>{props.children}</thead>;
-export const td = (props: ParentProps) => <td>{props.children}</td>;
-export const tr = (props: ParentProps) => <tr>{props.children}</tr>;
+export const table = (props: JSX.IntrinsicElements["table"]) => (
+	<div
+		aria-label="Scrollable table"
+		class="custom-scrollbar max-w-full overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 dark:focus-visible:outline-blue-300"
+		role="region"
+		tabIndex={0}
+	>
+		<table {...props}>{props.children}</table>
+	</div>
+);
+export const th = (props: JSX.IntrinsicElements["th"]) => (
+	<th scope="col" {...props}>
+		{props.children}
+	</th>
+);
+export const thead = (props: JSX.IntrinsicElements["thead"]) => (
+	<thead {...props}>{props.children}</thead>
+);
+export const td = (props: JSX.IntrinsicElements["td"]) => (
+	<td {...props}>{props.children}</td>
+);
+export const tr = (props: JSX.IntrinsicElements["tr"]) => (
+	<tr {...props}>{props.children}</tr>
+);
 export const hr = (props: ParentProps) => {
 	return <hr {...props} class="dark:prose-hr:border-slate-900" />;
 };

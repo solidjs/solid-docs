@@ -364,14 +364,18 @@ const HIDDEN_EXPORTS = new Set([
 ]);
 
 const ENTRY_CALLOUTS = {
+	clientOnly:
+		"> When the server encounters a transformed `clientOnly` call and an asset manifest is available, it emits early preload hints for the component's JavaScript and CSS. The server does not run the importer or wait for these assets. The hints also stay outside the hydration asset map because the fallback hydrates before the real component mounts.",
 	Dynamic:
-		"> `<Dynamic>` is the JSX convenience wrapper for `dynamic()`. Prefer `dynamic()` when you need a reusable stable component reference.",
+		"> `<Dynamic>` is a JSX convenience wrapper. General application code should use `dynamic()` to create a reusable stable component reference.",
 	createRoot:
 		"> `render()` creates the root for normal app code. Reach for `createRoot` in tests, libraries, or non-render entry points that need to host a reactive scope.",
 	dynamic:
-		"> `dynamic()` is the canonical API: it returns a stable component identity and composes with `lazy()` and routing. Use `<Dynamic>` when the choice happens at a JSX callsite.",
+		"> `dynamic()` is the canonical API. It returns a stable component identity and composes with `lazy()` and routing.",
 	onCleanup:
 		"> For component setup and teardown in Solid 2.0, prefer `onSettled` and return a cleanup function. Keep `onCleanup` for advanced owner and custom primitive internals.",
+	Repeat:
+		"> `Repeat` is positional list rendering over a store. It creates rows from numeric indexes without diffing array items or identities, so store reads remain fine-grained. Combine `from` and `count` for a sliding window; rows in the overlapping range are preserved.",
 };
 
 const scriptPath = fileURLToPath(import.meta.url);

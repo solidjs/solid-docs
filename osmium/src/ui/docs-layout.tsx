@@ -31,16 +31,18 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 
 	return (
 		<article class="expressive-code-overrides mx-auto w-full max-w-2xl overflow-hidden pb-16">
-			<Show when={frontmatter()?.category}>
-				{(t) => (
-					<span class="mb-2 block px-1 text-sm font-semibold text-blue-700 dark:text-blue-300">
-						{t()}
-					</span>
-				)}
-			</Show>
-			<h1 class="prose-headings:text-[2.8rem] px-1 text-slate-900 dark:text-white">
-				{frontmatter()?.title}
-			</h1>
+			<header class="mb-10 px-1">
+				<Show when={frontmatter()?.category}>
+					{(t) => (
+						<span class="mb-2 block text-sm font-medium text-slate-500 dark:text-slate-400">
+							{t()}
+						</span>
+					)}
+				</Show>
+				<h1 class="font-display m-0! text-[2.25rem] leading-10 font-semibold text-balance [overflow-wrap:anywhere] text-slate-900 sm:text-[2.5rem] sm:leading-11 dark:text-white">
+					{frontmatter()?.title}
+				</h1>
+			</header>
 			<div class="w-full px-1">{props.children}</div>
 			<Show when={frontmatter()?.lastUpdated}>
 				<span class="mt-6 block w-full text-right text-sm">

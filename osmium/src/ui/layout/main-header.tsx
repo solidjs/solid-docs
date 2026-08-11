@@ -114,7 +114,7 @@ export function MainHeader(_props: MainHeaderProps) {
 					)}
 				</Show>
 
-				<div class="order- flex basis-0 items-center justify-end gap-4 lg:order-2">
+				<div class="flex items-center justify-end gap-4 lg:col-start-3">
 					<ClientSearch />
 					<a
 						href={`${config().themeConfig?.github}/${project().projects[project().current].path || "solid"}`}

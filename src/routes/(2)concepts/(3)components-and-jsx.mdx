@@ -195,17 +195,41 @@ Set `keyed={false}` for position-based mapping.
 That form receives an item accessor and a stable numeric index.
 Pass a key function when identity should come from part of each item; that form provides accessors for both the item and index.
 
-Use [`Repeat`](/reference/solid-js/components-jsx/repeat) when the input is a count instead of an array.
-It reuses entries whose numeric indexes remain in the rendered range and supports an optional starting index.
+Use [`Repeat`](/reference/solid-js/components-jsx/repeat) for positional rendering over a store.
+`Repeat` creates rows from a numeric range instead of diffing an array or item identities.
+Each row reads its store position directly, so a store update can notify only the expressions that read the changed properties.
+
+Set `from` and `count` to render a sliding window without creating a sliced array.
+When the window moves, `Repeat` preserves rows whose indexes remain in range, disposes rows that leave it, and creates rows for the new indexes.
 
 ```tsx
-import { Repeat } from "solid-js";
+import { Repeat, createSignal, createStore } from "solid-js";
 
-function Rating(props: { value: number }) {
+function ActivityLog() {
+	const [rows] = createStore(
+		Array.from({ length: 1_000 }, (_, id) => ({
+			id,
+			message: `Activity ${id}`,
+		}))
+	);
+	const [from, setFrom] = createSignal(0);
+	const size = 20;
+
 	return (
-		<span aria-label={`${props.value} out of 5`}>
-			<Repeat count={5}>{(index) => (index < props.value ? "★" : "☆")}</Repeat>
-		</span>
+		<>
+			<button
+				onClick={() =>
+					setFrom((index) => Math.min(index + 1, rows.length - size))
+				}
+			>
+				Next
+			</button>
+			<ul>
+				<Repeat from={from()} count={Math.min(size, rows.length - from())}>
+					{(index) => <li>{rows[index].message}</li>}
+				</Repeat>
+			</ul>
+		</>
 	);
 }
 ```
@@ -256,7 +280,7 @@ function Status(props: { code: number }) {
 
 ## Dynamic components
 
-Import `dynamic` and `Dynamic` from `@solidjs/web`.
+Import `dynamic` from `@solidjs/web`.
 Use `dynamic` when a reactive source chooses the component or native element to render.
 It returns a stable component reference that forwards props and children.
 
@@ -280,17 +304,3 @@ export function Preview() {
 ```
 
 The source may also resolve to a native tag name or an async component.
-Use `Dynamic` when the selection belongs directly at one JSX call site.
-
-```tsx
-import { Dynamic } from "@solidjs/web";
-
-function MessageField(props: { multiline: boolean }) {
-	return (
-		<Dynamic
-			component={props.multiline ? "textarea" : "input"}
-			name="message"
-		/>
-	);
-}
-```

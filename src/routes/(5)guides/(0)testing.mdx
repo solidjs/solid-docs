@@ -115,9 +115,8 @@ describe("<Counter />", () => {
 });
 ```
 
-Solid 2 stages reactive work on its queue so consecutive writes can share one update pass.
-The click changes the signal immediately, but the DOM update can remain queued when `fireEvent.click` returns.
-Call [`flush()`](/reference/solid-js/reactivity/flush) after a synchronous interaction to drain pending work before reading the DOM.
+The click event stages the signal update, and ordinary reads continue to return the last committed value.
+Call [`flush()`](/reference/solid-js/reactivity/flush) to commit the staged value and drain queued work before reading the DOM.
 Use asynchronous queries for behavior that is asynchronous by contract, such as a pending resource, rather than using `flush()` as a replacement for waiting on that work.
 
 Solid Testing Library tracks mounted containers and exports `cleanup`.
@@ -129,10 +128,14 @@ The configuration above sets `globals: false`, so the explicit `afterEach(cleanu
 Choose browser mode when jsdom cannot provide the behavior that the test needs.
 The maintained browser-mode template uses the Playwright provider with headless Chromium.
 
-Replace jsdom with the browser dependencies:
+Keep jsdom installed and add the browser dependencies.
+When `test.environment` is unset, `vite-plugin-solid` supplies a jsdom environment and Vitest resolves that dependency before it starts the browser pool.
+Without jsdom, the Chromium test can pass while the Vitest command exits with a missing-dependency error.
+
+For a new test setup, install the complete dependency set:
 
 ```sh
-pnpm add -D @vitest/browser-playwright@^4.0.0 playwright@^1.56.0
+pnpm add -D vitest@^4.0.0 jsdom@^25.0.1 @solidjs/testing-library@1.0.0-beta.2 @testing-library/jest-dom@^6.6.3 @vitest/browser-playwright@^4.0.0 playwright@^1.56.0
 pnpm exec playwright install chromium
 ```
 
@@ -161,6 +164,11 @@ export default defineConfig({
 The `Counter` test above runs unchanged in this configuration.
 The component still renders through Solid Testing Library, and `flush()` still drains the staged DOM update after the click.
 The difference is the host environment: Vitest runs the test in a Chromium page instead of a simulated jsdom document.
+Run the browser suite once and exit with:
+
+```sh
+pnpm test --run
+```
 
 The maintained templates demonstrate component tests, not browser-wide end-to-end flows.
 See the [Vitest browser-mode guide](https://vitest.dev/guide/browser/) for browser locators, interactions, and browser-mode limitations when a component test needs those APIs.

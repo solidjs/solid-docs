@@ -35,7 +35,7 @@ The sidebar keeps the existing Learn / Reference tab split.
 
 | Section             | Contents                                                                                                                                                                                                                                                                                                                                                                         |
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Overview**        | What Solid 2.0 is, state of the beta, how the docs are organized                                                                                                                                                                                                                                                                                                                 |
+| **Overview**        | What Solid 2.0 is, state of the release candidate, how the docs are organized                                                                                                                                                                                                                                                                                                    |
 | **Getting started** | Quick start (run the Solid CLI, choose a project shape, tour `App.tsx` / `Document.tsx`). Project shapes: `bare` / `basic` / `fullstack`, the deployment contract of each tier, the `ssr` flip                                                                                                                                                                                   |
 | **Concepts**        | The framework itself. No router, no server. Reactivity basics (signals, memos, effects). Async reactivity (`isPending`, `latest`, `flush`, `onSettled`, actions and `refresh`). Stores, projections, optimistic updates. Components and JSX control flow. Boundaries (`Loading`, `Errored`, `Reveal`). The rendering and SSR model                                               |
 | **Building apps**   | The platform layer, router-neutral throughout. App structure (`App` / `Document` conventions, generated entries, `start` options). Styling and assets. Head and metadata (the Meta 1.0 components). Server functions. Sessions and auth. Typed environment variables and `server-only` / `client-only`. Middleware and API routes. Deployment (`handleRequest`, adapters, hosts) |
@@ -104,13 +104,13 @@ The true size of the writing effort is Concepts, Routing, and Migration. Everyth
 
 ## Open questions
 
-1. **Staging.** Where does the 2.0 site live while under construction — a preview deployment, or does the split happen up front with the new site carrying a beta banner? The v1 branch-off itself is cheap and can happen at any point.
+1. **Staging.** Where does the 2.0 site live while under construction — a preview deployment, or does the split happen up front with the new site carrying an RC banner? The v1 branch-off itself is cheap and can happen at any point.
 2. **Redirects.** Existing deep links into today's site: which URLs redirect to the v1 subdomain versus mapping to their 2.0 equivalents? The middleware redirect layer already exists to implement whatever mapping is chosen.
 
 ## Suggested sequencing
 
 1. **Foundations.** Writing-guide addendum for AI-assisted drafting (banned filler and marketing language, claims traceable to source) plus a CI tone lint. Reconcile the existing generated reference (a handful of missing pages, one stale page).
 2. **Skeleton.** Branch the current site off for the v1 subdomain, then land the folder structure and nav config above from a clean starting point; move the content that relocates cleanly.
-3. **Concepts.** The biggest user-facing hole: 2.0 beta users currently have API lookup but no way to learn the model.
+3. **Concepts.** The biggest user-facing hole: 2.0 RC users currently have API lookup but no way to learn the model.
 4. **Routing + Migration.** Router 2.0 narrative docs, the TanStack integration guide, and the migration hub.
 5. **Building Apps.** Port and rewrite the Start guides against start mode.

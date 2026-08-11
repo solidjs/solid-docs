@@ -20,6 +20,8 @@ description: >-
 ```
 
 Solid Meta 1.x requires `solid-js` and `@solidjs/web` 2.0 (`2.0.0-beta.31` or later).
+It is an ergonomic component layer over the ambient head registry that Solid ships through `@solidjs/web`.
+Applications can use the components for common tags and call [`useHead`](/reference/solid-web/head/use-head) directly for lower-level registration.
 
 ## Usage
 
@@ -57,7 +59,69 @@ Every component accepts a `key` prop that overrides the default identity — use
 <Meta key="social-image" property="og:image" content="/og.png" />
 ```
 
-To manage a _set_ of tags as one unit — several `og:image`s, a block of social tags that should override together — wrap them in [`<Head>`](/reference/solid-meta/head).
+## Group related tags
+
+Use [`<Head>`](/reference/solid-meta/head) when several tags form one replacement set.
+Tags with the same identity coexist inside a group.
+A later group replaces the earlier set as one unit, and unmounting the later group restores the earlier set.
+Group membership stays reactive as child tags mount and unmount.
+
+This layout provides two default social images:
+
+```tsx
+import { Head, Meta } from "@solidjs/meta";
+
+function SocialDefaults() {
+	return (
+		<Head>
+			<Meta property="og:image" content="/default-wide.png" />
+			<Meta property="og:image" content="/default-square.png" />
+		</Head>
+	);
+}
+```
+
+A page can replace both defaults while it remains mounted:
+
+```tsx
+function ProductSocialTags(props: { image: string }) {
+	return (
+		<Head>
+			<Meta property="og:image" content={props.image} />
+			<Meta name="twitter:card" content="summary_large_image" />
+		</Head>
+	);
+}
+```
+
+An inner `<Head>` starts an independent group.
+Render bare Meta components from child components when those tags should join the surrounding group.
+
+## Use the core head registry
+
+Call `useHead` from `@solidjs/web` when a library or application needs descriptor-level control.
+Solid Meta uses the same primitive internally.
+
+```tsx
+import { useHead } from "@solidjs/web";
+
+function ProductDescription(props: { description: string }) {
+	useHead({
+		tag: "meta",
+		props: {
+			name: "description",
+			content: () => props.description,
+		},
+	});
+
+	return null;
+}
+```
+
+Pass an array to register one replacement group.
+Pass a function to make the group's membership reactive.
+For common application metadata, prefer Solid Meta components because their props and tag identities are easier to read in JSX.
+See [`useHead`](/reference/solid-web/head/use-head) and [`HeadTag`](/reference/solid-web/head/head-tag) for the descriptor contract.
 
 ## Server rendering
 

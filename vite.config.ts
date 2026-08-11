@@ -44,7 +44,7 @@ export default defineConfig({
 		solidBase.plugin({
 			title: "SolidJS Documentation",
 			description:
-				"Documentation for SolidJS, the signals-powered UI framework",
+				"Documentation for the Solid 2.0 release candidate, including reactivity, web rendering, routing, metadata, and Vite integration.",
 			siteUrl: "https://docs.solidjs.com",
 			// TODO: point back at main when this branch becomes main
 			editPath: "https://github.com/solidjs/solid-docs/edit/v2-rebuild/:path",

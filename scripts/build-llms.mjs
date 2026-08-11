@@ -4,7 +4,11 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const OUTPUT_DIR = resolve(ROOT, process.argv[2] ?? "dist");
-const SITE_ORIGIN = new URL(process.env.SITE_URL ?? "https://docs.solidjs.com");
+const SITE_ORIGIN = new URL(
+	process.env.SITE_URL ??
+		process.env.DEPLOY_PRIME_URL ??
+		"https://docs.solidjs.com"
+);
 const INDEX_PATH = resolve(OUTPUT_DIR, "llms.txt");
 const FULL_PATH = resolve(OUTPUT_DIR, "llms-full.txt");
 

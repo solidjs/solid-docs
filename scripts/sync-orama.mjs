@@ -7,6 +7,16 @@ import "dotenv/config";
 const ORAMA_PRIVATE_API_KEY = process.env.ORAMA_PRIVATE_API_KEY;
 const ORAMA_DATASOURCE_ID = process.env.ORAMA_DATASOURCE_ID;
 const ORAMA_PROJECT_ID = process.env.ORAMA_PROJECT_ID;
+const siteOrigin =
+	process.env.SITE_URL ??
+	process.env.DEPLOY_PRIME_URL ??
+	"https://docs.solidjs.com";
+
+if (!ORAMA_PRIVATE_API_KEY || !ORAMA_DATASOURCE_ID || !ORAMA_PROJECT_ID) {
+	throw new Error(
+		"ORAMA_PRIVATE_API_KEY, ORAMA_DATASOURCE_ID, and ORAMA_PROJECT_ID are required."
+	);
+}
 
 const baseURL = new URL("../dist", import.meta.url).pathname;
 const HTMLFiles = await Array.fromAsync(glob("**/*.html", { cwd: baseURL }));
@@ -18,16 +28,14 @@ const pagesToIndex = HTMLFiles.flatMap((file) => {
 		"utf8"
 	);
 
-	const productionDocsURL = `https://docs.solidjs.com/${path}`;
+	const pageURL = new URL(`/${path}`, siteOrigin).toString();
 
-	const content = generalPurposeCrawler(productionDocsURL, pageContent, {
+	const content = generalPurposeCrawler(pageURL, pageContent, {
 		parseCodeBlocks: false,
 	})[0];
-	const contentWithCode = generalPurposeCrawler(
-		productionDocsURL,
-		pageContent,
-		{ parseCodeBlocks: true }
-	)[0];
+	const contentWithCode = generalPurposeCrawler(pageURL, pageContent, {
+		parseCodeBlocks: true,
+	})[0];
 
 	const fullContent = {
 		title: content.title,

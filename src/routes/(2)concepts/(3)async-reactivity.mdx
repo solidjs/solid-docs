@@ -8,13 +8,26 @@ version: "2.0"
 Solid computations can return promises and async iterables.
 Consumers still read their accessors as reactive values instead of receiving the promise or iterator.
 
+## Settled view and in-flight work
+
+Separate the answer currently visible to the user from the work that may produce another answer:
+
+![A timeline showing a Loading fallback during the first request, Answer A remaining visible during a held update, and Answer B appearing when the next request settles.](/images/diagrams/async-update-timeline.svg)
+
+Before the first answer settles, the UI has no value to render.
+After an answer settles, Solid holds the current committed view while work prepares the next answer.
+Other writes in the same update wait with it, then commit together when the pending work settles.
+This held update is automatic and does not require a `Loading` boundary.
+The boundary controls what renders when no settled answer exists; it does not create the hold.
+Each async primitive closes a specific gap in this timeline instead of creating a separate async state model.
+
+## No settled answer: `Loading`
+
 Reading an async source before its first result reports that the value is not ready.
-A [`Loading` boundary](/reference/solid-js/components-jsx/loading) catches that state and renders its fallback.
-When the async work resolves, the computation stores the result and notifies its dependents.
-If the work rejects, the error travels through the reactive graph and can be handled by an [`Errored` boundary](/reference/solid-js/components-jsx/errored).
+A [`Loading` boundary](/reference/solid-js/components-jsx/loading) turns that state into fallback UI.
 
 ```tsx
-import { Loading, createMemo, createSignal, isPending } from "solid-js";
+import { Loading, createMemo, createSignal } from "solid-js";
 
 type User = {
 	id: number;
@@ -39,10 +52,7 @@ function UserProfile() {
 		<section>
 			<button onClick={() => setId((current) => current + 1)}>Next user</button>
 			<Loading fallback={<p>Loading profile...</p>}>
-				<article
-					aria-busy={isPending(user) ? "true" : "false"}
-					classList={{ updating: isPending(user) }}
-				>
+				<article>
 					<h2>{user().name}</h2>
 					<p>{user().bio}</p>
 				</article>
@@ -53,49 +63,60 @@ function UserProfile() {
 ```
 
 The first read of `user()` has no value, so `Loading` shows its fallback.
-After the first user lands, changing `id()` starts a pending update while the existing profile remains visible.
-The `isPending(user)` read marks that existing profile as updating until the new user appears.
+When the request resolves, the computation commits the answer and the content renders.
 
-## Readiness, pending state, and the latest value
+## Another answer is coming: `isPending`
 
-Treat first readiness and later updates as separate UI states.
-Before a source has a committed value, an unresolved read follows the `Loading` path because there is no content to render.
-After a source has committed a value, changing one of its tracked inputs asks a new question while the existing content remains visible.
-Use [`isPending(fn)`](/reference/solid-js/reactivity/is-pending) to indicate that the new answer has not appeared yet.
+After the first answer settles, changing `id()` asks a new question while the current profile remains visible.
+Use [`isPending(fn)`](/reference/solid-js/reactivity/is-pending) when that visible content needs an updating indicator:
+
+```tsx
+import { Loading, isPending } from "solid-js";
+
+<Loading fallback={<p>Loading profile...</p>}>
+	<article
+		aria-busy={isPending(user) ? "true" : "false"}
+		class={{ updating: isPending(user) }}
+	>
+		<h2>{user().name}</h2>
+		<p>{user().bio}</p>
+	</article>
+</Loading>;
+```
 
 `isPending` evaluates the expression passed to it.
-If that evaluation reaches an uninitialized async source inside a tracking scope, the not-ready state still reaches the surrounding `Loading` boundary.
-Reading only an upstream signal does not reveal whether a separate downstream computation is pending.
+The result becomes `true` when another answer for that expression is in flight and has not revealed.
+If the expression has no settled answer yet, its read still follows the surrounding `Loading` path.
 
-Use [`latest(fn)`](/reference/solid-js/reactivity/latest) when a reader needs the freshest available value during an update.
-It returns a value produced by the current update when one exists.
-Until then, it returns the visible committed value.
+Read the async source itself.
+Reading only an upstream input such as `id` cannot reveal whether a separate downstream computation is pending.
 
-## Refreshing the same question
+## Work rejects: `Errored`
 
-[`refresh(source)`](/reference/solid-js/lifecycle-actions/refresh) invalidates a derived accessor or projected store so its computation runs again.
-It is a write-like operation, so call it from an event handler, effect, or action instead of a pure computation.
-A plain signal is not a refreshable target.
+If async work rejects, the error travels through the reactive graph.
+An [`Errored` boundary](/reference/solid-js/components-jsx/errored) turns an unhandled error into recoverable UI:
 
-Changing a tracked input asks a new question, so `isPending` reports the unrevealed change.
-A refresh with unchanged inputs asks the same question again.
-The displayed answer still matches those inputs, so a bare refresh is quiet and `isPending` remains `false`.
-The fresh result replaces the displayed value when it arrives.
+```tsx
+import { Errored, Loading } from "solid-js";
 
-Use [`affects(target, key?)`](/reference/solid-js/lifecycle-actions/affects) when in-flight work is known to change data before the reactive graph can observe that change.
-The declaration makes the target and values derived from it read as pending until the surrounding transaction settles or reverts.
-It does not make the marked values unreadable.
-Pairing `affects(source)` with `refresh(source)` turns an otherwise quiet reload into a declared pending update.
+<Errored
+	fallback={(error, reset) => (
+		<section>
+			<p>{String(error())}</p>
+			<button onClick={reset}>Retry</button>
+		</section>
+	)}
+>
+	<Loading fallback={<p>Loading profile...</p>}>
+		<UserDetails user={user()} />
+	</Loading>
+</Errored>;
+```
 
-:::note[Advanced: committed first values]
-Most applications should let unresolved first reads reach a `Loading` boundary.
-Use `loadingValue` only when a signal-family source must return a declared committed value during its first async flight instead.
-Use `seedLoadingValue: true` for the equivalent projected-store case.
-These options bypass `Loading` and remain `isPending`-false until the first real value lands, after which normal refetch behavior applies.
-See the [`createMemo`](/reference/solid-js/reactivity/create-memo) and [`createStore`](/reference/solid-js/stores/create-store) references for the complete option contracts.
-:::
+`Loading` and `Errored` handle separate states.
+A loading boundary does not consume errors, and an error boundary does not replace loading UI.
 
-## Actions and optimistic state
+## Coordinate a mutation: `action` and optimistic state
 
 Reads usually need no imperative wrapper because changing their tracked inputs starts the next async computation.
 Mutations have a different shape because writes can happen before and after a server round trip.
@@ -108,81 +129,191 @@ The returned action is an async function intended for event handlers and other i
 Writes are visible immediately inside an action and are tentative until its transaction finishes.
 The authoritative async result can reconcile the optimistic value, and a failed action reverts the tentative write.
 
+The common mutation timeline is:
+
+1. Start an `action`.
+2. Write the expected result to optimistic state.
+3. `yield` the durable operation.
+4. Call [`refresh(source)`](/reference/solid-js/lifecycle-actions/refresh) to read durable truth again.
+5. Settle the action and remove its optimistic overlay.
+
+`action` coordinates this process.
+Optimistic state supplies the predicted change while the operation is in flight.
+`refresh` reconciles the visible result with the authoritative source.
+
+### Layer state by lifetime
+
+An async feature can combine state with different lifetimes.
+One useful composition applies three layers in a fixed order:
+
+1. **Persistent data** comes from the async projection.
+   A server, browser database, or another durable source owns this layer.
+2. **Ephemeral UI state** records recoverable errors, drafts, or notices that should survive an optimistic rollback.
+   The projection applies this layer to the persistent result.
+3. **Optimistic state** represents the expected result of the active mutation.
+   `createOptimisticStore` applies this action-scoped layer last and removes it when the action settles.
+
+Consumers read the composed store rather than choosing between separate persistent and optimistic views.
+The primitive composition enforces the layer order.
+
 ```tsx
 import {
+	Errored,
 	For,
 	Loading,
+	Show,
 	action,
-	affects,
 	createOptimisticStore,
-	isPending,
 	refresh,
 } from "solid-js";
+import { api } from "./api";
 
-type Todo = {
+type ServerTodo = {
 	id: string;
-	text: string;
+	title: string;
+	completed: boolean;
 };
 
-const [todos, setTodos] = createOptimisticStore<Todo[]>(async () => {
-	const response = await fetch("/api/todos");
+type TodoError = {
+	completed: boolean;
+};
 
-	if (!response.ok) {
-		throw new Error("Could not load todos");
-	}
+type Todo = ServerTodo & {
+	pending?: boolean;
+	error?: TodoError;
+};
 
-	return response.json();
-}, []);
+function createTodos() {
+	const errors = new Map<string, TodoError>();
+	const [todos, setTodos] = createOptimisticStore<Todo[]>(async () => {
+		const current: ServerTodo[] = await api.getTodos();
+		return current.map((todo) => {
+			const error = errors.get(todo.id);
+			return error ? { ...todo, error } : todo;
+		});
+	}, []);
 
-const addTodo = action(function* (text: string) {
-	const optimisticTodo = { id: crypto.randomUUID(), text };
+	const toggleTodo = action(function* (id: string, completed: boolean) {
+		setTodos((draft) => {
+			const todo = draft.find((todo) => todo.id === id);
+			if (!todo) return;
+			todo.completed = completed;
+			todo.pending = true;
+		});
 
-	setTodos((current) => {
-		current.push(optimisticTodo);
+		try {
+			yield api.toggleTodo(id, completed);
+			errors.delete(id);
+		} catch {
+			errors.set(id, { completed });
+		} finally {
+			refresh(todos);
+		}
 	});
-	affects(todos);
 
-	const response: Response = yield fetch("/api/todos", {
-		method: "POST",
-		headers: { "content-type": "application/json" },
-		body: JSON.stringify({ text }),
-	});
-
-	if (!response.ok) {
-		throw new Error("Could not save todo");
-	}
-
-	refresh(todos);
-});
+	return [todos, { toggleTodo }] as const;
+}
 
 function TodoList() {
+	const [todos, { toggleTodo }] = createTodos();
+
 	return (
-		<Loading fallback={<p>Loading todos...</p>}>
-			<form
-				onSubmit={(event) => {
-					event.preventDefault();
-					const data = new FormData(event.currentTarget);
-					void addTodo(String(data.get("text")));
-					event.currentTarget.reset();
-				}}
-			>
-				<input name="text" required />
-				<button aria-busy={isPending(() => todos.length)}>Add todo</button>
-			</form>
-			<ul>
-				<For each={todos}>{(todo) => <li>{todo.text}</li>}</For>
-			</ul>
-		</Loading>
+		<Errored fallback={(error) => <p>{String(error())}</p>}>
+			<Loading fallback={<p>Loading todos...</p>}>
+				<ul>
+					<For each={todos}>
+						{(todo) => (
+							<li
+								class={{
+									pending: !!todo.pending,
+									errored: !!todo.error,
+								}}
+							>
+								<label>
+									<input
+										type="checkbox"
+										checked={todo.completed}
+										onInput={(event) =>
+											void toggleTodo(todo.id, event.currentTarget.checked)
+										}
+									/>
+									{todo.title}
+								</label>
+								<Show when={todo.error}>
+									{(error) => (
+										<button
+											type="button"
+											onClick={() =>
+												void toggleTodo(todo.id, error().completed)
+											}
+										>
+											Retry
+										</button>
+									)}
+								</Show>
+							</li>
+						)}
+					</For>
+				</ul>
+			</Loading>
+		</Errored>
 	);
 }
 ```
 
-The optimistic row appears before the request completes.
-`affects(todos)` declares that the server operation can change the collection, so reads of the collection remain pending across the action.
-`refresh(todos)` then recomputes the authoritative store and reconciles the collection after the write.
+`createTodos()` creates all three layers under the component owner and returns one composed store with its actions.
+This avoids module-scope reactive state and cross-request sharing.
+
+The projection reads the durable todos and folds in the `errors` map.
+The map is not reactive by itself; `refresh(todos)` reruns the projection after each mutation and makes its current entries visible.
+
+The optimistic write updates `completed` and adds `pending` before the request finishes.
+On success, the refreshed persistent result confirms the update.
+On failure, the optimistic layer reverts and reveals the persistent todo with its retry state from the projection.
+
+The action catches an expected mutation failure because the row can recover locally.
+An unhandled projection or render error still reaches `Errored`.
+
+## Additional control
+
+### Mark data as changing: `affects`
 
 Optimistic writes and pending declarations answer separate questions.
-Optimistic state supplies a value to display, while `affects` describes data that is still expected to change.
+An optimistic field such as `pending` describes the mutation process, while the optimistic data supplies the expected value to display.
+[`affects(target, key?)`](/reference/solid-js/lifecycle-actions/affects) describes the state of the targeted data.
+Consumers read that source, store, or store property as pending while work that can change it remains in flight.
+
+These mechanisms are independent and can be used together.
+Use both when the UI needs an expected value and data-level pending status for the same mutation.
+Optimism does not remove the value of `affects`, and `affects` does not require the affected data to lack an optimistic value.
+
+A bare `refresh(source)` quietly asks the same question again because the visible answer still matches the source's inputs.
+Pair `affects(source)` with `refresh(source)` when the reload itself should make consumers report pending.
+
+### Read a speculative value: `latest`
+
+Normal reads preserve the visible settled answer while a held update prepares its replacement.
+Use [`latest(fn)`](/reference/solid-js/reactivity/latest) when a preview or coordination path needs the freshest in-flight value:
+
+```tsx
+import { latest } from "solid-js";
+
+const nextUser = () => latest(user);
+```
+
+If the next answer exists, `latest(user)` returns it before the held update commits it.
+Otherwise, it returns the visible settled answer.
+Before any answer exists, the read still follows the normal `Loading` path.
+
+### Declare a committed first value
+
+Most applications should let unresolved first reads reach a `Loading` boundary.
+Use `loadingValue` only when a signal-family source must return a declared committed value during its first async flight.
+Use `seedLoadingValue: true` for the equivalent projected-store case.
+
+These escape hatches bypass `Loading` for the first flight.
+They remain `isPending`-false until the first computed value lands, then later updates follow the normal pending behavior.
+See the [`createMemo`](/reference/solid-js/reactivity/create-memo) and [`createStore`](/reference/solid-js/stores/create-store) references for their complete option contracts.
 
 ## Queue completion
 
@@ -191,6 +322,9 @@ Reactive writes normally schedule one batched update on the microtask queue.
 This is useful in tests and imperative integrations that must observe a queued write before the next microtask.
 
 `flush` does not replace async coordination.
+Use [`resolve(fn)`](/reference/solid-js/advanced/interop-async/resolve) outside a tracking scope to await one reactive expression.
+It resolves with the first settled value or rejects with the expression's error.
+
 Use [`onSettled(callback)`](/reference/solid-js/lifecycle-actions/on-settled) to register one callback after pending async reads under the current owner resolve and the reactive queue flushes.
 Reads inside the callback are untracked, so another settle requires another registration.
 When registered in an owned scope, the callback can return a cleanup function for owner disposal.
@@ -217,7 +351,13 @@ function SearchResults() {
 		return () => controller.abort();
 	});
 
-	return <input ref={searchInput} type="search" aria-label="Search" />;
+	return (
+		<input
+			ref={(element) => (searchInput = element)}
+			type="search"
+			aria-label="Search"
+		/>
+	);
 }
 ```
 
@@ -251,3 +391,18 @@ A post-`await` re-read can retry only when the same source was already tracked b
 Async generators used with `action` have a related transaction boundary.
 A plain `await` does not restore the action transaction for writes to sources that the action has not written earlier.
 Use `yield promise` as the suspension point, or place a bare `yield` before writing after an `await`.
+
+## Capability map
+
+- Return a promise or async iterable from a computation to create an async reactive source.
+- Use [`Loading`](/reference/solid-js/components-jsx/loading) when no settled answer exists.
+- Use [`isPending`](/reference/solid-js/reactivity/is-pending) when visible data has an unrevealed replacement or an `affects` declaration.
+- Use [`Errored`](/reference/solid-js/components-jsx/errored) to handle errors that reach the reactive graph.
+- Use [`action`](/reference/solid-js/lifecycle-actions/action) to coordinate writes across async gaps.
+- Use [`createOptimistic`](/reference/solid-js/reactivity/create-optimistic) or [`createOptimisticStore`](/reference/solid-js/stores/create-optimistic-store) to show an expected result until an action settles.
+- Use [`refresh`](/reference/solid-js/lifecycle-actions/refresh) to rerun a derived source with the same inputs.
+- Use [`affects`](/reference/solid-js/lifecycle-actions/affects) to declare which data in-flight work can change.
+- Use [`latest`](/reference/solid-js/reactivity/latest) to read the freshest available in-flight value.
+- Use [`resolve`](/reference/solid-js/advanced/interop-async/resolve) to await one reactive expression outside tracking.
+- Use [`onSettled`](/reference/solid-js/lifecycle-actions/on-settled) to run code after owned async work and queued updates settle.
+- Use `loadingValue` or `seedLoadingValue` only when a source needs a committed value before its first result.

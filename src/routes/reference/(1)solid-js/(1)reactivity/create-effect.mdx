@@ -13,7 +13,6 @@ version: "2.0"
 description: "Creates a reactive effect with **separate compute and effect phases**."
 source_repo: "solidjs/solid"
 source_ref: "next"
-source_sha: "766ea30318710943450415ac6acb39d31c9d606c"
 source_path: "packages/solid-signals/src/signals.ts"
 ---
 
@@ -40,8 +39,7 @@ code has no frame to `try/catch`. The `error` handler is the error arm of
 the effect phase: it runs on the same schedule and in the same imperative,
 writable scope as `effect` (setting error state via signals is fine), and
 only for _settled_ errors — a transient error that recovers before the
-effect phase runs `effect` with the recovered value instead, and a held
-transition defers it exactly as it defers `effect`. Without an `error`
+effect phase runs `effect` with the recovered value instead, and a held update defers it exactly as it defers `effect`. Without an `error`
 handler a compute-phase error is logged and the effect simply skips that
 run — a non-render effect's reactivity failing does not crash the app.
 Rethrowing from `error` escalates it to the nearest error boundary
@@ -144,7 +142,7 @@ type EffectBundle<Prev, Next extends Prev = Prev> = {
 
 #### `effect`
 
-- **Type:** `EffectFunction&lt;Prev, Next&gt;`
+- **Type:** `EffectFunction<Prev, Next>`
 
 #### `error`
 
@@ -158,7 +156,7 @@ This is the error arm of the effect phase: it runs on the same queue and
 in the same imperative, writable scope as `effect` (signal writes are
 legal), receives the error the user code threw, and observes settled
 outcomes — an error that recovers before the effect phase runs the
-`effect` arm instead, and a held transition defers it like `effect`.
+`effect` arm instead, and a held update defers it like `effect`.
 
 ### `EffectFunction`
 
@@ -193,11 +191,11 @@ When true, defers the initial effect execution until the next change
 - **Type:** `boolean`
 
 When true, enqueues the initial effect callback through the effect queue instead of running
-it synchronously at creation. Lets the initial run participate in transitions -- if any
+it synchronously at creation. Lets the initial run participate in held updates -- if any
 source throws `NotReadyError` during the compute phase, the callback is held until the
-transition settles.
+pending work settles.
 
-Primarily for render effects that need transition-aware initial mounts (e.g. The root
+Primarily for render effects that need async-aware initial mounts (e.g. The root
 `insert()` in `render()`).
 
 #### `sync`

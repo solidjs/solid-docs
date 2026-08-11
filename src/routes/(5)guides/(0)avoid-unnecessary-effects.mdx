@@ -1,0 +1,287 @@
+---
+title: "Avoid unnecessary effects"
+titleTemplate: ":title"
+mainNavExclude: true
+version: "2.0"
+description: "Choose direct, memoized, async, or writable derivation before reaching for an effect."
+---
+
+Most components do not need `createEffect`.
+Signals, stores, props, memos, and async computations already form a graph of derived values.
+Keep data in that graph until it reaches JSX, an event, or an imperative system outside Solid.
+
+An effect is usually the end of this sequence:
+
+![Reactive inputs flow through derived values to declarative consumers and terminal effects. User interactions and external observations use setters to become new inputs.](/images/diagrams/derived-state-effects-sequence.svg)
+
+The effect consumes a settled result and performs work that has no reactive return value.
+It should not copy one reactive value into another signal or store in most application code.
+
+The [Reactivity concept page](/concepts/reactivity) explains tracking, memos, effect phases, scheduling, and ownership.
+This guide focuses on choosing the right pattern before reaching for an effect.
+
+## Calculate values when they are read
+
+Do not use an effect to copy a value that can be calculated from existing reactive state:
+
+```tsx
+import { createEffect, createSignal } from "solid-js";
+
+const [firstName, setFirstName] = createSignal("Ada");
+const [lastName, setLastName] = createSignal("Lovelace");
+const [fullName, setFullName] = createSignal("");
+
+// Avoid: fullName duplicates data already present in two signals.
+createEffect(
+	() => [firstName(), lastName()] as const,
+	([first, last]) => setFullName(`${first} ${last}`)
+);
+```
+
+Derive the value directly:
+
+```tsx
+const fullName = () => `${firstName()} ${lastName()}`;
+
+return <p>{fullName()}</p>;
+```
+
+The function runs in the tracking scope that reads it.
+It cannot become stale independently of its inputs, and it does not schedule another write.
+
+Keep the function call inside JSX or another tracking scope.
+Component bodies run untracked, so reading `fullName()` at the top level of a component captures a one-time value.
+
+Use [`createMemo`](/reference/solid-js/reactivity/create-memo) when several consumers need the same result or the derivation should form an equality boundary.
+Keep memo computations free of side effects.
+
+## Put asynchronous work in a derivation
+
+Do not start a request in an effect and copy its result into another signal.
+Solid computations can return promises, so the request and its result can remain one derived value:
+
+```tsx
+import { Errored, For, Loading, createMemo, createSignal } from "solid-js";
+
+const [query, setQuery] = createSignal("");
+const results = createMemo(async () => {
+	const value = query().trim();
+	if (!value) return [];
+	return api.search(value);
+});
+
+return (
+	<>
+		<input
+			type="search"
+			value={query()}
+			onInput={(event) => setQuery(event.currentTarget.value)}
+		/>
+		<Errored fallback={(error) => <p>{String(error())}</p>}>
+			<Loading fallback={<p>Searching...</p>}>
+				<ul>
+					<For each={results()}>{(result) => <li>{result.title}</li>}</For>
+				</ul>
+			</Loading>
+		</Errored>
+	</>
+);
+```
+
+Changing `query()` asks the computation for another answer.
+Solid coordinates readiness and error propagation, keeps settled content visible during later requests, and drops stale answers from superseded runs.
+See [Async reactivity](/concepts/async-reactivity) for pending indicators, actions, and refresh behavior.
+
+Use the function form of [`createStore`](/reference/solid-js/stores/create-store) when the async result is nested data that benefits from per-property tracking and reconciliation.
+
+## Use a writable derivation for a local override
+
+Forms and editable fields often start from a reactive source but need a temporary local value.
+Do not copy the source into a plain signal and then add an effect to keep both values synchronized.
+
+Pass a function to `createSignal` to create a writable derived signal:
+
+```tsx
+import { createSignal } from "solid-js";
+
+function NameField(props: { value: string }) {
+	const [draft, setDraft] = createSignal(() => props.value);
+
+	return (
+		<input
+			value={draft()}
+			onInput={(event) => setDraft(event.currentTarget.value)}
+		/>
+	);
+}
+```
+
+The derivation supplies `props.value`.
+Calling `setDraft` places a local override over that result.
+The override remains visible until a dependency of the derivation changes and the derivation produces another value.
+
+Use a writable derived store for a nested form:
+
+```tsx
+import { createMemo, createStore } from "solid-js";
+
+type Profile = {
+	name: string;
+	email: string;
+};
+
+function ProfileForm(props: { profile: Profile }) {
+	const [draft, setDraft] = createStore(() => props.profile, {
+		name: "",
+		email: "",
+	});
+	const emailError = createMemo(() =>
+		draft.email.includes("@") ? undefined : "Enter a valid email address."
+	);
+
+	return (
+		<form>
+			<input
+				value={draft.name}
+				onInput={(event) =>
+					setDraft((current) => {
+						current.name = event.currentTarget.value;
+					})
+				}
+			/>
+			<input
+				type="email"
+				value={draft.email}
+				aria-invalid={emailError() ? "true" : undefined}
+				onInput={(event) =>
+					setDraft((current) => {
+						current.email = event.currentTarget.value;
+					})
+				}
+			/>
+			<p aria-live="polite">{emailError()}</p>
+		</form>
+	);
+}
+```
+
+The setter changes the projected store locally.
+When `props.profile` changes, the projection runs again and reconciles the new source value into the store.
+Validation remains a derivation of the current draft.
+
+Use this pattern when a new source value should replace the local edit.
+Use a plain signal or store when the local value has an independent lifetime.
+Use optimistic state when a tentative value belongs to an active mutation rather than a local editing session.
+
+## Handle interactions where they happen
+
+An event handler knows which interaction occurred and has access to its current values.
+Keep interaction-driven work in that handler or an [`action`](/reference/solid-js/lifecycle-actions/action).
+
+```tsx
+import { action, snapshot } from "solid-js";
+
+const save = action(function* () {
+	yield api.saveProfile(snapshot(draft));
+});
+
+return (
+	<button type="button" onClick={() => void save()}>
+		Save
+	</button>
+);
+```
+
+Do not set a `submitted` signal and watch it from an effect.
+That removes the cause from the code that performs the work and creates another reactive step.
+
+## Use an effect at an imperative boundary
+
+Use an effect when a settled reactive value must drive an imperative system that Solid does not own.
+The two-phase [`createEffect`](/reference/solid-js/reactivity/create-effect) API keeps that boundary explicit.
+Solid runs the tracked compute phases for an update before it runs any corresponding effect phases.
+If a compute phase reaches pending async work, its effect phase waits for that work to settle.
+
+Examples include:
+
+- updating a third-party widget;
+- opening a subscription selected by reactive state;
+- sending state-driven telemetry; and
+- calling an imperative browser API that has no declarative JSX form.
+
+```ts
+import { createEffect } from "solid-js";
+
+createEffect(
+	() => props.roomId,
+	(roomId) => {
+		const connection = chat.connect(roomId);
+		connection.open();
+
+		return () => connection.close();
+	}
+);
+```
+
+The compute phase tracks `props.roomId`.
+The effect phase receives a plain value, opens the external connection, and returns its cleanup.
+It does not produce another value for the reactive graph.
+
+Extract every reactive value needed by the imperative work in the compute phase.
+The effect phase is untracked, so reading another signal or store property there does not add a dependency.
+
+## Let external observations become new inputs
+
+Some APIs report information that exists only after render work, such as element size.
+Their callbacks may write that observation into a signal because the external result is a new input to the graph:
+
+```tsx
+import { createSignal, onSettled } from "solid-js";
+
+function measure(setWidth: (width: number) => void) {
+	let element: HTMLElement | undefined;
+
+	onSettled(() => {
+		if (!element) return;
+
+		const observer = new ResizeObserver(([entry]) => {
+			setWidth(entry.contentRect.width);
+		});
+		observer.observe(element);
+
+		return () => observer.disconnect();
+	});
+
+	return (next: HTMLElement) => {
+		element = next;
+	};
+}
+
+function Panel() {
+	const [width, setWidth] = createSignal(0);
+	return <section ref={measure(setWidth)}>Width: {width()}px</section>;
+}
+```
+
+The observer callback starts a new reactive sequence.
+The write does not copy an upstream reactive value back into the graph.
+It records information produced downstream by the browser.
+
+See [Refs and directives](/concepts/components-and-jsx#refs-and-directives) for owned DOM setup and cleanup.
+
+## Check before adding an effect
+
+Before calling `createEffect`, ask:
+
+1. Can the value be calculated directly in JSX or a derived function?
+2. Does the result need a memo for reuse, caching, or equality?
+3. Is it asynchronous data that belongs in an async memo or projected store?
+4. Is it a temporary local override that belongs in a writable derived signal or store?
+5. Did a user interaction cause the work?
+   Keep it in the event handler or action.
+6. Is the work one-time owned setup?
+   Use `onSettled` or a ref directive.
+7. Does a settled reactive result need to leave Solid and drive an imperative system?
+   Use an effect.
+
+If the answer to the last question is no, the code probably belongs earlier in the reactive sequence.

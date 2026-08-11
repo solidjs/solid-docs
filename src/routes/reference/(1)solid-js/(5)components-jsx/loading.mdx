@@ -13,7 +13,6 @@ version: "2.0"
 description: "Renders a `fallback` while pending async reads inside the subtree settle."
 source_repo: "solidjs/solid"
 source_ref: "next"
-source_sha: "766ea30318710943450415ac6acb39d31c9d606c"
 source_path: "packages/solid/src/client/flow.ts"
 ---
 
@@ -26,9 +25,9 @@ Any computation (`createMemo`, `createSignal(fn)`, `createStore(fn)`,
 nearest enclosing `<Loading>`. The boundary swaps to its `fallback` until
 every pending read has resolved, then renders the children.
 
-The optional `on` prop scopes the boundary so it ignores transitions
-caused by writes to other reactive sources — those transitions stay on the
-previous content (with `isPending()` flipping during the transition).
+The optional `on` prop scopes the boundary.
+The boundary keeps its previous content for updates caused by writes to other
+reactive sources, while `isPending()` reports the pending work.
 
 Scope `<Loading>` around the data-dependent slot, not the surrounding
 shell. Wrapping layout chrome (header, nav, footer) in the same boundary
@@ -63,7 +62,7 @@ const Profile = lazy(() => import("./Profile"));
 ```
 
 ```tsx
-// Only show the fallback for transitions caused by writes to `route`.
+// Only show the fallback for updates caused by writes to `route`.
 <Loading fallback={<Skeleton />} on={route}>
 	<Page />
 </Loading>

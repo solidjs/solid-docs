@@ -94,7 +94,132 @@ function SaveButton(props: { onSave: () => void }) {
 }
 ```
 
-Use a `ref` callback with `addEventListener` when you need native listener options such as capture or passive handling.
+Use a `ref` directive with `addEventListener` when you need native listener options such as capture or passive handling.
+
+## Refs and directives
+
+A `ref` callback receives an element after Solid creates it.
+Use the callback to keep an element reference or apply behavior that needs the DOM node.
+
+```tsx
+function SearchField() {
+	let input!: HTMLInputElement;
+
+	return (
+		<>
+			<input ref={(element) => (input = element)} type="search" />
+			<button type="button" onClick={() => input.select()}>
+				Select query
+			</button>
+		</>
+	);
+}
+```
+
+Solid 2 uses ref callbacks and directive factories instead of the `use:` namespace.
+A directive factory creates owned reactive primitives during component setup and returns the callback that applies the directive to an element.
+
+Ref callbacks run untracked and without an owner.
+Do not create effects or register cleanup inside the returned callback.
+Create them in the factory, where they belong to the component owner.
+
+```tsx
+import { onSettled } from "solid-js";
+
+function listen(
+	type: string,
+	listener: EventListener,
+	options?: AddEventListenerOptions
+) {
+	let element: HTMLElement | undefined;
+
+	onSettled(() => {
+		const target = element;
+		if (!target) return;
+
+		target.addEventListener(type, listener, options);
+		return () => target.removeEventListener(type, listener, options);
+	});
+
+	return (next: HTMLElement) => {
+		element = next;
+	};
+}
+```
+
+The factory registers setup and cleanup while it has an owner.
+The returned callback only stores the element for the settled work.
+
+The `ref` prop also accepts an array.
+Solid recursively flattens the array and calls each callback in order, so separate directives can share one element.
+
+```tsx
+function autofocus(element: HTMLInputElement) {
+	element.autofocus = true;
+}
+
+function SearchField(props: { onInput: EventListener }) {
+	let input!: HTMLInputElement;
+
+	return (
+		<>
+			<input
+				type="search"
+				ref={[
+					(element) => (input = element),
+					autofocus,
+					listen("input", props.onInput, { passive: true }),
+				]}
+			/>
+			<button type="button" onClick={() => input.select()}>
+				Select query
+			</button>
+		</>
+	);
+}
+```
+
+Use a ref array to compose element access, reusable directives, and third-party integrations without creating one wrapper callback.
+Ref callback return values are ignored; register cleanup through an owned primitive such as `onSettled`.
+See the [`ref` reference](/reference/solid-web/jsx-properties/ref) for its accepted values and callback behavior.
+
+## Classes
+
+Use the `class` prop for static and conditional class names.
+Solid 2 accepts strings, objects, and nested arrays:
+
+```tsx
+function SaveButton(props: {
+	class?: string;
+	active: boolean;
+	saving: boolean;
+}) {
+	return (
+		<button
+			class={[
+				"button",
+				props.class,
+				{
+					active: props.active,
+					"saving muted": props.saving,
+				},
+			]}
+		>
+			Save
+		</button>
+	);
+}
+```
+
+- A string supplies the complete class value or one always-present array entry.
+- An object adds each key whose value is truthy.
+  A key can contain several space-separated class names.
+- An array combines strings, objects, and other arrays.
+
+Put conditional names in an object instead of constructing a string with concatenation, `filter(Boolean)`, or `join`.
+Solid can then add and remove the affected class tokens directly.
+The `classList` prop from Solid 1 is replaced by these object and array forms of `class`.
+See the [`class` reference](/reference/solid-web/jsx-properties/class) for each supported value form.
 
 ## Children and composition
 

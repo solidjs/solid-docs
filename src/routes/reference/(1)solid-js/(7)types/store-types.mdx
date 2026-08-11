@@ -1,11 +1,10 @@
 ---
-title: "SolidStore / Store / StoreNode"
+title: "SolidStore / Store"
 category: "Types"
 use_cases: "types api, solidstore usage"
 tags:
   - "solid"
   - "store"
-  - "node"
   - "types"
   - "reference"
   - "api"
@@ -14,7 +13,6 @@ version: "2.0"
 description: "SolidStore API reference."
 source_repo: "solidjs/solid"
 source_ref: "next"
-source_sha: "766ea30318710943450415ac6acb39d31c9d606c"
 source_path: "packages/solid-signals/src/store/store.ts"
 ---
 
@@ -51,117 +49,3 @@ import type { Store } from "solid-js";
 ```ts
 type Store<T> = Readonly<T>;
 ```
-
----
-
-StoreNode API reference.
-
-## Import
-
-```ts
-import type { StoreNode } from "solid-js";
-```
-
-## Type signature
-
-```ts
-type StoreNode = {
-	[$PROXY]: any;
-	[STORE_VALUE]: Record<PropertyKey, any>;
-	[STORE_OVERRIDE]?: Record<PropertyKey, any>;
-	[STORE_OPTIMISTIC_OVERRIDE]?: Record<PropertyKey, any>;
-	// Per-key transition ownership of the optimistic layer (#2899): stamped at
-	// write time so a settling action only consumes its own entries. `null` =
-	// ambient write (clears at flush end). Nodes already get this granularity
-	// via _optimisticNodes; this is the layer's half.
-	[STORE_OPTIMISTIC_OWNERS]?: Record<PropertyKey, Transition | null>;
-	[STORE_NODE]?: DataNodes;
-	[STORE_HAS]?: DataNodes;
-	[STORE_CUSTOM_PROTO]?: boolean;
-	[STORE_WRAP]?: (value: any, target?: StoreNode) => any;
-	[STORE_LOOKUP]?: WeakMap<any, any>;
-	[STORE_FIREWALL]?: Computed<any>;
-	[STORE_OPTIMISTIC]?: boolean;
-	[STORE_SNAPSHOT_PROPS]?: Record<PropertyKey, any>;
-	// Wrap-time back-link to the target this one was first wrapped under.
-	// Serves node-presence bubbling (#2902); roots and store-in-store roots
-	// have none. First wrapper wins — diamond reachability is untracked.
-	[STORE_PARENT]?: StoreNode;
-	// Shallow boundary: this target's own keys are reactive, its values are
-	// raw records replaced by reference. Values ingested below the boundary are
-	// sticky-marked raw (rawValues) so they present raw through every store.
-	[STORE_SHALLOW]?: boolean;
-	// Sticky "this subtree (self included) carries signal nodes" flag, set by
-	// getNode and bubbled up STORE_PARENT. Reconcile's object diff descends
-	// into node-less children only when this is set, so never-subscribed
-	// branches stay pruned (#2902). Never cleared: precision degrades toward
-	// over-descent only for subscribe-then-unsubscribe churn.
-	[STORE_DESC]?: boolean;
-};
-```
-
-## Properties
-
-### `[$PROXY]`
-
-- **Type:** `any`
-
-### `[STORE_VALUE]`
-
-- **Type:** `Record&lt;PropertyKey, any&gt;`
-
-### `[STORE_OVERRIDE]`
-
-- **Type:** `Record&lt;PropertyKey, any&gt;`
-
-### `[STORE_OPTIMISTIC_OVERRIDE]`
-
-- **Type:** `Record&lt;PropertyKey, any&gt;`
-
-### `[STORE_OPTIMISTIC_OWNERS]`
-
-- **Type:** `Record&lt;PropertyKey, Transition | null&gt;`
-
-### `[STORE_NODE]`
-
-- **Type:** `DataNodes`
-
-### `[STORE_HAS]`
-
-- **Type:** `DataNodes`
-
-### `[STORE_CUSTOM_PROTO]`
-
-- **Type:** `boolean`
-
-### `[STORE_WRAP]`
-
-- **Type:** `(value: any, target?: StoreNode) => any`
-
-### `[STORE_LOOKUP]`
-
-- **Type:** `WeakMap&lt;any, any&gt;`
-
-### `[STORE_FIREWALL]`
-
-- **Type:** `Computed&lt;any&gt;`
-
-### `[STORE_OPTIMISTIC]`
-
-- **Type:** `boolean`
-
-### `[STORE_SNAPSHOT_PROPS]`
-
-- **Type:** `Record&lt;PropertyKey, any&gt;`
-
-### `[STORE_PARENT]`
-
-- **Type:** `StoreNode`
-
-### `[STORE_SHALLOW]`
-
-- **Type:** `boolean`
-
-### `[STORE_DESC]`
-
-- **Type:** `boolean`

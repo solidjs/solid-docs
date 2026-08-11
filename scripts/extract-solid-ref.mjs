@@ -240,7 +240,6 @@ const STANDALONE_TYPE_ROUTES = {
 	ContextProviderComponent: ["types/context-types.mdx", "Types"],
 
 	Store: ["types/store-types.mdx", "Types"],
-	StoreNode: ["types/store-types.mdx", "Types"],
 	SolidStore: ["types/store-types.mdx", "Types"],
 
 	Owner: ["types/owner.mdx", "Types"],
@@ -338,6 +337,7 @@ const HIDDEN_EXPORTS = new Set([
 	"sharedConfig",
 	"spread",
 	"SSRTemplateObject",
+	"StoreNode",
 	"ssr",
 	"ssrAttribute",
 	"ssrClassList",
@@ -381,13 +381,30 @@ const ENTRY_CALLOUTS = {
 
 const ENTRY_SUMMARY_OVERRIDES = {
 	affects:
-		"Marks a reactive source or store location as pending while work that will change it is in flight. Marked values remain readable, and derived readers report the pending state until the surrounding transaction settles or the current flush ends.",
+		"Marks a reactive source or store location as pending while work that will change it is in flight. Marked values remain readable, and derived readers report the pending state until the surrounding action or update settles.",
 	clientOnly:
 		"Creates a component that renders only in the browser. The server renders the fallback, and the client keeps that fallback through hydration before mounting the imported component.",
 	NotReadyError:
 		"Represents a read from an async reactive source before its first value is ready. Application code should normally let `Loading` and `Errored` boundaries handle this control flow.",
 	Owner:
 		"Represents the owner of a reactive scope. Treat its structure as opaque and use the public owner APIs to inspect or run code in that scope.",
+	JSX: "Selected public types from the `JSX` namespace. Element-specific attributes are available through `JSX.IntrinsicElements`.",
+	dynamic:
+		"Creates a stable component whose rendered component comes from a reactive source. The source can return a component, an intrinsic element name, a promise, or no component.",
+	hydrate:
+		"Attaches a Solid component tree to server-rendered DOM and returns a function that disposes the hydrated tree.",
+	isDev:
+		"Build-time constant that is `true` in development output and `false` in production output.",
+	isDisposed:
+		"Returns `true` when an owner has been disposed. Use it to ignore late work after the owner’s component or reactive scope has been removed.",
+	isPending:
+		"Returns whether the reactive reads inside `fn` depend on an in-flight value change that has not been revealed.",
+	isServer:
+		"Build-time constant that is `true` in server output and `false` in browser output.",
+	latest:
+		"Reads the freshest in-flight value available inside `fn`, falling back to the current settled value.",
+	storePath:
+		"Creates a path-based store update for compatibility with Solid 1.x setter calls. Prefer draft-mutating store setters in new Solid 2 code.",
 };
 
 const SIGNATURE_OVERRIDES = {
@@ -401,9 +418,142 @@ const SIGNATURE_OVERRIDES = {
 	Owner: `interface Owner {
 	readonly id?: string;
 }`,
+	JSX: `namespace JSX {
+	type Element = SolidElement | Node | ArrayElement;
+	type ClassValue =
+		| string
+		| number
+		| boolean
+		| null
+		| undefined
+		| Record<string, boolean>
+		| ClassValue[];
+	type RefCallback<T> = (element: T) => void;
+	type Ref<T> = T | RefCallback<T> | undefined | Ref<T>[];
+	interface CSSProperties extends csstype.PropertiesHyphen {
+		[key: \`-\${string}\`]: string | number | undefined;
+	}
+	interface IntrinsicElements
+		extends HTMLElementTags,
+			HTMLElementDeprecatedTags,
+			SVGElementTags,
+			MathMLElementTags {}
+}`,
+	hydrate: `function hydrate(
+	code: () => JSX.Element,
+	element: Element | Document | ShadowRoot | DocumentFragment | Node,
+	options?: { renderId?: string; owner?: unknown }
+): () => void;`,
+	storePath: `interface StorePath {
+	<T>(setter: PathSetter<T>): (state: T) => void;
+	<T, K extends keyof T>(
+		key: Part<T, K>,
+		setter: PathSetter<T[K]>
+	): (state: T) => void;
+	readonly DELETE: typeof DELETE;
+}
+
+const storePath: StorePath;`,
 };
 
-const OMIT_MEMBER_DOCS = new Set(["Owner"]);
+const OMIT_MEMBER_DOCS = new Set(["JSX", "Owner"]);
+const OMIT_REMARKS = new Set(["render"]);
+const VALUE_IMPORTS = new Set(["storePath"]);
+
+const ENTRY_EXAMPLES = {
+	dynamic: [
+		`\
+\`\`\`tsx
+const CurrentPage = dynamic(() => pages[route()]);
+
+return <CurrentPage />;
+\`\`\``,
+	],
+	hydrate: [
+		`\
+\`\`\`tsx
+import { hydrate } from "@solidjs/web";
+
+const dispose = hydrate(() => <App />, document.getElementById("root")!);
+\`\`\``,
+	],
+	isDev: [
+		`\
+\`\`\`ts
+if (isDev) {
+	console.warn("Development-only diagnostic");
+}
+\`\`\``,
+	],
+	isPending: [
+		`\
+\`\`\`tsx
+<button aria-busy={isPending(user)}>
+	{isPending(user) ? "Updating…" : "Update"}
+</button>
+\`\`\``,
+	],
+	isServer: [
+		`\
+\`\`\`ts
+if (!isServer) {
+	window.addEventListener("resize", onResize);
+}
+\`\`\``,
+	],
+	latest: [
+		`\
+\`\`\`ts
+const preview = () => latest(user);
+\`\`\``,
+	],
+	storePath: [
+		`\
+\`\`\`ts
+setState(storePath("user", "name", "Grace"));
+setState(storePath("todos", todo => !todo.done, "done", true));
+setState(storePath("user", "nickname", storePath.DELETE));
+\`\`\``,
+	],
+};
+
+const REFERENCE_FIXUPS = [
+	[
+		/createSignal<T>\(fn, initialValue\?, options\?:/g,
+		"createSignal<T>(fn, options?:",
+	],
+	[/optimistic local edit/g, "temporary local edit"],
+	[/\(a "transition"\)/g, ""],
+	[
+		/Writes inside an `action`\s+transition are/g,
+		"Writes during an `action` are",
+	],
+	[
+		/The optional `on` prop scopes the boundary so it ignores transitions\s+caused by writes to other reactive sources — those transitions stay on the\s+previous content \(with `isPending\(\)` flipping during the transition\)\./g,
+		"The optional `on` prop scopes the boundary.\nThe boundary keeps its previous content for updates caused by writes to other\nreactive sources, while `isPending()` reports the pending work.",
+	],
+	[/\baction transition\b/g, "action execution"],
+	[/\bend of transition\b/g, "the end of an action"],
+	[/\bafter each transition\b/g, "after each action"],
+	[/\bthe transition finishes\b/g, "the action settles"],
+	[/\bheld\s+transition\b/g, "held update"],
+	[/\btransition is held\b/g, "update is held"],
+	[/\bparticipate in transitions\b/g, "participate in held updates"],
+	[/\bheld by the transition\b/g, "held"],
+	[/\bignores transitions\b/g, "ignores updates"],
+	[/\bthose transitions\b/g, "those updates"],
+	[/\bduring the transition\b/g, "while the update is pending"],
+	[/\btransitions caused by\b/g, "updates caused by"],
+	[/\btransition settles\b/g, "pending work settles"],
+	[/\btransition-aware\b/g, "async-aware"],
+	[/\baction \/\s+transition\b/g, "action or held update"],
+	[
+		/\bboundaries\/transitions coordinate\b/g,
+		"and the runtime coordinates the update",
+	],
+	[/\btransition ownership\b/g, "update ownership"],
+	[/\bonce all pending settles\b/g, "once all pending work settles"],
+];
 
 const scriptPath = fileURLToPath(import.meta.url);
 const repoRoot = path.resolve(path.dirname(scriptPath), "..");
@@ -1107,14 +1257,23 @@ function buildOutputFiles(reference, source) {
 		return {
 			routePath,
 			fullPath: path.join(outDir, routePath),
-			content: renderMdx(
-				routeEntries,
-				primary.route.category,
-				source,
-				foldsByRoute.get(routePath) ?? []
+			content: applyReferenceFixups(
+				renderMdx(
+					routeEntries,
+					primary.route.category,
+					source,
+					foldsByRoute.get(routePath) ?? []
+				)
 			),
 		};
 	});
+}
+
+function applyReferenceFixups(content) {
+	return REFERENCE_FIXUPS.reduce(
+		(result, [pattern, replacement]) => result.replace(pattern, replacement),
+		content
+	);
 }
 
 function collectFoldsByRoute(folds) {
@@ -1143,9 +1302,10 @@ function collectFoldsByRoute(folds) {
 
 function renderMdx(entries, category, source, foldedEntries = []) {
 	const primary = entries[0];
-	const description =
+	const description = applyReferenceFixups(
 		escapeMdxText(primary.docs.summary.split("\n\n")[0]) ||
-		`${primary.name} API reference.`;
+			`${primary.name} API reference.`
+	);
 	const useCases =
 		primary.docs.useCases ||
 		`${humanizeCategory(category).toLowerCase()} api, ${primary.name.toLowerCase()} usage`;
@@ -1165,7 +1325,6 @@ function renderMdx(entries, category, source, foldedEntries = []) {
 		`description: ${yamlString(description)}`,
 		`source_repo: "solidjs/solid"`,
 		`source_ref: ${yamlString(source.sourceRef)}`,
-		`source_sha: ${yamlString(source.sourceSha)}`,
 		`source_path: ${yamlString(primary.sourcePath)}`,
 		"---",
 	].join("\n");
@@ -1199,7 +1358,7 @@ function renderEntry(entry) {
 	}
 
 	blocks.push(
-		`## Import\n\n\`\`\`ts\n${entry.kind === "type" || entry.kind === "namespace" ? "import type" : "import"} { ${entry.name} } from "${entry.packageName}";\n\`\`\``
+		`## Import\n\n\`\`\`ts\n${!VALUE_IMPORTS.has(entry.name) && (entry.kind === "type" || entry.kind === "namespace") ? "import type" : "import"} { ${entry.name} } from "${entry.packageName}";\n\`\`\``
 	);
 
 	blocks.push(`## Type signature\n\n\`\`\`ts\n${entry.signature}\n\`\`\``);
@@ -1223,14 +1382,16 @@ function renderEntry(entry) {
 		blocks.push(`## Return value\n\n${escapeMdxText(entry.docs.returns)}`);
 	}
 
-	if (entry.docs.remarks) {
+	if (entry.docs.remarks && !OMIT_REMARKS.has(entry.name)) {
 		blocks.push(`## Remarks\n\n${escapeMdxText(entry.docs.remarks)}`);
 	}
 
-	if (entry.docs.examples.length) {
-		blocks.push(
-			`## Examples\n\n${entry.docs.examples.map(formatExample).join("\n\n")}`
-		);
+	const examples = [
+		...entry.docs.examples,
+		...(ENTRY_EXAMPLES[entry.name] ?? []),
+	];
+	if (examples.length) {
+		blocks.push(`## Examples\n\n${examples.map(formatExample).join("\n\n")}`);
 	}
 
 	const related = renderRelatedLinks(entry);
@@ -1267,12 +1428,17 @@ function renderMemberDocs(members, heading = "###") {
 	return members
 		.map((member) => {
 			const parts = [`${heading} \`${member.name}\``];
-			if (member.type)
-				parts.push(`- **Type:** \`${escapeMdxText(member.type)}\``);
+			if (member.type) parts.push(`- **Type:** ${inlineCode(member.type)}`);
 			if (member.text) parts.push(escapeMdxText(member.text));
 			return parts.join("\n\n");
 		})
 		.join("\n\n");
+}
+
+function inlineCode(value) {
+	const text = String(value);
+	const fence = text.includes("`") ? "``" : "`";
+	return `${fence}${text}${fence}`;
 }
 
 function formatExample(example) {

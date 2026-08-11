@@ -11,6 +11,12 @@ import {
 } from "@kobalte/solidbase/config/sidebar";
 
 const solidBase = createSolidBase(osmium);
+const siteUrl =
+	process.env.SITE_URL ??
+	process.env.DEPLOY_PRIME_URL ??
+	"https://docs.solidjs.com";
+const isProductionSite =
+	new URL(siteUrl).hostname.toLowerCase() === "docs.solidjs.com";
 
 // Reference groups are named by import specifier, which the filesystem
 // sidebar would otherwise title-case (e.g. "Solid Js").
@@ -32,6 +38,9 @@ function transformSidebarItem(item: SidebarItemWithMeta): SidebarItemWithMeta {
 	if (item.title === "Advanced") {
 		return { ...item, collapsed: true };
 	}
+	if (item.title === "Jsx Properties") {
+		return { ...item, title: "JSX properties" };
+	}
 	return item;
 }
 
@@ -45,7 +54,7 @@ export default defineConfig({
 			title: "SolidJS Documentation",
 			description:
 				"Documentation for the Solid 2.0 release candidate, including reactivity, web rendering, routing, metadata, and Vite integration.",
-			siteUrl: "https://docs.solidjs.com",
+			siteUrl,
 			// TODO: point back at main when this branch becomes main
 			editPath: "https://github.com/solidjs/solid-docs/edit/v2-rebuild/:path",
 			themeConfig: {
@@ -136,13 +145,15 @@ export default defineConfig({
 			llms: true,
 			sitemap: true,
 			robots: {
-				rules: [
-					{
-						userAgent: "*",
-						allow: ["/"],
-						disallow: ["/i18n-status/"],
-					},
-				],
+				rules: isProductionSite
+					? [
+							{
+								userAgent: "*",
+								allow: ["/"],
+								disallow: ["/i18n-status/"],
+							},
+						]
+					: [{ userAgent: "*", disallow: ["/"] }],
 			},
 		}),
 		solidStart(
@@ -153,7 +164,7 @@ export default defineConfig({
 			prerender: {
 				crawlLinks: true,
 				autoSubfolderIndex: false,
-				// failOnError: true,
+				failOnError: true,
 				// eslint-disable-next-line no-useless-escape
 				ignore: [/\{\getPath}/, /.*?emojiSvg\(.*/],
 			},

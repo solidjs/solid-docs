@@ -13,7 +13,6 @@ version: "2.0"
 description: "Creates a simple reactive state with a getter and setter."
 source_repo: "solidjs/solid"
 source_ref: "next"
-source_sha: "766ea30318710943450415ac6acb39d31c9d606c"
 source_path: "packages/solid-signals/src/signals.ts"
 ---
 
@@ -28,7 +27,7 @@ When called with a function, creates a writable memo with `SignalOptions & MemoO
 // Plain signal
 const [state, setState] = createSignal<T>(value, options?: SignalOptions<T>);
 // Writable memo (function overload)
-const [state, setState] = createSignal<T>(fn, initialValue?, options?: SignalOptions<T> & MemoOptions<T>);
+const [state, setState] = createSignal<T>(fn, options?: SignalOptions<T> & MemoOptions<T>);
 ```
 
 ## Import
@@ -79,7 +78,7 @@ setCount((c) => c + 1); // updater
 // Writable memo: starts as `fn()`, can be locally overwritten by setter.
 const [user, setUser] = createSignal(() => fetchUser(userId()));
 
-setUser({ ...user(), name: "Alice" }); // optimistic local edit
+setUser({ ...user(), name: "Alice" }); // temporary local edit
 ```
 
 ## Related types
@@ -177,13 +176,13 @@ stored as-is and never awaited.
 Commit #0: a committed value the memo is born with, shown until the
 compute's first real answer lands. While that first answer is in flight
 the memo reads as a settled value everywhere — nothing suspends to a
-`<Loading>` boundary, no transition is held (first-flight work is
+`<Loading>` boundary, no update is held (first-flight work is
 loading-class, like a boundary fallback), and `isPending(memo)` stays
 **false**: commit #0 answers the question by declaration, so first-load
 affordances are driven from the value itself (a `null` placeholder, a
 `skeleton: true` field, etc.). Once the first answer lands, the loading
 value leaves the lineage forever: refetches use normal pending semantics
-(stale value shown, `isPending` true, boundaries/transitions coordinate)
+(stale value shown, `isPending` true, and the runtime coordinates the update)
 — the canonical guard is `data.skeleton || isPending(data)`, whose two
 terms cover the two disjoint states.
 

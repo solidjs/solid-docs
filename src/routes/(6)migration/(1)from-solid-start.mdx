@@ -121,7 +121,7 @@ The following checklist uses an SSR application with Solid Router.
 Omit `ssr: true` only when the source application is client-rendered.
 Omit `serverFunctions` and middleware when the application has no server behavior.
 
-### 1. Create the package boundary
+### Create the package boundary
 
 Start from the selected Solid 2 template's `package.json`.
 Keep the template's compatible versions of Solid 2, `@solidjs/web`, Vite, and `vite-plugin-solid`.
@@ -142,7 +142,7 @@ Use Vite scripts:
 Copy application dependencies only after checking that each package supports Solid 2.
 Replace a package when it imports Solid 1 internals or requires SolidStart runtime modules.
 
-### 2. Configure start mode
+### Configure start mode
 
 Add `vite-plugin-solid` start mode in `vite.config.ts`.
 The `start` option owns entries, development serving, preview serving, and production build wiring.
@@ -184,7 +184,7 @@ Map old configuration deliberately:
 
 See the [`StartOptions` reference](/reference/vite-plugin-solid/start) for the complete option contracts.
 
-### 3. Let the plugin generate entries
+### Let the plugin generate entries
 
 Delete or move the SolidStart `src/entry-client.*` and `src/entry-server.*` files before the first target build.
 If those conventional files remain, start mode selects them instead of generating entries.
@@ -202,7 +202,7 @@ Keep generated entries unless the old entries contain behavior that cannot move 
 When authored entries are necessary, rewrite both files as a pair.
 The server entry must export `render(request?, context?)`, and the client entry must hydrate the same document tree.
 
-### 4. Split `App.tsx` and `Document.tsx`
+### Split `App.tsx` and `Document.tsx`
 
 Create `src/App.tsx` as the default-exporting application root.
 Move the router, providers, layouts, and application UI here.
@@ -241,7 +241,7 @@ export default function Document(props: ParentProps) {
 The generated entry injects its client script into the document head.
 Do not copy SolidStart `props.assets`, `props.scripts`, or an `#app` mount wrapper into this component.
 
-### 5. Select and mount a router
+### Select and mount a router
 
 Start mode does not select a router or discover pages.
 Choose the router before copying route files.
@@ -280,7 +280,7 @@ For SSR, `start.setup` creates and loads a request-specific router before the ge
 Do not reuse SolidStart's router server or client entry protocol.
 See the [TanStack Router integration](/routing/tanstack).
 
-### 6. Move route modules incrementally
+### Move route modules incrementally
 
 Move one layout and its child routes at a time.
 For each route:
@@ -295,7 +295,7 @@ Do not copy `FileRoutes` or assume a SolidStart route export has the same type i
 The route component is usually reusable.
 The route registration and data boundary usually require changes.
 
-### 7. Move server functions
+### Move server functions
 
 Enable `serverFunctions: true` before moving any `"use server"` functions.
 The default endpoint remains `/_server`.
@@ -322,7 +322,7 @@ Server functions are transport primitives in the plugin.
 Router caching, submissions, revalidation, and single-flight behavior require the matching router integration.
 See [Server functions](/building-apps/server-functions).
 
-### 8. Rebuild environment handling
+### Rebuild environment handling
 
 Vite public variables that use the configured `VITE_` prefix remain available through `import.meta.env`.
 Keep secrets in server-only modules.
@@ -351,7 +351,7 @@ Client values are validated and embedded in the browser bundle.
 Copy `.env.example`, but do not copy local secrets into source control.
 See [Environment](/building-apps/environment).
 
-### 9. Rewrite sessions and authentication
+### Rewrite sessions and authentication
 
 Start mode supplies a request event, cookies on web headers, and response metadata.
 It does not supply SolidStart session helpers or an authentication system.
@@ -372,7 +372,7 @@ Keep authorization inside every protected server function and API handler.
 Middleware can populate `event.locals`, but hiding UI or checking a page request does not authorize another server entry point.
 See [Sessions and auth](/building-apps/sessions-and-auth).
 
-### 10. Rewrite middleware and API routes
+### Rewrite middleware and API routes
 
 Configure a server-only module through `start.middleware`.
 Its default export is one fetch-style middleware function or an array:
@@ -417,7 +417,7 @@ A module can also default-export a page and export methods.
 The handler result and fallback rules are not identical to SolidStart, so retest `HEAD`, missing methods, `undefined` results, route parameters, cookies, and errors.
 See [Middleware and API routes](/building-apps/middleware-and-api-routes).
 
-### 11. Rebuild the deployment boundary
+### Rebuild the deployment boundary
 
 Run `vite build` before adding provider-specific integration.
 With `start` and `ssr: true`, the build writes:
@@ -446,7 +446,7 @@ Set `start.external: true` only when a host integration owns both server build w
 The plugin continues to provide generated entries, the client manifest, and its virtual handler.
 See [Deployment](/building-apps/deployment).
 
-### 12. Resolve removed framework features
+### Resolve removed framework features
 
 Start mode does not replace every SolidStart feature.
 Resolve each old dependency explicitly:

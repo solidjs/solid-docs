@@ -63,12 +63,13 @@ export default defineConfig({
 						latest: { path: "", label: "Latest" },
 						v2: { path: "v2", label: "v2" },
 						v1: { path: "v1", label: "v1" },
+						solid_v2_external: { href: "https://v2.solidjs.com", label: "v2" },
 					},
 				},
 				include: [
 					{
 						project: "solid",
-						version: ["latest", "v2"],
+						version: ["latest", "solid_v2_external"],
 					},
 					{
 						project: "start",

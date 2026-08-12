@@ -31,14 +31,28 @@ If server functions remain enabled, deploy `dist/client` for pages and keep `dis
 
 ## The request handler
 
-The built server entry exports `handleRequest`.
-Its deployment contract is one web `Request` in and a promise of one web `Response` out:
+The built server entry exports the handler in two forms:
 
 ```ts
-import { handleRequest } from "./dist/server/server.js";
+import app, { handleRequest } from "./dist/server/server.js";
 
 const response = await handleRequest(request);
+const sameResponse = await app.fetch(request);
 ```
+
+`handleRequest(Request)` is the direct Solid API.
+The default export follows the Fetchable module convention used by Workers, Nitro, Netlify Functions, Bun, and `deno serve`:
+
+```ts
+export default {
+	fetch(request: Request) {
+		return handleRequest(request);
+	},
+};
+```
+
+The wrapper intentionally accepts only the request.
+Some hosts call `fetch` with additional environment or execution-context arguments, which are not Solid handler options.
 
 The handler creates the request event, runs configured middleware, dispatches the server-function endpoint when enabled, renders pages, and commits response metadata.
 It also resolves built client entry and stylesheet URLs through the client build manifest.
@@ -66,21 +80,6 @@ Use the template adapter as a reference when integrating another Node server.
 The bridge must use a streamed request body for methods other than `GET` and `HEAD`.
 It must forward multiple `Set-Cookie` headers as separate values instead of joining them with commas.
 
-## Web-native hosts
-
-A host that already uses the Fetch API can call the handler without a Node conversion layer:
-
-```ts
-import { handleRequest } from "./dist/server/server.js";
-
-export function fetch(request: Request): Promise<Response> {
-	return handleRequest(request);
-}
-```
-
-Map this function to the host's request entry point and configure its static asset service for `dist/client`.
-Workers, Deno servers, and `Bun.serve` use web `Request` and `Response` objects, but each host has its own module, asset, and environment-variable configuration.
-
 ## Preview the production artifact
 
 The start-mode integration configures `vite preview` to serve `dist/client` and dispatch remaining requests through the built handler:
@@ -100,41 +99,69 @@ pnpm serve
 Preview verifies the built request handler and static assets together.
 It does not replace the target host's deployment test.
 
-## External host integrations
+## Provider integrations
 
-Set `start.external: true` only when a host integration owns both the server environment and HTTP serving:
+Provider Vite plugins can add platform development features and prepare deployment output.
+The normal `ssr` environment exposes the default Fetchable handler as its `index` service entry in development and production.
+A provider plugin can adopt that environment, supply its runtime and build orchestration, and use the Solid entry without a custom source file or explicit Rollup input.
 
-```ts
-solid({
-	start: {
-		external: true,
-	},
-	ssr: true,
-	serverFunctions: true,
+The integrations below adopt the normal `ssr` environment.
+Use `start.external` instead when a custom host controls a differently named or independently configured server environment.
+External mode leaves the server build and development HTTP serving to that host while Solid continues to provide its generated entries, manifest, and virtual request handler.
+
+### Netlify
+
+The Netlify Vite plugin consumes Solid's normal `ssr` build and turns its Fetchable server entry into a streaming Netlify Function.
+
+```package-install-dev
+@netlify/vite-plugin
+```
+
+Add the Netlify plugin after `solid()` and enable its build support:
+
+```ts title="vite.config.ts"
+import netlify from "@netlify/vite-plugin";
+import { defineConfig } from "vite";
+import solid from "vite-plugin-solid";
+
+export default defineConfig({
+	plugins: [
+		solid({
+			start: true,
+			ssr: true,
+		}),
+		netlify({
+			build: {
+				enabled: true,
+			},
+		}),
+	],
 });
 ```
 
-The plugin then leaves server build and serving ownership to that integration while continuing to provide generated entries and the client manifest.
-A host integration must supply the missing server build and HTTP serving behavior; `external: true` does not create a deployable server by itself.
-A provider-owned non-runnable server environment can also cause the plugin's development middleware to stand down automatically.
+Keep the normal Solid server build enabled so Netlify can consume its `ssr` environment.
 
-:::note[Adapter status]
-The pinned Solid 2.0 sources define the `handleRequest(Request) -> Promise<Response>` boundary and include a Node example.
-They do not include a verified catalog of provider-specific deployment adapters.
-Treat provider adapters and `start.external` integrations as integration-specific until their packages test this exact handler contract and Solid 2.0 version.
-:::
+Set the direct-plugin build defaults explicitly:
 
-### Integration examples
+```toml title="netlify.toml"
+[build]
+command = "pnpm build"
+publish = "dist/client"
+```
 
-#### Nitro
+The Netlify plugin generates the catch-all function, gives static files precedence, and preserves streaming responses.
+It also emulates Netlify platform features during `vite dev`.
+No handwritten Netlify Function is required.
 
-[Nitro v3](https://nitro.build/) supports multiple deployment targets through presets.
+### Nitro
+
+[Nitro v3](https://nitro.build/) adopts Solid's `ssr` environment so its presets, route rules, tasks, and runtime features apply to the Solid handler.
 
 ```package-install
 nitro
 ```
 
-Add `nitro()` and configure the `ssr` environment:
+Add `nitro()` after `solid()`:
 
 ```tsx title="vite.config.ts"
 import { nitro } from "nitro/vite";
@@ -143,61 +170,21 @@ import solid from "vite-plugin-solid";
 
 export default defineConfig({
 	plugins: [
-		solid({ start: { external: true }, ssr: true }),
+		solid({
+			start: true,
+			ssr: true,
+		}),
 		nitro({ serverEntry: false }),
 	],
-	environments: {
-		ssr: {
-			build: {
-				rollupOptions: {
-					input: "./src/ssr.ts",
-				},
-			},
-		},
-	},
 });
 ```
 
-Then add `src/ssr.ts`:
-
-```ts
-import { handleRequest } from "virtual:solid-ssr-handler";
-
-export default {
-	fetch(request: Request) {
-		return handleRequest(request);
-	},
-};
-```
+Nitro discovers the Fetchable handler through the environment's `index` service entry.
+No custom server entry or Rollup input is required.
 
 Use the top-level `nitro` property for deployment presets, prerendering, tasks, WebSockets, and other Nitro options. See the [Nitro configuration reference](https://nitro.build/config).
 
-#### Netlify
-
-The Netlify Vite plugin prepares the server build for Netlify Functions and emulates Netlify platform features during development.
-
-```package-install-dev
-@netlify/vite-plugin
-```
-
-Add the plugin after `solid()` and enable its build support:
-
-```tsx title="vite.config.ts"
-import netlify from "@netlify/vite-plugin";
-import { defineConfig } from "vite";
-import solid from "vite-plugin-solid";
-
-export default defineConfig({
-	plugins: [
-		solid({ start: { external: true }, ssr: true }),
-		netlify({ build: { enabled: true } }),
-	],
-});
-```
-
-No Solid-specific adapter is required. Netlify detects Solid and can supply the build command and publish directory automatically.
-
-#### Cloudflare
+### Cloudflare Workers
 
 The [Cloudflare Vite plugin](https://developers.cloudflare.com/workers/vite-plugin/) runs the server build in the Workers runtime during development and prepares it for deployment to Cloudflare.
 
@@ -215,39 +202,21 @@ import solid from "vite-plugin-solid";
 export default defineConfig({
 	plugins: [
 		cloudflare({ viteEnvironment: { name: "ssr" } }),
-		solid({ start: { external: true }, ssr: true }),
+		solid({ start: true, ssr: true }),
 	],
-	environments: {
-		ssr: {
-			build: {
-				rollupOptions: {
-					input: "./src/ssr.ts",
-				},
-			},
-		},
-	},
 });
 ```
 
-Then add `src/ssr.ts`:
+Cloudflare comes before `solid()` in the plugin list, matching Cloudflare's framework-integration order.
+It associates the Worker with the `ssr` environment before Solid supplies the application entry.
 
-```ts
-import { handleRequest } from "virtual:solid-ssr-handler";
-
-export default {
-	fetch(request: Request) {
-		return handleRequest(request);
-	},
-};
-```
-
-Then configure the Worker in `wrangler.jsonc`:
+Point the Worker at Solid's generated virtual handler in `wrangler.jsonc`:
 
 ```jsonc
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	"name": "solid-2",
-	"main": "./src/ssr.ts",
+	"main": "virtual:solid-ssr-handler",
 	"compatibility_date": "2026-07-22",
 	"compatibility_flags": ["nodejs_compat"],
 	"assets": {
@@ -260,4 +229,13 @@ Then configure the Worker in `wrangler.jsonc`:
 }
 ```
 
-The `viteEnvironment` option merges the Workers runtime configuration with Solid's server environment. Follow the Cloudflare guide to add a Wrangler configuration and any platform bindings.
+The `viteEnvironment` option merges the Workers runtime configuration with Solid's server environment.
+The Cloudflare plugin resolves the environment's Fetchable `index` entry and runs it in workerd.
+No custom Worker source entry is required.
+Follow the Cloudflare guide to add any platform bindings.
+
+## Other Fetch runtimes
+
+When a runtime accepts a default Fetchable module, point it at `dist/server/server.js` and configure its static asset service for `dist/client`.
+For example, Bun and `deno serve` can start modules that default-export an object with a `fetch` method.
+The runtime still needs the server bundle's production dependencies and environment variables.

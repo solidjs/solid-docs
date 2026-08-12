@@ -25,7 +25,7 @@ const REFERENCE_PACKAGE_TITLES: Record<string, string> = {
 	"Solid Web": "@solidjs/web",
 	"Solid Router": "@solidjs/router",
 	"Solid Meta": "@solidjs/meta",
-	"Vite Plugin Solid": "vite-plugin-solid",
+	"Vite Plugin Solid": "@solidjs/vite-plugin",
 	"Filesystem Routing": "filesystem-routing",
 };
 

@@ -1,6 +1,6 @@
 # Proposal: Solid 2.0 documentation structure
 
-Solid 2.0 is a platform-wide change: `solid-js` 2.0, `@solidjs/web` 2.0, `@solidjs/router` 2.0, `@solidjs/meta` 1.0, and `vite-plugin-solid` 3.0 ship together and only work together. There is no SolidStart on this platform: SolidStart 2.0 is a Solid 1.x product and does not support Solid 2.0. Its role is taken by the `start` mode of the Vite plugin. This proposal restructures the docs site to match.
+Solid 2.0 is a platform-wide change: `solid-js` 2.0, `@solidjs/web` 2.0, `@solidjs/router` 2.0, `@solidjs/meta` 1.0, and `@solidjs/vite-plugin` 3.0 ship together and only work together. There is no SolidStart on this platform: SolidStart 2.0 is a Solid 1.x product and does not support Solid 2.0. Its role is taken by the `start` mode of the Vite plugin. This proposal restructures the docs site to match.
 
 ## The problem with the current structure
 
@@ -51,7 +51,7 @@ Grouped by import specifier, generated from source where possible:
 - `@solidjs/web`
 - `@solidjs/router`
 - `@solidjs/meta`
-- `vite-plugin-solid` (full `Options` / `StartOptions` / `ServerFunctionsOptions` surface)
+- `@solidjs/vite-plugin` (full `Options` / `StartOptions` / `ServerFunctionsOptions` surface)
 - `filesystem-routing`
 
 ### Route layout

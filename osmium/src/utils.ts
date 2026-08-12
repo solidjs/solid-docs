@@ -30,7 +30,7 @@ export function useProject() {
 			current: useSolidBaseRoute()().project ?? "solid",
 			projects: ("values" in projectConfig
 				? projectConfig.values
-				: { solid: { path: "", label: "Solid" } }) as Record<
+				: { solid: { path: "", label: "Solid2" } }) as Record<
 				string,
 				{ path: string; label: string }
 			>,

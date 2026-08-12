@@ -123,3 +123,141 @@ The pinned Solid 2.0 sources define the `handleRequest(Request) -> Promise<Respo
 They do not include a verified catalog of provider-specific deployment adapters.
 Treat provider adapters and `start.external` integrations as integration-specific until their packages test this exact handler contract and Solid 2.0 version.
 :::
+
+### Integration examples
+
+#### Nitro
+
+[Nitro v3](https://nitro.build/) supports multiple deployment targets through presets.
+
+```package-install
+nitro
+```
+
+Add `nitro()` and configure the `ssr` environment:
+
+```tsx title="vite.config.ts"
+import { nitro } from "nitro/vite";
+import { defineConfig } from "vite";
+import solid from "vite-plugin-solid";
+
+export default defineConfig({
+	plugins: [
+		solid({ start: { external: true }, ssr: true }),
+		nitro({ serverEntry: false }),
+	],
+	environments: {
+		ssr: {
+			build: {
+				rollupOptions: {
+					input: "./src/ssr.ts",
+				},
+			},
+		},
+	},
+});
+```
+
+Then add `src/ssr.ts`:
+
+```ts
+import { handleRequest } from "virtual:solid-ssr-handler";
+
+export default {
+	fetch(request: Request) {
+		return handleRequest(request);
+	},
+};
+```
+
+Use the top-level `nitro` property for deployment presets, prerendering, tasks, WebSockets, and other Nitro options. See the [Nitro configuration reference](https://nitro.build/config).
+
+#### Netlify
+
+The [Netlify Vite plugin](https://docs.netlify.com/build/frameworks/framework-setup-guides/solidstart/) prepares the server build for Netlify Functions and emulates Netlify platform features during development.
+
+```package-install-dev
+@netlify/vite-plugin
+```
+
+Add the plugin after `solid()` and enable its build support:
+
+```tsx title="vite.config.ts"
+import netlify from "@netlify/vite-plugin";
+import { defineConfig } from "vite";
+import solid from "vite-plugin-solid";
+
+export default defineConfig({
+	plugins: [
+		solid({ start: { external: true }, ssr: true }),
+		netlify({ build: { enabled: true } }),
+	],
+});
+```
+
+No Solid-specific adapter is required. Netlify detects Solid and can supply the build command and publish directory automatically.
+
+#### Cloudflare
+
+The [Cloudflare Vite plugin](https://developers.cloudflare.com/workers/vite-plugin/) runs the server build in the Workers runtime during development and prepares it for deployment to Cloudflare.
+
+```package-install-dev
+@cloudflare/vite-plugin wrangler
+```
+
+Map the Worker to SolidStart's `ssr` environment:
+
+```tsx title="vite.config.ts"
+import { cloudflare } from "@cloudflare/vite-plugin";
+import { defineConfig } from "vite";
+import solid from "vite-plugin-solid";
+
+export default defineConfig({
+	plugins: [
+		cloudflare({ viteEnvironment: { name: "ssr" } }),
+		solid({ start: { external: true }, ssr: true }),
+	],
+	environments: {
+		ssr: {
+			build: {
+				rollupOptions: {
+					input: "./src/ssr.ts",
+				},
+			},
+		},
+	},
+});
+```
+
+Then add `src/ssr.ts`:
+
+```ts
+import { handleRequest } from "virtual:solid-ssr-handler";
+
+export default {
+	fetch(request: Request) {
+		return handleRequest(request);
+	},
+};
+```
+
+Then configure the Worker in `wrangler.jsonc`:
+
+```jsonc
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "solid-2",
+	"main": "./src/ssr.ts",
+	"compatibility_date": "2026-07-22",
+	"compatibility_flags": ["nodejs_compat"],
+	"assets": {
+		"directory": "./dist/client",
+		"binding": "ASSETS",
+	},
+	"observability": {
+		"enabled": true,
+	},
+}
+```
+
+The `viteEnvironment` option merges the Workers runtime configuration with Solid's server environment. Follow the Cloudflare guide to add a Wrangler configuration and any platform bindings.

@@ -340,14 +340,17 @@ Keep secrets in server-only modules.
 Start mode also supports a typed Standard Schema file at `env.ts` or `env.js` in the project root:
 
 ```ts title="env.ts"
-import { z } from "zod";
+import * as v from "valibot";
 
-const signingKeys = z.preprocess(
-	(value) =>
+const signingKeys = v.pipe(
+	v.unknown(),
+	v.transform((value) =>
 		typeof value === "string"
 			? value.split(",").map((key) => key.trim())
-			: value,
-	z.array(z.string().min(32)).min(1)
+			: value
+	),
+	v.array(v.pipe(v.string(), v.minLength(32))),
+	v.minLength(1)
 );
 
 export default {
@@ -355,7 +358,7 @@ export default {
 		SESSION_SECRET: signingKeys,
 	},
 	client: {
-		VITE_APP_NAME: z.string().min(1),
+		VITE_APP_NAME: v.pipe(v.string(), v.minLength(1)),
 	},
 };
 ```

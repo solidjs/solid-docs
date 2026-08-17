@@ -89,9 +89,9 @@ See [Sessions and authentication](/building-apps/sessions-and-auth) for the requ
 
 ```ts
 import { getRequestEvent, redirect } from "@solidjs/web";
-import { z } from "zod";
+import * as v from "valibot";
 
-const UserName = z.string().trim().min(1).max(100);
+const UserName = v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(100));
 
 export async function updateCurrentUser(form: FormData) {
 	"use server";
@@ -99,7 +99,7 @@ export async function updateCurrentUser(form: FormData) {
 	const userId = event?.locals.userId;
 	if (!userId) throw redirect("/sign-in");
 
-	const name = UserName.parse(form.get("name"));
+	const name = v.parse(UserName, form.get("name"));
 	await database.users.update(userId, { name });
 }
 ```
@@ -151,11 +151,11 @@ Use `respond` when a value also needs status, headers, or revalidation metadata:
 
 ```ts
 import { getRequestEvent, respond } from "@solidjs/web";
-import { z } from "zod";
+import * as v from "valibot";
 
-const CreateUser = z.object({
-	name: z.string().trim().min(1).max(100),
-	email: z.string().email(),
+const CreateUser = v.object({
+	name: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(100)),
+	email: v.pipe(v.string(), v.email()),
 });
 
 export async function createUser(input: unknown) {
@@ -165,7 +165,7 @@ export async function createUser(input: unknown) {
 		return respond({ error: "Forbidden" }, { status: 403 });
 	}
 
-	const user = await database.users.create(CreateUser.parse(input));
+	const user = await database.users.create(v.parse(CreateUser, input));
 	return respond(user, {
 		status: 201,
 		headers: { "x-created-user": user.id },
@@ -190,9 +190,9 @@ These wrappers are optional:
 ```ts
 import { action, query } from "@solidjs/router";
 import { getRequestEvent, redirect } from "@solidjs/web";
-import { z } from "zod";
+import * as v from "valibot";
 
-const UserName = z.string().trim().min(1).max(100);
+const UserName = v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(100));
 
 export const getUsers = query(async () => {
 	"use server";
@@ -206,7 +206,7 @@ export const renameCurrentUser = action(async (form: FormData) => {
 	if (!userId) throw redirect("/sign-in");
 
 	await database.users.update(userId, {
-		name: UserName.parse(form.get("name")),
+		name: v.parse(UserName, form.get("name")),
 	});
 });
 ```

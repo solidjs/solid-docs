@@ -120,16 +120,16 @@ Both decisions belong in server code.
 
 ```ts
 import { redirect } from "@solidjs/web";
-import { z } from "zod";
+import * as v from "valibot";
 
-const UserName = z.string().trim().min(1).max(100);
+const UserName = v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(100));
 
 export async function renameCurrentUser(form: FormData) {
 	"use server";
 	const session = await getSession();
 	if (!session?.userId) throw redirect("/sign-in");
 
-	const name = UserName.parse(form.get("name"));
+	const name = v.parse(UserName, form.get("name"));
 	await database.users.rename(session.userId, name);
 }
 ```

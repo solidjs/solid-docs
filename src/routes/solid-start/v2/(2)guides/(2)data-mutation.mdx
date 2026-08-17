@@ -313,6 +313,88 @@ export default function Page() {
 }
 ```
 
+For more complex forms, you can use a schema library like [Valibot](https://valibot.dev/) to define your validation rules:
+
+```tsx tab title="TypeScript" {4} {6-11} {14-19}
+// src/routes/index.tsx
+import { Show } from "solid-js";
+import { action, useSubmission } from "@solidjs/router";
+import * as v from "valibot";
+
+const PostSchema = v.object({
+	title: v.pipe(
+		v.string(),
+		v.minLength(2, "Title must be at least 2 characters")
+	),
+});
+
+const addPost = action(async (formData: FormData) => {
+	const result = v.safeParse(PostSchema, {
+		title: formData.get("title"),
+	});
+	if (!result.success) {
+		return { error: result.issues[0].message };
+	}
+	await fetch("https://my-api.com/posts", {
+		method: "POST",
+		body: JSON.stringify(result.output),
+	});
+}, "addPost");
+
+export default function Page() {
+	const submission = useSubmission(addPost);
+	return (
+		<form action={addPost} method="post">
+			<input name="title" />
+			<Show when={submission.result?.error}>
+				<p>{submission.result?.error}</p>
+			</Show>
+			<button>Add Post</button>
+		</form>
+	);
+}
+```
+
+```jsx tab title="JavaScript" {4} {6-11} {14-19}
+// src/routes/index.jsx
+import { Show } from "solid-js";
+import { action, useSubmission } from "@solidjs/router";
+import * as v from "valibot";
+
+const PostSchema = v.object({
+	title: v.pipe(
+		v.string(),
+		v.minLength(2, "Title must be at least 2 characters")
+	),
+});
+
+const addPost = action(async (formData) => {
+	const result = v.safeParse(PostSchema, {
+		title: formData.get("title"),
+	});
+	if (!result.success) {
+		return { error: result.issues[0].message };
+	}
+	await fetch("https://my-api.com/posts", {
+		method: "POST",
+		body: JSON.stringify(result.output),
+	});
+}, "addPost");
+
+export default function Page() {
+	const submission = useSubmission(addPost);
+	return (
+		<form action={addPost} method="post">
+			<input name="title" />
+			<Show when={submission.result?.error}>
+				<p>{submission.result?.error}</p>
+			</Show>
+			<button>Add Post</button>
+		</form>
+	);
+}
+```
+
 ## Showing optimistic UI
 
 To update the UI before the server responds:

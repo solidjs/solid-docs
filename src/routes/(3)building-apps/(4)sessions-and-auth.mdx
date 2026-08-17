@@ -118,6 +118,10 @@ Authentication identifies the caller.
 Authorization decides whether that caller may perform an operation.
 Both decisions belong in server code.
 
+::::tab-group
+
+:::tab[Valibot]
+
 ```ts
 import { redirect } from "@solidjs/web";
 import * as v from "valibot";
@@ -133,6 +137,30 @@ export async function renameCurrentUser(form: FormData) {
 	await database.users.rename(session.userId, name);
 }
 ```
+
+:::
+
+:::tab[Zod]
+
+```ts
+import { redirect } from "@solidjs/web";
+import { z } from "zod";
+
+const UserName = z.string().trim().min(1).max(100);
+
+export async function renameCurrentUser(form: FormData) {
+	"use server";
+	const session = await getSession();
+	if (!session?.userId) throw redirect("/sign-in");
+
+	const name = UserName.parse(form.get("name"));
+	await database.users.rename(session.userId, name);
+}
+```
+
+:::
+
+::::
 
 Hiding a control in the browser does not authorize the corresponding server function or API route.
 Check the session or other credentials again at every protected server entry point, then authorize access to the specific record.

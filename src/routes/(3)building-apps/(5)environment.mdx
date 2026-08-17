@@ -12,7 +12,11 @@ This environment layer belongs to start mode and is not enabled by `ssr: true` a
 
 Add `env.ts` or `env.js` at the Vite project root.
 Default-export optional `server` and `client` maps whose values implement Standard Schema.
-The official `solid-v2/fullstack` template uses Valibot:
+The official `solid-v2/fullstack` template uses Valibot, but any Standard Schema library works:
+
+::::tab-group
+
+:::tab[Valibot]
 
 ```ts
 import * as v from "valibot";
@@ -37,6 +41,35 @@ export default {
 	},
 };
 ```
+
+:::
+
+:::tab[Zod]
+
+```ts
+import { z } from "zod";
+
+const signingKeys = z.preprocess(
+	(value) =>
+		typeof value === "string"
+			? value.split(",").map((key) => key.trim())
+			: value,
+	z.array(z.string().min(32)).min(1)
+);
+
+export default {
+	server: {
+		SESSION_SECRET: signingKeys,
+	},
+	client: {
+		VITE_APP_NAME: z.string().min(1).default("Solid App"),
+	},
+};
+```
+
+:::
+
+::::
 
 The `SESSION_SECRET` input is a comma-separated list.
 The schema validates every signing key after splitting the input, so a short or empty rotation key fails validation.

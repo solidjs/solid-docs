@@ -339,6 +339,10 @@ Keep secrets in server-only modules.
 
 Start mode also supports a typed Standard Schema file at `env.ts` or `env.js` in the project root:
 
+::::tab-group
+
+:::tab[Valibot]
+
 ```ts title="env.ts"
 import * as v from "valibot";
 
@@ -362,6 +366,35 @@ export default {
 	},
 };
 ```
+
+:::
+
+:::tab[Zod]
+
+```ts title="env.ts"
+import { z } from "zod";
+
+const signingKeys = z.preprocess(
+	(value) =>
+		typeof value === "string"
+			? value.split(",").map((key) => key.trim())
+			: value,
+	z.array(z.string().min(32)).min(1)
+);
+
+export default {
+	server: {
+		SESSION_SECRET: signingKeys,
+	},
+	client: {
+		VITE_APP_NAME: z.string().min(1),
+	},
+};
+```
+
+:::
+
+::::
 
 Import validated values from `virtual:env/server` in server-only modules and from `virtual:env/client` in shared or client code.
 The plugin generates `solid-env.d.ts` next to the schema.

@@ -90,16 +90,13 @@ const TabGroup = (props: {
 
 	// Groups sharing a sync key select together across the page and tabs,
 	// and the choice persists between visits.
-	const [openTab, setOpenTab] = makePersisted(
-		createSignal(props.tabNames[0]),
-		{
-			name: `tab-group:${props.syncKey}`,
-			sync: messageSync(new BroadcastChannel("tab-group")),
-			storage: cookieStorage.withOptions({
-				expires: new Date(Date.now() + 3e10),
-			}),
-		}
-	);
+	const [openTab, setOpenTab] = makePersisted(createSignal(props.tabNames[0]), {
+		name: `tab-group:${props.syncKey}`,
+		sync: messageSync(new BroadcastChannel("tab-group")),
+		storage: cookieStorage.withOptions({
+			expires: new Date(Date.now() + 3e10),
+		}),
+	});
 	return tabs(openTab, setOpenTab);
 };
 

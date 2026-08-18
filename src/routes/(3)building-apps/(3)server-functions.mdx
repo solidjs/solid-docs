@@ -87,6 +87,31 @@ Leave writes on the default `POST` transport:
 The mutation examples assume authentication middleware has populated typed `userId` and `isAdmin` fields on `event.locals`.
 See [Sessions and authentication](/building-apps/sessions-and-auth) for the request-scoped pattern.
 
+::::tab-group[validation-library]
+
+:::tab[Valibot]
+
+```ts
+import { getRequestEvent, redirect } from "@solidjs/web";
+import * as v from "valibot";
+
+const UserName = v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(100));
+
+export async function updateCurrentUser(form: FormData) {
+	"use server";
+	const event = getRequestEvent();
+	const userId = event?.locals.userId;
+	if (!userId) throw redirect("/sign-in");
+
+	const name = v.parse(UserName, form.get("name"));
+	await database.users.update(userId, { name });
+}
+```
+
+:::
+
+:::tab[Zod]
+
 ```ts
 import { getRequestEvent, redirect } from "@solidjs/web";
 import { z } from "zod";
@@ -103,6 +128,10 @@ export async function updateCurrentUser(form: FormData) {
 	await database.users.update(userId, { name });
 }
 ```
+
+:::
+
+::::
 
 A server function is a transport primitive and does not require a router or data cache.
 
@@ -149,6 +178,38 @@ The client reference resolves to the decoded value.
 
 Use `respond` when a value also needs status, headers, or revalidation metadata:
 
+::::tab-group[validation-library]
+
+:::tab[Valibot]
+
+```ts
+import { getRequestEvent, respond } from "@solidjs/web";
+import * as v from "valibot";
+
+const CreateUser = v.object({
+	name: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(100)),
+	email: v.pipe(v.string(), v.email()),
+});
+
+export async function createUser(input: unknown) {
+	"use server";
+	const event = getRequestEvent();
+	if (!event?.locals.isAdmin) {
+		return respond({ error: "Forbidden" }, { status: 403 });
+	}
+
+	const user = await database.users.create(v.parse(CreateUser, input));
+	return respond(user, {
+		status: 201,
+		headers: { "x-created-user": user.id },
+	});
+}
+```
+
+:::
+
+:::tab[Zod]
+
 ```ts
 import { getRequestEvent, respond } from "@solidjs/web";
 import { z } from "zod";
@@ -173,6 +234,10 @@ export async function createUser(input: unknown) {
 }
 ```
 
+:::
+
+::::
+
 Scripted callers receive the carried value, while the transport forwards the response metadata.
 `redirect()` and `reload()` return standard `Response` objects carrying `Location` or revalidation headers.
 Returning or throwing those responses preserves their control-flow metadata for an integration to interpret.
@@ -186,6 +251,38 @@ Use `respond()` for an intentional structured failure, or `markSafeError()` only
 
 Solid Router can add caching, submissions, revalidation, forms, and single-flight data to server functions.
 These wrappers are optional:
+
+::::tab-group[validation-library]
+
+:::tab[Valibot]
+
+```ts
+import { action, query } from "@solidjs/router";
+import { getRequestEvent, redirect } from "@solidjs/web";
+import * as v from "valibot";
+
+const UserName = v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(100));
+
+export const getUsers = query(async () => {
+	"use server";
+	return database.users.all();
+}, "users");
+
+export const renameCurrentUser = action(async (form: FormData) => {
+	"use server";
+	const event = getRequestEvent();
+	const userId = event?.locals.userId;
+	if (!userId) throw redirect("/sign-in");
+
+	await database.users.update(userId, {
+		name: v.parse(UserName, form.get("name")),
+	});
+});
+```
+
+:::
+
+:::tab[Zod]
 
 ```ts
 import { action, query } from "@solidjs/router";
@@ -210,6 +307,10 @@ export const renameCurrentUser = action(async (form: FormData) => {
 	});
 });
 ```
+
+:::
+
+::::
 
 Place the `"use server"` directive inside the callback passed to `query()` or `action()`.
 

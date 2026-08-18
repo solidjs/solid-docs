@@ -1,13 +1,20 @@
 import {
 	For,
+	type JSX,
 	Match,
 	type ParentProps,
 	Switch,
 	children,
 	createMemo,
+	createSignal,
 	splitProps,
 } from "solid-js";
 import { isServer } from "solid-js/web";
+import {
+	cookieStorage,
+	makePersisted,
+	messageSync,
+} from "@solid-primitives/storage";
 
 import { clientOnly } from "@solidjs/start";
 import { Callout } from "./ui/callout";
@@ -44,23 +51,53 @@ export const DirectiveContainer = (
 		>
 			<Match when={props.type === "tab"}>{_children}</Match>
 			<Match when={props.type === "tab-group"}>
-				<Tabs>
-					<TabList>
-						<For each={tabNames()}>
-							{(title) => <Tab value={title}>{title}</Tab>}
-						</For>
-					</TabList>
-					<For each={tabNames()}>
-						{(title, idx) => (
-							<TabPanel value={title} forceMount={true}>
-								{_children[idx()]}
-							</TabPanel>
-						)}
-					</For>
-				</Tabs>
+				<TabGroup
+					syncKey={props.title}
+					tabNames={tabNames()}
+					panels={_children}
+				/>
 			</Match>
 		</Switch>
 	);
+};
+
+const TabGroup = (props: {
+	syncKey?: string;
+	tabNames: string[];
+	panels: JSX.Element[];
+}) => {
+	const tabs = (
+		value?: () => string | undefined,
+		onChange?: (value: string) => void
+	) => (
+		<Tabs value={value?.()} onChange={onChange}>
+			<TabList>
+				<For each={props.tabNames}>
+					{(title) => <Tab value={title}>{title}</Tab>}
+				</For>
+			</TabList>
+			<For each={props.tabNames}>
+				{(title, idx) => (
+					<TabPanel value={title} forceMount={true}>
+						{props.panels[idx()]}
+					</TabPanel>
+				)}
+			</For>
+		</Tabs>
+	);
+
+	if (!props.syncKey) return tabs();
+
+	// Groups sharing a sync key select together across the page and tabs,
+	// and the choice persists between visits.
+	const [openTab, setOpenTab] = makePersisted(createSignal(props.tabNames[0]), {
+		name: `tab-group:${props.syncKey}`,
+		sync: messageSync(new BroadcastChannel("tab-group")),
+		storage: cookieStorage.withOptions({
+			expires: new Date(Date.now() + 3e10),
+		}),
+	});
+	return tabs(openTab, setOpenTab);
 };
 
 export const strong = (props: ParentProps) => (

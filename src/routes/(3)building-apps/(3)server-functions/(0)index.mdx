@@ -1,0 +1,119 @@
+---
+title: "Server functions"
+titleTemplate: ":title"
+version: "2.0"
+description: "Call server-only functions from browser code through Solid's typed HTTP transport."
+---
+
+Server functions let browser code call functions whose implementations stay in the server build.
+They work without a router, but routers can add caching, submissions, revalidation, and progressive enhancement.
+
+## Enable server functions
+
+Enable the transform with the `serverFunctions` option in start mode:
+
+```ts
+import { defineConfig } from "vite";
+import solid from "@solidjs/vite-plugin";
+
+export default defineConfig({
+	plugins: [
+		solid({
+			start: true,
+			ssr: true,
+			serverFunctions: true,
+		}),
+	],
+});
+```
+
+The official `solid-v2/fullstack` and `solid-v2/fullstack-tanstack` templates use this configuration.
+
+## Declare a server function
+
+Add `"use server"` to a function body:
+
+```ts
+export async function findUser(id: string) {
+	"use server";
+	return database.users.find(id);
+}
+```
+
+The transform extracts the implementation into the server build.
+The client build receives a callable reference that sends an HTTP request to the server-function endpoint.
+Code used only inside the server function, such as a database import or validation schema, does not enter the client bundle.
+
+A function-level server function can use module-scope bindings.
+It cannot close over a component or another local scope.
+Pass required local values as arguments.
+
+## Declare a server module
+
+Place the directive at the top of a module to turn each export into a server function:
+
+```ts
+"use server";
+
+export async function listUsers() {
+	return database.users.all();
+}
+
+export async function countUsers() {
+	return database.users.count();
+}
+```
+
+Each export must evaluate to a function.
+Named functions, default exports, aliases, and server-side wrappers are valid.
+A non-function export stops the server during module evaluation.
+
+Module-level wrappers become part of the registered server implementation:
+
+```ts
+"use server";
+
+import { getRequestEvent, redirect } from "@solidjs/web";
+
+const withAuthorization =
+	(fn) =>
+	async (...args) => {
+		const event = getRequestEvent();
+		if (!event?.locals.userId) throw redirect("/sign-in");
+		return fn(...args);
+	};
+
+export const listPrivateTodos = withAuthorization(async () => {
+	return database.todos.forUser(getRequestEvent()!.locals.userId);
+});
+```
+
+The wrapper runs for HTTP dispatch and in-process server rendering.
+By contrast, declaration wrappers such as `GET()` and `live()` belong around a function-level directive.
+Those wrappers configure the callable reference and its transport behavior.
+
+## Calls during server rendering
+
+Calling a server function in the browser uses the HTTP transport.
+Calling the same reference during server-side rendering runs the implementation in the current server process.
+The direct call receives a derived request event with `serverOnly: true`.
+
+Configured invocation policy can cover both call paths.
+This prevents an authorization or logging policy from being bypassed by a direct server-rendering call.
+
+## Treat arguments as untrusted input
+
+TypeScript types do not validate values that cross an HTTP boundary.
+Validate every caller-controlled argument and authorize the requested operation inside the server function.
+
+Read trusted identity from [`getRequestEvent()`](/reference/solid-web/request-response/get-request-event) instead of accepting credentials or user identifiers from the caller.
+Solid applies same-origin checks to state-changing server-function requests by default, but origin checks do not replace input validation or authorization.
+
+## Continue learning
+
+- [Reads, streams, and live data](/building-apps/server-functions/reads-and-live-data) explains `GET()`, async iterables, and `live()`.
+- [Arguments and security](/building-apps/server-functions/arguments-and-security) covers native request bodies, rich values, validation, and request context.
+- [Mutations and responses](/building-apps/server-functions/mutations-and-responses) covers `respond()`, `redirect()`, `reload()`, and safe errors.
+- [Metadata and transport](/building-apps/server-functions/metadata-and-transport) covers `withMeta()`, `prepareRequest`, `invoke()`, and custom endpoints.
+- [Progressive enhancement](/building-apps/server-functions/progressive-enhancement) covers form actions and no-JavaScript requests.
+- [Solid Router data APIs](/routing/solid-router/data) explains optional `query()` and `action()` integration.

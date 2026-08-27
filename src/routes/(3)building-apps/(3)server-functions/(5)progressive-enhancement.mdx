@@ -1,0 +1,112 @@
+---
+title: "Progressive enhancement"
+titleTemplate: ":title"
+version: "2.0"
+description: "Submit server-function forms before or without the client runtime."
+---
+
+A server-function reference exposes a self-describing `url`.
+Use the URL as a form action when the operation must work before hydration or when JavaScript is unavailable.
+
+## Post a form
+
+Declare a server function that accepts one `FormData` argument:
+
+```ts
+import { redirect, respond } from "@solidjs/web";
+
+export async function createTodo(form: FormData) {
+	"use server";
+
+	const title = String(form.get("title") ?? "").trim();
+	if (!title) {
+		throw respond({ error: "Enter a title" }, { status: 400 });
+	}
+
+	await database.todos.insert({ title });
+	return redirect("/todos", { revalidate: "todos" });
+}
+```
+
+Use the reference URL in the form:
+
+```tsx
+<form method="post" action={createTodo.url}>
+	<label>
+		Title
+		<input name="title" required />
+	</label>
+	<button type="submit">Add todo</button>
+</form>
+```
+
+The browser can submit this form without the server-function client runtime.
+The server detects an unscripted request by the absence of the `X-Server-Function-Instance` request header.
+It decodes a form request as one `FormData` argument.
+
+## Submit a GET form
+
+A GET form replaces the action URL's query string with the form fields.
+When the query is not an encoded server-function argument list, the handler passes one `URLSearchParams` argument:
+
+```ts
+import { GET } from "@solidjs/web/server-functions";
+
+export const search = GET(async (params: URLSearchParams) => {
+	"use server";
+	return database.search(String(params.get("q") ?? ""));
+});
+```
+
+```tsx
+<form method="get" action={search.url}>
+	<input name="q" />
+	<button type="submit">Search</button>
+</form>
+```
+
+GET functions must remain safe and idempotent.
+Do not use a GET form for a mutation.
+
+## Bind leading arguments
+
+The function id lives in the URL path.
+An integration can add JSON-safe bound arguments to the reserved `args` query parameter, while the submitted form remains the final `FormData` argument.
+
+Use `serverFunctionUrl(id, boundArgs)` when a router, form helper, or custom host must build this URL:
+
+```ts
+import { serverFunctionUrl } from "@solidjs/web/server-functions";
+
+const action = serverFunctionUrl(updateTodo.id, [todo.id]);
+```
+
+Bound arguments must be JSON-safe.
+The no-JavaScript form convention does not load the rich-argument serializer.
+
+Application components normally use a reference's `url` or a router form helper instead of constructing the address.
+
+## Understand response ownership
+
+Core owns the transport:
+
+- It identifies scripted and unscripted calls.
+- It decodes URL and form arguments.
+- It provides the default `createNoJSHandler()` response for browser form posts.
+- It redirects a POST with status 303 and stores a non-`Response` outcome in a one-shot flash cookie.
+- It exposes `handleNoJS` so an integration can replace or extend that response policy.
+- It preserves response status, headers, bodies, redirects, and revalidation metadata.
+
+The router owns submission behavior:
+
+- It reads and clears the flash cookie during the next server render.
+- It turns the decoded outcome into router submission state.
+- It connects revalidation metadata to the query cache.
+
+The core default works when a custom host dispatches the request through `handleServerFunctionRequest()`.
+A custom host can configure `createNoJSHandler()` with a base path or provide another `handleNoJS` implementation.
+
+Keep application validation and authorization inside the server function.
+No-JavaScript requests reach the same implementation as scripted requests.
+
+See [Server rendering with Solid Router](/routing/solid-router/server-rendering) for router setup and [server-function progressive-enhancement APIs](/reference/solid-web/server-functions/progressive-enhancement) for host integration.

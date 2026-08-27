@@ -1,0 +1,180 @@
+---
+title: "Arguments and security"
+titleTemplate: ":title"
+version: "2.0"
+description: "Encode server-function arguments and validate untrusted requests."
+---
+
+Server-function arguments cross an HTTP boundary.
+Choose values with a supported encoding, then validate and authorize the decoded values inside the server function.
+
+## Default argument encoding
+
+The client sends ordinary argument lists as JSON.
+Strings, numbers, booleans, arrays, plain objects, and `null` work without additional setup.
+
+Some single arguments have a natural HTTP encoding and are sent directly.
+These values include:
+
+- `string`
+- `URLSearchParams`
+- `FormData`
+- `Blob`
+- `File`
+- `ArrayBuffer`
+- `Uint8Array`
+
+These values do not need to be converted to JSON.
+This makes a server function suitable for forms and file uploads:
+
+```ts
+export async function uploadAvatar(form: FormData) {
+	"use server";
+
+	const file = form.get("avatar");
+	if (!(file instanceof File)) {
+		throw new Error("Select an avatar file");
+	}
+
+	await avatarStore.save(file);
+}
+```
+
+## Enable rich arguments
+
+JSON cannot preserve values such as `Date`, `Map`, `Set`, typed arrays, or cyclic objects.
+The client throws a directed error when an argument list contains one of these values and rich arguments are not enabled.
+
+Call `enableRichArguments()` once in the client entry:
+
+```ts
+import { enableRichArguments } from "@solidjs/web/server-functions/rich-args";
+
+enableRichArguments();
+```
+
+Rich arguments use the configured server-function codec.
+Call the helper only when the application sends values that JSON cannot represent.
+Results use the codec automatically when required, so the rich-argument opt-in affects arguments only.
+
+A custom codec plugin must use the `createPlugin` export from `@solidjs/web/serialization`.
+Configure matching codec options on the client and server.
+
+## Validate caller-controlled values
+
+TypeScript checks code during development.
+It does not check an HTTP request sent by a browser, script, or attacker.
+
+Accept an unknown value when the boundary is not already represented by a concrete web type such as `FormData`.
+Parse the value before using it:
+
+::::tab-group[validation-library]
+
+:::tab[Valibot]
+
+```ts
+import { getRequestEvent, respond } from "@solidjs/web";
+import * as v from "valibot";
+
+const RenameInput = v.object({
+	name: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(100)),
+});
+
+export async function renameCurrentUser(input: unknown) {
+	"use server";
+
+	const parsed = v.safeParse(RenameInput, input);
+	if (!parsed.success) {
+		throw respond(
+			{ name: "ValidationError", issues: parsed.issues },
+			{ status: 400 }
+		);
+	}
+
+	const event = getRequestEvent();
+	const userId = event?.locals.userId;
+	if (!userId) {
+		throw respond({ error: "Unauthorized" }, { status: 401 });
+	}
+
+	await database.users.update(userId, parsed.output);
+}
+```
+
+:::
+
+:::tab[Zod]
+
+```ts
+import { getRequestEvent, respond } from "@solidjs/web";
+import { z } from "zod";
+
+const RenameInput = z.object({
+	name: z.string().trim().min(1).max(100),
+});
+
+export async function renameCurrentUser(input: unknown) {
+	"use server";
+
+	const parsed = RenameInput.safeParse(input);
+	if (!parsed.success) {
+		throw respond(
+			{ name: "ValidationError", issues: parsed.error.issues },
+			{ status: 400 }
+		);
+	}
+
+	const event = getRequestEvent();
+	const userId = event?.locals.userId;
+	if (!userId) {
+		throw respond({ error: "Unauthorized" }, { status: 401 });
+	}
+
+	await database.users.update(userId, parsed.data);
+}
+```
+
+:::
+
+::::
+
+Place validation in the server function body.
+Function-level declaration wrappers configure the callable reference, but HTTP dispatch registers the server function itself.
+In-body validation therefore covers both HTTP dispatch and direct calls during server-side rendering.
+
+Validation libraries and schemas used only inside the `"use server"` body are removed from the client build.
+
+## Read trusted request context
+
+Use `getRequestEvent()` from `@solidjs/web` to read the current request and server-populated local values:
+
+```ts
+import { getRequestEvent } from "@solidjs/web";
+
+export async function currentUserId() {
+	"use server";
+
+	const event = getRequestEvent();
+	if (!event) throw new Error("Missing request event");
+
+	return event.locals.userId;
+}
+```
+
+Middleware can authenticate the request and add typed values to `event.locals`.
+See [Sessions and authentication](/building-apps/sessions-and-auth) for that pattern.
+
+Do not accept a user identifier, role, or other trusted identity value only because the caller supplied the value.
+Authorize the requested operation against server-controlled request context.
+
+## Same-origin protection
+
+The server-function handler checks the request origin for state-changing HTTP calls by default.
+The check uses Fetch metadata, `Origin`, or `Referer` headers when available.
+Requests with contradictory cross-origin metadata are rejected.
+
+GET and HEAD reads do not use this check.
+Only declare a function with `GET()` when the operation is safe and idempotent.
+
+Custom hosts can configure the expected public origin or replace the protection at a trusted outer layer.
+Keep the default protection unless the host has an equivalent cross-site request forgery (CSRF) policy.

@@ -10,7 +10,7 @@ tags:
   - "api"
   - "v2"
 version: "2.0"
-description: "Defines a code-split component. The returned component triggers its dynamic\nimport on first render and suspends through any enclosing `<Loading>`\nboundary while the chunk is in flight. Call `.preload()` to start the\nimport early (e.g. On hover)."
+description: "Defines a code-split component. The returned component triggers its dynamic\nimport on first render and suspends through any enclosing `<Loading>`\nboundary while the chunk is in flight. Call `.preload()` to start the\nimport early (e.g. on hover)."
 source_repo: "solidjs/solid"
 source_ref: "next"
 source_path: "packages/solid/src/client/component.ts"
@@ -21,7 +21,7 @@ source_path: "packages/solid/src/client/component.ts"
 Defines a code-split component. The returned component triggers its dynamic
 import on first render and suspends through any enclosing `<Loading>`
 boundary while the chunk is in flight. Call `.preload()` to start the
-import early (e.g. On hover).
+import early (e.g. on hover).
 
 ## Import
 
@@ -32,9 +32,15 @@ import { lazy } from "solid-js";
 ## Type signature
 
 ```ts
+function lazy<M extends Record<string, any>, K extends keyof M & string>(
+  fn: () => Promise<M>,
+  options: { export: K },
+  moduleUrl?: string
+): M[K] & { preload: () => Promise<M>; moduleUrl?: string };
 function lazy<T extends Component<any>>(
-	fn: () => Promise<{ default: T }>,
-	moduleUrl?: string
+  fn: () => Promise<{ default: T }>,
+  options?: { export?: string },
+  moduleUrl?: string
 ): T & { preload: () => Promise<{ default: T }>; moduleUrl?: string };
 ```
 
@@ -42,7 +48,18 @@ function lazy<T extends Component<any>>(
 
 ### `fn`
 
-Dynamic import returning the module's default export
+Dynamic import resolving the component's module. By default the
+component must BE the module's default export (same contract as
+React.lazy): hydration resolves it synchronously from the preloaded
+module, so wrappers that select a named export at runtime are not
+supported. To use a named export, pass `{ export: "Name" }` — the name is
+a call-site literal available on both server and client, so the
+synchronous hydration claim is preserved.
+
+### `options`
+
+`{ export?: string }` — which export of the resolved module
+is the component (defaults to `"default"`).
 
 ### `moduleUrl`
 
@@ -50,21 +67,22 @@ Optional module specifier injected by the bundler
 integration; exposed as the component's `moduleUrl` property (islands)
 and used in hydration error messages. Hydration itself matches
 server-preloaded modules positionally by hydration id, so lazy
-components without a moduleUrl (e.g. Via import.meta.glob) hydrate too.
+components without a moduleUrl (e.g. via import.meta.glob) hydrate too.
 
 ## Examples
 
 ```tsx
 const Profile = lazy(() => import("./Profile"));
+const About = lazy(() => import("./pages"), { export: "About" });
 
 function App() {
-	return (
-		<Loading fallback={<Spinner />}>
-			<Profile id="42" />
-		</Loading>
-	);
+  return (
+    <Loading fallback={<Spinner />}>
+      <Profile id="42" />
+    </Loading>
+  );
 }
 
 // Preload before the user clicks
-<button onMouseEnter={() => Profile.preload()}>Open profile</button>;
+<button onMouseEnter={() => Profile.preload()}>Open profile</button>
 ```

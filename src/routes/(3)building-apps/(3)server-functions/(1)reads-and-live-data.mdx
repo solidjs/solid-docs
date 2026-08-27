@@ -1,0 +1,149 @@
+---
+title: "Reads, streams, and live data"
+titleTemplate: ":title"
+version: "2.0"
+description: "Declare server-function reads, stream values, and keep live data connected."
+---
+
+Server functions use `POST` by default.
+Use `GET()` for a safe, idempotent read that can use HTTP caching.
+Use `live()` when one logical read produces values over time and must reconnect after a connection failure.
+
+## Declare a GET read
+
+Import `GET` from the server-functions entry:
+
+```ts
+import { GET } from "@solidjs/web/server-functions";
+
+export const getUser = GET(async (id: string) => {
+	"use server";
+	return database.users.find(id);
+});
+```
+
+The client puts the arguments in the request URL.
+When the encoded URL would exceed the transport limit, the client sends the read with `POST` instead.
+The fallback avoids a URL-length failure, but the response does not use a GET cache entry.
+
+A `GET()` declaration permits `GET` and `HEAD` requests.
+It does not remove the normal `POST` call path.
+An undeclared function rejects `GET` and `HEAD` requests with status 405.
+
+Do not put secrets or sensitive payloads in GET arguments.
+URLs can appear in browser history, server logs, and cache keys.
+
+Server-function responses use `Cache-Control: no-store` unless the function supplies another cache policy:
+
+```ts
+import { respond } from "@solidjs/web";
+import { GET } from "@solidjs/web/server-functions";
+
+export const getCatalog = GET(async () => {
+	"use server";
+	const items = await database.catalog.all();
+	return respond(items, {
+		headers: { "cache-control": "public, max-age=60" },
+	});
+});
+```
+
+## Return a stream
+
+A server function can return an async iterable.
+The transport sends each yielded value over the open response.
+Ending iteration in the browser aborts the request and lets the server producer clean up.
+
+```ts
+export async function* auditEvents() {
+	"use server";
+	for await (const event of auditLog.subscribe()) {
+		yield event;
+	}
+}
+```
+
+An ordinary streamed call has one connection.
+Use `live()` when a dropped connection must reopen and the source can yield its current value after every invocation.
+
+## Declare a live source
+
+A live source is value-shaped.
+Each yield replaces the previous answer to one logical query instead of representing an event to accumulate.
+
+```ts
+import { GET, live } from "@solidjs/web/server-functions";
+
+export const stockPrice = live(
+	GET(async function* (symbol: string) {
+		"use server";
+		for await (const tick of market.subscribe(symbol)) {
+			yield tick.price;
+		}
+	})
+);
+```
+
+Place `live()` outside `GET()`.
+`live()` adds the managed lifecycle, while `GET()` chooses the read transport.
+`live()` does not imply `GET()`, so a live source can use a streamed POST when URL caching is not useful.
+
+The source must yield current state first each time it is invoked.
+That contract lets a reconnect replace a disconnected answer without a separate client cache.
+
+## Read a live source reactively
+
+Pass the returned async iterable through an async computation:
+
+```tsx
+import { createMemo, Loading } from "solid-js";
+
+function Price(props: { symbol: string }) {
+	const source = stockPrice(props.symbol);
+	const price = createMemo(() => source);
+
+	return (
+		<Loading fallback={<span>Loading price…</span>}>
+			<output>{price()}</output>
+		</Loading>
+	);
+}
+```
+
+The first value can suspend the computation, so place a `Loading` boundary above the read.
+During server-side rendering, Solid renders the first value and hands subsequent work to the browser.
+
+One iteration represents one connection.
+Hoist the memo when several parts of the tree must share the same live result.
+Calling the server function at each consumption site creates separate connections.
+
+## Observe connection status
+
+The returned iterable has an optional `onstatus` callback:
+
+```tsx
+import { createMemo, createSignal } from "solid-js";
+import type { LiveSourceStatus } from "@solidjs/web/server-functions";
+
+const source = stockPrice("ACME");
+const [status, setStatus] = createSignal<LiveSourceStatus>();
+
+source.onstatus = (next) => setStatus(next);
+const price = createMemo(() => source);
+```
+
+The callback receives:
+
+- `"connected"` after each successful connection.
+- `"reconnecting"` when a connected stream fails and the client starts retrying.
+- `"closed"` when the source completes, the consumer ends iteration, or a definite rejection closes the source.
+
+A failure before the first connection rejects like a normal server-function call.
+After a connection succeeds, transient failures retry with exponential backoff.
+A 4xx response is a definite rejection and does not retry.
+
+Connection status is a transport detail.
+Put data freshness in the yielded value, such as a timestamp or heartbeat, when the UI needs to show whether the data itself is current.
+
+Live reads do not request single-flight mutation data.
+A live source updates through its open stream instead of router revalidation.

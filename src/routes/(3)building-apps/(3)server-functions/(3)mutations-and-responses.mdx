@@ -1,0 +1,138 @@
+---
+title: "Mutations and responses"
+titleTemplate: ":title"
+version: "2.0"
+description: "Return values, response metadata, redirects, revalidation, and safe errors from server functions."
+---
+
+Leave mutations on the default `POST` transport.
+Return an ordinary serializable value when the caller needs data and no HTTP metadata.
+Use Solid's response helpers when the result also controls status, headers, navigation, or revalidation.
+
+## Return a value with response metadata
+
+`respond()` pairs a value with a status and headers:
+
+```ts
+import { getRequestEvent, respond } from "@solidjs/web";
+
+export async function createUser(input: CreateUserInput) {
+	"use server";
+
+	const event = getRequestEvent();
+	if (!event?.locals.isAdmin) {
+		throw respond({ error: "Forbidden" }, { status: 403 });
+	}
+
+	const user = await database.users.create(input);
+	return respond(user, {
+		status: 201,
+		headers: { "x-created-user": user.id },
+	});
+}
+```
+
+A scripted caller receives `user`, not the response envelope.
+The transport applies the status and headers to the HTTP response.
+An unscripted HTTP caller receives a real JSON response body.
+
+Use [`isResponseEnvelope()`](/reference/solid-web/request-response/respond) when integration code must detect an envelope.
+The registered-symbol check works when a bundle contains more than one runtime copy.
+
+## Redirect the caller
+
+`redirect()` creates a response with a `Location` header:
+
+```ts
+import { getRequestEvent, redirect } from "@solidjs/web";
+
+export async function deleteCurrentAccount() {
+	"use server";
+
+	const event = getRequestEvent();
+	const userId = event?.locals.userId;
+	if (!userId) throw redirect("/sign-in");
+
+	await database.users.remove(userId);
+	return redirect("/goodbye", { revalidate: "session" });
+}
+```
+
+Return or throw a redirect.
+The router or host integration decides how to apply navigation in the browser.
+
+The redirect target can be an `Href` produced by a router.
+Solid preserves the target's logical application path when the router brands the value.
+
+## Request revalidation
+
+`reload()` returns a response that asks an integration to refresh cached data:
+
+```ts
+import { reload } from "@solidjs/web";
+
+export async function addTodo(title: string) {
+	"use server";
+
+	await database.todos.insert({ title });
+	return reload({ revalidate: "todos" });
+}
+```
+
+Omit `revalidate` to request a broad refresh.
+Core carries the response metadata but does not define a cache.
+Solid Router interprets the metadata for its query cache.
+
+`respond()` and `redirect()` accept the same `revalidate` option when the mutation also returns a value or changes location.
+
+## Handle thrown errors
+
+A returned or thrown `Response` or response envelope is intentional control flow.
+The server-function handler preserves its status, headers, and carried value.
+
+A plain thrown value is handled differently.
+Development builds send its details to the caller.
+Production builds replace an unbranded error with `Error("Internal Server Error")` so database, query, or infrastructure details do not leak.
+The build's `development` export condition selects this behavior; changing `NODE_ENV` at runtime does not.
+
+Use a response envelope for structured application failures:
+
+```ts
+throw respond({ name: "ValidationError", issues }, { status: 400 });
+```
+
+Use `markSafeError()` when an `Error` object contains intentional client-facing information:
+
+```ts
+import { markSafeError } from "@solidjs/web";
+
+throw markSafeError(new Error("The invitation has expired"));
+```
+
+The brand permits the error message and own properties to cross the boundary.
+Do not brand infrastructure errors or errors that can contain secrets.
+Integration code can test the brand with [`isSafeError()`](/reference/solid-web/request-response/safe-errors).
+
+## Add router submissions
+
+Solid Router can wrap server functions with `action()`:
+
+```ts
+import { action } from "@solidjs/router";
+import { reload } from "@solidjs/web";
+
+export const addTodo = action(async (form: FormData) => {
+	"use server";
+
+	await database.todos.insert({
+		title: String(form.get("title") ?? ""),
+	});
+	return reload({ revalidate: "todos" });
+});
+```
+
+`action()` tracks submissions and applies response metadata to the router's query cache.
+When the router registers its single-flight integration, the mutation response can carry refreshed route data with the mutation result.
+The server-function runtime treats that route data as an opaque payload.
+
+See [Data APIs](/routing/solid-router/data) for `action()`, submissions, and query invalidation.

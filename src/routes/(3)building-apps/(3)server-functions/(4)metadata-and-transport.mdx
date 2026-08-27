@@ -1,0 +1,147 @@
+---
+title: "Metadata and transport"
+titleTemplate: ":title"
+version: "2.0"
+description: "Configure server-function metadata, client transport policy, and individual calls."
+---
+
+Most applications can call a server function without configuring its transport.
+Use the APIs on this page when a declaration needs static metadata, every request needs session-dependent policy, or one call needs an abort signal or Fetch hint.
+
+## Attach declaration metadata
+
+`withMeta()` attaches transport metadata to a server-function reference:
+
+```ts
+import { withMeta } from "@solidjs/web/server-functions";
+
+export const chargeCard = withMeta(
+	async (amount: number) => {
+		"use server";
+		return payments.charge(amount);
+	},
+	{ requiresAuth: true }
+);
+```
+
+Metadata describes the function.
+It does not run server-side policy by itself.
+Later `withMeta()` calls shallow-merge their values over earlier metadata.
+
+`GET()` uses the same metadata channel for its HTTP method.
+The two wrappers compose in either order.
+Place `live()` outside both wrappers because `live()` wraps the call behavior:
+
+```ts
+export const prices = live(
+	withMeta(
+		GET(async function* () {
+			"use server";
+			yield* market.prices();
+		}),
+		{ channel: "prices" }
+	)
+);
+```
+
+Use `getServerFunctionMetadata()` when integration code must inspect a declaration.
+Use `isServerFunction()` before accepting an unknown callable as a server-function reference.
+Every reference also exposes its stable `id` and current `url`.
+
+## Prepare every client request
+
+`configureServerFunctionsClient()` configures the browser transport.
+Its `prepareRequest` hook runs before each server-function fetch:
+
+```ts
+import { configureServerFunctionsClient } from "@solidjs/web/server-functions";
+
+configureServerFunctionsClient({
+	prepareRequest(init, { meta }) {
+		if (!meta?.requiresAuth) return init;
+
+		const headers = new Headers(init.headers);
+		headers.set("authorization", `Bearer ${session.token()}`);
+		return { ...init, headers };
+	},
+});
+```
+
+Use `prepareRequest` for policy that changes during a browser session, such as an OAuth token or tracing header.
+The hook receives the final `RequestInit`, the function id, and the declaration metadata.
+
+The configuration accepts one hook.
+Compose several policies inside one function when the application needs more than one.
+
+## Configure a custom endpoint
+
+The default endpoint is `/_server`.
+Start mode configures matching client and server values when its `serverFunctions.endpoint` option changes.
+
+Configure the runtime directly only when an authored client or custom host owns the entries:
+
+```ts
+configureServerFunctionsClient({
+	endpoint: "/app/_server",
+});
+```
+
+The client endpoint must match the path where the server mounts `handleServerFunctionRequest()`.
+A base path is part of that endpoint.
+
+## Configure one call
+
+`invoke()` calls a server-function reference with invocation-scoped Fetch options:
+
+```ts
+import { invoke } from "@solidjs/web/server-functions";
+
+const controller = new AbortController();
+
+const result = invoke(
+	updateProfile,
+	{ signal: controller.signal, priority: "high" },
+	{ displayName: "Ada" }
+);
+
+controller.abort();
+await result;
+```
+
+`invoke()` accepts:
+
+- `signal` to cancel the caller and the HTTP request.
+- `keepalive` for a small request that must continue while the page unloads.
+- `priority` as a Fetch priority hint.
+
+Use `AbortSignal.timeout()` or `AbortSignal.any()` to build deadlines and combined cancellation.
+
+The API rejects options that have a longer lifetime or a different owner.
+Set headers in `prepareRequest`, declare reads with `GET()`, attach static values with `withMeta()`, and implement retries or deduplication in the data layer that owns the call.
+
+During an in-process server-rendering call, an abort signal rejects the caller.
+The underlying server work continues unless the function observes its own cancellation source.
+`keepalive` and `priority` have no effect because the direct call has no network request.
+
+Wrappers around a server-function reference must forward the invocation channel to support `invoke()`.
+Application code normally uses the reference directly or through a data layer that already handles this composition.
+
+## Read the current invocation
+
+`getServerFunctionInvocation()` reads the identity of the server function that is currently executing:
+
+```ts
+import { getServerFunctionInvocation } from "@solidjs/web/server-functions";
+
+export async function loadAccount() {
+	"use server";
+
+	const invocation = getServerFunctionInvocation();
+	logger.info({ serverFunctionId: invocation?.id });
+	return database.accounts.current();
+}
+```
+
+Invocation identity describes the current call.
+`getServerFunctionMetadata(fn)` describes a function declaration.
+Use the first for logs or per-call cache keys and the second for transport policy.

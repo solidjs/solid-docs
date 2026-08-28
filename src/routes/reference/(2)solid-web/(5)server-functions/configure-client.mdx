@@ -30,7 +30,9 @@ import { configureServerFunctionsClient } from "@solidjs/web/server-functions";
 ## Type signature
 
 ```ts
-function configureServerFunctionsClient(config?: ServerFunctionsClientConfig): void;
+function configureServerFunctionsClient(
+	config?: ServerFunctionsClientConfig
+): void;
 ```
 
 ## Examples
@@ -53,9 +55,9 @@ The context `prepareRequest` receives alongside the outgoing RequestInit.
 
 ```ts
 interface PrepareRequestContext {
-  id: string;
-  meta: ServerFunctionMetadata | undefined;
-};
+	id: string;
+	meta: ServerFunctionMetadata | undefined;
+}
 ```
 
 #### `id`
@@ -83,8 +85,8 @@ a chain — compose by wrapping functions in userland.
 
 ```ts
 type PrepareRequestHook = (
-  init: RequestInit,
-  context: PrepareRequestContext
+	init: RequestInit,
+	context: PrepareRequestContext
 ) => RequestInit | Promise<RequestInit>;
 ```
 
@@ -94,18 +96,18 @@ Options for `configureServerFunctionsClient`.
 
 ```ts
 interface ServerFunctionsClientConfig {
-  endpoint?: string;
-  codec?: JSONCodecOptions;
-  prepareRequest?: PrepareRequestHook;
-  responseHandler?: {
-    capture?(info: { id: string; meta: unknown }): unknown;
-    handle(
-      response: Response,
-      ctx: { id: string; meta: unknown; args: unknown[]; context: unknown }
-    ): unknown;
-  };
-  serializeArgs?(args: unknown[]): string | Promise<string>;
-};
+	endpoint?: string;
+	codec?: JSONCodecOptions;
+	prepareRequest?: PrepareRequestHook;
+	responseHandler?: {
+		capture?(info: { id: string; meta: unknown }): unknown;
+		handle(
+			response: Response,
+			ctx: { id: string; meta: unknown; args: unknown[]; context: unknown }
+		): unknown;
+	};
+	serializeArgs?(args: unknown[]): string | Promise<string>;
+}
 ```
 
 #### `endpoint`
@@ -136,24 +138,24 @@ cross-cutting concerns — bearer tokens, tracing headers:
 
 ```ts
 configureServerFunctionsClient({
-  prepareRequest(init) {
-    return {
-      ...init,
-      headers: { ...init.headers, Authorization: `Bearer ${session.token()}` }
-    };
-  }
+	prepareRequest(init) {
+		return {
+			...init,
+			headers: { ...init.headers, Authorization: `Bearer ${session.token()}` },
+		};
+	},
 });
 ```
 
 #### `responseHandler`
 
 - **Type:** `{
-    capture?(info: { id: string; meta: unknown }): unknown;
-    handle(
-      response: Response,
-      ctx: { id: string; meta: unknown; args: unknown[]; context: unknown }
-    ): unknown;
-  }`
+  capture?(info: { id: string; meta: unknown }): unknown;
+  handle(
+    response: Response,
+    ctx: { id: string; meta: unknown; args: unknown[]; context: unknown }
+  ): unknown;
+}`
 
 Response-side integration seam — the client mirror of the handler's
 `transformResult`. `handle(response, ctx)` sees every response before

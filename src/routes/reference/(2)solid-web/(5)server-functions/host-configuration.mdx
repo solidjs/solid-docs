@@ -33,7 +33,9 @@ import { configureServerFunctionsServer } from "@solidjs/web/server-functions";
 ## Type signature
 
 ```ts
-function configureServerFunctionsServer(config?: ServerFunctionsServerConfig): void;
+function configureServerFunctionsServer(
+	config?: ServerFunctionsServerConfig
+): void;
 ```
 
 ---
@@ -50,8 +52,8 @@ import { handleServerFunctionRequest } from "@solidjs/web/server-functions";
 
 ```ts
 function handleServerFunctionRequest(
-  request: Request,
-  options?: HandleServerFunctionOptions
+	request: Request,
+	options?: HandleServerFunctionOptions
 ): Promise<Response>;
 ```
 
@@ -65,35 +67,40 @@ encodes results on its own.
 
 ```ts
 interface HandleServerFunctionOptions {
-  createEvent?(request: Request): ServerFunctionEvent;
-  provideEvent?<T>(event: ServerFunctionEvent, fn: () => T): T;
-  wrapInvocation?: WrapInvocationHook;
-  transformResult?(
-    event: ServerFunctionEvent,
-    result: unknown,
-    context: {
-      id: string;
-      args: unknown[];
-      instance: string | null;
-      request: Request;
-      thrown?: boolean;
-    }
-  ): unknown | ResponseEnvelope | Promise<unknown | ResponseEnvelope>;
-  collectFlightData?: CollectFlightDataHook;
-  transformFlightResult?(
-    event: ServerFunctionEvent,
-    outcome: { value: unknown; data: unknown },
-    context: { id: string; args: unknown[]; instance: string | null; request: Request }
-  ): Response | undefined | Promise<Response | undefined>;
-  handleNoJS?(
-    result: unknown,
-    request: Request,
-    args: unknown[],
-    thrown?: boolean
-  ): Response | Promise<Response>;
-  csrf?: boolean | ServerFunctionCSRFOptions;
-  codec?: JSONCodecOptions;
-};
+	createEvent?(request: Request): ServerFunctionEvent;
+	provideEvent?<T>(event: ServerFunctionEvent, fn: () => T): T;
+	wrapInvocation?: WrapInvocationHook;
+	transformResult?(
+		event: ServerFunctionEvent,
+		result: unknown,
+		context: {
+			id: string;
+			args: unknown[];
+			instance: string | null;
+			request: Request;
+			thrown?: boolean;
+		}
+	): unknown | ResponseEnvelope | Promise<unknown | ResponseEnvelope>;
+	collectFlightData?: CollectFlightDataHook;
+	transformFlightResult?(
+		event: ServerFunctionEvent,
+		outcome: { value: unknown; data: unknown },
+		context: {
+			id: string;
+			args: unknown[];
+			instance: string | null;
+			request: Request;
+		}
+	): Response | undefined | Promise<Response | undefined>;
+	handleNoJS?(
+		result: unknown,
+		request: Request,
+		args: unknown[],
+		thrown?: boolean
+	): Response | Promise<Response>;
+	csrf?: boolean | ServerFunctionCSRFOptions;
+	codec?: JSONCodecOptions;
+}
 ```
 
 #### `createEvent`
@@ -185,9 +192,9 @@ Same-origin validation options for server function requests.
 
 ```ts
 interface ServerFunctionCSRFOptions {
-  origin?: ServerFunctionOriginMatcher;
-  allowRequestsWithoutOriginCheck?: boolean;
-};
+	origin?: ServerFunctionOriginMatcher;
+	allowRequestsWithoutOriginCheck?: boolean;
+}
 ```
 
 #### `origin`
@@ -213,8 +220,8 @@ client.
 
 ```ts
 interface ServerFunctionEvent extends RequestEvent {
-  serverOnly?: boolean;
-};
+	serverOnly?: boolean;
+}
 ```
 
 #### `serverOnly`
@@ -225,9 +232,9 @@ interface ServerFunctionEvent extends RequestEvent {
 
 ```ts
 type ServerFunctionOriginMatcher =
-  | string
-  | readonly string[]
-  | ((origin: string, request: Request) => boolean | Promise<boolean>);
+	| string
+	| readonly string[]
+	| ((origin: string, request: Request) => boolean | Promise<boolean>);
 ```
 
 ### `ServerFunctionsServerConfig`
@@ -236,41 +243,46 @@ Options for `configureServerFunctionsServer`.
 
 ```ts
 interface ServerFunctionsServerConfig {
-  provideEvent?: <T>(event: ServerFunctionEvent, fn: () => T) => T;
-  wrapInvocation?: WrapInvocationHook;
-  collectFlightData?: CollectFlightDataHook;
-  transformResult?(
-    event: ServerFunctionEvent,
-    result: unknown,
-    context: {
-      id: string;
-      args: unknown[];
-      instance: string | null;
-      request: Request;
-      thrown?: boolean;
-    }
-  ): unknown | ResponseEnvelope | Promise<unknown | ResponseEnvelope>;
-  transformFlightResult?(
-    event: ServerFunctionEvent,
-    outcome: { value: unknown; data: unknown },
-    context: { id: string; args: unknown[]; instance: string | null; request: Request }
-  ): Response | undefined | Promise<Response | undefined>;
-  transformDirectResult?(
-    value: unknown,
-    options: { id: string; args: unknown[]; event: ServerFunctionEvent }
-  ): unknown;
-  handleNoJS?:
-    | ((
-        result: unknown,
-        request: Request,
-        args: unknown[],
-        thrown?: boolean
-      ) => Response | Promise<Response>)
-    | null;
-  endpoint?: string;
-  csrf?: boolean | ServerFunctionCSRFOptions;
-  codec?: JSONCodecOptions;
-};
+	provideEvent?: <T>(event: ServerFunctionEvent, fn: () => T) => T;
+	wrapInvocation?: WrapInvocationHook;
+	collectFlightData?: CollectFlightDataHook;
+	transformResult?(
+		event: ServerFunctionEvent,
+		result: unknown,
+		context: {
+			id: string;
+			args: unknown[];
+			instance: string | null;
+			request: Request;
+			thrown?: boolean;
+		}
+	): unknown | ResponseEnvelope | Promise<unknown | ResponseEnvelope>;
+	transformFlightResult?(
+		event: ServerFunctionEvent,
+		outcome: { value: unknown; data: unknown },
+		context: {
+			id: string;
+			args: unknown[];
+			instance: string | null;
+			request: Request;
+		}
+	): Response | undefined | Promise<Response | undefined>;
+	transformDirectResult?(
+		value: unknown,
+		options: { id: string; args: unknown[]; event: ServerFunctionEvent }
+	): unknown;
+	handleNoJS?:
+		| ((
+				result: unknown,
+				request: Request,
+				args: unknown[],
+				thrown?: boolean
+		  ) => Response | Promise<Response>)
+		| null;
+	endpoint?: string;
+	csrf?: boolean | ServerFunctionCSRFOptions;
+	codec?: JSONCodecOptions;
+}
 ```
 
 #### `provideEvent`
@@ -334,12 +346,12 @@ calls during document SSR — e.g. frames' `frameTransformDirectResult`.
 #### `handleNoJS`
 
 - **Type:** `| ((
-        result: unknown,
-        request: Request,
-        args: unknown[],
-        thrown?: boolean
-      ) => Response | Promise<Response>)
-    | null`
+    result: unknown,
+    request: Request,
+    args: unknown[],
+    thrown?: boolean
+  ) => Response | Promise<Response>)
+| null`
 
 Server-wide response builder for calls made without the client runtime
 (see `handleNoJS` in `HandleServerFunctionRequestOptions`); a
@@ -393,13 +405,13 @@ be async.
 
 ```ts
 type WrapInvocationHook = (
-  run: () => unknown,
-  context: {
-    id: string;
-    args: unknown[];
-    event: ServerFunctionEvent;
-    request?: Request;
-    direct: boolean;
-  }
+	run: () => unknown,
+	context: {
+		id: string;
+		args: unknown[];
+		event: ServerFunctionEvent;
+		request?: Request;
+		direct: boolean;
+	}
 ) => unknown;
 ```

@@ -442,6 +442,83 @@ In the type signature `JSX.EventHandler<T, E>`, `currentTarget` will consistentl
 However, the type of target could be more generic, potentially any DOM element.
 For specific events like `Input` and `Focus` that are directly associated with input elements, the target will have the type `HTMLInputElement`.
 
+#### The `on:` directive
+
+The `on:___` attribute provides low-level access to native DOM `addEventListener`, allowing custom event types and listener options.
+
+##### Custom events
+
+To handle custom events, extend Solid's JSX namespace with the `CustomEvents` interface:
+
+```tsx
+class NameEvent extends CustomEvent<{ name: string }> {
+	constructor(name: string) {
+		super("Name", { detail: { name } });
+	}
+}
+
+declare module "solid-js" {
+	namespace JSX {
+		interface CustomEvents {
+			Name: NameEvent; // Matches `on:Name`
+		}
+	}
+}
+
+// Usage
+<div on:Name={(event) => console.log("name is", event.detail.name)} />;
+```
+
+:::note
+
+<span>New in v1.9.0</span>
+:::
+
+It is now possible to use the intersection `EventListenerObject & AddEventListenerOptions` to provide listener options as follows:
+
+```tsx
+import type { JSX } from "solid-js";
+
+const handler: JSX.EventHandlerWithOptions<HTMLDivElement, Event> = {
+	once: true,
+	handleEvent: (event) => {
+		console.log("will fire only once");
+	},
+}
+
+// Usage
+<div on:click={handler} />;
+```
+
+##### Using native events with `on:`
+
+By default, using native events like `mousemove` with the `on:` prefix — for example, `<div on:mousemove={e => {}} />` — will trigger a TypeScript error.
+This occurs because these native events are not part of Solid's custom event type definitions.
+To solve this, the `CustomEvents` interface can be extended to include events from the `HTMLElementEventMap` (which covers HTML element events — not `Document` or `Window` events).
+
+To include all native events:
+
+```ts
+declare module "solid-js" {
+	namespace JSX {
+		interface CustomEvents extends HTMLElementEventMap {}
+	}
+}
+```
+
+To include specific native events, you can choose certain events (e.g. `mousemove` and `pointermove`):
+
+```ts
+declare module "solid-js" {
+	namespace JSX {
+		interface CustomEvents extends Pick<
+			HTMLElementEventMap,
+			"mousemove" | "pointermove"
+		> {}
+	}
+}
+```
+
 ### `ref` attribute
 
 #### Basics
@@ -632,86 +709,7 @@ The following alternative also works when using `Show`:
 
 ## Advanced JSX attributes and directives
 
-### Custom event handlers
-
-To handle custom events in Solid, you can use the attribute `on:___`.
-Typing these events requires an extension of Solid's JSX namespace.
-
-```tsx
-class NameEvent extends CustomEvent {
-	type: "Name";
-	detail: { name: string };
-
-	constructor(name: string) {
-		super("Name", { detail: { name } });
-	}
-}
-
-declare module "solid-js" {
-	namespace JSX {
-		interface CustomEvents {
-			Name: NameEvent; // Matches `on:Name`
-		}
-	}
-}
-
-// Usage
-<div on:Name={(event) => console.log("name is", event.detail.name)} />;
-```
-
-:::note
-
-<span>New in v1.9.0</span>
-:::
-
-It is now possible to use the intersection `EventListenerObject & AddEventListenerOptions` to provide listener options as follows:
-
-```tsx
-import type { JSX } from "solid-js"
-
-const handler: JSX.EventHandlerWithOptions<HTMLDivElement, Event> =  {
-	once: true,
-	handleEvent: (event) => {
-		console.log("will fire only once");
-	},
-}
-
-// Usage
-<div on:click={handler} />;
-```
-
-:::note
-**Note**:
-By default, using native events like `mousemove` with the `on` prefix — for example, `<div on:mousemove={e => {}} />` — will trigger a TypeScript error.
-This occurs because these native events are not part of Solid's custom event type definitions.
-To solve this, the `CustomEvents` interface can be extended to include events from the `HTMLElementEventMap`:
-
-To include all native events:
-
-```ts
-declare module "solid-js" {
-	namespace JSX {
-		interface CustomEvents extends HTMLElementEventMap {}
-	}
-}
-```
-
-To include specific native events, you can choose certain events (e.g. `mousemove` and `pointermove`):
-
-```ts
-declare module "solid-js" {
-	namespace JSX {
-		interface CustomEvents extends Pick<
-			HTMLElementEventMap,
-			"mousemove" | "pointermove"
-		> {}
-	}
-}
-```
-
-:::
-
-#### Forcing properties and custom attributes
+### Forcing properties and custom attributes
 
 In Solid, the `prop:___` directive allows explicit property setting, which is useful for retaining the original data types like objects or arrays.
 `attr:___` directive allows custom attributes, on the other hand, and it is effective for handling string-based HTML attributes.
@@ -738,7 +736,7 @@ declare module "solid-js" {
 <my-web-component attr:name={name()} attr:count={count()} bool:disabled={true}/>
 ```
 
-#### Custom directives
+### Custom directives
 
 In Solid, custom directives can be applied using the `use:___` attribute, which usually accepts a target element and a JSX attribute value.
 The traditional `Directives` interface types these values directly (i.e. the type of `value` in `<div use:foo={value} />`).
@@ -823,7 +821,7 @@ While the `Directives` interface can limit the value type passed via JSX attribu
 <div use:model={createSignal('')} />
 ```
 
-##### Addressing import issues with directives
+#### Addressing import issues with directives
 
 If directives are imported from a separate file or module, TypeScript might mistakenly remove the import thinking it is a type.
 

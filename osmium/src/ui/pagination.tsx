@@ -25,15 +25,15 @@ export function Pagination(_props: Pagination) {
 		<Suspense>
 			<nav
 				aria-label="Documentation pagination"
-				class="mt-10 flex flex-col gap-6 border-t border-slate-200 pt-6 sm:flex-row sm:justify-between dark:border-slate-800"
+				class="border-border mt-10 flex flex-col gap-3 border-t pt-2 sm:flex-row sm:justify-between"
 			>
 				<div class="max-w-full min-w-0 sm:max-w-[48%]">
 					<Show when={hasPrev()}>
-						<span class="font-display text-sm font-medium text-slate-900 dark:text-white">
+						<span class="font-display text-text-subtle text-xs font-semibold tracking-wide uppercase">
 							Previous
 						</span>
 						<a
-							class="block max-w-full text-base font-medium [overflow-wrap:anywhere] text-slate-500 no-underline hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-300"
+							class="border-border bg-surface-raised text-text hover:border-border-strong hover:text-action focus-visible:ring-focus focus-visible:ring-offset-canvas mt-1 block max-w-full rounded border px-4 py-3 text-base font-semibold [overflow-wrap:anywhere] no-underline shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
 							href={customLink(frontmatter()?.prev) ?? prevNext.prevLink().link}
 						>
 							← {customTitle(frontmatter()?.prev) ?? prevNext.prevLink().title}
@@ -42,11 +42,11 @@ export function Pagination(_props: Pagination) {
 				</div>
 				<Show when={hasNext()}>
 					<div class="max-w-full min-w-0 self-end text-right sm:ml-auto sm:max-w-[48%]">
-						<span class="font-display text-sm font-medium text-slate-900 dark:text-white">
+						<span class="font-display text-text-subtle text-xs font-semibold tracking-wide uppercase">
 							Next
 						</span>
 						<a
-							class="block max-w-full text-base font-medium [overflow-wrap:anywhere] text-slate-500 no-underline hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-300"
+							class="border-border bg-surface-raised text-text hover:border-border-strong hover:text-action focus-visible:ring-focus focus-visible:ring-offset-canvas mt-1 block max-w-full rounded border px-4 py-3 text-base font-semibold [overflow-wrap:anywhere] no-underline shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
 							href={customLink(frontmatter()?.next) ?? prevNext.nextLink().link}
 						>
 							{customLink(frontmatter()?.next) ?? prevNext.nextLink().title} →

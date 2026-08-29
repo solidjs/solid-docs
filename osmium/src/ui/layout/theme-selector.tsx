@@ -58,30 +58,28 @@ export const ThemeSelector: Component = () => {
 			placement="bottom-end"
 			itemComponent={(props) => (
 				<Select.Item
-					class="group kb-selected:bg-slate-200 kb-selected:font-semibold kb-selected:dark:bg-slate-700 flex cursor-pointer items-center rounded-[0.625rem] p-1 outline-none select-none hover:bg-slate-200 hover:dark:bg-slate-600"
+					class="group text-text hover:bg-surface-muted focus-visible:bg-surface-muted focus-visible:ring-focus kb-selected:border-action kb-selected:bg-action-muted kb-selected:text-action flex min-h-11 cursor-pointer items-center rounded border-l-2 border-transparent px-3 py-1 font-medium outline-none select-none focus-visible:ring-2 lg:min-h-8"
 					item={props.item}
 				>
 					<Select.ItemLabel>
 						<Icon
-							class="kb-selected:fill-slate-800 kb-selected:dark:fill-white mr-2 inline-block h-6 w-6 rounded-md bg-white fill-slate-700 p-1 shadow ring-1 ring-slate-900/5 dark:bg-slate-700 dark:fill-slate-200 dark:ring-white/5 dark:ring-inset"
+							class="mr-2 inline-block size-5 fill-current"
 							path={props.item.rawValue.icon}
 						/>
-						<span class="prose prose-slate kb-selected:text-blue-500 kb-selected:group-hover:dark:text-white text-sm text-slate-700 dark:text-slate-300 group-hover:dark:text-white">
-							{props.item.rawValue.label}
-						</span>
+						<span class="text-sm">{props.item.rawValue.label}</span>
 					</Select.ItemLabel>
 				</Select.Item>
 			)}
 		>
 			<Select.Trigger
-				class="flex size-11 shrink-0 items-center justify-center rounded-lg shadow-md ring-1 shadow-black/5 ring-black/10 focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 focus-visible:outline-none lg:size-6 dark:bg-slate-800 dark:ring-white/60 dark:ring-inset dark:focus-visible:ring-blue-300 dark:focus-visible:ring-offset-slate-900"
+				class="text-text-muted hover:bg-surface-muted hover:text-text focus-visible:ring-focus focus-visible:ring-offset-surface flex size-11 shrink-0 items-center justify-center rounded focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none lg:size-8"
 				aria-label="Change theme mode"
 			>
 				<Select.Value<ThemeOption>>
 					{(state) => (
 						<RefreshOnMount aria-label={state.selectedOption().label}>
 							<Icon
-								class="h-4 w-4 fill-slate-700 dark:fill-slate-200"
+								class="size-4 fill-current"
 								path={state.selectedOption().icon}
 							/>
 						</RefreshOnMount>
@@ -89,7 +87,7 @@ export const ThemeSelector: Component = () => {
 				</Select.Value>
 			</Select.Trigger>
 			<Select.Portal>
-				<Select.Content class="z-50 w-36 space-y-1 rounded-xl bg-white p-2 text-sm shadow-md ring-1 shadow-black/5 ring-black/5 dark:bg-slate-800 dark:ring-white/5">
+				<Select.Content class="border-border bg-surface-raised text-text z-50 w-36 space-y-1 rounded border p-1 text-sm shadow-lg">
 					<Select.Listbox />
 				</Select.Content>
 			</Select.Portal>

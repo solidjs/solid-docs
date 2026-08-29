@@ -6,7 +6,7 @@ export function ProjectLogo(props: { class?: string }) {
 	const current = () => project().projects[project().current];
 
 	return (
-		<div class="text-primary dark:text-primary-dark inline-flex w-full items-center space-x-1 py-2">
+		<div class="text-text inline-flex min-w-0 items-center">
 			<img
 				srcset={["svg", "png"]
 					.map(
@@ -15,16 +15,9 @@ export function ProjectLogo(props: { class?: string }) {
 					)
 					.join(", ")}
 				alt={current().label}
-				class="text-link dark:text-link-dark -mt-1 h-9 w-9"
+				class="shrink-0 rounded-none"
 				{...props}
 			/>
-			<span class="inactive hidden text-2xl leading-none font-normal md:block dark:text-white">
-				<b>{current().label.split(/(?=[A-Z])/)[0]}</b>
-				{current()
-					.label.split(/(?=[A-Z])/)
-					.slice(1)
-					.join("")}
-			</span>
 		</div>
 	);
 }

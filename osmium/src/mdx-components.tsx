@@ -45,7 +45,7 @@ export const DirectiveContainer = (
 		>
 			<Match when={props.type === "tab"}>{_children}</Match>
 			<Match when={props.type === "tab-group"}>
-				<Tabs>
+				<Tabs class={props.codeGroup === "true" ? "code-tab-group" : undefined}>
 					<TabList>
 						<For each={tabNames()}>
 							{(title) => <Tab value={title}>{title}</Tab>}
@@ -193,7 +193,7 @@ export const pre = (props: ParentProps) => {
 	return (
 		<pre
 			{...props}
-			class="custom-scrollbar [&>code]:bg-white [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal dark:[&>code]:bg-slate-950!"
+			class="custom-scrollbar [&>code]:p-0 [&>code]:text-sm [&>code]:leading-normal"
 		>
 			{props.children}
 		</pre>

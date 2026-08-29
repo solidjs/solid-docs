@@ -5,12 +5,12 @@ import { PageIssueLink } from "../page-issue-link";
 export const Contribute: Component = () => {
 	return (
 		<>
-			<span class="text-base font-semibold text-slate-900 dark:text-white">
+			<span class="text-text-subtle mt-6 block text-xs font-semibold tracking-wide uppercase">
 				Contribute
 			</span>
 			<ol
 				role="list"
-				class="prose-a:text-slate-600 prose-li:my-1 mt-1.5 flex list-none flex-col p-0 pl-2.5 text-sm"
+				class="prose-li:my-1 mt-1 flex list-none flex-col p-0 pl-2 text-sm"
 			>
 				<li class="pl-0">
 					<span class="[&>a]:gap-x-1 [&>a>svg]:w-3.75">

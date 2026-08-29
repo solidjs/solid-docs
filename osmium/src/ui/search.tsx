@@ -155,12 +155,10 @@ export function Search() {
 
 	const regex = createMemo(() => makeSearchRegex(searchTerm()));
 	const highlightTitle = createMarker((text) => (
-		<mark class="bg-transparent font-bold dark:text-white">{text()}</mark>
+		<mark class="text-text bg-transparent font-bold">{text()}</mark>
 	));
 	const highlightContent = createMarker((text) => (
-		<mark class="rounded bg-blue-200 px-0.5 dark:bg-slate-600 dark:text-white">
-			{text()}
-		</mark>
+		<mark class="bg-action-muted text-text rounded px-0.5">{text()}</mark>
 	));
 	const trimContent = (content: string) => trimText(content, searchTerm(), 5);
 
@@ -177,7 +175,7 @@ export function Search() {
 			<Dialog.Trigger
 				aria-label="Search"
 				aria-keyshortcuts={isAppleDevice ? "Meta+K" : "Control+K"}
-				class="flex size-11 shrink-0 items-center justify-center rounded-lg border-black/10 focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 focus-visible:outline-none lg:h-auto lg:w-auto lg:border lg:px-2 lg:py-1.5 dark:border-white/60 dark:bg-slate-800 dark:focus-visible:ring-blue-300 dark:focus-visible:ring-offset-slate-900"
+				class="text-text-muted hover:bg-surface-muted hover:text-text focus-visible:ring-focus focus-visible:ring-offset-surface flex size-11 shrink-0 items-center justify-center rounded focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none lg:h-8 lg:w-auto lg:px-2"
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -188,21 +186,21 @@ export function Search() {
 				>
 					<path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
 				</svg>
-				<span class="ml-1 hidden text-sm lg:block">Search</span>
-				<kbd class="ml-2 hidden min-w-6 rounded border border-black/5 px-1 pt-1 pb-px text-center font-mono text-xs lg:block dark:bg-slate-700">
+				<span class="ml-1 hidden text-xs lg:block">Search</span>
+				<kbd class="text-text-subtle ml-2 hidden min-w-6 text-center font-mono text-xs lg:block">
 					<kbd>{isAppleDevice ? "⌘" : "Ctrl"}</kbd>
 					<kbd class="ml-0.5">K</kbd>
 				</kbd>
 			</Dialog.Trigger>
 			<Dialog.Portal>
-				<Dialog.Overlay class="fixed inset-0 z-50 bg-black/50" />
-				<Dialog.Content class="fixed inset-0 z-50 flex w-full flex-col overflow-hidden border border-black/5 bg-white pt-4 lg:top-14 lg:bottom-auto lg:left-1/2 lg:max-h-[calc(100%-56px-56px)] lg:max-w-173.5 lg:-translate-x-1/2 lg:rounded-2xl dark:border-white/60 dark:bg-slate-800">
+				<Dialog.Overlay class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm" />
+				<Dialog.Content class="border-border bg-surface-raised text-text fixed inset-0 z-50 flex w-full flex-col overflow-hidden border pt-4 shadow-2xl lg:top-20 lg:bottom-auto lg:left-1/2 lg:max-h-[calc(100%-10rem)] lg:max-w-173.5 lg:-translate-x-1/2 lg:rounded-lg">
 					<Dialog.Title class="sr-only">Search documentation</Dialog.Title>
 					<div class="mr-4 flex items-center lg:mx-4">
 						<Dialog.CloseButton
 							aria-label="Close search"
 							tabIndex={-1}
-							class="px-4 py-3 lg:hidden"
+							class="text-text-muted hover:bg-surface-muted hover:text-text focus-visible:ring-focus flex size-11 items-center justify-center rounded focus-visible:ring-2 focus-visible:outline-none lg:hidden"
 						>
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
@@ -219,7 +217,7 @@ export function Search() {
 								xmlns="http://www.w3.org/2000/svg"
 								fill="currentColor"
 								viewBox="0 0 256 256"
-								class="absolute inset-y-0 left-0 my-auto ml-3 size-5"
+								class="text-text-subtle absolute inset-y-0 left-0 my-auto ml-3 size-5"
 							>
 								<path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
 							</svg>
@@ -231,7 +229,7 @@ export function Search() {
 								role="searchbox"
 								spellcheck={false}
 								value={searchTerm()}
-								class="w-full rounded border border-blue-100 bg-white px-9 py-2 ring-2 ring-blue-400 focus:outline-none focus-visible:border focus-visible:border-blue-400 focus-visible:ring-2 dark:bg-slate-800"
+								class="border-border bg-surface text-text placeholder:text-text-subtle focus-visible:border-focus focus-visible:ring-focus min-h-11 w-full rounded border px-10 py-2 focus-visible:ring-2 focus-visible:outline-none"
 								onInput={(e) =>
 									startTransition(() =>
 										setSearchTerm((e.target as HTMLInputElement).value)
@@ -254,7 +252,7 @@ export function Search() {
 							<Show when={searchTerm()}>
 								<button
 									aria-label="Clear search"
-									class="absolute inset-y-0 right-0 p-2"
+									class="text-text-muted hover:bg-surface-muted hover:text-text focus-visible:ring-focus absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded focus-visible:ring-2 focus-visible:outline-none"
 									onClick={() => setSearchTerm("")}
 								>
 									<svg
@@ -273,7 +271,7 @@ export function Search() {
 					<p
 						role="status"
 						aria-live="polite"
-						class="mx-4 mt-2 text-sm text-black/70 dark:text-white/70"
+						class="text-text-subtle mx-4 mt-2 text-sm"
 					>
 						<Show when={searchTerm()}>
 							{searching()
@@ -297,7 +295,7 @@ export function Search() {
 											) ?? ""
 										}
 										target="_blank"
-										class="font-bold text-blue-400"
+										class="text-action hover:text-action-hover font-bold"
 									>
 										Let us know
 									</A>
@@ -307,7 +305,7 @@ export function Search() {
 							<For each={Object.entries(result())}>
 								{([section, hits]) => (
 									<section>
-										<p class="pt-2 pl-2 text-sm text-black/70 capitalize dark:text-white/70">
+										<p class="text-text-subtle pt-2 pl-2 text-sm capitalize">
 											{section
 												.replace(/^Enum\('(.+)'\)$/, "$1")
 												.replace(/-/g, " ")}
@@ -337,8 +335,8 @@ export function Search() {
 															<A
 																href={hit.document.path}
 																classList={{
-																	"pl-4 rounded-md block p-2 text-sm": true,
-																	"bg-blue-100 dark:bg-slate-700":
+																	"block rounded border-l-2 border-transparent p-2 pl-4 text-sm focus-visible:ring-2 focus-visible:ring-focus focus-visible:outline-none": true,
+																	"border-action bg-action-muted":
 																		itemIndex === active(),
 																}}
 																onMouseMove={() => setActive(itemIndex)}
@@ -350,7 +348,7 @@ export function Search() {
 																<span class="block">
 																	{highlightTitle(hit.document.title, regex())}
 																</span>
-																<span class="block truncate text-black/70 dark:text-white/70">
+																<span class="text-text-muted block truncate">
 																	{highlightContent(
 																		trimContent(hit.document.content),
 																		regex()
@@ -367,7 +365,7 @@ export function Search() {
 							</For>
 						</Suspense>
 					</div>
-					<div class="flex items-center justify-center border-t border-black/10 px-4 pt-2 pb-3 text-sm lg:justify-between dark:border-slate-700">
+					<div class="border-border text-text-muted flex items-center justify-center border-t px-4 pt-2 pb-3 text-sm lg:justify-between">
 						<div class="hidden lg:block">
 							<KeyboardShortcut key="↩" />
 							<span class="ml-1">to select</span>
@@ -898,7 +896,7 @@ function KeyboardShortcut(props: { key: string; class?: string }) {
 	return (
 		<kbd
 			classList={{
-				"min-w-6 rounded border border-black/10 bg-slate-100 dark:bg-slate-700 dark:border-slate-700 px-1 pb-px pt-1 text-center font-mono text-xs": true,
+				"min-w-6 rounded border border-border bg-surface-muted px-1 pt-1 pb-px text-center font-mono text-xs text-text-subtle": true,
 				[props.class ?? ""]: true,
 			}}
 		>

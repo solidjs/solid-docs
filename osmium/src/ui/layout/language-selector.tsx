@@ -24,31 +24,23 @@ export const LanguageSelector: Component = () => {
 						placement="bottom"
 						itemComponent={(props) => (
 							<Select.Item
-								class="ui-selected:bg-slate-200 ui-selected:dark:bg-slate-700 ui-selected:font-medium group flex cursor-pointer items-center rounded-[0.625rem] p-1 select-none hover:bg-slate-200 hover:dark:bg-slate-600"
+								class="group text-text hover:bg-surface-muted focus-visible:bg-surface-muted focus-visible:ring-focus ui-selected:border-action ui-selected:bg-action-muted ui-selected:text-action flex min-h-11 cursor-pointer items-center rounded border-l-2 border-transparent px-3 py-1 font-medium select-none focus-visible:ring-2 focus-visible:outline-none lg:min-h-8"
 								item={props.item}
 							>
-								<Select.ItemLabel class="prose prose-slate pl-1 text-sm text-slate-700 dark:text-slate-300 group-hover:dark:text-white">
+								<Select.ItemLabel class="text-sm">
 									{props.item.rawValue.config.label}
 								</Select.ItemLabel>
 							</Select.Item>
 						)}
 					>
 						<Select.Trigger
-							class="flex h-6 w-18 items-center rounded-lg text-left shadow-md ring-1 shadow-black/5 ring-black/10 dark:bg-slate-800 dark:ring-white/60 dark:ring-inset"
-							aria-label="change locale"
+							class="text-text-muted hover:bg-surface-muted hover:text-text focus-visible:ring-focus focus-visible:ring-offset-surface flex size-11 shrink-0 items-center justify-center rounded text-left focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none lg:size-8"
+							aria-label="Change language"
 						>
-							<Icon
-								class="w-4 fill-slate-700 pl-1 dark:fill-slate-200"
-								path={language}
-							/>
-							<Select.Value<
-								ResolvedLocale<OsmiumThemeConfig>
-							> class="prose prose-slate w-16 truncate pl-1 text-sm text-slate-700 dark:text-slate-300">
-								{(state) => state.selectedOption().config.label}
-							</Select.Value>
+							<Icon class="size-4 shrink-0 fill-current" path={language} />
 						</Select.Trigger>
 						<Select.Portal>
-							<Select.Content class="z-50 w-44 space-y-1 rounded-xl bg-white p-2 text-sm shadow-md ring-1 shadow-black/5 ring-black/5 dark:bg-slate-800 dark:ring-white/5">
+							<Select.Content class="border-border bg-surface-raised text-text z-50 w-44 space-y-1 rounded border p-1 text-sm shadow-lg">
 								<Select.Listbox />
 							</Select.Content>
 						</Select.Portal>

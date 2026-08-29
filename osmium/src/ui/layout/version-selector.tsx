@@ -6,7 +6,7 @@ import {
 } from "@kobalte/solidbase/client";
 import type { SolidBaseRouteOption } from "@kobalte/solidbase/config/route";
 import { Icon } from "solid-heroicons";
-import { chevronUpDown, tag } from "solid-heroicons/solid";
+import { chevronDown } from "solid-heroicons/solid";
 
 export default function VersionSelector() {
 	const [open, setOpen] = createSignal(false);
@@ -30,38 +30,31 @@ export default function VersionSelector() {
 					open={open()}
 					onOpenChange={setOpen}
 					gutter={4}
-					sameWidth
 					placement="bottom-start"
 				>
 					<Popover.Trigger
-						class="flex h-10 w-full items-center justify-between rounded-lg text-left shadow-md ring-1 shadow-black/5 ring-black/90 ring-inset dark:ring-white/10"
+						class="text-text hover:bg-surface-muted focus-visible:ring-focus focus-visible:ring-offset-surface flex min-h-11 w-full min-w-0 items-center justify-between rounded px-2 text-left text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none lg:min-h-8 lg:w-auto lg:justify-start lg:rounded-none lg:px-2"
 						aria-label={`Change version, current version ${getOptionLabel(current())}`}
 						disabled={options().length <= 1}
 					>
-						<span class="prose prose-slate flex items-center truncate pl-2 text-lg text-slate-700 dark:text-slate-300">
-							<Icon
-								class="mr-2 w-5 fill-slate-700 pl-1 dark:fill-slate-200"
-								path={tag}
-							/>
-							{getOptionLabel(current())}
-						</span>
+						<span class="min-w-0 truncate">{getOptionLabel(current())}</span>
 
 						<Show when={options().length > 1}>
 							<Icon
-								class="mr-2 w-6 fill-slate-700 pl-1 dark:fill-slate-200"
-								path={chevronUpDown}
+								class="fill-text-subtle ml-1 size-3.5 shrink-0"
+								path={chevronDown}
 							/>
 						</Show>
 					</Popover.Trigger>
 					<Popover.Portal>
-						<Popover.Content class="z-50 space-y-1 rounded-xl bg-white p-2 text-sm shadow-md ring-1 shadow-black/5 ring-black/5 dark:bg-slate-800 dark:ring-white/5">
+						<Popover.Content class="border-border bg-surface-raised text-text z-50 min-w-32 space-y-1 rounded border p-1 text-sm shadow-lg">
 							<For each={options()}>
 								{(option) => {
 									const outbound = () => !!option.href;
 
 									return (
 										<a
-											class="group flex cursor-pointer items-center rounded-[0.625rem] p-1 select-none hover:bg-slate-200 focus-visible:bg-slate-200 focus-visible:font-medium focus-visible:outline-hidden aria-[current]:bg-blue-50 hover:dark:bg-slate-600 focus-visible:dark:bg-slate-700 dark:aria-[current]:bg-blue-900/30"
+											class="group hover:bg-surface-muted focus-visible:bg-surface-muted focus-visible:ring-focus aria-[current]:border-action aria-[current]:bg-action-muted aria-[current]:text-action flex min-h-11 cursor-pointer items-center rounded border-l-2 border-transparent px-3 py-1 font-medium select-none focus-visible:ring-2 focus-visible:outline-none lg:min-h-8"
 											target={outbound() ? "_blank" : undefined}
 											rel={outbound() ? "noopener noreferrer" : undefined}
 											aria-current={option === currentOption() || undefined}

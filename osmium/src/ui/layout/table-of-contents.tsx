@@ -17,7 +17,7 @@ import { Icon } from "solid-heroicons";
 import { chevronDown } from "solid-heroicons/solid";
 
 const desktopTableOfContentsLinkClass =
-	"not-prose flex min-h-8 items-center rounded-sm px-1 py-1 text-sm leading-5 font-medium no-underline hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 focus-visible:outline-none dark:hover:bg-slate-800 dark:focus-visible:bg-slate-800 dark:focus-visible:ring-blue-300 dark:focus-visible:ring-offset-slate-900";
+	"not-prose flex min-h-8 items-center border-l-2 px-2 py-1 text-sm leading-5 font-medium no-underline focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-canvas focus-visible:outline-none";
 
 export const TableOfContents = () => {
 	const data = useCurrentPageData();
@@ -90,7 +90,7 @@ export const TableOfContents = () => {
 
 	return (
 		<aside aria-label="table of contents" class="w-full pt-2">
-			<span class="text-base font-semibold text-slate-900 dark:text-white">
+			<span class="text-xs font-semibold tracking-wide text-text-subtle uppercase">
 				On this page
 			</span>
 			<ol role="list" class="mt-2 list-none p-0">
@@ -102,9 +102,9 @@ export const TableOfContents = () => {
 						}
 						class={desktopTableOfContentsLinkClass}
 						classList={{
-							"text-slate-600 hover:text-slate-700 dark:text-slate-300 dark:hover:text-blue-300":
+							"border-transparent text-text-subtle hover:border-border-strong hover:text-text":
 								currentSection() !== undefined,
-							"text-blue-800 hover:text-slate-700 dark:text-blue-300 dark:hover:text-slate-200":
+							"border-action bg-action-muted text-action":
 								currentSection() === undefined,
 						}}
 					>
@@ -121,9 +121,9 @@ export const TableOfContents = () => {
 								}
 								class={desktopTableOfContentsLinkClass}
 								classList={{
-									"text-slate-600 hover:text-slate-700 dark:text-slate-300 dark:hover:text-blue-300":
+									"border-transparent text-text-subtle hover:border-border-strong hover:text-text":
 										currentSection() !== section().href,
-									"text-blue-800 hover:text-slate-700 dark:text-blue-300 dark:hover:text-slate-200":
+									"border-action bg-action-muted text-action":
 										currentSection() === section().href,
 								}}
 							>
@@ -143,9 +143,9 @@ export const TableOfContents = () => {
 													}
 													class={desktopTableOfContentsLinkClass}
 													classList={{
-														"text-slate-600 hover:text-slate-700 dark:text-slate-300 dark:hover:text-blue-300":
+														"border-transparent text-text-subtle hover:border-border-strong hover:text-text":
 															currentSection() !== subSection().href,
-														"text-blue-800 hover:text-slate-700 dark:text-blue-300 dark:hover:text-slate-200":
+														"border-action bg-action-muted text-action":
 															currentSection() === subSection().href,
 													}}
 												>
@@ -175,12 +175,12 @@ export const MobileTableOfContents = () => {
 
 	return (
 		<Show when={toc()?.length}>
-			<div class="relative w-full border-t border-slate-300 lg:hidden dark:border-slate-700">
+			<div class="relative w-full border-t border-border lg:hidden">
 				<Dialog open={open()} onOpenChange={setOpen} modal={false}>
 					<div class="max-w-8xl mx-auto flex min-h-11 w-full items-center justify-end px-2">
 						<Dialog.Trigger
 							type="button"
-							class="flex min-h-11 items-center gap-1 rounded px-2 text-sm font-semibold text-slate-900 focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 focus-visible:outline-none dark:text-white dark:focus-visible:ring-blue-300 dark:focus-visible:ring-offset-slate-900 [&[data-expanded]>svg]:rotate-180"
+							class="flex min-h-11 items-center gap-1 rounded px-2 text-sm font-semibold text-text focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-surface focus-visible:outline-none [&[data-expanded]>svg]:rotate-180"
 						>
 							On this page
 							<Icon
@@ -190,8 +190,8 @@ export const MobileTableOfContents = () => {
 							/>
 						</Dialog.Trigger>
 					</div>
-					<Dialog.Content class="absolute inset-x-0 top-full z-60 max-h-[calc(100dvh-10rem)] overflow-y-auto border-y border-slate-300 bg-slate-50 p-4 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-						<Dialog.Title class="text-base font-semibold text-slate-900 dark:text-white">
+					<Dialog.Content class="absolute inset-x-0 top-full z-60 max-h-[calc(100dvh-10rem)] overflow-y-auto border-y border-border bg-surface-raised p-4 text-text shadow-lg">
+						<Dialog.Title class="text-base font-semibold text-text">
 							On this page
 						</Dialog.Title>
 						<nav aria-label="On this page">
@@ -219,7 +219,7 @@ function MobileTableOfContentsLinks(props: {
 						<a
 							href={item().href}
 							onClick={props.onSelect}
-							class="flex min-h-11 items-center text-blue-800 no-underline hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-200"
+							class="flex min-h-11 items-center rounded text-action no-underline hover:text-action-hover focus-visible:ring-2 focus-visible:ring-focus focus-visible:outline-none"
 						>
 							{item().title}
 						</a>

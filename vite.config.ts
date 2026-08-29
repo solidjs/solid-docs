@@ -12,6 +12,33 @@ import {
 
 const solidBase = createSolidBase(osmium);
 
+type MarkdownNode = {
+	type?: string;
+	lang?: string | null;
+	meta?: string | null;
+	children?: MarkdownNode[];
+};
+
+function addDefaultCodeTitles() {
+	return function transform(node: MarkdownNode): void {
+		if (node.type === "code" && node.lang) {
+			const meta = node.meta ?? "";
+			const hasTitle =
+				/(?:^|\s)title(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s]+))?(?=\s|$)/.test(
+					meta
+				);
+			const hasNoFrame =
+				/(?:^|\s)frame\s*=\s*(?:"none"|'none'|none)(?=\s|$)/.test(meta);
+
+			if (!hasTitle && !hasNoFrame) {
+				node.meta = `${meta} title="${node.lang}"`.trim();
+			}
+		}
+
+		node.children?.forEach(transform);
+	};
+}
+
 function createV2Sidebar() {
 	return createFilesystemSidebar("./src/routes/v2", {
 		filter: (item) => {
@@ -178,6 +205,7 @@ export default defineConfig({
 					"https://github.com/solidjs/solid-docs/issues/new?title=[Search]+Missing+results+for+query+%22:path",
 			},
 			markdown: {
+				remarkPlugins: [addDefaultCodeTitles],
 				expressiveCode: {
 					themes: ["min-light", "material-theme-ocean"],
 					themeCssSelector: (theme) => `[data-theme="${theme.type}"]`,

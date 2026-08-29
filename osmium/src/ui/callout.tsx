@@ -11,27 +11,27 @@ import {
 const styles = {
 	note: {
 		container:
-			"border-l-emerald-500 bg-emerald-500/10 dark:border-l-emerald-400 dark:bg-emerald-800/10",
+			"border-l-emerald-500 bg-emerald-500/20 dark:border-l-emerald-400 dark:bg-emerald-800/20",
 		title: "text-emerald-900 dark:text-emerald-300",
 	},
 	tip: {
 		container:
-			"border-l-violet-900 bg-violet-800/10 dark:border-l-violet-400 dark:bg-violet-800/10",
+			"border-l-violet-900 bg-violet-800/20 dark:border-l-violet-400 dark:bg-violet-800/20",
 		title: "text-violet-900 dark:text-violet-300",
 	},
 	advanced: {
 		container:
-			"border-l-blue-600 bg-blue-400/10 dark:border-l-blue-400 dark:bg-blue-400/10",
+			"border-l-blue-600 bg-blue-400/20 dark:border-l-blue-400 dark:bg-blue-400/10",
 		title: "text-blue-700 dark:text-blue-300",
 	},
 	caution: {
 		container:
-			"border-l-amber-600 bg-amber-400/10 dark:border-l-amber-400 dark:bg-amber-400/10",
+			"border-l-amber-600 bg-amber-400/20 dark:border-l-amber-400 dark:bg-amber-400/10",
 		title: "text-amber-900 dark:text-amber-400",
 	},
 	danger: {
 		container:
-			"border-l-red-600 bg-red-400/10 dark:border-l-red-400 dark:bg-red-400/10",
+			"border-l-red-600 bg-red-400/20 dark:border-l-red-400 dark:bg-red-400/20",
 		title: "text-red-900 dark:text-red-400",
 	},
 };

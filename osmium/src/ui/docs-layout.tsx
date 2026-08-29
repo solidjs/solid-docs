@@ -30,16 +30,16 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 	);
 
 	return (
-		<article class="expressive-code-overrides mx-auto w-full max-w-2xl overflow-hidden pb-16">
-			<header class="mb-10 px-1">
+		<article class="expressive-code-overrides mx-auto w-full max-w-[52rem] overflow-hidden pb-16">
+			<header class="mb-8 px-1">
 				<Show when={frontmatter()?.category}>
 					{(t) => (
-						<span class="mb-2 block text-sm font-medium text-slate-500 dark:text-slate-400">
+						<span class="text-action mb-2 block text-sm font-semibold">
 							{t()}
 						</span>
 					)}
 				</Show>
-				<h1 class="font-display m-0! text-[2.25rem] leading-10 font-semibold text-balance [overflow-wrap:anywhere] text-slate-900 sm:text-[2.5rem] sm:leading-11 dark:text-white">
+				<h1 class="font-display text-text m-0! text-[2.25rem] leading-10 font-semibold text-balance [overflow-wrap:anywhere] sm:text-[2.5rem] sm:leading-11">
 					{frontmatter()?.title}
 				</h1>
 			</header>
@@ -52,7 +52,7 @@ export const DocsLayout = (props: DocsLayoutProps) => {
 					</Show>
 				</span>
 			</Show>
-			<div class="mt-6 flex flex-col gap-1 text-sm xl:hidden">
+			<div class="mt-6 flex flex-col gap-1 text-sm lg:hidden">
 				<EditPageLink />
 				<PageIssueLink />
 			</div>

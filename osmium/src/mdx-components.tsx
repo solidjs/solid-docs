@@ -157,7 +157,7 @@ export const a = (props: ParentProps & { href: string }) => {
 	} else {
 		return (
 			<a
-				class="font-semibold text-blue-800 no-underline shadow-[inset_0_calc(-1*(var(--tw-prose-underline-size,0.5px)+2px))_0_0_var(--tw-prose-underline,var(--color-blue-400))] [--tw-prose-background:var(--color-slate-50)] hover:[--tw-prose-underline-size:4px] dark:text-blue-300 dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,var(--color-blue-500))] dark:[--tw-prose-background:var(--color-slate-900)] dark:hover:[--tw-prose-underline-size:6px]"
+				class="font-medium text-blue-800 no-underline underline dark:text-blue-300"
 				{...rest}
 			>
 				{resolved()}
@@ -202,7 +202,7 @@ export const pre = (props: ParentProps) => {
 export const code = (props: ParentProps) => {
 	return (
 		<code
-			class="not-prose inline-flex rounded-lg bg-blue-200 px-1 py-0.5 font-mono! text-[0.8em] leading-snug font-semibold text-slate-900 dark:bg-slate-600/60 dark:text-white"
+			class="not-prose inline-flex rounded-lg bg-blue-200 px-1 py-0.5 font-mono! text-[0.8em] leading-snug text-slate-900 dark:bg-slate-600/60 dark:text-white"
 			{...props}
 		>
 			{props.children}

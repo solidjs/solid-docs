@@ -39,8 +39,12 @@ export const TableOfContents = () => {
 
 		for (const heading of headingElements()) {
 			if (!heading.el) continue;
-			if (heading.el.getBoundingClientRect().top < threshold) {
+			const { top } = heading.el.getBoundingClientRect();
+			if (top < threshold) {
 				current = heading.href;
+			} else if (top < window.innerHeight) {
+				current = heading.href;
+				break;
 			}
 		}
 

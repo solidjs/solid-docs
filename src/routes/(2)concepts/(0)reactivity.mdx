@@ -257,14 +257,13 @@ export function CartProvider(props: ParentProps) {
 }
 
 export function useCart() {
-	const cart = useContext(CartContext);
-	if (!cart) throw new Error("useCart must be used inside CartProvider");
-	return cart;
+	return useContext(CartContext);
 }
 ```
 
 `createCart()` runs inside `CartProvider`, so the provider owns the state and disposes it when the provider leaves the page.
 Any descendant calls `useCart()`; no props are threaded through the components in between.
+The context has no default value, so a call to `useCart()` outside `CartProvider` throws `ContextNotFoundError`; there is no null check to write.
 
 This is preferred over creating the signal at module scope.
 Module-scope state has no owner, so nothing disposes it, and during server rendering one module instance is shared by every request, which leaks one user's state into another's response.

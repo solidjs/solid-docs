@@ -16,15 +16,19 @@ Production builds strip the diagnostics and the `DEV` export is `undefined`.
 
 ## Read a diagnostic
 
-Development builds print warnings with a code in square brackets:
+Development builds print one console entry per finding, with a code in square brackets and a line naming where it happened:
 
 ```text
 [STRICT_READ_UNTRACKED] Reactive value read directly in <LineItem> will not update.
 Move it into a tracking scope (JSX, a memo, or an effect's compute function).
+  in <App> › <Cart> › <LineItem>
 ```
 
 The code is stable across releases; the sentence after it says what the runtime observed and what to change.
-The first time each code appears, Solid adds a line pointing to the repair guide that ships inside the `solid-js` package under `skills/reactivity-diagnostics/SKILL.md`, which lists every code with its fix.
+The `in` line is the chain of owners from the root down to the scope that produced the finding: components as `<Name>`, computations by the `name` option you gave them or `effect`/`computed` by default.
+When the finding is about a JSX binding (an attribute, class, style, or inserted text), the console entry also carries the DOM element it writes as a second argument, so hovering it in the browser's console highlights the element on the page and clicking it jumps to the Elements panel.
+
+The first time each code appears, Solid adds a footer pointing to the repair guide that ships inside the `solid-js` package under `skills/reactivity-diagnostics/SKILL.md`, and the same file on GitHub anchored to that code.
 
 Codes fall into a few groups:
 
@@ -32,10 +36,14 @@ Codes fall into a few groups:
 - Writes in the wrong place: `REACTIVE_WRITE_IN_OWNED_SCOPE`, `ACTION_CALLED_IN_OWNED_SCOPE`.
 - Leaks: `NO_OWNER_EFFECT`, `NO_OWNER_BOUNDARY`, `NO_OWNER_CLEANUP`.
 - Async placement: `ASYNC_OUTSIDE_LOADING_BOUNDARY`.
-- Cost: `HOT_SCOPE_RERUNS`, `WIDE_WRITE`, `ASYNC_WATERFALL`, which appear only while attribution is enabled.
+- Graph size, always on: `HUGE_FAN_OUT`, `HUGE_FAN_IN`.
+- Cost, only while attribution is enabled: `HOT_SCOPE_RERUNS`, `WIDE_WRITE`, `ASYNC_WATERFALL`, `UNSTABLE_MEMO_OUTPUT`, `EFFECT_WRITES_OWN_SOURCE`, `EFFECT_RELAY_TEAR`, `IMMUTABLE_UPDATE_IN_STORE`, `UNSTABLE_LIST_IDENTITY`.
+- Responsiveness, only while attribution is enabled: `SILENT_HOLD`.
 
-A warning means the code runs but is structurally wrong or expensive.
-An error means the behavior is broken.
+Each finding has one of three severities.
+An error throws and halts execution; the behavior is broken.
+A warning logs to the console; the code runs but is structurally wrong or expensive.
+An `info` finding does not reach the console at all; it is recorded on the structured channel that `DEV.diagnostics.subscribe()` and `@solidjs/diagnostics` read, for cases where the runtime has a lead but not enough proof to interrupt you.
 Do not silence a code you do not understand; each one describes a real defect or a real cost.
 
 ## Something does not update
@@ -121,8 +129,16 @@ for (const event of DEV!.attribution.why(total)) {
 ```
 
 Each entry names the write that started the update, the dependency that changed, and the time the recompute took.
+While attribution is enabled the same chains print to the console as collapsed `[why-run]` groups, one per re-run, with the cause chain and dependency changes inside.
 `DEV.attribution.costs()` ranks scopes by self time, including time spent on runs whose result did not change, and ranks writes by how much downstream work each one caused.
 The [`DEV` reference](/reference/solid-js/advanced/diagnostics-dev-hooks/dev) lists the rest of the surface.
+
+A chain ends at whatever made the root write, not only at the signal's name.
+Writes made inside a compiled event handler are stamped with the interaction (`click on button#add "Add"`), so `event.interaction` on a re-run names the click it traces back to, however many effects relayed it in between.
+Writes made from an effect or an action are stamped with that effect or action; writes from a timer or module scope read as `external`.
+
+While attribution is enabled, Solid also warns about the patterns below on its own.
+Each warning names the scope and the cause, so you usually do not need to query `why` for them.
 
 The usual causes and their fixes:
 
@@ -141,17 +157,92 @@ The memo compares its result to the previous one and does not notify readers whe
 Do not memoize everything.
 A memo costs a node in the graph and a comparison on every run; for a cheap expression with one reader, a function is smaller and faster.
 
+### A memo returns a new object that is equal to the last one
+
+`[UNSTABLE_MEMO_OUTPUT]` fires when a memo returns a fresh array or object whose contents match the previous result several runs in a row.
+The memo's equality check compares by reference, so it never absorbs the recompute and every reader runs for nothing.
+Return the same reference when nothing changed, keep the data in a store, or pass an `equals` option that compares by content.
+
 ### A write replaces an object that did not change
 
 `setItems(await fetchItems())` replaces every item with a new object, so every row that reads an item re-renders.
 Use a store with `reconcile` to merge the new data into the existing objects, so only the properties that changed notify their readers.
 See [Stores](/concepts/stores).
 
+The store version of the same mistake is a spread copy:
+
+```ts
+setCart((draft) => {
+	draft.items = [...draft.items, next]; // [IMMUTABLE_UPDATE_IN_STORE]
+});
+setCart((draft) => {
+	draft.items.push(next); // notifies readers of the new index and the length only
+});
+```
+
+`[IMMUTABLE_UPDATE_IN_STORE]` fires when a store path is replaced with a container whose leaves are mostly the same values as before.
+The store already tracks each leaf; a new container makes every reader of the path re-run for the one leaf that moved.
+Mutate the draft, or pass `reconcile()` for data that arrives as a fresh tree from the server.
+
+### A list rebuilds rows for the same records
+
+`[UNSTABLE_LIST_IDENTITY]` fires when a `For` or `mapArray` update disposes and recreates rows whose items are equal field-for-field to the ones they replaced.
+The list is keyed by object identity and a refetch handed it new objects for the same records, so every row's DOM and state were thrown away and rebuilt.
+Key the list on the record id, reconcile the data into a store so the objects keep their identity, or cache by id upstream.
+When the list already has a key function and the warning still fires, the message blames the key function instead: it returns something new on every call, such as an index or an object.
+
 ### An effect writes a signal that another scope derives from
 
 Every write in an effect schedules a second update after the first one has already landed, so readers of the copied value run twice per change and see an intermediate state in between.
-The value the effect writes is a derived value; make it a memo and delete the effect.
+Attribution proves this from the graph and reports it as `[EFFECT_RELAY_TEAR]`: the reader ran twice for one root change, once in the flush where the source changed and again after the effect relayed it, and the frame in between showed the new source with the stale copy.
+When the effect copies its input unchanged and nothing else writes the target signal, the value is derived state kept one flush late; make it a memo and delete the effect.
+When the effect measures the DOM or reads a ref, the message offers the other fix: read the measurement in a `createRenderEffect` so the second frame does not happen.
 [Avoid unnecessary effects](/guides/avoid-unnecessary-effects) works through the cases.
+
+### An effect re-runs because of its own write
+
+`[EFFECT_WRITES_OWN_SOURCE]` fires when an effect writes a signal or store that feeds back into the effect's own inputs, directly or through any number of memos.
+The runtime settles, but every change costs an extra flush and the screen shows the pre-write value in between.
+The written value is a function of what the effect reads, so it belongs in a memo, or the normalization belongs where the source is written.
+When two or more effects relay writes to each other in a ring, one report at `info` severity names the whole ring instead of blaming one effect.
+
+## The screen looks dead after a click
+
+When a write lands on async work, Solid holds the write and everything derived from it until the data settles, so the page never shows a half-applied update.
+That hold is correct, but if nothing on screen acknowledges it, the interaction looks broken for as long as the request takes.
+
+While attribution is enabled, Solid names this as `[SILENT_HOLD]`:
+
+```text
+[SILENT_HOLD] click on button#next "Next →" wrote selectedId; the write was held 640ms
+waiting on product and the screen showed nothing for the wait: no isPending()/latest()
+reader downstream, no optimistic value, no affects() mark, and no effect ran while it
+was held — the interaction was dead for 640ms.
+```
+
+A hold is silent when none of the following is true while it is open: an `isPending()` or `latest()` read on the held graph, an optimistic value, an `affects()` declaration, or an effect that ran and painted.
+Holds under 300ms are recorded but not reported; from 300ms the finding is `info`, from 500ms it is a warning.
+Both thresholds are options to `DEV.attribution.enable({ holds: { infoMs, warnMs } })`.
+
+The repair is always to add feedback, never to remove the hold:
+
+- Read `isPending(source)` where the result renders and show an updating state.
+- Read `latest(source)` for the part of the UI that should move immediately, such as the selected row.
+- Write the expected result to `createOptimistic` or `createOptimisticStore` inside the action.
+- Declare `affects(source)` when the work changes data the UI is reading.
+
+[Async reactivity](/concepts/async-reactivity#another-answer-is-coming-ispending) explains each of these.
+
+A `Loading` boundary above the async source is a different situation: the read never enters a hold, so there is no `SILENT_HOLD` to report.
+A hold that was acknowledged but still ran long is not a diagnostic either; it shows up as `late` in the tables below so the cost is visible without blaming code that waited correctly.
+
+`DEV.attribution.holds()` returns every hold from the session, reported or not.
+`DEV.attribution.feedback()` folds holds and re-runs into tables sorted worst-first:
+
+- `sources`: per async source, how many holds it caused, how many were silent, and which affordance acknowledged the rest.
+- `interactions`: per user event, the re-run time it caused and the time it was held, which are the two ways an interaction feels slow.
+- `flights`: per async source, requests started, landed, and abandoned before landing; a high abandon count is the request-per-keystroke signature.
+- `fallbacks`: per `Loading` boundary, how often the fallback showed, for how long, and how many showings were under 150ms flashes.
 
 ## The test sees the old DOM
 
@@ -212,13 +303,20 @@ test("adding an item recomputes the total once", async () => {
 	);
 
 	expect(artifact).toHaveNoDiagnostics();
-	expect(artifact).toStayWithinRerunBudget(1, { name: "total" });
+	expect(artifact).toStayWithinRerunBudget(1, { scope: "total" });
 	expect(artifact).toHaveNoWaste();
+	expect(artifact).toHaveNoSilentHolds();
 });
 ```
 
 `toHaveNoDiagnostics` fails the test when any coded warning fires during the scenario, which turns an untracked read or a leaked effect into a red test instead of a console line nobody reads.
+`info` findings do not fail it.
 The re-run budget and waste checks catch the second kind of bug: a change that makes a scope recompute more than it did before.
+`toHaveNoSilentHolds` is the responsiveness gate: it fails when a write was held on async work and nothing on screen acknowledged the wait, and its message names the interaction, the held write, and the source it waited on.
+`toStayWithinHoldBudget(ms)` bounds every hold, acknowledged or not.
+
+The artifact also carries `attribution.holds` and `attribution.feedback`, the same data as `DEV.attribution.holds()` and `feedback()`, so a test can assert on them directly.
+Budget files accept `maxSilentHoldMs` and `maxHoldMs` next to the re-run limits.
 
 With `@solidjs/diagnostics` in `package.json`, the Vite plugin also serves the same capture controls at `/__solid/diagnostics` on the dev server, so a script or an agent can record a scenario against the running app.
 Set `diagnostics: false` in the plugin options to turn that off.

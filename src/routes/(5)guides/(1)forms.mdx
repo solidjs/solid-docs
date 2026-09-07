@@ -3,23 +3,32 @@ title: "Forms"
 titleTemplate: ":title"
 mainNavExclude: true
 version: "2.0"
-description: "Build a form that submits to a server function, validates on both sides, and works before JavaScript loads."
+description: "Build a form with a server function and a Solid Router action: it works before JavaScript loads, validates on the server, and shows pending state and inline errors after hydration."
 ---
 
 This guide builds one form, a shipping address for the cart, in three passes.
-The first pass is plain HTML posting to a server function; it works with no JavaScript in the browser at all.
-The second adds validation on both sides.
-The third adds pending state and inline errors with Solid Router's `action()`, without changing the HTML.
+The first pass is a form that posts to a server function through a Solid Router action; it works with no JavaScript in the browser at all.
+The second adds validation the user cannot bypass.
+The third shows the validation messages inline and marks the form as pending, without changing the HTML.
 
 Each pass is a working form on its own.
 Stop at the pass that matches what your app needs.
 
-The guide assumes a `fullstack` project with [server functions](/building-apps/server-functions) enabled and Solid Router mounted.
+The guide assumes a `fullstack` project with [server functions](/building-apps/server-functions) enabled and [Solid Router](/routing/solid-router) mounted.
 
-## Pass 1: an HTML form and a server function
+:::note[Two functions named `action`]
+This guide uses `action` from `@solidjs/router`.
+It wraps a function so a form can submit to it and the router can track the submission.
 
-A server function that takes one `FormData` argument can be the `action` of an HTML form.
-Declare the function:
+`solid-js` also exports an [`action`](/reference/solid-js/lifecycle-actions/action); that one runs a generator as a reactive transaction and is covered in [Async reactivity](/concepts/async-reactivity#mutations-from-a-client-only-list-to-a-server-backed-one).
+The router's `action` uses the core one internally.
+Every `action` in the code on this page is the router's.
+:::
+
+## Pass 1: a form that posts to a server function
+
+Start with the server side.
+A server function that takes one `FormData` argument can receive an HTML form submission directly:
 
 ```ts
 // src/routes/checkout/address.ts
@@ -38,15 +47,18 @@ export async function saveAddress(form: FormData) {
 }
 ```
 
-And render the form with the function's `url` as its action:
+Wrap it in a router `action` and pass the action to the form:
 
 ```tsx
 // src/routes/checkout/address.tsx
+import { action } from "@solidjs/router";
 import { saveAddress } from "./address";
+
+const submitAddress = action(saveAddress);
 
 export default function AddressPage() {
 	return (
-		<form method="post" action={saveAddress.url}>
+		<form method="post" action={submitAddress}>
 			<label>
 				Name
 				<input name="name" required />
@@ -67,7 +79,13 @@ export default function AddressPage() {
 
 Load the page and disable JavaScript in your browser's developer tools.
 The form still submits.
-The browser posts to the server function's URL, the runtime sees that the request came from an HTML form rather than the Solid client, decodes the body as `FormData`, runs `saveAddress`, and follows the redirect.
+
+`action(saveAddress)` returns a value that serializes to the server function's URL, so `action={submitAddress}` renders as an ordinary `action="..."` attribute in the HTML.
+The browser posts to that URL, the server-function runtime sees that the request came from an HTML form rather than the Solid client, decodes the body as `FormData`, runs `saveAddress`, and follows the redirect.
+
+With JavaScript on, the router intercepts the submit instead.
+It calls `saveAddress` through the server-function client, and when the function returns the redirect the router navigates without a page load.
+Both paths run the same function with the same `FormData`.
 
 Two details are doing the work here.
 The inputs are uncontrolled: Solid does not read their values while the user types, and the browser assembles the `FormData` on submit.
@@ -79,7 +97,7 @@ What it lacks is validation the user cannot bypass and any feedback other than a
 ## Pass 2: validate on the server
 
 Browser validation is a convenience for the user.
-Anyone can post to `saveAddress.url` with `curl`, so the server function must check the data itself before touching the database.
+Anyone can post to the server function's URL with `curl`, so the function must check the data itself before touching the database.
 Parse the `FormData` with a schema:
 
 ```ts
@@ -126,13 +144,15 @@ See [Handle thrown errors](/building-apps/server-functions/mutations-and-respons
 The schema and `valibot` are used only inside the `"use server"` body, so they do not enter the client bundle.
 The `AddressIssues` type is exported for the client to use in the next pass.
 
-Without JavaScript, a failed submission posts, receives the 400, and the runtime redirects back to the form with the outcome stored in a one-shot cookie.
-The next pass shows the outcome to the user; on its own, pass 2 protects the database but the user sees a form that appears to have done nothing.
+The component from pass 1 does not change.
+With JavaScript on, a failed submission is recorded by the router but nothing displays it yet.
+Without JavaScript, the runtime redirects back to the form with the outcome stored in a one-shot cookie, and the router turns that into the same recorded submission on the next server render.
+On its own, pass 2 protects the database; the user sees a form that appears to have done nothing.
 Keep the browser attributes from pass 1 so most users never reach the server-side failure.
 
-## Pass 3: pending state and inline errors
+## Pass 3: inline errors and pending state
 
-Wrap the server function in a Solid Router `action()` and pass the action to the form instead of the URL:
+Read the recorded submissions with `useSubmissions` and show the messages next to the fields:
 
 ```tsx
 // src/routes/checkout/address.tsx
@@ -195,17 +215,18 @@ export default function AddressPage() {
 }
 ```
 
-The HTML is the same as before.
-`action(saveAddress)` returns something that serializes to the server function's URL, so `action={submitAddress}` renders the same `action` attribute the browser posted to in pass 1.
-Before hydration, or with JavaScript off, the form behaves as it did.
+The `<form>` element and its inputs are the same as in pass 1; only the message elements were added.
 
-After hydration, the router takes over the submit.
-It posts through the server-function client, marks the form with `aria-busy="true"` until the call and any revalidation settle, and records the outcome in the submissions list.
+`useSubmissions(submitAddress)` returns a reactive array of this action's settled submissions, each with the `input` that was sent and either a `result` or an `error`.
 When `saveAddress` throws the `respond()` envelope, the carried value becomes `submission.error`, which is where `issues()` reads the field messages.
-When it returns the redirect, the router navigates.
+A submission that returned a redirect does not stay in the list.
+`issues()` is a plain derived function read from JSX, following the rule from the [Reactivity](/concepts/reactivity) page.
 
-Pending state comes from the `aria-busy` attribute, so it needs no JavaScript in the component.
-Style it in CSS:
+The list also carries the no-JavaScript outcome.
+When the form posts without the client, the runtime stores the `400` and its value in a flash cookie and redirects back; the router reads that cookie during the next server render and records the same submission, so the inline errors render on that page load too.
+
+While a scripted submission is in flight, the router sets `aria-busy="true"` on the form and removes it when the call and any revalidation settle.
+Style the pending state in CSS, with no component code:
 
 ```css
 form[aria-busy] button[type="submit"] {
@@ -213,10 +234,6 @@ form[aria-busy] button[type="submit"] {
 	pointer-events: none;
 }
 ```
-
-`useSubmissions` returns a reactive array, so `issues()` is a plain derived function read from JSX, following the rule from the [Reactivity](/concepts/reactivity) page.
-The list holds settled outcomes with a result or an error; a submission that returned a redirect does not stay in it.
-The list also carries the no-JavaScript outcome: when a form posts without the client, the router reads the flash cookie on the next server render and turns it into the same submission state, so the inline errors render on that page load too.
 
 ## Live validation while typing
 
@@ -254,7 +271,7 @@ The message is a memo of the value, not a second signal set from an effect; the 
 The input keeps its `name`, so the same `FormData` reaches the server function and the server-side schema still runs.
 
 Use controlled inputs for the fields that need live feedback and leave the rest uncontrolled.
-A controlled input re-renders its text on every keystroke; an uncontrolled one costs nothing until submit.
+A controlled input updates its text on every keystroke; an uncontrolled one costs nothing until submit.
 
 ## Editing an existing record
 
@@ -288,8 +305,14 @@ Every field that should reach the server needs a `name`, and mutations must post
 
 ### The form submits, but the page reloads instead of staying put
 
-Either the router is not mounted around the form, so nothing intercepts the submit, or `action={...}` was given `saveAddress.url` instead of the `action()` wrapper.
-The URL form always posts as a full-page navigation; the wrapper is what lets the router take over after hydration.
+The router is not mounted around the form, so nothing intercepts the submit and the browser follows the `action` URL as a full-page navigation.
+Check that the page is rendered inside the `Router`.
+
+### `action` is not a function, or the form attribute renders as source code
+
+The `action` came from `solid-js` instead of `@solidjs/router`.
+The core `action` wraps generator functions for reactive transactions and has no URL to serialize.
+Import `action` from `@solidjs/router` for forms.
 
 ### Errors show for a moment and then vanish
 
@@ -305,5 +328,6 @@ Use `throw respond(value, { status })` for structured failures.
 ## Where to go next
 
 - [Data APIs](/routing/solid-router/data) covers `.with()` for bound arguments, `.onSubmit` for optimistic updates, and revalidation after a mutation.
+- [Progressive enhancement](/building-apps/server-functions/progressive-enhancement) explains what the server-function runtime does with an unscripted request, for forms outside the router.
 - [Arguments and security](/building-apps/server-functions/arguments-and-security) explains the other argument encodings and the same-origin check that protects POSTs.
 - [Sessions and auth](/building-apps/sessions-and-auth) applies this shape to sign-in and sign-out forms.

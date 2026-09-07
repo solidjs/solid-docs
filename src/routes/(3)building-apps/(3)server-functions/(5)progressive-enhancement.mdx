@@ -2,15 +2,19 @@
 title: "Progressive enhancement"
 titleTemplate: ":title"
 version: "2.0"
-description: "Submit server-function forms before or without the client runtime."
+description: "How a server function receives an HTML form submission before or without the client runtime, and how routers build on that transport."
 ---
 
-A server-function reference exposes a self-describing `url`.
-Use the URL as a form action when the operation must work before hydration or when JavaScript is unavailable.
+A server function has an HTTP address, so a plain HTML form can post to it.
+The server-function runtime detects that the request came from a form rather than the Solid client, decodes the body as one `FormData` argument, and handles the outcome in a way the browser can follow without JavaScript.
 
-## Post a form
+Application code normally reaches this through a router.
+Solid Router's `action()` wraps the server function in a value that serializes to that address, so the same `<form action={...}>` works before hydration and is taken over by the router after it.
+This page explains the transport underneath, for the parts of an app the router does not cover and for integrations that build their own form helpers.
 
-Declare a server function that accepts one `FormData` argument:
+## Post a form through a router action
+
+Declare a server function that accepts one `FormData` argument, and wrap it with `action` from `@solidjs/router`:
 
 ```ts
 import { redirect, respond } from "@solidjs/web";
@@ -28,26 +32,32 @@ export async function createTodo(form: FormData) {
 }
 ```
 
-Use the reference URL in the form:
-
 ```tsx
-<form method="post" action={createTodo.url}>
+import { action } from "@solidjs/router";
+import { createTodo } from "./todos";
+
+const addTodo = action(createTodo);
+
+<form method="post" action={addTodo}>
 	<label>
 		Title
 		<input name="title" required />
 	</label>
 	<button type="submit">Add todo</button>
-</form>
+</form>;
 ```
 
-The browser can submit this form without the server-function client runtime.
-The server detects an unscripted request by the absence of the `X-Server-Function-Instance` request header.
-It decodes a form request as one `FormData` argument.
+The rendered HTML has an ordinary `action="..."` attribute pointing at the server function's URL, so the browser can submit the form with no client runtime.
+The server detects an unscripted request by the absence of the `X-Server-Function-Instance` request header and decodes the form body as the single `FormData` argument.
+
+The [Forms guide](/guides/forms) builds this out with validation, inline errors, and pending state.
 
 ## Submit a GET form
 
 A GET form replaces the action URL's query string with the form fields.
-When the query is not an encoded server-function argument list, the handler passes one `URLSearchParams` argument:
+When the query is not an encoded server-function argument list, the handler passes one `URLSearchParams` argument.
+
+`GET()` returns a typed `ServerFunction` reference, so its `url` is available directly:
 
 ```ts
 import { GET } from "@solidjs/web/server-functions";
@@ -68,23 +78,36 @@ export const search = GET(async (params: URLSearchParams) => {
 GET functions must remain safe and idempotent.
 Do not use a GET form for a mutation.
 
+## The reference URL
+
+Every server-function reference carries `id` and `url` at runtime, on the client proxy and on the server-side callable alike.
+The `url` is the address the function is invoked at, `<endpoint>/<id>`, and is what the router serializes into the form attribute.
+
+Whether TypeScript knows about it depends on how the function was declared:
+
+- References returned by `GET()` and `live()` are typed as `ServerFunction`, which declares `id` and `url`.
+- A bare `"use server"` function keeps its declared function type.
+  `url` is present at runtime but not in the type, so `createTodo.url` is a type error.
+
+For form posts, use a router action rather than the URL.
+An integration that must read the address from a bare declaration can narrow it to `ServerFunction` from `@solidjs/web/server-functions` after checking `isServerFunction(fn)`.
+
 ## Bind leading arguments
 
 The function id lives in the URL path.
 An integration can add JSON-safe bound arguments to the reserved `args` query parameter, while the submitted form remains the final `FormData` argument.
+Solid Router's `action.with(...)` does this for application code.
 
 Use `serverFunctionUrl(id, boundArgs)` when a router, form helper, or custom host must build this URL:
 
 ```ts
 import { serverFunctionUrl } from "@solidjs/web/server-functions";
 
-const action = serverFunctionUrl(updateTodo.id, [todo.id]);
+const address = serverFunctionUrl(updateTodo.id, [todo.id]);
 ```
 
 Bound arguments must be JSON-safe.
 The no-JavaScript form convention does not load the rich-argument serializer.
-
-Application components normally use a reference's `url` or a router form helper instead of constructing the address.
 
 ## Understand response ownership
 
@@ -114,5 +137,5 @@ See [Server rendering with Solid Router](/routing/solid-router/server-rendering)
 ## Next steps
 
 - [Forms](/guides/forms): a complete form that works before hydration and upgrades to a scripted submission afterward.
-- [Data APIs](/routing/solid-router/data): Solid Router's `action()` adds pending state, optimistic UI, and revalidation on top of this transport.
+- [Data APIs](/routing/solid-router/data): what `action()` adds on top of this transport: submissions, optimistic UI, and revalidation.
 - [Sessions and auth](/building-apps/sessions-and-auth): sign-in forms are the most common no-JavaScript submission.

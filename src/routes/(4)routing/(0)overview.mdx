@@ -10,6 +10,67 @@ A router integration owns URL matching, navigation, and route rendering.
 Route-level data can use the router's data APIs or a separate cache.
 The application renders the router as part of the component tree.
 
+The `bare` project shape has no router.
+The `basic` and `fullstack` shapes use Solid Router, and `fullstack-tanstack` uses TanStack Router.
+This page explains what a router needs from the platform and how the two supported routers plug in.
+The router-specific guides are [Solid Router](/routing/solid-router) and [TanStack Router](/routing/tanstack).
+
+## Pick a router
+
+Use Solid Router when you do not have a reason to use something else.
+It is built for Solid's reactivity model: route params and location are reactive values, `query()` and `action()` are thin wrappers around server functions, forms submit before JavaScript loads, and single-flight mutations work by default.
+It also ships the file-system adapter that the CLI templates use, so routes are files under `src/routes`.
+
+Use TanStack Router when you already build on TanStack Query, need its typed search-parameter schemas and loader model, or share routing conventions with a TanStack app in another framework.
+You give up the file-system convention shared with the rest of the Solid templates, and you own the data cache handoff between server and client, which the [TanStack Router](/routing/tanstack) page documents.
+
+Both routers are mounted the same way and both use the same server-side hooks, so the rest of this page applies to either one.
+
+## The smallest routed app
+
+This is the `basic` template with the comments removed.
+The router is created once at module scope:
+
+```ts
+// src/router.ts
+import { pageRoutes } from "virtual:file-routes";
+import { createRouter } from "@solidjs/router";
+import { fileRoutes } from "@solidjs/router/fs";
+
+export const Router = createRouter({ routes: fileRoutes(pageRoutes) });
+
+export const { paths } = Router;
+```
+
+And mounted in `App`, where the matched page renders through `props.children`:
+
+```tsx
+// src/App.tsx
+import { Loading } from "solid-js";
+import { paths, Router } from "./router";
+
+export default function App() {
+	return (
+		<Router>
+			{(props) => (
+				<>
+					<nav>
+						<a href={paths()}>Home</a>
+						<a href={paths.users(1)}>Users</a>
+					</nav>
+					<Loading fallback={<main>Loading…</main>}>{props.children}</Loading>
+				</>
+			)}
+		</Router>
+	);
+}
+```
+
+Each file under `src/routes` with a default export is a page.
+`paths` builds URLs from the route tree, so links are checked by the type checker.
+The `Loading` boundary around `props.children` is what lets a navigation keep the current page on screen while the next page's data loads.
+The [Solid Router setup page](/routing/solid-router/setup) shows the same app with an in-memory route tree instead of the file-system adapter.
+
 ## Mount the router in `App`
 
 The `@solidjs/vite-plugin` start mode uses `src/App.tsx` as the root component for its generated entries.
@@ -66,3 +127,10 @@ The consumer applies response metadata and seeds Solid Router's `query` cache fr
 
 Other routers provide their own collection and cache-hydration policy.
 The [TanStack Router integration](/routing/tanstack) uses a dehydrated TanStack Query cache as the flight payload.
+
+## Next steps
+
+- [Solid Router](/routing/solid-router): routes, layouts, navigation, and data loading with the default router.
+- [TanStack Router](/routing/tanstack): the integration boundary used by the `fullstack-tanstack` template.
+- [App structure](/building-apps/app-structure): the `App`, `Document`, and `start.setup` conventions this page refers to.
+- [Async reactivity](/concepts/async-reactivity): why a navigation can hold the current page instead of flashing a fallback.

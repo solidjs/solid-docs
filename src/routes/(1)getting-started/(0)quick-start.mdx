@@ -5,6 +5,11 @@ mainNavExclude: true
 version: "2.0"
 ---
 
+This page takes you from an empty directory to a running app with a change of your own in it.
+It uses the `basic` project shape, which gives you a router, file-system routes, per-page titles, and a test suite while still producing a purely static build.
+
+## Create the project
+
 Install Node.js `20.19` or later, or `22.12` or later.
 These versions satisfy the Vite 8 runtime requirement used by the maintained templates.
 
@@ -22,37 +27,257 @@ yarn create solid@latest
 bun create solid@latest
 ```
 
-Choose the `basic` project shape when the CLI prompts you.
-Choose a project directory and package manager, then run the development command printed by the CLI.
+Choose `basic` when the CLI asks for a project shape.
+Pick a directory and a package manager, then run the development command the CLI prints.
+The dev server starts on port `3000`.
 
-Open the local URL printed by the development server to see your app.
+Open `http://localhost:3000`.
+You see a Solid logo, a "Hello Solid!" heading, a button that counts clicks, and a nav with Home and Users links.
+Click Users to see a page that loads a user record and links to the next one.
 
-The `basic` project includes:
+## Look around
 
-- A router with file-system routes.
-- Per-page titles.
-- A test suite.
-- A purely static production build.
+The project has no `index.html` and no file that calls `render()`.
+The Vite plugin generates those parts in what it calls start mode, and it builds them around a few conventional files.
 
-The source template has no hand-written `index.html` or mount file.
-The Vite plugin's start mode generates the entries around two files:
+```text
+src/
+  App.tsx            the root component: router, nav, site-wide layout
+  Document.tsx       the HTML document shell; site-wide head tags live here
+  router.ts          creates the router from the file-system route manifest
+  routes/
+    index.tsx        the / page
+    users.tsx        a layout that wraps every page under /users
+    users/[id].tsx   the /users/:id page, with data loading
+    [...404].tsx     the catch-all page
+  components/
+    Counter.tsx      the click counter on the home page
+    Counter.test.tsx its test
+vite.config.ts
+```
 
-- `src/App.tsx` is the app, router included.
-- `src/Document.tsx` is the document shell. Site-wide head tags go here.
+`vite.config.ts` turns start mode on and adds the file-system routing plugin:
 
-The static production build emits `dist/client/index.html`.
+```ts
+import { fileRoutes } from "filesystem-routing/vite";
+import { defineConfig } from "vitest/config";
+import solid from "@solidjs/vite-plugin";
 
-Edit files under `src/routes` and the route table follows.
+export default defineConfig({
+	plugins: [
+		solid({ start: true, extensions: [".jsx", ".tsx"], diagnostics: true }),
+		fileRoutes({ types: true }),
+	],
+	// ...
+});
+```
 
-## Other project shapes
+`src/App.tsx` is the component every page renders inside.
+The router is mounted here, and so is anything that should appear on every page:
 
-The CLI offers three project shapes, each a superset of the last.
-Pick the one that matches what you are building, or read about [project shapes](/getting-started/project-shapes) to compare them.
+```tsx
+import { Title } from "@solidjs/meta";
+import { Loading } from "solid-js";
+import { paths, Router } from "./router";
+import "./App.css";
 
-- `bare`: no router, pure static output.
-- `basic`: router, file-system routes, testing. Still pure static.
-- `fullstack`: streaming SSR with server functions, sessions, and API routes.
+export default function App() {
+	return (
+		<Router>
+			{(props) => (
+				<>
+					<Title>Solid App</Title>
+					<nav>
+						<a href={paths()}>Home</a>
+						<a href={paths.users(1)}>Users</a>
+					</nav>
+					<Loading fallback={<main>Loading…</main>}>{props.children}</Loading>
+				</>
+			)}
+		</Router>
+	);
+}
+```
 
-## Getting help
+Three things in this file come up again and again in Solid:
 
-If you need assistance, ask in the [Discord chatroom](https://discord.com/invite/solidjs).
+- `props.children` is where the matched page renders.
+  Layouts in Solid are ordinary components that render their children.
+- `<Loading>` is a boundary.
+  When a page inside it is waiting on data, the boundary shows the fallback instead of the page, and it keeps the current page visible when you navigate to one that is still loading.
+- `paths.users(1)` builds the URL `/users/1` from the route tree, so a typo in a link is a type error instead of a broken page.
+
+`src/Document.tsx` is the document shell, the file that replaces `index.html`.
+It renders the full `<html>` element and receives the app as `props.children`.
+It ships no JavaScript to the browser; it only exists to produce the static shell around the app.
+
+`src/routes/index.tsx` is the home page.
+Each file under `src/routes` with a default export becomes a page at the matching URL: `index.tsx` is `/`, `users/[id].tsx` is `/users/:id`, and `[...404].tsx` catches everything else.
+Pairing `users.tsx` with a `users/` directory makes it a layout that wraps every page inside the directory.
+
+`src/components/Counter.tsx` is the smallest complete Solid component in the project:
+
+```tsx
+import { createSignal } from "solid-js";
+
+export default function Counter() {
+	const [count, setCount] = createSignal(0);
+	return (
+		<button
+			class="increment"
+			onClick={() => setCount(count() + 1)}
+			type="button"
+		>
+			Clicks: {count()}
+		</button>
+	);
+}
+```
+
+`createSignal(0)` returns a pair: `count` is a function that reads the current value, and `setCount` writes a new one.
+The JSX reads `count()` inside curly braces.
+Because the read happens inside JSX, Solid knows that this text node depends on `count`, and it updates that text node, and nothing else, when the button is clicked.
+`Counter` itself runs once.
+
+## Make a change
+
+Add a step to the counter.
+Replace the body of `Counter.tsx` with this:
+
+```tsx
+import { createSignal } from "solid-js";
+
+export default function Counter() {
+	const [count, setCount] = createSignal(0);
+	const [step, setStep] = createSignal(1);
+
+	return (
+		<>
+			<button
+				class="increment"
+				onClick={() => setCount(count() + step())}
+				type="button"
+			>
+				Clicks: {count()}
+			</button>
+			<label>
+				Step
+				<input
+					type="number"
+					min="1"
+					value={step()}
+					onInput={(event) => setStep(event.currentTarget.valueAsNumber || 1)}
+				/>
+			</label>
+			<p>Next click adds {step()}.</p>
+		</>
+	);
+}
+```
+
+Save the file.
+The page updates without a reload.
+Change the step to `5` and click the button: the count goes up by five, and the sentence under the button already said so before you clicked.
+
+Now try something that does not work, on purpose.
+Move the read out of the JSX:
+
+```tsx
+const [count, setCount] = createSignal(0);
+const current = count(); // read once, in the component body
+
+return <button onClick={() => setCount(count() + 1)}>Clicks: {current}</button>;
+```
+
+The button no longer updates, and the browser console shows a warning:
+
+```text
+[STRICT_READ_UNTRACKED] Reactive value read directly in <Counter> will not update.
+Move it into a tracking scope (JSX, a memo, or an effect's compute function).
+```
+
+This is the one rule that makes the rest of Solid make sense.
+A component body runs once, so a value read there is a snapshot.
+A read inside JSX, a memo, or an effect's compute function is tracked, and tracked reads update.
+The [Reactivity](/concepts/reactivity) page explains why, and what to do when you need a value in the component body anyway.
+Put the read back inside the JSX before you continue.
+
+## Add a page
+
+Create `src/routes/about.tsx`:
+
+```tsx
+import { Title } from "@solidjs/meta";
+
+export default function About() {
+	return (
+		<main>
+			<Title>About - Solid App</Title>
+			<h1>About</h1>
+			<p>Built with Solid.</p>
+		</main>
+	);
+}
+```
+
+Then add a link to the nav in `src/App.tsx`:
+
+```tsx
+<nav>
+	<a href={paths()}>Home</a>
+	<a href={paths.about()}>About</a>
+	<a href={paths.users(1)}>Users</a>
+</nav>
+```
+
+Open `http://localhost:3000/about`.
+The route table follows the file system, so there is no route registration step.
+The `fileRoutes({ types: true })` plugin also regenerates the path types, which is why `paths.about()` type-checks.
+The `<Title>` sets the browser tab for this page only; the `<Title>` in `App.tsx` is the fallback for pages that do not set one.
+
+## Run the tests and build
+
+The template includes one test, for `Counter`:
+
+```tsx
+import { render, fireEvent } from "@solidjs/testing-library";
+import { flush } from "solid-js";
+import { describe, expect, test } from "vitest";
+
+import Counter from "./Counter";
+
+describe("<Counter />", () => {
+	test("it increments on click", () => {
+		const { getByRole } = render(() => <Counter />);
+		const button = getByRole("button");
+		expect(button).toHaveTextContent("Clicks: 0");
+		fireEvent.click(button);
+		// Solid batches DOM updates; flush() applies them synchronously.
+		flush();
+		expect(button).toHaveTextContent("Clicks: 1");
+	});
+});
+```
+
+Run it with `npm test`.
+If you kept the step input, `getByRole("button")` still finds the only button.
+The `flush()` call matters: Solid applies DOM updates in a batch after the event handler returns, so a test that asserts immediately after `fireEvent.click` sees the old text.
+The [Testing guide](/guides/testing) covers this and the other environments.
+
+Run `npm run build`.
+The output is a static site in `dist/client`, with each route in its own chunk.
+You can deploy that directory to any static host.
+When you later need server rendering or server functions, add `ssr: true` next to `start: true` in `vite.config.ts`; the files you have written carry over unchanged.
+[Project shapes](/getting-started/project-shapes) compares `bare`, `basic`, and `fullstack`.
+
+## Where to go next
+
+You now have an app with routing, a component you changed, and a passing test.
+Pick the next page by what you want to understand:
+
+- The model: [Reactivity](/concepts/reactivity) explains tracking, memos, effects, and when updates land, starting from the warning you saw above.
+- The components: [Components and JSX](/concepts/components-and-jsx) explains why a component runs once, how props stay reactive, and how `Show` and `For` replace conditionals and `map`.
+- The platform: [App structure](/building-apps/app-structure) explains what start mode generates, how `App` and `Document` fit together, and how to turn on server rendering.
+- The router: [Solid Router](/routing/solid-router) covers route definitions, layouts, navigation, and data loading.
+
+If you get stuck, ask in the [Discord chatroom](https://discord.com/invite/solidjs).

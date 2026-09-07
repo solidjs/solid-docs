@@ -1,0 +1,309 @@
+---
+title: "Forms"
+titleTemplate: ":title"
+mainNavExclude: true
+version: "2.0"
+description: "Build a form that submits to a server function, validates on both sides, and works before JavaScript loads."
+---
+
+This guide builds one form, a shipping address for the cart, in three passes.
+The first pass is plain HTML posting to a server function; it works with no JavaScript in the browser at all.
+The second adds validation on both sides.
+The third adds pending state and inline errors with Solid Router's `action()`, without changing the HTML.
+
+Each pass is a working form on its own.
+Stop at the pass that matches what your app needs.
+
+The guide assumes a `fullstack` project with [server functions](/building-apps/server-functions) enabled and Solid Router mounted.
+
+## Pass 1: an HTML form and a server function
+
+A server function that takes one `FormData` argument can be the `action` of an HTML form.
+Declare the function:
+
+```ts
+// src/routes/checkout/address.ts
+import { redirect } from "@solidjs/web";
+
+export async function saveAddress(form: FormData) {
+	"use server";
+
+	await database.addresses.save({
+		name: String(form.get("name") ?? ""),
+		street: String(form.get("street") ?? ""),
+		postalCode: String(form.get("postalCode") ?? ""),
+	});
+
+	return redirect("/checkout/shipping");
+}
+```
+
+And render the form with the function's `url` as its action:
+
+```tsx
+// src/routes/checkout/address.tsx
+import { saveAddress } from "./address";
+
+export default function AddressPage() {
+	return (
+		<form method="post" action={saveAddress.url}>
+			<label>
+				Name
+				<input name="name" required />
+			</label>
+			<label>
+				Street
+				<input name="street" required />
+			</label>
+			<label>
+				Postal code
+				<input name="postalCode" required pattern="[0-9]{5}" />
+			</label>
+			<button type="submit">Continue to shipping</button>
+		</form>
+	);
+}
+```
+
+Load the page and disable JavaScript in your browser's developer tools.
+The form still submits.
+The browser posts to the server function's URL, the runtime sees that the request came from an HTML form rather than the Solid client, decodes the body as `FormData`, runs `saveAddress`, and follows the redirect.
+
+Two details are doing the work here.
+The inputs are uncontrolled: Solid does not read their values while the user types, and the browser assembles the `FormData` on submit.
+And `required` and `pattern` are the browser's own validation; the browser will not submit until they pass.
+
+This is a complete, deployable form.
+What it lacks is validation the user cannot bypass and any feedback other than a redirect.
+
+## Pass 2: validate on the server
+
+Browser validation is a convenience for the user.
+Anyone can post to `saveAddress.url` with `curl`, so the server function must check the data itself before touching the database.
+Parse the `FormData` with a schema:
+
+```ts
+// src/routes/checkout/address.ts
+import { redirect, respond } from "@solidjs/web";
+import * as v from "valibot";
+
+const Address = v.object({
+	name: v.pipe(v.string(), v.trim(), v.minLength(1, "Enter a name")),
+	street: v.pipe(v.string(), v.trim(), v.minLength(1, "Enter a street")),
+	postalCode: v.pipe(
+		v.string(),
+		v.regex(/^[0-9]{5}$/, "Enter a five-digit postal code")
+	),
+});
+
+export type AddressIssues = Partial<
+	Record<keyof v.InferOutput<typeof Address>, string>
+>;
+
+export async function saveAddress(form: FormData) {
+	"use server";
+
+	const parsed = v.safeParse(Address, Object.fromEntries(form));
+	if (!parsed.success) {
+		const issues: AddressIssues = {};
+		for (const issue of parsed.issues) {
+			const field = issue.path?.[0]?.key as keyof AddressIssues | undefined;
+			if (field && !issues[field]) issues[field] = issue.message;
+		}
+		throw respond({ issues }, { status: 400 });
+	}
+
+	await database.addresses.save(parsed.output);
+	return redirect("/checkout/shipping");
+}
+```
+
+`Object.fromEntries(form)` turns the `FormData` into a plain object for the schema.
+On failure the function throws a `respond()` envelope: a `400` status with the field messages as its value.
+Throwing an envelope is intentional control flow, not an error; the runtime keeps the status and the value, and in production it does not replace the value with a generic message the way it does for a plain thrown `Error`.
+See [Handle thrown errors](/building-apps/server-functions/mutations-and-responses#handle-thrown-errors).
+
+The schema and `valibot` are used only inside the `"use server"` body, so they do not enter the client bundle.
+The `AddressIssues` type is exported for the client to use in the next pass.
+
+Without JavaScript, a failed submission posts, receives the 400, and the runtime redirects back to the form with the outcome stored in a one-shot cookie.
+The next pass shows the outcome to the user; on its own, pass 2 protects the database but the user sees a form that appears to have done nothing.
+Keep the browser attributes from pass 1 so most users never reach the server-side failure.
+
+## Pass 3: pending state and inline errors
+
+Wrap the server function in a Solid Router `action()` and pass the action to the form instead of the URL:
+
+```tsx
+// src/routes/checkout/address.tsx
+import { Show } from "solid-js";
+import { action, useSubmissions } from "@solidjs/router";
+import { saveAddress, type AddressIssues } from "./address";
+
+const submitAddress = action(saveAddress);
+
+export default function AddressPage() {
+	const submissions = useSubmissions(submitAddress);
+	const issues = () => {
+		const error = submissions.at(-1)?.error as
+			{ issues?: AddressIssues } | undefined;
+		return error?.issues ?? {};
+	};
+
+	return (
+		<form method="post" action={submitAddress}>
+			<label>
+				Name
+				<input
+					name="name"
+					required
+					aria-invalid={issues().name ? "true" : undefined}
+				/>
+			</label>
+			<Show when={issues().name}>
+				{(message) => <p role="alert">{message()}</p>}
+			</Show>
+
+			<label>
+				Street
+				<input
+					name="street"
+					required
+					aria-invalid={issues().street ? "true" : undefined}
+				/>
+			</label>
+			<Show when={issues().street}>
+				{(message) => <p role="alert">{message()}</p>}
+			</Show>
+
+			<label>
+				Postal code
+				<input
+					name="postalCode"
+					required
+					pattern="[0-9]{5}"
+					aria-invalid={issues().postalCode ? "true" : undefined}
+				/>
+			</label>
+			<Show when={issues().postalCode}>
+				{(message) => <p role="alert">{message()}</p>}
+			</Show>
+
+			<button type="submit">Continue to shipping</button>
+		</form>
+	);
+}
+```
+
+The HTML is the same as before.
+`action(saveAddress)` returns something that serializes to the server function's URL, so `action={submitAddress}` renders the same `action` attribute the browser posted to in pass 1.
+Before hydration, or with JavaScript off, the form behaves as it did.
+
+After hydration, the router takes over the submit.
+It posts through the server-function client, marks the form with `aria-busy="true"` until the call and any revalidation settle, and records the outcome in the submissions list.
+When `saveAddress` throws the `respond()` envelope, the carried value becomes `submission.error`, which is where `issues()` reads the field messages.
+When it returns the redirect, the router navigates.
+
+Pending state comes from the `aria-busy` attribute, so it needs no JavaScript in the component.
+Style it in CSS:
+
+```css
+form[aria-busy] button[type="submit"] {
+	opacity: 0.6;
+	pointer-events: none;
+}
+```
+
+`useSubmissions` returns a reactive array, so `issues()` is a plain derived function read from JSX, following the rule from the [Reactivity](/concepts/reactivity) page.
+The list holds settled outcomes with a result or an error; a submission that returned a redirect does not stay in it.
+The list also carries the no-JavaScript outcome: when a form posts without the client, the router reads the flash cookie on the next server render and turns it into the same submission state, so the inline errors render on that page load too.
+
+## Live validation while typing
+
+The passes above validate on submit.
+When a field should report as the user types, make that input controlled: hold its value in a signal, and derive the message from the value.
+
+```tsx
+import { createMemo, createSignal } from "solid-js";
+
+function PostalCodeField() {
+	const [postalCode, setPostalCode] = createSignal("");
+	const message = createMemo(() =>
+		postalCode() === "" || /^[0-9]{5}$/.test(postalCode())
+			? undefined
+			: "Enter a five-digit postal code"
+	);
+
+	return (
+		<label>
+			Postal code
+			<input
+				name="postalCode"
+				value={postalCode()}
+				onInput={(event) => setPostalCode(event.currentTarget.value)}
+				aria-invalid={message() ? "true" : undefined}
+			/>
+			<p aria-live="polite">{message()}</p>
+		</label>
+	);
+}
+```
+
+`value={postalCode()}` writes the signal into the input, and `onInput` writes the input back into the signal.
+The message is a memo of the value, not a second signal set from an effect; the guide [Avoid unnecessary effects](/guides/avoid-unnecessary-effects) explains why that distinction matters.
+The input keeps its `name`, so the same `FormData` reaches the server function and the server-side schema still runs.
+
+Use controlled inputs for the fields that need live feedback and leave the rest uncontrolled.
+A controlled input re-renders its text on every keystroke; an uncontrolled one costs nothing until submit.
+
+## Editing an existing record
+
+When the form edits a value that came from the server, the inputs need an initial value that follows the source but can be edited locally.
+Pass a function to `createSignal` or `createStore` to create a writable derivation:
+
+```tsx
+import { createStore } from "solid-js";
+
+function AddressForm(props: { address: Address }) {
+	const [draft, setDraft] = createStore(() => props.address, {
+		name: "",
+		street: "",
+		postalCode: "",
+	});
+	// ...
+}
+```
+
+The second argument is the seed the store starts from before the first derivation lands.
+Edits write to `draft`.
+When `props.address` changes, for example after a save and revalidation, the draft resets to the new source.
+[Use a writable derivation for a local override](/guides/avoid-unnecessary-effects#use-a-writable-derivation-for-a-local-override) shows the full pattern with per-field validation.
+
+## Common problems
+
+### The server function receives an empty object
+
+The inputs have no `name` attribute, or the form uses `method="get"`.
+Every field that should reach the server needs a `name`, and mutations must post.
+
+### The form submits, but the page reloads instead of staying put
+
+Either the router is not mounted around the form, so nothing intercepts the submit, or `action={...}` was given `saveAddress.url` instead of the `action()` wrapper.
+The URL form always posts as a full-page navigation; the wrapper is what lets the router take over after hydration.
+
+### Errors show for a moment and then vanish
+
+Something is clearing the submission.
+`submission.clear()` removes an entry from the list; call it when the user dismisses the error or resubmits, not from an effect that runs on every render.
+
+### `respond()` reaches the client as `Internal Server Error`
+
+The value was thrown as a plain object or `Error` instead of through `respond()` or `markSafeError()`.
+Production builds replace unbranded thrown errors with a generic message.
+Use `throw respond(value, { status })` for structured failures.
+
+## Where to go next
+
+- [Data APIs](/routing/solid-router/data) covers `.with()` for bound arguments, `.onSubmit` for optimistic updates, and revalidation after a mutation.
+- [Arguments and security](/building-apps/server-functions/arguments-and-security) explains the other argument encodings and the same-origin check that protects POSTs.
+- [Sessions and auth](/building-apps/sessions-and-auth) applies this shape to sign-in and sign-out forms.

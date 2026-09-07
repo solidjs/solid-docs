@@ -89,16 +89,53 @@ The fallback can be a static element or a function.
 The function receives an accessor for the captured error and a `reset` function.
 Calling `reset` retries the reactive sources collected by the boundary so the branch can render again.
 
+### Recovery
+
+An errored region is not stuck until someone resets it.
+The error is the current status of that part of the graph, the same way "not ready" is a status, and it clears when the graph produces a value again:
+
+- An input of the failed computation changes.
+  In the example above, clicking "Next account" after a failed request runs the fetch for the new id, and the content returns if that request succeeds.
+- A `refresh(source)` lands with a successful result.
+- A `live` server function reconnects and yields a value.
+
+`reset` covers the case where nothing upstream is going to change on its own, such as a network outage.
+It re-runs the failed sources, so a retry that reaches the same error shows the same fallback, and a retry that succeeds shows the content.
+It does not re-render the boundary's children with the old error still in place.
+
 An error thrown while rendering an `Errored` fallback is outside that boundary's protected subtree.
 A parent `Errored` boundary can catch it.
 Without a matching error boundary, an unhandled error is escalated instead of being consumed by a loading boundary.
 
 ## Reveal order
 
+Independent loading regions become visible in the order their data arrives.
+On a page with a hero, a feed, and a sidebar, a fast sidebar query pops in below a slow hero skeleton, and the layout shifts as each region lands.
+Server rendering has the same problem in the HTML stream, where fragments arrive out of order.
+
 [`Reveal`](/reference/solid-js/components-jsx/reveal) coordinates loading boundaries created directly within it.
 It changes reveal timing without changing which async sources each `Loading` boundary observes.
-It does not fetch data or create loading state.
+It does not fetch data or create loading state, and it does not delay the network or the stream; content still arrives as soon as it is ready and `Reveal` controls when it appears.
 Use it when independent regions should appear in a deliberate order instead of revealing in network completion order.
+
+```tsx
+import { Loading, Reveal } from "solid-js";
+
+<Reveal collapsed>
+	<Loading fallback={<HeroSkeleton />}>
+		<Hero />
+	</Loading>
+	<Loading fallback={<CardSkeleton />}>
+		<Feed />
+	</Loading>
+	<Loading fallback={<CardSkeleton />}>
+		<Sidebar />
+	</Loading>
+</Reveal>;
+```
+
+The sidebar can finish first and still waits its turn.
+`collapsed` keeps the skeletons after the current one from stacking below it.
 
 The default `sequential` order reveals slots in registration order.
 A later slot stays on its fallback until every earlier slot is ready.
@@ -194,3 +231,9 @@ function StatusBoundary(props: {
 	return output() as JSX.Element;
 }
 ```
+
+## Where to go next
+
+- [Rendering and SSR](/concepts/rendering-and-ssr): how `Loading` boundaries decide what goes in the initial HTML shell and what streams later.
+- [Server functions](/building-apps/server-functions): reads and live sources whose errors and reconnects these boundaries handle.
+- [Solid Router](/routing/solid-router): a `Loading` boundary around `props.children` is what lets a navigation hold the current page.

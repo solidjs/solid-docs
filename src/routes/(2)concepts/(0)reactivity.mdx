@@ -5,144 +5,314 @@ mainNavExclude: true
 version: "2.0"
 ---
 
-Solid connects reactive values to the computations that read them.
-A computation records its dependencies while it runs, and Solid schedules it again when one of those dependencies changes.
-This read-based model applies to JSX expressions, memos, and the compute phase of effects.
+In the [Quick start](/getting-started/quick-start) you saw two versions of the same counter.
+One read `count()` inside the JSX and updated on every click.
+The other read `count()` in the component body, and the button froze at zero while the console warned that the read "will not update".
 
-## A practical mental model
+Everything on this page follows from the difference between those two lines.
+Solid does not re-run components.
+It runs each component once, records which reactive values each expression reads, and re-runs only those expressions when the values they read change.
+The place where you read a value decides whether Solid can see the read.
 
-1. A signal or store property is a source of reactive state.
-2. Reading a source inside a tracking scope subscribes that scope to the source.
-3. Writing to a source stages a new value and notifies its subscribers.
-4. Solid drains the pending work as one update pass on the microtask queue.
-
-Dependencies follow the reads taken during the latest run.
-If a computation takes a different branch, reads from the old branch stop being dependencies and reads from the new branch become dependencies.
+The examples use a small shopping cart: a line item with a price and a quantity, a subtotal, and a shipping estimate.
 
 ## Signals
 
-A signal provides an accessor for reading a value and a setter for changing it.
-Calling the accessor inside a tracking scope creates a dependency, while calling it outside a tracking scope returns the current value without creating a subscription.
+A signal holds one value and knows who reads it.
+`createSignal` returns a getter and a setter:
 
 ```tsx
 import { createSignal } from "solid-js";
 
-export function Counter() {
-	const [count, setCount] = createSignal(0);
-	const doubled = () => count() * 2;
+export function LineItem() {
+	const [quantity, setQuantity] = createSignal(1);
+	const price = 12;
 
 	return (
-		<button type="button" onClick={() => setCount((value) => value + 1)}>
-			{count()} × 2 = {doubled()}
-		</button>
+		<div>
+			<button type="button" onClick={() => setQuantity(quantity() - 1)}>
+				−
+			</button>
+			<span>{quantity()}</span>
+			<button type="button" onClick={() => setQuantity(quantity() + 1)}>
+				+
+			</button>
+			<p>Subtotal: ${quantity() * price}</p>
+		</div>
 	);
 }
 ```
 
-The JSX expressions create tracking scopes.
-When JSX calls `doubled()`, its read of `count()` becomes a dependency of that JSX consumer.
-The updater passed to `setCount` receives the latest staged value, so updater functions compose when several writes happen before a flush.
+Click `+` and two things change on the page: the quantity and the subtotal.
+Nothing else is touched.
+`LineItem` does not run again; the two JSX expressions that read `quantity()` do.
 
-Reactive reads belong in JSX or another tracking scope rather than at the top level of a component body.
-Component bodies run untracked, so a top-level read is a one-time snapshot and produces a development warning.
+The parts of the code where Solid records reads are called tracking scopes.
+JSX expressions are tracking scopes.
+So are the compute functions of memos and effects, which come later on this page.
+A read inside a tracking scope subscribes that scope to the signal.
+A read anywhere else returns the current value and subscribes nothing.
 
-See the [`createSignal` reference](/reference/solid-js/reactivity/create-signal) for setter forms and equality options.
+The component body is not a tracking scope.
+That is deliberate: the body runs once to set up the component, and Solid must not re-run it, because that would recreate every signal and child inside it.
+So this version reads the quantity once and never again:
 
-## Memos
+```tsx
+const [quantity, setQuantity] = createSignal(1);
+const subtotal = quantity() * price; // a number, computed once
 
-Not every derived value needs a memo.
-The `doubled` function above runs in its caller's tracking scope and recalculates each time the caller invokes it.
-
-A memo is a read-only derived value.
-Its compute function tracks the reactive values it reads, and the memo caches its result for downstream readers.
-When the result changes according to the memo's equality rule, Solid notifies the computations that read the memo.
-
-```ts
-import { createMemo, createRoot, createSignal, flush } from "solid-js";
-
-const model = createRoot((dispose) => {
-	const [first, setFirst] = createSignal("Ada");
-	const [last] = createSignal("Lovelace");
-	const fullName = createMemo(() => `${first()} ${last()}`);
-
-	return { fullName, setFirst, dispose };
-});
-
-console.log(model.fullName()); // "Ada Lovelace"
-
-model.setFirst("Grace");
-console.log(model.fullName()); // "Ada Lovelace"
-
-flush();
-console.log(model.fullName()); // "Grace Lovelace"
-
-model.dispose();
+return <p>Subtotal: ${subtotal}</p>;
 ```
 
-:::note
-`model.fullName()` doesn't update until you call `flush()`.
-:::
+In development Solid warns:
 
-Use a memo when multiple consumers need the same derivation or when the derived value should form an equality boundary in the reactive graph.
-An expression used in only one JSX location can often read its sources directly.
+```text
+[STRICT_READ_UNTRACKED] Reactive value read directly in <LineItem> will not update.
+Move it into a tracking scope (JSX, a memo, or an effect's compute function).
+```
 
-Async memos normally use the readiness and loading behavior described on the [async reactivity page](/concepts/async-reactivity).
-That page also covers the advanced `loadingValue` escape hatch.
+The fix is to move the read, not the value.
+Wrap the calculation in a function and call the function from the JSX:
+
+```tsx
+const subtotal = () => quantity() * price;
+
+return <p>Subtotal: ${subtotal()}</p>;
+```
+
+Now the read of `quantity()` happens when the JSX calls `subtotal()`, inside a tracking scope, and the subtotal updates.
+
+Occasionally you want the one-time snapshot.
+Say so with [`untrack`](/reference/solid-js/reactivity/untrack), which reads without subscribing and without the warning:
+
+```tsx
+const initialQuantity = untrack(quantity);
+```
+
+The setter accepts a value or an updater function.
+The updater receives the latest value, including one that was set earlier in the same event and has not landed yet:
+
+```tsx
+setQuantity((current) => current + 1);
+```
+
+Prefer the updater when the new value depends on the old one.
+`setQuantity(quantity() + 1)` reads the committed value, and if something else has already staged a write in the same turn, the two writes collide.
+The [update scheduling](#when-updates-land) section explains what "landed" means.
+
+See the [`createSignal` reference](/reference/solid-js/reactivity/create-signal) for the setter forms and the equality option.
+
+## Derived values
+
+`subtotal` above is a plain function.
+It has no state of its own; it reads `quantity()` when called, in whatever tracking scope calls it.
+That is the right default for a derived value, and most derived values in a Solid app are functions like this.
+
+A function recomputes every time a reader calls it.
+When the same derivation feeds several readers, or when it is expensive, or when you want downstream readers to update only when the result changes, use a memo:
+
+```tsx
+import { createMemo, createSignal } from "solid-js";
+
+const [quantity, setQuantity] = createSignal(1);
+const [discountCode, setDiscountCode] = createSignal("");
+const price = 12;
+
+const subtotal = createMemo(() => quantity() * price);
+const discount = createMemo(() => (discountCode() === "SAVE10" ? 0.1 : 0));
+const total = createMemo(() => subtotal() * (1 - discount()));
+```
+
+`createMemo` runs its function in a tracking scope, caches the result, and hands the cached value to readers.
+When `quantity` changes, `subtotal` recomputes.
+`total` recomputes because it read `subtotal()`.
+When the user types `SAVE1` on the way to `SAVE10`, `discount` recomputes and produces `0` again; because the result is equal to the last one, `total` is not notified.
+That equality check is what makes a memo a useful boundary in a chain of derivations.
+
+A memo's function must not write to signals or stores.
+It runs during an update, and a write inside it throws `[REACTIVE_WRITE_IN_OWNED_SCOPE]` in development.
+If you find yourself wanting to write from a memo, the value you were going to write is itself a derived value; return it instead.
+
+A memo's function may be async.
+When it returns a promise, readers of the memo wait for the result, and the nearest [`Loading`](/concepts/boundaries) boundary shows its fallback in the meantime.
+The [Async reactivity](/concepts/async-reactivity) page covers that in depth.
+
+## When updates land
+
+Setting a signal does not update readers immediately.
+The write is staged, and Solid applies all staged writes together in a microtask, after the current code finishes.
+Within one event handler you can set several signals and every reader sees the final state once, not each intermediate state.
+
+This also means a read right after a write returns the old value:
+
+```ts
+const [quantity, setQuantity] = createSignal(1);
+
+setQuantity(3);
+console.log(quantity()); // 1
+
+await Promise.resolve();
+console.log(quantity()); // 3
+```
+
+Application code rarely notices.
+Event handlers set values and return; JSX and memos read values in tracking scopes and update when the batch lands.
+The two places where the delay shows up are tests, which assert right after an event, and imperative code that reads a signal immediately after writing it.
+[`flush()`](/reference/solid-js/reactivity/flush) applies the staged writes synchronously:
+
+```ts
+setQuantity(3);
+flush();
+console.log(quantity()); // 3
+```
+
+The test in the `basic` template calls `flush()` after `fireEvent.click` for this reason.
 
 ## Effects
 
-An effect connects reactive computation to imperative work.
-In Solid 2.0, `createEffect` has a tracked compute phase and an untracked effect phase.
-The value returned by the compute function is passed to the effect function after the queue flushes.
-Use an effect to send reactive output to code outside the reactive graph, such as a logger, DOM API, or subscription.
-Use a plain derived function or memo when other reactive code needs the result.
-See [Avoid unnecessary effects](/guides/avoid-unnecessary-effects) for synchronous and async derivation, writable derived state, and interaction-driven work.
+Signals, functions, and memos move data toward the JSX.
+An effect moves data out of Solid, into something Solid does not own: the browser's storage, the document title, a chart library, a WebSocket.
 
-```ts
-import { createEffect, createRoot, createSignal, flush } from "solid-js";
+[`createEffect`](/reference/solid-js/reactivity/create-effect) takes two functions.
+The first is the compute function; it runs in a tracking scope and returns a value.
+The second is the effect function; it receives that value and does the imperative work.
+It runs untracked, after the update has landed and the DOM reflects it:
 
-const counter = createRoot((dispose) => {
-	const [count, setCount] = createSignal(0);
+```tsx
+import { createEffect, createSignal } from "solid-js";
 
-	createEffect(
-		() => count(),
-		(value, previous) => console.log({ previous, value })
-	);
+const [quantity, setQuantity] = createSignal(1);
 
-	return { setCount, dispose };
-});
-
-flush(); // logs { previous: undefined, value: 0 }
-
-counter.setCount((value) => value + 1);
-flush(); // logs { previous: 0, value: 1 }
-
-counter.dispose();
+createEffect(
+	() => quantity(),
+	(value, previous) => {
+		localStorage.setItem("cart:quantity", String(value));
+		console.log({ previous, value });
+	}
+);
 ```
 
-Put every reactive read that should retrigger the effect in the compute function.
-Reads in the effect function do not become dependencies.
-The effect function may return a cleanup function, which runs before the next effect invocation and when the effect is disposed.
+Put every read that should re-run the effect in the compute function.
+A signal read in the effect function is not tracked, so changing it does not re-run the effect.
+Splitting the two phases keeps the dependency list visible: the compute function is the list.
 
-See the [`createEffect` reference](/reference/solid-js/reactivity/create-effect) for cleanup, scheduling, and error handling.
+The effect function can return a cleanup.
+Solid runs the cleanup before the next effect run and when the owning component is disposed:
 
-## Update scheduling
+```tsx
+createEffect(
+	() => productId(),
+	(id) => {
+		const source = new EventSource(`/stock/${id}`);
+		source.onmessage = (event) => setStock(Number(event.data));
+		return () => source.close();
+	}
+);
+```
 
-Signal and store writes are batched by default.
-A setter stages its value, and ordinary reads continue to return the committed value until Solid drains the queue in a microtask.
-Several writes in the same turn therefore update downstream computations together.
+Before you write an effect, check whether the value could be a derived function or memo instead.
+An effect that copies one signal into another creates a second copy of the same state, and the two copies are briefly out of step on every update.
+The guide [Avoid unnecessary effects](/guides/avoid-unnecessary-effects) works through the common cases: derived values, async data, editable copies of props, and event-driven work.
 
-Most application code can rely on this scheduled flush.
-Use [`flush()`](/reference/solid-js/reactivity/flush) when a test or imperative integration must observe pending writes synchronously.
+## Ownership
 
-## Ownership and disposal
+Every memo, effect, and cleanup belongs to an owner.
+A component is an owner.
+When Solid removes a component from the page, it disposes everything the component created: subscriptions are dropped, cleanups run, and the memos and effects stop.
+This is why a component can create an effect and never think about tearing it down.
 
-Reactive computations are organized under owners.
-Memos, effects, and cleanups created while an owner is current attach to that owner, and disposing the owner removes its child computations and subscriptions.
-Children created by a computation are also disposed before that computation runs again.
+The owner is whatever is running when the primitive is created.
+Create memos and effects in the component body, not inside an event handler; an event handler runs later, with no owner, and an effect created there would never be disposed.
+Development warns about that case:
 
-Components provide an owner for the reactive work created during their lifetime.
-Use [`createRoot`](/reference/solid-js/advanced/owner-introspection/create-root) to host a reactive scope outside a component, and call its disposer when that scope should end.
-Creating an effect without an owner leaves no lifecycle that can dispose it.
+```text
+[NO_OWNER_EFFECT] Effects created outside a reactive context will never be disposed
+```
 
-Async computations, loading state, actions, and refresh behavior are covered on the [async reactivity page](/concepts/async-reactivity).
+Outside components, [`createRoot`](/reference/solid-js/advanced/owner-introspection/create-root) creates an owner and gives you its disposer:
+
+```ts
+import { createEffect, createRoot, createSignal } from "solid-js";
+
+const dispose = createRoot((dispose) => {
+	const [quantity, setQuantity] = createSignal(1);
+	createEffect(
+		() => quantity(),
+		(value) => console.log(value)
+	);
+	return dispose;
+});
+
+// later
+dispose();
+```
+
+Use this in tests, in framework integrations, and for reactive state that lives outside the component tree.
+
+## Common problems
+
+### The page shows the words `function` or `() =>` instead of the value
+
+The signal was turned into a string before Solid saw it:
+
+```tsx
+<p>{"Quantity: " + quantity}</p>
+<p>{`Quantity: ${quantity}`}</p>
+```
+
+`quantity` is a function.
+Call it: `quantity()`.
+Writing `{quantity}` on its own in JSX does work, because Solid calls a function it finds in a JSX expression, but a template string or concatenation stringifies the function first.
+
+### A value renders once and never updates
+
+The read happened outside a tracking scope, usually in the component body.
+Development prints `[STRICT_READ_UNTRACKED]` with the component name.
+Move the read into the JSX or wrap it in a function that the JSX calls.
+
+Destructuring props is the same problem in a different shape:
+
+```tsx
+function LineItem({ price, quantity }: LineItemProps) {
+	// price and quantity were read once, here
+	return <p>${price * quantity}</p>;
+}
+```
+
+Keep the props object and read `props.price` inside the JSX.
+See [Props](/concepts/components-and-jsx#props).
+
+### Reading a signal right after setting it gives the old value
+
+Writes land in a batch after the current code finishes.
+If the next line depends on the new value, use the updater form so the calculation runs against the staged value, or move the dependent code into a tracking scope so it runs when the update lands.
+In a test, call `flush()` after the event.
+See [When updates land](#when-updates-land).
+
+### An effect copies one value into another and the copy lags
+
+```tsx
+const [subtotal, setSubtotal] = createSignal(0);
+createEffect(
+	() => quantity() * price,
+	(value) => setSubtotal(value)
+);
+```
+
+`subtotal` is a derived value.
+Make it a function or a memo and delete the effect and the second signal.
+[Avoid unnecessary effects](/guides/avoid-unnecessary-effects) covers the variants, including the case where the copy is meant to be edited locally.
+
+### `createEffect` throws `[MISSING_EFFECT_FN]`
+
+Solid 2 effects take two functions.
+A single-function effect from Solid 1 needs to be split into a compute function that reads and an effect function that acts.
+If the single function only computed a value, you wanted `createMemo`.
+The [migration guide](/migration/from-solid-1) lists the other Solid 1 patterns that changed.
+
+## Where to go next
+
+- [Components and JSX](/concepts/components-and-jsx) applies these rules to props, events, refs, lists, and conditional content.
+- [Stores](/concepts/stores) extends signals to nested objects and arrays with per-property tracking.
+- [Async reactivity](/concepts/async-reactivity) explains what happens when a memo returns a promise, and how Solid keeps the current screen visible while the next one loads.
+- [Avoid unnecessary effects](/guides/avoid-unnecessary-effects) is the guide to read before you write your first `createEffect` in an app.

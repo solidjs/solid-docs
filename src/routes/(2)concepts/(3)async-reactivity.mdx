@@ -5,93 +5,253 @@ mainNavExclude: true
 version: "2.0"
 ---
 
-Solid computations can return promises and async iterables.
-Consumers still read their accessors as reactive values instead of receiving the promise or iterator.
+Take one value your UI renders today: a product, a list, a setting.
+Make it come from the server instead of a constant.
+In most frameworks that change spreads: the type becomes `Promise<Product>`, every component between the fetch and the display learns about loading, and the place you fetch and the place you show a spinner become the same place whether you want that or not.
 
-## Settled view and in-flight work
+In Solid the change is one line.
+A computation that returns a promise is still a computation, and everything that reads it keeps reading a value.
+This page explains what that buys you and what you still have to decide.
 
-Separate the answer currently visible to the user from the work that may produce another answer:
+The examples continue the shopping cart from the [Reactivity](/concepts/reactivity) page.
 
-![A timeline showing a Loading fallback during the first request, Answer A remaining visible during a held update, and Answer B appearing when the next request settles.](/images/diagrams/async-update-timeline.svg)
-
-Before the first answer settles, the UI has no value to render.
-After an answer settles, Solid holds the current committed view while work prepares the next answer.
-Other writes in the same update wait with it, then commit together when the pending work settles.
-This held update is automatic and does not require a `Loading` boundary.
-The boundary controls what renders when no settled answer exists; it does not create the hold.
-Each async primitive closes a specific gap in this timeline instead of creating a separate async state model.
-
-## No settled answer: `Loading`
-
-Reading an async source before its first result reports that the value is not ready.
-A [`Loading` boundary](/reference/solid-js/components-jsx/loading) turns that state into fallback UI.
+## A memo that returns a promise
 
 ```tsx
-import { Loading, createMemo, createSignal } from "solid-js";
+import { Loading, createMemo } from "solid-js";
 
-type User = {
-	id: number;
-	name: string;
-	bio: string;
-};
+type Product = { id: string; name: string; price: number; description: string };
 
-function UserProfile() {
-	const [id, setId] = createSignal(1);
-	const user = createMemo(async (): Promise<User> => {
-		const requestedId = id();
-		const response = await fetch(`/api/users/${requestedId}`);
+async function fetchProduct(id: string): Promise<Product> {
+	const response = await fetch(`/api/products/${id}`);
+	if (!response.ok) throw new Error(`Could not load product ${id}`);
+	return response.json();
+}
 
-		if (!response.ok) {
-			throw new Error(`Could not load user ${requestedId}`);
-		}
-
-		return response.json();
-	});
+function ProductDetail(props: { id: string }) {
+	const product = createMemo(() => fetchProduct(props.id));
 
 	return (
-		<section>
-			<button onClick={() => setId((current) => current + 1)}>Next user</button>
-			<Loading fallback={<p>Loading profile...</p>}>
-				<article>
-					<h2>{user().name}</h2>
-					<p>{user().bio}</p>
-				</article>
-			</Loading>
-		</section>
+		<Loading fallback={<p>Loading product…</p>}>
+			<article>
+				<h1>{product().name}</h1>
+				<p>{product().description}</p>
+			</article>
+		</Loading>
 	);
 }
 ```
 
-The first read of `user()` has no value, so `Loading` shows its fallback.
-When the request resolves, the computation commits the answer and the content renders.
+`product()` has type `Product`, not `Product | undefined` and not `Promise<Product>`.
+There is no loading flag to check and no optional chaining.
+If the expression is running, the value is there.
+
+Until the first result arrives, a read of `product()` reports that the value is not ready, and the nearest [`Loading`](/reference/solid-js/components-jsx/loading) boundary renders its fallback in place of the content.
+When the promise resolves, the content renders.
+
+When `props.id` changes later, the fallback does not come back.
+The current product stays on screen while the next one loads.
+Initial readiness and a later update are different situations, and Solid treats them differently by default; the [in-flight work](#settled-view-and-in-flight-work) section explains the second one.
+
+## Passing is not reading
+
+Components run once, so there is no component to suspend and re-run.
+Only expressions that read an async value wait for it.
+Passing the value along as a prop does not count as reading it, because a dynamic prop compiles to a getter that evaluates where the child uses it:
+
+```tsx
+function ProductPage(props: { id: string }) {
+	const product = createMemo(() => fetchProduct(props.id));
+	return <ProductLayout product={product()} />;
+}
+
+function ProductLayout(props: { product: Product }) {
+	return (
+		<div class="layout">
+			<CategoryNav />
+			<main>
+				<Loading fallback={<p>Loading product…</p>}>
+					<ProductDetail product={props.product} />
+				</Loading>
+			</main>
+		</div>
+	);
+}
+```
+
+`product={product()}` looks like it calls the accessor before the data exists.
+It does not; the expression is evaluated when `ProductDetail` reads `props.product.name`.
+So `ProductLayout` renders immediately, `CategoryNav` renders immediately, and only the detail pane waits.
+
+Derived values behave the same way:
+
+```tsx
+function ProductDetail(props: { product: Product }) {
+	const priceLabel = createMemo(() => `$${props.product.price.toFixed(2)}`);
+	return (
+		<>
+			<h1>{props.product.name}</h1>
+			<p>{priceLabel()}</p>
+		</>
+	);
+}
+```
+
+`priceLabel` does not know that `product` was async.
+It reads a not-ready value, so it becomes not-ready itself, and its readers wait in turn.
+No `await` and no promise type appear anywhere between the fetch and the JSX.
+
+## Fetch high, block low
+
+Because passing a value costs nothing, the two decisions that usually fight each other come apart:
+
+- Where to create the async value is a performance decision.
+  Higher in the tree means the request starts earlier and can run in parallel with other work.
+- Where to block is a design decision.
+  Lower in the tree means a smaller region shows a fallback.
+
+Neither decision touches the components in between.
+Lift the fetch to the top of the app and push the boundary down to the one pane that should show a skeleton:
+
+```tsx
+function App() {
+	const [selectedId, setSelectedId] = createSignal("mug");
+	const product = createMemo(() => fetchProduct(selectedId()));
+
+	return <ProductPage product={product()} onSelect={setSelectedId} />;
+}
+
+function ProductPage(props: {
+	product: Product;
+	onSelect: (id: string) => void;
+}) {
+	return (
+		<div class="layout">
+			<ProductList onSelect={props.onSelect} />
+			<main>
+				<Loading fallback={<DetailSkeleton />}>
+					<ProductDetail product={props.product} />
+				</Loading>
+			</main>
+		</div>
+	);
+}
+```
+
+Do the same refactor with a hard-coded product object and the code is identical.
+The async version costs one `Loading` element placed where the design wants a skeleton.
+
+## Nesting is not a waterfall
+
+A child component below JSX that reads an async value does not wait for that value unless it reads it too:
+
+```tsx
+function ProductDetail(props: { id: string }) {
+	const product = createMemo(() => fetchProduct(props.id));
+
+	return (
+		<article>
+			<h1>{product().name}</h1>
+			<p>{product().description}</p>
+			<Reviews productId={props.id} />
+		</article>
+	);
+}
+
+function Reviews(props: { productId: string }) {
+	const reviews = createMemo(() => fetchReviews(props.productId));
+	return (
+		<For each={reviews()}>{(review) => <ReviewRow review={review} />}</For>
+	);
+}
+```
+
+`Reviews` sits under `product().name` in the JSX, but the component tree mounts up front and `Reviews` reads `props.productId`, which is available immediately.
+Both requests start at the same time.
+Requests are ordered by data dependency, not by where the components sit.
+
+A waterfall happens when the second request depends on the first response:
+
+```tsx
+const product = createMemo(() => fetchProduct(props.id));
+const brand = createMemo(() => fetchBrand(product().brandId));
+```
+
+`brand` cannot start until `product` resolves, because the id comes from the response.
+That is sequential because the data is sequential, and the dependency is visible in the code.
+Development builds can flag long chains like this with the `ASYNC_WATERFALL` diagnostic when attribution is enabled; see [Debugging reactivity](/guides/debugging-reactivity).
+
+## Settled view and in-flight work
+
+Once a value has settled, changing an input does not blank the screen.
+Solid separates the answer the user can see from the work that will produce the next answer:
+
+![A timeline showing a Loading fallback during the first request, Answer A remaining visible during a held update, and Answer B appearing when the next request settles.](/images/diagrams/async-update-timeline.svg)
+
+Before the first answer, there is nothing to show and the `Loading` boundary decides what renders.
+After an answer, Solid holds the committed view while the next one is prepared.
+Other writes in the same update wait with it, and everything commits together when the pending work settles, so the page never shows a mix of old and new.
+
+This hold is automatic.
+It does not need a `Loading` boundary and it has no API to opt in; if you used transitions in Solid 1 or React, this is that behavior as the default.
+The boundary controls what renders when no settled answer exists; it does not create the hold.
 
 ## Another answer is coming: `isPending`
 
-After the first answer settles, changing `id()` asks a new question while the current profile remains visible.
-Use [`isPending(fn)`](/reference/solid-js/reactivity/is-pending) when that visible content needs an updating indicator:
+Because the old answer stays visible, the UI needs a way to say that a new one is on the way.
+[`isPending(fn)`](/reference/solid-js/reactivity/is-pending) answers that for one expression:
 
 ```tsx
-import { Loading, isPending } from "solid-js";
+import { For, createMemo, createSignal, isPending } from "solid-js";
 
-<Loading fallback={<p>Loading profile...</p>}>
-	<article
-		aria-busy={isPending(user) ? "true" : "false"}
-		class={{ updating: isPending(user) }}
-	>
-		<h2>{user().name}</h2>
-		<p>{user().bio}</p>
-	</article>
-</Loading>;
+function Search() {
+	const [query, setQuery] = createSignal("");
+	const results = createMemo(() => searchProducts(query()));
+
+	return (
+		<>
+			<input onInput={(event) => setQuery(event.currentTarget.value)} />
+			<ul class={{ stale: isPending(results) }}>
+				<For each={results()}>{(product) => <li>{product.name}</li>}</For>
+			</ul>
+		</>
+	);
+}
 ```
 
-`isPending` evaluates the expression passed to it.
-The result becomes `true` when another answer for that expression is in flight and has not revealed.
-If the expression has no settled answer yet, its read still follows the surrounding `Loading` path.
+Typing changes `query`, `results` starts a new request, and the previous results stay on screen with the `stale` class until the new ones land.
+
+`isPending` is a question, not a piece of state.
+It can be asked about the async source, about a memo derived from it, about a prop several components down, or about the signal whose write started the update:
+
+```tsx
+function App() {
+	const [selectedId, setSelectedId] = createSignal("mug");
+
+	return (
+		<>
+			<ProductList selectedId={selectedId()} onSelect={setSelectedId} />
+			<main class={{ pending: isPending(selectedId) }}>
+				<ProductPage id={selectedId()} />
+			</main>
+		</>
+	);
+}
+```
+
+Here the fetch lives inside `ProductPage`.
+`App` knows nothing about it, but `isPending(selectedId)` is `true` from the moment the write happens until everything downstream has settled, because the write is what is being held.
+
+Notice that the list highlight does not move on click either.
+`selectedId()` holds its old value like everything else, so the highlighted row always matches the content on screen.
+When the design wants the highlight to move immediately, read the speculative value with [`latest`](#read-a-speculative-value-latest).
+
+If the expression has no settled answer yet, the read inside `isPending` still follows the surrounding `Loading` path; `isPending` reports on updates to a value that exists, not on the first load.
 
 ## Work rejects: `Errored`
 
-If async work rejects, the error travels through the reactive graph.
-An [`Errored` boundary](/reference/solid-js/components-jsx/errored) turns an unhandled error into recoverable UI:
+If async work rejects, the error travels through the reactive graph like a value.
+An [`Errored` boundary](/reference/solid-js/components-jsx/errored) turns an unhandled error into fallback UI:
 
 ```tsx
 import { Errored, Loading } from "solid-js";
@@ -104,8 +264,8 @@ import { Errored, Loading } from "solid-js";
 		</section>
 	)}
 >
-	<Loading fallback={<p>Loading profile...</p>}>
-		<UserDetails user={user()} />
+	<Loading fallback={<p>Loading product…</p>}>
+		<ProductDetail product={product()} />
 	</Loading>
 </Errored>;
 ```
@@ -113,45 +273,134 @@ import { Errored, Loading } from "solid-js";
 `Loading` and `Errored` handle separate states.
 A loading boundary does not consume errors, and an error boundary does not replace loading UI.
 
-## Coordinate a mutation: `action` and optimistic state
+An error is a status of that part of the graph, not a terminal state.
+When the data underneath changes, because an input signal changed or a `refresh` landed, the boundary retries and the content returns.
+`reset` retries the failed sources rather than re-rendering the same error.
+[Boundaries](/concepts/boundaries) covers placement and recovery in detail.
 
-Reads usually need no imperative wrapper because changing their tracked inputs starts the next async computation.
-Mutations have a different shape because writes can happen before and after a server round trip.
+## Mutations: from a client-only list to a server-backed one
 
-[`action(generator)`](/reference/solid-js/lifecycle-actions/action) runs a generator or async generator as a transaction.
-Each `yield` waits for its value and restores the action's transaction before the generator continues.
-The returned action is an async function intended for event handlers and other imperative scopes.
+Reads need no wrapper: change an input and the memo asks again.
+Writes have a different shape because they happen before and after a round trip.
 
-[`createOptimistic`](/reference/solid-js/reactivity/create-optimistic) and [`createOptimisticStore`](/reference/solid-js/stores/create-optimistic-store) provide writable state for the expected result of a mutation.
-Writes are visible immediately inside an action and are tentative until its transaction finishes.
-The authoritative async result can reconcile the optimistic value, and a failed action reverts the tentative write.
+Start with the cart as a purely client-side store.
+The UI reads the store and calls named mutations:
 
-The common mutation timeline is:
+```ts
+import { createStore } from "solid-js";
 
-1. Start an `action`.
-2. Write the expected result to optimistic state.
-3. `yield` the durable operation.
-4. Call [`refresh(source)`](/reference/solid-js/lifecycle-actions/refresh) to read durable truth again.
-5. Settle the action and remove its optimistic overlay.
+export type CartItem = { id: string; name: string; quantity: number };
 
-`action` coordinates this process.
-Optimistic state supplies the predicted change while the operation is in flight.
-`refresh` reconciles the visible result with the authoritative source.
+export function createCart() {
+	const [items, setItems] = createStore<CartItem[]>([]);
+
+	const add = (item: CartItem) => {
+		setItems((list) => {
+			list.push(item);
+		});
+	};
+	const remove = (id: string) => {
+		setItems((list) => list.filter((item) => item.id !== id));
+	};
+	const setQuantity = (id: string, quantity: number) => {
+		setItems((list) => {
+			const item = list.find((item) => item.id === id);
+			if (item) item.quantity = quantity;
+		});
+	};
+
+	return [items, { add, remove, setQuantity }] as const;
+}
+```
+
+Now move the cart to the server.
+The reads come from an API and every mutation goes through it, and the UI should still respond immediately:
+
+```ts
+import { action, createOptimisticStore, refresh } from "solid-js";
+import * as api from "./api";
+
+export function createCart() {
+	const [items, setItems] = createOptimisticStore<CartItem[]>(
+		() => api.list(),
+		[]
+	);
+
+	const add = action(function* (item: CartItem) {
+		setItems((list) => {
+			list.push(item);
+		});
+		yield api.add(item);
+		refresh(items);
+	});
+	const remove = action(function* (id: string) {
+		setItems((list) => list.filter((item) => item.id !== id));
+		yield api.remove(id);
+		refresh(items);
+	});
+	const setQuantity = action(function* (id: string, quantity: number) {
+		setItems((list) => {
+			const item = list.find((item) => item.id === id);
+			if (item) item.quantity = quantity;
+		});
+		yield api.setQuantity(id, quantity);
+		refresh(items);
+	});
+
+	return [items, { add, remove, setQuantity }] as const;
+}
+```
+
+Compare the two versions.
+The components that render the cart did not change.
+The `setItems` calls did not change; the synchronous write already described the expected result, so it becomes the optimistic prediction.
+Three things were added: the store now derives from `api.list()`, each mutation calls the API and refreshes, and each mutation is wrapped in an [`action`](/reference/solid-js/lifecycle-actions/action).
+
+The pieces:
+
+- [`createOptimisticStore(fn, seed)`](/reference/solid-js/stores/create-optimistic-store) derives its durable value from `fn` and accepts writes that are visible immediately but tentative.
+- `action` runs a generator as one transaction.
+  Each `yield` waits for its promise and then restores the transaction, so the write before the `yield` and the refresh after it belong to the same update.
+  Generators are used because JavaScript has no way to keep that context across a plain `await`.
+- [`refresh(items)`](/reference/solid-js/lifecycle-actions/refresh) re-runs the derivation so the store reconciles against what the server has.
+
+The optimistic write is not a second copy of the state.
+It is an overlay on the durable store, and Solid discards it when the action settles, whether the action succeeded or failed.
+If `api.add` throws, the overlay is dropped and the list is back where it started; there is no rollback code to write.
+If the server agrees with the prediction, reconciliation finds no differences and nothing re-renders.
+
+Because actions ride the same hold as reads, the list never shows half a mutation, and quick repeated clicks do not interleave into a corrupted list.
+
+### Show that a row is saving
+
+Immediate updates are the right default for a cart, but a user may want to know which rows the server has not confirmed yet.
+Add the affordance to the data itself:
+
+```ts
+export type CartItem = {
+	id: string;
+	name: string;
+	quantity: number;
+	pending?: boolean;
+};
+
+const add = action(function* (item: CartItem) {
+	setItems((list) => {
+		list.push({ ...item, pending: true });
+	});
+	yield api.add(item);
+	refresh(items);
+});
+```
+
+The optimistic row carries `pending: true`.
+When the action settles, the overlay goes away and the refreshed row from the server does not have the flag.
+Only the row that read `pending` updates.
 
 ### Layer state by lifetime
 
-An async feature can combine state with different lifetimes.
-One useful composition applies three layers in a fixed order:
-
-1. **Persistent data** comes from the async projection.
-   A server, browser database, or another durable source owns this layer.
-2. **Ephemeral UI state** records recoverable errors, drafts, or notices that should survive an optimistic rollback.
-   The projection applies this layer to the persistent result.
-3. **Optimistic state** represents the expected result of the active mutation.
-   `createOptimisticStore` applies this action-scoped layer last and removes it when the action settles.
-
-Consumers read the composed store rather than choosing between separate persistent and optimistic views.
-The primitive composition enforces the layer order.
+A production feature often combines state with different lifetimes: the durable data, per-row UI state such as a recoverable error, and the optimistic overlay.
+Apply them in that order and read the composed result:
 
 ```tsx
 import {
@@ -290,19 +539,22 @@ Pair `affects(source)` with `refresh(source)` when the reload itself should make
 ### Read a speculative value: `latest`
 
 Normal reads preserve the visible settled answer while a held update prepares its replacement.
-Use [`latest(fn)`](/reference/solid-js/reactivity/latest) when a preview or coordination path needs the freshest in-flight value:
+Use [`latest(fn)`](/reference/solid-js/reactivity/latest) when a preview or coordination path needs the freshest in-flight value.
+In the product list from the [`isPending`](#another-answer-is-coming-ispending) section, this moves the highlight on click while the detail pane keeps holding the old product:
 
 ```tsx
-import { latest } from "solid-js";
-
-const nextUser = () => latest(user);
+<ProductList selectedId={latest(selectedId)} onSelect={setSelectedId} />
+<main class={{ pending: isPending(selectedId) }}>
+	<ProductPage id={selectedId()} />
+</main>
 ```
 
-If the next answer exists, `latest(user)` returns it before the held update commits it.
+If the next answer exists, `latest(selectedId)` returns it before the held update commits it.
 Otherwise, it returns the visible settled answer.
 Before any answer exists, the read still follows the normal `Loading` path.
 
-A common use case for `latest` is an autocomplete or typeahead interface that keeps results visible while the next value loads.
+`isPending` asks whether something is coming; `latest` asks what it is.
+Each is asked exactly where the design needs the answer.
 
 ### Declare a committed first value
 
@@ -405,3 +657,10 @@ Use `yield promise` as the suspension point, or place a bare `yield` before writ
 - Use [`resolve`](/reference/solid-js/advanced/interop-async/resolve) to await one reactive expression outside tracking.
 - Use [`onSettled`](/reference/solid-js/lifecycle-actions/on-settled) to run code after owned async work and queued updates settle.
 - Use `loadingValue` or `seedLoadingValue` only when a source needs a committed value before its first result.
+
+## Where to go next
+
+- [Boundaries](/concepts/boundaries): where to place `Loading` and `Errored`, how `Reveal` orders sibling regions, and how an errored region recovers.
+- [Server functions](/building-apps/server-functions): a `"use server"` function returns a promise, so everything on this page applies to it unchanged; that page covers the transport, `GET` reads, and `live` streams.
+- [Rendering and SSR](/concepts/rendering-and-ssr): the same boundaries decide what streams in the initial HTML.
+- [Data APIs](/routing/solid-router/data): `query` and `action` from Solid Router add caching, preloading, and submissions on top of these primitives.

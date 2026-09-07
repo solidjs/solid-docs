@@ -5,9 +5,13 @@ mainNavExclude: true
 version: "2.0"
 ---
 
-Components are reusable units that combine rendering structure with related behavior.
-They nest to form a component tree, from the application root down to individual controls.
-A component is a function that receives props and returns elements.
+A Solid component is a function that runs once.
+It sets up state, returns JSX, and is not called again for the life of the component.
+If you come from a framework where components re-render, this is the fact to hold on to while reading this page: every rule about props, children, and control flow below exists because the function body will not run a second time.
+
+The [Reactivity](/concepts/reactivity) page explains how the JSX inside a component keeps updating after the function has returned.
+This page covers the rest of what a component does: receiving props, handling events, reaching the DOM, rendering lists and conditions, and composing with other components.
+The examples continue the shopping cart from that page.
 
 ## How JSX executes
 
@@ -20,61 +24,95 @@ In a browser build, those operations create or claim DOM nodes and connect react
 In a server build, the same JSX source compiles to server-rendering operations.
 There is no virtual DOM value that Solid repeatedly rebuilds and compares.
 
-A component function runs when Solid mounts that component.
-Compiled JSX invokes component functions through `createComponent`, which runs the function untracked so reactive reads in the component body do not subscribe the parent computation.
-Reactive expressions created by the component track their own dependencies.
+The compiled code calls a component function once, through `createComponent`, and it runs the function untracked so reactive reads in the body do not subscribe the parent.
+Each JSX expression the component returns is its own tracking scope with its own dependencies.
 
 ```tsx
 import { createSignal } from "solid-js";
 
-function Counter() {
-	const [count, setCount] = createSignal(0);
+function LineItem() {
+	const [quantity, setQuantity] = createSignal(1);
 
 	return (
-		<button onClick={() => setCount(count() + 1)}>Count: {count()}</button>
+		<button type="button" onClick={() => setQuantity(quantity() + 1)}>
+			Quantity: {quantity()}
+		</button>
 	);
 }
 ```
 
-The component sets up its signal and returns its JSX when mounted.
-The expression `{count()}` runs in a tracking scope and updates when `count` changes.
-The event handler runs when the button is clicked.
+`LineItem` runs once and returns a button.
+The expression `{quantity()}` is tracked, so the text updates on every click; the function around it does not run again.
 
 ## Props
 
-Parents pass data and configuration to child components through JSX props.
-The child receives those props as one object.
-Compiled component props can use getters so an expression such as `name={selected().name}` stays reactive until the receiving component reads `props.name`.
-Read reactive props inside JSX, a memo, or an effect.
+Parents pass data to children through JSX attributes, and the child receives them as one `props` object.
+Here a cart passes each line item its product:
 
 ```tsx
-type GreetingProps = {
-	name: string;
-	punctuation?: string;
-};
+type Product = { id: string; name: string; price: number };
 
-function Greeting(props: GreetingProps) {
+function LineItem(props: { product: Product; quantity: number }) {
 	return (
-		<p>
-			Hello, {props.name}
-			{props.punctuation ?? "."}
-		</p>
+		<li>
+			{props.product.name} × {props.quantity} = $
+			{props.product.price * props.quantity}
+		</li>
+	);
+}
+
+function Cart() {
+	const [quantity, setQuantity] = createSignal(1);
+	return (
+		<ul>
+			<LineItem
+				product={{ id: "mug", name: "Mug", price: 12 }}
+				quantity={quantity()}
+			/>
+		</ul>
 	);
 }
 ```
 
-Reading a reactive prop into a local variable at the top level of a component captures that read outside a tracking scope.
-Solid 2.0 warns about this pattern in development, including destructuring reactive props in the parameter list.
-Keep the props object intact, or derive a local value with `createMemo` when it needs its own reactive identity.
+`quantity={quantity()}` looks like it reads the signal once, when `Cart` runs.
+It does not.
+The compiler turns a dynamic attribute into a getter on the props object, so the read of `quantity()` happens when `LineItem` reads `props.quantity`, inside its JSX, in a tracking scope.
+That is why `props.quantity` in the child updates when the parent's signal changes, even though neither function runs again.
+
+This works only as long as the read stays on the props object.
+The tempting shortcuts break it:
+
+```tsx
+function LineItem({ product, quantity }: LineItemProps) {
+	// destructuring reads props.quantity here, once
+}
+
+function LineItem(props: LineItemProps) {
+	const quantity = props.quantity; // same thing, spelled out
+}
+```
+
+Both read the prop in the component body, where nothing is tracked.
+Development warns with `[STRICT_READ_UNTRACKED]` and the component name.
+Keep `props` intact and read `props.quantity` where you use it.
+When a derived value from props needs its own identity, wrap it in `createMemo`:
 
 ```tsx
 import { createMemo } from "solid-js";
 
-function FullName(props: { first: string; last: string }) {
-	const fullName = createMemo(() => `${props.first} ${props.last}`);
-	return <span>{fullName()}</span>;
+function LineItem(props: { product: Product; quantity: number }) {
+	const lineTotal = createMemo(() => props.product.price * props.quantity);
+	return (
+		<li>
+			{props.product.name} × {props.quantity} = ${lineTotal()}
+		</li>
+	);
 }
 ```
+
+Props are read-only from the child's side.
+When a child needs to change a value, the parent passes a function as a prop and the child calls it from an event handler, as `onSave` does in the next section.
+When a child needs a local, editable copy of a prop, see [Use a writable derivation for a local override](/guides/avoid-unnecessary-effects#use-a-writable-derivation-for-a-local-override).
 
 See the [`Component`, `ParentProps`, and `FlowProps` types](/reference/solid-js/types/component-types) for typing component contracts.
 
@@ -437,3 +475,37 @@ export function Preview() {
 
 The source may also resolve to a native tag name or an async component.
 See the [`dynamic()` reference](/reference/solid-web/components/dynamic).
+
+## Common problems
+
+### A child does not update when the parent's signal changes
+
+The child read the prop in its body or destructured its parameters.
+Read `props.name` inside the JSX instead.
+See [Props](#props).
+
+### A list re-creates every row on each change
+
+`For` reuses rows by item identity.
+If each update produces new objects for the same rows, for example by mapping over a fetched array on every read, every row is new and `For` rebuilds them.
+Keep item identity stable, pass a key function that reads an `id`, or use a [store](/concepts/stores) so that changes land on the existing objects.
+
+### `Show` renders the fallback even though the value is set
+
+`when` is checked for truthiness.
+A value of `0` or an empty string is falsy and shows the fallback.
+Compare explicitly, for example `when={count() !== undefined}`, or use `Switch` and `Match` when there are several cases.
+
+### An effect or `onCleanup` inside a `ref` callback never runs
+
+Ref callbacks run untracked and without an owner, so primitives created there are never disposed.
+Create the effect in a directive factory during component setup and return the callback that stores the element.
+See [Refs and directives](#refs-and-directives).
+
+## Where to go next
+
+- [Stores](/concepts/stores) hold the cart itself: an array of items where each property is tracked on its own.
+- [Async reactivity](/concepts/async-reactivity) covers components that read data from a promise, and how `Loading` keeps the current view on screen while the next one loads.
+- [Boundaries](/concepts/boundaries) explains `Loading`, `Errored`, and where to place them in the tree.
+- [Avoid unnecessary effects](/guides/avoid-unnecessary-effects) is the guide to read before adding an effect to a component.
+- [App structure](/building-apps/app-structure) shows where `App` and the document shell fit around the components you write.

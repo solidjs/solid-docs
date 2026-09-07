@@ -1,0 +1,150 @@
+---
+title: "Choose a rendering mode"
+titleTemplate: ":title"
+mainNavExclude: true
+version: "2.0"
+description: "Decide between a static shell, streaming server rendering, and build-time prerendering for a start-mode project, and what each one costs."
+---
+
+A start-mode project renders in one of three ways: a static shell that the browser fills in, a server that streams HTML for each request, or a build step that renders every page to HTML ahead of time.
+The application code is the same in all three.
+`src/App.tsx`, `src/Document.tsx`, and the routes carry over; what changes is one or two lines of `vite.config.ts`, what `vite build` produces, and what the host has to run.
+
+This guide is about picking one.
+The mechanics live in [App structure](/building-apps/app-structure) and [Rendering and SSR](/concepts/rendering-and-ssr).
+
+## The three modes
+
+### Static shell, rendered in the browser
+
+```ts
+solid({ start: true });
+```
+
+This is the `bare` and `basic` project shape.
+The build prerenders the document shell from `Document.tsx`, without the app inside it, to `dist/client/index.html`.
+The browser downloads the JavaScript and `render()` mounts the app.
+
+What the user sees first is the shell: whatever `Document.tsx` puts in `<body>` around the app, which in the templates is nothing.
+Content appears once the bundle has loaded and any data it fetches has arrived.
+
+What you deploy is `dist/client`, a directory of files.
+Any static host serves it.
+There is no server process to run, scale, or keep patched.
+
+### Streaming server rendering
+
+```ts
+solid({ start: true, ssr: true });
+```
+
+This is the `fullstack` project shape.
+Each request runs `App` on the server.
+The response starts with the parts of the page that are ready, `Loading` fallbacks stand in for the parts that are still waiting on data, and the rest of the HTML streams in as that data settles.
+The browser shows the HTML as it arrives, then `hydrate()` attaches the reactive graph to the existing DOM without rebuilding it.
+
+What the user sees first is real content, before the JavaScript has downloaded.
+Links and forms work before hydration; interactive widgets work after it.
+
+What you deploy is `dist/client` plus a request handler in `dist/server`.
+The host runs that handler on Node, a Fetch-based runtime, or a provider adapter.
+[Deployment](/building-apps/deployment) covers the options.
+
+### Prerendered at build time
+
+```ts
+solid({ start: true, ssr: true, serverFunctions: true });
+prerender({ mode: "static", integrations: [serverFunctions()] });
+```
+
+This is the `ssg` template.
+The server rendering happens once, during `vite build`.
+The `prerender-crawler` plugin starts at `/`, renders each page through the server build, writes the HTML, and follows same-origin links to find the rest.
+Server functions wrapped in `prerendered()` from `@solidjs/prerender` run during the build and their results are written as JSON files that the deployed client fetches instead of calling a server.
+
+What the user sees first is the complete page, as with SSR.
+What you deploy is `dist/client` only, as with the static shell.
+The trade is that content is as fresh as the last build, and a server function the crawl never called has no data on the deployed site.
+
+## What to weigh
+
+### What appears first
+
+The static shell shows nothing until the bundle runs.
+On a fast connection with a small app that is tens of milliseconds; on a slow connection with a large app it is a blank page for as long as the download takes.
+SSR and prerendering show the content in the HTML.
+
+The gap matters for pages a user arrives at from outside the app: a shared link, a search result, a bookmark.
+It matters much less for the second and later pages in a session, because the bundle is already loaded and every mode navigates on the client from then on.
+
+### Who reads the HTML
+
+Search engines, link-preview scrapers, and screen-reader users on slow devices all read the HTML response.
+Google runs JavaScript, but with a delay and a budget; most other crawlers do not.
+If the content has to be indexed or previewed, it has to be in the HTML, which means SSR or prerendering.
+An admin dashboard behind a login has no such reader, and the static shell loses nothing.
+
+### What the host runs
+
+The static shell and prerendering deploy files.
+SSR deploys a process.
+That process needs a runtime with the right Node or Fetch API surface, environment variables at boot, memory and CPU that scale with traffic, and a way to be updated without downtime.
+Providers make this routine, but it is a different category of hosting from a directory of files, with a different bill.
+
+Server functions blur this line.
+With `serverFunctions: true` in client mode, the pages stay static but the endpoint that serves the function calls is still a server handler in `dist/server`, so the host has to run something after all.
+If you want a static deployment and server-side data, prerendering is the mode that gives you both.
+
+### How fresh the data is
+
+SSR reads data on every request.
+Prerendering reads it at build time, so a change on the server is invisible until the next deploy.
+That is fine for a documentation site or a blog and wrong for a cart.
+A middle ground is to prerender the shell and page structure and fetch the changing data from the client, or to move to SSR for the pages that change.
+
+### What the code has to tolerate
+
+In the static shell, application code runs only in the browser.
+`window`, `document`, and `localStorage` are always there.
+
+With `ssr: true` or prerendering, `App` and every component it reaches also run on the server, once per request or once per page.
+Code that touches browser APIs at module scope or in a component body throws on the server.
+Move it behind an effect or `onSettled`, guard it with `isServer`, or load the component with `clientOnly`.
+The initial output must also match between server and client, or hydration cannot claim the server-rendered nodes.
+[Server and client boundaries](/concepts/rendering-and-ssr#server-and-client-boundaries) lists the tools.
+
+The templates are written to pass this test in every mode, so a project that starts from `basic` and flips `ssr: true` later usually needs no changes.
+A project that has accumulated browser-only code does.
+
+### Development and production parity
+
+The dev server behaves the same way in every mode: server functions run against the dev server, pages render on request, and edits reload.
+The differences appear at build.
+Prerendering in particular can pass in development and fail at `vite build`, because the build is where the crawl runs and where a server function nothing prerendered is reported.
+Run the production build before assuming a mode works.
+
+## A decision in three questions
+
+1. Does the content have to be in the HTML, for search, previews, or first paint on slow connections?
+   No: use the static shell and stop here.
+2. Does the content change between deploys, or depend on who is asking?
+   No: prerender.
+3. Otherwise, stream with `ssr: true`.
+
+The answer can differ by page.
+A marketing site with one signed-in dashboard is a prerendered site with `clientOnly` around the dashboard, or an SSR site with the marketing pages cached at the edge.
+Start with the simplest mode that satisfies the first question and change it when a measurement, not a guess, says to.
+
+## Switching later
+
+Moving from the static shell to SSR is `ssr: true` plus the host change.
+Moving to prerendering is the same flag plus the crawler plugin and `prerendered()` around the reads that should be baked.
+Moving back is removing them.
+None of the moves touch component code that was already server-safe.
+
+## Where to go next
+
+- [App structure](/building-apps/app-structure): what each mode generates and where the `App` and `Document` conventions come in.
+- [Deployment](/building-apps/deployment): hosts and adapters for the SSR handler.
+- [Rendering and SSR](/concepts/rendering-and-ssr): the `render`, `hydrate`, and `renderToStream` calls behind the modes.
+- [Boundaries](/concepts/boundaries): how `Loading` placement decides what streams in the shell.

@@ -1,0 +1,231 @@
+---
+title: "Debugging reactivity"
+titleTemplate: ":title"
+mainNavExclude: true
+version: "2.0"
+description: "Find out why a value does not update, why it updates too often, and how to read Solid's development diagnostics."
+---
+
+Reactivity bugs come in two shapes.
+Something on the page does not change when it should, or something changes far more often than it should.
+Solid's development build reports the first kind as it happens and can explain the second kind on request.
+This guide shows how to read those reports and what to change.
+
+Everything here needs the development build.
+Production builds strip the diagnostics and the `DEV` export is `undefined`.
+
+## Read a diagnostic
+
+Development builds print warnings with a code in square brackets:
+
+```text
+[STRICT_READ_UNTRACKED] Reactive value read directly in <LineItem> will not update.
+Move it into a tracking scope (JSX, a memo, or an effect's compute function).
+```
+
+The code is stable across releases; the sentence after it says what the runtime observed and what to change.
+The first time each code appears, Solid adds a line pointing to the repair guide that ships inside the `solid-js` package under `skills/reactivity-diagnostics/SKILL.md`, which lists every code with its fix.
+
+Codes fall into a few groups:
+
+- Reads in the wrong place: `STRICT_READ_UNTRACKED`, `PENDING_ASYNC_UNTRACKED_READ`.
+- Writes in the wrong place: `REACTIVE_WRITE_IN_OWNED_SCOPE`, `ACTION_CALLED_IN_OWNED_SCOPE`.
+- Leaks: `NO_OWNER_EFFECT`, `NO_OWNER_BOUNDARY`, `NO_OWNER_CLEANUP`.
+- Async placement: `ASYNC_OUTSIDE_LOADING_BOUNDARY`.
+- Cost: `HOT_SCOPE_RERUNS`, `WIDE_WRITE`, `ASYNC_WATERFALL`, which appear only while attribution is enabled.
+
+A warning means the code runs but is structurally wrong or expensive.
+An error means the behavior is broken.
+Do not silence a code you do not understand; each one describes a real defect or a real cost.
+
+## Something does not update
+
+Work through these in order.
+The first three account for most reports.
+
+### Is the read inside a tracking scope?
+
+Look for `[STRICT_READ_UNTRACKED]` in the console.
+If it names the component you are looking at, a signal, memo, store property, or prop is read in the component body.
+The body runs once; only JSX expressions, memo functions, and effect compute functions are tracked.
+Move the read there, or wrap the calculation in a function and call the function from the JSX.
+The [Reactivity](/concepts/reactivity) page has the full explanation.
+
+Destructured props produce the same warning and the same fix.
+
+### Is the signal being called?
+
+A signal is a function.
+`{quantity}` in JSX happens to work, because Solid calls a function it finds there, but `"Qty: " + quantity` produces the text of the function.
+Search the component for the signal's name without `()` behind it.
+
+### Did the write reach a reactive value?
+
+A store is tracked per property.
+Writes must go through the setter:
+
+```ts
+const [cart, setCart] = createStore({ items: [] as Item[] });
+
+cart.items.push(item); // ignored: a store proxy drops writes made outside its setter
+setCart((draft) => {
+	draft.items.push(item); // applied and tracked
+});
+```
+
+Objects held in a plain signal have the opposite failure.
+`items().push(item)` does mutate the array, but no one is notified because the signal's value is the same array; `setItems((current) => [...current, item])` gives the signal a new value to report.
+The [Stores](/concepts/stores) page covers nested updates.
+
+### Is the effect reading in the wrong phase?
+
+`createEffect` tracks its first function only.
+A signal read in the second function does not re-run the effect:
+
+```ts
+createEffect(
+	() => quantity(),
+	(value) => {
+		document.title = `${value} × ${price()}`; // price() is not tracked here
+	}
+);
+```
+
+Move `price()` into the compute function and return both values.
+
+### Is the value pending?
+
+A memo that returned a promise has no value until the promise settles.
+Reading it in JSX inside a `Loading` boundary shows the fallback; reading it in a component body throws `[PENDING_ASYNC_UNTRACKED_READ]`.
+If the console shows `[ASYNC_OUTSIDE_LOADING_BOUNDARY]`, the read is tracked but nothing catches the pending state, and the whole root waits.
+Add a boundary above the read.
+See [Boundaries](/concepts/boundaries).
+
+## Something updates too often
+
+The tool for this is attribution: a recording of every scope that re-ran, what changed to cause it, and how long it took.
+Give the scopes you care about names, enable attribution, reproduce the behavior, then ask why a scope ran:
+
+```ts
+import { DEV, createMemo, createStore } from "solid-js";
+
+const [cart, setCart] = createStore(initialCart, { name: "cart" });
+const total = createMemo(() => sum(cart.items), { name: "total" });
+
+DEV?.attribution.enable();
+
+// reproduce the interaction in the app, then:
+for (const event of DEV!.attribution.why(total)) {
+	console.log(DEV!.attribution.format(event));
+}
+```
+
+Each entry names the write that started the update, the dependency that changed, and the time the recompute took.
+`DEV.attribution.costs()` ranks scopes by self time, including time spent on runs whose result did not change, and ranks writes by how much downstream work each one caused.
+The [`DEV` reference](/reference/solid-js/advanced/diagnostics-dev-hooks/dev) lists the rest of the surface.
+
+The usual causes and their fixes:
+
+### A memo depends on more than it uses
+
+A memo that reads a whole store object, or spreads it, depends on every property.
+Read the properties the calculation needs, inside the memo, and nothing else.
+`DEV.attribution.subscriptions(total)` lists the current dependencies of a scope so you can compare them to what the calculation uses.
+
+### A chain recomputes because an early link has no equality boundary
+
+A plain derived function recomputes for every reader every time an input changes, and passes the recompute downstream even when its result is the same.
+Turn the link into a `createMemo` when its result is often unchanged, when several readers share it, or when the work downstream is expensive.
+The memo compares its result to the previous one and does not notify readers when the two are equal.
+
+Do not memoize everything.
+A memo costs a node in the graph and a comparison on every run; for a cheap expression with one reader, a function is smaller and faster.
+
+### A write replaces an object that did not change
+
+`setItems(await fetchItems())` replaces every item with a new object, so every row that reads an item re-renders.
+Use a store with `reconcile` to merge the new data into the existing objects, so only the properties that changed notify their readers.
+See [Stores](/concepts/stores).
+
+### An effect writes a signal that another scope derives from
+
+Every write in an effect schedules a second update after the first one has already landed, so readers of the copied value run twice per change and see an intermediate state in between.
+The value the effect writes is a derived value; make it a memo and delete the effect.
+[Avoid unnecessary effects](/guides/avoid-unnecessary-effects) works through the cases.
+
+## The test sees the old DOM
+
+Solid applies writes in a batch after the current code finishes.
+A test that fires an event and asserts on the next line asserts before the batch lands:
+
+```tsx
+fireEvent.click(button);
+flush(); // apply staged writes and run effects now
+expect(button).toHaveTextContent("Clicks: 1");
+```
+
+Import `flush` from `solid-js`.
+Application code does not normally call it; tests and imperative integrations do.
+The [Testing](/guides/testing) guide covers the rest of the test setup.
+
+## Every update stopped after an error
+
+An error thrown inside a computation that no boundary catches halts the reactive system:
+
+```text
+[REACTIVITY_HALTED] An uncaught error halted the reactive system. No further updates will be processed.
+Handle errors with createErrorBoundary/<Errored> or treat this as a crash.
+```
+
+Nothing on the page updates after this until a reload.
+Wrap the part of the tree that can fail in an [`Errored`](/reference/solid-js/components-jsx/errored) boundary so the failure is contained and the rest of the app keeps working.
+[Boundaries](/concepts/boundaries) explains where to place it.
+
+## Check for regressions in tests
+
+`@solidjs/diagnostics` records the diagnostic and attribution channels during a scenario and turns them into assertions.
+Add it as a development dependency and import its Vitest matchers from a setup file:
+
+```ts
+// vitest-setup.ts
+import "@solidjs/diagnostics/vitest";
+```
+
+Then capture a scenario:
+
+```ts
+import { captureArtifact } from "@solidjs/diagnostics";
+import { render, fireEvent } from "@solidjs/testing-library";
+import { flush } from "solid-js";
+import { expect, test } from "vitest";
+
+import Cart from "./Cart";
+
+test("adding an item recomputes the total once", async () => {
+	const { artifact } = await captureArtifact(
+		() => {
+			const { getByRole } = render(() => <Cart />);
+			fireEvent.click(getByRole("button", { name: "Add" }));
+			flush();
+		},
+		{ scenario: "add-item" }
+	);
+
+	expect(artifact).toHaveNoDiagnostics();
+	expect(artifact).toStayWithinRerunBudget(1, { name: "total" });
+	expect(artifact).toHaveNoWaste();
+});
+```
+
+`toHaveNoDiagnostics` fails the test when any coded warning fires during the scenario, which turns an untracked read or a leaked effect into a red test instead of a console line nobody reads.
+The re-run budget and waste checks catch the second kind of bug: a change that makes a scope recompute more than it did before.
+
+With `@solidjs/diagnostics` in `package.json`, the Vite plugin also serves the same capture controls at `/__solid/diagnostics` on the dev server, so a script or an agent can record a scenario against the running app.
+Set `diagnostics: false` in the plugin options to turn that off.
+
+## Where to go next
+
+- [Reactivity](/concepts/reactivity): the rules the diagnostics enforce.
+- [Avoid unnecessary effects](/guides/avoid-unnecessary-effects): the fix for most write-placement warnings.
+- [Stores](/concepts/stores): per-property tracking, `reconcile`, and why write path matters.
+- [Testing](/guides/testing): the test environments the diagnostics run in.

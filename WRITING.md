@@ -209,6 +209,76 @@ Avoid:
 
 If explanation is needed, link to a guide or how-to page.
 
+## Learn pages
+
+Learn pages are everything outside Reference: getting started, concepts, building apps, routing, guides, and migration.
+They carry the teaching load, so they are held to a different standard than Reference pages.
+A Learn page that reads like a Reference page with more words has failed.
+
+Every Learn page must do the following.
+
+### Open with something the reader has, wants, or sees
+
+The first paragraph names a concrete situation: a value that does not update, a form that must work before JavaScript loads, a page that flashes a spinner on every navigation.
+Do not open with a definition ("A signal is a reactive primitive that...").
+Definitions belong after the reader knows why they need one.
+
+Where the page continues a sequence, say what the reader saw on the previous page and build on it.
+The Quick start counter, the cart on the Reactivity and Components pages, and the product page on the Async page are the recurring examples; reuse them before inventing a new domain.
+
+### Show what happens, then explain why
+
+Each section that introduces a behavior shows the code, states what the reader observes when it runs, and then explains the mechanism.
+"Click `+` and the subtotal changes; nothing else is touched" before "JSX expressions are tracking scopes."
+
+Where a tempting wrong approach exists, show it, show what it does (including the exact development warning where there is one), and show the fix.
+A section that only shows the right way leaves the reader unable to recognize the wrong way in their own code.
+
+### Test every example
+
+Each example must run against the current release of the package it documents, on the branch being documented.
+Run it before committing it.
+If an example cannot be run because it depends on a database or a server, mark the stand-in clearly (`database.todos.insert`) and keep the Solid-specific parts exact.
+
+Behavioral claims are held to the same standard as Reference: if you cannot point to the source line or a test that demonstrates it, do not write the sentence.
+
+### State the trade-off
+
+When a page recommends one of several options, it says what the reader gives up.
+"Use a memo when several readers share the result" is incomplete without "a memo costs a node and a comparison; for a cheap expression with one reader, a function is smaller."
+Guides that choose between approaches need a section on what to weigh, not only a recommendation.
+
+### End with the next page, not the reference
+
+The last section of a Learn page tells the reader where to go next and why, in terms of what they are trying to do.
+Link API references inline where the API is discussed.
+Do not end a section or a page with "See the reference for details"; the reference is where the reader goes when they already understand the idea.
+
+### Vary the shape
+
+Do not write every page as introduction, one H2 per API, conclusion.
+Let the problem decide the sections: a troubleshooting section named after the symptom, a three-pass build-up, a decision list, a comparison of two versions of the same code.
+Section headings should be readable as the reader's question or situation where that helps ("A value renders once and never updates"), not only as the name of the mechanism.
+
+Do not add a closing paragraph that restates the page.
+If there is nothing to say after the last section but "where to go next", say only that.
+
+### Use the reader's words for problems
+
+Troubleshooting headings use the wording people use when they report the problem, taken from Discord, GitHub issues, and support threads where available.
+"The page shows `function` instead of the value" is a heading someone can search for; "Accessor invocation" is not.
+
+### A person owns the page
+
+AI can inventory APIs, draft cross-links, normalize prose to this guide, and check claims against source.
+A maintainer must own three things on every Learn page and must have run them, not only read them:
+
+- the examples,
+- the order in which ideas are introduced, and
+- every claim about what the runtime does.
+
+A Learn page with no named owner in its pull request is not ready to merge.
+
 ## Voice and tone
 
 So far, we've dealt with how your contributions should look and function.

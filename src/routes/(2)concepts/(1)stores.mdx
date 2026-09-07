@@ -21,8 +21,8 @@ A write to another property does not notify that subscription.
 Solid creates property tracking nodes lazily as tracked consumers read each property.
 The proxy keeps one nested object interface, so individual fields do not need accessor wrappers.
 
-```ts
-import { createEffect, createRoot, createStore, flush } from "solid-js";
+```tsx
+import { createStore } from "solid-js";
 
 type Todo = {
 	id: string;
@@ -30,30 +30,33 @@ type Todo = {
 	done: boolean;
 };
 
-const model = createRoot((dispose) => {
+function Profile() {
 	const [state, setState] = createStore({
 		profile: { name: "Ada", online: false },
 		todos: [] as Todo[],
 	});
 
-	createEffect(
-		() => state.profile.name,
-		(name) => console.log(`Name: ${name}`)
+	return (
+		<>
+			<h2>{state.profile.name}</h2>
+			<p>{state.todos.length} tasks</p>
+			<button
+				onClick={() =>
+					setState((draft) => {
+						draft.profile.name = "Grace";
+						draft.todos.push({ id: "1", text: "Write docs", done: false });
+					})
+				}
+			>
+				Update
+			</button>
+		</>
 	);
-
-	return { state, setState, dispose };
-});
-
-flush(); // logs "Name: Ada"
-
-model.setState((draft) => {
-	draft.profile.name = "Grace";
-	draft.todos.push({ id: "1", text: "Write docs", done: false });
-});
-
-flush(); // logs "Name: Grace"
-model.dispose();
+}
 ```
+
+Click the button and both the heading and the count change.
+The heading subscribed to `state.profile.name` and the count to `state.todos.length`; a later write to `state.profile.online` would update neither.
 
 Store properties are values rather than accessors, so read `state.profile.name` without calling it.
 Keep the property access inside JSX, a memo, or an effect compute function when future writes should update the consumer.
@@ -66,7 +69,7 @@ The store setter receives a draft that can be changed with normal property assig
 This callback is the produce-style update API for stores in Solid 2.0.
 
 ```ts
-model.setState((draft) => {
+setState((draft) => {
 	draft.profile.online = true;
 
 	const todo = draft.todos.find((todo) => todo.id === "1");
@@ -96,7 +99,7 @@ The draft callback is the primary setter form.
 ```ts
 import { storePath } from "solid-js";
 
-model.setState(storePath("profile", "name", "Katherine"));
+setState(storePath("profile", "name", "Katherine"));
 ```
 
 Store writes use the same microtask batching as signal writes, so ordinary reads see the committed state after the scheduled flush.
@@ -117,14 +120,8 @@ For an async projection, the seed is not a committed first result by default.
 First-flight reads use the readiness and loading behavior described on the [async reactivity page](/concepts/async-reactivity).
 That page also covers the advanced `seedLoadingValue` escape hatch.
 
-```ts
-import {
-	createProjection,
-	createRoot,
-	createSignal,
-	createStore,
-	flush,
-} from "solid-js";
+```tsx
+import { For, createProjection, createSignal, createStore } from "solid-js";
 
 type Todo = {
 	id: string;
@@ -132,7 +129,7 @@ type Todo = {
 	done: boolean;
 };
 
-const list = createRoot((dispose) => {
+function TodoList() {
 	const [todos] = createStore<Todo[]>([
 		{ id: "1", text: "Write docs", done: true },
 		{ id: "2", text: "Review examples", done: false },
@@ -143,17 +140,26 @@ const list = createRoot((dispose) => {
 		[]
 	);
 
-	return { visible, setIncludeDone, dispose };
-});
-
-console.log(list.visible.map((todo) => todo.text)); // ["Review examples"]
-
-list.setIncludeDone(true);
-flush();
-console.log(list.visible.map((todo) => todo.text)); // ["Write docs", "Review examples"]
-
-list.dispose();
+	return (
+		<>
+			<label>
+				<input
+					type="checkbox"
+					checked={includeDone()}
+					onInput={(event) => setIncludeDone(event.currentTarget.checked)}
+				/>
+				Show completed
+			</label>
+			<ul>
+				<For each={visible}>{(todo) => <li>{todo.text}</li>}</For>
+			</ul>
+		</>
+	);
+}
 ```
+
+The list shows "Review examples" at first.
+Check the box and "Write docs" appears above it; the row for "Review examples" is the same DOM node, because the projection reconciled by `id` and kept that item's proxy.
 
 See the [`createProjection` reference](/reference/solid-js/stores/create-projection) for mutation and return forms.
 

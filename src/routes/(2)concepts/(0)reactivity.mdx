@@ -229,7 +229,51 @@ Development warns about that case:
 [NO_OWNER_EFFECT] Effects created outside a reactive context will never be disposed
 ```
 
-Outside components, [`createRoot`](/reference/solid-js/advanced/owner-introspection/create-root) creates an owner and gives you its disposer:
+### Share state between components
+
+When several components need the same state, create it once in a component high enough in the tree to cover all of them, and pass it down through [context](/concepts/components-and-jsx#context):
+
+```tsx
+import {
+	createContext,
+	createSignal,
+	useContext,
+	type ParentProps,
+} from "solid-js";
+
+type CartItem = { id: string; name: string; price: number };
+type CartContextValue = ReturnType<typeof createCart>;
+
+function createCart() {
+	const [items, setItems] = createSignal<CartItem[]>([]);
+	const add = (item: CartItem) => setItems((list) => [...list, item]);
+	return { items, add };
+}
+
+const CartContext = createContext<CartContextValue>();
+
+export function CartProvider(props: ParentProps) {
+	return <CartContext value={createCart()}>{props.children}</CartContext>;
+}
+
+export function useCart() {
+	const cart = useContext(CartContext);
+	if (!cart) throw new Error("useCart must be used inside CartProvider");
+	return cart;
+}
+```
+
+`createCart()` runs inside `CartProvider`, so the provider owns the state and disposes it when the provider leaves the page.
+Any descendant calls `useCart()`; no props are threaded through the components in between.
+
+This is preferred over creating the signal at module scope.
+Module-scope state has no owner, so nothing disposes it, and during server rendering one module instance is shared by every request, which leaks one user's state into another's response.
+A context value is created per app, or per request on the server.
+
+### Roots
+
+[`createRoot`](/reference/solid-js/advanced/owner-introspection/create-root) creates an owner by hand and gives you its disposer.
+It is an advanced primitive for code that runs outside any component: tests, and integrations that embed Solid reactivity in another framework or a non-UI process.
 
 ```ts
 import { createEffect, createRoot, createSignal } from "solid-js";
@@ -247,7 +291,7 @@ const dispose = createRoot((dispose) => {
 dispose();
 ```
 
-Use this in tests, in framework integrations, and for reactive state that lives outside the component tree.
+Application code should not need it; if you are reaching for `createRoot` to share state, use context instead.
 
 ## Common problems
 

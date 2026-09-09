@@ -163,21 +163,31 @@ Check the box and "Write docs" appears above it; the row for "Review examples" i
 
 See the [`createProjection` reference](/reference/solid-js/stores/create-projection) for mutation and return forms.
 
-### Fetch in memos, shape in stores
+### Fetch into a store
 
-A projection function may return a promise, so `createStore(async () => api.rows(period()), [])` fetches and reconciles in one step.
-That collapsed form is right when nothing needs to sit between the request and the store.
+A projection function may return a promise, so a store can fetch and reconcile in one step:
 
-When something does, keep the two jobs apart: the memo owns the request, the store owns the shape.
+```tsx
+const [table] = createStore(async () => api.rows(period()), [] as Row[]);
+```
+
+This is the normal way to load server data into a store.
+The request starts when `period()` changes, the response reconciles into the same proxy by `id`, and rows that did not change keep their identity and their DOM.
+[`isPending(() => table.length)`](/reference/solid-js/reactivity/is-pending) reports a refetch, [`refresh(table)`](/reference/solid-js/lifecycle-actions/refresh) re-asks, and a `Loading` boundary handles the first load.
+Nothing else is needed.
+
+Split the request into its own memo only when the response has more than one consumer that shapes it differently, or when a request-level policy must live on the request rather than on the data:
 
 ```tsx
 const rows = createMemo(() => api.rows(period()));
 const [table] = createStore(() => rows(), [] as Row[]);
+const total = createMemo(() =>
+	rows().reduce((sum, row) => sum + row.amount, 0)
+);
 ```
 
-`rows` is where you attach request-level concerns: [`isPending(rows)`](/reference/solid-js/reactivity/is-pending) for the refetch indicator, [`refresh(rows)`](/reference/solid-js/lifecycle-actions/refresh) to re-ask, a second consumer that reads the same response.
-`table` is where per-row tracking and reconciliation happen; when a new response lands, `rows` changes once and the store diffs it once.
-The line between them is the visible marker of where a request-level policy lives, and it is the shape the rest of the docs use when a fetch and a store appear together.
+Here `rows` is fetched once and read twice.
+Reach for this shape when you have that second reader; otherwise the one-line form is the right one.
 
 ## Optimistic stores
 

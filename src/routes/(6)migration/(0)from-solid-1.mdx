@@ -252,6 +252,13 @@ This is the primary first-load model.
 The boundary owns branch readiness and renders its fallback until the required reads settle.
 After content has rendered, a revalidation normally keeps the committed content visible.
 
+:::caution[Async computations change when the screen updates]
+A write to an input of an async computation is held until that computation has its next answer, and everything else in the same update waits with it.
+Solid 1 resources and effect-based fetching never did this; each consumer updated on its own schedule.
+An application that converts all of its fetching at once inherits the new behavior everywhere, and a shared input such as a period selector then waits for the slowest fetch that reads it.
+[Data fetching from Solid 1](/migration/data-fetching-from-solid-1) shows how to keep each pattern working unchanged first, then convert one fetch at a time and choose the refetch behavior per fetch.
+:::
+
 The properties and actions on a Solid 1 resource become separate operations:
 
 - Replace `resource.loading` with a `Loading` boundary for initial readiness and [`isPending(() => resource())`](/reference/solid-js/reactivity/is-pending) for an in-flight changed answer.
@@ -264,8 +271,8 @@ A bare `refresh()` re-asks the same question without making `isPending` true.
 If the refresh must present as pending, call [`affects(target)`](/reference/solid-js/lifecycle-actions/affects) in the surrounding action before `refresh(target)`.
 Use a mutation-specific optimistic flag when the UI needs to show the progress of the mutation itself.
 
-`loadingValue` and the store option `seedLoadingValue` are advanced escape hatches.
-Use them only when provisional data should render through the same UI as the final data.
+`loadingValue` and the store option `seedLoadingValue` declare a placeholder that answers for the source before its first result.
+Use them when provisional data should render through the same UI as the final data, or when a Solid 1 `undefined` check must stay in the JSX.
 The declared value prevents first-flight suspension and keeps `isPending` false until the first real answer arrives.
 Use `Loading` when provisional data cannot truthfully have the final value's shape.
 
@@ -410,3 +417,9 @@ Before merging the migration:
 4. Exercise initial load, changed-input revalidation, manual refresh, successful mutation, failed mutation, and boundary recovery.
 5. Compare SSR shell output, streamed completion, hydration, and event behavior with the recorded Solid 1 baseline.
 6. Verify each third-party primitive, renderer, router, and metaframework package against an explicit Solid 2-compatible release.
+
+## Next steps
+
+- [Data fetching from Solid 1](/migration/data-fetching-from-solid-1): convert resource and effect-based fetching one fetch at a time and choose the refetch behavior for each.
+- [From SolidStart](/migration/from-solid-start), [From Solid Router](/migration/from-solid-router), and [From Solid Meta](/migration/from-solid-meta): the framework-level migrations that build on this one.
+- [Async reactivity](/concepts/async-reactivity): the model behind held updates, `Loading`, `isPending`, and actions.

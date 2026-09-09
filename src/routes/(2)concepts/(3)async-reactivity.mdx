@@ -11,8 +11,13 @@ In most frameworks that change spreads: the type becomes `Promise<Product>`, eve
 
 In Solid the change is one line.
 A computation that returns a promise is still a computation, and everything that reads it keeps reading a value.
-This page explains what that buys you and what you still have to decide.
 
+That one line also changes how writes behave.
+Once a memo is async, a write to any input it depends on is held until the memo has its next answer, and everything else in the same update waits with it.
+The page never shows a mix of old and new data.
+If you come from Solid 1 or from a pattern where every panel fetched and showed its own spinner on its own schedule, this is the part that will surprise you; the [in-flight work](#settled-view-and-in-flight-work) section shows it and the choices it gives you.
+
+This page explains what async computations buy you and what you still have to decide.
 The examples continue the shopping cart from the [Reactivity](/concepts/reactivity) page.
 
 ## A memo that returns a promise
@@ -196,6 +201,64 @@ This hold is automatic.
 It does not need a `Loading` boundary and it has no API to opt in; if you used transitions in Solid 1 or React, this is that behavior as the default.
 The boundary controls what renders when no settled answer exists; it does not create the hold.
 
+### What the hold means for a shared input
+
+The hold is simple to reason about for one memo and one view.
+It is worth seeing for several.
+
+A dashboard has a period selector and three panels.
+Each panel fetches its own data from the selected period, and the fetches take 200 milliseconds, one second, and ten seconds:
+
+```tsx
+function Dashboard() {
+	const [period, setPeriod] = createSignal("2026-Q2");
+
+	return (
+		<>
+			<PeriodSelect value={period()} onChange={setPeriod} />
+			<Loading fallback={<DashboardSkeleton />}>
+				<SummaryPanel period={period()} />
+				<TrendPanel period={period()} />
+				<AuditPanel period={period()} />
+			</Loading>
+		</>
+	);
+}
+
+function SummaryPanel(props: { period: string }) {
+	const summary = createMemo(() => fetchSummary(props.period));
+	return <p>{summary().total} orders</p>;
+}
+```
+
+In a framework where each panel manages its own loading flag, changing the period makes the selector flip at once and each panel replace its content when its own request lands: the summary at 200 milliseconds, the audit log ten seconds later.
+For those ten seconds the page shows the new period's summary beside the old period's audit log.
+
+In Solid the write to `period` is held.
+The selector keeps showing the old period, every panel keeps its old content, and at ten seconds the selector and all three panels change together.
+Nothing on the page ever disagrees about which period it is showing.
+The cost is that the fast panel waits for the slow one, and if nothing on the page reacts to the click, the page looks dead for ten seconds.
+
+Neither behavior is right for every screen.
+A detail page, a form, or a set of totals that must add up should change together.
+A set of independent widgets should not have to.
+The question to ask about any refetch is one your designer can answer:
+
+**While this data is being refetched, what should the user see?**
+
+| The user should see…                                                   | Use                                                                                           |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Nothing change until everything that depends on the input is ready     | The default. Add [`isPending`](#another-answer-is-coming-ispending) to acknowledge the click. |
+| The control they touched reflect their input now, and the content wait | [`latest`](#show-the-input-now-latest) on the control, `isPending` to dim the content.        |
+| A placeholder in place of the content for the changed subject          | [`<Loading on={key}>`](#show-a-placeholder-again-loading-on) around that content.             |
+
+The first two rows are the same screen: the tab highlight moves at once, the content stays and dims, the content swaps when it is ready.
+That is the standard interaction for a held update, and the rest of this section shows the pieces.
+The third row is for content that should not stay on screen when its subject changes, such as a panel for a different account.
+
+The hold applies only to updates.
+Each panel's first load still reaches the nearest `Loading` boundary, and nested boundaries let panels appear as their own first data arrives.
+
 ## Another answer is coming: `isPending`
 
 Because the old answer stays visible, the UI needs a way to say that a new one is on the way.
@@ -244,12 +307,64 @@ Here the fetch lives inside `ProductPage`.
 
 Notice that the list highlight does not move on click either.
 `selectedId()` holds its old value like everything else, so the highlighted row always matches the content on screen.
-When the design wants the highlight to move immediately, read the speculative value with [`latest`](#read-a-speculative-value-latest).
+When the design wants the highlight to move immediately, read the input with [`latest`](#show-the-input-now-latest), covered next.
 
 A held update that nothing acknowledges looks like a dead click for as long as the request takes.
 With attribution enabled, development builds report that case as `SILENT_HOLD` and name the interaction, the write, and the source it waited on; [Debugging reactivity](/guides/debugging-reactivity#the-screen-looks-dead-after-a-click) covers the report and the fixes, which are the primitives on this page.
 
 If the expression has no settled answer yet, the read inside `isPending` still follows the surrounding `Loading` path; `isPending` reports on updates to a value that exists, not on the first load.
+
+## Show the input now: `latest`
+
+A held update keeps the input's old value visible along with the old content.
+For the content that is the right choice.
+For the control the user has touched, it usually is not: a tab that does not highlight when clicked reads as broken, even when the content below it is correctly waiting.
+
+[`latest(fn)`](/reference/solid-js/reactivity/latest) reads the value an update is moving toward instead of the value it has committed:
+
+```tsx
+<ProductList selectedId={latest(selectedId)} onSelect={setSelectedId} />
+<main class={{ pending: isPending(selectedId) }}>
+	<ProductPage id={selectedId()} />
+</main>
+```
+
+If a new value is in flight, `latest(selectedId)` returns it before the held update commits it.
+Otherwise it returns the committed value.
+Before any value exists, the read still follows the normal `Loading` path.
+
+Read the two sides together: `latest` on the control, the plain read on the content, `isPending` between them to dim the content.
+The highlight moves at once, the old product stays visible and dims, and the new product replaces it when its data is ready.
+This is the everyday shape of a held update, not a special case.
+
+`latest` belongs on inputs.
+Reading data through `latest` shows a result before the rest of the update has agreed on it, so a panel can show the new period's numbers while the selector still shows the old period.
+When you want the control to lead, use `latest` on the control; when you want a panel to show a placeholder, use the next section.
+
+## Show a placeholder again: `Loading on`
+
+Once a `Loading` boundary has shown content, a later update does not bring the fallback back; the content stays and the update is held.
+Some content should not stay.
+An account panel showing account 1 while account 2 loads is worse than a skeleton, and the same is true for any content whose subject changed rather than whose data refreshed.
+
+The `on` prop names the value whose change should make the boundary eligible to show its fallback again:
+
+```tsx
+<Loading on={accountId()} fallback={<AccountSkeleton />}>
+	<AccountPanel id={accountId()} />
+</Loading>
+```
+
+When `accountId()` changes and the new account is not ready, this boundary shows its fallback and handles the wait itself instead of holding the update.
+The panel no longer keeps the write from committing, so controls outside the boundary see the new id as soon as nothing else in the update is holding it, and the panel shows its skeleton until the new account arrives.
+Pending work caused by other values, such as a refresh of the same account, leaves the content in place as usual.
+
+`on` is a value, not an accessor.
+The boundary compares it across updates, so pass `accountId()` rather than `accountId`.
+
+Put `on` on each panel that should show its own placeholder.
+A panel without it reads the shared input the normal way and still holds the write, so in the dashboard above, one panel with `on` and two without still waits for the two.
+[Boundaries](/concepts/boundaries) covers placement and how `Reveal` orders several boundaries.
 
 ## Work rejects: `Errored`
 
@@ -539,35 +654,24 @@ Optimism does not remove the value of `affects`, and `affects` does not require 
 A bare `refresh(source)` quietly asks the same question again because the visible answer still matches the source's inputs.
 Pair `affects(source)` with `refresh(source)` when the reload itself should make consumers report pending.
 
-### Read a speculative value: `latest`
-
-Normal reads preserve the visible settled answer while a held update prepares its replacement.
-Use [`latest(fn)`](/reference/solid-js/reactivity/latest) when a preview or coordination path needs the freshest in-flight value.
-In the product list from the [`isPending`](#another-answer-is-coming-ispending) section, this moves the highlight on click while the detail pane keeps holding the old product:
-
-```tsx
-<ProductList selectedId={latest(selectedId)} onSelect={setSelectedId} />
-<main class={{ pending: isPending(selectedId) }}>
-	<ProductPage id={selectedId()} />
-</main>
-```
-
-If the next answer exists, `latest(selectedId)` returns it before the held update commits it.
-Otherwise, it returns the visible settled answer.
-Before any answer exists, the read still follows the normal `Loading` path.
-
-`isPending` asks whether something is coming; `latest` asks what it is.
-Each is asked exactly where the design needs the answer.
-
-### Declare a committed first value
+### Declare a placeholder before the first answer
 
 Most applications should let unresolved first reads reach a `Loading` boundary.
-Use `loadingValue` only when a signal-family source must return a declared committed value during its first async flight.
-Use `seedLoadingValue: true` for the equivalent projected-store case.
+The `loadingValue` option declares that a placeholder value is an acceptable answer until the first real one arrives:
 
-These escape hatches bypass `Loading` for the first flight.
-They remain `isPending`-false until the first computed value lands, then later updates follow the normal pending behavior.
-See the [`createMemo`](/reference/solid-js/reactivity/create-memo) and [`createStore`](/reference/solid-js/stores/create-store) references for their complete option contracts.
+```ts
+const results = createMemo(() => searchProducts(query()), {
+	loadingValue: [] as Product[],
+});
+```
+
+A source with a `loadingValue` never reaches `Loading` for its first flight, and `isPending` stays `false` until the first computed value lands because the declared value already answers the question.
+Later updates follow the normal held behavior.
+Use `seedLoadingValue: true` for the equivalent derived-store case.
+
+This is rarely needed in new code, because a boundary is the better place to describe a first load.
+It fits when the placeholder renders through the same UI as the final data, such as an empty list, or when the first-load state must be carried in the data itself.
+See the [`createMemo`](/reference/solid-js/reactivity/create-memo) and [`createStore`](/reference/solid-js/stores/create-store) references for the complete option contracts.
 
 ## Queue completion
 
@@ -649,21 +753,22 @@ Use `yield promise` as the suspension point, or place a bare `yield` before writ
 ## Capability map
 
 - Return a promise or async iterable from a computation to create an async reactive source.
-- Use [`Loading`](/reference/solid-js/components-jsx/loading) when no settled answer exists.
+- Use [`Loading`](/reference/solid-js/components-jsx/loading) when no settled answer exists, and its `on` prop when a changed subject should show the fallback again.
 - Use [`isPending`](/reference/solid-js/reactivity/is-pending) when visible data has an unrevealed replacement or an `affects` declaration.
+- Use [`latest`](/reference/solid-js/reactivity/latest) on the control the user touched so it reflects the input while the content waits.
 - Use [`Errored`](/reference/solid-js/components-jsx/errored) to handle errors that reach the reactive graph.
 - Use [`action`](/reference/solid-js/lifecycle-actions/action) to coordinate writes across async gaps.
 - Use [`createOptimistic`](/reference/solid-js/reactivity/create-optimistic) or [`createOptimisticStore`](/reference/solid-js/stores/create-optimistic-store) to show an expected result until an action settles.
 - Use [`refresh`](/reference/solid-js/lifecycle-actions/refresh) to rerun a derived source with the same inputs.
 - Use [`affects`](/reference/solid-js/lifecycle-actions/affects) to declare which data in-flight work can change.
-- Use [`latest`](/reference/solid-js/reactivity/latest) to read the freshest available in-flight value.
 - Use [`resolve`](/reference/solid-js/advanced/interop-async/resolve) to await one reactive expression outside tracking.
 - Use [`onSettled`](/reference/solid-js/lifecycle-actions/on-settled) to run code after owned async work and queued updates settle.
-- Use `loadingValue` or `seedLoadingValue` only when a source needs a committed value before its first result.
+- Use `loadingValue` or `seedLoadingValue` when a placeholder value should answer for a source before its first result.
 
 ## Where to go next
 
 - [Boundaries](/concepts/boundaries): where to place `Loading` and `Errored`, how `Reveal` orders sibling regions, and how an errored region recovers.
+- [Migrate data fetching from Solid 1](/migration/data-fetching-from-solid-1): what changes when `createResource` or an effect-and-flag pattern becomes an async memo, and how to keep the old feel where you want it.
 - [Server functions](/building-apps/server-functions): a `"use server"` function returns a promise, so everything on this page applies to it unchanged; that page covers the transport, `GET` reads, and `live` streams.
 - [Rendering and SSR](/concepts/rendering-and-ssr): the same boundaries decide what streams in the initial HTML.
 - [Data APIs](/routing/solid-router/data): `query` and `action` from Solid Router add caching, preloading, and submissions on top of these primitives.

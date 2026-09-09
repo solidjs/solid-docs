@@ -1,0 +1,362 @@
+---
+title: "Data fetching from Solid 1"
+titleTemplate: ":title"
+mainNavExclude: true
+version: "2.0"
+description: "Move Solid 1 data loading patterns to async computations one fetch at a time, and decide per fetch whether an update should wait, dim, or show a placeholder."
+---
+
+Most of the Solid 1 migration is renaming and reshaping: split an effect, convert a store setter, replace `Suspense` with `Loading`.
+Data fetching is different.
+`createMemo(async () => ...)` looks like `createResource` with less ceremony, and for one memo on one page it is.
+Across an application it changes when the screen updates, and the change is silent: nothing errors, nothing warns, and the app starts waiting in places it never waited before.
+
+This page is for teams whose Solid 1 app already fetches data in a way that works.
+It names the common patterns, shows how to keep each one working unchanged in Solid 2, shows what changes when you convert it, and gives you the choice per fetch.
+It is a path, not a destination: the coordinated behavior is the better default for new code, and the [Async reactivity](/concepts/async-reactivity) page explains why.
+The [general migration guide](/migration/from-solid-1) covers everything that is not fetching.
+
+## What changes
+
+In Solid 1 a fetch and its consumer were connected by you.
+An effect or a resource started the request; a signal, store, or the resource itself received the result; the JSX read it and checked a loading flag.
+Solid did not know that the request and the value were related, so a write to an input made each consumer react on its own schedule.
+
+In Solid 2 an async computation is a value in the graph.
+Solid knows which inputs it depends on and knows when it does not have an answer yet.
+The consequence is the one to internalize: **a write to an input of an async computation is held until that computation has its next answer, and everything else in the same update waits with it.**
+
+A dashboard shows the difference.
+A period selector feeds three panels whose requests take 200 milliseconds, one second, and ten seconds:
+
+```tsx
+const [period, setPeriod] = createSignal("2026-Q2");
+
+<PeriodSelect value={period()} onChange={setPeriod} />
+<SummaryPanel period={period()} />   // 200 ms
+<TrendPanel period={period()} />     // 1 s
+<AuditPanel period={period()} />     // 10 s
+```
+
+With Solid 1 fetching, changing the period flips the selector at once and each panel replaces itself when its own request lands.
+For ten seconds the summary shows the new period beside an audit log for the old one.
+
+With three async memos, the write to `period` is held.
+The selector and all three panels keep their old content, and at ten seconds everything changes together.
+The page never disagrees with itself.
+The fast panel waits for the slow one, and unless something acknowledges the click, the page looks dead for ten seconds.
+
+Neither is right for every screen.
+Totals that must add up, a detail page, and a form should change together.
+Independent widgets should not have to.
+Solid 2 gives you the tools for both, but the default moved, and a migrated app inherits the new default everywhere at once.
+The rest of this page is about making that choice deliberately, one fetch at a time.
+
+## Migrate in this order
+
+1. **Make the app run on Solid 2 without changing how it fetches.**
+   Split effects into compute and apply phases, fix reads that expect to see a write immediately, and replace `onMount` and `Suspense`.
+   Your fetching code keeps its shape and its timing.
+   Test here; this is your baseline.
+2. **Convert one fetch at a time to an async computation.**
+   For each one, decide what the user should see while it refetches, using the [table](#decide-per-fetch) below.
+   Start with fetches that stand alone on a page, where the hold changes nothing visible.
+3. **Delete what the graph now does for you.**
+   Loading flags, cancellation of superseded requests, and stale-result guards go away as each fetch converts.
+
+Do not convert every fetch in one commit.
+The hold is a property of the graph, so it appears when the last non-async link in a chain converts, which can be far from the code you are editing.
+
+## Pattern: an effect, a store, and a loading flag
+
+This shape is common in Solid 1 applications that never adopted `Suspense`:
+
+```tsx
+// Solid 1
+function TabPanel() {
+	const [global] = useGlobalStore();
+	const [tabData, setTabData] = createStore<TabData>({ rows: [] });
+	const [isLoading, setIsLoading] = createSignal(true);
+
+	const fetchTabData = async () => {
+		setIsLoading(true);
+		const response = await TabAPI.get(global.period, global.department.id);
+		if (response.success) setTabData(response.result);
+		setIsLoading(false);
+	};
+
+	onMount(fetchTabData);
+	createEffect(
+		on(
+			[() => global.period, () => global.department.id, reloadSignal],
+			fetchTabData,
+			{
+				defer: true,
+			}
+		)
+	);
+
+	return (
+		<Show when={!isLoading()} fallback={<LoadingIndicator />}>
+			<TabRows rows={tabData.rows} />
+		</Show>
+	);
+}
+```
+
+### Step 1: keep it working
+
+Solid 2 effects have two phases.
+The compute phase tracks reads and returns a value; the apply phase receives that value, runs untracked, may do imperative work, and may return a cleanup.
+Effects run once on creation, so the `onMount` call folds into the effect:
+
+```tsx
+// Solid 2, same behavior
+function TabPanel() {
+	const [global] = useGlobalStore();
+	const [tabData, setTabData] = createStore<TabData>({ rows: [] });
+	const [isLoading, setIsLoading] = createSignal(true);
+
+	createEffect(
+		() => [global.period, global.department.id, reloadSignal()] as const,
+		([period, departmentId]) => {
+			const controller = new AbortController();
+			setIsLoading(true);
+			TabAPI.get(period, departmentId, controller.signal).then((response) => {
+				if (controller.signal.aborted) return;
+				if (response.success) setTabData(reconcile(response.result));
+				setIsLoading(false);
+			});
+			return () => controller.abort();
+		}
+	);
+
+	return (
+		<Show when={!isLoading()} fallback={<LoadingIndicator />}>
+			<TabRows rows={tabData.rows} />
+		</Show>
+	);
+}
+```
+
+This works and produces no diagnostics.
+Writing to a signal or store from the apply phase is what the apply phase is for, and the [`createEffect`](/reference/solid-js/reactivity/create-effect) reference uses a fetch with an abort cleanup as its own example.
+The graph does not know that `tabData` comes from a request, so nothing is held: the period write commits at once, the panel shows its indicator, and the rows replace themselves when the response lands.
+That is Solid 1 behavior, on Solid 2.
+
+It is a step, not a place to stop.
+The graph cannot see this fetch, so [`isPending`](/reference/solid-js/reactivity/is-pending), [`refresh`](/reference/solid-js/lifecycle-actions/refresh), [`Errored`](/reference/solid-js/components-jsx/errored), and server streaming do not apply to it, and you keep owning the loading flag, the cancellation, and the stale-response guard.
+The [Avoid unnecessary effects](/guides/avoid-unnecessary-effects) guide argues against this shape for new code, and the argument stands.
+For an app that already has fifty of them, it is the safe first commit.
+
+### Step 2: convert it, and choose the refetch behavior
+
+The async version removes the flag, the cancellation, and the guard:
+
+```tsx
+function TabPanel() {
+	const [global] = useGlobalStore();
+	const [tabData] = createStore<TabData>(
+		async () => {
+			const response = await TabAPI.get(global.period, global.department.id);
+			if (!response.success) throw new Error(response.error);
+			return response.result;
+		},
+		{ rows: [] }
+	);
+
+	return (
+		<Loading fallback={<LoadingIndicator />}>
+			<TabRows rows={tabData.rows} />
+		</Loading>
+	);
+}
+```
+
+`createStore(async fn, seed)` reads the inputs, awaits the response, and reconciles the result into the store, so `TabRows` re-renders only the rows that changed.
+A superseded run is discarded by Solid; the `AbortController` was doing that job by hand.
+A failed response throws, so the nearest `Errored` boundary can show it and retry it.
+`reloadSignal()` becomes `refresh(tabData)`.
+
+Now the behavior change from the [first section](#what-changes) applies.
+The first load still shows `LoadingIndicator`.
+When `global.period` changes, the indicator does not come back: the old rows stay on screen, the write to `period` is held, and the rows swap when the response lands.
+If other panels read the same period, they all swap together, and the selector waits with them.
+
+Decide what this panel should do while it refetches:
+
+- **Keep the old rows and dim them** while the new ones load.
+  This is the default, and it is the coordinated behavior.
+  Add an indicator so the wait is visible:
+
+  ```tsx
+  <Loading fallback={<LoadingIndicator />}>
+  	<div class={{ refreshing: isPending(() => tabData.rows) }}>
+  		<TabRows rows={tabData.rows} />
+  	</div>
+  </Loading>
+  ```
+
+- **Show the indicator again**, as the Solid 1 version did, when the subject of the panel changed.
+  Name that subject in the boundary's `on` prop:
+
+  ```tsx
+  <Loading
+  	on={`${global.period}/${global.department.id}`}
+  	fallback={<LoadingIndicator />}
+  >
+  	<TabRows rows={tabData.rows} />
+  </Loading>
+  ```
+
+  When the period or department changes, this boundary shows its fallback and handles the wait itself instead of holding the update.
+  The panel no longer keeps the selector from updating.
+  Other panels that read the same period without `on` still hold it, so give `on` to each panel that should behave independently.
+  The boundary compares `on` values by identity, so combine several inputs into one string or number rather than an array.
+
+The literal translation of the Solid 1 `<Show when={!isLoading()}>` is `<Show when={!isPending(() => tabData.rows)} fallback={<LoadingIndicator />}>` inside the `Loading` boundary.
+It works: while the refetch is pending the content unmounts, which also stops the panel from holding the update.
+Prefer `on` when the panel should reset because its subject changed, because `on` does not unmount content for refetches of the same subject, such as a `refresh`.
+
+## Pattern: `createResource` with `Suspense`
+
+```tsx
+// Solid 1
+const [user] = createResource(() => params.id, fetchUser);
+
+<Suspense fallback={<UserSkeleton />}>
+	<UserProfile user={user()} />
+</Suspense>;
+```
+
+Convert the resource to an async memo and the boundary to `Loading`:
+
+```tsx
+// Solid 2
+const user = createMemo(() => fetchUser(params.id));
+
+<Loading fallback={<UserSkeleton />}>
+	<UserProfile user={user()} />
+</Loading>;
+```
+
+`user()` is typed `User`, not `User | undefined`, and the boundary handles the first load as `Suspense` did.
+
+The change is in the refetch.
+In Solid 1, changing `params.id` refetched the resource and, unless the change happened inside `startTransition`, the boundary showed its fallback again.
+Teams worked around this with `user.latest` or by wrapping navigation in a transition.
+In Solid 2 the held update is the default: the old user stays on screen, the write is held, and the new user replaces it when ready.
+`resource.latest` has no replacement because that is now what a plain read does.
+
+You were already close to the coordinated model, so most resource-and-`Suspense` code needs no more than the rename.
+Where the Solid 1 fallback-on-refetch was the intended design, such as a profile page that should not show one user's name over another's data, use `on`:
+
+```tsx
+<Loading on={params.id} fallback={<UserSkeleton />}>
+	<UserProfile user={user()} />
+</Loading>
+```
+
+Where you used `startTransition` to get the held behavior, delete it; the behavior is now the default, and [`isPending`](/reference/solid-js/reactivity/is-pending) replaces the `useTransition` pending flag.
+
+The resource's other members map as follows:
+
+| Solid 1                      | Solid 2                                                                                                                                                                             |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `user.loading` on first load | `Loading` boundary                                                                                                                                                                  |
+| `user.loading` on refetch    | `isPending(user)`                                                                                                                                                                   |
+| `user.error`                 | `Errored` boundary                                                                                                                                                                  |
+| `refetch()`                  | [`refresh(user)`](/reference/solid-js/lifecycle-actions/refresh); add [`affects(user)`](/reference/solid-js/lifecycle-actions/affects) first when the reload should show as pending |
+| `mutate(value)`              | An `action` with [`createOptimistic`](/reference/solid-js/reactivity/create-optimistic)                                                                                             |
+| `user.latest`                | A plain read                                                                                                                                                                        |
+
+## Pattern: `createResource` with `.loading` and no `Suspense`
+
+```tsx
+// Solid 1
+const [orders] = createResource(() => filters(), fetchOrders);
+
+<Show when={!orders.loading} fallback={<Spinner />}>
+	<OrderTable orders={orders()!} />
+</Show>;
+```
+
+This is the resource used as a value with a flag, and it behaves like the [effect pattern](#pattern-an-effect-a-store-and-a-loading-flag): a spinner on first load and on every refetch, each table on its own schedule.
+
+The conversion is the same as above, and the same choice applies:
+
+```tsx
+// Solid 2
+const orders = createMemo(() => fetchOrders(filters()));
+
+<Loading on={filters()} fallback={<Spinner />}>
+	<OrderTable orders={orders()} />
+</Loading>;
+```
+
+With `on`, a change to the filters shows the spinner and does not hold the update, which is the Solid 1 behavior.
+Without `on`, the old table stays and the update is held until the new orders arrive; add `isPending(orders)` to show that.
+
+If the first-load branch must live in your own JSX rather than a boundary, for example because the spinner is part of the table's own layout, declare a placeholder with `loadingValue`:
+
+```tsx
+const orders = createMemo<Order[] | undefined>(() => fetchOrders(filters()), {
+	loadingValue: undefined,
+});
+
+<Show when={orders()} fallback={<Spinner />}>
+	{(loaded) => <OrderTable orders={loaded()} />}
+</Show>;
+```
+
+The placeholder answers for the source before its first result, so the read never reaches a `Loading` boundary and the `Show` decides what renders.
+Refetches still behave as above.
+Reach for this only when the boundary does not fit; a boundary is the clearer way to describe a first load.
+
+## Pattern: Solid Router `createAsync` and `cache`
+
+Router data loading in Solid 1 sat on top of resources, so `createAsync` with `Suspense` behaves like the [resource pattern](#pattern-createresource-with-suspense), including the change to refetch behavior.
+Replace `createAsync(() => getUser(params.id))` with `createMemo(() => getUser(params.id))` and `cache` with `query`.
+Route navigations already ran inside a transition in Solid 1, so a route whose content held during navigation keeps that behavior.
+
+The [Solid Router migration guide](/migration/from-solid-router#migrate-data-loading-and-caching) covers the API changes, and [Data loading and mutations](/routing/solid-router/data) covers `query`, `preload`, and revalidation in Solid 2.
+
+## Decide per fetch
+
+Ask the question your designer can answer: **while this data is being refetched, what should the user see?**
+
+| The user should see…                                                   | Use                                                      |
+| ---------------------------------------------------------------------- | -------------------------------------------------------- |
+| Nothing change until everything that depends on the input is ready     | The default; add `isPending` so the wait is visible.     |
+| The control they touched reflect their input now, and the content wait | `latest` on the control, `isPending` to dim the content. |
+| A placeholder in place of the content for the changed subject          | `<Loading on={key}>` around that content.                |
+
+The first two rows describe the same screen: the tab highlights at once, the content dims, the content swaps when ready.
+[Async reactivity](/concepts/async-reactivity#what-the-hold-means-for-a-shared-input) shows each piece.
+
+A useful test for a widget: if it showed last period's numbers for five seconds with a spinner on it, is that fine or wrong?
+Fine means the widget is independent, and `on` or a dimmed hold are both acceptable.
+Wrong means the widget is part of a coherent view, and the default hold is doing its job.
+
+## What you get when you stop
+
+Each fetch that converts removes code you were maintaining:
+
+- The loading flag and the code that sets it in the right order.
+- The `AbortController` or "is this response still current" guard; Solid discards superseded runs.
+- The `success` check that turned an error into a silent empty state; a thrown error reaches `Errored` and can be retried.
+- The reload signal; `refresh(source)` re-asks the same question.
+
+And it adds behavior you could not get before: a panel that reveals together with its siblings, `isPending` from any consumer without threading a flag through props, and server rendering that streams each region as its data settles.
+
+Convert the standalone fetches first, the independent panels with `on` second, and the coherent views last, when you can see what the hold does for them.
+
+## Checklist
+
+- [ ] The app runs on Solid 2 with its Solid 1 fetching shape and passes its tests.
+- [ ] Each fetch has a decision: hold, hold with `latest` on the control, or `on`.
+- [ ] Every `on` prop receives a value such as `params.id`, not an accessor.
+- [ ] `isPending` appears wherever a held update could otherwise look like a dead click.
+- [ ] Loading flags, abort controllers, and stale-response guards are gone from converted fetches.
+- [ ] Reload signals are `refresh(source)` calls, with `affects` where the reload should show as pending.
+- [ ] Failed requests throw and an `Errored` boundary covers them.

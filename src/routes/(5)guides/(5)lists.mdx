@@ -1,0 +1,277 @@
+---
+title: "Lists"
+titleTemplate: ":title"
+mainNavExclude: true
+version: "2.0"
+description: "Render, edit, filter, sort, select in, and window lists in Solid without rebuilding rows, and read the diagnostics that tell you when you are."
+---
+
+Most screens are lists: search results, table rows, chat messages, cart items.
+A list is also where a small mistake costs the most, because a row that is rebuilt instead of updated loses its DOM, its focus, its scroll position, and its animation, and does so once per row.
+
+This guide is organized by what you are doing with the list.
+The [Components and JSX](/concepts/components-and-jsx#rendering-lists) page introduces `For` and `Repeat`; this page is about using them well.
+
+The examples use a todo list because everyone knows what one does.
+
+```ts
+type Todo = { id: string; text: string; done: boolean };
+```
+
+## Render rows from an array
+
+[`For`](/reference/solid-js/components-jsx/for) maps an array to rows and reuses a row when its item comes back:
+
+```tsx
+import { For } from "solid-js";
+
+function TodoList(props: { todos: Todo[] }) {
+	return (
+		<ul>
+			<For each={props.todos} fallback={<li>Nothing to do</li>}>
+				{(todo, index) => (
+					<li>
+						{index() + 1}. {todo.text}
+					</li>
+				)}
+			</For>
+		</ul>
+	);
+}
+```
+
+The callback runs once per item that `For` has not seen before, and its JSX is created once.
+`todo` is the item itself.
+`index` is an accessor, because the same item can move to another position without being recreated; read `index()` where the position is displayed.
+
+"Seen before" means object identity.
+If the array on the next update contains the same object, the row is kept and moved if needed; if it contains a new object, the row is disposed and a new one is created.
+Everything else on this page follows from that rule.
+
+## Keep row identity across updates
+
+The rule bites when data comes from a server.
+A refetch returns new objects for the same records, so a list keyed by identity rebuilds every row:
+
+```tsx
+const todos = createMemo(() => api.todos()); // new objects on every refetch
+
+<For each={todos()}>{(todo) => <TodoRow todo={todo} />}</For>;
+```
+
+Development builds report this as `[UNSTABLE_LIST_IDENTITY]` when attribution is enabled: rows were disposed and recreated for items equal field-for-field to the ones they replaced.
+Two fixes, and the second is usually the better one.
+
+**Key by a field.** Pass a key function, and `For` matches items by the key instead of by identity:
+
+```tsx
+<For each={todos()} keyed={(todo) => todo.id}>
+	{(todo) => <TodoRow todo={todo()} />}
+</For>
+```
+
+In this mode the callback receives accessors for both the item and the index.
+The row is kept when an item with the same `id` appears, and `todo()` returns the newest object for that id, so the row's JSX updates to the new fields without being recreated.
+
+**Load into a store.** A store reconciles each response into the same proxies by `id`, so the objects themselves keep their identity:
+
+```tsx
+const [todos] = createStore(async () => api.todos(), [] as Todo[]);
+
+<For each={todos}>{(todo) => <TodoRow todo={todo} />}</For>;
+```
+
+Now `todo` is a store proxy, `todo.text` is a fine-grained read, and a refetch that changes one field of one record updates one text node.
+Nothing about `For` changed; the data stopped producing new objects.
+This is the shape to reach for whenever the list is edited or refetched, which is most lists.
+
+## Edit a row
+
+With the list in a store, editing is a write at a path:
+
+```tsx
+const [todos, setTodos] = createStore<Todo[]>([]);
+
+function toggle(id: string) {
+	setTodos((draft) => {
+		const todo = draft.find((todo) => todo.id === id);
+		if (todo) todo.done = !todo.done;
+	});
+}
+```
+
+Only the readers of that todo's `done` property run.
+The row is not recreated, the list is not diffed, and the other rows are untouched.
+
+The habit to unlearn from immutable state libraries is replacing the array to change one item:
+
+```tsx
+setTodos((draft) =>
+	draft.map((todo) => (todo.id === id ? { ...todo, done: !todo.done } : todo))
+);
+```
+
+This produces a new object for the edited todo, so every reader of that todo runs and, if the list is keyed by identity, its row is rebuilt.
+Development builds flag the store-level version as `[IMMUTABLE_UPDATE_IN_STORE]` when a path is replaced by a container whose leaves are mostly unchanged.
+Mutate the draft.
+Use [`reconcile`](/reference/solid-js/stores/reconcile) when the whole list arrives fresh from the server and should be diffed in.
+
+Adding and removing follow the same rule:
+
+```tsx
+setTodos((draft) => {
+	draft.push({ id: crypto.randomUUID(), text, done: false });
+});
+
+setTodos((draft) => draft.filter((todo) => todo.id !== id));
+```
+
+Returning a new array from the setter is fine for removal; the surviving items are the same proxies, so their rows are kept.
+
+## Filter and sort
+
+Derive the visible list; do not store it:
+
+```tsx
+const [filter, setFilter] = createSignal<"all" | "open" | "done">("all");
+const [sortBy, setSortBy] = createSignal<"text" | "created">("created");
+
+const visible = createMemo(() => {
+	const list = todos.filter((todo) =>
+		filter() === "all" ? true : filter() === "done" ? todo.done : !todo.done
+	);
+	return list.sort((a, b) =>
+		sortBy() === "text" ? a.text.localeCompare(b.text) : 0
+	);
+});
+
+<For each={visible()}>{(todo) => <TodoRow todo={todo} />}</For>;
+```
+
+`visible()` is a new array on every change, and that is fine.
+The items inside it are the same proxies as before, so `For` keeps every row and reorders or hides them.
+A derived array costs a diff; a new set of objects costs a rebuild.
+Those are different things, and only the second is a problem.
+
+When the derived list is large and read by several consumers, [`createProjection`](/reference/solid-js/stores/create-projection) produces a store-shaped result instead of an array, so readers of individual rows do not subscribe to the whole list; [Stores](/concepts/stores#derive-a-store-with-a-projection) shows the shape.
+
+## Select a row
+
+Highlighting the selected row is the classic performance trap: the naive version re-runs every row when the selection changes.
+
+```tsx
+const [selectedId, setSelectedId] = createSignal<string>();
+
+// Every row reads selectedId(), so every row re-evaluates on each change.
+<li class={{ selected: selectedId() === todo.id }}>...</li>;
+```
+
+For a few dozen rows this does not matter.
+For a few thousand it does.
+Turn the selection into a store where each row reads only its own key:
+
+```tsx
+import { createProjection } from "solid-js";
+
+const [selectedId, setSelectedId] = createSignal<string>();
+const isSelected = createProjection<Record<string, boolean>>((draft) => {
+	for (const key of Object.keys(draft)) delete draft[key];
+	const id = selectedId();
+	if (id !== undefined) draft[id] = true;
+}, {});
+
+<li
+	class={{ selected: isSelected[todo.id] }}
+	onClick={() => setSelectedId(todo.id)}
+>
+	...
+</li>;
+```
+
+When the selection moves from one row to another, exactly two rows update: the one that lost the key and the one that gained it.
+This replaces the Solid 1 `createSelector`.
+
+## Render a window over a large list
+
+`For` creates a row per item.
+For a list that is long enough to be a problem, render only the rows in view.
+
+[`Repeat`](/reference/solid-js/components-jsx/repeat) renders a range of positions over a store, without slicing the array:
+
+```tsx
+import { Repeat, createSignal, createStore } from "solid-js";
+
+function Log(props: { entries: Store<Entry[]> }) {
+	const [from, setFrom] = createSignal(0);
+	const size = 50;
+
+	return (
+		<ul
+			onScroll={(event) =>
+				setFrom(Math.floor(event.currentTarget.scrollTop / ROW_HEIGHT))
+			}
+		>
+			<Repeat
+				from={from()}
+				count={Math.min(size, props.entries.length - from())}
+			>
+				{(index) => <li>{props.entries[index].message}</li>}
+			</Repeat>
+		</ul>
+	);
+}
+```
+
+Each row reads `props.entries[index]` directly from the store, so a change to one entry updates one row.
+When `from` moves, rows whose index is still in range are kept, rows that left are disposed, and rows for new indexes are created.
+`Repeat` is positional: a row shows whatever is at its index, so it fits logs, tables, and grids over store data, and it does not fit lists where a row must follow its item as the list reorders.
+
+For a full virtualizer with variable heights, use a library; the pattern above is what those libraries build on.
+
+## Show a loading and an empty state
+
+The two are different states and use different tools.
+`fallback` on `For` is the empty state: a settled list with no items.
+A `Loading` boundary is the not-yet state:
+
+```tsx
+<Loading fallback={<ListSkeleton />}>
+	<ul>
+		<For each={todos} fallback={<li>Nothing to do</li>}>
+			{(todo) => <TodoRow todo={todo} />}
+		</For>
+	</ul>
+</Loading>
+```
+
+The skeleton shows until the first response; the "Nothing to do" row shows when that response is empty.
+A refetch does not bring the skeleton back; the rows stay, and `isPending(() => todos.length)` reports the wait if you want to dim them.
+
+## Common problems
+
+### Rows lose focus or animation when the list changes
+
+The items are new objects on each update.
+Key by a field or load into a store; see [Keep row identity across updates](#keep-row-identity-across-updates).
+
+### A row shows the wrong index after reordering
+
+The callback captured `index()` once instead of reading it in JSX.
+Read `index()` inside the JSX expression so it stays reactive, or use `keyed={false}` when the row should be bound to its position rather than its item.
+
+### Editing one item re-renders the whole list
+
+The list is an array of plain objects in a signal, and the edit replaced the array or the object.
+Move the list into a store and mutate the draft.
+
+### `todos.push(item)` does nothing
+
+A store proxy drops writes made outside its setter.
+Write through `setTodos((draft) => { draft.push(item); })`.
+
+## Next steps
+
+- [Components and JSX](/concepts/components-and-jsx#rendering-lists): the `For` and `Repeat` callback shapes.
+- [Stores](/concepts/stores): draft setters, projections, and reconciliation.
+- [Data fetching patterns](/guides/data-fetching-patterns): loading lists from a server, pagination, and infinite scroll.
+- [Debugging reactivity](/guides/debugging-reactivity): the `UNSTABLE_LIST_IDENTITY` and `IMMUTABLE_UPDATE_IN_STORE` reports in full.

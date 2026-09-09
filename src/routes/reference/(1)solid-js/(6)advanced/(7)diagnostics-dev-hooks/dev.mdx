@@ -35,34 +35,308 @@ const DEV: Dev | undefined;
 
 ## Related types
 
+### `AttributionHooks`
+
+Observe-tier hook points for the reactive core.
+
+Core's obligation is to call these with true facts at the moments they
+happen; ALL attribution semantics (stamps, cause chains, timings, warnings)
+live in the engine that installs them — `@solidjs/signals/attribution`, a
+separate entry so an observe build that never enables it never ships it
+(same pattern as the GlobalQueue.\_\* feature slots). `attrHooks` is null
+unless an engine is installed, so the disabled cost is one null check per
+site, and prod builds fold every site out behind **OBSERVE**.
+
+Important for implementers of call sites: a hook call must never sit inside
+a `try` block — rollup's tryCatchDeoptimization retains functions referenced
+inside `try` even behind a folded **OBSERVE** guard, which re-couples the
+engine into prod bundles (#2883 harness). Set a local flag inside the try
+and call the hook after the catch.
+
+```ts
+interface AttributionHooks {
+	interactionStart(ref: InteractionRef): void;
+	interactionEnd(): void;
+	recomputeStart(el: Computed<any>, create: boolean): void;
+	recomputeEnd(
+		el: Computed<any>,
+		create: boolean,
+		changed: boolean,
+		optimistic: boolean,
+		transition: boolean,
+		held: boolean
+	): void;
+	derivedChanged(el: Computed<any>): void;
+	write(el: Signal<any> | Computed<any>, prev: unknown, value: unknown): void;
+	refreshed(el: Computed<any>): void;
+	flightStart(el: Computed<any>, flight: object): void;
+	asyncStart(el: Computed<any>): void;
+	asyncEnd(
+		el: Computed<any>,
+		prev: unknown,
+		value: unknown,
+		direct: boolean
+	): void;
+	effectRunStart(el: Computed<any>): void;
+	effectRunEnd(el: Computed<any>): void;
+	actionStepStart(it: object, name: string | undefined): void;
+	actionStepEnd(it: object): void;
+	holdStart(t: Transition): void;
+	holdEnd(): void;
+	transitionSettled(t: Transition): void;
+	transitionMerged(target: Transition, outgoing: Transition): void;
+	storeReplaced(
+		path: string,
+		isArray: boolean,
+		total: number,
+		unchanged: number,
+		prevTotal: number
+	): void;
+	listChurn(
+		el: Computed<any>,
+		removed: unknown[],
+		created: unknown[],
+		newLen: number,
+		keyed: boolean
+	): void;
+	boundaryFallback(
+		boundary: object,
+		tree: Computed<any> | undefined,
+		shown: boolean
+	): void;
+}
+```
+
+#### `interactionStart`
+
+- **Type:** `void`
+
+`withInteraction` opened a user-interaction frame: root writes until the
+matching `interactionEnd` were performed by the handler of `ref`. Frames
+nest strictly (synchronous dispatch), so the engine keeps a stack.
+
+#### `interactionEnd`
+
+- **Type:** `void`
+
+#### `recomputeStart`
+
+- **Type:** `void`
+
+A recompute is starting; `el._deps` still holds the previous run's links.
+Always paired with `recomputeEnd` (recompute has no early returns).
+
+#### `recomputeEnd`
+
+- **Type:** `void`
+
+The recompute finished. `changed` = committed a changed value (false for
+errored runs); `optimistic` = ran under an optimistic lane / lane-dirty
+posture; `transition` = a transition was active or owns this node;
+`held` = the value went to `_pendingValue` (a transition hold) rather
+than committing directly — its reveal happens later on the transition's
+own schedule.
+
+#### `derivedChanged`
+
+- **Type:** `void`
+
+A non-effect computed committed a changed value during a re-run.
+
+#### `write`
+
+- **Type:** `void`
+
+A signal write committed (value passed the equality gate).
+
+#### `refreshed`
+
+- **Type:** `void`
+
+Refresh() invalidated this node (self-invalidation, no dep changed).
+
+#### `flightStart`
+
+- **Type:** `void`
+
+A new async flight entered the system (`_inFlight` was just assigned
+during a recompute of `el`). Always fired inside the owning recompute —
+both call paths (core's recompute and the projection self-registration)
+run within one — so the engine can read the current frame stack to link
+the flight to the change that caused it (waterfall chaining). `flight`
+is the registered thenable/iterable itself: the engine keys a first-seen
+origin registry on its identity, so shared and preloader-marked promises
+carry their true start time instead of the moment the graph saw them.
+
+#### `asyncStart`
+
+- **Type:** `void`
+
+An async landing is about to apply its value (before any branch).
+
+#### `asyncEnd`
+
+- **Type:** `void`
+
+The async landing finished. `direct` = the landing applies the value
+itself (lane/override paths); false = it went through setSignal, whose
+own `write` hook already saw any committed change. Fired whether or not
+the landing committed — call sites cannot carry that fact out of their
+try blocks (see the try rule above), so the engine derives committed-ness
+from the node's state against its asyncStart snapshot.
+
+#### `effectRunStart`
+
+- **Type:** `void`
+
+An effect's imperative half (its effect callback) is about to run /
+has run. Both fire outside the run's try; `effectRunEnd` fires whether
+or not the callback threw. Writes between the two are the effect's.
+
+#### `effectRunEnd`
+
+- **Type:** `void`
+
+#### `actionStepStart`
+
+- **Type:** `void`
+
+One synchronous step of an `action()` generator is about to run / has
+run (`it.next()`/`it.throw()` up to the next yield). `it` is the
+invocation's iterator — stable identity across its steps; `name` the
+generator function's name. Writes between the two are the action's.
+
+#### `actionStepEnd`
+
+- **Type:** `void`
+
+#### `holdStart`
+
+- **Type:** `void`
+
+A flush found `t` incomplete (transitionComplete's false verdict): its
+writes stay staged and its queues are about to be parked. Fired before
+this flush's lane effects (the visible acknowledgers — isPending
+companions, optimistic values) run; `holdEnd` fires from the root
+stashQueues call after them, so effect runs between the two are runs that
+painted _during_ the hold.
+
+#### `holdEnd`
+
+- **Type:** `void`
+
+#### `transitionSettled`
+
+- **Type:** `void`
+
+`t` was judged complete (transitionComplete's true verdict, before `_done`
+flips). Fired before its held writes commit, so `t._pendingNodes` still
+lists what was staged.
+
+#### `transitionMerged`
+
+- **Type:** `void`
+
+`outgoing` was folded into `target` (`outgoing._done = target`).
+
+#### `storeReplaced`
+
+- **Type:** `void`
+
+A store setter batch replaced the container at `path` (e.g. `store.user`)
+with a different one (both non-null, same array-ness, not the same
+logical slot), and this is the leaf census of the new container against
+the old: `total` leaves (own keys, or items) in the new one, `unchanged`
+of which are the same value as before (identity, judged on unwrapped
+values — object keys compared by key, array items by membership), and
+`prevTotal` leaves in the old one. Containers above 64 leaves are not
+announced. Fired per written key from the write channel's notify. The
+engine decides whether the replacement was a spread-copy worth a
+diagnostic.
+
+#### `listChurn`
+
+- **Type:** `void`
+
+A `mapArray` update both disposed and created rows: `removed` are the
+items whose rows were disposed, `created` the items that got new rows,
+`newLen` the list's new length, `keyed` whether a key function is in use
+(false = identity or by-index). Fired after commit. The engine judges
+whether the churn replaced equivalent records (unstable identity).
+
+#### `boundaryFallback`
+
+- **Type:** `void`
+
+A loading boundary started (`shown` true) or stopped showing its
+fallback. `boundary` is the boundary's queue (stable identity); `tree`
+its bound subtree computed when already constructed — the first show can
+fire while the subtree is still being built — whose owner chain names
+the boundary. Fired at the source-set transitions (first pending source
+registers / last one clears), not per flush.
+
+### `AttributionSlot`
+
+The core's side of attribution: the hook slot an engine installs into, and
+the interaction frame the rendering runtime opens around event dispatch.
+The engine itself — "why did this run", costs, holds, feedback — is
+`@solidjs/signals/attribution`, a separate entry so an observe build pays
+for it only when something imports it.
+
+```ts
+interface AttributionSlot {
+	install(hooks: AttributionHooks | null): void;
+	readonly installed: AttributionHooks | null;
+	withInteraction<T>(ref: InteractionRef, fn: () => T): T;
+}
+```
+
+#### `install`
+
+- **Type:** `void`
+
+Installs `hooks` as the engine the core reports facts to (`null`
+uninstalls). One engine at a time; the built-in engine's `enable()` calls
+this, and an external consumer (devtools) may install its own instead.
+
+#### `installed`
+
+- **Type:** `AttributionHooks | null`
+
+The installed engine's hooks, or `null` when none is installed.
+
+#### `withInteraction`
+
+- **Type:** `T`
+
+Run `fn` as a user interaction's handler: root writes inside stamp it as
+their origin, and actions/effects/flights it causes carry it. The web
+runtime wraps every event dispatch in this; custom renderers and test
+harnesses call it themselves. `fn()` when no engine is installed.
+
 ### `Dev`
+
+The dev tier: devtools hooks, graph traversal, and the console face of the
+diagnostics channel. Present only in dev builds (`__DEV__`).
 
 ```ts
 interface Dev {
 	hooks: DevHooks;
-	diagnostics: Diagnostics;
-	attribution: Attribution;
 	getChildren: typeof getChildren;
 	getSignals: typeof getSignals;
 	getParent: typeof getParent;
 	getSources: typeof getSources;
 	getObservers: typeof getObservers;
+	report(entry: DiagnosticEvent): void;
+	setConsoleFooter(
+		footer: ((event: DiagnosticEvent) => string | undefined) | undefined
+	): void;
 }
 ```
 
 #### `hooks`
 
 - **Type:** `DevHooks`
-
-#### `diagnostics`
-
-- **Type:** `Diagnostics`
-
-#### `attribution`
-
-- **Type:** `Attribution`
-
-"Why did this run" re-run attribution — see attribution.ts.
 
 #### `getChildren`
 
@@ -83,6 +357,24 @@ interface Dev {
 #### `getObservers`
 
 - **Type:** `typeof getObservers`
+
+#### `report`
+
+- **Type:** `void`
+
+Console face of an emitted event — see `reportDiagnostic`.
+
+#### `setConsoleFooter`
+
+- **Type:** `void`
+
+Registers a console footer appended to the first console report of
+each diagnostic code — a discovery pointer to deeper guidance (e.g.
+solid-js registers its shipped repair skill). Reported events carry
+it as trailing lines of the same console entry; events that surface as
+a thrown error instead get it as a follow-up line. Returning undefined
+for an event suppresses the footer. Passing undefined unregisters and
+resets the once-per-code memory.
 
 ### `DevHooks`
 
@@ -151,6 +443,7 @@ type DiagnosticCode =
 	| "NO_OWNER_CLEANUP"
 	| "CLEANUP_IN_FORBIDDEN_SCOPE"
 	| "SETTLED_CLEANUP_UNOWNED"
+	| "SETTLE_WALK_UNINITIALIZED_SOURCE"
 	| "FLUSH_IN_EFFECT_CALLBACK"
 	| "PRIMITIVE_IN_FORBIDDEN_SCOPE"
 	| "NO_OWNER_EFFECT"
@@ -168,7 +461,15 @@ type DiagnosticCode =
 	| "HOT_SCOPE_TIME"
 	| "WIDE_SCOPE_DEPS"
 	| "UNSTABLE_MEMO_OUTPUT"
-	| "WIDE_WRITE";
+	| "WIDE_WRITE"
+	| "ASYNC_WATERFALL"
+	| "HOT_SCOPE_FANOUT"
+	| "SILENT_HOLD"
+	| "LONG_HOLD"
+	| "EFFECT_WRITES_OWN_SOURCE"
+	| "EFFECT_RELAY_TEAR"
+	| "IMMUTABLE_UPDATE_IN_STORE"
+	| "UNSTABLE_LIST_IDENTITY";
 ```
 
 ### `DiagnosticEvent`
@@ -183,6 +484,7 @@ interface DiagnosticEvent {
 	ownerId?: string;
 	ownerName?: string;
 	nodeName?: string;
+	ownerPath?: string[];
 	data?: Record<string, unknown>;
 }
 ```
@@ -219,6 +521,17 @@ interface DiagnosticEvent {
 
 - **Type:** `string`
 
+#### `ownerPath`
+
+- **Type:** `string[]`
+
+Root-first chain of named owners enclosing the subject of the event —
+component roots as `<Name>`, computations by their `name` option (or
+the `effect`/`computed` default) — e.g. `["<App>", "<TodoRow>", "effect"]`.
+Unnamed owners (plain roots) are skipped. Absent when the subject has no
+named owner at all (a top-level scope, or an unowned primitive — which
+is usually the finding itself).
+
 #### `data`
 
 - **Type:** `Record<string, unknown>`
@@ -234,7 +547,14 @@ type DiagnosticKind =
 	| "owner"
 	| "error"
 	| "perf"
-	| "graph";
+	| "graph"
+	| "responsiveness";
+```
+
+### `DiagnosticListener`
+
+```ts
+type DiagnosticListener = (event: DiagnosticEvent) => void;
 ```
 
 ### `Diagnostics`
@@ -243,9 +563,10 @@ type DiagnosticKind =
 interface Diagnostics {
 	subscribe(listener: DiagnosticListener): () => void;
 	capture(): DiagnosticCapture;
-	setConsoleFooter(
-		footer: ((event: DiagnosticEvent) => string | undefined) | undefined
-	): void;
+	emit(
+		event: Omit<DiagnosticEvent, "sequence">,
+		subject?: DiagnosticSubject | null
+	): DiagnosticEvent;
 }
 ```
 
@@ -257,18 +578,100 @@ interface Diagnostics {
 
 - **Type:** `DiagnosticCapture`
 
-#### `setConsoleFooter`
+#### `emit`
 
-- **Type:** `void`
+- **Type:** `DiagnosticEvent`
 
-Registers a console footer printed after the first console report of
-each diagnostic code — a discovery pointer to deeper guidance (e.g.
-solid-js registers its shipped repair skill). Returning undefined for
-an event suppresses the footer. Passing undefined unregisters and
-resets the once-per-code memory.
+Records an event on the channel from outside the reactive core — a host
+runtime reporting its own findings (hydration mismatches, server render
+faults) so consumers see one stream. `subject` locates it like the
+internal sites do; a host whose owners are not signals' owners passes
+`ownerPath` on the event instead and it is used as-is.
 
 ### `DiagnosticSeverity`
 
+`info` is the advisory tier: a structural fact worth surfacing that is not
+presumptively a bug (e.g. a 2-deep sequential fetch chain, which may be an
+intrinsic data dependency). Budget/assertion consumers should treat only
+`warn`/`error` as failures unless they opt in to `info`.
+
 ```ts
-type DiagnosticSeverity = "warn" | "error";
+type DiagnosticSeverity = "info" | "warn" | "error";
+```
+
+### `DiagnosticSubject`
+
+Anything a diagnostic can be about: an owner (root, computed, effect) or a signal.
+
+```ts
+type DiagnosticSubject = Owner | Signal<any> | Computed<any>;
+```
+
+### `InteractionRef`
+
+A user interaction, as a rendering runtime describes it to `withInteraction`.
+
+```ts
+interface InteractionRef {
+	type: string;
+	target?: string;
+	at?: number;
+}
+```
+
+#### `type`
+
+- **Type:** `string`
+
+Event type — `click`, `keydown`, `input`…
+
+#### `target`
+
+- **Type:** `string`
+
+The element hit, e.g. `button#next "Next →"`.
+
+#### `at`
+
+- **Type:** `number`
+
+Dispatch time on the `performance.now()` clock; defaults to now.
+
+### `Observe`
+
+The observe tier: the structured channel and the attribution wiring —
+everything a production observability consumer needs, and nothing that
+assumes a developer at a console. Present in dev and observe builds
+(`__OBSERVE__`); `undefined` in prod.
+
+```ts
+interface Observe {
+	diagnostics: Diagnostics;
+	attribution: AttributionSlot;
+	subjectOf(event: DiagnosticEvent): DiagnosticSubject | undefined;
+}
+```
+
+#### `diagnostics`
+
+- **Type:** `Diagnostics`
+
+#### `attribution`
+
+- **Type:** `AttributionSlot`
+
+The attribution hook slot and interaction frame — see `AttributionSlot`.
+
+#### `subjectOf`
+
+- **Type:** `DiagnosticSubject | undefined`
+
+The live node an emitted event was about, when the emitter knew it.
+Events are serializable records and never carry the node; consumers that
+run in-process (devtools, the console reporter) look it up here.
+
+### `OBSERVE`
+
+```ts
+const OBSERVE: Observe | undefined;
 ```

@@ -109,6 +109,7 @@ const CANONICAL_ROUTES = {
 	affects: ["lifecycle-actions/affects.mdx", "Lifecycle & Actions"],
 	onSettled: ["lifecycle-actions/on-settled.mdx", "Lifecycle & Actions"],
 	refresh: ["lifecycle-actions/refresh.mdx", "Lifecycle & Actions"],
+	until: ["lifecycle-actions/until.mdx", "Lifecycle & Actions"],
 
 	children: ["components-context/children.mdx", "Components & Context"],
 	createContext: [
@@ -315,6 +316,10 @@ const ADVANCED_ROUTES = {
 		"server-functions/single-flight.mdx",
 		"Server functions / Integration",
 	],
+	registerFlightDataSource: [
+		"server-functions/single-flight.mdx",
+		"Server functions / Integration",
+	],
 	decodeResponse: [
 		"server-functions/single-flight.mdx",
 		"Server functions / Integration",
@@ -368,9 +373,21 @@ const FOLD_INTO = {
 	DiagnosticCode: "DEV",
 	DiagnosticEvent: "DEV",
 	DiagnosticKind: "DEV",
+	DiagnosticListener: "DEV",
+	DiagnosticSubject: "DEV",
 	Diagnostics: "DEV",
 	DiagnosticSeverity: "DEV",
+	AttributionHooks: "DEV",
+	AttributionSlot: "DEV",
+	InteractionRef: "DEV",
+	Observe: "DEV",
+	OBSERVE: "DEV",
 	DynamicProps: "Dynamic",
+	DynamicOptions: "dynamic",
+	Truthy: "until",
+	UntilOptions: "until",
+	TimeoutError: "until",
+	PreloadLink: "renderToStream",
 	EffectBundle: "createEffect",
 	EffectFunction: "createEffect",
 	EffectOptions: "createEffect",
@@ -417,6 +434,7 @@ const FOLD_INTO = {
 	ServerFunction: "withMeta",
 	ServerFunctionMetadata: "withMeta",
 	LiveSource: "live",
+	LiveServerFunction: "live",
 	LiveSourceStatus: "live",
 	InvokeOptions: "invoke",
 	ServerFunctionInvoker: "invoke",
@@ -550,7 +568,17 @@ const HIDDEN_EXPORTS = new Set([
 	"GENERIC_SERVER_ERROR_MESSAGE",
 	"HREF",
 	"INSTANCE_HEADER",
+	"NULL_BODY_STATUSES",
+	"REDIRECT_HEADER",
+	"RESPONSE_HEADER_VALUE_LIMIT",
 	"REVALIDATE_HEADER",
+	"UNKNOWN_HEADER",
+	"decodeRedirectHeaderValue",
+	"getFlightDataSourceIds",
+	// Store-target introspection consumed by the DOM list driver.
+	"storeHasFamily",
+	"storeHasOptimisticFamily",
+	"storeIsShallow",
 	"RequestContext",
 	"SAFE_ERROR",
 	"SERVER_FUNCTION_INVOKE",
@@ -626,6 +654,8 @@ const ENTRY_CALLOUTS = {
 };
 
 const ENTRY_SUMMARY_OVERRIDES = {
+	until:
+		"Awaits a reactive predicate and resolves the first time it becomes truthy, with the narrowed value. A falsy result or a pending async read means not yet, so the subscription stays live and re-evaluates as sources change. A thrown error, a rejected async source, a timeout, or an abort rejects the promise.",
 	affects:
 		"Marks a reactive source or store location as pending while work that will change it is in flight. Marked values remain readable, and derived readers report the pending state until the surrounding action or update settles.",
 	clientOnly:
@@ -923,6 +953,22 @@ const REFERENCE_FIXUPS = [
 		"createSignal<T>(fn, options?:",
 	],
 	[/the payload just has to be/g, "the payload must be"],
+	[/reads the AUTHORITATIVE view/g, "reads the authoritative view"],
+	[/target's NEXT QUIESCENT\s+STATE/g, "target's next settled state"],
+	[/transaction is STAGED;/g, "transaction is staged;"],
+	[/IMPORTANT for implementers/g, "Important for implementers"],
+	[/Fired BEFORE\b/g, "Fired before"],
+	[/against the DOCUMENT\s+URL/g, "against the document URL"],
+	[/it is ENTRY-ONLY:/g, "it is entry-only:"],
+	[/from READING the response/g, "from reading the response"],
+	[/to EXECUTE from any origin/g, "to execute from any origin"],
+	[/The DEPLOYMENT SECRET:/g, "The deployment secret:"],
+	[/the UNBOUND function base/g, "the unbound function base"],
+	[
+		/the optimistic store IS the live-fed store/g,
+		"the optimistic store is the live-fed store",
+	],
+	[/This is\s+load-bearing, not a loophole: truth/g, "This is required: truth"],
 	[/optimistic local edit/g, "temporary local edit"],
 	[/\(a "transition"\)/g, ""],
 	[

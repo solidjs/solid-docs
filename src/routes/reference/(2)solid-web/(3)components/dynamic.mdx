@@ -31,7 +31,8 @@ import { dynamic } from "@solidjs/web";
 
 ```ts
 function dynamic<T extends ValidComponent>(
-	source: () => T | Promise<T> | null | undefined | false
+	source: () => T | Promise<T> | null | undefined | false,
+	_options?: DynamicOptions
 ): Component<ComponentProps<T>>;
 ```
 
@@ -42,3 +43,22 @@ const CurrentPage = dynamic(() => pages[route()]);
 
 return <CurrentPage />;
 ```
+
+## Related types
+
+### `DynamicOptions`
+
+```ts
+interface DynamicOptions {
+	deferStream?: boolean;
+}
+```
+
+#### `deferStream`
+
+- **Type:** `boolean`
+
+SSR only: hold the document's first flush until the source settles, so
+the resolved component renders into the shell instead of streaming in
+behind its boundary's fallback. Same meaning as `createMemo`'s
+`deferStream`. Ignored on the client.

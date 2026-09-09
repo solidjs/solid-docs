@@ -41,7 +41,7 @@ function createNoJSHandler(
 	request: Request,
 	args: unknown[],
 	thrown?: boolean
-) => Response;
+) => Promise<Response>;
 ```
 
 ## Related types
@@ -59,6 +59,7 @@ interface FlashSubmission {
 	url: string;
 	result?: any;
 	error?: any;
+	truncated?: boolean;
 }
 ```
 
@@ -72,7 +73,13 @@ The arguments the call was made with (files are dropped).
 
 - **Type:** `string`
 
-The call's url: pathname + search of the server function request.
+The call's url: the unbound function base — the server function
+request's pathname (`<endpoint>/<id>`), without the `?args=` query a
+`.with()`-bound form's action carries (or any other query decoration).
+Matches what the scripted road records as a submission's url, so
+integrations can match flash and scripted submissions with the same
+`s.url === fn.base` test; bound arguments arrive in `input` instead,
+prepended exactly like a scripted call's.
 
 #### `result`
 
@@ -85,6 +92,17 @@ The returned value, when the call returned.
 - **Type:** `any`
 
 The thrown value, when the call threw.
+
+#### `truncated`
+
+- **Type:** `boolean`
+
+Set when the outcome was too large for the cookie's 4 KB ceiling and
+was degraded to fit (#3137): the input echo is dropped, and `result` /
+`error` may carry a bounded prefix — or the bare outcome flag `true` —
+rather than the full value. The submission still says what happened
+and where; integrations should render it as "succeeded (result too
+large to display)" rather than replaying the value.
 
 ### `NoJSHandlerOptions`
 

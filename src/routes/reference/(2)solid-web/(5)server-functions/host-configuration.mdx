@@ -57,6 +57,18 @@ function handleServerFunctionRequest(
 ): Promise<Response>;
 ```
 
+## Examples
+
+```ts
+import { handleServerFunctionRequest } from "@solidjs/web/server-functions";
+import "virtual:solid-server-function-manifest";
+
+// in the server's request handling:
+if (url.pathname.startsWith("/_server")) {
+	return handleServerFunctionRequest(request);
+}
+```
+
 ## Related types
 
 ### `HandleServerFunctionOptions`
@@ -100,6 +112,8 @@ interface HandleServerFunctionOptions {
 	): Response | Promise<Response>;
 	csrf?: boolean | ServerFunctionCSRFOptions;
 	codec?: JSONCodecOptions;
+	bodySizeLimit?: number;
+	maxArguments?: number;
 }
 ```
 
@@ -110,6 +124,15 @@ interface HandleServerFunctionOptions {
 Builds the request event a call runs under (default: bare
 `{ request, locals: {} }`). Integrations supply their richer event
 (cookies, response helpers, platform handles).
+
+`request` is a standards-shaped `Request` — url, method, headers,
+signal, readable body — and nothing more. Enforcing `bodySizeLimit`
+puts the runtime between the host's stream and the decoder, so the
+object handed here may be one the runtime rebuilt; host-specific
+fields on the inbound object (`request.cf`, srvx's `runtime`, `ip`,
+`waitUntil`) are not carried. The host has its own request in closure
+when it calls the handler: read platform handles there and put them on
+the event (`locals`) rather than through `request`.
 
 #### `provideEvent`
 
@@ -124,8 +147,13 @@ contract as the `provideEvent` config option.
 
 Overrides the configured per-invocation wrap for this handler — same
 contract as the `wrapInvocation` config option (see
-`WrapInvocationHook`), except it only applies to HTTP dispatch (a
-per-request option can't see direct SSR calls).
+`WrapInvocationHook`), except it is entry-only: it wraps exactly the
+invocation the request addressed. Nested direct server-function calls
+made by the dispatched body are not re-wrapped by it — they consult
+only the configured hook, which is ambient and wraps every direct call
+(a per-request option can't see direct SSR calls). Policy that must
+cover every hop belongs on `configureServerFunctionsServer`'s
+`wrapInvocation`, not here.
 
 #### `transformResult`
 
@@ -186,6 +214,20 @@ when another trusted layer protects the endpoint.
 
 Overrides the configured codec options for this handler.
 
+#### `bodySizeLimit`
+
+- **Type:** `number`
+
+Overrides the configured argument payload bound for this handler (see
+`ServerFunctionsServerConfig.bodySizeLimit`).
+
+#### `maxArguments`
+
+- **Type:** `number`
+
+Overrides the configured argument count bound for this handler (see
+`ServerFunctionsServerConfig.maxArguments`).
+
 ### `ServerFunctionCSRFOptions`
 
 Same-origin validation options for server function requests.
@@ -194,6 +236,7 @@ Same-origin validation options for server function requests.
 interface ServerFunctionCSRFOptions {
 	origin?: ServerFunctionOriginMatcher;
 	allowRequestsWithoutOriginCheck?: boolean;
+	protectDeclaredReads?: boolean;
 }
 ```
 
@@ -210,6 +253,19 @@ A function can validate origins dynamically for multi-tenant hosts.
 
 Allows requests without `Sec-Fetch-Site`, `Origin`, or `Referer`.
 Cross-origin metadata is still rejected.
+
+#### `protectDeclaredReads`
+
+- **Type:** `boolean`
+
+Applies the origin gate to GET-declared reads as well. By default the
+gate is skipped for declared reads: same-origin policy already keeps a
+cross-site caller from reading the response, and the gate's `Vary`
+fragments (or, on CDNs that ignore Vary, poisons) the shared-cache
+entries the `GET` helper exists to enable (#3071). The premise that
+skip rests on is `GET()`'s safety contract — declared reads are safe
+to execute from any origin (#3114). A deployment that does not rely
+on shared caches can enable this to gate its reads too.
 
 ### `ServerFunctionEvent`
 
@@ -282,6 +338,9 @@ interface ServerFunctionsServerConfig {
 	endpoint?: string;
 	csrf?: boolean | ServerFunctionCSRFOptions;
 	codec?: JSONCodecOptions;
+	bodySizeLimit?: number;
+	maxArguments?: number;
+	secret?: string;
 }
 ```
 
@@ -309,10 +368,13 @@ option overrides it for HTTP dispatch.
 
 - **Type:** `CollectFlightDataHook`
 
-The single-flight hook: produces the data payload folded into
+The unnamed single-flight hook: produces the data payload folded into
 responses of calls that opted in (see `CollectFlightDataHook`).
 Registered once by the integration that owns data production (a
-router); per-handler `collectFlightData` options override it.
+router); per-handler `collectFlightData` options override it. Other
+integrations contribute additively through
+`registerFlightDataSource(id, hook)` instead of competing for this
+slot.
 
 #### `transformResult`
 
@@ -346,12 +408,12 @@ calls during document SSR — e.g. frames' `frameTransformDirectResult`.
 #### `handleNoJS`
 
 - **Type:** `| ((
-    result: unknown,
-    request: Request,
-    args: unknown[],
-    thrown?: boolean
-  ) => Response | Promise<Response>)
-| null`
+      result: unknown,
+      request: Request,
+      args: unknown[],
+      thrown?: boolean
+    ) => Response | Promise<Response>)
+  | null`
 
 Server-wide response builder for calls made without the client runtime
 (see `handleNoJS` in `HandleServerFunctionRequestOptions`); a
@@ -365,10 +427,11 @@ the plain serialized response.
 
 - **Type:** `string`
 
-Endpoint the HTTP handler is mounted on, used for the `url` of SSR'd
-references (e.g. form actions) — must match the client configuration.
-Prefix it when the app serves from a base path (e.g.
-`` `${BASE_URL}_server` ``).
+Mount path the HTTP handler answers on. Must match the client
+configuration — the id travels as the segment after it, a request whose
+path does not start with it is not a call, and SSR'd reference `url`s
+(e.g. form actions) derive from it. Prefix it when the app serves from
+a base path (e.g. `` `${BASE_URL}_server` ``).
 
 #### `csrf`
 
@@ -384,7 +447,50 @@ endpoint.
 
 Codec options (extra plugins etc.) for decoding arguments and encoding
 results — must match the client's. Stored in the shared layer, so
-`decodeResponse` sees them too.
+`decodeResponse` sees them too. When `serializeErrorStacks` is omitted,
+the server-function boundary defaults it from this module's compiled
+development variant.
+
+#### `bodySizeLimit`
+
+- **Type:** `number`
+
+Upper bound, in bytes, on a call's argument payload — the POST body,
+or the `?args=` query encoding. The payload is buffered and decoded
+before dispatch, so its cost is paid before application code can
+decline it; the bound is enforced up front and a request over it is
+refused with `413` before any decoding (#3115). Raise it for functions
+that accept large uploads, or set `Infinity` to remove the bound.
+
+#### `maxArguments`
+
+- **Type:** `number`
+
+Upper bound on the number of arguments a call may carry. The decoded
+argument array is spread into the function call, so an unbounded list
+forces a range error out of any function regardless of what it does;
+past the bound the request is refused with `400` (#3115).
+
+#### `secret`
+
+- **Type:** `string`
+
+The deployment secret: one value per deployment, from which any feature
+that needs a key derives its own (domain-separated, so per-purpose keys
+share no material). Today one feature does — the no-JS flash cookie
+(#3239): the flash carries the submitted form input — whatever the user
+typed — so its payload is always AES-GCM encrypted; it never rides the
+wire or rests in the cookie jar as plaintext. Every instance that can
+serve the render after a form post must share the secret (behind a load
+balancer, a per-instance secret would silently lose outcomes), so there
+is no generated fallback here: when this is not set, the secret falls
+back to the one the Solid bundler plugin injects into the server build
+(a fresh value per build), and with neither present the outcome is
+simply not flashed — the form post still redirects cleanly, and dev
+builds warn once. Any non-empty string works; rotating it (or
+redeploying with the plugin's value) invalidates in-flight flashes,
+which are 60-second one-shot cookies — the next render reads "no
+flash".
 
 ### `WrapInvocationHook`
 

@@ -46,18 +46,7 @@ function parseCookieHeader(
 
 ---
 
-Serializes a cookie to a `Set-Cookie` header value. The name and value
-are `encodeURIComponent`-encoded (the parser decodes symmetrically);
-`path` defaults to `/` — the only defaulted attribute — and every other
-attribute is emitted exactly when the caller asked for it: `domain`,
-`maxAge` (seconds, truncated to an integer), `expires` (a `Date`),
-`httpOnly`, `secure`, `sameSite` (`"lax" | "strict" | "none"`, any
-case).
-
-The write half of the platform gap — the blessed response-cookie write
-is `event.response.headers.append("set-cookie", serializeCookie(name,
-value, options))`, which every head materialization path carries to the
-wire entry-by-entry.
+serializeCookie API reference.
 
 ## Import
 
@@ -88,6 +77,7 @@ interface CookieOptions {
 	httpOnly?: boolean;
 	secure?: boolean;
 	sameSite?: "lax" | "strict" | "none" | "Lax" | "Strict" | "None";
+	partitioned?: boolean;
 }
 ```
 
@@ -132,3 +122,11 @@ Emit the `Secure` attribute.
 - **Type:** `"lax" | "strict" | "none" | "Lax" | "Strict" | "None"`
 
 Cookie `SameSite` attribute, any case.
+
+#### `partitioned`
+
+- **Type:** `boolean`
+
+Emit the `Partitioned` attribute (CHIPS): a third-party cookie keyed to
+the top-level site it was set under — the only third-party cookie that
+keeps working as browsers finish removing the rest. Requires `secure`.

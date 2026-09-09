@@ -31,7 +31,7 @@ import { createProjection } from "solid-js";
 ```ts
 const createProjection: <T extends object = {}>(
 	fn: (draft: T) => void | T | Promise<void | T> | AsyncIterable<void | T>,
-	initialValue: Partial<T> | Store<NoFn<T>>,
+	seed: Partial<T> | Store<NoFn<T>>,
 	options?: HydrationProjectionOptions
 ) => Refreshable<Store<T>>;
 ```
@@ -40,12 +40,13 @@ const createProjection: <T extends object = {}>(
 
 ### `ProjectionOptions`
 
-Options for derived/projected stores created with `createStore(fn)`, `createProjection`, or `createOptimisticStore(fn)`.
+Options for derived/projected stores created with
+`createStore(fn, seed, options?)`, `createProjection(fn, seed, options?)`,
+or `createOptimisticStore(fn, seed, options?)`.
 
 ```ts
 interface ProjectionOptions extends StoreOptions {
 	key?: string | ((item: NonNullable<any>) => any) | null;
-	shallow?: boolean;
 	seedLoadingValue?: boolean;
 }
 ```
@@ -55,12 +56,6 @@ interface ProjectionOptions extends StoreOptions {
 - **Type:** `string | ((item: NonNullable<any>) => any) | null`
 
 Key property name or function for reconciliation identity; `null` merges positionally
-
-#### `shallow`
-
-- **Type:** `boolean`
-
-Single-layer store: root keys reactive, values raw records replaced by reference
 
 #### `seedLoadingValue`
 

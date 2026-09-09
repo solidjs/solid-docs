@@ -163,6 +163,22 @@ Check the box and "Write docs" appears above it; the row for "Review examples" i
 
 See the [`createProjection` reference](/reference/solid-js/stores/create-projection) for mutation and return forms.
 
+### Fetch in memos, shape in stores
+
+A projection function may return a promise, so `createStore(async () => api.rows(period()), [])` fetches and reconciles in one step.
+That collapsed form is right when nothing needs to sit between the request and the store.
+
+When something does, keep the two jobs apart: the memo owns the request, the store owns the shape.
+
+```tsx
+const rows = createMemo(() => api.rows(period()));
+const [table] = createStore(() => rows(), [] as Row[]);
+```
+
+`rows` is where you attach request-level concerns: [`isPending(rows)`](/reference/solid-js/reactivity/is-pending) for the refetch indicator, [`refresh(rows)`](/reference/solid-js/lifecycle-actions/refresh) to re-ask, a second consumer that reads the same response.
+`table` is where per-row tracking and reconciliation happen; when a new response lands, `rows` changes once and the store diffs it once.
+The line between them is the visible marker of where a request-level policy lives, and it is the shape the rest of the docs use when a fetch and a store appear together.
+
 ## Optimistic stores
 
 `createOptimisticStore` has the same nested draft update model with a tentative overlay.

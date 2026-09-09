@@ -1,13 +1,15 @@
 ---
-title: "decodeResponse / subscribeFlightData"
+title: "decodeResponse / registerFlightDataSource / subscribeFlightData"
 category: "Server functions / Integration"
 use_cases: "server functions integration api, decoderesponse usage"
 tags:
   - "decode"
   - "response"
-  - "subscribe"
+  - "register"
   - "flight"
   - "data"
+  - "source"
+  - "subscribe"
   - "server"
   - "functions"
   - "integration"
@@ -42,6 +44,27 @@ function decodeResponse<T = unknown>(
 
 ---
 
+Registers a named single-flight data source (the server half of
+`subscribeFlightData(source, consumer)`); returns an unregister
+function.
+
+## Import
+
+```ts
+import { registerFlightDataSource } from "@solidjs/web/server-functions";
+```
+
+## Type signature
+
+```ts
+function registerFlightDataSource(
+	source: string,
+	hook: CollectFlightDataHook
+): () => void;
+```
+
+---
+
 Registers the integration that receives data folded into a mutation response.
 
 ## Import
@@ -54,6 +77,10 @@ import { subscribeFlightData } from "@solidjs/web/server-functions";
 
 ```ts
 function subscribeFlightData<D = unknown>(
+	consumer: FlightDataConsumer<D>
+): () => void;
+function subscribeFlightData<D = unknown>(
+	source: string,
 	consumer: FlightDataConsumer<D>
 ): () => void;
 ```
@@ -104,9 +131,10 @@ type FlightDataConsumer<D = unknown> = (
 ### `FlightDataContext`
 
 Envelope context delivered alongside single-flight data: the transport
-response, whose headers carry the integration metadata (`Location` for
-redirect-with-data, `X-Revalidate` keys) and status. The body is already
-consumed — read `data` and `value` from the delivery, not from here.
+response, whose headers carry the integration metadata (the redirect
+carrier for redirect-with-data, `X-Revalidate` keys) and status. The
+body is already consumed — read `data` and `value` from the delivery,
+not from here.
 
 ```ts
 interface FlightDataContext {
@@ -214,7 +242,9 @@ integration-produced `data` payload, folded into one round trip by the
 HTTP handler. Integrations decoding passthrough responses themselves (no
 registered consumer) see this shape from `decodeResponse`. The top level
 is reserved for the protocol — integration payload lives entirely under
-`data`, which can be any codec-serializable value.
+`data`, the envelope keyed by source id (the unnamed registration's
+slice rides under the reserved id "true"); each slice can be any
+codec-serializable value.
 
 ```ts
 interface SingleFlightPayload<T = unknown, D = unknown> {
@@ -233,4 +263,4 @@ The server function's return (or thrown) value.
 
 - **Type:** `D`
 
-The integration-produced data payload.
+The integration-produced data payload, keyed by source id.

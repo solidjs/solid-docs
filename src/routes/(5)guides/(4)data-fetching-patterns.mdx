@@ -1,0 +1,302 @@
+---
+title: "Data fetching patterns"
+titleTemplate: ":title"
+mainNavExclude: true
+version: "2.0"
+description: "Worked patterns for loading data in Solid: search as you type, several requests on one page, dependent requests, pagination, sharing a request, keeping data fresh, and handling failures."
+---
+
+The [Async reactivity](/concepts/async-reactivity) page explains the model: a computation that returns a promise is a value, first loads reach a `Loading` boundary, and later updates are held until the new answer is ready.
+This guide is the other half.
+It takes the requests a real application makes and shows the Solid shape for each one, including the choices that are yours to make.
+
+The examples use a small storefront: products you can search, a product page with reviews, an order history, and a dashboard.
+Each `api.*` call is a function that returns a promise; a `"use server"` function, a `fetch` wrapper, or a client SDK all work the same way.
+
+## Load one thing
+
+The baseline everything else builds on:
+
+```tsx
+import { Loading, createMemo } from "solid-js";
+
+function ProductPage(props: { id: string }) {
+	const product = createMemo(() => api.product(props.id));
+
+	return (
+		<Loading fallback={<ProductSkeleton />}>
+			<h1>{product().name}</h1>
+			<p>{product().description}</p>
+		</Loading>
+	);
+}
+```
+
+`product()` is a `Product`.
+When `props.id` changes, the request starts again, the current product stays on screen, and the new one replaces it when it arrives.
+If the page should show the skeleton again for a different product, add `on={props.id}` to the boundary.
+
+When the data is a list or a tree whose items need identity across updates, load it into a store instead:
+
+```tsx
+const [orders] = createStore(
+	async () => api.orders(customerId()),
+	[] as Order[]
+);
+```
+
+The response reconciles into the same proxy by `id`, so a row that did not change keeps its DOM.
+[Stores](/concepts/stores#fetch-into-a-store) covers when that matters.
+
+## Search as you type
+
+An input writes a signal, and a memo turns the signal into results:
+
+```tsx
+import { For, createMemo, createSignal, isPending, latest } from "solid-js";
+
+function ProductSearch() {
+	const [query, setQuery] = createSignal("");
+	const results = createMemo(() => {
+		const text = query().trim();
+		if (!text) return [];
+		return api.search(text);
+	});
+
+	return (
+		<>
+			<input
+				type="search"
+				value={latest(query)}
+				onInput={(event) => setQuery(event.currentTarget.value)}
+			/>
+			<ul class={{ stale: isPending(results) }}>
+				<For each={results()}>{(product) => <li>{product.name}</li>}</For>
+			</ul>
+		</>
+	);
+}
+```
+
+Three things this code does not do, because Solid does them:
+
+- **Discard stale responses.** Typing `sh`, then `sho`, then `shoe` starts three requests.
+  Only the answer to the current question is used; if `sho` arrives after `shoe`, it is dropped.
+  There is no request counter and no `AbortController`.
+- **Blank the list between keystrokes.** The previous results stay visible with the `stale` class until the new ones land.
+- **Show a spinner for an empty query.** Returning `[]` synchronously is a settled answer, so the memo never becomes pending for it.
+
+The input binds `value={latest(query)}` rather than `value={query()}`.
+The write to `query` is held while results load, and `latest` reads the value the update is moving toward, so a controlled input reflects what the user typed.
+An uncontrolled input, with no `value` binding, needs nothing.
+
+Debounce at the event, not in the graph:
+
+```tsx
+onInput={debounce((event) => setQuery(event.currentTarget.value), 150)}
+```
+
+A debounce that lives in an effect copying one signal into another is the pattern the [effects guide](/guides/avoid-unnecessary-effects) warns about.
+At the event handler it is one line and the graph stays simple.
+
+## Load several things for one page
+
+A product page needs the product, its reviews, and related items.
+Create all three where the page is created, and they start together:
+
+```tsx
+function ProductPage(props: { id: string }) {
+	const product = createMemo(() => api.product(props.id));
+	const reviews = createMemo(() => api.reviews(props.id));
+	const related = createMemo(() => api.related(props.id));
+
+	return (
+		<article>
+			<Loading fallback={<ProductSkeleton />}>
+				<ProductHeader product={product()} />
+			</Loading>
+			<Loading fallback={<ReviewsSkeleton />}>
+				<ReviewList reviews={reviews()} />
+			</Loading>
+			<Loading fallback={<RelatedSkeleton />}>
+				<RelatedGrid products={related()} />
+			</Loading>
+		</article>
+	);
+}
+```
+
+Each boundary reveals when its own data is ready, so the header can appear before the reviews.
+If the page should not reveal out of order, wrap the boundaries in [`Reveal`](/reference/solid-js/components-jsx/reveal): `order="sequential"` shows them top to bottom, `order="together"` waits for all three.
+
+When `props.id` changes, all three requests start again and the update is held until all three have answered; the page then swaps as one.
+That is usually what you want for a detail page, where the header and the reviews must describe the same product.
+If a slow section should not delay the others on a subject change, give it `on={props.id}` and it will show its skeleton instead of holding the rest.
+
+## Dependent requests
+
+A request that needs a value from another response has to wait for it:
+
+```tsx
+const product = createMemo(() => api.product(props.id));
+const brand = createMemo(() => api.brand(product().brandId));
+```
+
+`brand` reads `product().brandId`, so it cannot start until `product` resolves.
+The dependency is visible in the code, and that is the right shape when the data is sequential.
+
+When it is not, remove the dependency rather than working around it.
+Two common fixes:
+
+- **Pass the input you already have.** If the route knows `brandId`, read it from `props` and both requests start together.
+- **Join on the server.** One server function that returns the product with its brand replaces two round trips with one.
+
+Development builds report long chains as `ASYNC_WATERFALL` when attribution is enabled; [Debugging reactivity](/guides/debugging-reactivity) shows the report.
+
+## Paginate
+
+A page number is an input like any other:
+
+```tsx
+function OrderHistory() {
+	const [page, setPage] = createSignal(1);
+	const [orders] = createStore(
+		async () => api.orders({ page: page() }),
+		[] as Order[]
+	);
+
+	return (
+		<Loading fallback={<TableSkeleton />}>
+			<table class={{ stale: isPending(() => orders.length) }}>
+				<For each={orders}>{(order) => <OrderRow order={order} />}</For>
+			</table>
+			<Pager page={latest(page)} onChange={setPage} />
+		</Loading>
+	);
+}
+```
+
+Clicking to page 2 keeps page 1 visible and dimmed until page 2 arrives, and the pager shows page 2 as selected at once because it reads `latest(page)`.
+Rows that appear on both pages keep their DOM.
+
+If the table should show a skeleton for each new page instead, move the choice to the boundary: `<Loading on={page()} fallback={<TableSkeleton />}>`.
+
+### Infinite scroll
+
+Accumulate pages with the memo's previous value:
+
+```tsx
+const [page, setPage] = createSignal(1);
+const orders = createMemo(async (previous: Order[] = []) => {
+	const next = await api.orders({ page: page() });
+	return [...previous, ...next];
+});
+```
+
+Each run receives the last committed list and returns the longer one.
+To reset the list when a filter changes, read the filter inside the memo and start over when it differs from the previous run's filter, or keep the accumulated list in a store keyed by filter.
+The simplest version is often a `Show` keyed on the filter around the whole list, so a filter change remounts it with `page` back at 1.
+
+## Share one request across components
+
+Two components that create the same memo make two requests.
+Create the request once and pass the value down, or make it available through context:
+
+```tsx
+function StorefrontLayout(props: ParentProps) {
+	const cart = createMemo(() => api.cart());
+	return <CartContext value={cart}>{props.children}</CartContext>;
+}
+
+function CartBadge() {
+	const cart = useContext(CartContext);
+	return <span>{cart().items.length}</span>;
+}
+```
+
+Passing an accessor through context keeps the read lazy: nothing waits on the cart until a component reads `cart()`, and only that component's boundary is involved.
+
+For requests shared across routes, or for deduplication and caching by argument, use [`query`](/routing/solid-router/data#cache-reads-with-query) from Solid Router.
+It returns the same in-flight promise to every caller with the same arguments and revalidates on navigation and after actions.
+
+## Keep data fresh
+
+A memo answers its question once and keeps the answer until an input changes.
+When the world changes without an input changing, ask again:
+
+```tsx
+import { onSettled, refresh } from "solid-js";
+
+const stats = createMemo(() => api.dashboardStats());
+
+onSettled(() => {
+	const interval = setInterval(() => refresh(stats), 30_000);
+	return () => clearInterval(interval);
+});
+```
+
+[`refresh(source)`](/reference/solid-js/lifecycle-actions/refresh) re-runs the computation with the same inputs and returns a promise for the settled result.
+A bare `refresh` is quiet: the current answer still fits the question, so `isPending` stays `false` and the new value replaces the old one without a pending phase.
+When the reload should be visible, declare it: call [`affects(stats)`](/reference/solid-js/lifecycle-actions/affects) inside an action before the `refresh`, and readers report pending until it lands.
+
+Polling is the fallback when the server cannot push.
+When it can, a [`live()` server function](/building-apps/server-functions/reads-and-live-data#declare-a-live-source) returns an async iterable that a memo consumes like any other async source, and each yielded value becomes the next answer.
+
+## Mutate, then refetch
+
+A write goes through an [`action`](/reference/solid-js/lifecycle-actions/action) so the request and the refetch belong to one update:
+
+```tsx
+const addReview = action(function* (productId: string, text: string) {
+	yield api.addReview(productId, text);
+	refresh(reviews);
+});
+```
+
+The reviews list does not flicker: the refetch runs inside the action, and the list updates once when the fresh data lands.
+To show the new review before the server confirms it, hold the list in a `createOptimisticStore` and write to it before the `yield`; [Async reactivity](/concepts/async-reactivity#mutations-from-a-client-only-list-to-a-server-backed-one) walks through that version.
+
+With Solid Router, `action` from `@solidjs/router` adds submissions and automatic revalidation of `query` reads; the [Forms guide](/guides/forms) uses it.
+
+## Handle failures
+
+A rejected promise travels through the graph like a value and stops at the nearest [`Errored`](/reference/solid-js/components-jsx/errored) boundary.
+Place boundaries where a failure should be contained:
+
+```tsx
+<article>
+	<Loading fallback={<ProductSkeleton />}>
+		<ProductHeader product={product()} />
+	</Loading>
+	<Errored
+		fallback={(error, reset) => <RetryPanel error={error()} onRetry={reset} />}
+	>
+		<Loading fallback={<ReviewsSkeleton />}>
+			<ReviewList reviews={reviews()} />
+		</Loading>
+	</Errored>
+</article>
+```
+
+A failed reviews request shows the retry panel and leaves the header alone.
+`reset` retries the sources the boundary collected, and a boundary also recovers on its own when an input changes or a `refresh` lands.
+
+Throw from the request when the response is not usable, rather than returning a `{ success: false }` object and checking it at every read.
+On the server, [`markSafeError`](/reference/solid-web/request-response/safe-errors) marks a message that is intended for the client; unmarked errors are replaced with a generic message in production.
+
+## Checklist
+
+- [ ] Each request is a memo or store created where the data is needed, or higher when it should start earlier.
+- [ ] Requests that do not depend on each other are created in the same scope so they run in parallel.
+- [ ] Each `Loading` boundary wraps the smallest region its fallback should replace; `on` is set where a changed subject should show the fallback again.
+- [ ] Controls whose writes feed a request read `latest` so they respond at once; `isPending` marks the content that is waiting.
+- [ ] No loading flags, request counters, or abort controllers remain for work Solid does.
+- [ ] Reloads use `refresh`, with `affects` when the reload should show as pending.
+- [ ] Failures throw and an `Errored` boundary covers each region that should fail on its own.
+
+## Next steps
+
+- [Async reactivity](/concepts/async-reactivity): the model these patterns rest on, including held updates and optimistic writes.
+- [Server functions](/building-apps/server-functions): `GET` reads, `live` sources, and what a `"use server"` function does on the wire.
+- [Data loading and mutations](/routing/solid-router/data): `query`, `preload`, and router actions.
+- [Data fetching from Solid 1](/migration/data-fetching-from-solid-1): the same patterns from the other direction, for code that already exists.

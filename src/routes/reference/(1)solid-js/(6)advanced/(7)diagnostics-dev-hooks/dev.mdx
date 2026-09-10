@@ -57,6 +57,9 @@ and call the hook after the catch.
 interface AttributionHooks {
 	interactionStart(ref: InteractionRef): void;
 	interactionEnd(): void;
+	originStart(ref: OriginRef): void;
+	originEnd(): void;
+	flushEnd(): void;
 	recomputeStart(el: Computed<any>, create: boolean): void;
 	recomputeEnd(
 		el: Computed<any>,
@@ -118,6 +121,30 @@ nest strictly (synchronous dispatch), so the engine keeps a stack.
 #### `interactionEnd`
 
 - **Type:** `void`
+
+#### `originStart`
+
+- **Type:** `void`
+
+`withOrigin` opened a declared-origin frame: root writes until the
+matching `originEnd` are the unit of work `ref` describes (a router's
+navigation). Nests inside an interaction frame — a link click that
+navigates — or stands alone (a redirect from an action, a programmatic
+`navigate()`). Frames nest strictly, so the engine keeps a stack.
+
+#### `originEnd`
+
+- **Type:** `void`
+
+#### `flushEnd`
+
+- **Type:** `void`
+
+A `flush()` drain finished: every batch it processed either committed
+(its effects have run) or was parked in a held update (`holdStart`
+fired for it). Fires once per drain, after the loop — not per batch, and
+not for a `flush()` call that found nothing to do. Gives the engine the
+"committed, screen updated" instant for writes no transition ever held.
 
 #### `recomputeStart`
 
@@ -288,6 +315,7 @@ interface AttributionSlot {
 	install(hooks: AttributionHooks | null): void;
 	readonly installed: AttributionHooks | null;
 	withInteraction<T>(ref: InteractionRef, fn: () => T): T;
+	withOrigin<T>(ref: OriginRef, fn: () => T): T;
 }
 ```
 
@@ -313,6 +341,17 @@ Run `fn` as a user interaction's handler: root writes inside stamp it as
 their origin, and actions/effects/flights it causes carry it. The web
 runtime wraps every event dispatch in this; custom renderers and test
 harnesses call it themselves. `fn()` when no engine is installed.
+
+#### `withOrigin`
+
+- **Type:** `T`
+
+Run `fn` as a declared unit of work — a router's navigation, described
+by the parametrized route it matched: root writes inside are attributed
+to it (under the enclosing interaction, if any), so the hold behind the
+route's data, the re-runs and the verdicts carry the route's name. Any
+router calls this around its location write; nothing else is
+router-specific. `fn()` when no engine is installed.
 
 ### `Dev`
 
@@ -637,6 +676,78 @@ The element hit, e.g. `button#next "Next →"`.
 
 Dispatch time on the `performance.now()` clock; defaults to now.
 
+### `NavigationRef`
+
+A navigation, as a router describes it to `withOrigin` around the location
+write it is about to perform. Match eagerly and describe before writing:
+the engine keys the work the write causes — the hold behind route data,
+the re-runs, the verdicts — to this record, and names it by the
+parametrized route so occurrences fold together.
+
+The engine keeps the object and reads `name`, `to` and `params` again when
+the navigation settles (and when a hold on it is judged), so a router whose
+match is not final at write time — a lazy route subtree that resolves inside
+the hold — may describe coarsely (`/admin/*`) and assign the exact pattern
+and params onto the same object once it knows them. `from` and `at` are
+read once, when the frame opens.
+
+```ts
+interface NavigationRef {
+	kind: "navigation";
+	name?: string;
+	to?: string;
+	from?: string;
+	params?: Readonly<Record<string, string>>;
+	at?: number;
+	redirect?: number;
+}
+```
+
+#### `kind`
+
+- **Type:** `"navigation"`
+
+#### `name`
+
+- **Type:** `string`
+
+The matched route pattern — `/users/:id`. The name every consumer groups by.
+
+#### `to`
+
+- **Type:** `string`
+
+Concrete destination path.
+
+#### `from`
+
+- **Type:** `string`
+
+Concrete path being left.
+
+#### `params`
+
+- **Type:** `Readonly<Record<string, string>>`
+
+Route params the pattern bound — `{ id: "42" }`.
+
+#### `at`
+
+- **Type:** `number`
+
+When the navigation was requested on the `performance.now()` clock; defaults to now.
+
+#### `redirect`
+
+- **Type:** `number`
+
+`>= 1`: this frame is the Nth redirect hop of the navigation still
+pending — a guard or loader sent it elsewhere before it landed — not a
+new navigation. The engine folds it onto that pending record: the record
+keeps the user's request time and interaction, its destination becomes
+this one, and the abandoned destination is kept in `redirects`. Without
+a pending navigation to fold onto it opens a navigation of its own.
+
 ### `Observe`
 
 The observe tier: the structured channel and the attribution wiring —
@@ -674,4 +785,15 @@ run in-process (devtools, the console reporter) look it up here.
 
 ```ts
 const OBSERVE: Observe | undefined;
+```
+
+### `OriginRef`
+
+What `withOrigin` accepts: a declared unit of work whose writes the engine
+should attribute as a whole. A discriminated union so kinds can be added
+(a form submission, a tab switch) without the seam changing shape; the
+engine knows `navigation` today.
+
+```ts
+type OriginRef = NavigationRef;
 ```

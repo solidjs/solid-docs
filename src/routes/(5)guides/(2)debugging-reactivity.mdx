@@ -33,7 +33,7 @@ The first time each code appears, Solid adds a footer pointing to the repair gui
 Codes fall into a few groups:
 
 - Reads in the wrong place: `STRICT_READ_UNTRACKED`, `PENDING_ASYNC_UNTRACKED_READ`.
-- Writes in the wrong place: `REACTIVE_WRITE_IN_OWNED_SCOPE`, `ACTION_CALLED_IN_OWNED_SCOPE`.
+- Writes in the wrong place: `REACTIVE_WRITE_IN_OWNED_SCOPE`, `ACTION_CALLED_IN_OWNED_SCOPE`, `FLUSH_IN_ACTION`, `SERVER_WRITE`.
 - Leaks: `NO_OWNER_EFFECT`, `NO_OWNER_BOUNDARY`, `NO_OWNER_CLEANUP`.
 - Async placement: `ASYNC_OUTSIDE_LOADING_BOUNDARY`.
 - Graph size, always on: `HUGE_FAN_OUT`, `HUGE_FAN_IN`.
@@ -245,6 +245,10 @@ A hold that was acknowledged but still ran long is not a diagnostic either; it s
 - `flights`: per async source, requests started, landed, and abandoned before landing; a high abandon count is the request-per-keystroke signature.
 - `fallbacks`: per `Loading` boundary, how often the fallback showed, for how long, and how many showings were under 150ms flashes.
 
+A router can name the holds its navigations cause by the route pattern that matched, `/users/:id` rather than `/users/42`, so occurrences fold together in these tables.
+It does so by wrapping its location write in `OBSERVE.attribution.withOrigin({ kind: "navigation", name, to, params }, write)`, which is router-agnostic; nothing else in attribution knows about routing.
+The [`DEV` reference](/reference/solid-js/advanced/diagnostics-dev-hooks/dev#navigationref) describes the `NavigationRef` fields, including how a router whose match is not final at write time fills them in later.
+
 ## The test sees the old DOM
 
 Solid applies writes in a batch after the current code finishes.
@@ -259,6 +263,35 @@ expect(button).toHaveTextContent("Clicks: 1");
 Import `flush` from `solid-js`.
 Application code does not normally call it; tests and imperative integrations do.
 The [Testing](/guides/testing) guide covers the rest of the test setup.
+
+One place `flush()` does not belong is inside an action body:
+
+```text
+[FLUSH_IN_ACTION] flush() inside an action body is not allowed. An action's writes are held in its
+transaction and commit when the action settles: flush() cannot reveal them, and draining here would
+detach the writes that follow from the transaction.
+```
+
+An action's writes are held until the action resolves, so a `flush()` in the middle has nothing to show and would split the writes after it from the transaction.
+Remove it and assert after the action's promise resolves.
+Development throws; production skips the drain and runs the callback, if any, inside the transaction.
+
+## A write on the server did nothing
+
+```text
+[SERVER_WRITE] Writing a signal on the server is deprecated and will become an error.
+Server render is pure: state changes flow from async sources (promises, async iterables), never setters.
+```
+
+A server render is one pass from inputs to HTML.
+A setter called during that pass lands as inert data and nothing re-renders, so the write is a sign the code expects a client-side update loop that does not exist on the server.
+The fix depends on what the write was for:
+
+- Bridging a subscription or a promise into a signal: make the source itself the value, `createSignal(() => source)` or `createStore(async () => ..., seed)`, so both server and client read it the same way.
+- Optimistic state: it only has meaning on the client, where it reverts when the async work settles.
+  Server output is settled state, so the write is a no-op there.
+
+The warning fires once per category, not on every write, so fixing the first occurrence may reveal the next.
 
 ## Every update stopped after an error
 

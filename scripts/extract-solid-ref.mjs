@@ -380,6 +380,8 @@ const FOLD_INTO = {
 	AttributionHooks: "DEV",
 	AttributionSlot: "DEV",
 	InteractionRef: "DEV",
+	NavigationRef: "DEV",
+	OriginRef: "DEV",
 	Observe: "DEV",
 	OBSERVE: "DEV",
 	DynamicProps: "Dynamic",
@@ -579,6 +581,8 @@ const HIDDEN_EXPORTS = new Set([
 	"storeHasFamily",
 	"storeHasOptimisticFamily",
 	"storeIsShallow",
+	// Compiler-emitted tracked one-layer read for object-valued style/class bindings.
+	"readShallow",
 	"RequestContext",
 	"SAFE_ERROR",
 	"SERVER_FUNCTION_INVOKE",

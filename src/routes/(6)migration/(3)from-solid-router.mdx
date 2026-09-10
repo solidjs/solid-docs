@@ -298,15 +298,17 @@ import { defineRoute } from "@solidjs/router";
 
 const userRoute = defineRoute({
 	path: "/users/:id/:tab?",
-	preload: ({ params }) => getUser(params.id),
-	component: (props) => (
-		<User user={props.data} id={props.params.id} tab={props.params.tab} />
-	),
+	preload: ({ params }) => void getUser(params.id),
+	component: (props) => <User id={props.params.id} tab={props.params.tab} />,
 });
 ```
 
 In this example, `id` is `string` and `tab` is `string | undefined`.
 Parameters inherited from a parent remain available as `string | undefined`.
+
+Note the `void` in the preload.
+In Router 1.x, `load` results were often read from the component through `createAsync`; in Router 2 the preload only starts the query, and the component reads the same query through a memo, as shown under [Replace async wrappers](#replace-async-wrappers).
+`props.data` still holds whatever `preload` returns, captured once when the route matches, which makes it a poor fit for a promise that depends on `params`.
 
 Use a path witness when the component is declared in another module:
 
@@ -447,34 +449,44 @@ const submission = useSubmission(addTodo);
 After:
 
 ```tsx
-import { createOptimisticStore } from "solid-js";
+import { For, createOptimisticStore } from "solid-js";
 import { action, useSubmissions } from "@solidjs/router";
 
-const [todos, setTodos] = createOptimisticStore(() => getTodos(), []);
+const addTodo = action(async (form: FormData) => {
+	return saveTodo(String(form.get("title") ?? ""));
+}, "add-todo");
 
-const addTodo = action(async (form: URLSearchParams) => {
-	const todo = await saveTodo(form.get("title") ?? "");
-	return todo;
-}, "add-todo").onSubmit((form) => {
-	setTodos((items) => {
-		items.push({
-			id: "pending",
-			title: form.get("title") ?? "",
-			pending: true,
-		});
-	});
-});
-
-function TodoForm() {
+function Todos() {
+	const [todos, setTodos] = createOptimisticStore(
+		() => getTodos(),
+		[] as Todo[]
+	);
 	const submissions = useSubmissions(addTodo);
 	const latest = () => submissions.at(-1);
 
+	addTodo.onSubmit((form) => {
+		setTodos((items) => {
+			items.push({
+				id: "pending",
+				title: String(form.get("title") ?? ""),
+				pending: true,
+			});
+		});
+	});
+
 	return (
-		<form action={addTodo} method="post">
-			<input name="title" />
-			<button>Save</button>
-			<p>{latest()?.error?.message}</p>
-		</form>
+		<>
+			<ul>
+				<For each={todos}>
+					{(todo) => <li class={{ pending: !!todo.pending }}>{todo.title}</li>}
+				</For>
+			</ul>
+			<form action={addTodo} method="post">
+				<input name="title" />
+				<button>Save</button>
+				<p>{latest()?.error?.message}</p>
+			</form>
+		</>
 	);
 }
 ```
@@ -485,9 +497,14 @@ form[aria-busy] button {
 }
 ```
 
+The three concerns that `submission.pending` used to cover are now split: the optimistic store shows the new row, `aria-busy` styles the form, and `useSubmissions` reports the error.
+`.onSubmit` runs inside the action's transaction, so the optimistic push reverts on its own when the action settles and `getTodos` revalidates.
+Registering it inside the component ties the hook to the component's lifetime.
+
 Router 2 retains a submission only when the action produces a result or error.
 A void or metadata-only completion still reaches `.onSettled(...)`.
 Keep `method="post"` on action forms, and give a server-rendered client action a stable name.
+The rewritten [Data loading and mutations](/routing/solid-router/data#show-what-is-happening) page walks through this split with a running example.
 
 ### Move response helpers
 
@@ -630,16 +647,19 @@ Move route options into a named `route` export:
 
 ```tsx
 // routes/blog/[id].tsx
+import { createMemo } from "solid-js";
 import { int, type RouteProps } from "@solidjs/router";
 import { defineFileRoute } from "@solidjs/router/fs";
+import { getPost } from "../../data/posts";
 
 export const route = defineFileRoute("/blog/:id", {
 	matchFilters: { id: int },
-	preload: ({ params }) => getPost(params.id),
+	preload: ({ params }) => void getPost(params.id),
 });
 
 export default function Post(props: RouteProps<typeof route>) {
-	return <h1>{props.data.title}</h1>;
+	const post = createMemo(() => getPost(props.params.id));
+	return <h1>{post().title}</h1>;
 }
 ```
 
@@ -669,7 +689,7 @@ After:
 const routes = defineRoutes([
 	defineRoute({
 		path: "/users/:id",
-		preload: ({ params }) => getUser(params.id),
+		preload: ({ params }) => void getUser(params.id),
 		component: User,
 	}),
 ]);

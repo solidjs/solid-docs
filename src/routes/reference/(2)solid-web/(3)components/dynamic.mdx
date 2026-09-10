@@ -31,10 +31,29 @@ import { dynamic } from "@solidjs/web";
 
 ```ts
 function dynamic<T extends ValidComponent>(
-	source: () => T | Promise<T> | null | undefined | false,
-	_options?: DynamicOptions
+  source: () => T | Promise<T> | null | undefined | false,
+  options?: DynamicOptions
 ): Component<ComponentProps<T>>;
 ```
+
+## Parameters
+
+### `source`
+
+- **Type:** `() => T | Promise<T> | null | undefined | false`
+
+Reactive function that returns the component to render: a component function, an intrinsic element name, a promise of either, or a falsy value to render nothing.
+
+### `options`
+
+- **Type:** `DynamicOptions`
+- Optional
+
+`deferStream` holds the SSR shell until the source settles.
+
+## Return value
+
+A stable component. Render it as `<Component />` and pass the target component's props to it.
 
 ## Examples
 
@@ -44,14 +63,23 @@ const CurrentPage = dynamic(() => pages[route()]);
 return <CurrentPage />;
 ```
 
+## Caveats
+
+- The returned component is stable; render it once and let `source` change. Creating it inside the render path recreates the subtree.
+
+## Learn more
+
+- [Dynamic components](/concepts/components-and-jsx#dynamic-components)
+- [Components and JSX](/concepts/components-and-jsx)
+
 ## Related types
 
 ### `DynamicOptions`
 
 ```ts
 interface DynamicOptions {
-	deferStream?: boolean;
-}
+  deferStream?: boolean;
+};
 ```
 
 #### `deferStream`

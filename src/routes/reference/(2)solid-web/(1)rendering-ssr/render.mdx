@@ -10,7 +10,7 @@ tags:
   - "api"
   - "v2"
 version: "2.0"
-description: "Renders a component tree into a DOM element. Returns a dispose function\nthat tears the tree down and cleans up reactive scopes when called."
+description: "Renders a component tree into a DOM element. Returns a dispose function that tears the tree down and cleans up reactive scopes when called."
 source_repo: "solidjs/solid"
 source_ref: "next"
 source_path: "packages/web/src/client.ts"
@@ -41,9 +41,75 @@ import { render } from "@solidjs/web";
 
 ```ts
 function render(
-	code: () => JSX.Element,
-	element: MountableElement,
-	init?: JSX.Element,
-	options?: { owner?: unknown; renderId?: string }
+  code: () => JSX.Element,
+  element: MountableElement,
+  init?: JSX.Element,
+  options?: { owner?: unknown; renderId?: string }
 ): () => void;
 ```
+
+## Parameters
+
+### `code`
+
+- **Type:** `() => JSX.Element`
+
+Function that returns the root JSX. It runs once inside a new reactive root.
+
+### `element`
+
+- **Type:** `MountableElement`
+
+DOM node to mount into. The tree is inserted as its children.
+
+### `init`
+
+- **Type:** `JSX.Element`
+- Optional
+
+Existing content to reuse as the initial children, for example from a static shell.
+
+### `options`
+
+- **Type:** `{ owner?: unknown; renderId?: string }`
+- Optional
+
+`owner` to parent the new root under an existing owner, and `renderId` for hydration id prefixes.
+
+## Return value
+
+A dispose function. Calling it removes the rendered DOM and disposes the reactive root.
+
+## Examples
+
+### Mount an app
+
+```tsx
+// src/entry-client.tsx
+import { render } from "@solidjs/web";
+import App from "./App";
+
+const dispose = render(() => <App />, document.getElementById("root")!);
+```
+
+### Unmount in a test
+
+```tsx
+const container = document.createElement("div");
+const dispose = render(() => <Counter />, container);
+
+// ...assert against container...
+
+dispose(); // removes the DOM and disposes the reactive root
+```
+
+## Caveats
+
+- `render` creates the reactive root. Calling reactive primitives outside it (module scope) has no owner and is never disposed.
+- Rendering into an element that already has server HTML does not reuse it; use `hydrate` for server-rendered pages.
+
+## Learn more
+
+- [Client rendering](/concepts/rendering-and-ssr#client-rendering)
+- [Rendering and SSR](/concepts/rendering-and-ssr)
+- [Choose a rendering mode](/guides/choose-a-rendering-mode)

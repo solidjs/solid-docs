@@ -10,7 +10,7 @@ tags:
   - "api"
   - "v2"
 version: "2.0"
-description: "Declares a server function whose async iterable represents one value that changes over time. The browser reconnects transiently failed streams and exposes connection state through `onstatus`."
+description: "Declares a server function whose async iterable represents one value that changes over time."
 source_repo: "solidjs/solid"
 source_ref: "next"
 source_path: "packages/web/server-functions/src/client.ts"
@@ -32,9 +32,15 @@ import { live } from "@solidjs/web/server-functions";
 
 ```ts
 function live<A extends readonly any[], R>(
-	fn: (...args: A) => R
+  fn: (...args: A) => R
 ): LiveServerFunction<A, Awaited<R>>;
 ```
+
+## Parameters
+
+### `fn`
+
+- **Type:** `(...args: A) => R`
 
 ## Examples
 
@@ -47,16 +53,21 @@ export const stockPrice = live(async function* (symbol: string) {
 });
 ```
 
+## Learn more
+
+- [Reads, streams, and live data](/building-apps/server-functions/reads-and-live-data)
+- [Server functions](/building-apps/server-functions)
+
 ## Related types
 
 ### `LiveServerFunction`
 
 ```ts
 interface LiveServerFunction<A extends readonly any[] = any[], R = any> {
-	(...args: A): LiveSource<R>;
-	readonly id: string;
-	readonly url: string;
-}
+  (...args: A): LiveSource<R>;
+  readonly id: string;
+  readonly url: string;
+};
 ```
 
 #### `id`
@@ -82,7 +93,7 @@ end was a definite rejection (4xx) failing fast instead of retrying.
 
 ```ts
 type LiveSource<R> = R & {
-	onstatus?: (state: LiveSourceStatus, error?: unknown) => void;
+  onstatus?: (state: LiveSourceStatus, error?: unknown) => void;
 };
 ```
 

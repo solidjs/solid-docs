@@ -46,6 +46,8 @@ function useContext<T>(context: Context<T>): T;
 
 ### `context`
 
+- **Type:** `Context<T>`
+
 A context returned from `createContext`
 
 ## Return value
@@ -59,10 +61,20 @@ default if one was supplied to `createContext`
 const TodosContext = createContext<TodosCtx>();
 
 function TodoList() {
-	const [todos, { addTodo }] = useContext(TodosContext); // throws if no Provider
-	// ...
+  const [todos, { addTodo }] = useContext(TodosContext); // throws if no Provider
+  // ...
 }
 ```
+
+## Caveats
+
+- Call it in the component body or another owned scope. Calling it inside an event handler or after an `await` has no owner to read from.
+- The value is whatever the nearest provider passed. Pass signals or stores, not their current values, to keep it reactive.
+
+## Learn more
+
+- [Context](/concepts/components-and-jsx#context)
+- [Components and JSX](/concepts/components-and-jsx)
 
 ## Related types
 
@@ -70,12 +82,12 @@ function TodoList() {
 
 ```ts
 class ContextNotFoundError extends Error {
-	constructor() {
-		super(
-			__DEV__
-				? "Context must either be created with a default value or a value must be provided before accessing it."
-				: ""
-		);
-	}
-}
+  constructor() {
+    super(
+      __DEV__
+        ? "Context must either be created with a default value or a value must be provided before accessing it."
+        : ""
+    );
+  }
+};
 ```

@@ -10,7 +10,7 @@ tags:
   - "api"
   - "v2"
 version: "2.0"
-description: "Resolves a `children` accessor and exposes the result as an accessor with\na `.toArray()` helper. Use this when a component needs to inspect or\niterate over its children rather than just render them through."
+description: "Resolves a `children` accessor and exposes the result as an accessor with a `.toArray()` helper."
 source_repo: "solidjs/solid"
 source_ref: "next"
 source_path: "packages/solid/src/client/core.ts"
@@ -20,7 +20,7 @@ source_path: "packages/solid/src/client/core.ts"
 
 Resolves a `children` accessor and exposes the result as an accessor with
 a `.toArray()` helper. Use this when a component needs to inspect or
-iterate over its children rather than just render them through.
+iterate over its children rather than only render them through.
 
 ## Import
 
@@ -31,14 +31,16 @@ import { children } from "solid-js";
 ## Type signature
 
 ```ts
-function children(fn: Accessor<SolidElement>): ChildrenReturn;
+function children(fn: Accessor<JSX.Element>): ChildrenReturn;
 ```
 
 ## Parameters
 
 ### `fn`
 
-An accessor for the children
+- **Type:** `Accessor<JSX.Element>`
+
+Accessor for the raw children, usually `() => props.children`.
 
 ## Return value
 
@@ -48,25 +50,31 @@ An accessor of the resolved children, with `.toArray()` for iteration
 
 ```tsx
 function List(props: { children: Element }) {
-	const items = children(() => props.children);
-	return (
-		<ul>
-			{items.toArray().map((item) => (
-				<li>{item}</li>
-			))}
-		</ul>
-	);
+  const items = children(() => props.children);
+  return <ul>{items.toArray().map(item => <li>{item}</li>)}</ul>;
 }
 ```
+
+## Caveats
+
+- Call it once in the component body and read the result. Calling `props.children` in several places creates the children several times.
+- The accessor resolves lazily; the first read happens where the result is inserted or `toArray()` is called.
+
+## Common problems
+
+- [A child does not update when the parent's signal changes](/concepts/components-and-jsx#a-child-does-not-update-when-the-parents-signal-changes)
+
+## Learn more
+
+- [Children and composition](/concepts/components-and-jsx#children-and-composition)
+- [Components and JSX](/concepts/components-and-jsx)
 
 ## Related types
 
 ### `ChildrenReturn`
 
 ```ts
-type ChildrenReturn = Accessor<ResolvedChildren> & {
-	toArray: () => ResolvedElement[];
-};
+type ChildrenReturn = Accessor<ResolvedChildren> & { toArray: () => ResolvedElement[] };
 ```
 
 ### `ResolvedChildren`

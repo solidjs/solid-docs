@@ -10,7 +10,7 @@ tags:
   - "api"
   - "v2"
 version: "2.0"
-description: "Catches uncaught errors inside its subtree and renders fallback content\ninstead. The `fallback` prop can be a JSX element, or a callback that\nreceives the error and a `reset()` function for retry affordances."
+description: "Catches uncaught errors inside its subtree and renders fallback content instead."
 source_repo: "solidjs/solid"
 source_ref: "next"
 source_path: "packages/solid/src/client/flow.ts"
@@ -35,20 +35,48 @@ import { Errored } from "solid-js";
 
 ```ts
 function Errored(props: {
-	fallback:
-		SolidElement | ((err: ErrorAccessor, reset: () => void) => SolidElement);
-	children: SolidElement;
-}): SolidElement;
+  fallback: JSX.Element | ((err: ErrorAccessor, reset: () => void) => JSX.Element);
+  children: JSX.Element;
+}): JSX.Element;
 ```
+
+## Props
+
+### `fallback`
+
+- **Type:** `JSX.Element | ((err: ErrorAccessor, reset: () => void) => JSX.Element)`
+
+Content to render in place of the subtree, or a function that receives the error accessor and a `reset()` function that retries the subtree.
+
+### `children`
+
+- **Type:** `JSX.Element`
+
+The subtree to guard.
 
 ## Examples
 
 ```tsx
-<Errored
-	fallback={(err, reset) => (
-		<div onClick={reset}>Error: {err().toString()}</div>
-	)}
->
-	<MyComp />
+<Errored fallback={(err, reset) => (
+  <div onClick={reset}>Error: {err().toString()}</div>
+)}>
+  <MyComp />
 </Errored>
 ```
+
+## Caveats
+
+- The boundary catches errors thrown while rendering its subtree and errors that travel through the reactive graph, including rejected async reads. Handle errors in event handlers where they happen.
+- `reset()` recomputes the failing sources. If the cause persists, the boundary errors again.
+- Errors thrown from the fallback itself go to the parent `Errored`.
+
+## Common problems
+
+- [Every update stopped after an error](/guides/debugging-reactivity#every-update-stopped-after-an-error)
+
+## Learn more
+
+- [Error boundaries](/concepts/boundaries#error-boundaries)
+- [Work rejects: `Errored`](/concepts/async-reactivity#work-rejects-errored)
+- [Components and JSX](/concepts/components-and-jsx)
+- [Boundaries](/concepts/boundaries)

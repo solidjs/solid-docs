@@ -10,7 +10,7 @@ tags:
   - "api"
   - "v2"
 version: "2.0"
-description: "Creates a Context for sharing state with descendants of a Provider in the\ncomponent tree."
+description: "Creates a Context for sharing state with descendants of a Provider in the component tree."
 source_repo: "solidjs/solid"
 source_ref: "next"
 source_path: "packages/solid/src/client/core.ts"
@@ -40,7 +40,7 @@ Two forms:
   `useContext` returns `defaultValue`.
 
 If you want truly app-wide state, **don't use Context** — a module-scope
-signal/store _is_ a global. Context is for scoping state to a subtree;
+signal/store *is* a global. Context is for scoping state to a subtree;
 that's why a Provider is required.
 
 ## Import
@@ -52,20 +52,22 @@ import { createContext } from "solid-js";
 ## Type signature
 
 ```ts
-function createContext<T>(
-	defaultValue?: T,
-	options?: EffectOptions
-): Context<T>;
+function createContext<T>(defaultValue?: T, options?: EffectOptions): Context<T>;
 ```
 
 ## Parameters
 
 ### `defaultValue`
 
-Optional default; only meaningful for primitive
-fallbacks. Omit for any context carrying reactive state.
+- **Type:** `T`
+- Optional
+
+Optional default. Only meaningful for primitive fallbacks; omit it for contexts that carry reactive state so a missing provider throws.
 
 ### `options`
+
+- **Type:** `EffectOptions`
+- Optional
 
 `{ name }` for debugging in development
 
@@ -81,16 +83,16 @@ type TodosCtx = readonly [Store<Todo[]>, TodoActions];
 const TodosContext = createContext<TodosCtx>();
 
 function App() {
-	return (
-		<TodosContext value={createTodos()}>
-			<TodoList />
-		</TodosContext>
-	);
+  return (
+    <TodosContext value={createTodos()}>
+      <TodoList />
+    </TodosContext>
+  );
 }
 
 function TodoList() {
-	const [todos, { addTodo }] = useContext(TodosContext); // typed as TodosCtx
-	// ...
+  const [todos, { addTodo }] = useContext(TodosContext); // typed as TodosCtx
+  // ...
 }
 ```
 
@@ -99,10 +101,20 @@ function TodoList() {
 const ThemeContext = createContext<"light" | "dark">("light");
 
 function Button() {
-	const theme = useContext(ThemeContext); // "light" | "dark"
-	return <button class={theme}>Click</button>;
+  const theme = useContext(ThemeContext); // "light" | "dark"
+  return <button class={theme}>Click</button>;
 }
 ```
+
+## Caveats
+
+- Without a default, reading outside a provider throws `ContextNotFoundError`. That is intentional; add a default only for primitive fallbacks.
+- For app-wide state, a module-scope signal or store is already global; context is for scoping a value to a subtree.
+
+## Learn more
+
+- [Context](/concepts/components-and-jsx#context)
+- [Components and JSX](/concepts/components-and-jsx)
 
 ## Related types
 

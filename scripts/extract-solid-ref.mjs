@@ -379,9 +379,20 @@ const FOLD_INTO = {
 	DiagnosticSeverity: "DEV",
 	AttributionHooks: "DEV",
 	AttributionSlot: "DEV",
+	AttributionRecords: "DEV",
+	AttributionRecordType: "DEV",
+	Acknowledgement: "DEV",
+	ChangeOrigin: "DEV",
+	ChangeRecord: "DEV",
+	HeldWrite: "DEV",
+	HoldEvent: "DEV",
+	InteractionEvent: "DEV",
 	InteractionRef: "DEV",
+	NavigationEvent: "DEV",
+	NavigationHop: "DEV",
 	NavigationRef: "DEV",
 	OriginRef: "DEV",
+	RerunEvent: "DEV",
 	Observe: "DEV",
 	OBSERVE: "DEV",
 	DynamicProps: "Dynamic",
@@ -684,7 +695,7 @@ const ENTRY_SUMMARY_OVERRIDES = {
 	latest:
 		"Reads the freshest in-flight value available inside `fn`, falling back to the current settled value.",
 	storePath:
-		"Creates a path-based store update for compatibility with Solid 1.x setter calls. Prefer draft-mutating store setters in new Solid 2 code.",
+		"Creates a path-based store update for code that still uses Solid 1.x setter paths. Prefer draft-mutating store setters in new code.",
 	GET: "Declares that a server-function read can use HTTP GET. Calls use a cacheable URL when the encoded arguments fit and fall back to a read-only POST when they do not.",
 	live: "Declares a server function whose async iterable represents one value that changes over time. The browser reconnects transiently failed streams and exposes connection state through `onstatus`.",
 	invoke:
@@ -726,6 +737,19 @@ const ENTRY_SUMMARY_OVERRIDES = {
 		"Returns whether a value is a response envelope, including across duplicated runtime modules.",
 	isSafeError:
 		"Returns whether a value is branded as safe to serialize to a client.",
+	reconcile:
+		"Creates a store setter callback that merges new data into the existing store by key. Items whose key matches keep their store identity, so rows keep DOM, focus, and animation state across a full replacement; only added and removed items change.",
+	redirect:
+		"Creates a redirect `Response` (status 302 by default). Pass `revalidate` to name the cache keys the mutation invalidated so the client refetches them after following the redirect.",
+	reload:
+		"Creates an empty `Response` that asks the client to revalidate the named cache keys without navigating.",
+	isWrappable:
+		"Returns whether a value would be wrapped in a store proxy. Plain objects, arrays, and class instances are wrappable; built-in objects such as `Map` and `Date`, frozen objects, and primitives are not.",
+	snapshot:
+		"Returns the plain, unwrapped view of a store value without tracking, for serialization or for passing to code that must not observe the store. Subtrees with no pending changes are returned as-is rather than copied.",
+	deep: "Subscribes the surrounding scope to every reachable level of a store value, then returns its plain view. Use it when any change anywhere in the subtree should re-run the computation.",
+	enableExternalSource:
+		"Registers an adapter that lets Solid track reads from a non-Solid reactive system, such as MobX or Vue reactivity, inside its computations.",
 };
 
 const SIGNATURE_OVERRIDES = {
@@ -737,6 +761,49 @@ function clientOnly<T extends Component<any>>(
 	fn: () => Promise<{ default: T }>,
 	options?: { lazy?: boolean; export?: string }
 ): Component<ComponentProps<T> & { fallback?: JSX.Element }>;`,
+	// The source overloads use non-exported helper types
+	// (KeyedConditionalRenderCallback, NonZeroParams) to reject zero-argument
+	// callbacks. The overloads below say the same thing with public types.
+	Show: `function Show<T>(props: {
+	when: T | undefined | null | false;
+	keyed?: false;
+	fallback?: JSX.Element;
+	children: JSX.Element | ((item: Accessor<NonNullable<T>>) => JSX.Element);
+}): JSX.Element;
+function Show<T>(props: {
+	when: T | undefined | null | false;
+	keyed: true;
+	fallback?: JSX.Element;
+	children: JSX.Element | ((item: NonNullable<T>) => JSX.Element);
+}): JSX.Element;`,
+	Match: `function Match<T>(props: {
+	when: T | undefined | null | false;
+	keyed?: false;
+	children: JSX.Element | ((item: Accessor<NonNullable<T>>) => JSX.Element);
+}): JSX.Element;
+function Match<T>(props: {
+	when: T | undefined | null | false;
+	keyed: true;
+	children: JSX.Element | ((item: NonNullable<T>) => JSX.Element);
+}): JSX.Element;`,
+	For: `function For<T extends readonly any[], U extends JSX.Element>(props: {
+	each: T | undefined | null | false;
+	fallback?: JSX.Element;
+	keyed?: true;
+	children: (item: T[number], index: Accessor<number>) => U;
+}): JSX.Element;
+function For<T extends readonly any[], U extends JSX.Element>(props: {
+	each: T | undefined | null | false;
+	fallback?: JSX.Element;
+	keyed: false;
+	children: (item: Accessor<T[number]>, index: number) => U;
+}): JSX.Element;
+function For<T extends readonly any[], U extends JSX.Element>(props: {
+	each: T | undefined | null | false;
+	fallback?: JSX.Element;
+	keyed: (item: T[number]) => any;
+	children: (item: Accessor<T[number]>, index: Accessor<number>) => U;
+}): JSX.Element;`,
 	getRequestEvent: `function getRequestEvent(): RequestEvent | undefined;`,
 	getServerFunctionMetadata: `function getServerFunctionMetadata(
 	fn: unknown
@@ -785,8 +852,8 @@ function clientOnly<T extends Component<any>>(
 			MathMLElementTags {}
 }`,
 	hydrate: `function hydrate(
-	code: () => JSX.Element,
-	element: Element | Document | ShadowRoot | DocumentFragment | Node,
+	fn: () => JSX.Element,
+	node: MountableElement,
 	options?: { renderId?: string; owner?: unknown }
 ): () => void;`,
 	storePath: `interface StorePath {
@@ -949,7 +1016,1230 @@ setState(storePath("todos", todo => !todo.done, "done", true));
 setState(storePath("user", "nickname", storePath.DELETE));
 \`\`\``,
 	],
+	reconcile: [
+		{
+			title: "Replace a list from the server and keep row identity",
+			code: `\
+\`\`\`ts
+const [todos, setTodos] = createStore<Todo[]>([]);
+
+async function refetch() {
+	const next = await fetch("/api/todos").then((r) => r.json());
+	// Rows whose \`id\` matches keep their store proxy, so <For> keeps their DOM.
+	setTodos(reconcile(next));
+}
+\`\`\``,
+		},
+		{
+			title: "Use a different identity field",
+			code: `\
+\`\`\`ts
+setProducts(reconcile(nextProducts, "sku"));
+setRows(reconcile(nextRows, (row) => row.region + row.year));
+\`\`\``,
+		},
+	],
+	render: [
+		{
+			title: "Mount an app",
+			code: `\
+\`\`\`tsx
+// src/entry-client.tsx
+import { render } from "@solidjs/web";
+import App from "./App";
+
+const dispose = render(() => <App />, document.getElementById("root")!);
+\`\`\``,
+		},
+		{
+			title: "Unmount in a test",
+			code: `\
+\`\`\`tsx
+const container = document.createElement("div");
+const dispose = render(() => <Counter />, container);
+
+// ...assert against container...
+
+dispose(); // removes the DOM and disposes the reactive root
+\`\`\``,
+		},
+	],
+	httpStatus: [
+		{
+			title: "Return 404 from a not-found route",
+			code: `\
+\`\`\`tsx
+function NotFound() {
+	httpStatus(404);
+	return <h1>Page not found</h1>;
+}
+\`\`\``,
+		},
+		{
+			title: "Report a failed render",
+			code: `\
+\`\`\`tsx
+<Errored
+	fallback={(error) => {
+		httpStatus(500);
+		return <p>Something went wrong.</p>;
+	}}
+>
+	<Page />
+</Errored>
+\`\`\``,
+		},
+	],
+	httpHeader: [
+		{
+			title: "Set a cache policy for a page",
+			code: `\
+\`\`\`tsx
+function ProductPage() {
+	httpHeader("Cache-Control", "public, max-age=60");
+	return <Product />;
+}
+\`\`\``,
+		},
+		{
+			title: "Append a header",
+			code: `\
+\`\`\`ts
+httpHeader("Link", "</fonts/inter.woff2>; rel=preload; as=font", { append: true });
+\`\`\``,
+		},
+	],
+	Show: [
+		{
+			title: "Remount when the identity changes",
+			code: `\
+\`\`\`tsx
+// Without \`keyed\`, switching from one user to another keeps the DOM and
+// updates the accessor. With \`keyed\`, the content is re-created per user.
+<Show when={user()} keyed fallback={<SignIn />}>
+	{(u) => <Profile user={u} />}
+</Show>
+\`\`\``,
+		},
+	],
+	For: [
+		{
+			title: "Key rows by a field",
+			code: `\
+\`\`\`tsx
+// Rows keep their DOM when the server returns new objects for the same ids.
+<For each={todos()} keyed={(todo) => todo.id}>
+	{(todo, index) => (
+		<li>
+			{index() + 1}. {todo().text}
+		</li>
+	)}
+</For>
+\`\`\``,
+		},
+	],
+	Switch: [
+		{
+			title: "Narrow the matched value",
+			code: `\
+\`\`\`tsx
+<Switch fallback={<p>Loading…</p>}>
+	<Match when={error()}>{(e) => <p>Error: {e().message}</p>}</Match>
+	<Match when={data()}>{(d) => <Table rows={d().rows} />}</Match>
+</Switch>
+\`\`\``,
+		},
+	],
+	isPending: [
+		{
+			title: "Dim stale results while a new answer loads",
+			code: `\
+\`\`\`tsx
+const [query, setQuery] = createSignal("");
+const results = createMemo(() => searchProducts(query()));
+
+<ul class={{ stale: isPending(results) }}>
+	<For each={results()}>{(product) => <li>{product.name}</li>}</For>
+</ul>
+\`\`\``,
+		},
+	],
+	until: [
+		{
+			title: "Wait for a value before continuing",
+			code: `\
+\`\`\`ts
+const user = createMemo(() => fetchUser(id()));
+
+async function exportReport() {
+	const u = await until(() => user()); // resolves once the user has loaded
+	download(buildReport(u));
+}
+\`\`\``,
+		},
+	],
 };
+
+// Hand-written reference anatomy. Everything below is keyed by exported
+// symbol name. These tables exist because the upstream JSDoc does not carry
+// caveats, troubleshooting, or learn-page links, and the reference pages
+// should read like the React and Vue references: signature, parameters,
+// examples, caveats, common problems, learn more.
+
+// Parameter descriptions when the upstream JSDoc has no `@param` tag.
+// Shape: { symbol: { paramName: "text" | { type?, text? } } }. An object
+// can pin the displayed type when the overload union is noisy.
+const PARAM_DOCS = {
+	createSignal: {
+		value:
+			"Initial value. Pass a function through the `fn` form instead; a function here is rejected by the types.",
+		options: {
+			type: "SignalOptions<T>",
+			text: "Debug `name` and `equals` comparator. The function form also accepts `MemoOptions<T>`, including `loadingValue`.",
+		},
+		fn: {
+			type: "ComputeFunction<T | undefined, T>",
+			text: "Compute function for the writable-memo form: `(prev) => next`, where `next` may also be a promise or an `AsyncIterable`. The signal starts as `fn()`, recomputes when tracked sources change, and the setter overrides the value locally until the next recompute.",
+		},
+	},
+	createMemo: {
+		compute: {
+			type: "ComputeFunction<T | undefined, T>",
+			text: "Receives the previous value and returns the new value; reads inside are tracked. Returning a promise or an `AsyncIterable` makes the memo async, and readers suspend until the first value arrives.",
+		},
+		options: {
+			type: "MemoOptions<T>",
+			text: "`name`, `equals`, `lazy`, `loadingValue`, `deferStream`, and `ssrSource`. See the members below.",
+		},
+	},
+	createEffect: {
+		options: {
+			type: "EffectOptions",
+			text: "`name`, `defer`, `schedule`, `transparent`, `deferStream`, and `ssrSource`.",
+		},
+	},
+	createOptimistic: {
+		value: "Initial value of the authoritative signal.",
+		options: {
+			type: "SignalOptions<T>",
+			text: "Debug `name` and `equals` comparator. The function form also accepts `MemoOptions<T>`.",
+		},
+		fn: {
+			type: "ComputeFunction<T | undefined, T>",
+			text: "Compute function for the derived form. It produces the authoritative value; optimistic writes overlay it and revert when the action settles.",
+		},
+	},
+	createStore: {
+		initialValue:
+			"Plain object or array to wrap, or an existing store to share.",
+		options: {
+			type: "StoreOptions | ProjectionOptions",
+			text: "`name` and `shallow` in the plain form; the derived form also accepts `key`, `seedLoadingValue`, `deferStream`, and `ssrSource`.",
+		},
+		fn: "Derive function for the projection form. Receives a draft and either mutates it or returns a new value; may be sync, async, or an `AsyncIterable`.",
+		seed: "Initial contents of the projection store and the draft the first derive receives. With an async `fn`, readers see the seed before the first result only when `seedLoadingValue` is set; otherwise they suspend.",
+	},
+	createProjection: {
+		fn: "Derive function. Receives a draft and either mutates it or returns a new value; may be sync, async, or an `AsyncIterable`. The result is reconciled by `options.key`.",
+		seed: "Initial contents and the draft the first derive receives. With an async `fn`, readers see the seed before the first result only when `seedLoadingValue` is set; otherwise they suspend.",
+		options:
+			'`key` (default `"id"`), `seedLoadingValue`, `name`, `shallow`, `deferStream`, and `ssrSource`.',
+	},
+	createOptimisticStore: {
+		initialValue: "Plain object or array to wrap.",
+		options: {
+			type: "StoreOptions | ProjectionOptions",
+			text: "`name` and `shallow` in the plain form; the derived form also accepts `key`, `seedLoadingValue`, `deferStream`, and `ssrSource`.",
+		},
+		fn: "Derive function that produces the authoritative contents. Optimistic writes overlay its result and revert when the action settles.",
+		seed: "Initial contents of the derived form.",
+	},
+	reconcile: {
+		value:
+			"The new data. It is merged into the existing store rather than replacing it.",
+		key: "Property name or function that identifies an item so matched items keep their store identity. Pass `null` to match by position.",
+	},
+	merge: {
+		sources:
+			"Props-like objects, or functions that return them. Later sources override earlier ones.",
+	},
+	omit: {
+		props: "The props object to read from.",
+		keys: "Property names to hide from the returned proxy.",
+	},
+	flush: {
+		fn: "Optional callback whose writes bypass microtask scheduling; the queue drains when it returns.",
+	},
+	isPending: {
+		fn: "Expression to probe. Read the values in question inside it.",
+	},
+	latest: {
+		fn: "Expression to read. In-flight values are returned in place of committed ones.",
+	},
+	untrack: {
+		fn: "Function to run without tracking. Its return value is returned.",
+		strictReadLabel:
+			"When set, development builds warn about reactive reads inside `fn` and name the label in the warning.",
+	},
+	action: {
+		genFn:
+			"Generator or async generator. Each `yield` is a suspension point that re-enters the transaction; writes between yields commit together.",
+	},
+	affects: {
+		target: "An accessor, a store, or a store node to mark as pending.",
+		key: "When `target` is a store, the property to mark instead of the whole store.",
+	},
+	refresh: {
+		target:
+			"A Solid-created accessor or a projection store. Plain signal accessors are a no-op.",
+	},
+	children: {
+		fn: "Accessor for the raw children, usually `() => props.children`.",
+	},
+	createContext: {
+		defaultValue:
+			"Optional default. Only meaningful for primitive fallbacks; omit it for contexts that carry reactive state so a missing provider throws.",
+	},
+	lazy: {
+		fn: "Dynamic import that resolves the component's module.",
+		options:
+			"`{ export }` names which export of the module is the component. Defaults to `default`.",
+		moduleUrl:
+			"Module specifier injected by the bundler integration. Exposed as the component's `moduleUrl` property and used in hydration error messages.",
+	},
+	clientOnly: {
+		fn: "Dynamic import that resolves the component's module.",
+		options:
+			"`export` names which export is the component. `lazy` defers the import until first render instead of starting it on the client immediately.",
+		moduleUrl:
+			"Module specifier injected by the bundler integration; used for preload hints and error messages.",
+	},
+	render: {
+		code: "Function that returns the root JSX. It runs once inside a new reactive root.",
+		element: "DOM node to mount into. The tree is inserted as its children.",
+		init: "Existing content to reuse as the initial children, for example from a static shell.",
+		options:
+			"`owner` to parent the new root under an existing owner, and `renderId` for hydration id prefixes.",
+	},
+	hydrate: {
+		fn: "Function that returns the same root JSX the server rendered.",
+		node: "DOM node that contains the server-rendered markup.",
+		options:
+			"`renderId` must match the server's render id when one was set; `owner` parents the root under an existing owner.",
+	},
+	renderToString: {
+		fn: "Function that returns the root JSX.",
+		options:
+			"`nonce` for CSP, `renderId` for hydration id prefixes, `noScripts` to omit the hydration script, `manifest` for asset resolution, `onError`, and `onHead` for hosts that own the document.",
+	},
+	renderToStream: {
+		fn: "Function that returns the root JSX.",
+		options:
+			"The `renderToString` options plus `onCompleteShell` and `onCompleteAll` hooks.",
+	},
+	httpHeader: {
+		name: "Header name.",
+		value: "Header value.",
+		options: "`append: true` adds a value instead of replacing the header.",
+	},
+	httpStatus: {
+		code: "HTTP status code.",
+		text: "Optional status text.",
+	},
+	dynamic: {
+		source:
+			"Reactive function that returns the component to render: a component function, an intrinsic element name, a promise of either, or a falsy value to render nothing.",
+		options: "`deferStream` holds the SSR shell until the source settles.",
+	},
+};
+
+// Prop descriptions for components. Component props types in the source are
+// inline literals without member docs, so this table is the record.
+// Shape: { Component: { propName: "text" | { type?, text? } } } or, when the
+// overloads cannot be merged sensibly, { Component: [{ name, type, optional, text }] }.
+const PROP_DOCS = {
+	Show: [
+		{
+			name: "when",
+			type: "T | undefined | null | false",
+			text: "The condition. Children render when it is truthy.",
+		},
+		{
+			name: "keyed",
+			type: "boolean",
+			optional: true,
+			text: "When `true`, the function child receives the raw value and the content remounts whenever the value's identity changes. Default `false`: the function child receives an accessor and the content is kept across truthy values.",
+		},
+		{
+			name: "fallback",
+			type: "JSX.Element",
+			optional: true,
+			text: "Rendered when `when` is falsy.",
+		},
+		{
+			name: "children",
+			type: "JSX.Element | ((item) => JSX.Element)",
+			text: "Static content, or a function that receives the narrowed value (an `Accessor<NonNullable<T>>` by default, `NonNullable<T>` when keyed).",
+		},
+	],
+	Match: [
+		{
+			name: "when",
+			type: "T | undefined | null | false",
+			text: "The branch condition. The first truthy `Match` in a `Switch` renders.",
+		},
+		{
+			name: "keyed",
+			type: "boolean",
+			optional: true,
+			text: "Same meaning as on `Show`: keyed content remounts when the value's identity changes.",
+		},
+		{
+			name: "children",
+			type: "JSX.Element | ((item) => JSX.Element)",
+			text: "Static content, or a function that receives the narrowed value.",
+		},
+	],
+	For: [
+		{
+			name: "each",
+			type: "T | undefined | null | false",
+			text: "The array to render. A falsy value renders the fallback.",
+		},
+		{
+			name: "fallback",
+			type: "JSX.Element",
+			optional: true,
+			text: "Rendered when the array is empty or falsy.",
+		},
+		{
+			name: "keyed",
+			type: "true | false | ((item) => any)",
+			optional: true,
+			text: "Row identity. Default `true` keys by item reference and passes the raw item with an index accessor. `false` keys by position and passes an item accessor with a stable index. A function keys by the returned value and passes accessors for both.",
+		},
+		{
+			name: "children",
+			type: "(item, index) => JSX.Element",
+			text: "Row renderer. The argument shapes follow `keyed`; see above.",
+		},
+	],
+	Switch: {
+		fallback: "Rendered when no `Match` condition is truthy.",
+		children: "One or more `Match` elements.",
+	},
+	Errored: {
+		fallback:
+			"Content to render in place of the subtree, or a function that receives the error accessor and a `reset()` function that retries the subtree.",
+		children: "The subtree to guard.",
+	},
+	Loading: {
+		fallback:
+			"Rendered while an async read inside the subtree has no settled value.",
+		on: "A value, not an accessor. When it changes and the new content is not ready, the boundary shows its fallback again instead of holding the update.",
+		children: "The subtree whose async reads this boundary handles.",
+	},
+	Repeat: {
+		count: "Number of rows.",
+		from: "Index of the first row. Combine with `count` for a window over a larger list.",
+		fallback: "Rendered when `count` is zero.",
+		children:
+			"A function from index to content, or static content repeated per index.",
+	},
+	Reveal: {
+		order:
+			'`"sequential"` (default), `"together"`, or `"natural"`. See the summary for each policy.',
+		collapsed:
+			'Only consulted under `"sequential"`. Boundaries past the frontier render nothing instead of their fallback.',
+		children:
+			"The `Loading` boundaries (or nested `Reveal` groups) to coordinate.",
+	},
+	Portal: {
+		mount: "Element to render into. Defaults to `document.body`.",
+		children: "Content to render at the mount point.",
+	},
+	Dynamic: {
+		component:
+			"Component function or intrinsic element name to render. A falsy value renders nothing. All other props are forwarded to it.",
+	},
+};
+
+// Return-value descriptions when the upstream JSDoc has no `@returns` tag.
+const RETURN_DOCS = {
+	createSignal:
+		"A tuple. The accessor reads the value and tracks it in the surrounding scope; the setter takes a new value or an updater `(prev) => next`.",
+	createOptimistic:
+		"A tuple with the same shape as `createSignal`. Writes made inside an action are tentative and revert when the action settles.",
+	createStore:
+		"A tuple. The store is a read-only proxy that tracks each property you read; the setter receives a draft to mutate, and the changes commit when it returns.",
+	createOptimisticStore:
+		"A tuple with the same shape as `createStore`. Writes made inside an action are tentative and revert when the action settles.",
+	createMemo:
+		"A read-only accessor. Call it to read the memoized value; reading tracks the memo in the surrounding scope.",
+	createEffect:
+		"Nothing. The effect is owned by the surrounding scope and disposed with it.",
+	createProjection:
+		"The projected store. There is no setter; write through the derive function's inputs.",
+	reconcile:
+		"A setter callback. Pass it to a store setter: `setState(reconcile(next))`.",
+	merge:
+		"A reactive proxy over the merged sources. Property reads track the source that supplies them.",
+	omit: "A reactive proxy of `props` without the listed keys.",
+	flush: "The value returned by `fn`, when one was passed.",
+	isPending:
+		"`true` while a read inside `fn` depends on a change that has not committed yet.",
+	latest:
+		"The value `fn` returns when in-flight values are read in place of committed ones.",
+	untrack: "The value `fn` returns.",
+	action:
+		"A function with the generator's parameters that returns a promise for its return value. The promise rejects when the generator throws.",
+	refresh:
+		"A promise for the target's next settled state. Safe to ignore; a failed re-ask rejects it but does not surface as an unhandled rejection when ignored.",
+	until:
+		"A promise that resolves with the first truthy result of `fn`, narrowed by `Truthy<T>`.",
+	lazy: "A component with the same props as the imported one, plus a `preload()` method that starts the import early.",
+	createUniqueId:
+		"A string id that matches between the server-rendered and hydrated trees.",
+	render:
+		"A dispose function. Calling it removes the rendered DOM and disposes the reactive root.",
+	hydrate: "A dispose function for the hydrated tree.",
+	renderToString: "The rendered HTML string.",
+	renderToStream:
+		"A stream object with `pipe`, `pipeTo`, and `readable`; awaiting it resolves with the fully settled HTML.",
+	dynamic:
+		"A stable component. Render it as `<Component />` and pass the target component's props to it.",
+	clientOnly:
+		"A component with the imported component's props plus an optional `fallback`.",
+};
+
+// Caveats rendered as a bullet list under `## Caveats`.
+const ENTRY_CAVEATS = {
+	createSignal: [
+		"Passing a function to the setter treats it as an updater. To store a function as the value, wrap it: `setHandler(() => fn)`.",
+		"A read right after a write returns the old value until the queue flushes. Derive the value you need instead of reading it back, or call `flush()` in tests.",
+		"In the function form, a local override lasts until `fn` recomputes; the next tracked change replaces it.",
+	],
+	createMemo: [
+		"Reads inside `compute` are tracked; reads in the code that calls the accessor are tracked there, not in the memo.",
+		"When `compute` returns a promise, reading the accessor before it resolves suspends to the nearest `Loading` boundary. Later updates hold the previous value instead.",
+		"A memo is for values. Put side effects in `createEffect`, not in `compute`.",
+	],
+	createEffect: [
+		"Only the `compute` phase tracks. Reads in `effectFn` do not subscribe, so an effect that reads a signal only in `effectFn` runs once.",
+		"The effect phase runs after the queue flushes, so DOM written by the same update is already in place.",
+		"Writing to a signal that the same effect tracks creates a loop. Derive the value with `createMemo` instead.",
+		"On the server, effects do not run.",
+	],
+	createOptimistic: [
+		"Make optimistic writes inside an `action`. The action's settle is what reverts the overlay or reconciles it to the resolved value.",
+		"To keep a value after the action, write it to the authoritative source inside the action; the overlay itself does not persist.",
+	],
+	flush: [
+		"Do not call `flush()` inside an `action` body or an `onSettled` callback; the queue is already draining there. Defer it with `queueMicrotask` if needed.",
+		"Flushing does not resolve async work. A memo waiting on a promise stays pending after `flush()`.",
+	],
+	isPending: [
+		"Reports on updates to a value that exists. Before a first value, the read inside `fn` follows the surrounding `Loading` path.",
+		"A bare `refresh()` does not flip `isPending`; pair it with `affects()` to make the re-ask visible.",
+	],
+	latest: [
+		"Use it on controls, not on content. Data read through `latest` can show a new answer before the rest of the update agrees with it.",
+		"Before any value exists, the read still suspends like a normal read.",
+	],
+	untrack: [
+		"Untracking a read does not stop the computation from re-running for its other tracked reads.",
+		"Inside an effect, prefer the two-phase form: reads in `effectFn` are already untracked.",
+	],
+	createStore: [
+		"Store properties hold plain values. Nesting an accessor inside a store (`{ count: () => count() }`) does not track when read.",
+		"Mutating the store outside the setter (`state.items.push(x)`) is not reactive. Write through the setter's draft.",
+		"The setter does not reconcile by key. Replacing an array replaces rows by index; use `reconcile()` or the derived form to keep row identity.",
+		"Plain objects, arrays, and class instances are wrapped. Built-in objects such as `Map`, `Date`, and frozen objects are stored raw; the property that holds them still tracks reassignment.",
+	],
+	createProjection: [
+		"There is no setter. The derive function's reactive inputs are the way to change the result.",
+		"Rows survive between derives only when `key` matches them. Data without an `id` needs an explicit `key` or `key: null` for positional matching.",
+		"With an async derive, readers suspend until the first result unless `seedLoadingValue` is set; then the seed shows first.",
+	],
+	createOptimisticStore: [
+		"Make optimistic writes inside an `action`. The action's settle is what reverts the overlay or reconciles it to the resolved value.",
+		"Write the saved row into the draft inside the action to keep it; the overlay itself does not persist.",
+		'In the derived form, `key` defaults to `"id"`. Set it when the identity field differs.',
+	],
+	reconcile: [
+		"When the store root is a keyed object, the new value must carry the same key; a different key throws `Cannot reconcile states with different identity`. Replace the whole value through the setter instead.",
+		"Items without a key fall back to positional matching, and a type change at any level replaces that subtree.",
+	],
+	merge: [
+		"Do not destructure the result; reading a property through the proxy is what keeps it reactive.",
+		"A function source is treated as a memo-backed source, so its computation tracks. Pass plain objects when that is not intended.",
+	],
+	omit: [
+		"Do not destructure the result. Spread it onto an element or read properties through it.",
+		"Keys are evaluated once. Hide a dynamic set of keys by building a wrapper object instead.",
+	],
+	action: [
+		"A plain `await` leaves the transaction. Put a bare `yield` before any writes that follow an `await`, or use `yield` in place of `await`.",
+		"Do not call `flush()` inside the generator; it drains the transaction mid-step.",
+		"Navigation-shaped updates (write an input, read the async result) do not need an action. A plain setter call is held automatically.",
+	],
+	affects: [
+		"Marking does not change the value or trigger a refetch; it only reports pending. Pair with `refresh()` to re-ask.",
+	],
+	onSettled: [
+		"Reads inside the callback are not tracked. To react to later settles, register again.",
+		"Returning a cleanup only works from an owned scope, such as a component body. From an event handler it is a development error and is dropped in production.",
+		"`onCleanup` and `flush()` are not allowed inside the callback.",
+	],
+	refresh: [
+		"Refreshing a plain signal accessor is a no-op that resolves immediately.",
+		"The re-ask is quiet: `isPending` does not flip. Call `affects()` first when the UI should show a pending state.",
+		"Inside an action, the resolved value is the staged truth, never the caller's own optimistic override.",
+	],
+	until: [
+		"A falsy result keeps waiting. A thrown error, a rejected async source, a timeout, or an abort rejects the promise.",
+		"Reads inside the predicate see authoritative state, so an optimistic write cannot satisfy it.",
+	],
+	children: [
+		"Call it once in the component body and read the result. Calling `props.children` in several places creates the children several times.",
+		"The accessor resolves lazily; the first read happens where the result is inserted or `toArray()` is called.",
+	],
+	createContext: [
+		"Without a default, reading outside a provider throws `ContextNotFoundError`. That is intentional; add a default only for primitive fallbacks.",
+		"For app-wide state, a module-scope signal or store is already global; context is for scoping a value to a subtree.",
+	],
+	useContext: [
+		"Call it in the component body or another owned scope. Calling it inside an event handler or after an `await` has no owner to read from.",
+		"The value is whatever the nearest provider passed. Pass signals or stores, not their current values, to keep it reactive.",
+	],
+	lazy: [
+		"The import runs on first render, not at definition. Wrap the component in a `Loading` boundary or the nearest boundary shows its fallback.",
+		'By default the component must be the module\'s default export. Use `{ export: "Name" }` for a named export; a runtime wrapper that selects one breaks hydration.',
+	],
+	createUniqueId: [
+		"Call it in a component body or another owned scope so the server and client generate the same id.",
+	],
+	Show: [
+		"A bare accessor as `when` (`when={user}`) is truthy because it is a function. Pass `when={user()}`.",
+		"Without `keyed`, changing `when` to another truthy value updates the accessor in place and keeps the DOM. With `keyed`, the content remounts.",
+	],
+	For: [
+		"The default `keyed` keys rows by item reference. New object instances for the same data recreate rows; keep row identity with a stable `keyed` function or a store.",
+		"`each` takes an array or a falsy value. Pass the accessor's value (`each={items()}`), not the accessor.",
+	],
+	Repeat: [
+		"Rows are positional. Inserting an item in the middle of the source shifts the data every later row reads; use `For` when rows have identity.",
+	],
+	Switch: [
+		"Only `Match` elements are meaningful children; other content has no `when` and never renders.",
+		"The first truthy `Match` wins; order the branches from most to least specific.",
+	],
+	Match: [
+		"A `Match` outside a `Switch` renders nothing useful; it reports its condition to the enclosing `Switch`.",
+	],
+	Errored: [
+		"The boundary catches errors thrown while rendering its subtree and errors that travel through the reactive graph, including rejected async reads. Handle errors in event handlers where they happen.",
+		"`reset()` recomputes the failing sources. If the cause persists, the boundary errors again.",
+		"Errors thrown from the fallback itself go to the parent `Errored`.",
+	],
+	Loading: [
+		"The boundary shows its fallback only when a read inside has no settled value yet. Later updates hold the previous content; use `on` for content that should show a placeholder again.",
+		"`on` compares values, not accessors. Pass `on={id()}`, not `on={id}`.",
+		"Place the boundary around the data-dependent slot, not around layout chrome that should stay stable.",
+	],
+	Reveal: [
+		"Nested groups always participate in the outer group's ordering; there is no opt out.",
+		'`collapsed` has no effect under `"together"` or `"natural"`.',
+	],
+	render: [
+		"`render` creates the reactive root. Calling reactive primitives outside it (module scope) has no owner and is never disposed.",
+		"Rendering into an element that already has server HTML does not reuse it; use `hydrate` for server-rendered pages.",
+	],
+	hydrate: [
+		"The client must render the same tree the server did. A mismatch reports a hydration error in development.",
+		"Content in a `Portal` renders fresh on the client; the server emits nothing for it.",
+	],
+	renderToString: [
+		"Async reads inside `Loading` boundaries emit their fallback. Await `renderToStream` when the output must include settled data.",
+		"Pair the result with `hydrate()` on the client, and keep `renderId` consistent between the two when several roots share a page.",
+	],
+	renderToStream: [
+		"`pipe`, `pipeTo`, and `readable` each consume the render. Use exactly one of them, or await the stream for the settled string.",
+		"Render errors route through `onError`; the awaited promise never rejects.",
+	],
+	httpHeader: [
+		"Call it in a component or reactive-scope body during SSR. It is a no-op in the browser.",
+		"Writes after the response head is committed (the shell flush of a stream) are ignored.",
+	],
+	httpStatus: [
+		"Call it in the scope that decides the status, such as a not-found route or an error fallback. It is a no-op in the browser.",
+		"A scope that disposes retracts its status, so an error boundary that recovers does not leave a 500 behind.",
+		"Writes after the response head is committed are ignored.",
+	],
+	isServer: [
+		"It is a build-time constant. Code behind `if (!isServer)` is removed from the server bundle, so use it rather than `typeof window` checks.",
+	],
+	isDev: [
+		"It is a build-time constant. Code behind `if (isDev)` is removed from production output.",
+	],
+	clientOnly: [
+		"The server renders only the fallback, and the client keeps it through hydration before mounting the component.",
+		"Async reads inside the imported component start on the client; hoist data that should be fetched on the server above the boundary.",
+	],
+	Portal: [
+		"The server renders nothing for a portal; its children render on the client after hydration settles.",
+		"Async reads inside a portal start on the client. Fetch above the portal and pass the data down, and give async content inside its own `Loading` boundary.",
+		"The portal shares its parent's reactive scope and disposes with it.",
+	],
+	Dynamic: [
+		"Prefer `dynamic()` for a component reference you render in several places; `<Dynamic>` is the inline JSX form of the same primitive.",
+		"Every prop other than `component` is forwarded to the rendered component, including `children`.",
+	],
+	dynamic: [
+		"The returned component is stable; render it once and let `source` change. Creating it inside the render path recreates the subtree.",
+	],
+};
+
+// Links to troubleshooting material on Learn pages.
+// Shape: { symbol: [["Problem heading", "/learn/page#anchor"], ...] }.
+const REACTIVITY_PROBLEMS = {
+	functionInstead: [
+		"The page shows the words `function` or `() =>` instead of the value",
+		"/concepts/reactivity#the-page-shows-the-words-function-or---instead-of-the-value",
+	],
+	rendersOnce: [
+		"A value renders once and never updates",
+		"/concepts/reactivity#a-value-renders-once-and-never-updates",
+	],
+	oldValue: [
+		"Reading a signal right after setting it gives the old value",
+		"/concepts/reactivity#reading-a-signal-right-after-setting-it-gives-the-old-value",
+	],
+	copyLags: [
+		"An effect copies one value into another and the copy lags",
+		"/concepts/reactivity#an-effect-copies-one-value-into-another-and-the-copy-lags",
+	],
+	missingEffectFn: [
+		"`createEffect` throws `[MISSING_EFFECT_FN]`",
+		"/concepts/reactivity#createeffect-throws-missing_effect_fn",
+	],
+	notUpdating: [
+		"Something does not update",
+		"/guides/debugging-reactivity#something-does-not-update",
+	],
+	tooOften: [
+		"Something updates too often",
+		"/guides/debugging-reactivity#something-updates-too-often",
+	],
+	deadClick: [
+		"The screen looks dead after a click",
+		"/guides/debugging-reactivity#the-screen-looks-dead-after-a-click",
+	],
+	testOldDom: [
+		"The test sees the old DOM",
+		"/guides/debugging-reactivity#the-test-sees-the-old-dom",
+	],
+	serverWrite: [
+		"A write on the server did nothing",
+		"/guides/debugging-reactivity#a-write-on-the-server-did-nothing",
+	],
+	stoppedAfterError: [
+		"Every update stopped after an error",
+		"/guides/debugging-reactivity#every-update-stopped-after-an-error",
+	],
+};
+const COMPONENT_PROBLEMS = {
+	childNotUpdating: [
+		"A child does not update when the parent's signal changes",
+		"/concepts/components-and-jsx#a-child-does-not-update-when-the-parents-signal-changes",
+	],
+	listRecreates: [
+		"A list re-creates every row on each change",
+		"/concepts/components-and-jsx#a-list-re-creates-every-row-on-each-change",
+	],
+	showFallback: [
+		"`Show` renders the fallback even though the value is set",
+		"/concepts/components-and-jsx#show-renders-the-fallback-even-though-the-value-is-set",
+	],
+	refCallback: [
+		"An effect or `onCleanup` inside a `ref` callback never runs",
+		"/concepts/components-and-jsx#an-effect-or-oncleanup-inside-a-ref-callback-never-runs",
+	],
+};
+const LIST_PROBLEMS = {
+	loseFocus: [
+		"Rows lose focus or animation when the list changes",
+		"/guides/lists#rows-lose-focus-or-animation-when-the-list-changes",
+	],
+	wrongIndex: [
+		"A row shows the wrong index after reordering",
+		"/guides/lists#a-row-shows-the-wrong-index-after-reordering",
+	],
+	wholeList: [
+		"Editing one item re-renders the whole list",
+		"/guides/lists#editing-one-item-re-renders-the-whole-list",
+	],
+	pushNothing: [
+		"`todos.push(item)` does nothing",
+		"/guides/lists#todospushitem-does-nothing",
+	],
+};
+const FORM_PROBLEMS = {
+	emptyObject: [
+		"The server function receives an empty object",
+		"/guides/forms#the-server-function-receives-an-empty-object",
+	],
+	pageReloads: [
+		"The form submits, but the page reloads instead of staying put",
+		"/guides/forms#the-form-submits-but-the-page-reloads-instead-of-staying-put",
+	],
+	actionNotFunction: [
+		"`action` is not a function, or the form attribute renders as source code",
+		"/guides/forms#action-is-not-a-function-or-the-form-attribute-renders-as-source-code",
+	],
+	errorsVanish: [
+		"Errors show for a moment and then vanish",
+		"/guides/forms#errors-show-for-a-moment-and-then-vanish",
+	],
+	respondInternalError: [
+		"`respond()` reaches the client as `Internal Server Error`",
+		"/guides/forms#respond-reaches-the-client-as-internal-server-error",
+	],
+};
+const ENTRY_PROBLEMS = {
+	createSignal: [
+		REACTIVITY_PROBLEMS.functionInstead,
+		REACTIVITY_PROBLEMS.rendersOnce,
+		REACTIVITY_PROBLEMS.oldValue,
+	],
+	createMemo: [
+		REACTIVITY_PROBLEMS.rendersOnce,
+		REACTIVITY_PROBLEMS.copyLags,
+		REACTIVITY_PROBLEMS.tooOften,
+	],
+	createEffect: [
+		REACTIVITY_PROBLEMS.missingEffectFn,
+		REACTIVITY_PROBLEMS.copyLags,
+		REACTIVITY_PROBLEMS.tooOften,
+		REACTIVITY_PROBLEMS.serverWrite,
+	],
+	untrack: [REACTIVITY_PROBLEMS.notUpdating, REACTIVITY_PROBLEMS.tooOften],
+	flush: [REACTIVITY_PROBLEMS.testOldDom, REACTIVITY_PROBLEMS.oldValue],
+	isPending: [REACTIVITY_PROBLEMS.deadClick],
+	latest: [REACTIVITY_PROBLEMS.deadClick],
+	createStore: [
+		LIST_PROBLEMS.pushNothing,
+		LIST_PROBLEMS.wholeList,
+		REACTIVITY_PROBLEMS.notUpdating,
+	],
+	createProjection: [LIST_PROBLEMS.loseFocus],
+	reconcile: [LIST_PROBLEMS.loseFocus, LIST_PROBLEMS.wholeList],
+	merge: [COMPONENT_PROBLEMS.childNotUpdating],
+	omit: [COMPONENT_PROBLEMS.childNotUpdating],
+	action: [REACTIVITY_PROBLEMS.deadClick, FORM_PROBLEMS.errorsVanish],
+	affects: [REACTIVITY_PROBLEMS.deadClick],
+	refresh: [REACTIVITY_PROBLEMS.deadClick],
+	children: [COMPONENT_PROBLEMS.childNotUpdating],
+	Show: [COMPONENT_PROBLEMS.showFallback, REACTIVITY_PROBLEMS.functionInstead],
+	For: [
+		COMPONENT_PROBLEMS.listRecreates,
+		LIST_PROBLEMS.loseFocus,
+		LIST_PROBLEMS.wrongIndex,
+		LIST_PROBLEMS.wholeList,
+	],
+	Repeat: [LIST_PROBLEMS.wrongIndex],
+	Errored: [REACTIVITY_PROBLEMS.stoppedAfterError],
+	Loading: [REACTIVITY_PROBLEMS.deadClick],
+	Portal: [COMPONENT_PROBLEMS.refCallback],
+	respond: [FORM_PROBLEMS.respondInternalError, FORM_PROBLEMS.errorsVanish],
+	redirect: [FORM_PROBLEMS.pageReloads],
+	reload: [FORM_PROBLEMS.pageReloads],
+	createNoJSHandler: [FORM_PROBLEMS.pageReloads, FORM_PROBLEMS.emptyObject],
+	markSafeError: [FORM_PROBLEMS.respondInternalError],
+	GET: [FORM_PROBLEMS.actionNotFunction],
+};
+
+// Learn pages that explain the concept behind an API. Category defaults
+// apply to every page in the category; entry links are listed first.
+// Shape: [["Label", "/path"], ...].
+const ENTRY_LEARN = {
+	createSignal: [["Signals", "/concepts/reactivity#signals"]],
+	createMemo: [
+		["Derived values", "/concepts/reactivity#derived-values"],
+		[
+			"A memo that returns a promise",
+			"/concepts/async-reactivity#a-memo-that-returns-a-promise",
+		],
+	],
+	createEffect: [
+		["Effects", "/concepts/reactivity#effects"],
+		["Avoid unnecessary effects", "/guides/avoid-unnecessary-effects"],
+	],
+	createOptimistic: [
+		[
+			"Mutations: from a client-only list to a server-backed one",
+			"/concepts/async-reactivity#mutations-from-a-client-only-list-to-a-server-backed-one",
+		],
+	],
+	flush: [
+		["When updates land", "/concepts/reactivity#when-updates-land"],
+		["Testing", "/guides/testing"],
+	],
+	isPending: [
+		[
+			"Another answer is coming: `isPending`",
+			"/concepts/async-reactivity#another-answer-is-coming-ispending",
+		],
+	],
+	latest: [
+		[
+			"Show the input now: `latest`",
+			"/concepts/async-reactivity#show-the-input-now-latest",
+		],
+	],
+	untrack: [["Effects", "/concepts/reactivity#effects"]],
+	createStore: [
+		["Create nested state", "/concepts/stores#create-nested-state"],
+		["Update with a draft", "/concepts/stores#update-with-a-draft"],
+	],
+	createProjection: [
+		[
+			"Derive a store with a projection",
+			"/concepts/stores#derive-a-store-with-a-projection",
+		],
+	],
+	createOptimisticStore: [
+		["Optimistic stores", "/concepts/stores#optimistic-stores"],
+		[
+			"Mutations: from a client-only list to a server-backed one",
+			"/concepts/async-reactivity#mutations-from-a-client-only-list-to-a-server-backed-one",
+		],
+	],
+	reconcile: [
+		[
+			"Keep row identity across updates",
+			"/guides/lists#keep-row-identity-across-updates",
+		],
+	],
+	merge: [["Props", "/concepts/components-and-jsx#props"]],
+	omit: [["Props", "/concepts/components-and-jsx#props"]],
+	action: [
+		[
+			"Mutations: from a client-only list to a server-backed one",
+			"/concepts/async-reactivity#mutations-from-a-client-only-list-to-a-server-backed-one",
+		],
+		[
+			"Mutations and responses",
+			"/building-apps/server-functions/mutations-and-responses",
+		],
+	],
+	affects: [
+		["Additional control", "/concepts/async-reactivity#additional-control"],
+	],
+	refresh: [
+		["Keep data fresh", "/guides/data-fetching-patterns#keep-data-fresh"],
+		[
+			"Mutate, then refetch",
+			"/guides/data-fetching-patterns#mutate-then-refetch",
+		],
+	],
+	until: [["Queue completion", "/concepts/async-reactivity#queue-completion"]],
+	onSettled: [
+		[
+			"Use an effect at an imperative boundary",
+			"/guides/avoid-unnecessary-effects#use-an-effect-at-an-imperative-boundary",
+		],
+		["Ownership", "/concepts/reactivity#ownership"],
+	],
+	children: [
+		[
+			"Children and composition",
+			"/concepts/components-and-jsx#children-and-composition",
+		],
+	],
+	createContext: [["Context", "/concepts/components-and-jsx#context"]],
+	useContext: [["Context", "/concepts/components-and-jsx#context"]],
+	lazy: [["Loading boundaries", "/concepts/boundaries#loading-boundaries"]],
+	Show: [
+		["Conditional content", "/concepts/components-and-jsx#conditional-content"],
+	],
+	Switch: [
+		["Conditional content", "/concepts/components-and-jsx#conditional-content"],
+	],
+	For: [
+		["Rendering lists", "/concepts/components-and-jsx#rendering-lists"],
+		["Lists", "/guides/lists"],
+	],
+	Repeat: [
+		[
+			"Render a window over a large list",
+			"/guides/lists#render-a-window-over-a-large-list",
+		],
+	],
+	Errored: [
+		["Error boundaries", "/concepts/boundaries#error-boundaries"],
+		[
+			"Work rejects: `Errored`",
+			"/concepts/async-reactivity#work-rejects-errored",
+		],
+	],
+	Loading: [
+		["Loading boundaries", "/concepts/boundaries#loading-boundaries"],
+		[
+			"Show a placeholder again: `Loading on`",
+			"/concepts/async-reactivity#show-a-placeholder-again-loading-on",
+		],
+	],
+	Reveal: [["Reveal order", "/concepts/boundaries#reveal-order"]],
+	Dynamic: [
+		["Dynamic components", "/concepts/components-and-jsx#dynamic-components"],
+	],
+	dynamic: [
+		["Dynamic components", "/concepts/components-and-jsx#dynamic-components"],
+	],
+	render: [
+		["Client rendering", "/concepts/rendering-and-ssr#client-rendering"],
+	],
+	hydrate: [
+		[
+			"Hydrating server HTML",
+			"/concepts/rendering-and-ssr#hydrating-server-html",
+		],
+	],
+	renderToString: [
+		[
+			"Synchronous string rendering",
+			"/concepts/rendering-and-ssr#synchronous-string-rendering",
+		],
+	],
+	renderToStream: [
+		["Streaming rendering", "/concepts/rendering-and-ssr#streaming-rendering"],
+	],
+	clientOnly: [
+		[
+			"Server and client boundaries",
+			"/concepts/rendering-and-ssr#server-and-client-boundaries",
+		],
+	],
+	isServer: [
+		[
+			"Server and client boundaries",
+			"/concepts/rendering-and-ssr#server-and-client-boundaries",
+		],
+	],
+	Portal: [
+		[
+			"Server and client boundaries",
+			"/concepts/rendering-and-ssr#server-and-client-boundaries",
+		],
+	],
+	httpStatus: [
+		[
+			"Who owns the document",
+			"/concepts/rendering-and-ssr#who-owns-the-document",
+		],
+	],
+	httpHeader: [
+		[
+			"Who owns the document",
+			"/concepts/rendering-and-ssr#who-owns-the-document",
+		],
+	],
+	GET: [
+		[
+			"Reads, streams, and live data",
+			"/building-apps/server-functions/reads-and-live-data",
+		],
+	],
+	live: [
+		[
+			"Reads, streams, and live data",
+			"/building-apps/server-functions/reads-and-live-data",
+		],
+	],
+	invoke: [
+		[
+			"Metadata and transport",
+			"/building-apps/server-functions/metadata-and-transport",
+		],
+	],
+	withMeta: [
+		[
+			"Metadata and transport",
+			"/building-apps/server-functions/metadata-and-transport",
+		],
+	],
+	enableRichArguments: [
+		[
+			"Arguments and security",
+			"/building-apps/server-functions/arguments-and-security",
+		],
+	],
+	configureServerFunctionsClient: [
+		[
+			"Metadata and transport",
+			"/building-apps/server-functions/metadata-and-transport",
+		],
+	],
+	createNoJSHandler: [
+		[
+			"Progressive enhancement",
+			"/building-apps/server-functions/progressive-enhancement",
+		],
+		["Forms", "/guides/forms"],
+	],
+	respond: [
+		[
+			"Mutations and responses",
+			"/building-apps/server-functions/mutations-and-responses",
+		],
+		["Forms", "/guides/forms"],
+	],
+	redirect: [
+		[
+			"Mutations and responses",
+			"/building-apps/server-functions/mutations-and-responses",
+		],
+	],
+	reload: [
+		[
+			"Mutations and responses",
+			"/building-apps/server-functions/mutations-and-responses",
+		],
+	],
+	markSafeError: [
+		[
+			"Arguments and security",
+			"/building-apps/server-functions/arguments-and-security",
+		],
+		["Forms", "/guides/forms"],
+	],
+	getRequestEvent: [
+		["Sessions and auth", "/building-apps/sessions-and-auth"],
+		["Middleware and API routes", "/building-apps/middleware-and-api-routes"],
+	],
+	parseCookieHeader: [
+		["Sessions and auth", "/building-apps/sessions-and-auth"],
+	],
+};
+const CATEGORY_LEARN = {
+	Reactivity: [
+		["Reactivity", "/concepts/reactivity"],
+		["Async reactivity", "/concepts/async-reactivity"],
+		["Debugging reactivity", "/guides/debugging-reactivity"],
+	],
+	Stores: [
+		["Stores", "/concepts/stores"],
+		["Lists", "/guides/lists"],
+	],
+	"Lifecycle & Actions": [
+		["Async reactivity", "/concepts/async-reactivity"],
+		["Avoid unnecessary effects", "/guides/avoid-unnecessary-effects"],
+	],
+	"Components & Context": [
+		["Components and JSX", "/concepts/components-and-jsx"],
+	],
+	"Components (JSX)": [
+		["Components and JSX", "/concepts/components-and-jsx"],
+		["Boundaries", "/concepts/boundaries"],
+	],
+	Components: [["Components and JSX", "/concepts/components-and-jsx"]],
+	"Rendering & SSR": [
+		["Rendering and SSR", "/concepts/rendering-and-ssr"],
+		["Choose a rendering mode", "/guides/choose-a-rendering-mode"],
+	],
+	"Server functions": [["Server functions", "/building-apps/server-functions"]],
+	"Request & response": [
+		[
+			"Mutations and responses",
+			"/building-apps/server-functions/mutations-and-responses",
+		],
+		["Middleware and API routes", "/building-apps/middleware-and-api-routes"],
+	],
+	"Advanced / Owner & Introspection": [
+		["Ownership", "/concepts/reactivity#ownership"],
+	],
+	"Advanced / Specialized Reactivity & Tracking": [
+		["Avoid unnecessary effects", "/guides/avoid-unnecessary-effects"],
+		["Debugging reactivity", "/guides/debugging-reactivity"],
+	],
+	"Advanced / Store Advanced": [["Stores", "/concepts/stores"]],
+	"Advanced / JSX Component Primitives": [
+		["Primitive forms", "/concepts/boundaries#primitive-forms"],
+	],
+	"Advanced / Manual Hydration": [
+		[
+			"Controlling hydration",
+			"/concepts/rendering-and-ssr#controlling-hydration",
+		],
+	],
+	"Advanced / Interop & Async": [
+		["Async reactivity", "/concepts/async-reactivity"],
+	],
+	"Advanced / Diagnostics & Dev Hooks": [
+		["Debugging reactivity", "/guides/debugging-reactivity"],
+	],
+};
+
+// Non-exported aliases and brands that appear in public signatures,
+// rewritten to the public types they stand for. `Refreshable` is kept on the
+// `refresh` page, where it is the point.
+const TYPE_TEXT_REWRITES = [
+	[
+		/\bHydrationSignalOptions<([^<>]+)>/g,
+		"SignalOptions<$1> & MemoOptions<$1>",
+	],
+	[/\bHydrationMemoOptions</g, "MemoOptions<"],
+	[/\bHydrationProjectionOptions\b/g, "ProjectionOptions"],
+	[/\bNoFn<([^<>]+)>/g, "$1"],
+	[/\bRefreshable<((?:[^<>]|<[^<>]*>)+)>/g, "$1"],
+	// The core `Element` type is imported as `SolidElement` inside the
+	// package; app code knows it as `JSX.Element`.
+	[/\bSolidElement\b/g, "JSX.Element"],
+	// Underscore-prefixed parameter names in server-side stubs.
+	[/([(,]\s*)_+([a-z]\w*\??:)/g, "$1$2"],
+];
+const KEEP_BRAND_TYPES = new Set(["refresh"]);
+
+// `packages/solid/src/client/hydration.ts` augments the @solidjs/signals
+// option interfaces with `deferStream` and `ssrSource` through a module
+// declaration, using a non-exported `HydrationSsrFields` alias. Fold those
+// members into the public option types so the rendered signature and
+// member docs match what a solid-js user can pass.
+const HYDRATION_AUGMENTED_TYPES = [
+	"MemoOptions",
+	"SignalOptions",
+	"EffectOptions",
+	"ProjectionOptions",
+];
+// Set while an entry's signature and parameters are computed.
+let currentEntryName = "";
+
+// Which export leads a page that holds several exports, keyed by file stem.
+const PAGE_LEAD = {
+	"switch-and-match": "Switch",
+	metadata: "withMeta",
+	"safe-errors": "markSafeError",
+	cookies: "parseCookieHeader",
+};
+
+// Folded types that are TypeScript plumbing (brands, inference helpers).
+// They stay folded so the missing-disposition check passes, but they are not
+// rendered under "Related types".
+const HIDDEN_RELATED_TYPES = new Set([
+	"Refreshable",
+	"NoInfer",
+	"NoFn",
+	"NonZeroParams",
+]);
+
+// Folded types whose member docs are long integration-level material. They
+// render inside a collapsed deep-dive so the page stays scannable.
+const COLLAPSED_RELATED_TYPES = new Set([
+	"MemoOptions",
+	"SignalOptions",
+	"HydrationProjectionOptions",
+]);
 
 const REFERENCE_FIXUPS = [
 	[
@@ -1004,6 +2294,78 @@ const REFERENCE_FIXUPS = [
 	],
 	[/\btransition ownership\b/g, "update ownership"],
 	[/\bonce all pending settles\b/g, "once all pending work settles"],
+	[/inside an `action` transition/g, "inside an `action`"],
+	// Source-voice and tone leaks (see WRITING.md: no "simply", "just",
+	// shouting caps, internal ticket or file references).
+	[
+		/Restating the default just adds noise\./g,
+		"Restating the default adds noise.",
+	],
+	[/but is just a category error/g, "but is a category error"],
+	[/so this is just the opt-in/g, "so this option is the only opt-in needed"],
+	[
+		/rather than just render them through/g,
+		"rather than only render them through",
+	],
+	[/\bsimply returns\b/g, "returns"],
+	[/\bis simply not flashed\b/g, "is not flashed"],
+	[/it doesn't subscribe, it just\b/g, "it doesn't subscribe, it only"],
+	[
+		/`await` is still the ergonomic choice for typed results; just\b/g,
+		"`await` is still the ergonomic choice for typed results;",
+	],
+	[/A plain `await` does NOT\b/g, "A plain `await` does not"],
+	[
+		/Effect-phase throws are NOT routed here/g,
+		"Effect-phase throws are not routed here",
+	],
+	[/^WARNING: Because/gm, "Because"],
+	[
+		/Treat the seed as commit #0:/g,
+		"Treat the seed as the first committed value:",
+	],
+	[/^Commit #0: a committed value/gm, "First committed value: a value"],
+	[
+		/\*\*false\*\*: commit #0 answers/g,
+		"**false**: the declared first value answers",
+	],
+	[/\*\*declared commit #0\*\* \(value\)/g, "**declared first value**"],
+	[
+		/the seed is the declared commit #0/g,
+		"the seed is the declared first value",
+	],
+	[/\bcommit #0\b/gi, "first committed value"],
+	[/\(`_\$memo`\) and library code/g, "and library code"],
+	[
+		/the (signal|state)'s type will automatically extended with undefined/g,
+		"the $1's type is widened to include `undefined`",
+	],
+	[
+		/\s*See `documentation\/solid-2\.0\/03-control-flow\.md` for the full nesting matrix and the\n?\s*"minimally ready" definition per order\./g,
+		"",
+	],
+	[/\(eg\. A hash router's/g, "(for example, a hash router's"],
+	[
+		/See\s+\{@link HydrationSsrFields\}|See\s+`HydrationSsrFields`/g,
+		"See the `ssrSource` option",
+	],
+	[/\bALL attribution semantics\b/g, "all attribution semantics"],
+	[/calls of the SAME function\b/g, "calls of the same function"],
+	[/\(matching `resolve\(\)`\/`until\(\)`, #\d+\)/g, "(matching `until()`)"],
+	[/\(`_inFlight` was just assigned\n/g, "(`_inFlight` was assigned\n"],
+	[/the outcome is\nsimply not flashed/g, "the outcome is\nnot flashed"],
+	[
+		/for the same client-vs-server\s+tradeoffs as the other primitives\. See the `ssrSource` option\./g,
+		"for the same client-vs-server tradeoffs as the other primitives.",
+	],
+	[
+		/that controls what initial value the client uses and whether `fn`\s+re-runs\. See the `ssrSource` option\./g,
+		"that controls what initial value the client uses and whether `fn` re-runs.",
+	],
+	[
+		/\bSolid 1\.x setter calls\. Prefer draft-mutating store setters in new Solid 2 code\./g,
+		"code that still uses Solid 1.x setter paths. Prefer draft-mutating store setters in new code.",
+	],
 ];
 
 const scriptPath = fileURLToPath(import.meta.url);
@@ -1285,6 +2647,8 @@ function collectEntries(program, checker, root) {
 		);
 	}
 
+	augmentWithHydrationFields(foldedByName, program, root);
+
 	return {
 		pages: entries.sort(
 			(a, b) =>
@@ -1293,6 +2657,37 @@ function collectEntries(program, checker, root) {
 		),
 		folds: foldedEntries.sort((a, b) => a.name.localeCompare(b.name)),
 	};
+}
+
+function augmentWithHydrationFields(foldedByName, program, root) {
+	const sourceFile = program.getSourceFile(
+		path.join(root, "packages/solid/src/client/hydration.ts")
+	);
+	if (!sourceFile) return;
+	const alias = sourceFile.statements.find(
+		(statement) =>
+			ts.isTypeAliasDeclaration(statement) &&
+			statement.name.getText() === "HydrationSsrFields"
+	);
+	if (!alias) return;
+	const members = getMemberDocs([alias]);
+	if (!members.length) return;
+	const memberLines = getTypeMembers([alias]).map(
+		(member) => `  ${member.getText(sourceFile).replace(/\s+/g, " ").trim()}`
+	);
+	for (const name of HYDRATION_AUGMENTED_TYPES) {
+		const entry = foldedByName.get(name);
+		if (!entry) continue;
+		const known = new Set(entry.memberDocs.map((member) => member.name));
+		entry.memberDocs = [
+			...entry.memberDocs,
+			...members.filter((member) => !known.has(member.name)),
+		];
+		entry.signature = entry.signature.replace(
+			/\n?\}\s*;?$/,
+			`\n${memberLines.join("\n")}\n};`
+		);
+	}
 }
 
 function createEntry({
@@ -1313,6 +2708,7 @@ function createEntry({
 		primary.getSourceFile().getLineAndCharacterOfPosition(primary.getStart())
 			.line + 1;
 	const summaryOverride = ENTRY_SUMMARY_OVERRIDES[name];
+	currentEntryName = name;
 	return {
 		name,
 		packageName: entrypoint.packageName,
@@ -1330,6 +2726,7 @@ function createEntry({
 		signature:
 			SIGNATURE_OVERRIDES[name] ?? getSignature(name, declarations, checker),
 		memberDocs: OMIT_MEMBER_DOCS.has(name) ? [] : getMemberDocs(declarations),
+		...getCallableDocs(name, declarations, docs, checker),
 		route: disposition.route,
 		foldTargets: disposition.targets ?? [],
 		aliases: getExportAliases(name, exportedSymbol, symbol),
@@ -1354,7 +2751,42 @@ function mergeDuplicateEntry(existing, incoming) {
 		existing.docs = incoming.docs;
 		existing.signature = incoming.signature;
 		existing.aliases = incoming.aliases;
+		existing.parameters = incoming.parameters;
+		existing.props = incoming.props;
+		existing.isComponent = incoming.isComponent;
+		return;
 	}
+	// Both sides documented (for example the solid-js hydration wrapper and
+	// the @solidjs/signals core): keep the first summary but borrow any
+	// examples, returns, and parameter text the wrapper does not carry.
+	if (!existing.docs.examples.length && incoming.docs.examples.length) {
+		existing.docs = { ...existing.docs, examples: incoming.docs.examples };
+	}
+	if (!existing.docs.returns && incoming.docs.returns) {
+		existing.docs = { ...existing.docs, returns: incoming.docs.returns };
+	}
+	if (!existing.docs.params.length && incoming.docs.params.length) {
+		existing.docs = { ...existing.docs, params: incoming.docs.params };
+	}
+	existing.parameters = borrowMemberText(
+		existing.parameters,
+		incoming.parameters
+	);
+	existing.props = borrowMemberText(existing.props, incoming.props);
+}
+
+// Keeps the existing member list (names and types) but fills in missing
+// descriptions from a duplicate declaration, matched by member name.
+function borrowMemberText(existing, incoming) {
+	if (!existing.length) return incoming;
+	const textByName = new Map(
+		incoming.filter((member) => member.text).map((m) => [m.name, m.text])
+	);
+	return existing.map((member) =>
+		member.text || !textByName.has(member.name)
+			? member
+			: { ...member, text: textByName.get(member.name) }
+	);
 }
 
 function shouldSkipName(name) {
@@ -1419,7 +2851,7 @@ function getDocs(declarations) {
 	};
 
 	for (const declaration of declarations) {
-		const docs = declaration.jsDoc ?? [];
+		const docs = jsDocsOf(declaration);
 		for (const doc of docs) {
 			const summary = normalizeMarkdown(renderComment(doc.comment));
 			if (summary) result.summary = summary;
@@ -1465,6 +2897,19 @@ function getDocs(declarations) {
 	result.tags = uniqueStrings(result.tags);
 
 	return result;
+}
+
+// JSDoc for `export const x = ...` hangs off the VariableStatement, not the
+// VariableDeclaration that the symbol points at.
+function jsDocsOf(declaration) {
+	if (declaration.jsDoc?.length) return declaration.jsDoc;
+	if (ts.isVariableDeclaration(declaration)) {
+		const statement = declaration.parent?.parent;
+		if (statement && ts.isVariableStatement(statement)) {
+			return statement.jsDoc ?? [];
+		}
+	}
+	return [];
 }
 
 function renderComment(comment) {
@@ -1577,7 +3022,9 @@ function getSignature(name, declarations, checker) {
 		);
 		const targets = overloads.length ? overloads : functionDeclarations;
 		return targets
-			.map((declaration) => cleanSignature(signatureFromNode(declaration)))
+			.map((declaration) =>
+				cleanSignature(signatureFromNode(declaration, checker))
+			)
 			.join("\n");
 	}
 
@@ -1597,6 +3044,58 @@ function getSignature(name, declarations, checker) {
 
 	const variableDeclaration = declarations.find(ts.isVariableDeclaration);
 	if (variableDeclaration) {
+		const annotation = variableDeclaration.type;
+		if (annotation && ts.isTypeQueryNode(annotation)) {
+			// `const createEffect: typeof coreEffect` — follow the alias and
+			// present the underlying overloads under the exported name.
+			const target = checker.getSymbolAtLocation(annotation.exprName);
+			const resolved = target ? resolveSymbol(checker, target) : undefined;
+			const targetDeclarations = (
+				resolved ? declarationList(resolved) : []
+			).filter((declaration) => !ts.isVariableDeclaration(declaration));
+			if (targetDeclarations.length) {
+				return getSignature(name, targetDeclarations, checker).replace(
+					/^function \w+/gm,
+					`function ${name}`
+				);
+			}
+		}
+		if (annotation && !ts.isTypeQueryNode(annotation)) {
+			const sourceFile = variableDeclaration.getSourceFile();
+			// A const typed as a call-signature object or a function type is a
+			// function to the reader; present it as overloads.
+			if (
+				ts.isTypeLiteralNode(annotation) &&
+				annotation.members.length &&
+				annotation.members.every(ts.isCallSignatureDeclaration)
+			) {
+				return annotation.members
+					.map((member) =>
+						cleanSignature(
+							`function ${name}${dedent(member.getText(sourceFile))}`
+						)
+					)
+					.join("\n");
+			}
+			if (ts.isFunctionTypeNode(annotation)) {
+				const head = sourceFile.text
+					.slice(
+						annotation.getStart(sourceFile),
+						annotation.type.getStart(sourceFile)
+					)
+					.replace(/=>\s*$/, "")
+					.trim();
+				return cleanSignature(
+					`function ${name}${head}: ${annotation.type.getText(sourceFile)}`
+				);
+			}
+			// Keep the author's formatting (and drop overload comments) when
+			// the const carries an explicit type annotation.
+			const text = annotation
+				.getText(sourceFile)
+				.replace(/^\s*\/\/.*$\n?/gm, "");
+			return cleanSignature(`const ${name}: ${text}`);
+		}
 		const type = checker.typeToString(
 			checker.getTypeOfSymbolAtLocation(
 				checker.getSymbolAtLocation(variableDeclaration.name) ??
@@ -1615,6 +3114,183 @@ function getSignature(name, declarations, checker) {
 
 	const primary = declarations[0];
 	return cleanSignature(signatureFromNode(primary));
+}
+
+// Collects call-signature parameters (or component props) from the
+// declarations so every function page can render `## Parameters` or
+// `## Props` even when the upstream JSDoc has no `@param` tags.
+function getCallableDocs(name, declarations, docs, checker) {
+	const empty = { parameters: [], props: [], isComponent: false };
+	const callDeclarations = collectCallDeclarations(declarations, checker);
+	if (!callDeclarations.length) return empty;
+
+	const first = callDeclarations[0];
+	const isComponent =
+		/^[A-Z]/.test(name) &&
+		first.parameters.length === 1 &&
+		first.parameters[0].name.getText() === "props";
+
+	if (isComponent) {
+		const override = PROP_DOCS[name];
+		if (Array.isArray(override)) {
+			return { parameters: [], props: override, isComponent: true };
+		}
+		return {
+			parameters: [],
+			props: mergeMembers(
+				callDeclarations.map((declaration) =>
+					propsFromDeclaration(declaration, checker)
+				),
+				override ?? {}
+			),
+			isComponent: true,
+		};
+	}
+
+	// `@param` text first, then hand-written PARAM_DOCS on top (a string
+	// replaces the text; an object can also pin the displayed type).
+	const paramDocs = Object.fromEntries(
+		docs.params.map((param) => [param.name, { text: param.text }])
+	);
+	for (const [paramName, doc] of Object.entries(PARAM_DOCS[name] ?? {})) {
+		paramDocs[paramName] = {
+			...(paramDocs[paramName] ?? {}),
+			...(typeof doc === "string" ? { text: doc } : doc),
+		};
+	}
+	const parameters = mergeMembers(
+		callDeclarations.map((declaration) =>
+			declaration.parameters.map((parameter) => ({
+				// Some implementations underscore-prefix unused server-side
+				// parameters; the reader sees the public name.
+				name: parameter.name.getText().replace(/^_+/, ""),
+				type: parameter.type
+					? cleanTypeText(parameter.type.getText(parameter.getSourceFile()))
+					: checker.typeToString(
+							checker.getTypeAtLocation(parameter),
+							parameter,
+							ts.TypeFormatFlags.NoTruncation
+						),
+				optional: Boolean(parameter.questionToken || parameter.initializer),
+				text: "",
+			}))
+		),
+		paramDocs
+	);
+	return { parameters, props: [], isComponent: false };
+}
+
+function collectCallDeclarations(declarations, checker) {
+	const functionDeclarations = declarations.filter(ts.isFunctionDeclaration);
+	if (functionDeclarations.length) {
+		const overloads = functionDeclarations.filter(
+			(declaration) => !declaration.body
+		);
+		return overloads.length ? overloads : functionDeclarations;
+	}
+	const variableDeclaration = declarations.find(ts.isVariableDeclaration);
+	if (!variableDeclaration) return [];
+	const symbol = checker.getSymbolAtLocation(variableDeclaration.name);
+	if (!symbol) return [];
+	const type = checker.getTypeOfSymbolAtLocation(symbol, variableDeclaration);
+	return type
+		.getCallSignatures()
+		.map((signature) => signature.getDeclaration())
+		.filter(
+			(declaration) =>
+				declaration &&
+				Array.isArray(declaration.parameters) &&
+				declaration.parameters.length
+		);
+}
+
+function propsFromDeclaration(declaration, checker) {
+	const parameter = declaration.parameters[0];
+	if (!parameter.type) return [];
+	const type = checker.getTypeAtLocation(parameter.type);
+	const properties = type.getProperties?.() ?? [];
+	return properties.map((property) => {
+		const declarationNode =
+			property.valueDeclaration ?? property.declarations?.[0];
+		const typeNode = declarationNode?.type;
+		const typeText = typeNode
+			? cleanTypeText(typeNode.getText(typeNode.getSourceFile()))
+			: checker.typeToString(
+					checker.getTypeOfSymbolAtLocation(property, parameter),
+					parameter,
+					ts.TypeFormatFlags.NoTruncation
+				);
+		return {
+			name: property.getName(),
+			type: typeText,
+			optional: Boolean(property.flags & ts.SymbolFlags.Optional),
+			text: normalizeMarkdown(
+				ts.displayPartsToString(property.getDocumentationComment(checker))
+			),
+		};
+	});
+}
+
+// Merges members across overloads by name, keeping first-seen order and
+// collecting the distinct type texts. Descriptions come from `docsByName`
+// (hand-written tables or `@param` tags) and fall back to source JSDoc.
+function mergeMembers(memberLists, docsByName) {
+	const merged = new Map();
+	for (const members of memberLists) {
+		for (const member of members) {
+			const existing = merged.get(member.name);
+			if (!existing) {
+				merged.set(member.name, {
+					name: member.name,
+					types: [member.type],
+					optional: member.optional,
+					text: member.text,
+				});
+				continue;
+			}
+			if (!existing.types.includes(member.type))
+				existing.types.push(member.type);
+			existing.optional = existing.optional || member.optional;
+			if (!existing.text && member.text) existing.text = member.text;
+		}
+	}
+	return [...merged.values()].map((member) => {
+		const doc = docsByName[member.name];
+		const override = typeof doc === "object" && doc !== null ? doc : null;
+		return {
+			name: member.name,
+			type: override?.type ?? member.types.join(" | "),
+			optional: override?.optional ?? member.optional,
+			text: (override ? override.text : doc) ?? member.text ?? "",
+		};
+	});
+}
+
+// Removes one level of indentation from a multi-line member text so it can
+// sit at column zero in a code block.
+function dedent(value) {
+	const lines = String(value).split("\n");
+	if (lines.length < 2) return value;
+	const indents = lines
+		.slice(1)
+		.filter((line) => line.trim())
+		.map((line) => line.match(/^\s*/)[0].length);
+	const shared = Math.min(...indents);
+	return [lines[0], ...lines.slice(1).map((line) => line.slice(shared))].join(
+		"\n"
+	);
+}
+
+function cleanTypeText(value) {
+	return rewriteTypeText(String(value).replace(/\s+/g, " ").trim());
+}
+
+function rewriteTypeText(value) {
+	if (KEEP_BRAND_TYPES.has(currentEntryName)) return value;
+	return TYPE_TEXT_REWRITES.reduce(
+		(result, [pattern, replacement]) => result.replace(pattern, replacement),
+		value
+	);
 }
 
 function stripMemberDocs(value) {
@@ -1654,10 +3330,26 @@ function getMemberDocs(declarations) {
 		.filter(Boolean);
 }
 
-function signatureFromNode(node) {
+function signatureFromNode(node, checker) {
 	const sourceFile = node.getSourceFile();
 	if (ts.isFunctionDeclaration(node) && node.body) {
-		return `${sourceFile.text.slice(node.getStart(sourceFile), node.body.getStart(sourceFile)).trim()};`;
+		const head = sourceFile.text
+			.slice(node.getStart(sourceFile), node.body.getStart(sourceFile))
+			.trim();
+		// Implementations without an annotated return type still have one;
+		// ask the checker so the signature is complete.
+		if (!node.type && checker) {
+			const signature = checker.getSignatureFromDeclaration(node);
+			if (signature) {
+				const returnType = checker.typeToString(
+					checker.getReturnTypeOfSignature(signature),
+					node,
+					ts.TypeFormatFlags.NoTruncation
+				);
+				return `${head}: ${returnType};`;
+			}
+		}
+		return `${head};`;
 	}
 	const text = node.getText(sourceFile);
 	const withoutDocs = text.replace(/^\/\*\*[\s\S]*?\*\/\s*/g, "");
@@ -1665,13 +3357,15 @@ function signatureFromNode(node) {
 }
 
 function cleanSignature(value) {
-	return value
-		.replace(/\r\n/g, "\n")
-		.replace(/^export\s+/gm, "")
-		.replace(/^declare\s+/gm, "")
-		.replace(/\n{3,}/g, "\n\n")
-		.trim()
-		.replace(/;?$/, ";");
+	return rewriteTypeText(
+		value
+			.replace(/\r\n/g, "\n")
+			.replace(/^export\s+/gm, "")
+			.replace(/^declare\s+/gm, "")
+			.replace(/\n{3,}/g, "\n\n")
+			.trim()
+			.replace(/;?$/, ";")
+	);
 }
 
 function getExportAliases(name, exportedSymbol, resolvedSymbol) {
@@ -1748,6 +3442,7 @@ function buildOutputFiles(reference, source) {
 	const foldsByRoute = collectFoldsByRoute(reference.folds);
 
 	return [...grouped.entries()].map(([routePath, routeEntries]) => {
+		orderPageEntries(routePath, routeEntries);
 		const primary = routeEntries[0];
 		return {
 			routePath,
@@ -1762,6 +3457,22 @@ function buildOutputFiles(reference, source) {
 			),
 		};
 	});
+}
+
+// On pages that hold several exports, the export whose name matches the file
+// (or, failing that, the first non-predicate export) leads the page. Without
+// this, `redirect.mdx` would open with `isHref`.
+function orderPageEntries(routePath, entries) {
+	if (entries.length < 2) return;
+	const stem = path.basename(routePath, ".mdx").replace(/^\(\d+\)/, "");
+	const rank = (entry) => {
+		if (PAGE_LEAD[stem] === entry.name) return -1;
+		if (slugify(entry.name) === stem) return 0;
+		if (stem.includes(slugify(entry.name))) return 1;
+		if (/^is[A-Z]/.test(entry.name)) return 3;
+		return 2;
+	};
+	entries.sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
 }
 
 function applyReferenceFixups(content) {
@@ -1797,9 +3508,11 @@ function collectFoldsByRoute(folds) {
 
 function renderMdx(entries, category, source, foldedEntries = []) {
 	const primary = entries[0];
-	const description = applyReferenceFixups(
-		escapeMdxText(primary.docs.summary.split("\n\n")[0]) ||
-			`${primary.name} API reference.`
+	const description = toDescription(
+		applyReferenceFixups(
+			escapeMdxText(primary.docs.summary.split("\n\n")[0]) ||
+				`${primary.name} API reference.`
+		)
 	);
 	const useCases =
 		primary.docs.useCases ||
@@ -1824,61 +3537,128 @@ function renderMdx(entries, category, source, foldedEntries = []) {
 		"---",
 	].join("\n");
 
-	const body = entries
-		.map((entry) => renderEntry(entry, source))
-		.join("\n\n---\n\n");
-	const relatedTypes = foldedEntries.length
-		? `\n\n${renderRelatedTypes(foldedEntries)}`
+	const visibleFolds = foldedEntries.filter(
+		(entry) => !HIDDEN_RELATED_TYPES.has(entry.name)
+	);
+	const relatedTypes = visibleFolds.length
+		? `\n\n${renderRelatedTypes(visibleFolds)}`
 		: "";
+	const learn = renderLearnLinks(entries, category);
+	const learnBlock = learn.length
+		? `\n\n## Learn more\n\n${learn.join("\n")}`
+		: "";
+
+	const body =
+		entries.length === 1
+			? renderEntry(primary, { heading: "##" })
+			: renderMultiEntryPage(entries);
+
 	return `${frontmatter}
 
 {/* ${GENERATED_MARKER} */}
 
-${body}${relatedTypes}
+${body}${learnBlock}${relatedTypes}
 `;
 }
 
-function renderEntry(entry) {
-	const blocks = [];
-	blocks.push(
-		escapeMdxText(entry.docs.summary) || `${entry.name} API reference.`
-	);
-
-	if (ENTRY_CALLOUTS[entry.name]) {
-		blocks.push(ENTRY_CALLOUTS[entry.name]);
+// A page with several exports opens with the lead export's summary and a
+// combined import block, then gives each export its own `##` section with
+// the standard anatomy nested one level down.
+function renderMultiEntryPage(entries) {
+	const primary = entries[0];
+	const blocks = [renderIntro(primary)];
+	blocks.push(renderImport(entries));
+	for (const entry of entries) {
+		blocks.push(`## \`${entry.name}\``);
+		blocks.push(
+			renderEntry(entry, {
+				heading: "###",
+				skipIntro: entry === primary,
+				skipImport: true,
+			})
+		);
 	}
+	return blocks.join("\n\n");
+}
 
+function renderIntro(entry) {
+	const blocks = [
+		escapeMdxText(entry.docs.summary) || `${entry.name} API reference.`,
+	];
+	if (ENTRY_CALLOUTS[entry.name]) blocks.push(ENTRY_CALLOUTS[entry.name]);
 	if (entry.docs.deprecated) {
 		blocks.push(`> Deprecated: ${escapeMdxText(entry.docs.deprecated)}`);
 	}
+	return blocks.join("\n\n");
+}
 
-	blocks.push(
-		`## Import\n\n\`\`\`ts\n${!VALUE_IMPORTS.has(entry.name) && (entry.kind === "type" || entry.kind === "namespace") ? "import type" : "import"} { ${entry.name} } from "${entry.packageName}";\n\`\`\``
-	);
-
-	blocks.push(`## Type signature\n\n\`\`\`ts\n${entry.signature}\n\`\`\``);
-
-	if (entry.memberDocs.length) {
-		blocks.push(`## Properties\n\n${renderMemberDocs(entry.memberDocs)}`);
+function renderImport(entries, heading = "##") {
+	const byPackage = new Map();
+	for (const entry of entries) {
+		const isType =
+			!VALUE_IMPORTS.has(entry.name) &&
+			(entry.kind === "type" || entry.kind === "namespace");
+		const key = `${isType ? "import type" : "import"}|${entry.packageName}`;
+		const current = byPackage.get(key) ?? [];
+		current.push(entry.name);
+		byPackage.set(key, current);
 	}
+	const lines = [...byPackage.entries()].map(([key, names]) => {
+		const [keyword, packageName] = key.split("|");
+		return `${keyword} { ${names.join(", ")} } from "${packageName}";`;
+	});
+	return `${heading} Import\n\n\`\`\`ts\n${lines.join("\n")}\n\`\`\``;
+}
 
-	if (entry.docs.params.length) {
+function renderEntry(
+	entry,
+	{ heading = "##", skipIntro = false, skipImport = false } = {}
+) {
+	const h = heading;
+	const sub = `${heading}#`;
+	const blocks = [];
+	if (!skipIntro) blocks.push(renderIntro(entry));
+	if (!skipImport) blocks.push(renderImport([entry], h));
+
+	blocks.push(`${h} Type signature\n\n\`\`\`ts\n${entry.signature}\n\`\`\``);
+
+	if (entry.isComponent && entry.props.length) {
+		blocks.push(`${h} Props\n\n${renderMembers(entry.props, sub)}`);
+	} else if (entry.parameters.length) {
+		blocks.push(`${h} Parameters\n\n${renderMembers(entry.parameters, sub)}`);
+	} else if (entry.docs.params.length) {
 		blocks.push(
-			`## Parameters\n\n${entry.docs.params
+			`${h} Parameters\n\n${entry.docs.params
 				.map(
 					(param) =>
-						`### \`${param.name}\`\n\n${escapeMdxText(param.text) || "No description provided."}`
+						`${sub} \`${param.name}\`\n\n${escapeMdxText(param.text) || "No description provided."}`
 				)
 				.join("\n\n")}`
 		);
 	}
 
-	if (entry.docs.returns) {
-		blocks.push(`## Return value\n\n${escapeMdxText(entry.docs.returns)}`);
+	let returns = entry.docs.returns || RETURN_DOCS[entry.name];
+	// Upstream `@returns` that is only a type gets the prose from RETURN_DOCS.
+	if (
+		returns &&
+		RETURN_DOCS[entry.name] &&
+		/^`[^`]+`$/.test(returns.trim()) &&
+		returns !== RETURN_DOCS[entry.name]
+	) {
+		returns = `${returns.trim()}\n\n${RETURN_DOCS[entry.name]}`;
+	}
+	if (returns) {
+		blocks.push(`${h} Return value\n\n${escapeMdxText(returns)}`);
+	}
+
+	if (entry.memberDocs.length) {
+		blocks.push(
+			`${h} Properties\n\n${renderMemberDocs(entry.memberDocs, sub)}`
+		);
 	}
 
 	if (entry.docs.remarks && !OMIT_REMARKS.has(entry.name)) {
-		blocks.push(`## Remarks\n\n${escapeMdxText(entry.docs.remarks)}`);
+		blocks.push(`${h} Remarks\n\n${escapeMdxText(entry.docs.remarks)}`);
 	}
 
 	const examples = [
@@ -1886,15 +3666,45 @@ function renderEntry(entry) {
 		...(ENTRY_EXAMPLES[entry.name] ?? []),
 	];
 	if (examples.length) {
-		blocks.push(`## Examples\n\n${examples.map(formatExample).join("\n\n")}`);
+		blocks.push(
+			`${h} Examples\n\n${examples
+				.map((example) => formatExample(example, sub))
+				.join("\n\n")}`
+		);
+	}
+
+	const caveats = ENTRY_CAVEATS[entry.name] ?? [];
+	if (caveats.length) {
+		blocks.push(
+			`${h} Caveats\n\n${caveats.map((caveat) => `- ${caveat}`).join("\n")}`
+		);
+	}
+
+	const problems = ENTRY_PROBLEMS[entry.name] ?? [];
+	if (problems.length) {
+		blocks.push(
+			`${h} Common problems\n\n${problems
+				.map(([label, href]) => `- [${label}](${href})`)
+				.join("\n")}`
+		);
 	}
 
 	const related = renderRelatedLinks(entry);
 	if (related.length) {
-		blocks.push(`## Related\n\n${related.join("\n")}`);
+		blocks.push(`${h} Related\n\n${related.join("\n")}`);
 	}
 
 	return blocks.join("\n\n");
+}
+
+function renderLearnLinks(entries, category) {
+	const links = [];
+	for (const entry of entries) links.push(...(ENTRY_LEARN[entry.name] ?? []));
+	links.push(...(CATEGORY_LEARN[category] ?? []));
+	const seen = new Set();
+	return links
+		.filter(([, href]) => (seen.has(href) ? false : seen.add(href)))
+		.map(([label, href]) => `- [${label}](${href})`);
 }
 
 function renderRelatedTypes(entries) {
@@ -1904,8 +3714,18 @@ ${entries.map(renderRelatedType).join("\n\n")}`;
 }
 
 function renderRelatedType(entry) {
-	const blocks = [`### \`${entry.name}\``];
 	const summary = escapeMdxText(entry.docs.summary);
+	if (COLLAPSED_RELATED_TYPES.has(entry.name)) {
+		const inner = [];
+		if (summary) inner.push(summary);
+		inner.push(`\`\`\`ts\n${entry.signature}\n\`\`\``);
+		if (entry.docs.remarks) inner.push(escapeMdxText(entry.docs.remarks));
+		if (entry.memberDocs.length) {
+			inner.push(renderMemberDocsInline(entry.memberDocs));
+		}
+		return `### \`${entry.name}\`\n\n:::deep-dive[${entry.name} members]\n${inner.join("\n\n")}\n:::`;
+	}
+	const blocks = [`### \`${entry.name}\``];
 	if (summary) blocks.push(summary);
 	blocks.push(`\`\`\`ts
 ${entry.signature}
@@ -1930,13 +3750,75 @@ function renderMemberDocs(members, heading = "###") {
 		.join("\n\n");
 }
 
+// Member docs without headings, for use inside a collapsed deep-dive where
+// headings would leak into the table of contents.
+function renderMemberDocsInline(members) {
+	return members
+		.map((member) => {
+			const head = member.type
+				? `**\`${member.name}\`** — ${inlineCode(member.type)}`
+				: `**\`${member.name}\`**`;
+			return member.text ? `${head}\n\n${escapeMdxText(member.text)}` : head;
+		})
+		.join("\n\n");
+}
+
+// Parameters and props: one `###` per member with type, optionality, and text.
+function renderMembers(members, heading) {
+	return members
+		.map((member) => {
+			const parts = [`${heading} \`${member.name}\``];
+			const meta = [];
+			if (member.type) meta.push(`- **Type:** ${inlineCode(member.type)}`);
+			if (member.optional) meta.push("- Optional");
+			if (meta.length) parts.push(meta.join("\n"));
+			if (member.text) parts.push(escapeMdxText(member.text));
+			return parts.join("\n\n");
+		})
+		.join("\n\n");
+}
+
+// Frontmatter descriptions are one plain-text line of at most a few
+// sentences; the page body carries the full summary.
+function toDescription(value) {
+	const flat = String(value)
+		.replace(/\s+/g, " ")
+		.replace(/\*\*([^*]+)\*\*/g, "$1")
+		.replace(/(^|\s)\*([^*]+)\*(?=[\s.,;:)]|$)/g, "$1$2")
+		.replace(/\\</g, "<")
+		.trim();
+	// Mask inline code and abbreviations so their periods do not end a sentence.
+	const masked = [];
+	const maskedText = flat.replace(
+		/`[^`]*`|\b(?:e\.g|i\.e|etc|vs)\./gi,
+		(match) => `\uE000${masked.push(match) - 1}\uE001`
+	);
+	const sentences = maskedText.match(/[^.!?]+[.!?]+(?=\s|$)|[^.!?]+$/g) ?? [
+		maskedText,
+	];
+	let result = "";
+	for (const sentence of sentences) {
+		if (result && (result + sentence).length > 180) break;
+		result += sentence;
+	}
+	const unmask = (text) =>
+		text.replace(/\uE000(\d+)\uE001/g, (_m, index) => masked[Number(index)]);
+	return unmask(result.trim()) || unmask(maskedText);
+}
+
 function inlineCode(value) {
 	const text = String(value);
 	const fence = text.includes("`") ? "``" : "`";
 	return `${fence}${text}${fence}`;
 }
 
-function formatExample(example) {
+// Examples are either raw strings (from `@example` tags or ENTRY_EXAMPLES)
+// or `{ title, code }` objects, which render with a heading.
+function formatExample(example, heading = "###") {
+	if (typeof example === "object" && example !== null) {
+		const code = formatExample(example.code, heading);
+		return example.title ? `${heading} ${example.title}\n\n${code}` : code;
+	}
 	if (example.includes("```")) return example;
 	return `\`\`\`ts
 ${example}

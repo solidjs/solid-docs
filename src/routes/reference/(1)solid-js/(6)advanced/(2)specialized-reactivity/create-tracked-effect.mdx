@@ -14,7 +14,7 @@ tags:
   - "api"
   - "v2"
 version: "2.0"
-description: "Creates a tracked reactive effect where dependency tracking and side effects happen\nin the same scope."
+description: "Creates a tracked reactive effect where dependency tracking and side effects happen in the same scope."
 source_repo: "solidjs/solid"
 source_ref: "next"
 source_path: "packages/signals/src/signals.ts"
@@ -26,16 +26,16 @@ Creates a tracked reactive effect where dependency tracking and side effects hap
 in the same scope.
 
 > Deprecated: Do not use in new code. For a side effect that follows reactive
-> state, use `createEffect(compute, effect)` — it separates tracking from the
-> side effect, knows its dependencies before it runs, and participates in
-> async and transitions. For one-time DOM work after render (measuring,
-> attaching third-party widgets to a ref), use `onSettled`. Tracking from
-> inside the effect phase — the only thing this primitive adds — is retained
-> solely to ease 1.x migration: it runs beside user-effect callbacks after
-> values commit, never holds a transition, and cannot observe a write staged
-> earlier in the same flush by a signal it has not read yet.
+state, use `createEffect(compute, effect)` — it separates tracking from the
+side effect, knows its dependencies before it runs, and participates in
+async and transitions. For one-time DOM work after render (measuring,
+attaching third-party widgets to a ref), use `onSettled`. Tracking from
+inside the effect phase — the only thing this primitive adds — is retained
+solely to ease 1.x migration: it runs beside user-effect callbacks after
+values commit, never holds a transition, and cannot observe a write staged
+earlier in the same flush by a signal it has not read yet.
 
-WARNING: Because tracking and effects happen in the same scope, this primitive
+Because tracking and effects happen in the same scope, this primitive
 may run multiple times for a single change or show tearing (reading inconsistent
 state). Use only when dynamic subscription patterns require same-scope tracking.
 
@@ -59,8 +59,8 @@ import { createTrackedEffect } from "solid-js";
 
 ```ts
 function createTrackedEffect(
-	compute: () => void | (() => void),
-	options?: BaseEffectOptions
+  compute: () => void | (() => void),
+  options?: BaseEffectOptions
 ): void;
 ```
 
@@ -68,9 +68,14 @@ function createTrackedEffect(
 
 ### `compute`
 
+- **Type:** `() => void | (() => void)`
+
 A function that contains reactive reads to track and returns an optional cleanup function to run on disposal or before next execution
 
 ### `options`
+
+- **Type:** `BaseEffectOptions`
+- Optional
 
 -- name
 
@@ -78,12 +83,17 @@ A function that contains reactive reads to track and returns an optional cleanup
 
 ```ts
 createTrackedEffect(() => {
-	const target = focusedNode();
-	if (!target) return;
+  const target = focusedNode();
+  if (!target) return;
 
-	const handler = () => log(target.value());
-	target.on("change", handler);
+  const handler = () => log(target.value());
+  target.on("change", handler);
 
-	return () => target.off("change", handler);
+  return () => target.off("change", handler);
 });
 ```
+
+## Learn more
+
+- [Avoid unnecessary effects](/guides/avoid-unnecessary-effects)
+- [Debugging reactivity](/guides/debugging-reactivity)

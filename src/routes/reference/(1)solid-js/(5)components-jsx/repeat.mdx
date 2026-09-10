@@ -34,18 +34,60 @@ import { Repeat } from "solid-js";
 ## Type signature
 
 ```ts
-function Repeat<T extends SolidElement>(props: {
-	count: number;
-	from?: number | undefined;
-	fallback?: SolidElement;
-	children: ((index: number) => T) | T;
-});
+function Repeat<T extends JSX.Element>(props: {
+  count: number;
+  from?: number | undefined;
+  fallback?: JSX.Element;
+  children: ((index: number) => T) | T;
+}): JSX.Element;
 ```
+
+## Props
+
+### `count`
+
+- **Type:** `number`
+
+Number of rows.
+
+### `from`
+
+- **Type:** `number | undefined`
+- Optional
+
+Index of the first row. Combine with `count` for a window over a larger list.
+
+### `fallback`
+
+- **Type:** `JSX.Element`
+- Optional
+
+Rendered when `count` is zero.
+
+### `children`
+
+- **Type:** `((index: number) => T) | T`
+
+A function from index to content, or static content repeated per index.
 
 ## Examples
 
 ```tsx
 <Repeat count={items.length} fallback={<div>No items</div>}>
-	{(index) => <div data-index={index}>{items[index]}</div>}
+  {(index) => <div data-index={index}>{items[index]}</div>}
 </Repeat>
 ```
+
+## Caveats
+
+- Rows are positional. Inserting an item in the middle of the source shifts the data every later row reads; use `For` when rows have identity.
+
+## Common problems
+
+- [A row shows the wrong index after reordering](/guides/lists#a-row-shows-the-wrong-index-after-reordering)
+
+## Learn more
+
+- [Render a window over a large list](/guides/lists#render-a-window-over-a-large-list)
+- [Components and JSX](/concepts/components-and-jsx)
+- [Boundaries](/concepts/boundaries)

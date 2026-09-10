@@ -11,7 +11,7 @@ tags:
   - "api"
   - "v2"
 version: "2.0"
-description: "Declares an HTTP response header (or with `append`, appends to one) for\nthe lifetime of the current reactive scope during SSR — call it bare in a\ncomponent or reactive-scope body. Client build: a no-op — the response\nhead was sent long ago."
+description: "Declares an HTTP response header (or with `append`, appends to one) for the lifetime of the current reactive scope during SSR — call it bare in a component or reactive-scope body."
 source_repo: "solidjs/solid"
 source_ref: "next"
 source_path: "packages/web/src/index.ts"
@@ -24,7 +24,7 @@ the lifetime of the current reactive scope during SSR — call it bare in a
 component or reactive-scope body. Client build: a no-op — the response
 head was sent long ago.
 
-Naming note — this is a scope-tied _declaration_, not a mutation: "while
+Naming note — this is a scope-tied *declaration*, not a mutation: "while
 this reactive scope is live, the response has this header." Solid
 reserves `set*` verbs for event-time mutation; like
 `createSignal`/`onCleanup` this is called in scope bodies and un-declares
@@ -47,9 +47,54 @@ import { httpHeader } from "@solidjs/web";
 ## Type signature
 
 ```ts
-function httpHeader(
-	_name: string,
-	_value: string,
-	_options?: { append?: boolean }
-): void;
+function httpHeader(name: string, value: string, options?: { append?: boolean }): void;
 ```
+
+## Parameters
+
+### `name`
+
+- **Type:** `string`
+
+Header name.
+
+### `value`
+
+- **Type:** `string`
+
+Header value.
+
+### `options`
+
+- **Type:** `{ append?: boolean }`
+- Optional
+
+`append: true` adds a value instead of replacing the header.
+
+## Examples
+
+### Set a cache policy for a page
+
+```tsx
+function ProductPage() {
+	httpHeader("Cache-Control", "public, max-age=60");
+	return <Product />;
+}
+```
+
+### Append a header
+
+```ts
+httpHeader("Link", "</fonts/inter.woff2>; rel=preload; as=font", { append: true });
+```
+
+## Caveats
+
+- Call it in a component or reactive-scope body during SSR. It is a no-op in the browser.
+- Writes after the response head is committed (the shell flush of a stream) are ignored.
+
+## Learn more
+
+- [Who owns the document](/concepts/rendering-and-ssr#who-owns-the-document)
+- [Rendering and SSR](/concepts/rendering-and-ssr)
+- [Choose a rendering mode](/guides/choose-a-rendering-mode)

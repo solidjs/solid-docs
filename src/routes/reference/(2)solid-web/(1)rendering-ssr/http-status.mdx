@@ -11,7 +11,7 @@ tags:
   - "api"
   - "v2"
 version: "2.0"
-description: "Declares the HTTP response status (and optional status text) for the\nlifetime of the current reactive scope during SSR — call it bare in a\ncomponent or reactive-scope body where the status is decided (a 404\nroute, an error fallback). Client build: a no-op — the response head was\nsent long ago."
+description: "Declares the HTTP response status (and optional status text) for the lifetime of the current reactive scope during SSR — call it bare in a component or reactive-scope body where the status is decided (a 404 route, an error fallback)."
 source_repo: "solidjs/solid"
 source_ref: "next"
 source_path: "packages/web/src/index.ts"
@@ -25,7 +25,7 @@ component or reactive-scope body where the status is decided (a 404
 route, an error fallback). Client build: a no-op — the response head was
 sent long ago.
 
-Naming note — this is a scope-tied _declaration_, not a mutation: "while
+Naming note — this is a scope-tied *declaration*, not a mutation: "while
 this reactive scope is live, the response has this status." Solid
 reserves `set*` verbs for event-time mutation; like
 `createSignal`/`onCleanup` this is called in scope bodies and un-declares
@@ -49,5 +49,56 @@ import { httpStatus } from "@solidjs/web";
 ## Type signature
 
 ```ts
-function httpStatus(_code: number, _text?: string): void;
+function httpStatus(code: number, text?: string): void;
 ```
+
+## Parameters
+
+### `code`
+
+- **Type:** `number`
+
+HTTP status code.
+
+### `text`
+
+- **Type:** `string`
+- Optional
+
+Optional status text.
+
+## Examples
+
+### Return 404 from a not-found route
+
+```tsx
+function NotFound() {
+	httpStatus(404);
+	return <h1>Page not found</h1>;
+}
+```
+
+### Report a failed render
+
+```tsx
+<Errored
+	fallback={(error) => {
+		httpStatus(500);
+		return <p>Something went wrong.</p>;
+	}}
+>
+	<Page />
+</Errored>
+```
+
+## Caveats
+
+- Call it in the scope that decides the status, such as a not-found route or an error fallback. It is a no-op in the browser.
+- A scope that disposes retracts its status, so an error boundary that recovers does not leave a 500 behind.
+- Writes after the response head is committed are ignored.
+
+## Learn more
+
+- [Who owns the document](/concepts/rendering-and-ssr#who-owns-the-document)
+- [Rendering and SSR](/concepts/rendering-and-ssr)
+- [Choose a rendering mode](/guides/choose-a-rendering-mode)

@@ -9,7 +9,7 @@ tags:
   - "api"
   - "v2"
 version: "2.0"
-description: "Renders an arbitrary custom or native component and forwards the other\nprops. JSX form of `dynamic()` — same primitive, picked at the JSX site."
+description: "Renders an arbitrary custom or native component and forwards the other props. JSX form of `dynamic()` — same primitive, picked at the JSX site."
 source_repo: "solidjs/solid"
 source_ref: "next"
 source_path: "packages/web/src/index.ts"
@@ -34,15 +34,33 @@ import { Dynamic } from "@solidjs/web";
 function Dynamic<T extends ValidComponent>(props: DynamicProps<T>): JSX.Element;
 ```
 
+## Props
+
+### `component`
+
+- **Type:** `T | null | undefined | false`
+
+Component function or intrinsic element name to render. A falsy value renders nothing. All other props are forwarded to it.
+
 ## Examples
 
 ```tsx
 <Dynamic
-	component={multiline() ? RichTextEditor : "input"}
-	value={value()}
-	onInput={onInput}
+  component={multiline() ? RichTextEditor : "input"}
+  value={value()}
+  onInput={onInput}
 />
 ```
+
+## Caveats
+
+- Prefer `dynamic()` for a component reference you render in several places; `<Dynamic>` is the inline JSX form of the same primitive.
+- Every prop other than `component` is forwarded to the rendered component, including `children`.
+
+## Learn more
+
+- [Dynamic components](/concepts/components-and-jsx#dynamic-components)
+- [Components and JSX](/concepts/components-and-jsx)
 
 ## Related types
 
@@ -50,8 +68,8 @@ function Dynamic<T extends ValidComponent>(props: DynamicProps<T>): JSX.Element;
 
 ```ts
 type DynamicProps<T extends ValidComponent, P = ComponentProps<T>> = {
-	[K in keyof P]: P[K];
+  [K in keyof P]: P[K];
 } & {
-	component: T | null | undefined | false;
+  component: T | null | undefined | false;
 };
 ```

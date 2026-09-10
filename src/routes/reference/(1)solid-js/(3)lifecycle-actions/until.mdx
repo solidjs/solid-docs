@@ -10,7 +10,7 @@ tags:
   - "api"
   - "v2"
 version: "2.0"
-description: "Awaits a reactive predicate and resolves the first time it becomes truthy, with the narrowed value. A falsy result or a pending async read means not yet, so the subscription stays live and re-evaluates as sources change. A thrown error, a rejected async source, a timeout, or an abort rejects the promise."
+description: "Awaits a reactive predicate and resolves the first time it becomes truthy, with the narrowed value."
 source_repo: "solidjs/solid"
 source_ref: "next"
 source_path: "packages/signals/src/signals.ts"
@@ -36,28 +36,55 @@ function until<T>(fn: () => T, options?: UntilOptions): Promise<Truthy<T>>;
 
 ### `fn`
 
+- **Type:** `() => T`
+
 A reactive predicate over authoritative state
 
 ### `options`
 
+- **Type:** `UntilOptions`
+- Optional
+
 Optional `timeout` (ms) and abort `signal`
+
+## Return value
+
+A promise that resolves with the first truthy result of `fn`, narrowed by `Truthy<T>`.
 
 ## Examples
 
 ```ts
 const send = action(async function* (text: string) {
-	const clientId = crypto.randomUUID();
-	setMessages((m) => {
-		m.push({ clientId, text, pending: true });
-	}); // optimistic
-	await socket.send({ clientId, text }); // fire-and-forget transport
-	// Hold until the live source echoes the write (authoritative view —
-	// the optimistic row above cannot satisfy this):
-	yield until(() => messages.some((m) => m.clientId === clientId), {
-		timeout: 10_000,
-	});
+  const clientId = crypto.randomUUID();
+  setMessages(m => { m.push({ clientId, text, pending: true }); }); // optimistic
+  await socket.send({ clientId, text }); // fire-and-forget transport
+  // Hold until the live source echoes the write (authoritative view —
+  // the optimistic row above cannot satisfy this):
+  yield until(() => messages.some(m => m.clientId === clientId), { timeout: 10_000 });
 });
 ```
+
+### Wait for a value before continuing
+
+```ts
+const user = createMemo(() => fetchUser(id()));
+
+async function exportReport() {
+	const u = await until(() => user()); // resolves once the user has loaded
+	download(buildReport(u));
+}
+```
+
+## Caveats
+
+- A falsy result keeps waiting. A thrown error, a rejected async source, a timeout, or an abort rejects the promise.
+- Reads inside the predicate see authoritative state, so an optimistic write cannot satisfy it.
+
+## Learn more
+
+- [Queue completion](/concepts/async-reactivity#queue-completion)
+- [Async reactivity](/concepts/async-reactivity)
+- [Avoid unnecessary effects](/guides/avoid-unnecessary-effects)
 
 ## Related types
 
@@ -70,11 +97,11 @@ optimistic state reverts.
 
 ```ts
 class TimeoutError extends Error {
-	constructor(message = "Timed out waiting for condition") {
-		super(message);
-		this.name = "TimeoutError";
-	}
-}
+  constructor(message = "Timed out waiting for condition") {
+    super(message);
+    this.name = "TimeoutError";
+  }
+};
 ```
 
 ### `Truthy`
@@ -89,9 +116,9 @@ type Truthy<T> = Exclude<T, false | 0 | 0n | "" | null | undefined>;
 
 ```ts
 interface UntilOptions {
-	timeout?: number;
-	signal?: AbortSignal;
-}
+  timeout?: number;
+  signal?: AbortSignal;
+};
 ```
 
 #### `timeout`

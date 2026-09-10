@@ -38,18 +38,23 @@ import { createReaction } from "solid-js";
 
 ```ts
 function createReaction(
-	effectFn: EffectFunction<undefined> | EffectBundle<undefined>,
-	options?: EffectOptions
-);
+  effectFn: EffectFunction<undefined> | EffectBundle<undefined>,
+  options?: EffectOptions
+): (tracking: () => void) => void;
 ```
 
 ## Parameters
 
 ### `effectFn`
 
+- **Type:** `EffectFunction<undefined> | EffectBundle<undefined>`
+
 A function (or `EffectBundle`) that is called when tracked function is invalidated
 
 ### `options`
+
+- **Type:** `EffectOptions`
+- Optional
 
 `EffectOptions` -- name, defer
 
@@ -59,11 +64,16 @@ A function (or `EffectBundle`) that is called when tracked function is invalidat
 const [count, setCount] = createSignal(0);
 
 const track = createReaction(() => {
-	console.log("count changed once, re-arm to listen again");
-	track(() => count()); // re-arm
+  console.log("count changed once, re-arm to listen again");
+  track(() => count()); // re-arm
 });
 
 track(() => count()); // initial arm
 
 setCount(1); // logs once, reaction re-armed for next change
 ```
+
+## Learn more
+
+- [Avoid unnecessary effects](/guides/avoid-unnecessary-effects)
+- [Debugging reactivity](/guides/debugging-reactivity)

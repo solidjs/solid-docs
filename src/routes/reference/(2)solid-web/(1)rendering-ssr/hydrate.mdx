@@ -30,11 +30,36 @@ import { hydrate } from "@solidjs/web";
 
 ```ts
 function hydrate(
-	code: () => JSX.Element,
-	element: Element | Document | ShadowRoot | DocumentFragment | Node,
+	fn: () => JSX.Element,
+	node: MountableElement,
 	options?: { renderId?: string; owner?: unknown }
 ): () => void;
 ```
+
+## Parameters
+
+### `fn`
+
+- **Type:** `() => JSX.Element`
+
+Function that returns the same root JSX the server rendered.
+
+### `node`
+
+- **Type:** `MountableElement`
+
+DOM node that contains the server-rendered markup.
+
+### `options`
+
+- **Type:** `{ renderId?: string; owner?: unknown }`
+- Optional
+
+`renderId` must match the server's render id when one was set; `owner` parents the root under an existing owner.
+
+## Return value
+
+A dispose function for the hydrated tree.
 
 ## Examples
 
@@ -43,3 +68,14 @@ import { hydrate } from "@solidjs/web";
 
 const dispose = hydrate(() => <App />, document.getElementById("root")!);
 ```
+
+## Caveats
+
+- The client must render the same tree the server did. A mismatch reports a hydration error in development.
+- Content in a `Portal` renders fresh on the client; the server emits nothing for it.
+
+## Learn more
+
+- [Hydrating server HTML](/concepts/rendering-and-ssr#hydrating-server-html)
+- [Rendering and SSR](/concepts/rendering-and-ssr)
+- [Choose a rendering mode](/guides/choose-a-rendering-mode)

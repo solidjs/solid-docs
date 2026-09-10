@@ -9,7 +9,7 @@ tags:
   - "api"
   - "v2"
 version: "2.0"
-description: "Renders its children into a different part of the DOM (modal roots,\ntooltips, layers that need to escape an `overflow: hidden` ancestor)."
+description: "Renders its children into a different part of the DOM (modal roots, tooltips, layers that need to escape an `overflow: hidden` ancestor)."
 source_repo: "solidjs/solid"
 source_ref: "next"
 source_path: "packages/web/src/index.ts"
@@ -42,10 +42,40 @@ import { Portal } from "@solidjs/web";
 function Portal(props: { mount?: Element; children: JSX.Element }): JSX.Element;
 ```
 
+## Props
+
+### `mount`
+
+- **Type:** `Element`
+- Optional
+
+Element to render into. Defaults to `document.body`.
+
+### `children`
+
+- **Type:** `JSX.Element`
+
+Content to render at the mount point.
+
 ## Examples
 
 ```tsx
 <Portal mount={document.getElementById("modal-root")!}>
-	<Dialog />
+  <Dialog />
 </Portal>
 ```
+
+## Caveats
+
+- The server renders nothing for a portal; its children render on the client after hydration settles.
+- Async reads inside a portal start on the client. Fetch above the portal and pass the data down, and give async content inside its own `Loading` boundary.
+- The portal shares its parent's reactive scope and disposes with it.
+
+## Common problems
+
+- [An effect or `onCleanup` inside a `ref` callback never runs](/concepts/components-and-jsx#an-effect-or-oncleanup-inside-a-ref-callback-never-runs)
+
+## Learn more
+
+- [Server and client boundaries](/concepts/rendering-and-ssr#server-and-client-boundaries)
+- [Components and JSX](/concepts/components-and-jsx)

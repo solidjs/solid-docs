@@ -12,7 +12,7 @@ tags:
   - "api"
   - "v2"
 version: "2.0"
-description: "A zero-arg getter for a reactive value. Calling it inside a tracking scope\n(memo, effect compute, JSX expression) subscribes the scope to changes."
+description: "A zero-arg getter for a reactive value. Calling it inside a tracking scope (memo, effect compute, JSX expression) subscribes the scope to changes."
 source_repo: "solidjs/solid"
 source_ref: "next"
 source_path: "packages/signals/src/signals.ts"
@@ -23,22 +23,24 @@ source_path: "packages/signals/src/signals.ts"
 A zero-arg getter for a reactive value. Calling it inside a tracking scope
 (memo, effect compute, JSX expression) subscribes the scope to changes.
 
-Reading outside any tracking scope simply returns the current value without
+Reading outside any tracking scope returns the current value without
 creating a subscription.
 
 ## Import
 
 ```ts
-import type { Accessor } from "solid-js";
+import type { Accessor, Setter, Signal, SourceAccessor } from "solid-js";
 ```
 
-## Type signature
+## `Accessor`
+
+### Type signature
 
 ```ts
 type Accessor<T> = () => T;
 ```
 
----
+## `Setter`
 
 A signal setter. Accepts either a new value or an updater `(prev) => next`.
 
@@ -47,55 +49,35 @@ If the type permits `undefined`, `setState()` (no args) clears to `undefined`.
 To store a function as the value itself (rather than as an updater), wrap it
 with an updater: `setHandler(() => myHandler)`.
 
-## Import
-
-```ts
-import type { Setter } from "solid-js";
-```
-
-## Type signature
+### Type signature
 
 ```ts
 type Setter<in out T> = {
-	<U extends T>(
-		...args: undefined extends T
-			? []
-			: [value: Exclude<U, Function> | ((prev: T) => U)]
-	): undefined extends T ? undefined : U;
-	<U extends T>(value: (prev: T) => U): U;
-	<U extends T>(value: Exclude<U, Function>): U;
-	<U extends T>(value: Exclude<U, Function> | ((prev: T) => U)): U;
+  <U extends T>(
+    ...args: undefined extends T ? [] : [value: Exclude<U, Function> | ((prev: T) => U)]
+  ): undefined extends T ? undefined : U;
+  <U extends T>(value: (prev: T) => U): U;
+  <U extends T>(value: Exclude<U, Function>): U;
+  <U extends T>(value: Exclude<U, Function> | ((prev: T) => U)): U;
 };
 ```
 
----
+## `Signal`
 
 A `[get, set]` pair returned from `createSignal` / `createOptimistic`.
 
-## Import
-
-```ts
-import type { Signal } from "solid-js";
-```
-
-## Type signature
+### Type signature
 
 ```ts
 type Signal<T> = [get: SourceAccessor<T>, set: Setter<T>];
 ```
 
----
+## `SourceAccessor`
 
 SourceAccessor API reference.
 
-## Import
+### Type signature
 
 ```ts
-import type { SourceAccessor } from "solid-js";
-```
-
-## Type signature
-
-```ts
-type SourceAccessor<T> = Refreshable<Accessor<T>>;
+type SourceAccessor<T> = Accessor<T>;
 ```

@@ -45,11 +45,33 @@ import { Loading } from "solid-js";
 
 ```ts
 function Loading(props: {
-	fallback?: SolidElement;
-	on?: any;
-	children: SolidElement;
-}): SolidElement;
+  fallback?: JSX.Element;
+  on?: any;
+  children: JSX.Element;
+}): JSX.Element;
 ```
+
+## Props
+
+### `fallback`
+
+- **Type:** `JSX.Element`
+- Optional
+
+Rendered while an async read inside the subtree has no settled value.
+
+### `on`
+
+- **Type:** `any`
+- Optional
+
+A value, not an accessor. When it changes and the new content is not ready, the boundary shows its fallback again instead of holding the update.
+
+### `children`
+
+- **Type:** `JSX.Element`
+
+The subtree whose async reads this boundary handles.
 
 ## Examples
 
@@ -57,13 +79,30 @@ function Loading(props: {
 const Profile = lazy(() => import("./Profile"));
 
 <Loading fallback={<Spinner />}>
-	<Profile />
-</Loading>;
+  <Profile />
+</Loading>
 ```
 
 ```tsx
 // Only show the fallback for updates caused by writes to `route`.
 <Loading fallback={<Skeleton />} on={route}>
-	<Page />
+  <Page />
 </Loading>
 ```
+
+## Caveats
+
+- The boundary shows its fallback only when a read inside has no settled value yet. Later updates hold the previous content; use `on` for content that should show a placeholder again.
+- `on` compares values, not accessors. Pass `on={id()}`, not `on={id}`.
+- Place the boundary around the data-dependent slot, not around layout chrome that should stay stable.
+
+## Common problems
+
+- [The screen looks dead after a click](/guides/debugging-reactivity#the-screen-looks-dead-after-a-click)
+
+## Learn more
+
+- [Loading boundaries](/concepts/boundaries#loading-boundaries)
+- [Show a placeholder again: `Loading on`](/concepts/async-reactivity#show-a-placeholder-again-loading-on)
+- [Components and JSX](/concepts/components-and-jsx)
+- [Boundaries](/concepts/boundaries)

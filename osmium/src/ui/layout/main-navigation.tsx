@@ -88,9 +88,13 @@ function DirList(props: { items: SidebarItem[] }) {
 	);
 }
 
+function isReferencePath(pathname: string) {
+	return /(^|\/)reference(\/|$)/.test(pathname.split(/[?#]/)[0]);
+}
+
 export function MainNavigation(_props: MainNavigationProps) {
 	const location = useLocation();
-	const isReference = () => location.pathname.includes("/reference/");
+	const isReference = () => isReferencePath(location.pathname);
 	const initialTab = () => (isReference() ? "reference" : "learn");
 
 	const [selectedTab, setSelectedTab] = createSignal(initialTab());
@@ -110,7 +114,7 @@ export function MainNavigation(_props: MainNavigationProps) {
 	useBeforeLeave(({ to }) => {
 		if (typeof to === "number") return;
 
-		if (to.includes("/reference/")) {
+		if (isReferencePath(to)) {
 			setSelectedTab("reference");
 		} else {
 			setSelectedTab("learn");

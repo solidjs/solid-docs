@@ -30,60 +30,76 @@ Decodes a server-function response, including response envelopes and single-flig
 ## Import
 
 ```ts
-import { decodeResponse } from "@solidjs/web/server-functions";
+import { decodeResponse, registerFlightDataSource, subscribeFlightData } from "@solidjs/web/server-functions";
 ```
 
-## Type signature
+## `decodeResponse`
+
+### Type signature
 
 ```ts
 function decodeResponse<T = unknown>(
-	response: Response,
-	codecOptions?: JSONCodecOptions
+  response: Response,
+  codecOptions?: JSONCodecOptions
 ): Promise<T | undefined>;
 ```
 
----
+### Parameters
+
+#### `response`
+
+- **Type:** `Response`
+
+#### `codecOptions`
+
+- **Type:** `JSONCodecOptions`
+- Optional
+
+## `registerFlightDataSource`
 
 Registers a named single-flight data source (the server half of
 `subscribeFlightData(source, consumer)`); returns an unregister
 function.
 
-## Import
+### Type signature
 
 ```ts
-import { registerFlightDataSource } from "@solidjs/web/server-functions";
+function registerFlightDataSource(source: string, hook: CollectFlightDataHook): () => void;
 ```
 
-## Type signature
+### Parameters
 
-```ts
-function registerFlightDataSource(
-	source: string,
-	hook: CollectFlightDataHook
-): () => void;
-```
+#### `source`
 
----
+- **Type:** `string`
+
+#### `hook`
+
+- **Type:** `CollectFlightDataHook`
+
+## `subscribeFlightData`
 
 Registers the integration that receives data folded into a mutation response.
 
-## Import
+### Type signature
 
 ```ts
-import { subscribeFlightData } from "@solidjs/web/server-functions";
-```
-
-## Type signature
-
-```ts
+function subscribeFlightData<D = unknown>(consumer: FlightDataConsumer<D>): () => void;
 function subscribeFlightData<D = unknown>(
-	consumer: FlightDataConsumer<D>
-): () => void;
-function subscribeFlightData<D = unknown>(
-	source: string,
-	consumer: FlightDataConsumer<D>
+  source: string,
+  consumer: FlightDataConsumer<D>
 ): () => void;
 ```
+
+### Parameters
+
+#### `consumer`
+
+- **Type:** `FlightDataConsumer<D>`
+
+#### `source`
+
+- **Type:** `string`
 
 ## Related types
 
@@ -109,8 +125,8 @@ pre-digested on the outcome (`targetUrl`, `revalidateKeys`,
 
 ```ts
 type CollectFlightDataHook = (
-	event: ServerFunctionEvent,
-	outcome: ServerFunctionOutcome
+  event: ServerFunctionEvent,
+  outcome: ServerFunctionOutcome
 ) => unknown | Promise<unknown>;
 ```
 
@@ -123,8 +139,8 @@ value is returned to the caller, so caches are seeded first.
 
 ```ts
 type FlightDataConsumer<D = unknown> = (
-	data: D,
-	context: FlightDataContext
+  data: D,
+  context: FlightDataContext
 ) => void | Promise<void>;
 ```
 
@@ -138,8 +154,8 @@ not from here.
 
 ```ts
 interface FlightDataContext {
-	response: Response;
-}
+  response: Response;
+};
 ```
 
 #### `response`
@@ -156,15 +172,15 @@ assuming one.
 
 ```ts
 interface ServerFunctionOutcome {
-	id: string;
-	value: unknown;
-	response: Response | undefined;
-	request: Request;
-	thrown: boolean;
-	targetUrl: string | undefined;
-	revalidateKeys: string[] | undefined;
-	foldedHeaders: Headers;
-}
+  id: string;
+  value: unknown;
+  response: Response | undefined;
+  request: Request;
+  thrown: boolean;
+  targetUrl: string | undefined;
+  revalidateKeys: string[] | undefined;
+  foldedHeaders: Headers;
+};
 ```
 
 #### `id`
@@ -248,9 +264,9 @@ codec-serializable value.
 
 ```ts
 interface SingleFlightPayload<T = unknown, D = unknown> {
-	value: T;
-	data: D;
-}
+  value: T;
+  data: D;
+};
 ```
 
 #### `value`

@@ -9,7 +9,7 @@ tags:
   - "api"
   - "v2"
 version: "2.0"
-description: "Returns a reactive proxy of `props` with the listed keys hidden. Tracking\non the remaining keys is preserved."
+description: "Returns a reactive proxy of `props` with the listed keys hidden. Tracking on the remaining keys is preserved."
 source_repo: "solidjs/solid"
 source_ref: "next"
 source_path: "packages/signals/src/store/utils.ts"
@@ -33,35 +33,62 @@ import { omit } from "solid-js";
 
 ```ts
 function omit<T extends Record<any, any>, K extends readonly (keyof T)[]>(
-	props: T,
-	...keys: K
+  props: T,
+  ...keys: K
 ): Omit<T, K>;
 ```
+
+## Parameters
+
+### `props`
+
+- **Type:** `T`
+
+The props object to read from.
+
+### `keys`
+
+- **Type:** `K`
+
+Property names to hide from the returned proxy.
+
+## Return value
+
+A reactive proxy of `props` without the listed keys.
 
 ## Examples
 
 ```tsx
-function Input(
-	props: {
-		label: string;
-		value: string;
-		onInput: (v: string) => void;
-	} & JSX.HTMLAttributes<HTMLInputElement>
-) {
-	const rest = omit(props, "label", "value", "onInput");
+function Input(props: { label: string; value: string; onInput: (v: string) => void } & JSX.HTMLAttributes<HTMLInputElement>) {
+  const rest = omit(props, "label", "value", "onInput");
 
-	return (
-		<label>
-			{props.label}
-			<input
-				{...rest}
-				value={props.value}
-				onInput={(e) => props.onInput(e.currentTarget.value)}
-			/>
-		</label>
-	);
+  return (
+    <label>
+      {props.label}
+      <input
+        {...rest}
+        value={props.value}
+        onInput={e => props.onInput(e.currentTarget.value)}
+      />
+    </label>
+  );
 }
 ```
+
+## Caveats
+
+- Do not destructure the result. Spread it onto an element or read properties through it.
+- Keys are evaluated once. Hide a dynamic set of keys by building a wrapper object instead.
+
+## Common problems
+
+- [A child does not update when the parent's signal changes](/concepts/components-and-jsx#a-child-does-not-update-when-the-parents-signal-changes)
+
+## Learn more
+
+- [Props](/concepts/components-and-jsx#props)
+- [Stores](/concepts/stores)
+- [Lists](/guides/lists)
 
 ## Related types
 
@@ -69,6 +96,6 @@ function Input(
 
 ```ts
 type Omit<T, K extends readonly (keyof T)[]> = {
-	[P in keyof T as Exclude<P, K[number]>]: T[P];
+  [P in keyof T as Exclude<P, K[number]>]: T[P];
 };
 ```

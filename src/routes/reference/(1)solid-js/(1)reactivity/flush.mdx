@@ -9,7 +9,7 @@ tags:
   - "api"
   - "v2"
 version: "2.0"
-description: "Synchronously processes the pending reactive queue, or runs `fn` in a synchronous\nflush scope before draining the queue."
+description: "Synchronously processes the pending reactive queue, or runs `fn` in a synchronous flush scope before draining the queue."
 source_repo: "solidjs/solid"
 source_ref: "next"
 source_path: "packages/signals/src/core/scheduler.ts"
@@ -22,7 +22,7 @@ flush scope before draining the queue.
 
 Reactive updates are normally batched onto the microtask queue, so multiple
 writes in a row collapse into a single update pass. Call `flush()` when you
-need to _observe_ the result of those writes synchronously — most commonly
+need to *observe* the result of those writes synchronously — most commonly
 in tests, but also at the boundary of imperative integration code. Pass a
 callback when the writes themselves should bypass microtask scheduling and
 drain synchronously when the callback returns.
@@ -40,6 +40,18 @@ function flush(): void;
 function flush<T>(fn: () => T): T;
 ```
 
+## Parameters
+
+### `fn`
+
+- **Type:** `() => T`
+
+Optional callback whose writes bypass microtask scheduling; the queue drains when it returns.
+
+## Return value
+
+The value returned by `fn`, when one was passed.
+
 ## Examples
 
 ```ts
@@ -55,8 +67,26 @@ expect(doubled()).toBe(12);
 
 // Nested flushes drain at each level:
 flush(() => {
-	setCount(7);
-	flush(() => setCount(8)); // inner drain — effects fire here
-	// outer continues with up-to-date state
+  setCount(7);
+  flush(() => setCount(8)); // inner drain — effects fire here
+  // outer continues with up-to-date state
 });
 ```
+
+## Caveats
+
+- Do not call `flush()` inside an `action` body or an `onSettled` callback; the queue is already draining there. Defer it with `queueMicrotask` if needed.
+- Flushing does not resolve async work. A memo waiting on a promise stays pending after `flush()`.
+
+## Common problems
+
+- [The test sees the old DOM](/guides/debugging-reactivity#the-test-sees-the-old-dom)
+- [Reading a signal right after setting it gives the old value](/concepts/reactivity#reading-a-signal-right-after-setting-it-gives-the-old-value)
+
+## Learn more
+
+- [When updates land](/concepts/reactivity#when-updates-land)
+- [Testing](/guides/testing)
+- [Reactivity](/concepts/reactivity)
+- [Async reactivity](/concepts/async-reactivity)
+- [Debugging reactivity](/guides/debugging-reactivity)

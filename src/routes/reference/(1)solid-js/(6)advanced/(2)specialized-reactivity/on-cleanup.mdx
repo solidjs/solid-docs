@@ -13,7 +13,7 @@ tags:
   - "api"
   - "v2"
 version: "2.0"
-description: "Low-level reactive-cleanup primitive. Registers a callback that runs when\nthe surrounding owner is disposed."
+description: "Low-level reactive-cleanup primitive. Registers a callback that runs when the surrounding owner is disposed."
 source_repo: "solidjs/solid"
 source_ref: "next"
 source_path: "packages/signals/src/signals.ts"
@@ -61,6 +61,12 @@ import { onCleanup } from "solid-js";
 function onCleanup(fn: Disposable): Disposable;
 ```
 
+## Parameters
+
+### `fn`
+
+- **Type:** `Disposable`
+
 ## Examples
 
 ```ts
@@ -68,11 +74,13 @@ function onCleanup(fn: Disposable): Disposable;
 // from a factory that has no settle-phase setup of its own. `onSettled`
 // would queue a callback we don't need; `onCleanup` is the leaner
 // primitive when the only job is "register disposal on this owner".
-function bindToOwner<T extends { dispose(): void }>(
-	owner: Owner,
-	resource: T
-): T {
-	runWithOwner(owner, () => onCleanup(() => resource.dispose()));
-	return resource;
+function bindToOwner<T extends { dispose(): void }>(owner: Owner, resource: T): T {
+  runWithOwner(owner, () => onCleanup(() => resource.dispose()));
+  return resource;
 }
 ```
+
+## Learn more
+
+- [Avoid unnecessary effects](/guides/avoid-unnecessary-effects)
+- [Debugging reactivity](/guides/debugging-reactivity)

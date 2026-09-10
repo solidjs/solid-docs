@@ -9,7 +9,7 @@ tags:
   - "api"
   - "v2"
 version: "2.0"
-description: "Runs `fn` outside of any reactive tracking — reads inside `fn` will not\nsubscribe the current scope. Returns whatever `fn` returns."
+description: "Runs `fn` outside of any reactive tracking — reads inside `fn` will not subscribe the current scope. Returns whatever `fn` returns."
 source_repo: "solidjs/solid"
 source_ref: "next"
 source_path: "packages/signals/src/core/core.ts"
@@ -39,14 +39,50 @@ import { untrack } from "solid-js";
 function untrack<T>(fn: () => T, strictReadLabel?: string | false): T;
 ```
 
+## Parameters
+
+### `fn`
+
+- **Type:** `() => T`
+
+Function to run without tracking. Its return value is returned.
+
+### `strictReadLabel`
+
+- **Type:** `string | false`
+- Optional
+
+When set, development builds warn about reactive reads inside `fn` and name the label in the warning.
+
+## Return value
+
+The value `fn` returns.
+
 ## Examples
 
 ```ts
 createEffect(
-	() => trigger(), // tracks `trigger` only
-	() => {
-		const snapshot = untrack(() => state); // read once, untracked
-		log(snapshot);
-	}
+  () => trigger(),                 // tracks `trigger` only
+  () => {
+    const snapshot = untrack(() => state); // read once, untracked
+    log(snapshot);
+  }
 );
 ```
+
+## Caveats
+
+- Untracking a read does not stop the computation from re-running for its other tracked reads.
+- Inside an effect, prefer the two-phase form: reads in `effectFn` are already untracked.
+
+## Common problems
+
+- [Something does not update](/guides/debugging-reactivity#something-does-not-update)
+- [Something updates too often](/guides/debugging-reactivity#something-updates-too-often)
+
+## Learn more
+
+- [Effects](/concepts/reactivity#effects)
+- [Reactivity](/concepts/reactivity)
+- [Async reactivity](/concepts/async-reactivity)
+- [Debugging reactivity](/guides/debugging-reactivity)

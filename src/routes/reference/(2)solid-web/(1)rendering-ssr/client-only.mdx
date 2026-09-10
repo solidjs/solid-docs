@@ -42,9 +42,46 @@ function clientOnly<T extends Component<any>>(
 ): Component<ComponentProps<T> & { fallback?: JSX.Element }>;
 ```
 
+## Parameters
+
+### `fn`
+
+- **Type:** `() => Promise<M> | () => Promise<{ default: T }>`
+
+Dynamic import that resolves the component's module.
+
+### `options`
+
+- **Type:** `{ lazy?: boolean; export: K } | { lazy?: boolean; export?: string }`
+- Optional
+
+`export` names which export is the component. `lazy` defers the import until first render instead of starting it on the client immediately.
+
+### `moduleUrl`
+
+- **Type:** `string`
+- Optional
+
+Module specifier injected by the bundler integration; used for preload hints and error messages.
+
+## Return value
+
+A component with the imported component's props plus an optional `fallback`.
+
 ## Examples
 
 ```tsx
 const Chart = clientOnly(() => import("./Chart.jsx"));
 // <Chart fallback={<div>Loading chart…</div>} data={data()} />
 ```
+
+## Caveats
+
+- The server renders only the fallback, and the client keeps it through hydration before mounting the component.
+- Async reads inside the imported component start on the client; hoist data that should be fetched on the server above the boundary.
+
+## Learn more
+
+- [Server and client boundaries](/concepts/rendering-and-ssr#server-and-client-boundaries)
+- [Rendering and SSR](/concepts/rendering-and-ssr)
+- [Choose a rendering mode](/guides/choose-a-rendering-mode)

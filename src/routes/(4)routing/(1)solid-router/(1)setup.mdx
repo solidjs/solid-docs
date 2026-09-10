@@ -4,7 +4,10 @@ version: "2.0"
 description: "Install Solid Router, create a route tree, and mount the router instance."
 ---
 
-Install Solid Router in a Solid 2 application:
+The `basic` and `fullstack` templates from `npm create solid` already install and mount Solid Router, so if you started from one of them, skip to [Configure the router](#configure-the-router) when you need to change an option.
+The rest of this page is for adding the router to a project that does not have it, such as one created from the `bare` shape or an existing Vite app.
+
+Install it:
 
 ```sh
 pnpm add @solidjs/router@next
@@ -74,22 +77,22 @@ render(() => <App />, document.getElementById("app")!);
 
 ## Configure the router
 
-`createRouter` accepts these application-level options:
+Most apps pass only `routes`.
+The other options exist for a specific situation each:
 
-- `routes` is the immutable route tree used for matching and type inference.
-- `base` prefixes matching and generated paths.
-- `preload` loads root-layout data once per mount or server request.
-- `history` selects a history adapter.
-- `preloadLinks` controls route code and data preloading from link hover, focus, and touch.
-- `explicitLinks` limits delegated routing to anchors with a `link` attribute.
-- `singleFlight` controls the server-function data consumer and defaults to `true`.
-- `actionBase` sets the server-action URL prefix and defaults to `/_server`.
-- `scrollRestoration` controls explicit back and forward scroll restoration.
-- `transformUrl` rewrites pathnames before matching.
+| Option              | Reach for it when                                                                                                                 |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `base`              | The app is served under a prefix such as `/app`; matching and `paths` both include it.                                            |
+| `history`           | The app is not a normal page: an Electron shell or `file://` needs `hashHistory()`, tests need `memoryHistory()`.                 |
+| `preload`           | The root layout needs data of its own; it runs once per mount or server request and reaches the root render prop as `props.data`. |
+| `preloadLinks`      | Hover and focus preloading costs more than it saves; set `false` and use `preload="false"` per link for finer control.            |
+| `explicitLinks`     | Some anchors inside the router must stay as full page loads; only anchors with a `link` attribute are then handled by the router. |
+| `scrollRestoration` | The app manages scroll itself; set `false` to stop the router restoring the position on back and forward (on by default).         |
+| `transformUrl`      | Incoming pathnames need rewriting before matching, for example to strip a locale prefix.                                          |
+| `singleFlight`      | The router's server-function data consumer should be off; it is `true` by default.                                                |
+| `actionBase`        | Server actions are served from a prefix other than the default `/_server`.                                                        |
 
-The router uses browser history by default on the client.
-The router uses the current request URL by default on the server.
-Pass `hashHistory()` or `memoryHistory()` through `history` for other client-side environments.
+The router uses browser history by default on the client and the current request URL on the server, so `history` is rarely set in a web app.
 
 ```tsx
 import { createRouter, hashHistory } from "@solidjs/router";

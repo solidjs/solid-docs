@@ -1,64 +1,68 @@
 ---
 title: "Server rendering and hydration"
 version: "2.0"
-description: "Render Solid Router from a request URL and connect query hydration and single-flight mutations."
+description: "What changes when Solid Router renders on the server: where the URL comes from, how query results hydrate without a second fetch, how a mutation returns fresh data in one round trip, and how forms work without JavaScript."
 ---
 
-The same router instance renders on the client and server.
-No separate server router is required.
+Nothing on the earlier pages changes when the app renders on the server.
+The same `Router` from `src/router.ts` renders on both sides; there is no server variant to import.
+What this page adds is what the server side does for you, and where the switches are when you need to change it.
 
-## Select the server URL
+The `fullstack` project shape wires all of this up.
+If you started there, read this page to understand what it does; if you are adding server rendering to a project by hand, it tells you what to add.
 
-When a request event is available, the router reads `event.request.url`.
-For static generation, tests, or another render without a request event, pass a `url` prop:
+## Where the URL comes from
 
-```tsx
-const html = await renderToStream(() => (
-	<Router url="https://example.com/users/42" />
-));
-```
+In the browser the router reads `window.location`.
+On the server there is no window, so it reads the request: under start mode, the request event's `request.url`.
+Only the pathname and search string take part in matching.
 
-A request event takes precedence over the `url` prop.
-Only the pathname and search string select the server route.
-Client history adapters do not select the location for a server render, although their utility overrides remain available.
-
-## Stream lazy route subtrees
-
-A matched lazy `children` thunk is asynchronous route work.
-The router waits for the subtree, recompiles the route branches, and then renders its inner match.
-
-Use the streaming server-rendering entry for a route tree that can cross a lazy subtree:
+When there is no request, such as a test or a prerender script, pass the URL in:
 
 ```tsx
 import { renderToStream } from "@solidjs/web";
+import { Router } from "./router";
 
-const html = await renderToStream(() => <Router url={request.url} />);
+const html = await renderToStream(() => (
+	<Router url="https://example.com/products/mug" />
+));
 ```
 
-Await `renderToStream` to receive the settled HTML.
-The synchronous `renderToString` path does not support a matched lazy route subtree.
+A request event wins over the `url` prop when both are present.
 
-## Hydrate query results
+Lazy route subtrees, the `children: () => import(...)` form, are asynchronous work during matching.
+`renderToStream` waits for them; the synchronous `renderToString` cannot, so use the streaming entry for any route tree that has one.
 
-During an asynchronous server render, `query` serializes its keyed result into Solid's hydration registry unless the render disables hydration or the request is marked server-only.
-The client query with the same name and serialized arguments adopts that server result instead of starting a duplicate request.
+## Queries render once
 
-The adoption path remains available after global hydration completes because a lazy route module can make its first matching query read later.
-The server payload must be younger than the query cache retention limit of three minutes.
-A first read after that limit runs the query again instead of presenting the old server value as newly fetched.
+Open the network tab on a server-rendered page whose component reads a `query`.
+There is one request for the document and none for the data.
+The product page from the [introduction](/routing/solid-router#load-data-for-a-page) rendered `product().name` on the server, and the browser did not fetch the product again.
 
-Keep the query name and arguments stable between server and client.
-The cache key is the query name followed by the serialized argument array.
+During an async server render, each `query` result is serialized into the page along with its key.
+When the client runs the same `query` with the same name and arguments, it finds the serialized value and adopts it instead of starting a request.
+Two things follow:
 
-## Collect fresh data with mutations
+- Keep the name and arguments stable across server and client.
+  A key built from `Date.now()` or a random id never matches, and the page fetches twice.
+- The adoption window is the cache retention limit, three minutes.
+  A lazy route module that first reads a query well after load, on a tab that sat idle, runs the query fresh rather than presenting an old server value as new.
 
-The optional `@solidjs/router/server` entry connects route preloads to Solid's server-function single-flight protocol.
-Create the collector from the same router instance:
+Adoption also works for reads that happen after hydration finishes, so a lazy chunk that loads later still finds its server data.
+
+## One round trip for a mutation
+
+Submit a form backed by an `action` on a page that also reads a `query`.
+Without the server-side collector, the browser makes two requests: the mutation, then the revalidation fetch when the router reloads the affected queries.
+With it, the browser makes one: the mutation response carries the fresh query values, and the router seeds its cache from them before the action's caller even receives the return value.
+
+The `fullstack` template enables this in two files.
+The first registers the router as the collector:
 
 ```ts
 // src/server-config.ts
-import { createFlightDataCollector } from "@solidjs/router/server";
 import { configureServerFunctionsServer } from "@solidjs/web/server-functions/server";
+import { createFlightDataCollector } from "@solidjs/router/server";
 import { Router } from "./router";
 
 configureServerFunctionsServer({
@@ -66,61 +70,47 @@ configureServerFunctionsServer({
 });
 ```
 
-The collector receives the mutation outcome from the server-function handler.
-The collector then:
-
-1. Matches the URL that the client will show after the mutation.
-2. Resolves matching lazy route subtrees.
-3. Runs the root preload.
-4. Runs the matched route preloads in data-only mode.
-
-When those preloads call `query`, the mutation response includes the keyed values.
-
-On the client, a mounted router subscribes to flight data when `singleFlight` is enabled.
-The subscription opts server-function mutations into the protocol.
-The router seeds delivered values into the query cache.
-The router then applies response revalidation and redirect metadata before the action caller receives the return value.
-
-Set `singleFlight: false` to keep the router from subscribing.
-Without a consumer, the transport does not add the single-flight request header and the server does not run collection for that mutation.
-
-## Register the collector before dispatch
-
-When `@solidjs/vite-plugin` compiles server functions, its `serverFunctions.configure` option can pin a server-only configuration module into the generated handler graph:
+The second makes sure that module runs before any server function is dispatched:
 
 ```ts
 // vite.config.ts
-import solid from "@solidjs/vite-plugin";
-
-export default {
-	plugins: [
-		solid({
-			serverFunctions: {
-				configure: "./src/server-config.ts",
-			},
-		}),
-	],
-};
+solid({
+	start: true,
+	serverFunctions: { configure: "./src/server-config.ts" },
+});
 ```
 
-The generated handler imports the configuration module before it configures and dispatches server-function requests.
-The import makes the collector available for the first mutation in development and production.
-The default server-function endpoint is `/_server`; keep the router's `actionBase` aligned with a customized endpoint.
+When a mutation finishes, the collector works out which URL the client will show next, whether that is the current page or a `redirect` target.
+It resolves any lazy subtrees on that path, runs the root preload and the matched route preloads in data-only mode, and folds every `query` result they produced into the response.
+On the client, the router applies the response's revalidation and redirect metadata, seeds the delivered values, and only then resolves the action call.
 
-Applications with a custom server-function handler can instead pass `collectFlightData` to `handleServerFunctionRequest` for each request.
+That is why the [Data](/routing/solid-router/data#what-revalidates-after-a-mutation) page recommends putting the reads a page needs in its `preload`: the collector can only refresh what the preloads touch.
 
-## Preserve form behavior without JavaScript
+To turn the protocol off, set `singleFlight: false` in `createRouter`.
+Without a client consumer the transport does not send the single-flight header and the server does not run collection.
+An app with its own server-function handler passes `collectFlightData` to `handleServerFunctionRequest` per request instead of using the `configure` module.
 
-An action backed by a server function has a URL that a POST form can submit without the client runtime.
-The core server-function runtime detects the unscripted request, redirects back, and stores the outcome in a one-shot flash cookie.
-During the redirected server render, the router clears and decodes that cookie into submission state.
+If the default server-function endpoint `/_server` is changed in the Vite plugin, set the router's `actionBase` to match so action URLs still reach it.
 
-The router also intercepts server-action form URLs in clients where the action module was not loaded.
-The router loads the action submit path on demand.
-The router then sends the form through the server-function transport.
+## Forms without JavaScript
 
-The no-JavaScript form path requires the Solid server-function handler.
-Plain client-only actions cannot run without their client module.
+Disable JavaScript and submit the cart form from the [Data](/routing/solid-router/data#mutate-with-actions) page.
+It still works.
 
-See [Progressive enhancement with server functions](/building-apps/server-functions/progressive-enhancement) for the core and router ownership boundary.
-See [`createFlightDataCollector`](/reference/solid-router/server#createflightdatacollector) for the collector options.
+The action's URL points at the server-function handler.
+The handler sees a plain form `POST` with no client runtime behind it, runs the server function, and instead of returning a payload the browser could not use, redirects back to the page with the outcome stored in a one-shot flash cookie.
+When the router renders that page on the server, it clears and decodes the cookie into the same submission records that `useSubmissions` exposes, so a validation error from a no-JavaScript submit shows up in the same `<p role="alert">` as a scripted one.
+
+The router also covers the gap between the page loading and the action's module arriving.
+If a form is submitted before the code that defines its action has been loaded, the router recognizes the server-action URL, loads the submit path on demand, and sends the form through the server-function transport as usual.
+
+This path exists only for actions backed by server functions.
+A client-only action has no URL the server can run, so it needs its module loaded.
+[Progressive enhancement](/building-apps/server-functions/progressive-enhancement) describes what the core runtime owns in this exchange and what the router adds.
+
+## Next steps
+
+- [Choose a rendering mode](/guides/choose-a-rendering-mode): static shell, streaming SSR, or prerendering, and what each asks of your route code.
+- [Server functions](/building-apps/server-functions): the runtime under `query` and `action` in a `fullstack` project.
+- [Deployment](/building-apps/deployment): where the server handler runs.
+- [`@solidjs/router/server` reference](/reference/solid-router/server): `createFlightDataCollector` options.

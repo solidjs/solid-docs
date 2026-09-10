@@ -4,7 +4,8 @@ version: "2.0"
 description: "Define static, parameterized, lazy, and file-system-backed Solid Router routes."
 ---
 
-A route definition maps a path pattern to a component and route behavior.
+A route definition is a plain object: a path pattern, the component to render, and optionally a preload, children, match filters, and metadata.
+This page covers each field and the two places route definitions come from, a hand-written array or the file-system adapter.
 
 ```tsx
 import { defineRoutes } from "@solidjs/router";
@@ -16,31 +17,33 @@ export const routes = defineRoutes([
 ]);
 ```
 
-Use `defineRoutes` for an extracted route array.
-The `const` type parameter preserves path literals that TypeScript would otherwise widen.
-`createRouter({ routes })` can then infer typed paths from the array.
-An inline array passed directly to `createRouter` already receives literal inference.
+The route array is also where the types come from.
+`paths.about` exists and `paths.abuot` does not because TypeScript kept the literal `"/about"`.
+An inline array passed to `createRouter` keeps its literals on its own; an array assigned to a variable first would widen to `string`, so wrap it in `defineRoutes` to preserve them.
 
 ## Type a route at its definition
 
-`defineRoute` is an identity helper that types a route component and preload from the route's own path pattern.
+Inside a route's own `component` and `preload`, `params` is an open record by default: every key is `string | undefined`, even `:id`, which the pattern guarantees.
+Wrap the route in `defineRoute` and both are typed from the route's own `path`:
 
 ```tsx
 import { defineRoute } from "@solidjs/router";
 
 const storyRoute = defineRoute({
 	path: "/stories/:id/:tab?",
-	preload: ({ params }) => getStory(params.id),
+	preload: ({ params }) => void getStory(params.id), // params.id: string
 	component: (props) => (
-		<Story story={props.data} id={props.params.id} tab={props.params.tab} />
+		<Story id={props.params.id} tab={props.params.tab} /> // tab: string | undefined
 	),
 });
 ```
 
 Required parameters such as `:id` are typed as `string`.
 Optional parameters such as `:tab?` are typed as `string | undefined`.
-The return type of `preload` becomes the component's `props.data` type.
 Parameters inherited from a parent remain accessible as `string | undefined`.
+
+Whatever `preload` returns is typed as the component's `props.data`.
+It is captured once when the route matches, so for async data the pattern on the [Data](/routing/solid-router/data) page is to start the query in `preload` with `void` and read it through a memo in the component, where it stays reactive to `params`.
 
 For a component declared in another module, annotate it with a path witness:
 
@@ -197,21 +200,25 @@ An optional named `route` export can supply:
 
 ```tsx
 // routes/blog/[id].tsx
+import { createMemo } from "solid-js";
 import { int, type RouteProps } from "@solidjs/router";
 import { defineFileRoute } from "@solidjs/router/fs";
+import { getPost } from "../../data/posts";
 
 export const route = defineFileRoute("/blog/:id", {
 	matchFilters: { id: int },
-	preload: ({ params }) => getPost(params.id),
+	preload: ({ params }) => void getPost(params.id),
 });
 
 export default function Post(props: RouteProps<typeof route>) {
-	return <h1>{props.data.title}</h1>;
+	const post = createMemo(() => getPost(props.params.id));
+	return <h1>{post().title}</h1>;
 }
 ```
 
-The string passed to `defineFileRoute` is a type witness for the file's path.
-The manifest path remains the runtime source of truth.
+Inside a route file the pattern lives in the filename, so there is no `paths` node to type against.
+The string passed to `defineFileRoute` stands in for it: it types `preload`'s params, validates `matchFilters`, and lets the config double as the component's `RouteProps` witness.
+The manifest path remains the runtime source of truth; if the file moves, update the string with it.
 When the manifest has generated literal types, route paths, filters, and search schemas continue into `Router.paths`.
 
 Code-split manifest components become Solid `lazy` components.

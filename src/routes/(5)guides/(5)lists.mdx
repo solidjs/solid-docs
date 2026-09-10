@@ -168,28 +168,36 @@ const [selectedId, setSelectedId] = createSignal<string>();
 
 For a few dozen rows this does not matter.
 For a few thousand it does.
-Turn the selection into a store where each row reads only its own key:
+Keep the selection in a store keyed by id, so each row reads only its own key:
 
 ```tsx
-import { createProjection } from "solid-js";
+const [selected, setSelected] = createStore<Record<string, boolean>>({});
 
-const [selectedId, setSelectedId] = createSignal<string>();
-const isSelected = createProjection<Record<string, boolean>>((draft) => {
-	for (const key of Object.keys(draft)) delete draft[key];
-	const id = selectedId();
-	if (id !== undefined) draft[id] = true;
-}, {});
+function select(id: string) {
+	setSelected((draft) => {
+		for (const key of Object.keys(draft)) delete draft[key];
+		draft[id] = true;
+	});
+}
 
-<li
-	class={{ selected: isSelected[todo.id] }}
-	onClick={() => setSelectedId(todo.id)}
->
+<li class={{ selected: selected[todo.id] }} onClick={() => select(todo.id)}>
 	...
 </li>;
 ```
 
 When the selection moves from one row to another, exactly two rows update: the one that lost the key and the one that gained it.
-This replaces the Solid 1 `createSelector`.
+The same store handles multi-select without changes; leave the other keys in place instead of deleting them.
+
+When the selected id already lives somewhere else, such as a route parameter, derive the store from it with [`createProjection`](/reference/solid-js/stores/create-projection) instead of writing it by hand:
+
+```tsx
+const isSelected = createProjection<Record<string, boolean>>((draft) => {
+	for (const key of Object.keys(draft)) delete draft[key];
+	draft[params.id] = true;
+}, {});
+```
+
+Either form replaces the Solid 1 `createSelector`.
 
 ## Render a window over a large list
 

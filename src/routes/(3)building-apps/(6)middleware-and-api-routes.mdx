@@ -1,7 +1,5 @@
 ---
 title: "Middleware and API routes"
-titleTemplate: ":title"
-mainNavExclude: true
 version: "2.0"
 description: "Run code in front of every request with fetch-style middleware, share state with pages and server functions through the request event, and answer HTTP requests from route modules."
 ---
@@ -35,6 +33,10 @@ export default [createAPIHandler(routes)];
 Every request the server handles, a page render, a server-function call, or an API route, passes through this array in order before reaching the handler.
 `createAPIHandler` answers requests that match a route module's method exports and passes everything else along.
 
+`virtual:file-routes` has two exports.
+The default export is the flat manifest of every route file, which is what the API handler needs.
+The named `pageRoutes` export is the page tree with grouping segments stripped, which is what `src/router.ts` hands to Solid Router.
+
 ## Add a middleware
 
 A middleware is a function of the request and a `next` continuation:
@@ -53,16 +55,17 @@ Read the session and put the user where every later step can see it:
 
 ```ts
 import { getRequestEvent } from "@solidjs/web";
-import { readSession } from "./server/session";
+import { getSession } from "./server/session";
 
-async function attachUser(request: Request, next: () => Promise<Response>) {
-	getRequestEvent()!.locals.user = await readSession(request);
+async function attachUser(_request: Request, next: () => Promise<Response>) {
+	const session = await getSession();
+	getRequestEvent()!.locals.userId = session?.userId;
 	return next();
 }
 ```
 
-`getRequestEvent()` returns the same event the page render and the server functions for this request see, so `locals.user` set here is readable from a server function without passing it around.
-[Sessions and auth](/building-apps/sessions-and-auth) builds the `readSession` side.
+`getRequestEvent()` returns the same event the page render and the server functions for this request see, so `locals.userId` set here is readable from a server function without passing it around.
+[Sessions and auth](/building-apps/sessions-and-auth) builds `getSession()`, which reads the signed cookie from that same event.
 
 **Continue, then change the response.**
 Nothing is written to the network until the outermost middleware returns, so headers can be set after `await next()`, even on a streamed body:
@@ -105,7 +108,7 @@ export default [
 
 The request travels down the array and the response travels back up it.
 `securityHeaders` runs before `attachUser` on the way in and receives its response on the way out.
-Order matters in the usual way: put the session reader before anything that needs `locals.user`, and put the API handler after it if API routes need the user.
+Order matters in the usual way: put the session reader before anything that needs `locals.userId`, and put the API handler after it if API routes need the user.
 
 Pass a `Request` to `next(request)` to replace the request for the rest of the chain, for example after rewriting a URL.
 Do not call `next()` twice from one invocation.
@@ -159,7 +162,7 @@ Enable method discovery in the plugin and the template's `createAPIHandler` pick
 fileRoutes({ httpMethods: true });
 ```
 
-The handler receives the request event with the matched `params`, so it can read `locals.user` set by middleware and append cookies to `event.response.headers`.
+The handler receives the request event with the matched `params`, so it can read `locals.userId` set by middleware and append cookies to `event.response.headers`.
 Do the authorization check in the handler, or in a middleware that is guaranteed to run before it; a route file is not protected by its location.
 
 ### Return values
@@ -184,7 +187,7 @@ The stable contract Solid's server runtime exposes is the fetch-style `Request` 
 
 ## Common problems
 
-**`locals.user` is `undefined` in a server function.**
+**`locals.userId` is `undefined` in a server function.**
 The middleware that sets it runs after the API handler in the array, or is not in the array at all.
 Middleware order is array order.
 

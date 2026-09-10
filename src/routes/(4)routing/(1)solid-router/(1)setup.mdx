@@ -31,7 +31,7 @@ export const Router = createRouter({
 export const { paths } = Router;
 ```
 
-`createRouter` returns both the provider component and the application-wide static routing instance.
+[`createRouter`](/reference/solid-router/router-factory#createrouter) returns both the provider component and the application-wide static routing instance.
 The instance members `routes`, `config`, `paths`, and `match()` do not represent one visitor's current location.
 Session-specific state comes from routing primitives inside the provider.
 
@@ -39,7 +39,8 @@ Mount the instance at the application root:
 
 ```tsx
 // src/App.tsx
-import { Router } from "./router";
+import { Loading } from "solid-js";
+import { paths, Router } from "./router";
 
 export default function App() {
 	return (
@@ -47,10 +48,12 @@ export default function App() {
 			{(props) => (
 				<>
 					<header>
-						<a href={Router.paths()}>Home</a>
-						<a href={Router.paths.about}>About</a>
+						<a href={paths()}>Home</a>
+						<a href={paths.about}>About</a>
 					</header>
-					<main>{props.children}</main>
+					<Loading fallback={<main>Loading…</main>}>
+						<main>{props.children}</main>
+					</Loading>
 				</>
 			)}
 		</Router>
@@ -60,6 +63,7 @@ export default function App() {
 
 The render-prop child is the root layout.
 The root layout remains mounted while matched route components render through `props.children`.
+The `Loading` boundary gives the first page load a fallback while a lazy page or its data is pending; later navigations keep the current page on screen without it.
 If the router config has a top-level `preload`, its return value is available as `props.data`.
 In start mode, the generated client and server entries render `src/App.tsx`.
 
@@ -107,4 +111,8 @@ export const Router = createRouter({
 Solid Router does not support nested routers.
 Compose one route tree from extracted route arrays or [lazy route subtrees](/routing/solid-router/route-definitions#load-a-route-subtree-lazily).
 
-See [`createRouter`](/reference/solid-router/router-factory#createrouter) for the full signature.
+## Next steps
+
+- [Route definitions](/routing/solid-router/route-definitions): path patterns, parameter filters, metadata, and lazy subtrees for the `routes` array you passed in.
+- [Nested routes and layouts](/routing/solid-router/nested-routes): layouts that stay mounted while the page inside them changes.
+- [Navigation and typed paths](/routing/solid-router/navigation): links, typed `paths`, and search parameters.

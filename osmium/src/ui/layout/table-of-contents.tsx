@@ -1,4 +1,11 @@
-import { Index, Show, createEffect, createSignal, on } from "solid-js";
+import {
+	Index,
+	type JSX,
+	Show,
+	createEffect,
+	createSignal,
+	on,
+} from "solid-js";
 import {
 	useCurrentPageData,
 	TableOfContentsItemData,
@@ -51,58 +58,36 @@ export const TableOfContents = () => {
 			<span class="text-base font-semibold text-slate-900 dark:text-white">
 				On this page
 			</span>
-			<ol role="list" class="mt-2 flex list-none flex-col p-0 pl-2.5 text-sm">
+			<ol
+				role="list"
+				class="mt-3 flex list-none flex-col border-l border-slate-300 p-0 text-sm dark:border-slate-700"
+			>
 				<li class="not-prose mt-0 mb-0 pl-0">
-					<span>
-						<a
-							href="#"
-							classList={{
-								"dark:text-slate-300": currentSection() !== undefined,
-								"text-blue-800 dark:text-blue-300 font-bold hover:text-slate-700 dark:hover:text-slate-200":
-									currentSection() === undefined,
-							}}
-							class="not-prose no-underline hover:text-slate-700 dark:hover:text-blue-300"
-						>
-							Overview
-						</a>
-					</span>
+					<TocLink href="#" active={currentSection() === undefined}>
+						Overview
+					</TocLink>
 				</li>
 				<Index each={toc()}>
 					{(section) => (
-						<li class="not-prose mt-2 pt-0 pl-0">
-							<span>
-								<a
-									href={section().href}
-									classList={{
-										"dark:text-slate-300": currentSection() !== section().href,
-										"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-bold":
-											currentSection() === section().href,
-									}}
-									class="not-prose no-underline hover:text-slate-700 dark:hover:text-blue-300"
-								>
-									{section().title}
-								</a>
-							</span>
+						<li class="not-prose mt-0 pt-0 pl-0">
+							<TocLink
+								href={section().href}
+								active={currentSection() === section().href}
+							>
+								{section().title}
+							</TocLink>
 							<Show when={section().children.length !== 0}>
-								<ol
-									role="list"
-									class="mt-2 list-none pl-2.5 font-bold text-slate-500 hover:text-slate-700 active:font-bold active:text-blue-600 dark:text-slate-300 dark:hover:text-blue-200"
-								>
+								<ol role="list" class="list-none p-0">
 									<Index each={section().children}>
 										{(subSection) => (
-											<li>
-												<a
+											<li class="not-prose mt-0 pl-0">
+												<TocLink
 													href={subSection().href}
-													classList={{
-														"dark:text-slate-300":
-															currentSection() !== subSection().href,
-														"text-blue-800 dark:text-blue-200 hover:text-slate-700 dark:hover:text-slate-200 font-bold":
-															currentSection() === subSection().href,
-													}}
-													class="not-prose no-underline hover:text-blue-700 dark:hover:text-blue-300"
+													active={currentSection() === subSection().href}
+													nested
 												>
 													{subSection().title}
-												</a>
+												</TocLink>
 											</li>
 										)}
 									</Index>
@@ -115,6 +100,30 @@ export const TableOfContents = () => {
 		</aside>
 	);
 };
+
+// One rail for the whole list; the active entry colors its own segment of it.
+const TocLink = (props: {
+	href: string;
+	active: boolean;
+	nested?: boolean;
+	children: JSX.Element;
+}) => (
+	<a
+		href={props.href}
+		aria-current={props.active ? "location" : undefined}
+		classList={{
+			"pl-6": props.nested,
+			"pl-3": !props.nested,
+			"border-blue-600 dark:border-blue-300 text-blue-800 dark:text-blue-200 font-semibold":
+				props.active,
+			"border-transparent text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:border-slate-400 dark:hover:border-slate-500":
+				!props.active,
+		}}
+		class="not-prose -ml-px block border-l-2 py-1 leading-snug no-underline transition-colors"
+	>
+		{props.children}
+	</a>
+);
 
 function flattenData(data: TableOfContentsItemData): Array<string> {
 	return [data?.href, ...(data?.children ?? []).flatMap(flattenData)].filter(

@@ -1,7 +1,5 @@
 ---
 title: "Styling and assets"
-titleTemplate: ":title"
-mainNavExclude: true
 version: "2.0"
 description: "Choose between global CSS, CSS modules, Tailwind, and inline styles; import images and other assets; and understand where styles end up under streaming SSR."
 ---
@@ -122,18 +120,16 @@ The `basic` template keeps `favicon.ico` there and fetches `public/users.json` a
 Use `public/` for things an outside party needs to find by name: `robots.txt`, a well-known file, an image referenced from an email.
 Import everything else, so a changed file gets a new URL and caches cannot serve the old one.
 
-## Where styles end up
+A stylesheet imported by a lazy route module is loaded with that module's chunk.
+For a page that must be styled before its JavaScript arrives, import its CSS from a module that is always loaded, or add a `<link>` for it through [head metadata](/building-apps/head-and-metadata).
 
-You do not have to think about this in normal use, but it answers the "why is there no flash of unstyled content?" question.
-
+:::deep-dive[Why there is no flash of unstyled content]
 In production, the CSS reachable from `App` and `Document` is built into asset files and the generated handler writes `<link rel="stylesheet">` tags for them into the document head, so the first HTML the browser receives already references the styles.
 Imported asset URLs point at their hashed output.
 
 In development, the dev server inlines the reachable CSS into the server-rendered page so the first paint is styled, then Vite's client takes over for hot updates and the server-rendered copy is removed.
 You may briefly see two `<style>` elements for the same file in the inspector during that handoff; it is expected.
-
-A stylesheet imported by a lazy route module is loaded with that module's chunk.
-For a page that must be styled before its JavaScript arrives, import its CSS from a module that is always loaded, or add a `<link>` for it through [head metadata](/building-apps/head-and-metadata).
+:::
 
 ## Common problems
 

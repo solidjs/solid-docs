@@ -1,8 +1,7 @@
 ---
 title: Quick start
-titleTemplate: ":title"
-mainNavExclude: true
 version: "2.0"
+description: "Go from an empty directory to a running Solid app with a change of your own in it, and meet the ideas the rest of the docs build on."
 ---
 
 This page takes you from an empty directory to a running app with a change of your own in it.
@@ -104,7 +103,8 @@ Three things in this file come up again and again in Solid:
 - `props.children` is where the matched page renders.
   Layouts in Solid are ordinary components that render their children.
 - `<Loading>` is a boundary.
-  When a page inside it is waiting on data, the boundary shows the fallback instead of the page, and it keeps the current page visible when you navigate to one that is still loading.
+  The first time a page inside it waits on data, the boundary shows the fallback instead of the page.
+  After that, Solid itself keeps the current page on screen while the next one loads; the boundary is not involved in that hold.
 - `paths.users(1)` builds the URL `/users/1` from the route tree, so a typo in a link is a type error instead of a broken page.
 
 `src/Document.tsx` is the document shell, the file that replaces `index.html`.
@@ -155,7 +155,7 @@ export default function Counter() {
 		<>
 			<button
 				class="increment"
-				onClick={() => setCount(count() + step())}
+				onClick={() => setCount((current) => current + step())}
 				type="button"
 			>
 				Clicks: {count()}
@@ -178,6 +178,10 @@ export default function Counter() {
 Save the file.
 The page updates without a reload.
 Change the step to `5` and click the button: the count goes up by five, and the sentence under the button already said so before you clicked.
+
+The click handler now passes a function to `setCount` instead of a value.
+When the new value depends on the old one, this form is the safe one: it receives the latest value even if another write is already queued.
+[Reactivity](/concepts/reactivity#signals) explains the difference.
 
 Now try something that does not work, on purpose.
 Move the read out of the JSX:
@@ -270,7 +274,7 @@ You can deploy that directory to any static host.
 When you later need server rendering or server functions, add `ssr: true` next to `start: true` in `vite.config.ts`; the files you have written carry over unchanged.
 [Project shapes](/getting-started/project-shapes) compares `bare`, `basic`, and `fullstack`.
 
-## Where to go next
+## Next steps
 
 You now have an app with routing, a component you changed, and a passing test.
 Pick the next page by what you want to understand:

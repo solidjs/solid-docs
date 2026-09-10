@@ -1,7 +1,5 @@
 ---
 title: "Debugging reactivity"
-titleTemplate: ":title"
-mainNavExclude: true
 version: "2.0"
 description: "Find out why a value does not update, why it updates too often, and how to read Solid's development diagnostics."
 ---
@@ -197,8 +195,8 @@ The [Lists guide](/guides/lists#keep-row-identity-across-updates) shows both fix
 Every write in an effect schedules a second update after the first one has already landed, so readers of the copied value run twice per change and see an intermediate state in between.
 Attribution proves this from the graph and reports it as `[EFFECT_RELAY_TEAR]`: the reader ran twice for one root change, once in the flush where the source changed and again after the effect relayed it, and the frame in between showed the new source with the stale copy.
 When the effect copies its input unchanged and nothing else writes the target signal, the value is derived state kept one flush late; make it a memo and delete the effect.
-When the effect measures the DOM or reads a ref, the message offers the other fix: read the measurement in a `createRenderEffect` so the second frame does not happen.
-[Avoid unnecessary effects](/guides/avoid-unnecessary-effects) works through the cases.
+When the write reads something outside the graph, such as layout or the clock, the message says so: the tear is the cost of measuring, and the effect stays.
+[Avoid unnecessary effects](/guides/avoid-unnecessary-effects#let-external-observations-become-new-inputs) shows that case written with `onSettled` and works through the derivable ones.
 
 ### An effect re-runs because of its own write
 
@@ -355,7 +353,7 @@ Budget files accept `maxSilentHoldMs` and `maxHoldMs` next to the re-run limits.
 With `@solidjs/diagnostics` in `package.json`, the Vite plugin also serves the same capture controls at `/__solid/diagnostics` on the dev server, so a script or an agent can record a scenario against the running app.
 Set `diagnostics: false` in the plugin options to turn that off.
 
-## Where to go next
+## Next steps
 
 - [Reactivity](/concepts/reactivity): the rules the diagnostics enforce.
 - [Avoid unnecessary effects](/guides/avoid-unnecessary-effects): the fix for most write-placement warnings.

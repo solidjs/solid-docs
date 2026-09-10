@@ -6,6 +6,7 @@ import {
 	xCircle,
 	puzzlePiece,
 	bookOpen,
+	noSymbol,
 } from "solid-heroicons/solid";
 
 const styles = {
@@ -33,6 +34,13 @@ const styles = {
 		container:
 			"bg-red-400/30 border-red-600 dark:border-red-400 dark:bg-red-400/20 dark:border-red-600",
 		title: "text-red-900 dark:text-red-400",
+	},
+	// A tempting approach that looks right and is not. Distinct from
+	// `caution` (a constraint to respect) and `danger` (data loss, security).
+	pitfall: {
+		container:
+			"bg-orange-400/25 border-orange-600 dark:border-orange-400 dark:bg-orange-400/15 dark:border-orange-600",
+		title: "text-orange-900 dark:text-orange-300",
 	},
 };
 
@@ -70,6 +78,13 @@ const icons = {
 			aria-hidden="true"
 			path={xCircle}
 			class={`${props.class} fill-red-500 dark:fill-red-400`}
+		/>
+	),
+	pitfall: (props: { class?: string }) => (
+		<Icon
+			aria-hidden="true"
+			path={noSymbol}
+			class={`${props.class} fill-orange-600 dark:fill-orange-400`}
 		/>
 	),
 };

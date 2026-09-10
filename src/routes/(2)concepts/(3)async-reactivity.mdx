@@ -1,8 +1,7 @@
 ---
 title: "Async reactivity"
-titleTemplate: ":title"
-mainNavExclude: true
 version: "2.0"
+description: "Read a promise like a value: how async memos hold updates, when Loading shows a fallback, and how mutations settle."
 ---
 
 Take one value your UI renders today: a product, a list, a setting.
@@ -741,7 +740,7 @@ const profile = createMemo(async () => {
 
 :::caution[First unresolved read after await]
 A source first read after `await` cannot notify the async computation when it settles because no dependency edge exists.
-At this revision, development builds convert that unresolved read into an error that can reach `Errored`.
+Development builds convert that unresolved read into an error that can reach `Errored`.
 Production builds do not include this authorship check, so this unsupported pattern can remain pending without a retry.
 A post-`await` re-read can retry only when the same source was already tracked before the first `await`.
 :::
@@ -766,11 +765,11 @@ Use `yield promise` as the suspension point, or place a bare `yield` before writ
 - Use [`onSettled`](/reference/solid-js/lifecycle-actions/on-settled) to run code after owned async work and queued updates settle.
 - Use `loadingValue` or `seedLoadingValue` when a placeholder value should answer for a source before its first result.
 
-## Where to go next
+## Next steps
 
 - [Boundaries](/concepts/boundaries): where to place `Loading` and `Errored`, how `Reveal` orders sibling regions, and how an errored region recovers.
 - [Data fetching patterns](/guides/data-fetching-patterns): search as you type, several requests per page, pagination, sharing a request, polling, and failures, each as working code.
 - [Migrate data fetching from Solid 1](/migration/data-fetching-from-solid-1): what changes when `createResource` or an effect-and-flag pattern becomes an async memo, and how to keep the old feel where you want it.
 - [Server functions](/building-apps/server-functions): a `"use server"` function returns a promise, so everything on this page applies to it unchanged; that page covers the transport, `GET` reads, and `live` streams.
 - [Rendering and SSR](/concepts/rendering-and-ssr): the same boundaries decide what streams in the initial HTML.
-- [Data APIs](/routing/solid-router/data): `query` and `action` from Solid Router add caching, preloading, and submissions on top of these primitives.
+- [Data loading and mutations](/routing/solid-router/data): `query` and `action` from Solid Router add caching, preloading, and submissions on top of these primitives.

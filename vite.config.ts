@@ -72,7 +72,12 @@ export default defineConfig({
 				expressiveCode: {
 					themes: ["min-light", "material-theme-ocean"],
 					themeCssSelector: (theme) => `[data-theme="${theme.type}"]`,
-					frames: false,
+					frames: {
+						// A leading `// src/App.tsx` comment becomes the frame title;
+						// `title="..."` on the fence also works.
+						extractFileNameFromCode: true,
+						showCopyToClipboardButton: true,
+					},
 					styleOverrides: {
 						twoSlash: {
 							cursorColor: "var(--twoslash-cursor)",

@@ -7,7 +7,7 @@ description: "Wrap a group of pages in a shared layout, keep it mounted while pa
 Most apps have sections: an account area with its own sidebar, an admin area behind a sign-in check, a product catalog with a filter bar.
 Nested routes let you write the section's frame once and swap the page inside it.
 
-This page adds an account section to the store from the [Solid Router introduction](/routing/solid-router).
+This page adds an account section to the store from the [Solid Router](/routing/solid-router).
 
 ## A layout and its pages
 
@@ -19,6 +19,7 @@ The child arrives as `props.children`, the same way any Solid component receives
 export const Router = createRouter({
 	routes: [
 		{ path: "/", component: Home },
+		{ path: "/sign-in", component: SignIn },
 		{
 			path: "/account",
 			component: AccountLayout,
@@ -98,6 +99,7 @@ Leave `path` off and the route adds a component to the match without adding to t
 import { Show, createMemo } from "solid-js";
 import type { RouteProps } from "@solidjs/router";
 import { getSession } from "../data/session";
+import { paths } from "../router";
 
 export default function RequireSignIn(props: RouteProps) {
 	const session = createMemo(() => getSession());
@@ -105,7 +107,7 @@ export default function RequireSignIn(props: RouteProps) {
 	return (
 		<Show
 			when={session().user}
-			fallback={<a href="/sign-in">Sign in to continue</a>}
+			fallback={<a href={paths["sign-in"]}>Sign in to continue</a>}
 		>
 			{props.children}
 		</Show>
@@ -177,7 +179,7 @@ The child's preload does not wait for the parent's:
 ```
 
 Navigating to `/collections/mugs/products/blue` sends both requests at once.
-Each component then reads its own query through a memo, as on the [Data](/routing/solid-router/data) page, and the `Loading` boundary above them decides what to show while they are pending.
+Each component then reads its own query through a memo, as on the [Data loading and mutations](/routing/solid-router/data) page, and the `Loading` boundary above them decides what to show while they are pending.
 The parallel start is the point of nesting the preloads rather than fetching the product from inside `CollectionLayout` after the collection arrives, which would be a waterfall.
 [Async reactivity](/concepts/async-reactivity#nesting-is-not-a-waterfall) covers the general principle.
 
@@ -244,6 +246,6 @@ Read the location with `useLocation()`, or move the check into the child that ow
 
 ## Next steps
 
-- [Navigation](/routing/solid-router/navigation): typed `paths`, active and pending link styling, and navigation guards for sections such as `RequireSignIn`.
+- [Navigation and typed paths](/routing/solid-router/navigation): typed `paths`, active and pending link styling, and navigation guards for sections such as `RequireSignIn`.
 - [Data loading and mutations](/routing/solid-router/data): what the preloads above start, and how the cache shares results between a layout and its pages.
 - [Route definitions](/routing/solid-router/route-definitions): path patterns, match filters, metadata, and the file-system adapter, which produces the same nested structure from directories.

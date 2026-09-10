@@ -1,7 +1,5 @@
 ---
 title: "Forms"
-titleTemplate: ":title"
-mainNavExclude: true
 version: "2.0"
 description: "Build a form with a server function and a Solid Router action: it works before JavaScript loads, validates on the server, and shows pending state and inline errors after hydration."
 ---
@@ -16,11 +14,12 @@ Stop at the pass that matches what your app needs.
 
 The guide assumes a `fullstack` project with [server functions](/building-apps/server-functions) enabled and [Solid Router](/routing/solid-router) mounted.
 
-:::note[Two functions named `action`]
+:::pitfall[Two functions named action]
 This guide uses `action` from `@solidjs/router`.
 It wraps a function so a form can submit to it and the router can track the submission.
 
 `solid-js` also exports an [`action`](/reference/solid-js/lifecycle-actions/action); that one runs a generator as a reactive transaction and is covered in [Async reactivity](/concepts/async-reactivity#mutations-from-a-client-only-list-to-a-server-backed-one).
+Editor auto-import offers both, and `<form action={coreAction}>` fails at the type level because the core `action` does not produce a URL.
 The router's `action` uses the core one internally.
 Every `action` in the code on this page is the router's.
 :::
@@ -31,7 +30,7 @@ Start with the server side.
 A server function that takes one `FormData` argument can receive an HTML form submission directly:
 
 ```ts
-// src/routes/checkout/address.ts
+// src/data/address.ts
 import { redirect } from "@solidjs/web";
 
 export async function saveAddress(form: FormData) {
@@ -52,7 +51,7 @@ Wrap it in a router `action` and pass the action to the form:
 ```tsx
 // src/routes/checkout/address.tsx
 import { action } from "@solidjs/router";
-import { saveAddress } from "./address";
+import { saveAddress } from "../../data/address";
 
 const submitAddress = action(saveAddress);
 
@@ -80,7 +79,11 @@ export default function AddressPage() {
 Load the page and disable JavaScript in your browser's developer tools.
 The form still submits.
 
+The server function lives in `src/data/`, not next to the page: with method discovery on, a `.ts` file under `src/routes` is an [API route](/building-apps/middleware-and-api-routes#api-routes), and this file is not one.
+
 `action(saveAddress)` returns a value that serializes to the server function's URL, so `action={submitAddress}` renders as an ordinary `action="..."` attribute in the HTML.
+You can also write the server function inline, `action(async (form) => { "use server"; ... })`, as the [Data loading and mutations](/routing/solid-router/data) page does; the two forms behave the same.
+Keep the function exported and separate when an API route or a test needs to call it without the form.
 The browser posts to that URL, the server-function runtime sees that the request came from an HTML form rather than the Solid client, decodes the body as `FormData`, runs `saveAddress`, and follows the redirect.
 
 With JavaScript on, the router intercepts the submit instead.
@@ -101,7 +104,7 @@ Anyone can post to the server function's URL with `curl`, so the function must c
 Parse the `FormData` with a schema:
 
 ```ts
-// src/routes/checkout/address.ts
+// src/data/address.ts
 import { redirect, respond } from "@solidjs/web";
 import * as v from "valibot";
 
@@ -325,9 +328,9 @@ The value was thrown as a plain object or `Error` instead of through `respond()`
 Production builds replace unbranded thrown errors with a generic message.
 Use `throw respond(value, { status })` for structured failures.
 
-## Where to go next
+## Next steps
 
-- [Data APIs](/routing/solid-router/data) covers `.with()` for bound arguments, `.onSubmit` for optimistic updates, and revalidation after a mutation.
+- [Data loading and mutations](/routing/solid-router/data) covers `.with()` for bound arguments, `.onSubmit` for optimistic updates, and revalidation after a mutation.
 - [Progressive enhancement](/building-apps/server-functions/progressive-enhancement) explains what the server-function runtime does with an unscripted request, for forms outside the router.
 - [Arguments and security](/building-apps/server-functions/arguments-and-security) explains the other argument encodings and the same-origin check that protects POSTs.
 - [Sessions and auth](/building-apps/sessions-and-auth) applies this shape to sign-in and sign-out forms.

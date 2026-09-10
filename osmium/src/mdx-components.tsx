@@ -19,19 +19,22 @@ import {
 
 import { clientOnly } from "@solidjs/start";
 import { Callout } from "./ui/callout";
+import { DeepDive } from "./ui/deep-dive";
 import { Tabs, TabList, TabPanel, Tab } from "./ui/tabs";
 
 export { Callout } from "./ui/callout";
+export { DeepDive } from "./ui/deep-dive";
 export { QuickLinks } from "./ui/quick-links";
 export { ImageLink } from "./ui/image-link";
 
 const EraserLinkImpl = clientOnly(() => import("./ui/eraser-link"));
 
-type CalloutType = "note" | "tip" | "advanced" | "caution" | "danger";
+type CalloutType =
+	"note" | "tip" | "advanced" | "caution" | "danger" | "pitfall";
 
 export const DirectiveContainer = (
 	props: {
-		type: "tab-group" | "tab" | CalloutType;
+		type: "tab-group" | "tab" | "deep-dive" | CalloutType;
 		title?: string;
 		codeGroup?: string;
 		tabNames?: string;
@@ -51,6 +54,9 @@ export const DirectiveContainer = (
 			}
 		>
 			<Match when={props.type === "tab"}>{_children}</Match>
+			<Match when={props.type === "deep-dive"}>
+				<DeepDive title={props.title} children={_children} />
+			</Match>
 			<Match when={props.type === "tab-group"}>
 				<TabGroup
 					syncKey={props.title}

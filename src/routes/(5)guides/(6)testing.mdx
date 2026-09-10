@@ -1,7 +1,5 @@
 ---
 title: "Testing"
-titleTemplate: ":title"
-mainNavExclude: true
 version: "2.0"
 description: "Test Solid components in jsdom or a real browser, and test fullstack server code in a separate Node project."
 ---
@@ -22,12 +20,14 @@ This approach follows the [Testing Library guiding principles](https://testing-l
 
 ## Test components in jsdom
 
-The `basic` template pins Vitest 4, jsdom 25, Solid Testing Library 1.0 beta, and the jest-dom matchers.
+The `basic` template ships Vitest, jsdom, Solid Testing Library, and the jest-dom matchers.
 Add the same development dependencies to an existing Solid project:
 
 ```sh
-pnpm add -D vitest@^4.0.0 jsdom@^25.0.1 @solidjs/testing-library@1.0.0-beta.2 @testing-library/jest-dom@^6.6.3
+pnpm add -D vitest jsdom @solidjs/testing-library @testing-library/jest-dom
 ```
+
+The template's `package.json` is the record of which versions are known to work together.
 
 Add a test script to `package.json`:
 
@@ -131,7 +131,7 @@ Without jsdom, the Chromium test can pass while the Vitest command exits with a 
 For a new test setup, install the complete dependency set:
 
 ```sh
-pnpm add -D vitest@^4.0.0 jsdom@^25.0.1 @solidjs/testing-library@1.0.0-beta.2 @testing-library/jest-dom@^6.6.3 @vitest/browser-playwright@^4.0.0 playwright@^1.56.0
+pnpm add -D vitest jsdom @solidjs/testing-library @testing-library/jest-dom @vitest/browser-playwright playwright
 pnpm exec playwright install chromium
 ```
 
@@ -328,3 +328,9 @@ test("reads a session on the next request", async () => {
 The test asserts the public request-to-response contract: one request writes a cookie, and the next request reads the session.
 Reset modules before importing code that captures environment values at module initialization.
 Restore fake timers and mocks, delete changed environment variables, and dispose any other process-wide state in `afterEach`.
+
+## Next steps
+
+- [Debugging reactivity](/guides/debugging-reactivity): when a test sees the old DOM, the reason is usually a pending flush; that page explains `flush()` and where it does not belong.
+- [Sessions and auth](/building-apps/sessions-and-auth): the session module the server test above exercises.
+- [Environment](/building-apps/environment): why server code that reads `virtual:env/server` needs the module reset the last section describes.

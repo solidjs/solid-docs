@@ -53,23 +53,60 @@ See below for an example of what this would look like in raw Markdown.
 |April | 4 |
 ```
 
-#### Asides
+#### Callouts and deep dives
 
-Asides serve as callout boxes in Solid's documentation.
-They represent a section of the document that is related to the content surrounding the aside, but not directly relevant to the page.
-They work well with explaining how Solid differs from other popular frameworks, referring to other points in the documentation, or serving as a tangential note.
-We ask that you use them sparingly.
+A page written as one unbroken column of prose and code reads as generated.
+Callouts change the register: they mark what the reader must not miss, what they can skip, and what will bite them.
+Aim for two or three per Learn page, placed where the content changes kind, not where a paragraph felt long.
 
-1. To use an aside, you must first import the correct component.
-2. Use the following command in your terminal. (Remember to be in the cloned Solid repo directory.)
-
-3. Once you have the Aside component imported, simply follow the below example for how to add one to your document.
+Write a callout as a container directive with an optional title in brackets:
 
 ```
-:::note
-    content here
+:::pitfall[Title in the reader's words]
+The wrong version, what it does, and the fix.
 :::
 ```
+
+The available kinds, and what each one is for:
+
+| Kind        | Use it for                                                                                                             |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `pitfall`   | A tempting approach that looks right and is not. Show the wrong code, name the consequence, quote the dev warning.     |
+| `caution`   | A constraint the reader must respect: an ordering rule, a limit, a case the runtime does not check.                    |
+| `danger`    | Data loss or a security exposure.                                                                                      |
+| `note`      | Context the paragraph needs but the flow does not: a difference from another framework, a scope statement.             |
+| `tip`       | A shortcut or a better default the reader may not know to look for.                                                    |
+| `advanced`  | Content for integrators and library authors that an app developer can skip.                                            |
+| `deep-dive` | Collapsed by default. How something works under the hood, or why a rule exists. Never the only place a rule is stated. |
+
+Rules:
+
+- A `pitfall` needs three things: the wrong code, the observed consequence, and the fix.
+  Where a development diagnostic fires, quote it and link its code to the Debugging reactivity guide.
+- A `deep-dive` must be skippable.
+  If the reader needs it to use the API, it belongs in the body.
+  Keep headings out of it so the page outline stays flat.
+- Do not put a callout inside a callout, and do not stack two in a row.
+- Callout titles are plain text; inline code in the bracket is dropped by the parser.
+- Do not use a callout to restate the paragraph above it.
+
+Tabs group alternatives the reader picks one of, such as package managers or validation libraries:
+
+```
+::::tab-group[validation-library]
+
+:::tab[Valibot]
+...
+:::
+
+:::tab[Zod]
+...
+:::
+
+::::
+```
+
+Tab groups that share a name select together across the site.
 
 ### Code examples
 
@@ -97,6 +134,11 @@ npm install
 Code examples are vital to providing users with quick tips on how to use Solid.
 Knowing when to use inline code versus code blocks can further the understanding of the readers and users alike.
 
+When a block shows the contents of a file, name the file.
+A first-line comment such as `// src/router.ts` is lifted into the block's title bar, or set it on the fence with `title="src/router.ts"`.
+Fragments that are not a whole file get no filename.
+Every block has a copy button; do not add prose telling the reader to copy.
+
 ### Images
 
 Good documentation takes advantage of images, such as screenshots and graphics, to expand upon the written content.
@@ -122,6 +164,24 @@ Now that we've laid out how we'd like your contribution to look, we'd like to ta
 
 Please note that, for editing purposes, **each sentence gets its own line**.
 Paragraphs should have two lines between them.
+
+### Frontmatter
+
+Every hand-written page carries three fields:
+
+```yaml
+---
+title: "Sessions and auth"
+version: "2.0"
+description: "Build a signed cookie session on the request event, sign users in and out from server functions, and authorize every server entry point."
+---
+```
+
+`description` is one sentence, written for the search result and the `llms.txt` index: what the reader will be able to do after the page, not what the page "covers".
+Do not add `titleTemplate`; the browser title is built from `title` and the site name.
+`use_cases` and `tags` are emitted by the reference generator and are not used on hand-written pages.
+
+Do not pin package versions in prose or install commands; point at the template's `package.json` for the versions known to work together.
 
 ### Headings
 
@@ -224,15 +284,47 @@ Do not open with a definition ("A signal is a reactive primitive that...").
 Definitions belong after the reader knows why they need one.
 
 Where the page continues a sequence, say what the reader saw on the previous page and build on it.
-The Quick start counter, the cart on the Reactivity and Components pages, and the product page on the Async page are the recurring examples; reuse them before inventing a new domain.
+The recurring example across Learn is a storefront: the Quick start counter, then a product page, a cart, a checkout address form, an account area, and orders.
+Reuse those before inventing a new domain, and do not claim a page follows one example unless it does.
 
 ### Show what happens, then explain why
 
 Each section that introduces a behavior shows the code, states what the reader observes when it runs, and then explains the mechanism.
 "Click `+` and the subtotal changes; nothing else is touched" before "JSX expressions are tracking scopes."
+Every example gets that observation sentence; code followed directly by mechanism reads as a reference page.
 
 Where a tempting wrong approach exists, show it, show what it does (including the exact development warning where there is one), and show the fix.
 A section that only shows the right way leaves the reader unable to recognize the wrong way in their own code.
+Mark the pair so it can be scanned:
+
+```tsx
+// Avoid: the effect copies a value it could derive
+createEffect(
+	() => fullName(),
+	(name) => setDisplayName(name)
+);
+
+// Prefer: derive it where it is read
+const displayName = createMemo(() => fullName());
+```
+
+Then one sentence of what the `Avoid` version does when run, and the bracketed diagnostic code if one fires, linked to its section in Debugging reactivity.
+A `:::pitfall` callout is the right container when the wrong version is a common habit rather than a one-off.
+
+### Gloss a term the first time it appears
+
+Solid has vocabulary a new reader has not met: held update, settled, owner, tracking scope, projection, boundary.
+The first time a page uses one, say what it means in a clause and link the page that explains it.
+"the write is held (kept back until the data it needs has arrived; see Async reactivity)".
+After the first use, the bare term is fine.
+One new term per section; a paragraph that introduces three is a paragraph the reader will not finish.
+
+### Close with a recap
+
+Before the next-steps section, list the rules the page taught as five to eight one-line bullets under `## Recap`.
+Each line is a rule the reader can apply, not a heading restated: "Read signals inside JSX, a memo, or an effect's compute function" rather than "Reactivity basics".
+The recap is what gets screenshotted and quoted; write it as if it were the only part of the page someone reads.
+A page with fewer than four rules to recap does not need one.
 
 ### Test every example
 
@@ -250,9 +342,12 @@ Guides that choose between approaches need a section on what to weigh, not only 
 
 ### End with the next page, not the reference
 
-The last section of a Learn page tells the reader where to go next and why, in terms of what they are trying to do.
+The last section of a Learn page is `## Next steps`: two to four links, each with a clause saying what the reader gets there in terms of what they are trying to do.
+Use that heading on every page so readers and tooling can find it.
 Link API references inline where the API is discussed.
 Do not end a section or a page with "See the reference for details"; the reference is where the reader goes when they already understand the idea.
+
+Troubleshooting goes under `## Common problems`, before Next steps, with each problem as an H3 in the reader's words so it appears in the page outline and can be linked.
 
 ### Vary the shape
 
@@ -260,8 +355,8 @@ Do not write every page as introduction, one H2 per API, conclusion.
 Let the problem decide the sections: a troubleshooting section named after the symptom, a three-pass build-up, a decision list, a comparison of two versions of the same code.
 Section headings should be readable as the reader's question or situation where that helps ("A value renders once and never updates"), not only as the name of the mechanism.
 
-Do not add a closing paragraph that restates the page.
-If there is nothing to say after the last section but "where to go next", say only that.
+Do not add a closing paragraph that restates the page; the bulleted recap is the only summary.
+If there is nothing to say after the last section but "next steps", say only that.
 
 ### Use the reader's words for problems
 

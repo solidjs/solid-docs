@@ -8,7 +8,7 @@ Everything on this page is optional.
 A Solid Router app can load data with plain async memos and submit forms with plain server functions, and the [Async reactivity](/concepts/async-reactivity) page is all it needs.
 The router's data APIs add three things on top: a way to start a request before the page's component exists, a cache so two readers share one request, and a mutation shape that works as a form without JavaScript and revalidates the cache when it finishes.
 
-This page continues the store from the [Solid Router introduction](/routing/solid-router): a product page and a cart.
+This page continues the store from the [Solid Router](/routing/solid-router): a product page and a cart.
 
 ## The three pieces
 
@@ -151,7 +151,7 @@ Start with the server function:
 ```ts
 // src/data/cart.ts
 import { query, action } from "@solidjs/router";
-import { reload } from "@solidjs/web";
+import { markSafeError, reload } from "@solidjs/web";
 import { currentSessionId } from "./session";
 
 export const getCart = query(async () => {
@@ -164,7 +164,7 @@ export const addToCart = action(async (form: FormData) => {
 	const productId = String(form.get("productId"));
 	const quantity = Number(form.get("quantity") ?? 1);
 	if (!Number.isInteger(quantity) || quantity < 1) {
-		throw new Error("Quantity must be a whole number");
+		throw markSafeError(new Error("Quantity must be a whole number"));
 	}
 	await db.cart.add(currentSessionId(), productId, quantity);
 	return reload({ revalidate: getCart.key });
@@ -280,7 +280,8 @@ function AddToCartForm(props: { productId: string }) {
 Each submission carries the `input` that was sent, the `result` or `error`, and `retry()` and `clear()`.
 A submission that redirected or returned nothing does not stay in the list; use `.onSettled` when you need to observe those too.
 
-When the server function throws, production builds replace the message with a generic one unless the error is marked safe; [Mutations and responses](/building-apps/server-functions/mutations-and-responses) covers `markSafeError` and returning validation issues with `respond()`.
+The message reaches the browser because `addToCart` threw it through `markSafeError`.
+A plain `throw new Error(...)` arrives in production as `Internal Server Error`, so database and infrastructure details do not leak; [Mutations and responses](/building-apps/server-functions/mutations-and-responses) covers `markSafeError` and the alternative of returning validation issues with `respond()`.
 
 ### Before the server confirms
 

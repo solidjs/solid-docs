@@ -1,6 +1,5 @@
 ---
 title: "Mutations and responses"
-titleTemplate: ":title"
 version: "2.0"
 description: "Return values, response metadata, redirects, revalidation, and safe errors from server functions."
 ---
@@ -19,8 +18,8 @@ import { getRequestEvent, respond } from "@solidjs/web";
 export async function createUser(input: CreateUserInput) {
 	"use server";
 
-	const event = getRequestEvent();
-	if (!event?.locals.isAdmin) {
+	const userId = getRequestEvent()?.locals.userId;
+	if (!userId || !(await database.users.isAdmin(userId))) {
 		throw respond({ error: "Forbidden" }, { status: 403 });
 	}
 
@@ -135,7 +134,7 @@ export const addTodo = action(async (form: FormData) => {
 When the router registers its single-flight integration, the mutation response can carry refreshed route data with the mutation result.
 The server-function runtime treats that route data as an opaque payload.
 
-See [Data APIs](/routing/solid-router/data) for `action()`, submissions, and query invalidation.
+See [Data loading and mutations](/routing/solid-router/data) for `action()`, submissions, and query invalidation.
 
 ## Next steps
 

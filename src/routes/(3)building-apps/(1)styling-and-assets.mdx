@@ -3,125 +3,157 @@ title: "Styling and assets"
 titleTemplate: ":title"
 mainNavExclude: true
 version: "2.0"
+description: "Choose between global CSS, CSS modules, Tailwind, and inline styles; import images and other assets; and understand where styles end up under streaming SSR."
 ---
 
-Solid source files use Vite's CSS and asset imports.
-Start mode keeps those import forms for generated and authored entries.
-Because a start-mode project has no `index.html` (see [App structure](/building-apps/app-structure)), stylesheets and assets enter through imports in `App`, `Document`, or the modules they reach.
+Solid has no styling opinion of its own.
+Styles and assets enter through Vite's import pipeline, the same as in any Vite project, and a component decides how to apply them with the `class` and `style` props.
+What is different in a start-mode project is that there is no `index.html` to put a `<link>` in, so everything reaches the page through imports.
 
-## CSS
+This page walks the choices in the order most projects meet them.
 
-Import a stylesheet for its side effects to make its rules global.
-The official templates import the application stylesheet from `App`:
+## Pick a styling approach
+
+**Global CSS** is the default in every template.
+Import a stylesheet for its side effect and its rules apply everywhere:
 
 ```tsx
+// src/App.tsx
 import "./App.css";
-
-export default function App() {
-	return <main class="content">Hello Solid</main>;
-}
 ```
 
-The stylesheet becomes part of the module graph at the point where it is imported.
-This applies to CSS imported by a component, a route module, or `App`.
-The import location does not scope ordinary CSS selectors.
+Where you import it does not scope it; a stylesheet imported from one route module still applies to every page once that module has loaded.
+Treat this as the place for resets, typography, and layout.
 
-## CSS modules
-
-Name a file `*.module.css` and import its generated class-name map:
+**CSS modules** give a component classes that cannot collide.
+Name the file `*.module.css` and import the class map:
 
 ```tsx
-import styles from "./route.module.css";
+import styles from "./Card.module.css";
 
-export default function Route() {
-	return <p class={styles.message}>Scoped by CSS modules</p>;
+export function Card(props: { title: string }) {
+	return <article class={styles.card}>{props.title}</article>;
 }
 ```
 
 ```css
-.message {
-	color: rebeccapurple;
+/* Card.module.css */
+.card {
+	border-radius: 0.5rem;
+	padding: 1rem;
 }
 ```
 
-Vite replaces `styles.message` with the generated class name and includes the stylesheet in the same asset pipeline as global CSS.
+`styles.card` is a generated class name, so two components can each have a `.card` rule.
+This is the right default for component-level styles.
 
-## CSS preprocessors
+**Tailwind** works through its Vite plugin, with no Solid-specific setup.
+The `with-tailwindcss` template adds the plugin and one import:
 
-Start mode uses Vite's preprocessor pipeline without additional start configuration.
-Install the preprocessor implementation required by the file type, then import the file from application code.
+```ts
+// vite.config.ts
+import tailwindcss from "@tailwindcss/vite";
 
-The official `solid-v2/with-sass` template installs `sass`, renames `App.css` to `App.scss`, and keeps the same import:
-
-```tsx
-import "./App.scss";
+export default defineConfig({
+	plugins: [solid({ start: true }), fileRoutes(), tailwindcss()],
+});
 ```
 
-Sass compiles to CSS during the Vite build and adds no Sass runtime to the browser.
-Use the `*.module.scss` name when a Sass file also needs CSS-module class names.
+```css
+/* src/App.css */
+@import "tailwindcss";
+```
 
-## Imported asset URLs
+**Sass and other preprocessors** need only the compiler installed.
+The `with-sass` template renames `App.css` to `App.scss` and changes the import to match; `*.module.scss` combines both.
+The preprocessor runs at build time and ships nothing to the browser.
 
-Import an asset when application code needs its resolved URL.
-The official templates import the Solid logo and pass that URL to an element:
+## Conditional classes and inline styles
+
+Whichever approach supplies the class names, Solid's `class` prop accepts an object or an array so a component can toggle them without string building:
+
+```tsx
+<li class={{ [styles.row]: true, [styles.selected]: props.selected }}>…</li>
+
+<button class={["btn", { "btn-primary": props.primary }]}>…</button>
+```
+
+A string is always applied, an object adds each key whose value is truthy, and an array combines the two.
+Put conditions in the object rather than building a string; Solid then adds and removes only the affected class tokens.
+
+`style` takes an object of CSS declarations and updates only the declarations that change:
+
+```tsx
+<div style={{ width: `${progress()}%`, "background-color": color() }} />
+```
+
+Both are read reactively when given a function or a tracked value.
+The [`class`](/reference/solid-web/jsx-properties/class) and [`style`](/reference/solid-web/jsx-properties/style) reference pages have the details, including how object forms interact with stores.
+
+## Images and other files
+
+Import a file when code needs its URL.
+Vite hashes it into the build output and the import gives you the final path:
 
 ```tsx
 import logo from "../logo.svg";
 
-export default function Home() {
-	return <img src={logo} alt="Solid logo" />;
-}
+<img src={logo} alt="Solid logo" />;
 ```
 
-Append `?url` when a file should be imported explicitly as a URL.
-This is useful when code creates the consuming element:
+The templates set `build.assetsInlineLimit: 0` so small images stay as files rather than being inlined as data URLs into the JavaScript.
+Remove that if you prefer inlining for icons.
+
+Append `?url` to import something as a URL that Vite would otherwise process, such as a stylesheet you want to link rather than inject:
 
 ```tsx
-import stylesheetUrl from "./theme.css?url";
+import themeHref from "./theme.css?url";
 
-export default function ThemeLink() {
-	return <link rel="stylesheet" href={stylesheetUrl} />;
-}
+<link rel="stylesheet" href={themeHref} />;
 ```
 
-The official templates set `build.assetsInlineLimit: 0` when images must remain emitted files instead of being inlined:
-
-```ts
-export default defineConfig({
-	build: {
-		assetsInlineLimit: 0,
-	},
-});
-```
-
-## Public files
-
-The maintained `basic` template demonstrates fixed root-relative assets with files under `public`.
-Its route fetches `public/users.json` through `/users.json`, and its document refers to `public/favicon.ico` through `/favicon.ico`.
+Files that need a fixed, un-hashed path go in `public/` and are referenced by root-relative URL.
+The `basic` template keeps `favicon.ico` there and fetches `public/users.json` as `/users.json`:
 
 ```tsx
 <link rel="icon" href="/favicon.ico" />
 ```
 
-These template files are addressed by their root-relative names rather than imported from the module graph.
-Import an asset instead when application code needs the URL produced for a module dependency.
+Use `public/` for things an outside party needs to find by name: `robots.txt`, a well-known file, an image referenced from an email.
+Import everything else, so a changed file gets a new URL and caches cannot serve the old one.
 
-## Start-mode output
+## Where styles end up
 
-The official start-mode templates have no `index.html`.
-Import application CSS from `App`, an authored entry, or another module reachable from them.
+You do not have to think about this in normal use, but it answers the "why is there no flash of unstyled content?" question.
 
-During start-mode development, the page response inlines CSS reachable from the generated `App` and `Document` roots.
-With authored entries, it uses the authored client entry plus `Document` in client mode, or the authored server entry in SSR mode.
-The style elements carry Vite development identifiers, and the start-mode patch removes the server-rendered copy when Vite's client-side style takes over.
-CSS hot updates continue through Vite without leaving both copies active.
+In production, the CSS reachable from `App` and `Document` is built into asset files and the generated handler writes `<link rel="stylesheet">` tags for them into the document head, so the first HTML the browser receives already references the styles.
+Imported asset URLs point at their hashed output.
 
-In production, entry CSS is emitted as built assets and the generated handler adds stylesheet links to the document head.
-Imported asset URLs point at their built output, including Vite's generated file names.
-CSS modules, preprocessors, and URL imports keep their normal Vite syntax in both client and SSR modes.
+In development, the dev server inlines the reachable CSS into the server-rendered page so the first paint is styled, then Vite's client takes over for hot updates and the server-rendered copy is removed.
+You may briefly see two `<style>` elements for the same file in the inspector during that handoff; it is expected.
+
+A stylesheet imported by a lazy route module is loaded with that module's chunk.
+For a page that must be styled before its JavaScript arrives, import its CSS from a module that is always loaded, or add a `<link>` for it through [head metadata](/building-apps/head-and-metadata).
+
+## Common problems
+
+**A CSS module class is `undefined`.**
+The file is not named `*.module.css`, or the class in the CSS uses a name that is not a valid identifier; `styles["my-class"]` works, `styles.my-class` does not.
+
+**Styles from one page leak into another.**
+The stylesheet is global CSS imported from a route module.
+Switch to a CSS module or scope the selectors under a page-level class.
+
+**An imported image has a `data:` URL.**
+It was small enough to inline.
+Set `build.assetsInlineLimit: 0` or move it to `public/`.
+
+**A `public/` file 404s in production.**
+The host is not serving `dist/client` for that path.
+[Deployment](/building-apps/deployment) shows how each host maps static files.
 
 ## Next steps
 
-- The [`class` reference](/reference/solid-web/jsx-properties/class) and [`style` reference](/reference/solid-web/jsx-properties/style) cover conditional classes and inline styles in JSX.
-- [Head and metadata](/building-apps/head-and-metadata) covers stylesheet links and other head tags that a page adds on its own.
-- [Deployment](/building-apps/deployment) explains where the built assets land and how a host serves them.
+- [`class`](/reference/solid-web/jsx-properties/class) and [`style`](/reference/solid-web/jsx-properties/style) reference: the object and array forms in detail.
+- [Head and metadata](/building-apps/head-and-metadata): stylesheet links and other head tags a page adds on its own.
+- [Deployment](/building-apps/deployment): where built assets land and how a host serves them.

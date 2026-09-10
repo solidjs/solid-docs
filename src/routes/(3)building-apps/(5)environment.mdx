@@ -3,38 +3,32 @@ title: "Environment"
 titleTemplate: ":title"
 mainNavExclude: true
 version: "2.0"
+description: "Declare environment variables once, read secrets on the server and public values in the browser through typed modules, and let the build fail when a secret would leak."
 ---
 
-Start mode can validate environment variables and expose their typed outputs through separate server and client modules.
-This environment layer belongs to start mode and is not enabled by `ssr: true` alone.
+An app usually has two kinds of configuration: values that must never reach the browser, such as a cookie-signing secret, and values that are fine to ship, such as the app's display name.
+Vite's `import.meta.env` handles the second kind.
+Start mode adds a layer that handles both, with one schema, two import paths, and a build that refuses to cross them.
 
-## Define the schema
+This page uses the two variables the `fullstack` project shape declares.
+The layer belongs to start mode and is not enabled by `ssr: true` alone.
 
-Add `env.ts` or `env.js` at the Vite project root.
-Default-export optional `server` and `client` maps whose values implement Standard Schema.
-The official `solid-v2/fullstack` template uses Valibot, but any Standard Schema library works:
+## Declare, then import
+
+Put an `env.ts` at the project root.
+It default-exports a `server` map and a `client` map of validators; any [Standard Schema](https://standardschema.dev/) library works, even mixed per key.
 
 ::::tab-group[validation-library]
 
 :::tab[Valibot]
 
 ```ts
+// env.ts
 import * as v from "valibot";
-
-const signingKeys = v.pipe(
-	v.unknown(),
-	v.transform((value) =>
-		typeof value === "string"
-			? value.split(",").map((key) => key.trim())
-			: value
-	),
-	v.array(v.pipe(v.string(), v.minLength(32))),
-	v.minLength(1)
-);
 
 export default {
 	server: {
-		SESSION_SECRET: signingKeys,
+		SESSION_SECRET: v.pipe(v.string(), v.minLength(32)),
 	},
 	client: {
 		VITE_APP_NAME: v.optional(v.pipe(v.string(), v.minLength(1)), "Solid App"),
@@ -47,19 +41,12 @@ export default {
 :::tab[Zod]
 
 ```ts
+// env.ts
 import { z } from "zod";
-
-const signingKeys = z.preprocess(
-	(value) =>
-		typeof value === "string"
-			? value.split(",").map((key) => key.trim())
-			: value,
-	z.array(z.string().min(32)).min(1)
-);
 
 export default {
 	server: {
-		SESSION_SECRET: signingKeys,
+		SESSION_SECRET: z.string().min(32),
 	},
 	client: {
 		VITE_APP_NAME: z.string().min(1).default("Solid App"),
@@ -71,135 +58,142 @@ export default {
 
 ::::
 
-The `SESSION_SECRET` input is a comma-separated list.
-The schema validates every signing key after splitting the input, so a short or empty rotation key fails validation.
+Read each side from its own module:
 
-The validators may come from different Standard Schema libraries because the plugin reads the shared Standard Schema interface.
-Only keys declared by the schema appear in the virtual modules.
+```ts
+// src/server/session.ts
+import { env } from "virtual:env/server";
 
-Start mode probes the root schema automatically.
-The `start.env` option can require the convention, select another schema inside the Vite root, or disable probing:
+const secret = env.SESSION_SECRET; // string, at least 32 characters
+```
+
+```tsx
+// src/App.tsx
+import { env } from "virtual:env/client";
+
+<Title>{env.VITE_APP_NAME}</Title>; // string, "Solid App" when unset
+```
+
+Both are typed from the validators' output types.
+The plugin writes `solid-env.d.ts` next to the schema when dev or a build starts; keep it in the TypeScript project and do not edit it.
+Only keys in the schema exist on `env`, so a typo is a type error rather than an `undefined` at runtime.
+
+## What happens when you get it wrong
+
+The layer is easiest to understand from its failures.
+
+**You import `virtual:env/server` from a component.**
+The build fails and names the importing file.
+A component's module is part of the browser bundle even when it renders on the server, so there is no safe way to give it a server value.
+Move the read into a [server function](/building-apps/server-functions), middleware, or a module reached only from those.
+
+**You put a secret in the `client` map.**
+The build succeeds and the secret ships to every visitor.
+Nothing can protect a value once it is in the browser bundle; the `client` map is a statement that the value is public.
+Client keys must carry Vite's public prefix (`VITE_` by default) so the intent is visible in the name.
+
+**`SESSION_SECRET` is missing in production.**
+The build passes with a warning and the server fails at boot with the validation message.
+Server values are read from `process.env` when the server starts, not baked in at build time, so a build machine without secrets can still produce the artifact, and a host can rotate the secret without a rebuild.
+
+**`VITE_APP_NAME` is invalid.**
+The build fails.
+Client values are validated at build time because that is when they are serialized into the bundle as plain JSON.
+The validator library does not ship to the browser; only the validated values do.
+
+**A server string shows up in the client bundle.**
+The production client build scans non-vendor chunks for exact quoted copies of validated server strings of at least eight characters and fails if it finds one.
+This is a backstop for a copy-paste mistake, not a security boundary; the module split above is the control.
+
+## Rules in one place
+
+|                        | `server` map                                             | `client` map             |
+| ---------------------- | -------------------------------------------------------- | ------------------------ |
+| Import from            | `virtual:env/server`                                     | `virtual:env/client`     |
+| Allowed in             | server-only modules                                      | anywhere                 |
+| Read from              | `process.env` at server boot                             | build-time environment   |
+| Validated              | at boot (and in dev, since the dev server is the server) | at build                 |
+| Key prefix             | any                                                      | `VITE_` (or `envPrefix`) |
+| Rotate without rebuild | yes                                                      | no                       |
+
+`virtual:env/server` also exposes the client values, so server code does not need two imports.
+
+## `.env` files
+
+The layer loads `.env`, `.env.local`, `.env.[mode]`, and `.env.[mode].local` from Vite's environment directory and folds them into `process.env` for dev and builds.
+A value already in the process wins over one from a file, which is what you want on a host that injects real secrets.
+Because the values land in `process.env`, a database client or session library that reads `process.env` itself sees them too, with no `loadEnv` in `vite.config.ts`.
+
+The `fullstack` shape ships a `.env.example`; copy it to `.env` and fill in `SESSION_SECRET` (`openssl rand -base64 32` produces one).
+
+## Schema location
+
+Start mode probes `env.ts` or `env.js` at the Vite root.
+`start.env` changes that:
 
 ```ts
 solid({
 	start: {
-		env: "./config/env.ts",
+		env: "./config/env.ts", // another path inside the Vite root
+		// env: true   → error if no schema exists
+		// env: false  → turn the layer off even if a schema exists
 	},
 });
 ```
 
-Use `env: true` to report an error when neither root schema exists.
-Use `env: false` to disable the environment layer even when a conventional schema exists.
+## Mark a module server-only or client-only
 
-## Generated types
-
-The plugin writes `solid-env.d.ts` next to the schema when development or a build starts.
-The declarations infer each value from the Standard Schema output type of its validator.
-Keep both the schema and generated declaration in the TypeScript project.
-
-Both virtual modules provide a named and a default `env` export:
+The env modules enforce their own boundary.
+For your own modules, the `server-only` and `client-only` markers do the same, and they work even with start mode and server functions off:
 
 ```ts
-import { env } from "virtual:env/client";
-```
-
-Do not edit `solid-env.d.ts` because the plugin regenerates it from the schema.
-
-## Client environment
-
-`virtual:env/client` contains only values declared in the schema's `client` map.
-Each client key must start with Vite's public environment prefix, which is `VITE_` unless `envPrefix` changes it.
-The prefix requirement is enforced when the schema is loaded.
-
-Client values are validated during development and production builds.
-The validated outputs are serialized into the browser bundle as plain JSON, so defaults and coercions run before serialization.
-The validator library is not included with those generated values.
-A client validation failure stops the build.
-During development, a validation failure is reported through Vite's error response or overlay.
-
-These values are public because anyone can inspect a browser bundle.
-Do not place credentials or other secrets in the `client` map, regardless of how the application uses them.
-The client module can also be imported by isomorphic code because it contains only public values.
-
-## Server environment
-
-`virtual:env/server` exposes the schema's server values and its public client values to server module graphs.
-Server values are read from `process.env` and validated when the server bundle starts.
-They are not serialized into the server bundle, so a deployment platform can inject or rotate them without rebuilding.
-
-```ts
-import { env } from "virtual:env/server";
-
-const signingKeys = env.SESSION_SECRET;
-```
-
-Import this module from middleware, a `"use server"` module, an authored server entry, or another server-only module.
-Importing it from the application root or another client module graph is a build error that names the importer.
-An SSR component is not automatically server-only because its module can also be included in the hydration bundle.
-
-The plugin validates server values during development because the development server is the running server.
-During a production build, a missing or invalid server value produces a warning and defers the failure to server boot.
-This lets build systems create artifacts before deployment-only secrets exist.
-
-In client mode, only the client map is available to the static browser graph.
-The server virtual module remains unavailable to client code.
-
-## Environment file loading
-
-When environment-file loading is enabled, the layer loads `.env`, `.env.local`, `.env.[mode]`, and `.env.[mode].local` from Vite's configured environment directory.
-It folds those file-loaded values into `process.env` during development and builds.
-Values already present in the process take precedence over values loaded from files.
-Application server libraries can therefore read the same file-loaded values from `process.env` without `loadEnv` setup in `vite.config.ts`.
-When a built server handler is retained, `vite preview` also folds the selected files before that module performs its boot validation.
-
-The production client build also performs a heuristic leak scan over non-vendor chunks.
-It checks exact quoted copies of validated server strings that are at least eight characters long and are not also client values.
-Shorter values, non-string values, and values unavailable on the build machine are outside that scan.
-The scan is a secondary check and does not make a client value secret.
-The server/client schema split and module-graph boundaries remain the controls that keep server data out of browser code.
-
-## Server-only and client-only modules
-
-`@solidjs/vite-plugin` enables the `server-only` and `client-only` marker modules even when start mode and server functions are off.
-Import a marker for its side effect at the top of a module:
-
-```ts
+// src/server/db.ts
 import "server-only";
 
-export function readFromDatabase() {
-	// Server implementation.
+export function listUsers() {
+	// Database access.
 }
 ```
 
-If this module enters a client graph, resolution fails and reports the importing file.
-In a server graph, the marker resolves to an empty module.
-
-`client-only` enforces the reverse rule:
+If any path pulls this module into the client bundle, the build fails naming the importer.
+In a server graph the marker resolves to an empty module.
 
 ```ts
 import "client-only";
 
-export function readBrowserStorage() {
+export function readPreference() {
 	return localStorage.getItem("preference");
 }
 ```
 
-If this module enters an SSR graph, the build fails.
-In a client graph, the marker resolves to an empty module.
+`client-only` is the mirror: the build fails if the module enters an SSR graph.
 
 The markers assert where a module may be bundled.
-They do not move code between environments, create a runtime condition, or hide values that have already been copied into client code.
-The marker must be imported by the module that needs the assertion.
-Keep browser modules out of server import graphs, and keep secrets in modules reached only from server entries, middleware, or server functions.
+They do not split a module in two, add a runtime check, or un-leak a value already copied into client code.
+Put the marker in the module that holds the sensitive code, not in the module that imports it.
 
-Add the plugin's boundary declarations when TypeScript does not already include them:
+If TypeScript does not already know these module names, add the plugin's declarations:
 
 ```ts
 /// <reference types="@solidjs/vite-plugin/boundary-modules" />
 ```
 
+## Common problems
+
+**Type of `env.SESSION_SECRET` is `unknown` or the key is missing.**
+`solid-env.d.ts` has not been regenerated; start dev or a build once.
+If it is regenerated but still wrong, the validator's output type is what is inferred, so check the schema.
+
+**The dev server reports a validation error for a server variable.**
+The dev server is the server, so boot validation runs there.
+Add the value to `.env` or the shell.
+
+**A `server-only` module fails the build on a cold `dev` start.**
+Vite's dependency scanner can walk imports before the `"use server"` transform runs and hit the marker.
+It skips pre-bundling for that path and dev proceeds; the build-time guard is unaffected.
+
 ## Next steps
 
-- [Sessions and auth](/building-apps/sessions-and-auth) uses a server-only secret from this layer to sign cookies.
-- [Server functions](/building-apps/server-functions) are the usual place where server environment values are read.
-- [Deployment](/building-apps/deployment) explains how each host supplies the server variables at boot and why client variables are fixed at build time.
+- [Sessions and auth](/building-apps/sessions-and-auth) signs a cookie with `SESSION_SECRET` from this layer.
+- [Server functions](/building-apps/server-functions) are the usual place server values are read.
+- [Deployment](/building-apps/deployment) covers how each host supplies server variables at boot and why client values are fixed at build time.

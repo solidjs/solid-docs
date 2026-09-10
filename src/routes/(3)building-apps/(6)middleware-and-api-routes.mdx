@@ -3,102 +3,26 @@ title: "Middleware and API routes"
 titleTemplate: ":title"
 mainNavExclude: true
 version: "2.0"
+description: "Run code in front of every request with fetch-style middleware, share state with pages and server functions through the request event, and answer HTTP requests from route modules."
 ---
 
-Start mode accepts fetch-style middleware that runs before its request handler.
-Configure a server-only middleware module with `start.middleware`:
+Some work belongs in front of the app rather than inside it: reading a session cookie once, catching errors before they become a blank page, answering `/api/users` for a script that is not a browser.
+Start mode runs a chain of fetch-style middleware before its request handler, and the `fullstack` project shape puts an API-route dispatcher in that chain.
+
+This page explains the chain by adding to the one the template ships, then covers API routes.
+
+## The chain the template ships
+
+`vite.config.ts` names a server-only module:
 
 ```ts
-import { defineConfig } from "vite";
-import solid from "@solidjs/vite-plugin";
-
-export default defineConfig({
-	plugins: [
-		solid({
-			start: {
-				middleware: "./src/middleware.ts",
-			},
-			ssr: true,
-		}),
-	],
+solid({
+	start: { middleware: "./src/middleware.ts" },
+	ssr: true,
 });
 ```
 
-The module must default-export one middleware function or an array of middleware functions.
-
-## Middleware contract
-
-Each function receives a web `Request` and a `next` continuation:
-
-```ts
-type Middleware = (
-	request: Request,
-	next: (request?: Request) => Promise<Response>
-) => Response | Promise<Response>;
-```
-
-Call `next()` to advance to the next middleware.
-Pass a `Request` to `next(request)` to replace the request for the remaining chain.
-Return a `Response` without calling `next()` to stop the chain.
-Do not call `next()` more than once from the same middleware invocation.
-
-Middleware runs in array order before the request handler and unwinds in reverse order:
-
-```ts
-import { getRequestEvent } from "@solidjs/web";
-
-async function authenticate(request: Request, next: () => Promise<Response>) {
-	const event = getRequestEvent()!;
-	event.locals.user = await readUser(request);
-
-	const response = await next();
-	response.headers.set("x-authenticated", String(Boolean(event.locals.user)));
-	return response;
-}
-
-async function catchErrors(_request: Request, next: () => Promise<Response>) {
-	try {
-		return await next();
-	} catch (error) {
-		console.error(error);
-		return Response.json({ error: "Internal Server Error" }, { status: 500 });
-	}
-}
-
-export default [catchErrors, authenticate];
-```
-
-Return details only for errors that the application explicitly marks as safe for clients.
-Do not expose arbitrary exception messages because they can contain database, filesystem, token, or internal-state details.
-
-Nothing is written to the network until the outermost middleware returns.
-Middleware can therefore change headers on the returned `Response` after `await next()`, including responses with streamed bodies.
-
-The chain runs inside the request-event scope.
-`getRequestEvent()` exposes the same `locals` and response stub that the page render or server function sees.
-The chain fronts page rendering, server-function dispatch, and other requests handled by configured middleware in development, preview, and production.
-
-## API routes in the fullstack template
-
-API route discovery is supplied by the `filesystem-routing` integration used in the official fullstack templates.
-It is not part of the core middleware primitive.
-
-Enable HTTP method discovery and place its dispatcher in the middleware chain:
-
-```ts
-// vite.config.ts
-import { fileRoutes } from "filesystem-routing/vite";
-
-export default defineConfig({
-	plugins: [
-		solid({
-			start: { middleware: "./src/middleware.ts" },
-			ssr: true,
-		}),
-		fileRoutes({ httpMethods: true }),
-	],
-});
-```
+And the module exports an array of middleware functions:
 
 ```ts
 // src/middleware.ts
@@ -108,46 +32,172 @@ import routes from "virtual:file-routes";
 export default [createAPIHandler(routes)];
 ```
 
-Export an uppercase HTTP method from a route module:
+Every request the server handles, a page render, a server-function call, or an API route, passes through this array in order before reaching the handler.
+`createAPIHandler` answers requests that match a route module's method exports and passes everything else along.
+
+## Add a middleware
+
+A middleware is a function of the request and a `next` continuation:
+
+```ts
+type Middleware = (
+	request: Request,
+	next: (request?: Request) => Promise<Response>
+) => Response | Promise<Response>;
+```
+
+Three shapes cover most needs.
+
+**Do something, then continue.**
+Read the session and put the user where every later step can see it:
+
+```ts
+import { getRequestEvent } from "@solidjs/web";
+import { readSession } from "./server/session";
+
+async function attachUser(request: Request, next: () => Promise<Response>) {
+	getRequestEvent()!.locals.user = await readSession(request);
+	return next();
+}
+```
+
+`getRequestEvent()` returns the same event the page render and the server functions for this request see, so `locals.user` set here is readable from a server function without passing it around.
+[Sessions and auth](/building-apps/sessions-and-auth) builds the `readSession` side.
+
+**Continue, then change the response.**
+Nothing is written to the network until the outermost middleware returns, so headers can be set after `await next()`, even on a streamed body:
+
+```ts
+async function securityHeaders(
+	_request: Request,
+	next: () => Promise<Response>
+) {
+	const response = await next();
+	response.headers.set("x-frame-options", "DENY");
+	return response;
+}
+```
+
+**Stop the chain.**
+Return a `Response` without calling `next()`:
+
+```ts
+function requireHttps(request: Request, next: () => Promise<Response>) {
+	const url = new URL(request.url);
+	if (url.protocol === "http:" && !url.hostname.endsWith("localhost")) {
+		url.protocol = "https:";
+		return Response.redirect(url, 308);
+	}
+	return next();
+}
+```
+
+Add them to the array in the order they should run:
+
+```ts
+export default [
+	requireHttps,
+	securityHeaders,
+	attachUser,
+	createAPIHandler(routes),
+];
+```
+
+The request travels down the array and the response travels back up it.
+`securityHeaders` runs before `attachUser` on the way in and receives its response on the way out.
+Order matters in the usual way: put the session reader before anything that needs `locals.user`, and put the API handler after it if API routes need the user.
+
+Pass a `Request` to `next(request)` to replace the request for the rest of the chain, for example after rewriting a URL.
+Do not call `next()` twice from one invocation.
+
+### Catching errors
+
+A middleware that wraps `next()` in `try`/`catch` sees anything the rest of the chain throws:
+
+```ts
+async function catchErrors(_request: Request, next: () => Promise<Response>) {
+	try {
+		return await next();
+	} catch (error) {
+		console.error(error);
+		return Response.json({ error: "Internal Server Error" }, { status: 500 });
+	}
+}
+```
+
+Log the real error and return a generic body.
+Exception messages can carry database, filesystem, or token details; the only errors whose text belongs in a response are the ones the app marked safe, which [Mutations and responses](/building-apps/server-functions/mutations-and-responses#handle-thrown-errors) covers for server functions.
+
+## API routes
+
+An API route is a route module that exports uppercase HTTP methods instead of, or as well as, a default component:
 
 ```ts
 // src/routes/api/users.ts
 import type { APIHandler } from "filesystem-routing/api";
+import { listUsers, createUser } from "../../server/db";
 
-export const GET: APIHandler = ({ request, params }) => {
-	return Response.json({
-		path: new URL(request.url).pathname,
-		params,
-	});
+export const GET: APIHandler = () => Response.json(listUsers());
+
+export const POST: APIHandler = async ({ request }) => {
+	const body = await request.json();
+	if (typeof body?.name !== "string" || body.name.length === 0) {
+		return Response.json({ error: "name is required" }, { status: 400 });
+	}
+	const user = createUser({ name: body.name });
+	return Response.json(user, { status: 201 });
 };
 ```
 
-A module with method exports and no default component is an API-only route.
-A module may also contain a page component and a `GET` handler.
+`GET /api/users` and `POST /api/users` now work for any HTTP client.
+The file lives under `src/routes` because the same file-system convention that maps pages maps API routes; `src/routes/api/users/[id].ts` answers `/api/users/:id` with `params.id`.
 
-## API handler contract
+Enable method discovery in the plugin and the template's `createAPIHandler` picks the exports up:
 
-The dispatcher writes matched route parameters to the request event and passes that event to the method handler.
-Return a `Response` to control the full status, headers, and body.
-A returned string becomes a text `Response`, and another returned value becomes a JSON `Response`.
+```ts
+// vite.config.ts
+fileRoutes({ httpMethods: true });
+```
 
-Requests with no matching method continue to the next middleware.
-`HEAD` uses a route's `HEAD` handler when present and otherwise falls back to `GET`.
-A `GET` handler in a page module may return `undefined` to let the page render.
-An API-only `GET` handler that returns `undefined` produces a `404` response.
-Any other matched method that returns `undefined` throws because the handler did not provide a response.
+The handler receives the request event with the matched `params`, so it can read `locals.user` set by middleware and append cookies to `event.response.headers`.
+Do the authorization check in the handler, or in a middleware that is guaranteed to run before it; a route file is not protected by its location.
 
-API handlers run under the same request event as the surrounding middleware.
-They can read authenticated state from `event.locals` and append cookies to `event.response.headers`.
-Keep authorization checks in the handler or in middleware that is guaranteed to run before it.
+### Return values
+
+- A `Response` is sent as-is; use it to control status and headers.
+- A string becomes a `text/plain` response.
+- Any other value becomes a JSON response.
+- `undefined` from a `GET` in a module that also has a page component lets the page render, which is how a route can serve HTML to browsers and JSON to `fetch`.
+  From an API-only `GET`, `undefined` is a `404`.
+  From any other method, `undefined` throws, since the handler was expected to answer.
+
+A request whose method has no export continues down the chain.
+`HEAD` uses a `HEAD` export when present and otherwise falls back to `GET`.
+
+Server functions, not API routes, are the way the app's own components talk to the server; they are typed end to end and need no URL design.
+API routes are for everything else: webhooks, other services, scripts, and public endpoints.
 
 :::note[Integration boundary]
-The method-export convention and route matching belong to `filesystem-routing`.
-The stable contract exposed by Solid's server runtime is the fetch-style `Request` and `Response` middleware shape.
+The method-export convention and route matching come from `filesystem-routing`.
+The stable contract Solid's server runtime exposes is the fetch-style `Request` and `Response` middleware shape; any dispatcher that fits it can sit in the chain.
 :::
+
+## Common problems
+
+**`locals.user` is `undefined` in a server function.**
+The middleware that sets it runs after the API handler in the array, or is not in the array at all.
+Middleware order is array order.
+
+**An API route returns HTML.**
+The module has a default export and the `GET` handler returned `undefined`, so the page rendered.
+Return a `Response` or remove the component.
+
+**Headers set in middleware are missing on a streamed page.**
+They were set before `await next()` on the request, not on the returned response.
+Set them on the `Response` after `next()` resolves.
 
 ## Next steps
 
-- [Sessions and auth](/building-apps/sessions-and-auth) shows the most common middleware: reading a session cookie into `event.locals`.
-- [Server functions](/building-apps/server-functions) run under the same request event, so state set here is visible to them.
-- [Deployment](/building-apps/deployment) covers the request handler that this middleware runs in front of.
+- [Sessions and auth](/building-apps/sessions-and-auth): the most common middleware, reading a session cookie into `event.locals`.
+- [Server functions](/building-apps/server-functions): run under the same request event, so state set here is visible to them.
+- [Deployment](/building-apps/deployment): where the request handler this chain fronts runs, and how a host serves `dist/client`.

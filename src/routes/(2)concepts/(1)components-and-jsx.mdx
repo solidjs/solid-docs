@@ -79,21 +79,31 @@ The compiler turns a dynamic attribute into a getter on the props object, so the
 That is why `props.quantity` in the child updates when the parent's signal changes, even though neither function runs again.
 
 This works only as long as the read stays on the props object.
-The tempting shortcuts break it:
+
+:::pitfall[Destructuring props reads them once]
+The shortcut every other framework encourages is the one that breaks here:
 
 ```tsx
+// Avoid: both read props.quantity in the component body, once
 function LineItem({ product, quantity }: LineItemProps) {
-	// destructuring reads props.quantity here, once
+	return <li>{quantity}</li>;
 }
 
 function LineItem(props: LineItemProps) {
-	const quantity = props.quantity; // same thing, spelled out
+	const quantity = props.quantity;
+	return <li>{quantity}</li>;
+}
+
+// Prefer: read the prop where it is used
+function LineItem(props: LineItemProps) {
+	return <li>{props.quantity}</li>;
 }
 ```
 
-Both read the prop in the component body, where nothing is tracked.
-Development warns with `[STRICT_READ_UNTRACKED]` and the component name.
-Keep `props` intact and read `props.quantity` where you use it.
+Change the quantity in the parent and the `Avoid` versions keep showing the first value; development warns with `[STRICT_READ_UNTRACKED]` and the component name.
+Keep `props` intact and read `props.quantity` inside the JSX.
+:::
+
 When a derived value from props needs its own identity, wrap it in `createMemo`:
 
 ```tsx
@@ -108,6 +118,23 @@ function LineItem(props: { product: Product; quantity: number }) {
 	);
 }
 ```
+
+:::deep-dive[What the compiler does with a dynamic prop]
+For `<LineItem product={{ id: "mug", name: "Mug", price: 12 }} quantity={quantity()} />`, the compiler emits a call in this shape:
+
+```js
+createComponent(LineItem, {
+	product: { id: "mug", name: "Mug", price: 12 },
+	get quantity() {
+		return quantity();
+	},
+});
+```
+
+A static value becomes a plain property.
+An expression that could change becomes a getter, so `quantity()` runs each time the child reads `props.quantity`, in whatever tracking scope that read happens.
+Destructuring calls the getter once in the component body; reading `props.quantity` inside JSX calls it inside a tracking scope.
+:::
 
 Props are read-only from the child's side.
 When a child needs to change a value, the parent passes a function as a prop and the child calls it from an event handler, as `onSave` does in the next section.
@@ -478,6 +505,63 @@ export function Preview() {
 The source may also resolve to a native tag name or an async component.
 See the [`dynamic()` reference](/reference/solid-web/components/dynamic).
 
+## Try it: remove a line from the cart
+
+Take the `Cart` and `LineItem` components from the [Props](#props) section and make the cart hold several items in a signal.
+Render one `LineItem` per item with `For`, add a **Remove** button to each row, and have the click remove that item from the cart.
+
+Decide first which component owns the items and how the child tells the parent which item to remove.
+
+:::solution[Remove a line from the cart]
+
+```tsx
+import { For, createSignal } from "solid-js";
+
+type Product = { id: string; name: string; price: number };
+type Line = { product: Product; quantity: number };
+
+function LineItem(props: Line & { onRemove: (id: string) => void }) {
+	return (
+		<li>
+			{props.product.name} × {props.quantity} = $
+			{props.product.price * props.quantity}
+			<button type="button" onClick={() => props.onRemove(props.product.id)}>
+				Remove
+			</button>
+		</li>
+	);
+}
+
+function Cart() {
+	const [lines, setLines] = createSignal<Line[]>([
+		{ product: { id: "mug", name: "Mug", price: 12 }, quantity: 1 },
+		{ product: { id: "tee", name: "T-shirt", price: 20 }, quantity: 2 },
+	]);
+	const remove = (id: string) =>
+		setLines((list) => list.filter((line) => line.product.id !== id));
+
+	return (
+		<ul>
+			<For each={lines()} fallback={<li>Your cart is empty</li>}>
+				{(line) => (
+					<LineItem
+						product={line.product}
+						quantity={line.quantity}
+						onRemove={remove}
+					/>
+				)}
+			</For>
+		</ul>
+	);
+}
+```
+
+`Cart` owns the list, so `Cart` is the only place that writes it.
+`LineItem` gets a function prop and calls it with its own id; it never touches the list.
+`For` keys rows by the line object, so removing the T-shirt disposes that one row and leaves the Mug row untouched.
+When the last line goes, the `fallback` renders.
+:::
+
 ## Common problems
 
 ### A child does not update when the parent's signal changes
@@ -504,9 +588,19 @@ Ref callbacks run untracked and without an owner, so primitives created there ar
 Create the effect in a directive factory during component setup and return the callback that stores the element.
 See [Refs and directives](#refs-and-directives).
 
+## Recap
+
+- A component runs once; the JSX expressions it returns keep running.
+- Keep `props` whole and read `props.name` where it is used; destructuring reads once.
+- A child changes shared state by calling a function the parent passed, never by writing to props.
+- Pass a `ref` callback, or an array of them, to reach the element; create effects and cleanup in the factory that returns the callback, not in the callback.
+- Put conditional class names in an object under `class` instead of building a string.
+- Use `For` for rows from an array and `Show`, `Switch`, and `Match` for conditions; keep item identity stable so rows are reused.
+- Provide shared state through context created inside a component, not from a module-scope signal.
+
 ## Next steps
 
-- [Stores](/concepts/stores) hold the cart itself: an array of items where each property is tracked on its own.
+- [Stores](/concepts/stores) hold the cart itself: an array of items where each property is tracked on its own, so editing one quantity does not rebuild the row.
 - [Async reactivity](/concepts/async-reactivity) covers components that read data from a promise, why the current view stays on screen while the next one loads, and when `Loading` shows a fallback instead.
 - [Boundaries](/concepts/boundaries) explains `Loading`, `Errored`, and where to place them in the tree.
 - [Avoid unnecessary effects](/guides/avoid-unnecessary-effects) is the guide to read before adding an effect to a component.

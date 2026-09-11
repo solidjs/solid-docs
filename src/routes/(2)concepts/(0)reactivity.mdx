@@ -101,6 +101,30 @@ The [update scheduling](#when-updates-land) section explains what "landed" means
 
 See the [`createSignal` reference](/reference/solid-js/reactivity/create-signal) for the setter forms and the equality option.
 
+:::deep-dive[A signal in ten lines]
+The real implementation adds batching, equality checks, ownership, and async, but the shape that explains the tracking rule fits in a sketch:
+
+```ts
+let currentScope: Scope | null = null; // set by Solid while a tracking scope runs
+
+function createSignal<T>(value: T) {
+	const subscribers = new Set<Scope>();
+	const read = () => {
+		if (currentScope) subscribers.add(currentScope);
+		return value;
+	};
+	const write = (next: T) => {
+		value = next;
+		for (const scope of subscribers) scope.rerun();
+	};
+	return [read, write] as const;
+}
+```
+
+`read` can only record a subscriber if a tracking scope is running at the moment it is called.
+A read in the component body runs when `currentScope` is empty, so it returns the value and records nothing; that is the whole reason the place you read matters.
+:::
+
 ## Derived values
 
 `subtotal` above is a plain function.
@@ -221,12 +245,29 @@ When Solid removes a component from the page, it disposes everything the compone
 This is why a component can create an effect and never think about tearing it down.
 
 The owner is whatever is running when the primitive is created.
-Create memos and effects in the component body, not inside an event handler; an event handler runs later, with no owner, and an effect created there would never be disposed.
-Development warns about that case:
+
+:::pitfall[An effect created in an event handler is never disposed]
+An event handler runs later, with no owner, so nothing will ever clean up what it creates.
+
+```tsx
+// Avoid: a new, unowned effect on every click
+<button onClick={() => createEffect(() => quantity(), (q) => trackQuantity(q))}>
+
+// Prefer: create it once in the component body, which owns and disposes it
+createEffect(
+	() => quantity(),
+	(q) => trackQuantity(q)
+);
+```
+
+Each click of the `Avoid` version adds another effect that runs for the life of the page, and development warns:
 
 ```text
 [NO_OWNER_EFFECT] Effects created outside a reactive context will never be disposed
 ```
+
+If the effect should start on an event, create it in the body and gate it on a signal the handler sets.
+:::
 
 ### Share state between components
 
@@ -291,6 +332,59 @@ dispose();
 
 Application code should not need it; if you are reaching for `createRoot` to share state, use context instead.
 
+## Try it: a shipping estimate
+
+Extend the `LineItem` component from the top of this page.
+Shipping is free when the subtotal is 50 or more and costs 5 otherwise.
+Show the shipping cost, the total, and a line that reads either "Free shipping" or "Add $N more for free shipping", where N is the amount still needed.
+
+Before you look at the solution, decide for each value whether it should be a plain function or a memo, and where each read has to happen.
+
+:::solution[A shipping estimate]
+
+```tsx
+import { createMemo, createSignal } from "solid-js";
+
+export function LineItem() {
+	const [quantity, setQuantity] = createSignal(1);
+	const price = 12;
+
+	const subtotal = createMemo(() => quantity() * price);
+	const shipping = createMemo(() => (subtotal() >= 50 ? 0 : 5));
+	const total = () => subtotal() + shipping();
+	const toFreeShipping = () => 50 - subtotal();
+
+	return (
+		<div>
+			<button
+				type="button"
+				onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+			>
+				−
+			</button>
+			<span>{quantity()}</span>
+			<button type="button" onClick={() => setQuantity((q) => q + 1)}>
+				+
+			</button>
+			<p>Subtotal: ${subtotal()}</p>
+			<p>Shipping: ${shipping()}</p>
+			<p>Total: ${total()}</p>
+			<p>
+				{shipping() === 0
+					? "Free shipping"
+					: `Add $${toFreeShipping()} more for free shipping.`}
+			</p>
+		</div>
+	);
+}
+```
+
+`subtotal` is a memo because four readers share it.
+`shipping` is a memo for its equality check: going from quantity 2 to 3 recomputes it, produces 5 again, and notifies nobody, so only the readers of `subtotal` update.
+`total` and `toFreeShipping` are plain functions with one reader each; a memo would add a node for no benefit.
+Every read happens inside JSX or inside a memo's function, so every line updates on click.
+:::
+
 ## Common problems
 
 ### The page shows the words `function` or `() =>` instead of the value
@@ -352,6 +446,16 @@ Make it a function or a memo and delete the effect and the second signal.
 A single function that reads and acts needs to be split in two.
 If the single function only computed a value, you wanted `createMemo`.
 Code written for an earlier Solid hits this first; the [migration guide](/migration/from-solid-1) lists the other patterns that changed.
+
+## Recap
+
+- Read reactive values inside a tracking scope: JSX, a memo's function, or an effect's compute function. A read in the component body is a one-time snapshot.
+- Call the accessor: `quantity()`, not `quantity`.
+- Derive with a plain function by default; use `createMemo` when several readers share the result, when it is expensive, or when its equality check should stop a chain.
+- Use the updater form, `setQuantity((q) => q + 1)`, when the new value depends on the old one.
+- Writes land in a batch after the current code finishes; a read on the next line sees the old value, and tests call `flush()`.
+- Use an effect only to move data out of Solid; a memo's function never writes.
+- Create memos and effects in the component body so the component owns and disposes them, and share state through context rather than module scope.
 
 ## Next steps
 

@@ -1,0 +1,366 @@
+---
+title: "Mutations"
+version: "2.0"
+description: "Move the cart's add, remove, and set-quantity writes to a server without changing the UI: actions, optimistic stores, refresh, and how a failed request undoes itself."
+---
+
+The user clicks **Add to cart**.
+The request takes 400 milliseconds.
+In that time the cart must show the new line, and when the response arrives the cart must agree with the server; if the server refuses, the line must go away again.
+
+Reads need no wrapper for any of this: change an input and the memo asks again, as the [Async reactivity](/concepts/async-reactivity) page showed.
+Writes have a different shape, because a write happens before the round trip and must be reconciled after it.
+This page takes the cart from the [Stores](/concepts/stores) page and moves its writes to a server one change at a time.
+
+## A client-only cart
+
+Start with the cart as a store and three named writes.
+The UI reads `items` and calls the functions:
+
+```ts
+import { createStore } from "solid-js";
+
+export type CartItem = { id: string; name: string; quantity: number };
+
+export function createCart() {
+	const [items, setItems] = createStore<CartItem[]>([]);
+
+	const add = (item: CartItem) => {
+		setItems((list) => {
+			list.push(item);
+		});
+	};
+	const remove = (id: string) => {
+		setItems((list) => list.filter((item) => item.id !== id));
+	};
+	const setQuantity = (id: string, quantity: number) => {
+		setItems((list) => {
+			const item = list.find((item) => item.id === id);
+			if (item) item.quantity = quantity;
+		});
+	};
+
+	return [items, { add, remove, setQuantity }] as const;
+}
+```
+
+Click **Add** and the row appears; there is nothing to wait for.
+
+## Move the cart to the server
+
+Now the list comes from an API and every write goes through it.
+The UI should still respond on the click:
+
+```ts
+import { action, createOptimisticStore, refresh } from "solid-js";
+import * as api from "./api";
+
+export function createCart() {
+	const [items, setItems] = createOptimisticStore<CartItem[]>(
+		() => api.list(),
+		[]
+	);
+
+	const add = action(function* (item: CartItem) {
+		setItems((list) => {
+			list.push(item);
+		});
+		yield api.add(item);
+		refresh(items);
+	});
+	const remove = action(function* (id: string) {
+		setItems((list) => list.filter((item) => item.id !== id));
+		yield api.remove(id);
+		refresh(items);
+	});
+	const setQuantity = action(function* (id: string, quantity: number) {
+		setItems((list) => {
+			const item = list.find((item) => item.id === id);
+			if (item) item.quantity = quantity;
+		});
+		yield api.setQuantity(id, quantity);
+		refresh(items);
+	});
+
+	return [items, { add, remove, setQuantity }] as const;
+}
+```
+
+Click **Add** and the row appears at once, as before.
+When `api.add` resolves, the cart is re-read from the server and the row is replaced by the server's copy; if the two agree, nothing on screen changes.
+If `api.add` rejects, the row disappears.
+
+Compare the two versions.
+The components that render the cart did not change.
+The `setItems` calls did not change: the synchronous write already described the expected result, so it becomes the optimistic prediction.
+Three things were added:
+
+- [`createOptimisticStore(fn, seed)`](/reference/solid-js/stores/create-optimistic-store) derives its durable value from `fn` and accepts writes that show immediately but are tentative.
+- [`action`](/reference/solid-js/lifecycle-actions/action) runs a generator as one transaction.
+  Each `yield` waits for its promise and then restores the transaction, so the write before the `yield` and the refresh after it belong to the same update.
+- [`refresh(items)`](/reference/solid-js/lifecycle-actions/refresh) re-runs the derivation so the store reconciles against what the server has.
+
+The optimistic write is an overlay on the durable store, not a second copy of the state.
+Solid discards the overlay when the action settles, whether the action succeeded or failed.
+If `api.add` throws, the overlay is dropped and the list is back where it started; there is no rollback code to write.
+If the server agrees with the prediction, reconciliation finds no differences and nothing re-renders.
+
+Because actions ride the same hold as reads, the list never shows half a mutation, and quick repeated clicks do not interleave into a corrupted list.
+
+:::pitfall[An await inside an action leaves the transaction]
+JavaScript has no way to keep the action's context across a plain `await`, which is why the body is a generator.
+
+```ts
+// Avoid: the write after the await is outside the transaction
+const add = action(async function* (item: CartItem) {
+	await api.add(item);
+	setItems((list) => {
+		list.push(item);
+	});
+});
+
+// Prefer: yield the promise so the transaction resumes with the result
+const add = action(function* (item: CartItem) {
+	setItems((list) => {
+		list.push(item);
+	});
+	yield api.add(item);
+	refresh(items);
+});
+```
+
+In the `Avoid` version the write runs with no transaction to belong to, so the optimistic overlay is discarded at the end of that update: the row flashes in and vanishes, or never appears.
+Use `yield promise` as the suspension point.
+If you must `await`, place a bare `yield` before the next write so the transaction is restored.
+:::
+
+## Show that a row is saving
+
+Immediate updates are the right default for a cart, but a user may want to know which rows the server has not confirmed yet.
+Put the affordance in the data:
+
+```ts
+export type CartItem = {
+	id: string;
+	name: string;
+	quantity: number;
+	pending?: boolean;
+};
+
+const add = action(function* (item: CartItem) {
+	setItems((list) => {
+		list.push({ ...item, pending: true });
+	});
+	yield api.add(item);
+	refresh(items);
+});
+```
+
+The optimistic row carries `pending: true`, and a row can render a spinner or a muted style from it.
+When the action settles, the overlay goes away and the refreshed row from the server has no flag.
+Only the row that read `pending` updates.
+
+## Mark data as changing: `affects`
+
+The `pending` flag describes the row.
+Sometimes the question is about the data as a whole: "is the quantity of this item about to change?"
+[`affects(target, key?)`](/reference/solid-js/lifecycle-actions/affects) marks a source, a store, or one store property as pending while the surrounding action is in flight, so readers of that data report it through `isPending`:
+
+```ts
+const setQuantity = action(function* (id: string, quantity: number) {
+	const item = items.find((item) => item.id === id);
+	if (item) affects(item, "quantity");
+	yield api.setQuantity(id, quantity);
+	refresh(items);
+});
+```
+
+Here no optimistic write is made; the old quantity stays visible and `isPending(() => item.quantity)` is `true` until the refresh lands.
+The two mechanisms are independent: an optimistic write supplies the expected value, `affects` supplies the pending status, and a mutation can use either or both.
+
+A bare `refresh(source)` asks the same question again without changing the inputs, so nothing reports pending on its own.
+Pair `affects(source)` with `refresh(source)` when the reload itself should show as pending.
+
+## Wait for the server to echo the write: `until`
+
+Some transports do not return the result: the request is fire-and-forget and the confirmation arrives later on a live source.
+[`until(fn)`](/reference/solid-js/lifecycle-actions/until) holds the action open until a predicate over the confirmed data becomes true:
+
+```ts
+const send = action(function* (text: string) {
+	const clientId = crypto.randomUUID();
+	setMessages((list) => {
+		list.push({ clientId, text, pending: true });
+	});
+	yield socket.send({ clientId, text });
+	yield until(() => messages.some((message) => message.clientId === clientId), {
+		timeout: 10_000,
+	});
+});
+```
+
+The predicate reads authoritative state, so the optimistic row pushed above cannot satisfy it; only the echo from the live source can.
+A timeout or an abort rejects, which settles the action and drops the overlay.
+
+## Layer state by lifetime
+
+A production feature often combines state with different lifetimes: the durable data from the server, per-row UI state such as a recoverable error, and the optimistic overlay.
+Apply them in that order and read the composed result.
+Here each cart line has a gift-wrap toggle whose failure the row can recover from on its own:
+
+```tsx
+import {
+	Errored,
+	For,
+	Loading,
+	Show,
+	action,
+	createOptimisticStore,
+	refresh,
+} from "solid-js";
+import { api } from "./api";
+
+type ServerItem = {
+	id: string;
+	name: string;
+	giftWrap: boolean;
+};
+
+type ItemError = {
+	giftWrap: boolean;
+};
+
+type CartItem = ServerItem & {
+	pending?: boolean;
+	error?: ItemError;
+};
+
+function createCart() {
+	const errors = new Map<string, ItemError>();
+	const [items, setItems] = createOptimisticStore<CartItem[]>(async () => {
+		const current: ServerItem[] = await api.list();
+		return current.map((item) => {
+			const error = errors.get(item.id);
+			return error ? { ...item, error } : item;
+		});
+	}, []);
+
+	const setGiftWrap = action(function* (id: string, giftWrap: boolean) {
+		setItems((draft) => {
+			const item = draft.find((item) => item.id === id);
+			if (!item) return;
+			item.giftWrap = giftWrap;
+			item.pending = true;
+		});
+
+		try {
+			yield api.setGiftWrap(id, giftWrap);
+			errors.delete(id);
+		} catch {
+			errors.set(id, { giftWrap });
+		} finally {
+			refresh(items);
+		}
+	});
+
+	return [items, { setGiftWrap }] as const;
+}
+
+function CartLines() {
+	const [items, { setGiftWrap }] = createCart();
+
+	return (
+		<Errored fallback={(error) => <p>{String(error())}</p>}>
+			<Loading fallback={<p>Loading cart...</p>}>
+				<ul>
+					<For each={items}>
+						{(item) => (
+							<li
+								class={{
+									pending: !!item.pending,
+									errored: !!item.error,
+								}}
+							>
+								<label>
+									<input
+										type="checkbox"
+										checked={item.giftWrap}
+										onInput={(event) =>
+											void setGiftWrap(item.id, event.currentTarget.checked)
+										}
+									/>
+									Gift wrap {item.name}
+								</label>
+								<Show when={item.error}>
+									{(error) => (
+										<button
+											type="button"
+											onClick={() =>
+												void setGiftWrap(item.id, error().giftWrap)
+											}
+										>
+											Retry
+										</button>
+									)}
+								</Show>
+							</li>
+						)}
+					</For>
+				</ul>
+			</Loading>
+		</Errored>
+	);
+}
+```
+
+Toggle gift wrap on a line and the checkbox moves at once with the `pending` style.
+If the request fails, the checkbox returns to the server's value and a **Retry** button appears on that line; the rest of the cart is untouched.
+
+`createCart()` creates all three layers under the component owner and returns one composed store with its actions, which keeps reactive state out of module scope and out of shared server memory.
+The projection reads the durable items and folds in the `errors` map.
+The map is not reactive by itself; `refresh(items)` re-runs the projection after each mutation and makes its current entries visible.
+
+The action catches the expected failure because the row can recover locally.
+An error the action does not catch, or an error thrown by the projection or the render, still reaches `Errored`.
+
+## Common problems
+
+### After the request succeeds, the row snaps back to the old value
+
+The action settled and Solid removed the optimistic overlay, but nothing re-read the server, so the store still holds the value from before the mutation.
+Call `refresh(items)` after the `yield` so the store reconciles with what the server now has.
+
+### The optimistic value flashes and disappears, or never appears
+
+The write ran with no transaction: either outside any action, or inside an action after a plain `await`.
+An optimistic overlay with no transaction to wait on is discarded at the end of the current update.
+Make the tentative write inside the `action` that sends the request, and suspend with `yield promise` rather than `await`.
+
+### The tentative write stayed after the action failed
+
+The store is a plain `createStore`, whose writes are durable even inside an action.
+Use `createOptimisticStore` for state that should revert when the request settles.
+
+### `flush()` inside an action throws `[FLUSH_IN_ACTION]`
+
+An action's writes are held in its transaction until the action settles, so there is nothing for `flush()` to show.
+Remove the call and assert after the action's promise resolves.
+[Debugging reactivity](/guides/debugging-reactivity#the-test-sees-the-old-dom) explains the diagnostic.
+
+## Recap
+
+- Keep the synchronous store write; inside an `action` on a `createOptimisticStore`, it becomes the optimistic prediction.
+- Write the body as a generator and `yield` each promise so the writes before and after it share one transaction.
+- Call `refresh(source)` after the request so the store reconciles with the server.
+- The overlay is discarded when the action settles, on success and on failure; there is no rollback code.
+- Put a `pending` flag in the optimistic row when the UI should show what is unconfirmed.
+- Use `affects(target, key)` to report pending on data without predicting its value.
+- Use `until(predicate)` when the confirmation arrives on a live source rather than in the response.
+- Create durable data, per-row UI state, and the optimistic overlay under one owner and return one composed store.
+
+## Next steps
+
+- [Forms](/guides/forms): the same actions behind a `<form>`, with progressive enhancement, validation, and errors returned from the server.
+- [Mutations and responses](/building-apps/server-functions/mutations-and-responses): writing `api.add` as a `"use server"` function and returning redirects, statuses, and safe errors.
+- [Boundaries](/concepts/boundaries): where `Errored` catches the errors an action does not, and how an errored region recovers.
+- [Data loading and mutations](/routing/solid-router/data): Solid Router's `action` and `query` add submissions, caching, and revalidation on top of these primitives.

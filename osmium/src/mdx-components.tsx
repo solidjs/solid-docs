@@ -34,7 +34,7 @@ type CalloutType =
 
 export const DirectiveContainer = (
 	props: {
-		type: "tab-group" | "tab" | "deep-dive" | CalloutType;
+		type: "tab-group" | "tab" | "deep-dive" | "solution" | CalloutType;
 		title?: string;
 		codeGroup?: string;
 		tabNames?: string;
@@ -54,8 +54,12 @@ export const DirectiveContainer = (
 			}
 		>
 			<Match when={props.type === "tab"}>{_children}</Match>
-			<Match when={props.type === "deep-dive"}>
-				<DeepDive title={props.title} children={_children} />
+			<Match when={props.type === "deep-dive" || props.type === "solution"}>
+				<DeepDive
+					kind={props.type as "deep-dive" | "solution"}
+					title={props.title}
+					children={_children}
+				/>
 			</Match>
 			<Match when={props.type === "tab-group"}>
 				<TabGroup

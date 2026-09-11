@@ -1877,8 +1877,8 @@ const ENTRY_LEARN = {
 	],
 	createOptimistic: [
 		[
-			"Mutations: from a client-only list to a server-backed one",
-			"/concepts/async-reactivity#mutations-from-a-client-only-list-to-a-server-backed-one",
+			"Move the cart to the server",
+			"/concepts/mutations#move-the-cart-to-the-server",
 		],
 	],
 	flush: [
@@ -1911,8 +1911,8 @@ const ENTRY_LEARN = {
 	createOptimisticStore: [
 		["Optimistic stores", "/concepts/stores#optimistic-stores"],
 		[
-			"Mutations: from a client-only list to a server-backed one",
-			"/concepts/async-reactivity#mutations-from-a-client-only-list-to-a-server-backed-one",
+			"Move the cart to the server",
+			"/concepts/mutations#move-the-cart-to-the-server",
 		],
 	],
 	reconcile: [
@@ -1925,8 +1925,8 @@ const ENTRY_LEARN = {
 	omit: [["Props", "/concepts/components-and-jsx#props"]],
 	action: [
 		[
-			"Mutations: from a client-only list to a server-backed one",
-			"/concepts/async-reactivity#mutations-from-a-client-only-list-to-a-server-backed-one",
+			"Move the cart to the server",
+			"/concepts/mutations#move-the-cart-to-the-server",
 		],
 		[
 			"Mutations and responses",
@@ -1934,7 +1934,10 @@ const ENTRY_LEARN = {
 		],
 	],
 	affects: [
-		["Additional control", "/concepts/async-reactivity#additional-control"],
+		[
+			"Mark data as changing: `affects`",
+			"/concepts/mutations#mark-data-as-changing-affects",
+		],
 	],
 	refresh: [
 		["Keep data fresh", "/guides/data-fetching-patterns#keep-data-fresh"],
@@ -1943,7 +1946,12 @@ const ENTRY_LEARN = {
 			"/guides/data-fetching-patterns#mutate-then-refetch",
 		],
 	],
-	until: [["Queue completion", "/concepts/async-reactivity#queue-completion"]],
+	until: [
+		[
+			"Wait for the server to echo the write: `until`",
+			"/concepts/mutations#wait-for-the-server-to-echo-the-write-until",
+		],
+	],
 	onSettled: [
 		[
 			"Use an effect at an imperative boundary",
@@ -2352,6 +2360,7 @@ const REFERENCE_FIXUPS = [
 	[/\bALL attribution semantics\b/g, "all attribution semantics"],
 	[/calls of the SAME function\b/g, "calls of the same function"],
 	[/\(matching `resolve\(\)`\/`until\(\)`, #\d+\)/g, "(matching `until()`)"],
+	[/\bHIGH-ENTROPY\b/g, "high-entropy"],
 	[/\(`_inFlight` was just assigned\n/g, "(`_inFlight` was assigned\n"],
 	[/the outcome is\nsimply not flashed/g, "the outcome is\nnot flashed"],
 	[

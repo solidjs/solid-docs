@@ -1,24 +1,31 @@
 ---
 title: Project shapes
 version: "2.0"
-description: "The three project shapes the Solid CLI offers, what each one adds, and what each one deploys as."
+description: "Pick between the bare, basic, and fullstack templates by what your app needs on day one, knowing that moving up later changes configuration, not your code."
 ---
 
-The Solid CLI offers three project shapes.
-Each tier is a strict superset of the last and defines its deployment output.
+The CLI asks one question before it writes any files: `bare`, `basic`, or `fullstack`.
+The answer decides what is installed and what the build produces, and it looks like a commitment.
+It is not: each shape is a strict superset of the one before, and the `src/App.tsx` and `src/Document.tsx` conventions are the same in all three, so an app that starts as `bare` becomes `fullstack` by changing configuration rather than rewriting components.
 
-| Tier        | Adds                                                  | Deployment contract                                          |
+Pick by what the app needs on its first deploy:
+
+- A single page, a widget, or an experiment with no routing: `bare`.
+- Several pages that can be served as static files, such as a marketing site or a client-rendered dashboard that talks to an existing API: `basic`.
+- Server rendering, server functions, sessions, or API routes: `fullstack`.
+
+When in doubt, choose the smaller one.
+Moving up is a configuration change; moving down means removing code you did not need.
+
+| Shape       | Adds                                                  | Build output                                                 |
 | ----------- | ----------------------------------------------------- | ------------------------------------------------------------ |
-| `bare`      | Solid, nothing else                                   | `vite build` emits a purely static site                      |
-| `basic`     | Router, file-system routes, per-page titles, testing  | Still purely static; deploy `dist/client` to any static host |
+| `bare`      | Solid, nothing else                                   | `vite build` emits a static site                             |
+| `basic`     | Router, file-system routes, per-page titles, testing  | Still static; deploy `dist/client` to any static host        |
 | `fullstack` | Streaming SSR, server functions, sessions, API routes | Static client assets plus a request handler in `dist/server` |
-
-Start with the smallest tier that does the job.
-Moving up a tier later does not change the structure of your app: the same `src/App.tsx` and `src/Document.tsx` conventions carry through all three.
 
 ## Enable server-side rendering
 
-Every tier can enable server rendering with one boolean in `vite.config.ts`:
+Every shape can turn on server rendering with one option in `vite.config.ts`:
 
 ```ts
 import { defineConfig } from "vite";
@@ -34,13 +41,15 @@ export default defineConfig({
 });
 ```
 
-The `src/App.tsx` and `src/Document.tsx` structure remains the same.
-Application code must still be safe to evaluate and render on the server.
-Move browser-only APIs behind client lifecycle code or a client-only boundary, and make the initial server and client output deterministic.
-In client mode the document shell is prerendered as static HTML and pages render in the browser; with `ssr: true` pages stream from the server and hydrate.
-See [server and client boundaries](/concepts/rendering-and-ssr#server-and-client-boundaries).
+Without `ssr`, the document shell is prerendered as static HTML and pages render in the browser.
+With `ssr: true`, pages stream from the server and hydrate in the browser.
+The `src/App.tsx` and `src/Document.tsx` structure does not change.
 
-## Deploying `fullstack`
+What does change is what your code is allowed to assume.
+Component and module code now runs in Node as well as in the browser, so a read of `window` or `localStorage` at module scope stops the server render with `ReferenceError: window is not defined`.
+[Rendering and SSR](/concepts/rendering-and-ssr#server-and-client-boundaries) shows where browser-only code goes and how to keep the server and client output identical for hydration.
+
+## Deploy `fullstack`
 
 The built server entry exports `handleRequest(request)`, a fetch-compatible `Request -> Promise<Response>` handler:
 
@@ -51,7 +60,13 @@ import { handleRequest } from "./dist/server/server.js";
 const response = await handleRequest(request);
 ```
 
-The template's included `server.js` is the Node version of exactly that.
-On a fetch-native platform, map `handleRequest` to the host's request entry point and configure its static asset service for `dist/client`.
-Workers, Deno, and Bun have separate module, asset, and environment configuration requirements.
-See [Deployment](/building-apps/deployment) for platform specifics.
+The template's `server.js` is the Node version of that.
+On a fetch-native platform, map `handleRequest` to the host's request entry point and point its static asset service at `dist/client`.
+Workers, Deno, and Bun each have their own module, asset, and environment configuration; [Deployment](/building-apps/deployment) covers them.
+
+## Next steps
+
+- [Quick start](/getting-started/quick-start): create a `basic` project and make the first change, if you have not yet.
+- [App structure](/building-apps/app-structure): what `App.tsx` and `Document.tsx` do, and the entries the plugin generates for each shape.
+- [Choose a rendering mode](/guides/choose-a-rendering-mode): the trade-offs between a client-rendered shell, streaming SSR, and prerendering.
+- [Deployment](/building-apps/deployment): platform-specific setup for the `fullstack` request handler.

@@ -1,0 +1,323 @@
+---
+title: "Rendering and SSR"
+version: "2.0"
+description: "Run the same components in the browser and on the server: keep browser-only code off the server, get matching HTML for hydration, and choose between string and streaming rendering."
+---
+
+You add `ssr: true` to `vite.config.ts`, reload, and the terminal prints:
+
+```text
+ReferenceError: window is not defined
+```
+
+The stack points at a module that read `localStorage` when it was imported.
+Nothing about the component was wrong in the browser; it is now also running in Node, where there is no `window`, and the same source has to be correct in both places.
+
+Solid uses one component source for client rendering and server-side rendering (SSR).
+The JSX build target selects DOM operations for the browser or HTML-producing operations for the server.
+This page covers what that asks of your code and which rendering function fits which situation.
+
+Most applications need two things from this page: the [server and client boundaries](#server-and-client-boundaries) rules for browser-only code, and the rule in [streaming rendering](#streaming-rendering) about where `Loading` boundaries go.
+In a project made by the CLI, the generated entries already call `render`, `hydrate`, and `renderToStream`; the sections on those functions are for code that calls the renderer directly.
+
+## Server and client boundaries
+
+Code that touches `window`, `document`, `localStorage`, or a browser-only library must not run while the server renders.
+Three places are safe: an effect function, an `onSettled` callback, or a subtree that only renders in the browser.
+
+```tsx
+// Avoid: runs on import, on the server too
+const saved = localStorage.getItem("cart");
+const [cart, setCart] = createStore(saved ? JSON.parse(saved) : { items: [] });
+
+// Prefer: read the browser API after hydration, which happens only in the browser
+const [cart, setCart] = createStore({ items: [] as CartItem[] });
+onSettled(() => {
+	const saved = localStorage.getItem("cart");
+	if (saved) {
+		setCart((draft) => {
+			draft.items = JSON.parse(saved).items;
+		});
+	}
+});
+```
+
+The `Avoid` version crashes the server render with `ReferenceError: localStorage is not defined`.
+In the `Prefer` version the server renders an empty cart, the browser hydrates it, and the `onSettled` callback fills it in from storage.
+The effect function of `createEffect` and the callback of `onSettled` do not run during server rendering; their compute functions may.
+
+For a check inside shared code, [`isServer`](/reference/solid-web/rendering-ssr/is-server) is a build-time constant: the browser build exports `false` and the server build exports `true`, so a bundler can remove the unreachable side.
+
+```tsx
+import { isServer } from "@solidjs/web";
+
+if (!isServer) {
+	window.addEventListener("online", reportOnline);
+}
+```
+
+For a whole component that cannot run on the server, such as a map or a rich text editor, use [`clientOnly`](/reference/solid-web/rendering-ssr/client-only).
+The server renders its fallback and does not start the import; the browser hydrates the fallback, waits for the module and for hydration to settle, and then swaps in the component:
+
+```tsx
+import { clientOnly } from "@solidjs/web";
+
+const Map = clientOnly(() => import("./Map"));
+
+export function StoreLocator() {
+	return <Map fallback={<div class="map-placeholder" />} />;
+}
+```
+
+By default `clientOnly` starts loading when its declaration runs.
+Pass `{ lazy: true }` to defer the import until the component's first render.
+
+:::caution[Module-scope state is shared by every request]
+On the server one module instance serves every request, so a signal or store at module scope leaks one user's state into another user's response.
+Create state inside a component or a context provider, which runs once per app in the browser and once per request on the server.
+[Share state between components](/concepts/reactivity#share-state-between-components) shows the pattern.
+:::
+
+## Client rendering
+
+[`render`](/reference/solid-web/rendering-ssr/render) mounts a tree into a DOM container and returns a disposer that tears down the tree and its reactive scopes:
+
+```tsx
+import { render } from "@solidjs/web";
+import { App } from "./App";
+
+const root = document.getElementById("app");
+
+if (!root) {
+	throw new Error("Missing #app");
+}
+
+const dispose = render(() => <App />, root);
+
+// Call dispose() when this root must be unmounted.
+```
+
+Pass a function so Solid creates the root before it evaluates the component tree.
+The root owns the delegated event listeners for its container, and disposal removes them.
+When the initial render has no unresolved async read, `render` flushes that work before returning; if an async read is pending, the mount attaches after it settles.
+
+## Hydrating server HTML
+
+[`hydrate`](/reference/solid-web/rendering-ssr/hydrate) is `render` for a container that already holds HTML from `renderToString` or `renderToStream`.
+It claims the existing nodes and attaches event handlers and reactive bindings without recreating them:
+
+```tsx
+import { hydrate } from "@solidjs/web";
+import { App } from "./App";
+
+const root = document.getElementById("app");
+
+if (!root) {
+	throw new Error("Missing #app");
+}
+
+hydrate(() => <App />, root);
+```
+
+The server and client must render the same initial structure in each hydrated region.
+Solid assigns hydration keys during SSR so the client build can claim the matching nodes; when the structures differ, the client cannot find the node it expects.
+
+```tsx
+// Avoid: a different element on each side
+<p>{isServer ? "Rendered on the server" : `Rendered at ${Date.now()}`}</p>;
+
+// Prefer: the same structure, with the browser-only value filled in after hydration
+const [renderedAt, setRenderedAt] = createSignal<number>();
+onSettled(() => setRenderedAt(Date.now()));
+
+<p>
+	{renderedAt() ? `Rendered at ${renderedAt()}` : "Rendered on the server"}
+</p>;
+```
+
+The `Avoid` version logs, in development, a warning such as `Hydration structure mismatch: expected <p> as first child of` followed by the node it found instead, and the client's bindings for that region attach to the wrong nodes.
+The `Prefer` version hydrates cleanly and updates the text once the browser has taken over.
+
+When the application owns the full document, include `HydrationScript` once before the application markup.
+It initializes hydration support and records delegated events that fire before the client bundle has hydrated, so a click during the load is not lost.
+For several roots on one page, give each server render a distinct `renderId` and pass the same value to its `hydrate` call:
+
+```tsx
+// Server
+const accountHtml = renderToString(() => <Account />, { renderId: "account" });
+
+// Client
+hydrate(() => <Account />, accountRoot, { renderId: "account" });
+```
+
+## Synchronous string rendering
+
+[`renderToString`](/reference/solid-web/rendering-ssr/render-to-string) runs a component tree synchronously and returns an HTML string.
+Use it when the tree can complete synchronously, or when the pending parts are inside a `Loading` boundary whose fallback is acceptable in the response:
+
+```tsx
+import { Loading } from "solid-js";
+import { renderToString } from "@solidjs/web";
+import { App } from "./App";
+
+const html = renderToString(() => (
+	<Loading fallback={<main>Loading…</main>}>
+		<App />
+	</Loading>
+));
+```
+
+When a read is pending inside `Loading`, the string contains that boundary's fallback and nothing arrives later.
+Use streaming when the client should receive the real content once the async work settles.
+
+## Streaming rendering
+
+[`renderToStream`](/reference/solid-web/rendering-ssr/render-to-stream) emits the synchronous shell first, then a fragment for each `Loading` boundary as its content settles:
+
+```tsx
+import { renderToStream } from "@solidjs/web";
+import { App } from "./App";
+
+export function handleRequest(): Response {
+	const stream = renderToStream(() => <App />);
+	return new Response(stream.readable, {
+		headers: { "content-type": "text/html; charset=utf-8" },
+	});
+}
+```
+
+The returned object can pipe to a Node writable, pipe to a Web `WritableStream`, expose a `ReadableStream<Uint8Array>`, or be awaited for the fully settled HTML.
+Choose one output form per render.
+
+An async read with no `Loading` boundary above it blocks the shell until it settles.
+Inside a boundary, the shell carries the fallback and a later fragment replaces it.
+That makes `Loading` placement a server decision as well as a client one: a boundary around the product detail lets the header, navigation, and footer reach the browser while the product query is still running.
+[Boundaries](/concepts/boundaries) covers placement and how `Reveal` orders the fragments.
+
+## Who owns the document
+
+A server render can produce a complete document or a fragment embedded in a document another host owns.
+The choice decides how head content and render assets reach the page.
+
+When the rendered output includes a closing `</head>`, the renderer inserts registered head content and assets into that document:
+
+```tsx
+import { HydrationScript, renderToString } from "@solidjs/web";
+import { App } from "./App";
+
+const html = renderToString(() => (
+	<html lang="en">
+		<head>
+			<meta charset="utf-8" />
+			<HydrationScript />
+		</head>
+		<body>
+			<div id="app">
+				<App />
+			</div>
+		</body>
+	</html>
+));
+```
+
+When another host owns the document, render the application fragment and use `onHead` to receive the head HTML.
+For `renderToString`, `onHead` runs synchronously before the function returns; for `renderToStream`, it runs before the shell is emitted:
+
+```tsx
+let head = "";
+
+const body = renderToString(() => <App />, {
+	onHead(value) {
+		head = value;
+	},
+});
+
+const documentHtml = `<!doctype html>
+<html>
+  <head>${head}</head>
+  <body><div id="app">${body}</div></body>
+</html>`;
+```
+
+The renderer handles HTML generation and head delivery.
+Server adapters, routing, response creation, and deployment belong to the application layer; [App structure](/building-apps/app-structure) shows how the CLI templates wire them.
+
+## Controlling hydration
+
+These controls divide hydration ownership between the server and the client.
+Use them only when the two intentionally manage different parts of the document, such as a server-rendered marketing page with one interactive island.
+
+[`NoHydration`](/reference/solid-js/advanced/manual-hydration/no-hydration) renders its children on the server without hydration keys or serialized state.
+During client hydration, Solid skips that subtree and leaves its DOM untouched:
+
+```tsx
+import { NoHydration } from "solid-js";
+
+<NoHydration>
+	<aside>This server-rendered content is not hydrated.</aside>
+</NoHydration>;
+```
+
+[`Hydration`](/reference/solid-js/advanced/manual-hydration/hydration) re-enables hydration inside a `NoHydration` region and starts a new hydration id namespace on the server.
+Pass the same id as the `renderId` of the client root that hydrates it:
+
+```tsx
+import { Hydration, NoHydration } from "solid-js";
+
+<NoHydration>
+	<div id="account">
+		<Hydration id="account">
+			<Account />
+		</Hydration>
+	</div>
+</NoHydration>;
+```
+
+```tsx
+import { hydrate } from "@solidjs/web";
+
+const accountRoot = document.getElementById("account")!;
+
+hydrate(() => <Account />, accountRoot, { renderId: "account" });
+```
+
+## Common problems
+
+### `window is not defined` or `document is not defined`
+
+A module or component body reads a browser API while the server renders.
+Move the read into an effect function or an `onSettled` callback, guard it with `isServer`, or wrap the component in `clientOnly`.
+See [Server and client boundaries](#server-and-client-boundaries).
+
+### `Hydration structure mismatch` or `Hydration key miss` in the console
+
+The server and the client rendered different structures for the same region: a conditional on `isServer`, a value such as `Date.now()` or `Math.random()`, or data that differs between the request and the browser.
+Render the same structure on both sides and fill in browser-only values after hydration.
+A key miss whose message mentions namespaces means a subtree was hydrated with a different `renderId` than the server used; see [Controlling hydration](#controlling-hydration).
+
+### The page renders but the first clicks do nothing
+
+Clicks that fire before the client bundle has hydrated are lost unless `HydrationScript` is in the document head.
+Include it once, before the application markup.
+
+### The shell waits for every request before anything is sent
+
+An async read outside any `Loading` boundary blocks the stream's shell.
+Put a boundary around the region that depends on the read, so the shell carries a fallback and the content streams later.
+
+## Recap
+
+- One component source runs in the browser and on the server; code that needs `window` runs in an effect, an `onSettled` callback, behind `isServer`, or inside `clientOnly`.
+- Create state inside components or providers, never at module scope, so requests do not share it.
+- Render the same initial structure on both sides; fill in browser-only values after hydration.
+- Include `HydrationScript` once when the application owns the document.
+- `renderToString` returns the shell with fallbacks; `renderToStream` sends the shell and streams each boundary's content as it settles.
+- A `Loading` boundary decides what is in the shell and what streams later, so its placement is a server decision too.
+- Reach for `NoHydration`, `Hydration`, and `renderId` only when the server and client intentionally own different parts of the page.
+
+## Next steps
+
+- [Choose a rendering mode](/guides/choose-a-rendering-mode): which of these APIs a start-mode project uses, and how to pick between a static shell, streaming SSR, and prerendering.
+- [App structure](/building-apps/app-structure): the generated entries that call `render`, `hydrate`, and `renderToStream` for you.
+- [Boundaries](/concepts/boundaries): how `Loading` placement decides what streams in the shell and what arrives later.
+- [Head and metadata](/building-apps/head-and-metadata): how titles and meta tags declared in components reach the document head on both sides.

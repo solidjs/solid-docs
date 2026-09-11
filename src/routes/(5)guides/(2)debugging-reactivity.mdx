@@ -262,6 +262,13 @@ Import `flush` from `solid-js`.
 Application code does not normally call it; tests and imperative integrations do.
 The [Testing](/guides/testing) guide covers the rest of the test setup.
 
+`flush()` drains queued writes; it does not wait for async work.
+To await one reactive expression from outside a tracking scope, such as an async memo in a test, use [`resolve(fn)`](/reference/solid-js/advanced/interop-async/resolve), which resolves with the first settled value or rejects with the expression's error:
+
+```ts
+const product = await resolve(() => productMemo());
+```
+
 One place `flush()` does not belong is inside an action body:
 
 ```text

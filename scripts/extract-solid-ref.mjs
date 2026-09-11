@@ -669,6 +669,8 @@ const ENTRY_CALLOUTS = {
 };
 
 const ENTRY_SUMMARY_OVERRIDES = {
+	SourceAccessor:
+		"The getter `createSignal` and `createMemo` return: an `Accessor<T>` carrying the `Refreshable` brand, which is what lets [`refresh()`](/reference/solid-js/lifecycle-actions/refresh) accept it. A plain `Accessor<T>` parameter accepts a `SourceAccessor<T>`; the reverse does not hold.",
 	until:
 		"Awaits a reactive predicate and resolves the first time it becomes truthy, with the narrowed value. A falsy result or a pending async read means not yet, so the subscription stays live and re-evaluates as sources change. A thrown error, a rejected async source, a timeout, or an abort rejects the promise.",
 	affects:
@@ -1863,6 +1865,83 @@ const ENTRY_PROBLEMS = {
 // apply to every page in the category; entry links are listed first.
 // Shape: [["Label", "/path"], ...].
 const ENTRY_LEARN = {
+	onCleanup: [
+		[
+			"Clean up what you start",
+			"/guides/custom-primitives#clean-up-what-you-start",
+		],
+		["Ownership", "/concepts/reactivity#ownership"],
+	],
+	createRoot: [
+		[
+			"Run outside a component",
+			"/guides/custom-primitives#run-outside-a-component",
+		],
+	],
+	getOwner: [
+		[
+			"Run outside a component",
+			"/guides/custom-primitives#run-outside-a-component",
+		],
+	],
+	runWithOwner: [
+		[
+			"Run outside a component",
+			"/guides/custom-primitives#run-outside-a-component",
+		],
+	],
+	isDisposed: [
+		[
+			"Run outside a component",
+			"/guides/custom-primitives#run-outside-a-component",
+		],
+	],
+	enableExternalSource: [
+		[
+			"Feed an outside source into the graph",
+			"/guides/integrate-non-solid-code#feed-an-outside-source-into-the-graph",
+		],
+	],
+	Component: [
+		["Type component props", "/guides/typescript#type-component-props"],
+	],
+	ParentProps: [
+		["Type component props", "/guides/typescript#type-component-props"],
+	],
+	FlowProps: [
+		["Type component props", "/guides/typescript#type-component-props"],
+	],
+	VoidProps: [
+		["Type component props", "/guides/typescript#type-component-props"],
+	],
+	ComponentProps: [
+		["Type component props", "/guides/typescript#type-component-props"],
+	],
+	Ref: [["Events and refs", "/guides/typescript#events-and-refs"]],
+	Accessor: [
+		[
+			"Signals, memos, and setters",
+			"/guides/typescript#signals-memos-and-setters",
+		],
+	],
+	SourceAccessor: [
+		[
+			"Signals, memos, and setters",
+			"/guides/typescript#signals-memos-and-setters",
+		],
+	],
+	Setter: [
+		[
+			"Signals, memos, and setters",
+			"/guides/typescript#signals-memos-and-setters",
+		],
+	],
+	Signal: [
+		[
+			"Signals, memos, and setters",
+			"/guides/typescript#signals-memos-and-setters",
+		],
+	],
 	createSignal: [["Signals", "/concepts/reactivity#signals"]],
 	createMemo: [
 		["Derived values", "/concepts/reactivity#derived-values"],
@@ -2028,17 +2107,27 @@ const ENTRY_LEARN = {
 			"Server and client boundaries",
 			"/concepts/rendering-and-ssr#server-and-client-boundaries",
 		],
+		[
+			"Keep it off the server",
+			"/guides/integrate-non-solid-code#keep-it-off-the-server",
+		],
+		["SSR-safe code", "/guides/ssr-safe-code"],
 	],
 	isServer: [
 		[
 			"Server and client boundaries",
 			"/concepts/rendering-and-ssr#server-and-client-boundaries",
 		],
+		["SSR-safe code", "/guides/ssr-safe-code"],
 	],
 	Portal: [
 		[
 			"Server and client boundaries",
 			"/concepts/rendering-and-ssr#server-and-client-boundaries",
+		],
+		[
+			"Render Solid into a foreign container",
+			"/guides/integrate-non-solid-code#render-solid-into-a-foreign-container",
 		],
 	],
 	httpStatus: [
@@ -2166,7 +2255,9 @@ const CATEGORY_LEARN = {
 	],
 	"Advanced / Owner & Introspection": [
 		["Ownership", "/concepts/reactivity#ownership"],
+		["Custom primitives", "/guides/custom-primitives"],
 	],
+	Types: [["TypeScript", "/guides/typescript"]],
 	"Advanced / Specialized Reactivity & Tracking": [
 		["Avoid unnecessary effects", "/guides/avoid-unnecessary-effects"],
 		["Debugging reactivity", "/guides/debugging-reactivity"],
@@ -2183,6 +2274,7 @@ const CATEGORY_LEARN = {
 	],
 	"Advanced / Interop & Async": [
 		["Async reactivity", "/concepts/async-reactivity"],
+		["Integrate non-Solid code", "/guides/integrate-non-solid-code"],
 	],
 	"Advanced / Diagnostics & Dev Hooks": [
 		["Debugging reactivity", "/guides/debugging-reactivity"],
@@ -2207,7 +2299,7 @@ const TYPE_TEXT_REWRITES = [
 	// Underscore-prefixed parameter names in server-side stubs.
 	[/([(,]\s*)_+([a-z]\w*\??:)/g, "$1$2"],
 ];
-const KEEP_BRAND_TYPES = new Set(["refresh"]);
+const KEEP_BRAND_TYPES = new Set(["refresh", "SourceAccessor"]);
 
 // `packages/solid/src/client/hydration.ts` augments the @solidjs/signals
 // option interfaces with `deferStream` and `ssrSource` through a module

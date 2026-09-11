@@ -1,0 +1,323 @@
+---
+title: "Integrate non-Solid code"
+version: "2.0"
+description: "Drive a charting library, a map, a web component, or an analytics script from Solid state: get the DOM node at the right time, create the instance once, update it in an effect, and keep browser-only imports off the server."
+---
+
+The account area needs a chart of order totals, and the charting library wants a `<canvas>` and a `chart.update(data)` call.
+The store locator needs a map from a library that reads `window` the moment it is imported.
+The checkout form uses a `<date-picker>` custom element that takes an array of disabled dates, and the analytics script wants to know the current URL on every navigation.
+
+None of these know about signals.
+Each one needs the same four things from Solid: a DOM node once it exists, a place to create the instance once, an effect that pushes settled values into it, and a cleanup that tears it down with the component.
+This guide goes through those four things and the two directions state can flow, from Solid into the library and from the library back into Solid.
+The [Custom primitives](/guides/custom-primitives) guide shows how to package the result once it works.
+
+## Get a DOM node
+
+Pass a variable or a callback to `ref` and Solid assigns the element when it creates it:
+
+```tsx
+function OrderTotalsChart(props: { totals: number[] }) {
+	let canvas!: HTMLCanvasElement;
+
+	// Avoid: the JSX below has not run yet, so canvas is still undefined here
+	const chart = new Chart(canvas, { data: props.totals });
+
+	return <canvas ref={canvas} />;
+}
+```
+
+Run the `Avoid` version and the library throws on `undefined`, because the component body runs top to bottom and the `<canvas>` is created by the `return` statement.
+The element exists after the JSX has been evaluated; a `ref` callback runs at that moment, while the surrounding render is still being built.
+
+The [`ref` reference](/reference/solid-web/jsx-properties/ref) lists the accepted forms, and [Refs and directives](/concepts/components-and-jsx#refs-and-directives) shows how a directive factory owns setup for an element.
+Two facts from those pages matter for every integration on this page: a `ref` callback runs untracked and without an owner, so it is not a place to create effects or register cleanup; and setup that needs the element in the document belongs in `onSettled`, which runs after the first render has settled.
+
+## Create the instance once, update it in an effect
+
+The chart is created once, updated when the totals change, and destroyed with the component:
+
+```tsx
+import { createEffect, onSettled } from "solid-js";
+import { Chart } from "chart-lib";
+
+function OrderTotalsChart(props: { totals: number[] }) {
+	let canvas!: HTMLCanvasElement;
+	let chart: Chart | undefined;
+
+	// Avoid: props.totals is read in the settled callback, which is untracked
+	onSettled(() => {
+		const chart = new Chart(canvas, { data: props.totals });
+		return () => chart.destroy();
+	});
+
+	// Prefer: create once in onSettled, and let an effect drive every update
+	onSettled(() => {
+		chart = new Chart(canvas, { data: props.totals });
+		return () => chart?.destroy();
+	});
+
+	createEffect(
+		() => props.totals,
+		(totals) => chart?.update(totals)
+	);
+
+	return <canvas ref={canvas} />;
+}
+```
+
+Run the `Avoid` version and the chart draws the first totals and never changes, because `onSettled` runs its callback once and does not track the reads inside it.
+In the `Prefer` version a new `totals` array re-runs the compute function, and the effect function hands the value to the library after the update has landed.
+
+The split follows the rest of the documentation: [`onSettled`](/reference/solid-js/lifecycle-actions/on-settled) for one-time setup that returns its teardown, and the effect function of [`createEffect`](/reference/solid-js/reactivity/create-effect) for each settled value that has to leave Solid.
+Neither runs during server rendering, so the component is safe to render on the server as long as `chart-lib` can be imported there; if it cannot, see [Keep it off the server](#keep-it-off-the-server).
+[Use an effect at an imperative boundary](/guides/avoid-unnecessary-effects#use-an-effect-at-an-imperative-boundary) explains why every input belongs in the compute function.
+
+The analytics script is the same shape without a DOM node:
+
+```tsx
+import { createEffect } from "solid-js";
+import { useLocation } from "@solidjs/router";
+
+function PageViews() {
+	const location = useLocation();
+
+	createEffect(
+		() => location.pathname,
+		(path) => analytics.pageView(path)
+	);
+
+	return null;
+}
+```
+
+Navigate from `/account` to `/account/orders` and `pageView` is called once with the new path; `location.pathname` is reactive, as [Read the location](/routing/solid-router/navigation#read-the-location) describes.
+
+## Web components
+
+A custom element is a native element in JSX.
+Attributes, properties, and events each have a form:
+
+```tsx
+function DeliveryDate(props: {
+	value: string;
+	holidays: string[];
+	onChange: (value: string) => void;
+}) {
+	return (
+		<date-picker
+			value={props.value}
+			prop:disabledDates={props.holidays}
+			onDatechange={(event) => props.onChange(event.detail.value)}
+		/>
+	);
+}
+```
+
+Pick a date and `onChange` receives it; change `holidays` in the parent and the element's `disabledDates` property is reassigned.
+
+On an element whose name contains a hyphen, a plain attribute is set with `setAttribute`, so `value={props.value}` becomes a string attribute, and `null` or `false` removes it.
+An array or object passed that way is stringified.
+The `prop:` namespace assigns a property instead, which is what a custom element that exposes `disabledDates` as a property expects.
+The server emits attributes into the HTML and skips `prop:` bindings; the property is assigned when the browser renders or hydrates the element.
+
+`onDatechange` lowercases the name and adds a listener for `datechange` with `addEventListener`.
+An event name that contains uppercase letters or a hyphen cannot be written that way; use a directive that calls `addEventListener` with the exact name, following the `listen` factory in [Refs and directives](/concepts/components-and-jsx#refs-and-directives).
+The events Solid delegates, such as `onInput` and `onClick`, are handled by a listener on the render root, so a custom element that dispatches one of those names must dispatch it with `bubbles: true` for the handler to run.
+
+TypeScript does not know `<date-picker>`.
+Declare it once, with the attribute, property, and event names the element supports:
+
+```ts
+// src/types/date-picker.d.ts
+declare module "@solidjs/web" {
+	namespace JSX {
+		interface IntrinsicElements {
+			"date-picker": JSX.HTMLAttributes<HTMLElement> & {
+				value?: string;
+				"prop:disabledDates"?: string[];
+				onDatechange?: (event: CustomEvent<{ value: string }>) => void;
+			};
+		}
+	}
+}
+```
+
+## Render Solid into a foreign container
+
+Two situations move Solid content into a DOM node Solid did not create.
+
+The first is a subtree that must escape its ancestor, such as a confirmation dialog inside the map library's container, which clips overflow.
+[`Portal`](/reference/solid-web/components/portal) renders its children into another element, `document.body` by default, while they stay in the component's reactive scope:
+
+```tsx
+import { Show, type ParentProps } from "solid-js";
+import { Portal } from "@solidjs/web";
+
+function AddedToCart(props: ParentProps<{ open: boolean }>) {
+	return (
+		<Show when={props.open}>
+			<Portal>
+				<dialog open>{props.children}</dialog>
+			</Portal>
+		</Show>
+	);
+}
+```
+
+Open the dialog and it appears as a child of `<body>`, outside the clipped container; close it and the portal's nodes are removed with the `Show` branch.
+The server renders nothing for a portal, and its children render fresh in the browser after hydration settles, so async reads inside a portal start on the client.
+Fetch above the portal and pass the data in.
+
+The second is the reverse: a page another framework or a server template owns, with one region that should be Solid.
+[`render`](/reference/solid-web/rendering-ssr/render) mounts a tree into a node and returns a disposer:
+
+```ts
+import { render } from "@solidjs/web";
+import { MiniCart } from "./MiniCart";
+
+const node = document.getElementById("mini-cart")!;
+const dispose = render(() => <MiniCart />, node);
+
+// When the host removes the region:
+dispose();
+```
+
+`dispose` disposes the reactive root, removes the delegated event listeners the root added, and empties the container.
+`render` creates the owner that every primitive inside `MiniCart` attaches to, and it renders fresh DOM; for a region the server already rendered, use [`hydrate`](/reference/solid-web/rendering-ssr/hydrate) instead.
+
+## Feed an outside source into the graph
+
+A stock feed pushes the quantity on hand for a product.
+Its values enter Solid through a signal written from the subscription callback, and the subscription is tied to the effect that opened it:
+
+```ts
+import { createEffect, createSignal, type Accessor } from "solid-js";
+import { stockFeed } from "./stockFeed";
+
+export function createStock(productId: Accessor<string>) {
+	const [stock, setStock] = createSignal<number>();
+
+	createEffect(
+		() => productId(),
+		(id) => stockFeed.subscribe(id, (count) => setStock(count))
+	);
+
+	return stock;
+}
+```
+
+Each push updates whatever reads `stock()`; change the product and the previous subscription's unsubscribe function, returned from the effect function, runs before the new one opens.
+
+The write is allowed because it records an observation, not a copy of another reactive value; [Let external observations become new inputs](/guides/avoid-unnecessary-effects#let-external-observations-become-new-inputs) draws that line.
+A `Map`, class instance, or `Date` the library hands over goes in a signal as one value; a store wraps plain objects and arrays.
+
+:::advanced[Bridging a whole reactive system]
+When the outside source is itself a reactive system, such as MobX or Vue reactivity, and its values are read directly inside Solid computations, [`enableExternalSource`](/reference/solid-js/advanced/interop-async/enable-external-source) registers an adapter once for the whole app.
+Its `factory` receives each computation's function and a `trigger`; it returns `track`, which runs the function under the external library's tracking, and `dispose`.
+Solid wraps every computation with the adapter, re-runs a computation when its `trigger` is called, and calls `dispose` when the computation is disposed.
+Several calls chain, each wrapping the previous adapter.
+For a library with a `subscribe` method, the signal above is the smaller tool.
+:::
+
+## Keep it off the server
+
+The map library reads `window` when it is imported, so importing it in a component that renders on the server fails before any component code runs.
+[`clientOnly`](/reference/solid-web/rendering-ssr/client-only) takes the dynamic import and returns a component that renders only in the browser:
+
+```tsx
+import { clientOnly } from "@solidjs/web";
+
+const StoreMap = clientOnly(() => import("./StoreMap"));
+
+function StoreLocator() {
+	return (
+		<StoreMap fallback={<div class="map-placeholder" />} center={[51.5, 0]} />
+	);
+}
+```
+
+The server renders the fallback and does not run the import.
+The browser hydrates the fallback, waits for the module and for hydration to settle, and swaps in `StoreMap` with the props it was given.
+By default the import starts as soon as `clientOnly` is called; pass `{ lazy: true }` to start it at the component's first render.
+
+:::tip[Fetch above the boundary]
+Async reads inside the imported component start in the browser, after the swap.
+Create the memo for the store list in `StoreLocator`, which renders on the server, and pass the result to `StoreMap` as a prop.
+:::
+
+When only one call needs the library, a dynamic import inside `onSettled` keeps the rest of the component on the server:
+
+```tsx
+import { onSettled } from "solid-js";
+
+function StoreMap(props: { center: [number, number] }) {
+	let container!: HTMLDivElement;
+
+	onSettled(() => {
+		let map: MapInstance | undefined;
+		let disposed = false;
+		import("map-lib").then(({ createMap }) => {
+			if (disposed) return;
+			map = createMap(container, { center: props.center });
+		});
+		return () => {
+			disposed = true;
+			map?.remove();
+		};
+	});
+
+	return <div ref={container} class="map" />;
+}
+```
+
+The callback runs only in the browser, and the `disposed` flag covers the case where the component leaves the page before the import resolves.
+The [SSR-safe code](/guides/ssr-safe-code) guide covers `isServer` and the other shapes browser-only code takes.
+
+## Common problems
+
+### `window is not defined` at import
+
+A library reads `window` or `document` in its module body, and the component that imports it renders on the server.
+Wrap the component in `clientOnly`, or move the import into an `onSettled` callback.
+See [Keep it off the server](#keep-it-off-the-server).
+
+### The chart draws once and never updates
+
+The data is read inside `onSettled` or inside the effect function, neither of which tracks.
+Read it in the compute function of `createEffect` and pass the value to the effect function, as in [Create the instance once, update it in an effect](#create-the-instance-once-update-it-in-an-effect).
+
+### The custom element ignores an object or array prop
+
+The value was set as an attribute, which the browser stores as a string.
+Use the `prop:` namespace, `prop:disabledDates={holidays()}`, so Solid assigns the property.
+
+### The handler for a custom event never fires
+
+`onDateChange` listens for `datechange`; a name with uppercase letters or a hyphen never matches.
+Add the listener from a `ref` directive with the exact name.
+If the event uses a delegated name such as `input` and the element dispatches it without `bubbles: true`, the root listener never sees it either.
+
+### An effect or cleanup inside a `ref` callback never runs
+
+Ref callbacks run without an owner.
+Move the setup into `onSettled` in the component body, or into a directive factory that returns the callback.
+See [An effect or onCleanup inside a ref callback never runs](/concepts/components-and-jsx#an-effect-or-oncleanup-inside-a-ref-callback-never-runs).
+
+## Recap
+
+- Read a `ref` variable after the JSX has run, and do setup that needs the element in the document inside `onSettled`.
+- Create a library instance once in `onSettled` and return its teardown; push each new value with an effect whose compute function reads every input.
+- On a custom element, plain attributes are strings; use `prop:` for properties and `onXxx` for lowercase event names.
+- `Portal` moves a subtree to another node without leaving the component's scope; the server renders nothing for it.
+- `render` mounts Solid into a node another host owns and returns the disposer that unmounts it.
+- Bring outside values in by writing a signal from the subscription callback, and return the unsubscribe function from the effect function.
+- Wrap a browser-only component in `clientOnly`, or import the library inside `onSettled`.
+
+## Next steps
+
+- [Custom primitives](/guides/custom-primitives): package the chart, the feed, and the map into `createX` functions with the owner and cleanup rules this page relied on.
+- [SSR-safe code](/guides/ssr-safe-code): the full checklist for code that runs on both sides, including hydration mismatches from library output.
+- [Rendering and SSR](/concepts/rendering-and-ssr): `render`, `hydrate`, and where `clientOnly` sits among the rendering functions.
+- [Avoid unnecessary effects](/guides/avoid-unnecessary-effects): the two cases where an effect is the right tool, both of which this page used.

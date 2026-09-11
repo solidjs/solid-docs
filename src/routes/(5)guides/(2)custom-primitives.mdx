@@ -1,0 +1,394 @@
+---
+title: "Custom primitives"
+version: "2.0"
+description: "Move repeated reactive setup into a createX function that runs inside an owner, accepts accessors, returns accessors, cleans up what it starts, and stays correct during server rendering."
+---
+
+The catalog page debounces its search query before it calls `searchProducts`.
+The orders page switches from a table to cards below a viewport width.
+The checkout page keeps a cart draft in `localStorage` so a refresh does not lose it.
+Each of those is a signal, a timer or a listener, and a cleanup, and the same six lines now sit in three components with small differences between them.
+
+A custom primitive is a function that packages those lines: it creates signals, memos, and effects, and returns what the component needs to read.
+Solid has no rules about where such a function may be called beyond the ones every primitive already follows, and this guide is about those rules.
+The [Reactivity](/concepts/reactivity) page explains tracking, effects, and ownership; this page assumes them.
+
+## A primitive is a function that runs inside an owner
+
+Start with the debounce.
+The search box should not call the server on every keystroke, so the query signal should change only after typing pauses:
+
+```ts
+import { createSignal, onCleanup } from "solid-js";
+
+export function createDebouncedSignal(initial: string, ms: number) {
+	const [value, setValue] = createSignal(initial);
+	let timer: ReturnType<typeof setTimeout> | undefined;
+
+	const setDebounced = (next: string) => {
+		clearTimeout(timer);
+		timer = setTimeout(() => setValue(next), ms);
+	};
+
+	onCleanup(() => clearTimeout(timer));
+
+	return [value, setDebounced] as const;
+}
+```
+
+```tsx
+import { For, Loading, createMemo } from "solid-js";
+import { createDebouncedSignal } from "./createDebouncedSignal";
+import { searchProducts } from "../data/products";
+
+function SearchBox() {
+	const [query, setQuery] = createDebouncedSignal("", 150);
+	const results = createMemo(() => searchProducts(query()));
+
+	return (
+		<>
+			<input
+				type="search"
+				onInput={(event) => setQuery(event.currentTarget.value)}
+			/>
+			<Loading fallback={<p>Searching…</p>}>
+				<ul>
+					<For each={results()}>{(product) => <li>{product.name}</li>}</For>
+				</ul>
+			</Loading>
+		</>
+	);
+}
+```
+
+Type `mug` and one request starts, 150 milliseconds after the last keystroke; `results` never sees `m` or `mu`.
+Navigate away while a timer is pending and the timer is cleared.
+
+The primitive works because of where it is called.
+`SearchBox` runs once, and while it runs, Solid records the component as the current owner.
+`createSignal` and `onCleanup` attach to whatever owner is current, so the signal and the cleanup belong to `SearchBox` and are disposed with it.
+[Ownership](/concepts/reactivity#ownership) explains the owner tree; the rule for primitives is that a `createX` function is called in a component body, or in another primitive that is, and never later.
+Within the body it is a plain function call: inside an `if`, inside a loop, or after an early return, because there is no second run whose call order has to match the first.
+
+:::pitfall[Calling a primitive from an event handler]
+
+```tsx
+// Avoid: a new signal and a new cleanup on every keystroke, owned by nothing
+<input
+	onInput={(event) => {
+		const [query, setQuery] = createDebouncedSignal("", 150);
+		setQuery(event.currentTarget.value);
+	}}
+/>;
+
+// Prefer: create it once in the body, and call the setter from the handler
+const [query, setQuery] = createDebouncedSignal("", 150);
+<input onInput={(event) => setQuery(event.currentTarget.value)} />;
+```
+
+Each keystroke of the `Avoid` version creates a signal that nothing reads, and development warns `[NO_OWNER_CLEANUP] onCleanup called outside a reactive context will never be run`.
+An effect created the same way warns `[NO_OWNER_EFFECT] Effects created outside a reactive context will never be disposed`, and runs for the life of the page.
+If a primitive should start in response to an event, create it in the body and gate it on a signal the handler sets.
+:::
+
+## Clean up what you start
+
+The orders page shows a table on wide screens and a card list otherwise.
+A media query listener is the kind of thing a primitive should own, because the listener has to be removed when the page goes away:
+
+```ts
+import { createSignal, onSettled } from "solid-js";
+
+export function createMediaQuery(query: string) {
+	const [matches, setMatches] = createSignal(false);
+
+	onSettled(() => {
+		const media = window.matchMedia(query);
+		setMatches(media.matches);
+		const onChange = (event: MediaQueryListEvent) => setMatches(event.matches);
+		media.addEventListener("change", onChange);
+		return () => media.removeEventListener("change", onChange);
+	});
+
+	return matches;
+}
+```
+
+```tsx
+function Orders() {
+	const wide = createMediaQuery("(min-width: 60rem)");
+	return (
+		<Show when={wide()} fallback={<OrderCards />}>
+			<OrderTable />
+		</Show>
+	);
+}
+```
+
+Resize the window across 60rem and the page switches between the table and the cards.
+Leave the page and the `change` listener is removed.
+
+[`onSettled`](/reference/solid-js/lifecycle-actions/on-settled) runs its callback once, after the component's first render has settled, and the cleanup the callback returns runs when the owner is disposed.
+It is the home for setup that touches the browser, because the callback does not run during server rendering.
+`matches` starts as `false` on both sides, so the server renders the cards and the browser switches to the table after hydration if the query matches.
+The [SSR-safe code](/guides/ssr-safe-code) guide covers what to do when that first frame matters.
+
+Use [`onCleanup`](/reference/solid-js/advanced/specialized-reactivity/on-cleanup) when there is nothing to set up after render and only something to release, as the debounce did with its timer.
+It registers a callback on the current owner and nothing else.
+
+:::caution[Return the cleanup from onSettled; do not register one inside it]
+Inside an `onSettled` callback, `onCleanup` throws `[CLEANUP_IN_FORBIDDEN_SCOPE] Cannot use onCleanup inside createTrackedEffect or onSettled; return a cleanup function instead`.
+The same callback may not create signals, memos, or effects; development throws `[PRIMITIVE_IN_FORBIDDEN_SCOPE]`.
+Create primitives in the body of the `createX` function, and use the callback for the imperative setup and its returned teardown.
+:::
+
+## Accept accessors or values
+
+`createMediaQuery("(min-width: 60rem)")` takes a string, and a string is fine while the query is a constant.
+The moment the query comes from a prop or a signal, a plain parameter freezes it:
+
+```tsx
+// Avoid: props.breakpoint is read once, when the body runs
+const wide = createMediaQuery(props.breakpoint);
+
+// Prefer: pass a function, and let the primitive read it in a tracking scope
+const wide = createMediaQuery(() => props.breakpoint);
+```
+
+Run the `Avoid` version and change `breakpoint` in the parent: `wide` keeps answering for the first query, and development warns `[STRICT_READ_UNTRACKED]` with the component name, because a prop read in the component body is a one-time read.
+
+The `Prefer` version needs the primitive to accept either shape.
+The pattern is a `MaybeAccessor<T>` parameter and an `access` helper that unwraps it:
+
+```ts
+import { createEffect, createSignal, type Accessor } from "solid-js";
+
+export type MaybeAccessor<T> = T | Accessor<T>;
+
+export function access<T>(value: MaybeAccessor<T>): T {
+	return typeof value === "function" ? (value as Accessor<T>)() : value;
+}
+
+export function createMediaQuery(query: MaybeAccessor<string>) {
+	const [matches, setMatches] = createSignal(false);
+
+	createEffect(
+		() => access(query),
+		(current) => {
+			const media = window.matchMedia(current);
+			setMatches(media.matches);
+			const onChange = (event: MediaQueryListEvent) =>
+				setMatches(event.matches);
+			media.addEventListener("change", onChange);
+			return () => media.removeEventListener("change", onChange);
+		}
+	);
+
+	return matches;
+}
+```
+
+Change `breakpoint` in the parent and the old listener is removed, a new `MediaQueryList` is created for the new query, and `wide` answers for it.
+
+The setup moved from `onSettled` into [`createEffect`](/reference/solid-js/reactivity/create-effect) because the input can now change.
+The compute function reads the input, the effect function does the browser work and returns its cleanup, and Solid runs that cleanup before the next effect run and on disposal.
+Like `onSettled`, the effect function does not run during server rendering.
+[`Accessor<T>`](/reference/solid-js/types/reactive-types) is the type of a signal getter and of any `() => T`, so a caller can pass a signal, a memo, or an arrow function over props.
+
+Take a plain `T` only for a value the primitive reads once by design, such as `initial` in `createDebouncedSignal`.
+Name such parameters so that the one-time read is visible.
+
+## Return accessors, not values
+
+The same rule applies on the way out.
+A primitive returns something the caller reads inside a tracking scope:
+
+```ts
+// Avoid: the boolean is read here, in the component body, once
+return matches();
+
+// Prefer: return the accessor and let the JSX call it
+return matches;
+```
+
+The `Avoid` version returns `false` forever, and development warns `[STRICT_READ_UNTRACKED]` at the return.
+The `Prefer` version returns a function, and `wide()` in the JSX subscribes the JSX to the signal.
+
+Return a tuple, `[value, setValue] as const`, when the primitive is a signal with extra behavior, so callers destructure it the way they destructure `createSignal`.
+Return an object of accessors and functions, as `createCart` does in [Share state between components](/concepts/reactivity#share-state-between-components), when there are several values or actions.
+A store proxy is already a live view, so a primitive can return a store as it is.
+
+## Async inside a primitive
+
+A primitive may return a memo whose function returns a promise.
+The product page and the cart both need a product by id, so wrap the server function once:
+
+```ts
+import { createMemo } from "solid-js";
+import { getProduct } from "../data/products";
+import { type MaybeAccessor, access } from "./access";
+
+export function createProduct(id: MaybeAccessor<string>) {
+	return createMemo(() => getProduct(access(id)));
+}
+```
+
+```tsx
+function ProductTitle(props: { id: string }) {
+	const product = createProduct(() => props.id);
+
+	return (
+		<Loading fallback={<p>Loading…</p>}>
+			<h1>{product().name}</h1>
+		</Loading>
+	);
+}
+```
+
+The first read of `product()` shows the `Loading` fallback until `getProduct` resolves.
+Change `props.id` and the current name stays on screen while the next product loads.
+
+Nothing about the primitive is async-specific.
+The memo is created under the component's owner, and the caller's JSX reads it, so the nearest `Loading` boundary above that read is the one that responds.
+[Async reactivity](/concepts/async-reactivity) explains the first load, the held update, and `isPending`.
+For a list whose items should keep their identity across refetches, return the function form of `createStore` instead; [Fetch into a store](/concepts/stores#fetch-into-a-store) shows it.
+
+## Sync with something outside Solid
+
+The cart draft has to survive a refresh, so it lives in a store and in `localStorage` at the same time.
+Reading storage is setup after render; writing it is an effect at the boundary where Solid's state leaves Solid:
+
+```ts
+import { createEffect, createStore, deep, onSettled } from "solid-js";
+
+const STORAGE_KEY = "cart:draft";
+
+export function createCartDraft() {
+	const [cart, setCart] = createStore({ items: [] as CartItem[] });
+
+	onSettled(() => {
+		const saved = localStorage.getItem(STORAGE_KEY);
+		if (saved) {
+			setCart((draft) => {
+				draft.items = JSON.parse(saved).items;
+			});
+		}
+	});
+
+	createEffect(
+		() => JSON.stringify(deep(cart)),
+		(json) => localStorage.setItem(STORAGE_KEY, json),
+		{ defer: true }
+	);
+
+	return [cart, setCart] as const;
+}
+```
+
+Add a mug, refresh, and the mug is still in the cart.
+
+`onSettled` reads storage once, after hydration, and writes the saved items into the store through the setter's draft.
+[`deep`](/reference/solid-js/advanced/store-advanced/deep) subscribes the compute function to every level of the store and returns its plain view, so any change to any item re-runs the effect.
+`defer: true` skips the effect's first run, so the empty seed is never written to storage; only changes are.
+
+Neither the `onSettled` callback nor the effect function runs during server rendering.
+The server renders an empty cart, and the browser fills the draft in after hydration.
+For a check the body itself has to make, [`isServer`](/reference/solid-web/rendering-ssr/is-server) from `@solidjs/web` is a build-time constant, `true` in the server build and `false` in the browser build.
+The [SSR-safe code](/guides/ssr-safe-code) guide covers the cases where the two sides render different first frames.
+
+## Run outside a component
+
+Sometimes the work a primitive starts finishes after the body has returned.
+The account page loads its analytics module on demand, and the effect that reports page views can only be created once the module has arrived, from a promise callback that has no owner:
+
+```ts
+import {
+	createEffect,
+	getOwner,
+	isDisposed,
+	onSettled,
+	runWithOwner,
+	type Accessor,
+} from "solid-js";
+
+export function createPageViews(path: Accessor<string>) {
+	const owner = getOwner();
+
+	onSettled(() => {
+		import("./analytics").then((analytics) => {
+			if (!owner || isDisposed(owner)) return;
+			runWithOwner(owner, () => {
+				createEffect(
+					() => path(),
+					(current) => analytics.pageView(current)
+				);
+			});
+		});
+	});
+}
+```
+
+Navigate within the account area and each path is reported once the module has loaded; leave the account area before it loads and nothing is created.
+
+[`getOwner`](/reference/solid-js/advanced/owner-introspection/get-owner) captures the component's owner while the body runs.
+[`runWithOwner`](/reference/solid-js/advanced/owner-introspection/run-with-owner) re-enters it later, so the effect created in the callback is disposed with the component.
+[`isDisposed`](/reference/solid-js/advanced/owner-introspection/is-disposed) guards the callback against a component that has already left the page.
+
+When there is no component at all, [`createRoot`](/reference/solid-js/advanced/owner-introspection/create-root) creates an owner and hands back its disposer:
+
+```ts
+import { createRoot } from "solid-js";
+
+const dispose = createRoot((dispose) => {
+	const [query, setQuery] = createDebouncedSignal("", 150);
+	setQuery("mug");
+	return dispose;
+});
+
+dispose();
+```
+
+Use it in a test of the primitive itself, or in an integration that hosts Solid reactivity in code that has no `render` call.
+Application code should not need it; state that several components share belongs in [context](/concepts/components-and-jsx#context), not in a root at module scope.
+
+## Common problems
+
+### The effect inside my primitive runs, but its cleanup never does
+
+The primitive was called from an event handler, a promise callback, or a `ref` callback, none of which has an owner.
+Development warns `[NO_OWNER_EFFECT]` or `[NO_OWNER_CLEANUP]` at the call.
+Call the primitive in the component body, or capture the owner with `getOwner` and re-enter it with `runWithOwner`.
+
+### `onCleanup` throws inside `onSettled`
+
+`onSettled` callbacks may not register cleanups or create primitives; development throws `[CLEANUP_IN_FORBIDDEN_SCOPE]` or `[PRIMITIVE_IN_FORBIDDEN_SCOPE]`.
+Return the cleanup function from the callback, and create signals and effects in the body of the primitive.
+
+### The value the primitive returns never changes
+
+Either the caller passed a plain value where the primitive reads it once, such as `createMediaQuery(props.breakpoint)`, or the primitive returned `matches()` instead of `matches`.
+Both read a reactive value in the component body, and development warns `[STRICT_READ_UNTRACKED]`.
+Pass `() => props.breakpoint`, and return the accessor.
+
+### The primitive works in the browser and crashes the server render
+
+Setup that touches `window`, `matchMedia`, or `localStorage` is in the body of the primitive.
+Move it into an `onSettled` callback or an effect function, neither of which runs on the server, or guard it with `isServer`.
+The [SSR-safe code](/guides/ssr-safe-code) guide has the full checklist.
+
+## Recap
+
+- Call a `createX` function in a component body or in another primitive, never in an event handler or a callback; primitives attach to the owner that is current when they run.
+- Register teardown where the setup is: `onCleanup` for something started in the body, a returned function from `onSettled` or an effect function for something started there.
+- Accept `MaybeAccessor<T>` and unwrap it inside a tracking scope; a plain parameter is a one-time read.
+- Return accessors, tuples of accessors, or a store; never the result of calling one.
+- Return an async memo as you would a sync one; the caller's `Loading` boundary handles the wait.
+- Read browser state in `onSettled`, write it in an effect function, and use `defer: true` when the first run should not write.
+- Capture the owner with `getOwner` and re-enter it with `runWithOwner` when a primitive must create something after an `await`.
+
+## Next steps
+
+- [Avoid unnecessary effects](/guides/avoid-unnecessary-effects): which of the values a primitive returns should be memos, and when its effect is one that should not exist.
+- [Integrate non-Solid code](/guides/integrate-non-solid-code): the same owner and cleanup rules applied to charting libraries, maps, and web components.
+- [SSR-safe code](/guides/ssr-safe-code): the checklist for primitives whose first frame differs between server and browser.
+- [TypeScript](/guides/typescript): typing `Accessor`, `Setter`, and `MaybeAccessor` parameters and return values.

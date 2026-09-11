@@ -1,0 +1,361 @@
+---
+title: "SSR-safe code"
+version: "2.0"
+description: "Keep browser APIs, per-run values, and client-only data out of the server render, and read each hydration warning to find the line that made the server and the browser disagree."
+---
+
+The storefront passed `vite build`, and the first request to the dev server with `ssr: true` printed `ReferenceError: window is not defined` from the cart drawer.
+Moving that line fixed the crash, and the browser console then filled with `Hydration structure mismatch` warnings from the sale banner, which the server rendered and the browser decided not to.
+
+Both problems have the same shape: one component source runs on the server and in the browser, and a line that gives a different answer in each place breaks one of them.
+[Rendering and SSR](/concepts/rendering-and-ssr) explains the model.
+This guide is the checklist for the code: where each line runs, which lines cannot run on the server, which values must not differ, and how to read the warnings when they do.
+
+## Where each line runs
+
+One component, with each kind of line marked:
+
+```tsx
+import {
+	createEffect,
+	createMemo,
+	createSignal,
+	createStore,
+	onSettled,
+} from "solid-js";
+import { getCart } from "./cart.server";
+
+// Module scope: both sides; on the server, once per process, not per request
+const currency = new Intl.NumberFormat("en-US", {
+	style: "currency",
+	currency: "USD",
+});
+
+export function CartSummary() {
+	// Component body: both sides; on the server, once per request
+	const [open, setOpen] = createSignal(false);
+	// The store's function: both sides; the body of getCart: server only
+	const [cart] = createStore(() => getCart(), { items: [] as CartItem[] });
+	const total = createMemo(() =>
+		cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+	);
+
+	createEffect(
+		// Compute function: both sides
+		() => total(),
+		// Effect function: browser only
+		(amount) => {
+			document.title = `Cart (${currency.format(amount)})`;
+		}
+	);
+
+	// onSettled callback: browser only
+	onSettled(() => {
+		document.getElementById("cart-toggle")?.focus();
+	});
+
+	return (
+		<aside>
+			<button id="cart-toggle" onClick={() => setOpen(!open())}>
+				{cart.items.length} items, {currency.format(total())}
+			</button>
+		</aside>
+	);
+}
+```
+
+Request the page and the server runs the module once, the component body once per request, the store's function and the memo, and the compute function of the effect.
+It does not run the effect function or the `onSettled` callback: on the server `createEffect` runs the compute function once and drops the effect function, and `onSettled` is a no-op that reserves a hydration id.
+The browser runs all of it, and `document.title` changes after hydration.
+
+The rule for browser-only work follows from that list: put it in an effect function or `onSettled`.
+Event handlers also run only in the browser, because the server has no events to handle.
+
+A `"use server"` function is the reverse case.
+Its body runs on the server on both paths; in the browser the call becomes an HTTP request, and during a server render it runs in the same process under the request event.
+[What the call becomes](/building-apps/server-functions#what-the-call-becomes) describes both paths.
+
+Module scope is the case that surprises people.
+A `const` at the top of a file is evaluated once when the server entry loads and then shared by every request, so a signal or store there is one object for every visitor.
+[Module-level state and the server](/guides/state-management#module-level-state-and-the-server) shows what that does to the cart and where to create the store instead.
+
+:::caution[A setter called during a server render lands as inert data]
+A server render is one pass from inputs to HTML.
+Calling `setOpen(true)` in the component body on the server does not re-render anything, and development prints a `[SERVER_WRITE]` warning the first time it happens.
+[A write on the server did nothing](/guides/debugging-reactivity#a-write-on-the-server-did-nothing) explains the warning and what the write should have been.
+:::
+
+## Browser APIs
+
+The cart drawer wants to know whether the viewport is narrow.
+`window.matchMedia` in the component body is the line that printed `window is not defined`:
+
+```tsx
+import { createSignal, onSettled } from "solid-js";
+
+// Avoid: matchMedia runs in the component body, on the server too
+function CartDrawer() {
+	const compact = window.matchMedia("(max-width: 40rem)").matches;
+	return <aside class={compact ? "drawer drawer-compact" : "drawer"}>…</aside>;
+}
+
+// Prefer: ask the browser after hydration, and let the answer be a signal
+function CartDrawer() {
+	const [compact, setCompact] = createSignal(false);
+
+	onSettled(() => {
+		const query = window.matchMedia("(max-width: 40rem)");
+		setCompact(query.matches);
+		const update = (event: MediaQueryListEvent) => setCompact(event.matches);
+		query.addEventListener("change", update);
+		return () => query.removeEventListener("change", update);
+	});
+
+	return (
+		<aside class={compact() ? "drawer drawer-compact" : "drawer"}>…</aside>
+	);
+}
+```
+
+Run the `Avoid` version with `ssr: true` and the server render throws before the drawer produces any HTML.
+In the `Prefer` version the server renders `class="drawer"`, the browser hydrates the same markup, and the `onSettled` callback reads the media query and updates the class once.
+Resizing the window updates it again through the listener, and the returned cleanup removes the listener when the drawer is disposed.
+[Custom primitives](/guides/custom-primitives#clean-up-what-you-start) turns this into a reusable `createMediaQuery`.
+
+Some helpers are called from places that have no owner, such as a formatting function shared with server code.
+For those, [`isServer`](/reference/solid-web/rendering-ssr/is-server) from `@solidjs/web` is a build-time constant, `true` in the server build and `false` in the browser build, so the bundler drops the branch that cannot run:
+
+```ts
+import { isServer } from "@solidjs/web";
+
+export function prefersReducedMotion() {
+	if (isServer) return false;
+	return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+```
+
+`isServer` stops the crash; it does not make the two renders agree.
+A helper like this returns `false` on the server and possibly `true` in the browser, so use its result in an effect function or `onSettled`, not in JSX that decides which elements exist.
+
+For a component that cannot be made safe, such as a map or a rich text editor whose library touches `window` at import, [`clientOnly`](/reference/solid-web/rendering-ssr/client-only) renders a fallback on the server and swaps the component in after hydration.
+[Keep it off the server](/guides/integrate-non-solid-code#keep-it-off-the-server) covers it, including the `{ lazy: true }` option.
+
+## Values that differ on every run
+
+The product page shows a promotion banner to half of its visitors.
+`Math.random()` in JSX picks a different half on the server and in the browser:
+
+```tsx
+import { Show } from "solid-js";
+
+// Avoid: the server and the browser each roll their own value
+<Show when={Math.random() < 0.5}>
+	<aside class="promo">Free shipping on orders over $50</aside>
+</Show>;
+
+// Prefer: one side decides and the other receives the decision
+<Show when={props.product.promo}>
+	<aside class="promo">{props.product.promo}</aside>
+</Show>;
+```
+
+Run the `Avoid` version and half of the page loads disagree.
+When the server rendered the banner and the browser did not, development warns after hydration with `Hydration completed with 1 unclaimed server-rendered node(s):` followed by the banner's HTML, and the server's banner stays in the document with nothing attached to it.
+When the browser rendered it and the server did not, development warns `Hydration key miss for "..."`: the browser created the `<aside>` as a detached element, and the banner is not on the page.
+
+In the `Prefer` version `getProduct` decides on the server, in the same request that renders the page, and the browser reads the same field from the same data.
+The rule covers `Date.now()`, `Math.random()`, `crypto.randomUUID()`, `navigator.language`, and any other value the two sides compute independently: when the value decides which elements exist, compute it once, on the server, and pass it as data.
+
+:::note[Text is not compared during hydration]
+Hydration claims the server's nodes by position and checks element tags in development; it does not compare text.
+`<p>Rendered at {Date.now()}</p>` fires no warning, and the server's text stays on the page.
+The warnings in this guide come from values that change the structure: a `Show`, a list length, or an element that exists on one side only.
+:::
+
+Ids are the other common per-run value.
+The checkout address form labels each input with a generated id, and a counter or `Math.random()` gives the server and the browser different strings.
+[`createUniqueId`](/reference/solid-js/components-context/create-unique-id) derives the id from the component's position in the owner tree, on both sides:
+
+```tsx
+import { createUniqueId } from "solid-js";
+
+function Field(props: { label: string; value: string }) {
+	const id = createUniqueId();
+	return (
+		<>
+			<label for={id}>{props.label}</label>
+			<input id={id} value={props.value} />
+		</>
+	);
+}
+```
+
+On the server and during hydration, each call takes the next child id of the current owner, so the `for` attribute the server wrote is the `id` the browser hydrates.
+Outside hydration, in a client-only render, it returns `cl-` followed by a counter.
+Call it during component setup; on the server it throws `createUniqueId cannot be used outside of a reactive context` when there is no owner.
+
+For a value that must count in the browser, such as "sale ends in 2:14", render a server-provided value first and let the browser take over after hydration:
+
+```tsx
+import { createSignal, onSettled } from "solid-js";
+
+function SaleCountdown(props: { endsAt: number; serverNow: number }) {
+	const [now, setNow] = createSignal(props.serverNow);
+
+	onSettled(() => {
+		const timer = setInterval(() => setNow(Date.now()), 1000);
+		return () => clearInterval(timer);
+	});
+
+	return <p>Sale ends in {formatRemaining(props.endsAt - now())}</p>;
+}
+```
+
+`serverNow` comes from the server function that returned the product, so both sides render the same first text, and the interval starts only in the browser.
+
+## Data the server does not have
+
+The cart draft lives in `localStorage`, which exists only in the browser.
+The server renders the cart it can see, an empty one, and the browser fills the draft in after hydration; [Sync with something outside Solid](/guides/custom-primitives#sync-with-something-outside-solid) has that primitive, with `onSettled` for the read and `createEffect` for the write.
+The cost is a first frame that shows an empty cart to a visitor who has three items in it.
+
+When the server should render the real cart, move the data to where the server can read it.
+A cart id in a cookie arrives with every request, and the server function reads it from the request event:
+
+```ts
+// src/server/cart.ts
+"use server";
+import { getRequestEvent, parseCookieHeader } from "@solidjs/web";
+
+export async function getCart(): Promise<{ items: CartItem[] }> {
+	const event = getRequestEvent();
+	const cookies = parseCookieHeader(event?.request.headers.get("cookie"));
+	const cartId = cookies["cart"];
+	if (!cartId) return { items: [] };
+	return (await database.carts.get(cartId)) ?? { items: [] };
+}
+```
+
+`createStore(() => getCart(), { items: [] as CartItem[] })` in the component now renders three items on the server, and the browser asks the same function and gets the same answer.
+`database.carts.get` is a stand-in for the storage the application uses.
+[Sessions and auth](/building-apps/sessions-and-auth) covers the signed cookie that identifies a customer, and `event.locals.userId` set by middleware replaces the cookie read once the customer is signed in.
+
+Choose by who needs the first frame.
+A draft only the current browser cares about can wait for hydration; a cart that a shared link, a crawler, or a slow connection should see belongs on the server.
+
+## Markup the browser rewrites
+
+The browser's HTML parser does not build every tree it is handed.
+A `<div>` inside a `<p>` closes the paragraph first, a `<tr>` directly inside a `<table>` gets an implied `<tbody>`, and an `<a>` inside an `<a>` ends the outer link.
+The server writes the string as the JSX describes it, the browser builds a different tree from that string, and the client's compiled template expects the tree the JSX described.
+
+The compiler catches this when the whole structure is in one JSX expression.
+A product description written as `<p>` around a `<div>`:
+
+```tsx
+// Avoid: the parser closes <p> when it meets <div>
+<p class="description">
+	<div class="badge">{props.product.badge}</div>
+	{props.product.description}
+</p>;
+
+// Prefer: use an element that may contain flow content
+<div class="description">
+	<div class="badge">{props.product.badge}</div>
+	<p>{props.product.description}</p>
+</div>;
+```
+
+Compile the `Avoid` version and the build fails at the template with `The HTML provided is malformed and will yield unexpected output when evaluated by a browser.`, followed by the HTML as written and the HTML a browser would build from it.
+The check runs on each template's markup with attributes and text stripped, so the two versions in the message are skeletons; compare the tag order to find the moved node.
+
+The compiler cannot see across components.
+A `Description` component that renders `<p>{props.children}</p>` and a parent that passes `<div>` children each compile to a valid template, and the browser still rebuilds the tree at runtime.
+When a hydration warning points at an element whose parent in the Elements panel is not the parent in the JSX, look for nesting that spans a component boundary and fix the outer element.
+
+## Reading the hydration warnings
+
+Development prints one of five messages when the server's DOM and the client's expectations diverge.
+Each one names a different check, and the check says where to look.
+
+### `Hydration structure mismatch: expected <X> as first child of`
+
+The client is walking inside one template and the node at that position is not the element the template expects.
+The variant `Hydration structure mismatch: expected <X> after` reports the same check for a later sibling.
+The line after the message sketches the parent's children with `← expected X` at the node it found, or `← missing` when the position is empty.
+Look for markup the browser rewrote, or for a template root that was claimed from the wrong place because an earlier element shifted the ids.
+
+### `Hydration tag mismatch for key "...": expected <X> but found`
+
+A template root was found under its hydration key, and it is a different element than the template's root.
+The two sides rendered different elements at the same position: a conditional that picked a different branch, or two components whose order differs.
+
+### `Hydration key miss for "...": no server-rendered element carries this key`
+
+The client rendered a template root the server never emitted under that id.
+The message continues with what happened: `A detached element was created instead; its subtree will not appear in the document or become interactive.`
+Look for a branch that runs only in the browser, such as `Show when={!isServer}` or a per-run value, or for a subtree hydrated under a different `renderId` than the server used; the message names that case, and [Controlling hydration](/concepts/rendering-and-ssr#controlling-hydration) covers it.
+
+### `Hydration completed with N unclaimed server-rendered node(s):`
+
+Hydration finished and the server-rendered elements listed under the message were never claimed by the client.
+The server rendered something the browser did not: the mirror image of a key miss.
+
+### `Hydration Mismatch. Unable to find DOM nodes for hydration key`
+
+This one is an error, not a warning.
+`Dynamic` with a string tag, and other code that claims an element without a template to fall back on, throws it when no server node carries the key.
+The cause is the same as a key miss; the difference is that there is no template to create a stand-in from.
+
+## Third-party code
+
+A library that reads `window` in its module body fails at import, before any component runs.
+Wrap the component that uses it in `clientOnly`, or move the import into an `onSettled` callback so it runs only in the browser.
+[Keep it off the server](/guides/integrate-non-solid-code#keep-it-off-the-server) shows both shapes and the `disposed` guard the dynamic import needs.
+
+## Common problems
+
+### `window is not defined` or `document is not defined` on the first request
+
+A module body, a component body, or a compute function reads a browser API, and with `ssr: true` that code runs on the server too.
+Move the read into an effect function or an `onSettled` callback, guard it with `isServer`, or wrap the component in `clientOnly`.
+If the stack points into `node_modules`, the library reads the browser at import; see [Third-party code](#third-party-code).
+
+### `Hydration structure mismatch` after fixing the crash
+
+The two sides now both render, and they render different structures.
+Find the value that differs: a `Math.random()` or `Date.now()` in a condition, a check on `isServer` inside JSX, or data one side has and the other does not.
+[Values that differ on every run](#values-that-differ-on-every-run) and [Data the server does not have](#data-the-server-does-not-have) cover the fixes.
+
+### The build fails with `The HTML provided is malformed`
+
+One JSX template nests elements the browser's parser would move, such as `<div>` inside `<p>` or `<tr>` directly inside `<table>`.
+Compare the two HTML skeletons in the message and change the outer element; [Markup the browser rewrites](#markup-the-browser-rewrites) lists the common cases.
+
+### The cart shows empty, then fills in
+
+The data lives in the browser, in `localStorage` or in memory, so the server renders the empty seed and the browser replaces it after hydration.
+Either accept the first frame or move the data behind a cookie or a session so the server function can return it; see [Data the server does not have](#data-the-server-does-not-have).
+
+### A `<label>` points at a different id than its `<input>`
+
+The id came from a counter or `Math.random()`, so the server and the browser generated different strings.
+Use `createUniqueId`, which derives the id from the owner tree on both sides.
+
+## Recap
+
+- The server runs module scope once per process, the component body once per request, and every compute function; it never runs an effect function or an `onSettled` callback.
+- Put browser-only work in an effect function or `onSettled`; use `isServer` for helpers that have no owner, and `clientOnly` for a component that cannot be made safe.
+- `isServer` prevents the crash and does not make the two renders agree; keep it out of JSX that decides which elements exist.
+- Compute `Math.random()`, `Date.now()`, and other per-run values once, on the server, and pass the result as data.
+- Use `createUniqueId` for ids that appear in both a `for` attribute and an `id` attribute.
+- Render the value the server has, then update from the browser after hydration; or move the data to a cookie or session so the server has it.
+- Nest elements the way the browser's parser will keep them; the compiler catches invalid nesting inside one template and not across components.
+- Read a hydration warning by the check it names: a structure mismatch is a walk inside a template, a key miss is an element the server never rendered, an unclaimed node is one the browser never rendered.
+
+## Next steps
+
+- [Rendering and SSR](/concepts/rendering-and-ssr): the `render`, `hydrate`, and `renderToStream` calls, streaming with `Loading` boundaries, and `HydrationScript`.
+- [Integrate non-Solid code](/guides/integrate-non-solid-code): `clientOnly`, dynamic imports in `onSettled`, and refs for libraries that own their own DOM.
+- [Choose a rendering mode](/guides/choose-a-rendering-mode): whether the storefront needs a server at all, and what each mode asks of the code.
+- [Protected routes](/guides/protected-routes): the account area, where the server's view of the signed-in user decides what renders.

@@ -75,7 +75,7 @@ Pass `{ lazy: true }` to defer the import until the component's first render.
 :::caution[Module-scope state is shared by every request]
 On the server one module instance serves every request, so a signal or store at module scope leaks one user's state into another user's response.
 Create state inside a component or a context provider, which runs once per app in the browser and once per request on the server.
-[Share state between components](/concepts/reactivity#share-state-between-components) shows the pattern.
+[State management](/guides/state-management#module-level-state-and-the-server) shows the pattern and what the server does with the module-scope version.
 :::
 
 ## Client rendering
@@ -124,7 +124,13 @@ Solid assigns hydration keys during SSR so the client build can claim the matchi
 
 ```tsx
 // Avoid: a different element on each side
-<p>{isServer ? "Rendered on the server" : `Rendered at ${Date.now()}`}</p>;
+{
+	isServer ? (
+		<p>Rendered on the server</p>
+	) : (
+		<time>Rendered at {Date.now()}</time>
+	);
+}
 
 // Prefer: the same structure, with the browser-only value filled in after hydration
 const [renderedAt, setRenderedAt] = createSignal<number>();
@@ -135,8 +141,10 @@ onSettled(() => setRenderedAt(Date.now()));
 </p>;
 ```
 
-The `Avoid` version logs, in development, a warning such as `Hydration structure mismatch: expected <p> as first child of` followed by the node it found instead, and the client's bindings for that region attach to the wrong nodes.
+The `Avoid` version logs, in development, a warning such as `Hydration structure mismatch: expected <time> as first child of` followed by the node it found instead, and the client's bindings for that region attach to the wrong nodes.
 The `Prefer` version hydrates cleanly and updates the text once the browser has taken over.
+A value that differs only in its text, such as `<p>{Date.now()}</p>`, produces no warning: hydration adopts the server's text node as it is, so the page keeps showing the server's value until a reactive update replaces it.
+[SSR-safe code](/guides/ssr-safe-code#values-that-differ-on-every-run) goes through these cases and how to read each warning.
 
 When the application owns the full document, include `HydrationScript` once before the application markup.
 It initializes hydration support and records delegated events that fire before the client bundle has hydrated, so a click during the load is not lost.
@@ -291,8 +299,8 @@ See [Server and client boundaries](#server-and-client-boundaries).
 
 ### `Hydration structure mismatch` or `Hydration key miss` in the console
 
-The server and the client rendered different structures for the same region: a conditional on `isServer`, a value such as `Date.now()` or `Math.random()`, or data that differs between the request and the browser.
-Render the same structure on both sides and fill in browser-only values after hydration.
+The server and the client rendered different elements for the same region: a conditional on `isServer` that picks a different tag, a `Show` whose condition depends on `Math.random()`, or data that differs between the request and the browser.
+Render the same structure on both sides and fill in browser-only values after hydration; [Reading the hydration warnings](/guides/ssr-safe-code#reading-the-hydration-warnings) explains what each message checks.
 A key miss whose message mentions namespaces means a subtree was hydrated with a different `renderId` than the server used; see [Controlling hydration](#controlling-hydration).
 
 ### The page renders but the first clicks do nothing
@@ -321,3 +329,4 @@ Put a boundary around the region that depends on the read, so the shell carries 
 - [App structure](/building-apps/app-structure): the generated entries that call `render`, `hydrate`, and `renderToStream` for you.
 - [Boundaries](/concepts/boundaries): how `Loading` placement decides what streams in the shell and what arrives later.
 - [Head and metadata](/building-apps/head-and-metadata): how titles and meta tags declared in components reach the document head on both sides.
+- [SSR-safe code](/guides/ssr-safe-code): the checklist for code that runs in both places, and how to read each hydration warning.

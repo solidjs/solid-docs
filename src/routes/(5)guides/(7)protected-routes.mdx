@@ -1,0 +1,363 @@
+---
+title: "Protected routes"
+version: "2.0"
+description: "Require a signed-in customer for the account area at the data, route, and request layers, redirect a signed-out visitor to sign-in on the server and in the browser, and send them back where they were going."
+---
+
+The account area from [Nested routes and layouts](/routing/solid-router/nested-routes) has three pages: `/account`, `/account/orders`, and `/account/addresses`.
+A signed-out visitor reaches them three ways: a bookmark or a shared link, which is a full page request; the **Account** link in the header, which is a client-side navigation; and a script that calls `getOrders` directly, which never renders anything.
+All three should end at `/sign-in`, and after signing in the visitor should land on the page they asked for, not on the account home.
+
+[Sessions and auth](/building-apps/sessions-and-auth) built the cookie, `getSession()`, and the middleware that sets `event.locals.userId`.
+This guide assembles those pieces into a guard that holds at every layer and uses the account area as the running example.
+
+## Three layers, one decision
+
+The decision is always the same: is there a `userId` on the request event.
+Where the decision runs determines what it protects.
+
+- A check inside each server function protects the data.
+  It runs for a page render, a router navigation, a form post without JavaScript, and a `curl` command alike, because every one of those reaches the function through the same request event.
+- A check in a route guard, a pathless route with a `preload` and a component, protects the navigation.
+  It turns a missing session into a redirect before the account pages render, on the server and in the browser.
+- A check in middleware protects the request.
+  It answers a full page request for `/account/*` with a redirect before any rendering starts.
+
+Each alone is not enough.
+A route guard alone leaves `getOrders` callable by anyone who knows its URL, because a route guard decides what to render and never sees a direct call.
+The server function check alone stops the data and nothing else: in the browser the read receives a response object instead of a navigation, and the page is left without its data.
+Middleware alone never sees a client-side navigation, because a navigation inside the router makes no page request.
+
+## Guard the data first
+
+Every server function under the account area reads the identity from the request event and refuses without it:
+
+```ts
+// src/data/account.ts
+import { getRequestEvent, redirect } from "@solidjs/web";
+import { query } from "@solidjs/router";
+import { paths } from "../router";
+import { database } from "../server/database";
+
+export const getCurrentUser = query(async () => {
+	"use server";
+	const userId = getRequestEvent()?.locals.userId;
+	return userId ? database.customers.find(userId) : null;
+}, "current-user");
+
+export const getOrders = query(async () => {
+	"use server";
+	const userId = getRequestEvent()?.locals.userId;
+	if (!userId) throw redirect(paths["sign-in"]);
+	return database.orders.forCustomer(userId);
+}, "orders");
+```
+
+Call `getOrders` from an HTTP client at the function's URL without the session cookie and the answer is a redirect with no order data in it.
+`locals.userId` was set by the `attachCustomer` middleware in [Authenticate once in middleware](/building-apps/sessions-and-auth#authenticate-once-in-middleware), and the caller cannot supply it, which is why the identity comes from the event rather than from an argument.
+[Authorize on the server](/building-apps/sessions-and-auth#authorize-on-the-server) covers the check itself; this page adds nothing to it except the rule that it goes in every function the account pages read or write.
+
+`getCurrentUser` returns `null` rather than throwing, because a signed-out visitor is a normal state for the header to show.
+Wrapping both in `query` gives the header and the route guard below one request per render, and lets the server-rendered result hydrate without a second fetch, as [Queries render once](/routing/solid-router/server-rendering#queries-render-once) describes.
+
+## Group the routes with a pathless layout
+
+The three account pages need one guard, so the route tree gets one route that owns them.
+Leave `path` off and the route adds to the match without adding to the URL:
+
+```tsx
+// src/router.ts
+export const Router = createRouter({
+	routes: [
+		{ path: "/", component: Home },
+		{ path: "/sign-in", component: SignIn },
+		{
+			preload: ({ location }) =>
+				void requireUser(location.pathname + location.search),
+			component: RequireUser,
+			children: [
+				{
+					path: "/account",
+					component: AccountLayout,
+					children: [
+						{ path: "/", component: Profile },
+						{ path: "/orders", component: Orders },
+						{ path: "/addresses", component: Addresses },
+					],
+				},
+			],
+		},
+		{ path: "*404", component: NotFound },
+	],
+});
+```
+
+```tsx
+// src/pages/RequireUser.tsx
+import { Show, createMemo } from "solid-js";
+import type { RouteProps } from "@solidjs/router";
+import { requireUser } from "../data/account";
+
+export default function RequireUser(props: RouteProps) {
+	const user = createMemo(() =>
+		requireUser(props.location.pathname + props.location.search)
+	);
+
+	return <Show when={user()}>{props.children}</Show>;
+}
+```
+
+Visit `/account/orders` and the match is the pathless route, then `/account`, then `/orders`; the URLs do not change.
+`RequireUser` renders no frame of its own, only the matched page once the check has a user.
+`/sign-in` is a sibling of the group rather than a child of it; a sign-in page inside the guard would redirect to itself.
+
+The preload and the component read the same key, so entering the group makes one request.
+Moving from `/account` to `/account/orders` keeps the pathless route mounted, the same way the layout in [Layouts without a URL segment](/routing/solid-router/nested-routes#layouts-without-a-url-segment) stays mounted across its pages; the memo re-runs with the new path and checks again against the cached `getCurrentUser` result.
+
+## Redirect before render
+
+`requireUser` is the guard the preload starts and the component reads.
+It is a `query` around a plain async function that calls a server function and throws a redirect when there is no user:
+
+```ts
+// src/data/account.ts
+export const requireUser = query(async (next: string) => {
+	const user = await getCurrentUser();
+	if (!user) throw redirect(paths["sign-in"]({ next }));
+	return user;
+}, "require-user");
+```
+
+Open `/account/orders` signed out from a bookmark and the browser lands on `/sign-in?next=%2Faccount%2Forders`.
+Click **Account** in the header signed out and the URL becomes the same sign-in address without the account page painting first: the memo in `RequireUser` is pending, so the navigation is held, and the redirect replaces its target before anything commits.
+Sign in, and the next visit to the account area runs the check again and finds the user, because a router action's completion invalidates every cached query.
+
+The preload is what starts the check as soon as the route matches, and on hover, before `RequireUser` exists; the memo is what holds the navigation until the check answers.
+Both call the same function, and the function has no `"use server"` directive of its own.
+It runs where the read happens, on the server during server rendering and in the browser during a navigation, and calls `getCurrentUser` across the boundary.
+
+:::caution[Throw the redirect in the query, not inside the server function]
+Moving the `throw redirect(...)` into a `"use server"` body and wrapping that function in `query` redirects on a full page request, because the function runs in-process during server rendering, but not on a client-side navigation.
+The server-function transport delivers a redirect to its caller as a response object with the target in an `X-Server-Function-Redirect` header and no `Location`; `query` navigates only on `Location`, so the read settles with that object and the navigation completes as if the check had passed.
+Router actions decode that header, which is why `throw redirect()` inside a server function works from a form or an action.
+For a read, build the redirect in the function `query` wraps, as above.
+:::
+
+Hovering the **Account** link runs the preload with the `"preload"` intent, which starts the request and does not act on its outcome, so a hover never redirects; the click that follows does, whether it reuses that answer or fetches a new one.
+
+:::deep-dive[What the router does with a thrown redirect]
+`query` treats a value thrown by the wrapped function the same way as a returned one.
+When the value is a `Response`, the router copies its headers onto the request event's response and reads its `Location` header.
+A relative `Location` becomes a call to the router's `navigate` with `replace: true`.
+On the server, `navigate` records a 302 with that `Location` on the request event, and the read resolves `undefined` so the render can finish; a `Location` set before the shell flushes turns the whole response into a redirect with no body, and one set after the flush is appended to the stream as a script that sets `window.location`, as the [streaming renderer](/concepts/rendering-and-ssr#streaming-rendering) documents.
+In the browser the read stays pending forever, because the navigation unmounts everything that was waiting on it; the account page never receives a value, `undefined` included.
+Any `X-Revalidate` keys on the redirect are invalidated before the navigation so the destination fetches fresh.
+:::
+
+## Send them back
+
+The sign-in page reads `next` from the URL and hands it to the sign-in action through a hidden field:
+
+```tsx
+// src/pages/SignIn.tsx
+import { action, useSearchParams } from "@solidjs/router";
+import { safeNext, signIn } from "../data/account";
+
+const signInAction = action(signIn);
+
+export default function SignIn() {
+	const [search] = useSearchParams();
+
+	return (
+		<form method="post" action={signInAction}>
+			<input type="hidden" name="next" value={safeNext(search.next) ?? ""} />
+			<label>
+				Email
+				<input name="email" type="email" required />
+			</label>
+			<label>
+				Password
+				<input name="password" type="password" required />
+			</label>
+			<button>Sign in</button>
+		</form>
+	);
+}
+```
+
+```ts
+// src/data/account.ts
+import { markSafeError } from "@solidjs/web";
+import { setSession } from "../server/session";
+import { verifyCredentials } from "../server/customers";
+
+export function safeNext(value: unknown): string | undefined {
+	if (typeof value !== "string") return undefined;
+	if (!value.startsWith("/")) return undefined;
+	if (value.startsWith("//") || value.startsWith("/\\")) return undefined;
+	if (value.startsWith("/sign-in")) return undefined;
+	return value;
+}
+
+export async function signIn(form: FormData) {
+	"use server";
+	const customer = await verifyCredentials(
+		String(form.get("email") ?? ""),
+		String(form.get("password") ?? "")
+	);
+	if (!customer) {
+		throw markSafeError(new Error("Email or password did not match"));
+	}
+
+	await setSession({ userId: customer.id });
+	throw redirect(safeNext(form.get("next")) ?? paths.account);
+}
+```
+
+Arrive at `/sign-in?next=%2Faccount%2Forders`, submit valid credentials, and the router navigates to `/account/orders` with the new session cookie on the response; without JavaScript the browser follows a 303 to the same address.
+`useSearchParams()` decodes the value, so `search.next` is `/account/orders`, and the hidden input carries it through the post.
+[Type search parameters](/routing/solid-router/navigation#type-search-parameters) covers the untyped and schema-typed forms of that read; [Sign in and sign out](/building-apps/sessions-and-auth#sign-in-and-sign-out) owns the credential check and the session write.
+
+`safeNext` accepts one shape: a path on this origin that starts with a single `/`.
+Everything else falls back to the account home.
+
+:::danger[Validate next on the server, not only in the form]
+The hidden input is caller-controlled: anyone can post `next=//attacker.example` to `signIn`, whether or not the sign-in page put it there.
+The server-function transport resolves a redirect target against the request URL, so `//attacker.example` and `/\attacker.example` both resolve to another origin, and the router leaves the app for a target on another origin by setting `window.location.href`.
+The runtime refuses targets whose scheme is not `http` or `https`, and it does not refuse a different `http` origin.
+Run `safeNext` inside `signIn`, where the value is about to become a `Location` header, and treat the copy in the form as a convenience.
+:::
+
+## Middleware for whole sections
+
+A full page request for `/account/orders` from a signed-out visitor can be answered before any rendering starts.
+Add a middleware after the one that reads the session:
+
+```ts
+// src/middleware.ts
+import { getRequestEvent } from "@solidjs/web";
+import { createAPIHandler } from "filesystem-routing/api";
+import routes from "virtual:file-routes";
+import { paths } from "./router";
+
+// attachCustomer from Sessions and auth is defined above this line
+
+function requireAccountSession(
+	request: Request,
+	next: () => Promise<Response>
+) {
+	const url = new URL(request.url);
+	if (
+		url.pathname.startsWith("/account") &&
+		!getRequestEvent()?.locals.userId
+	) {
+		const target = paths["sign-in"]({ next: url.pathname + url.search });
+		return Response.redirect(new URL(target, request.url), 302);
+	}
+	return next();
+}
+
+export default [
+	attachCustomer,
+	requireAccountSession,
+	createAPIHandler(routes),
+];
+```
+
+Request `/account/orders` with no cookie and the server answers `302` with `Location: /sign-in?next=%2Faccount%2Forders`, and no component runs.
+`attachCustomer` is the middleware from [Sessions and auth](/building-apps/sessions-and-auth#authenticate-once-in-middleware); it has to come first in the array, because middleware order is array order.
+[Stop the chain](/building-apps/middleware-and-api-routes#stop-the-chain) covers returning a `Response` without calling `next()`.
+
+Use this layer in addition to the route guard, not instead of it.
+What it adds is a real redirect status on full page requests: the route guard's redirect, when it lands after the shell has flushed, reaches the browser as a script at the end of the stream, after the fallback has already painted.
+What it cannot do is see a client-side navigation, which makes no page request, or a server-function call, which is a request to `/_server` rather than to `/account/*`.
+
+:::caution[A path prefix is not a permission]
+The middleware matches URLs, so it protects exactly the paths that start with `/account` and nothing else.
+The server functions the account pages call are reachable at their own URLs, and the check inside each function is what protects them.
+Adding a prefix to the middleware does not remove a check from a function.
+:::
+
+## Show the right navigation
+
+The header shows **Sign in** or the customer's name from the same `getCurrentUser` read the guard uses:
+
+```tsx
+// src/components/Header.tsx
+import { Loading, Show, createMemo } from "solid-js";
+import { useLocation } from "@solidjs/router";
+import { getCurrentUser } from "../data/account";
+import { paths } from "../router";
+
+export function Header() {
+	const user = createMemo(() => getCurrentUser());
+	const location = useLocation();
+
+	return (
+		<Loading fallback={<span />}>
+			<Show
+				when={user()}
+				fallback={
+					<a
+						href={paths["sign-in"]({
+							next: location.pathname + location.search,
+						})}
+					>
+						Sign in
+					</a>
+				}
+			>
+				{(current) => <a href={paths.account}>{current().name}</a>}
+			</Show>
+		</Loading>
+	);
+}
+```
+
+Load the product page signed out and the header shows **Sign in** linking to `/sign-in?next=%2Fproducts%2Fmug`; the server rendered that link, and the browser adopted the serialized `current-user` result during hydration instead of fetching it again, so there is no request and no change of state on load.
+Sign in and the name appears; sign out through a router `action` that throws `redirect(paths())` and every cached query is invalidated when the action completes, so `getCurrentUser` runs again and the header shows **Sign in** without a full page load.
+
+[State on the server](/guides/state-management#state-on-the-server) explains why the header holds a view of the user rather than a copy.
+`Header` renders inside the router's function child, so `useLocation()` and the `query` read both have a router to bind to.
+
+## Common problems
+
+### The redirect loops between `/sign-in` and `/account`
+
+The sign-in route is a child of the pathless guard route, so the guard redirects to a page it guards.
+Move `/sign-in` beside the group.
+If the routes are right, the session cookie is not coming back on the next request; [Sessions and auth](/building-apps/sessions-and-auth#common-problems) lists the cookie attributes to compare.
+Chained client-side redirects stop after 100 with `Too many redirects` from the router.
+
+### The account page paints, then the sign-in page replaces it
+
+The guard navigates after the user data has arrived, from an effect or a callback, so the page commits and the navigation follows it.
+Throw the redirect from inside the `query` function instead; the read stays pending, the navigation is held, and the sign-in page replaces the target before anything paints.
+On a full page request, add the middleware so the server answers with a redirect status instead of rendering the shell first.
+
+### The server function returns orders for a signed-out caller
+
+The function has no check of its own; a route guard, a hidden link, or a middleware prefix protected the page and not the function.
+Read `getRequestEvent()?.locals.userId` inside the function and throw `redirect()` or `respond()` when it is missing, as [Authorize on the server](/building-apps/sessions-and-auth#authorize-on-the-server) shows.
+
+### After signing in, the visitor lands on another site
+
+`next` was passed to `redirect()` without validation, and a value such as `//attacker.example` resolved to another origin.
+Accept only paths that start with a single `/` and reject `//` and `/\`; run that check inside the server function, not only in the form.
+
+## Recap
+
+- Decide once, on `locals.userId`, and run the decision in every server function, in the route guard, and in middleware; each layer covers a way in that the others do not see.
+- Put the account pages under a pathless route whose `preload` starts the check and whose component renders `props.children` behind it, and keep `/sign-in` beside the group.
+- Make the guard a `query` around a plain async function that calls a server function and throws `redirect()` itself, so the router sees the `Location` on the server and in the browser.
+- Build the sign-in target with `paths["sign-in"]({ next })`; the search object encodes the path.
+- Validate `next` inside the server function: a single leading `/`, no `//`, no `/\`, and not the sign-in page itself.
+- Return a redirect from middleware for full page requests under `/account`, and keep the function checks, because middleware does not see `/_server` or client-side navigations.
+- Read `getCurrentUser()` through `query` in the header so the server result hydrates and a sign-out action refreshes it.
+
+## Next steps
+
+- [Sessions and auth](/building-apps/sessions-and-auth): the cookie, `getSession()`, and the middleware that puts `userId` on the event this guide reads.
+- [Middleware and API routes](/building-apps/middleware-and-api-routes): the chain the `requireAccountSession` middleware joins, and how to protect API routes the same way.
+- [Forms](/guides/forms): inline validation messages and pending state for the sign-in form.
+- [SSR-safe code](/guides/ssr-safe-code): the checklist for code such as `requireUser` that runs on both sides.

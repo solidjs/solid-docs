@@ -44,7 +44,7 @@ Codes fall into a few groups:
 Each finding has one of three severities.
 An error throws and halts execution; the behavior is broken.
 A warning logs to the console; the code runs but is structurally wrong or expensive.
-An `info` finding does not reach the console at all; it is recorded on the structured channel that `DEV.diagnostics.subscribe()` and `@solidjs/diagnostics` read, for cases where the runtime has a lead but not enough proof to interrupt you.
+An `info` finding does not reach the console at all; it is recorded on the structured channel that `OBSERVE.diagnostics.subscribe()` and `@solidjs/diagnostics` read, for cases where the runtime has a lead but not enough proof to interrupt you.
 Do not silence a code you do not understand; each one describes a real defect or a real cost.
 
 ## Something does not update
@@ -130,23 +130,26 @@ The tool for this is attribution: a recording of every scope that re-ran, what c
 Give the scopes you care about names, enable attribution, reproduce the behavior, then ask why a scope ran:
 
 ```ts
-import { DEV, createMemo, createStore } from "solid-js";
+import { createMemo, createStore } from "solid-js";
+import { attribution } from "solid-js/attribution";
 
 const [cart, setCart] = createStore(initialCart, { name: "cart" });
 const total = createMemo(() => sum(cart.items), { name: "total" });
 
-DEV?.attribution.enable();
+attribution.enable();
 
 // reproduce the interaction in the app, then:
-for (const event of DEV!.attribution.why(total)) {
-	console.log(DEV!.attribution.format(event));
+for (const event of attribution.why(total)) {
+	console.log(event.nodeName, event.causes, `${event.selfMs}ms`);
 }
 ```
 
+`solid-js/attribution` resolves to the recording engine in development and to an inert object with the same methods in production, so the import can stay in the code.
+
 Each entry names the write that started the update, the dependency that changed, and the time the recompute took.
 While attribution is enabled the same chains print to the console as collapsed `[why-run]` groups, one per re-run, with the cause chain and dependency changes inside.
-`DEV.attribution.costs()` ranks scopes by self time, including time spent on runs whose result did not change, and ranks writes by how much downstream work each one caused.
-The [`DEV` reference](/reference/solid-js/advanced/diagnostics-dev-hooks/dev) lists the rest of the surface.
+`attribution.costs()` ranks scopes by self time, including time spent on runs whose result did not change, and ranks writes by how much downstream work each one caused.
+The `Attribution` interface exported from `solid-js/attribution` lists the rest of the surface: `history()`, `waterfalls()`, `interactions()`, `navigations()`, and `subscribe()`.
 
 A chain ends at whatever made the root write, not only at the signal's name.
 Writes made inside a compiled event handler are stamped with the interaction (`click on button#add "Add"`), so `event.interaction` on a re-run names the click it traces back to, however many effects relayed it in between.
@@ -166,7 +169,7 @@ The usual causes and their fixes:
 
 A memo that reads a whole store object, or spreads it, depends on every property.
 Read the properties the calculation needs, inside the memo, and nothing else.
-`DEV.attribution.subscriptions(total)` lists the current dependencies of a scope so you can compare them to what the calculation uses.
+`attribution.subscriptions(total)` lists the current dependencies of a scope so you can compare them to what the calculation uses.
 
 ### A chain recomputes because an early link has no equality boundary
 
@@ -247,7 +250,7 @@ was held — the interaction was dead for 640ms.
 
 A hold is silent when none of the following is true while it is open: an `isPending()` or `latest()` read on the held graph, an optimistic value, an `affects()` declaration, or an effect that ran and painted.
 Holds under 300ms are recorded but not reported; from 300ms the finding is `info`, from 500ms it is a warning.
-Both thresholds are options to `DEV.attribution.enable({ holds: { infoMs, warnMs } })`.
+Both thresholds are options to `attribution.enable({ holds: { infoMs, warnMs } })`.
 
 The repair is always to add feedback, never to remove the hold:
 
@@ -262,8 +265,8 @@ A `Loading` boundary above the async source is a different situation: the read n
 A hold that was acknowledged but still ran long is not a diagnostic either; it is recorded as `late` in the feedback tables so the cost is visible without blaming code that waited correctly.
 
 :::deep-dive[Feedback tables, and how a router names its holds]
-`DEV.attribution.holds()` returns every hold from the session, reported or not.
-`DEV.attribution.feedback()` folds holds and re-runs into tables sorted worst-first:
+`attribution.holds()` returns every hold from the session, reported or not.
+`attribution.feedback()` folds holds and re-runs into tables sorted worst-first:
 
 - `sources`: per async source, how many holds it caused, how many were silent, and which affordance acknowledged the rest.
 - `interactions`: per user event, the re-run time it caused and the time it was held, which are the two ways an interaction feels slow.
@@ -382,7 +385,7 @@ The re-run budget and waste checks catch the second kind of bug: a change that m
 `toHaveNoSilentHolds` is the responsiveness gate: it fails when a write was held on async work and nothing on screen acknowledged the wait, and its message names the interaction, the held write, and the source it waited on.
 `toStayWithinHoldBudget(ms)` bounds every hold, acknowledged or not.
 
-The artifact also carries `attribution.holds` and `attribution.feedback`, the same data as `DEV.attribution.holds()` and `feedback()`, so a test can assert on them directly.
+The artifact also carries `attribution.holds` and `attribution.feedback`, the same data the `holds()` and `feedback()` methods return, so a test can assert on them directly.
 Budget files accept `maxSilentHoldMs` and `maxHoldMs` next to the re-run limits.
 
 With `@solidjs/diagnostics` in `package.json`, the Vite plugin also serves the same capture controls at `/__solid/diagnostics` on the dev server, so a script or an agent can record a scenario against the running app.
@@ -392,7 +395,7 @@ Set `diagnostics: false` in the plugin options to turn that off.
 
 - Read the bracketed code first; it is stable across releases and names the defect, and the `in` line names the scope that produced it.
 - For a value that does not update, check in order: is the read in a tracking scope, is the signal called, did the write go through the setter, is the read in the effect's compute function, is the value pending.
-- For a value that updates too often, name the scopes, enable attribution, reproduce, and ask `DEV.attribution.why(scope)`.
+- For a value that updates too often, name the scopes, enable attribution, reproduce, and ask `attribution.why(scope)`.
 - Change the one property on a store draft; a spread copy or a fresh array re-runs every reader of the path.
 - Replace an effect that copies state with a memo; keep the effect only when the write records something from outside the graph.
 - When a click looks dead, add feedback with `isPending`, `latest`, an optimistic value, or `affects`; do not remove the hold.
@@ -404,4 +407,5 @@ Set `diagnostics: false` in the plugin options to turn that off.
 - [Reactivity](/concepts/reactivity): the rules the diagnostics enforce.
 - [Avoid unnecessary effects](/guides/avoid-unnecessary-effects): the fix for most write-placement warnings, with the wrong version shown next to the right one.
 - [Stores](/concepts/stores): per-property tracking, `reconcile`, and why the write path matters.
+- [Performance](/guides/performance): when the extra runs are also slow, which knob each attribution table points at.
 - [Testing](/guides/testing): the test environments the diagnostics run in.

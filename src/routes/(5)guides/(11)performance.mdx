@@ -1,0 +1,284 @@
+---
+title: "Performance"
+version: "2.0"
+description: "Measure a slow catalog page with the browser profiler and Solid's attribution tables, then fix the cause each measurement points at: hot derivations, wide writes, rebuilt rows, waterfalls, unsplit code, and a blocked streaming shell."
+---
+
+The catalog page renders 2,000 products.
+Typing in its search box lags a beat behind each keystroke, and the first paint of the page waits until the product list, the cart badge, and the account menu have all answered.
+Someone suggests memoizing everything; someone else suggests a virtual list.
+
+Both may be right, and neither is worth doing before a measurement says which part is slow.
+This guide is about taking that measurement and reading which knob it points at.
+It does not make speed claims; it describes what Solid does and does not do when a value changes, so the profile can be read against it.
+
+## Measure before changing
+
+Start in the browser's Performance panel: record, type one character in the search box, stop.
+A long task after the keystroke shows the call stack that spent the time, and `performance.mark()` calls around suspect code give the flame chart named spans to look for.
+That tells you where the milliseconds went; the next tool tells you why that code ran.
+
+Attribution is Solid's development-build recorder of every scope that re-ran, what changed to cause it, and how long it took:
+
+```ts
+import { attribution } from "solid-js/attribution";
+
+attribution.enable();
+
+// type in the search box, then:
+console.table(attribution.costs().scopes);
+console.table(attribution.feedback().flights);
+```
+
+`costs().scopes` ranks scopes by `selfMs`, with `wastedMs` for the time spent on runs whose result did not change, and `costs().writes` ranks root writes by the downstream re-run time each one caused.
+`feedback().flights` counts, per async source, how many requests started and how many were `abandoned` before landing; a high abandon count is the request-per-keystroke signature.
+`feedback().fallbacks` counts how often each `Loading` boundary showed its fallback and how many of those were `flashes` under 150ms.
+
+Name the scopes first: `createMemo(fn, { name: "visible" })`, `createStore(value, { name: "catalog" })`.
+Every table and every `attribution.why(visible)` chain refers to nodes by that name, and an unnamed memo prints as `computed`.
+
+While attribution is enabled, Solid also warns on its own when a scope re-runs 120 or more times in one second (`HOT_SCOPE_RERUNS`), spends 8ms or more of compute in one second (`HOT_SCOPE_TIME`), tracks 30 or more sources (`WIDE_SCOPE_DEPS`), or when one write reaches 250 or more subscribers (`WIDE_WRITE`).
+Two warnings are always on in development: `HUGE_FAN_OUT` and `HUGE_FAN_IN`, from 2,000 subscribers or sources.
+[Debugging reactivity](/guides/debugging-reactivity#something-updates-too-often) explains how to read each report.
+
+:::note[Development build only]
+Attribution and the diagnostics on this page exist in the development build.
+A production build strips them, so measure the production bundle with the browser profiler and the development bundle with attribution, and expect the second to be slower in absolute terms.
+:::
+
+## What does not re-run
+
+A component function runs once.
+The JSX it returns compiles to expressions that each track what they read, so a signal write re-runs the expressions that read that signal and nothing else.
+"Too many re-renders" is therefore not a failure mode to look for, and a profile that shows a component function high in the stack is showing its first and only run.
+
+The failure modes that do exist are narrower, and each has a name in the console:
+
+| What the profile shows                                  | Code                                                  | Fix                                                            |
+| ------------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------- |
+| One derivation runs on every keystroke, in every reader | `HOT_SCOPE_RERUNS`, `HOT_SCOPE_TIME`                  | [Expensive derivations](#expensive-derivations)                |
+| One write re-runs thousands of small scopes             | `HUGE_FAN_OUT`, `WIDE_WRITE`                          | [Stores at scale](#stores-at-scale)                            |
+| Readers update twice per change, one flush apart        | `EFFECT_RELAY_TEAR`                                   | [Avoid unnecessary effects](/guides/avoid-unnecessary-effects) |
+| Rows are disposed and recreated for the same records    | `UNSTABLE_LIST_IDENTITY`, `IMMUTABLE_UPDATE_IN_STORE` | [Lists](#lists)                                                |
+| A memo notifies readers although nothing changed        | `UNSTABLE_MEMO_OUTPUT`                                | [Expensive derivations](#expensive-derivations)                |
+| Requests start one after another                        | `ASYNC_WATERFALL`                                     | [Waterfalls](#waterfalls)                                      |
+
+## Expensive derivations
+
+The catalog filters 2,000 products by the query.
+Where that filter lives decides how many times it runs:
+
+```tsx
+import { For, createMemo, createSignal, createStore } from "solid-js";
+
+const [products] = createStore(initialCatalog, { name: "catalog" });
+const [query, setQuery] = createSignal("");
+
+// Avoid: a plain function runs in every scope that reads it
+const visible = () =>
+	products.filter((product) => product.name.includes(query().trim()));
+
+// Prefer: a memo runs once per change and hands the result to every reader
+const visible = createMemo(
+	() => products.filter((product) => product.name.includes(query().trim())),
+	{ name: "visible" }
+);
+
+<p>{visible().length} results</p>;
+<For each={visible()}>{(product) => <ProductCard product={product} />}</For>;
+```
+
+Run the `Avoid` version and type one character: the filter runs twice, once for the count and once for the list, because a plain function is re-evaluated by each tracking scope that calls it.
+In `attribution.costs()`, `visible` does not appear at all, since a plain function is not a scope; its time is charged to the scopes that called it.
+In the `Prefer` version the memo runs once, both readers receive the stored array, and `costs()` shows one `visible` row.
+
+A memo costs a node in the graph and a comparison on each run; for a cheap expression with one reader, the function is smaller.
+Reach for the memo when several readers share the result, when the computation is expensive, or when the result is often unchanged.
+That last case is the equality gate: a memo compares its new value to the previous one and does not notify readers when the two are equal, so nothing downstream runs.
+
+The gate compares by reference, which a filter defeats: every run produces a new array.
+Move the equality boundary to where the value is a primitive:
+
+```tsx
+// Prefer: the trimmed query settles first, so " mug" and "mug" filter once
+const needle = createMemo(() => query().trim().toLowerCase(), {
+	name: "needle",
+});
+const visible = createMemo(
+	() =>
+		products.filter((product) => product.name.toLowerCase().includes(needle())),
+	{ name: "visible" }
+);
+```
+
+Type a trailing space and `needle` recomputes, produces the same string, and stops there; `visible` and the 2,000-row list do not run.
+When a memo must return an object or array that is often equal in content, pass an `equals` option that compares by content; without one, attribution reports `[UNSTABLE_MEMO_OUTPUT]` after four consecutive new-but-equivalent results, because every subscriber re-ran for nothing.
+
+## Lists
+
+A list is where one mistake is paid once per row.
+`For` keeps a row when the same object comes back and rebuilds it when a new object appears, so the expensive version of a list is the one that hands `For` new objects for the same records:
+
+```tsx
+// Avoid: a new object per product on every change, so every row is rebuilt
+<For
+	each={visible().map((product) => ({
+		...product,
+		inCart: cartIds().has(product.id),
+	}))}
+>
+	{(product) => <ProductCard product={product} inCart={product.inCart} />}
+</For>;
+
+// Prefer: pass the store's objects and read the derived flag in the row
+<For each={visible()}>
+	{(product) => <ProductCard product={product} inCart={inCart[product.id]} />}
+</For>;
+```
+
+Run the `Avoid` version and add one item to the cart: all 2,000 rows are disposed and recreated, and attribution reports `[UNSTABLE_LIST_IDENTITY]`.
+In the `Prefer` version `inCart` is a store keyed by product id, built in [Stores at scale](#stores-at-scale), so adding an item updates the one row whose key flipped.
+
+The [Lists](/guides/lists) guide owns the rest: [keeping identity across a refetch](/guides/lists#keep-row-identity-across-updates), [selection without touching every row](/guides/lists#select-a-row), and [rendering a window](/guides/lists#render-a-window-over-a-large-list) with `Repeat` when 2,000 rows should not all be in the DOM.
+
+## Waterfalls
+
+The first paint waits on three requests because each one starts when the one before it lands: the product needs nothing, the brand read waits for the product, and the brand's catalog waits for the brand.
+Derive each request from the input you already have, so the ones that do not depend on each other start together, and join the ones that do on the server.
+With attribution on, two or more sequential flights of 50ms or more are reported as `[ASYNC_WATERFALL]` with the serialized time.
+[Dependent requests](/guides/data-fetching-patterns#dependent-requests) shows the `Avoid` and `Prefer` versions, and a route [`preload`](/routing/solid-router/data#start-work-before-the-component-runs) starts the reads before the component runs at all.
+
+## Code splitting
+
+The account area is a third of the bundle and most visitors never open it.
+[`lazy`](/reference/solid-js/components-context/lazy) turns an import into a component that loads its chunk on first render:
+
+```tsx
+import { Loading, lazy } from "solid-js";
+
+const Account = lazy(() => import("./account/Account"));
+
+<Loading fallback={<AccountSkeleton />}>
+	<Account />
+</Loading>;
+```
+
+Render `<Account />` for the first time and the dynamic import starts; while it is in flight the component suspends through the nearest `Loading` boundary, which shows the skeleton.
+Call `Account.preload()` to start the import early, for example from a link's `onMouseEnter`.
+
+With Solid Router the split usually happens at the route.
+A route whose `component` is a `lazy` component has its chunk loaded when the user hovers, focuses, or touches a link to it, and a `children: () => import("./account/routes")` thunk defers a whole route table the same way.
+[Load a route subtree lazily](/routing/solid-router/route-definitions#load-a-route-subtree-lazily) and [Preloading from links](/routing/solid-router/data#preloading-from-links) cover both.
+
+:::caution[A chunk is a round trip]
+Splitting a component that the first page needs adds a request before that page can paint.
+Split at the boundary between what the first page shows and what it does not, and leave the header, the product grid, and the cart badge in the main bundle.
+:::
+
+## Server rendering and streaming
+
+With `ssr: true`, `renderToStream` sends the synchronous shell first and then a fragment for each `Loading` boundary as its content settles.
+An async read with no boundary above it holds the shell, so the visitor sees nothing until that read lands:
+
+```tsx
+// Avoid: the shell waits for the catalog
+<main>
+	<Header />
+	<ProductGrid products={products} />
+</main>;
+
+// Prefer: the shell carries the header and a fallback; the grid streams in
+<main>
+	<Header />
+	<Loading fallback={<GridSkeleton />}>
+		<ProductGrid products={products} />
+	</Loading>
+</main>;
+```
+
+Load the page with the `Avoid` version and nothing is sent until the catalog query resolves.
+With the `Prefer` version the header and the skeleton arrive at once, and the grid replaces the skeleton when its data lands.
+
+When one read must be in the first HTML, for a crawler or a link preview, pass `deferStream: true` to that memo; the shell then waits for that read instead of sending its boundary's fallback.
+[Streaming rendering](/concepts/rendering-and-ssr#streaming-rendering) covers the output forms, and [Choose a rendering mode](/guides/choose-a-rendering-mode) weighs streaming against a static shell and prerendering.
+
+## Stores at scale
+
+A store holding 2,000 products does not create 2,000 sets of tracking nodes.
+The proxy creates a node for a property the first time a tracking scope reads it, so the rows on screen cost nodes and the rest cost nothing until they scroll into view.
+Two store features keep that cheap as the data changes:
+
+```tsx
+import { createProjection, createStore } from "solid-js";
+
+// Server refreshes reconcile by id, so unchanged rows notify no one
+const [products] = createStore(async () => getProducts(), [] as Product[], {
+	name: "catalog",
+});
+
+// A derived per-key view: each row reads its own key
+const inCart = createProjection<Record<string, boolean>>(
+	(draft) => {
+		for (const key of Object.keys(draft)) delete draft[key];
+		for (const item of cart.items) draft[item.id] = true;
+	},
+	{},
+	{ name: "inCart" }
+);
+```
+
+Refetch the catalog after a price change and one text node updates; the other 1,999 rows read properties whose values did not change and are not notified.
+Add an item to the cart and `inCart` gains one key, so one row's `inCart` read runs.
+
+The alternative, every row reading `cart.items.some((item) => item.id === product.id)`, subscribes 2,000 scopes to `cart.items`, and adding an item re-runs all of them.
+Development reports that write as `[HUGE_FAN_OUT]`, and with attribution on the lower threshold `[WIDE_WRITE]` names the signal from 250 subscribers.
+A [projection](/concepts/stores#derive-a-store-with-a-projection) or a store used as a map keyed by id is the repair both messages suggest.
+
+For a record map whose rows are replaced wholesale rather than edited, `createStore(value, { shallow: true })` tracks the root keys and stores each value by reference, so no per-field nodes are created for rows nothing reads field by field.
+
+## Common problems
+
+### Typing in the search box lags
+
+Three causes, and attribution separates them.
+If `costs().scopes` puts a filter or sort at the top, it runs in every reader; make it a memo and put an equality boundary on the normalized query, as in [Expensive derivations](#expensive-derivations).
+If `feedback().flights` shows most requests abandoned, a request starts per keystroke; debounce in the input handler, as [Search as you type](/guides/data-fetching-patterns#search-as-you-type) shows.
+If the input itself shows the previous character, it is bound to `query()` while a held update waits on results; bind `latest(query)` instead.
+
+### Every row updates when one product is selected
+
+Each row reads the selected id, so a selection change re-runs 2,000 scopes and development prints `[HUGE_FAN_OUT]`.
+Keep the selection in a store keyed by id and read `selected[product.id]` in the row; [Select a row](/guides/lists#select-a-row) shows the two versions.
+
+### The list rebuilds on every refresh
+
+The refetch produced new objects for the same records, so `For` disposed every row, and attribution reports `[UNSTABLE_LIST_IDENTITY]`.
+Load the list into a store created from a function, or pass `keyed={(item) => item.id}`; see [Keep row identity across updates](/guides/lists#keep-row-identity-across-updates).
+
+### First paint waits for all the data
+
+An async read sits above every `Loading` boundary, so the streaming shell waits for it, or three reads run in sequence and the page waits for their sum.
+Put a boundary around the region that depends on the read, and check the console for `[ASYNC_WATERFALL]` to find the chain.
+
+### The development build is slow and the production build is fine
+
+Attribution, the diagnostics, and the `[why-run]` console groups run in development only.
+Measure timings on a production build; use the development build to find out which scope ran and why.
+
+## Recap
+
+- Record a profile first, then enable `attribution` and read `costs()` and `feedback()` to see which scope ran and what caused it.
+- A component runs once; look for a hot derivation, a wide write, a relaying effect, or a rebuilt list, not a re-rendering component.
+- Put a shared or expensive derivation in a memo, and put an equality boundary on a primitive so a change that settles to the same value stops there.
+- Hand `For` the store's objects; a `map` that produces new objects rebuilds every row.
+- Derive independent requests from inputs you already have, so they start together.
+- Split code with `lazy` at the boundary between the first page and the rest, and let the router preload chunks on hover.
+- Wrap each streamed region in a `Loading` boundary so the shell does not wait for its data.
+- Keep per-row flags in a store or projection keyed by id, so a change touches the rows whose key flipped.
+
+## Next steps
+
+- [Lists](/guides/lists): row identity, selection, and windowing over the catalog, with the diagnostics that fire when rows are rebuilt.
+- [Data fetching patterns](/guides/data-fetching-patterns): parallel reads, `preload`, sharing one request across components, and the full `[ASYNC_WATERFALL]` report.
+- [Debugging reactivity](/guides/debugging-reactivity): how to read every diagnostic named on this page and the `why` chains behind them.
+- [Rendering and SSR](/concepts/rendering-and-ssr): `renderToStream`, hydration, and where the boundaries on this page end up in the HTML.

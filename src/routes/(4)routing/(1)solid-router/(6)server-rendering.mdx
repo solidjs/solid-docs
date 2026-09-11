@@ -1,12 +1,16 @@
 ---
 title: "Server rendering and hydration"
 version: "2.0"
-description: "What changes when Solid Router renders on the server: where the URL comes from, how query results hydrate without a second fetch, how a mutation returns fresh data in one round trip, and how forms work without JavaScript."
+description: "Render Solid Router on the server: read the URL from the request, hydrate query results without a second fetch, return fresh data from a mutation in one round trip, and keep forms working without JavaScript."
 ---
 
-Nothing on the earlier pages changes when the app renders on the server.
+Open the network tab on a server-rendered product page and there is one request, for the document, and none for the product.
+Submit the **Add to cart** form and there is one `POST`, after which the cart in the header is already up to date.
+Turn JavaScript off and the same form still adds to the cart.
+
+None of that needs a change to the earlier pages.
 The same `Router` from `src/router.ts` renders on both sides; there is no server variant to import.
-What this page adds is what the server side does for you, and where the switches are when you need to change it.
+This page explains what the server side does to make those three things true, and where the switches are when you need to change them.
 
 The `fullstack` project shape wires all of this up.
 If you started there, read this page to understand what it does; if you are adding server rendering to a project by hand, it tells you what to add.
@@ -30,13 +34,13 @@ const html = await renderToStream(() => (
 
 A request event wins over the `url` prop when both are present.
 
+:::caution[Lazy subtrees need the streaming renderer]
 Lazy route subtrees, the `children: () => import(...)` form, are asynchronous work during matching.
 `renderToStream` waits for them; the synchronous `renderToString` cannot, so use the streaming entry for any route tree that has one.
+:::
 
 ## Queries render once
 
-Open the network tab on a server-rendered page whose component reads a `query`.
-There is one request for the document and none for the data.
 The product page from the [introduction](/routing/solid-router#load-data-for-a-page) rendered `product().name` on the server, and the browser did not fetch the product again.
 
 During an async server render, each `query` result is serialized into the page along with its key.
@@ -80,11 +84,15 @@ solid({
 });
 ```
 
+Submit **Add to cart** with both in place and the network tab shows one `POST /_server` whose response carries the cart, and no request after it.
+
+:::deep-dive[What the collector does on each mutation]
 When a mutation finishes, the collector works out which URL the client will show next, whether that is the current page or a `redirect` target.
 It resolves any lazy subtrees on that path, runs the root preload and the matched route preloads in data-only mode, and folds every `query` result they produced into the response.
 On the client, the router applies the response's revalidation and redirect metadata, seeds the delivered values, and only then resolves the action call.
-
 That is why the [Data](/routing/solid-router/data#what-revalidates-after-a-mutation) page recommends putting the reads a page needs in its `preload`: the collector can only refresh what the preloads touch.
+[Integrate a router](/routing/integrate-a-router#integrate-single-flight-mutations) describes the transport hooks the collector is built on.
+:::
 
 To turn the protocol off, set `singleFlight: false` in `createRouter`.
 Without a client consumer the transport does not send the single-flight header and the server does not run collection.
@@ -104,9 +112,44 @@ When the router renders that page on the server, it clears and decodes the cooki
 The router also covers the gap between the page loading and the action's module arriving.
 If a form is submitted before the code that defines its action has been loaded, the router recognizes the server-action URL, loads the submit path on demand, and sends the form through the server-function transport as usual.
 
-This path exists only for actions backed by server functions.
-A client-only action has no URL the server can run, so it needs its module loaded.
+:::note[Only server-backed actions have a no-JavaScript path]
+A client-only action has no URL the server can run, so it needs its module loaded before the form is submitted.
 [Progressive enhancement](/building-apps/server-functions/progressive-enhancement) describes what the core runtime owns in this exchange and what the router adds.
+:::
+
+## Common problems
+
+### The first load shows nothing until every query has finished
+
+There is no `Loading` boundary around `props.children` in `App`.
+An async read with no boundary above it blocks the shell until it settles, so the server sends nothing until the slowest query returns.
+Wrap `props.children` in `<Loading fallback={...}>` as the [setup](/routing/solid-router/setup#mount-it-at-the-application-root) page shows; the shell then streams with the fallback and the page follows.
+
+### `Hydration structure mismatch` in the console on a routed page
+
+The server and the client rendered different trees for the same URL.
+The usual causes are a component that branches on `isServer` or `typeof window`, a value such as `Date.now()` in the render, or a `url` prop on the server that does not match what the browser loaded.
+Render the same structure on both sides and fill in browser-only values after hydration; [Hydrating server HTML](/concepts/rendering-and-ssr#hydrating-server-html) covers the general case.
+
+### The page fetches data the server already rendered
+
+The query key differs between server and client, or the page read the query more than three minutes after load.
+Check that the name and arguments are the same on both sides and contain nothing time-dependent or random.
+
+### The mutation still makes two requests
+
+The `serverFunctions.configure` module is not set in `vite.config.ts`, so the collector never registered, or `singleFlight: false` is set on the router.
+With a custom server-function handler, pass `collectFlightData` to `handleServerFunctionRequest` yourself.
+
+## Recap
+
+- The same `Router` renders on both sides; on the server it reads the request URL from the request event, or from the `url` prop when there is no request.
+- Use `renderToStream` for any route tree with a lazy subtree.
+- Keep `query` names and arguments stable across server and client so the browser adopts the serialized result instead of fetching again.
+- Register `createFlightDataCollector(Router)` from a `serverFunctions.configure` module to fold fresh query results into each mutation response.
+- Put the reads a page needs in its `preload`; the collector refreshes only what the preloads touch.
+- Set `actionBase` when the server-function endpoint moves off `/_server`.
+- Wrap `props.children` in `Loading` so the shell streams before the queries settle.
 
 ## Next steps
 

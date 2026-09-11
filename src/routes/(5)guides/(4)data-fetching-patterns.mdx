@@ -1,14 +1,14 @@
 ---
 title: "Data fetching patterns"
 version: "2.0"
-description: "Worked patterns for loading data in Solid: search as you type, several requests on one page, dependent requests, pagination, sharing a request, keeping data fresh, and handling failures."
+description: "Load data for search, detail pages, pagination, shared state, and dashboards without loading flags, request counters, or abort controllers, and decide where each request and each boundary goes."
 ---
 
-The [Async reactivity](/concepts/async-reactivity) page explains the model: a computation that returns a promise is a value, first loads reach a `Loading` boundary, and later updates are held until the new answer is ready.
-This guide is the other half.
-It takes the requests a real application makes and shows the Solid shape for each one, including the choices that are yours to make.
+The product page on the [Async reactivity](/concepts/async-reactivity) page loaded one product with one memo.
+A storefront makes more requests than that: a search box that fires on every keystroke, a product page that also needs reviews and related items, an order history with pages, a cart badge that several components read, a dashboard that should stay current without a reload.
+Each of those has a shape in other frameworks that involves a loading flag, a request counter, or an `AbortController`, and each has a shorter shape in Solid because a computation that returns a promise is a value.
 
-The examples use a small storefront: products you can search, a product page with reviews, an order history, and a dashboard.
+This guide goes through those requests one at a time and shows the Solid shape for each, including the choices that are yours to make.
 Each `api.*` call is a function that returns a promise; a `"use server"` function, a `fetch` wrapper, or a client SDK all work the same way.
 
 ## Load one thing
@@ -76,26 +76,30 @@ function ProductSearch() {
 }
 ```
 
+Type `mug` and three requests start, one per keystroke; the list shows the results for `mug` and nothing else.
 Three things this code does not do, because Solid does them:
 
-- **Discard stale responses.** Typing `sh`, then `sho`, then `shoe` starts three requests.
-  Only the answer to the current question is used; if `sho` arrives after `shoe`, it is dropped.
+- It does not discard stale responses by hand.
+  Only the answer to the current question is used; if the response for `mu` arrives after the one for `mug`, it is dropped.
   There is no request counter and no `AbortController`.
-- **Blank the list between keystrokes.** The previous results stay visible with the `stale` class until the new ones land.
-- **Show a spinner for an empty query.** Returning `[]` synchronously is a settled answer, so the memo never becomes pending for it.
+- It does not blank the list between keystrokes.
+  The previous results stay visible with the `stale` class until the new ones land.
+- It does not show a spinner for an empty query.
+  Returning `[]` synchronously is a settled answer, so the memo never becomes pending for it.
 
 The input binds `value={latest(query)}` rather than `value={query()}`.
 The write to `query` is held while results load, and `latest` reads the value the update is moving toward, so a controlled input reflects what the user typed.
 An uncontrolled input, with no `value` binding, needs nothing.
 
-Debounce at the event, not in the graph:
+:::tip[Debounce at the event, not in the graph]
+One line in the handler keeps the graph as it is:
 
 ```tsx
 onInput={debounce((event) => setQuery(event.currentTarget.value), 150)}
 ```
 
-A debounce that lives in an effect copying one signal into another is the pattern the [effects guide](/guides/avoid-unnecessary-effects) warns about.
-At the event handler it is one line and the graph stays simple.
+A debounce written as an effect that copies one signal into another after a delay is the relay pattern [Avoid unnecessary effects](/guides/avoid-unnecessary-effects#calculate-values-when-they-are-read) shows the cost of.
+:::
 
 ## Load several things for one page
 
@@ -143,13 +147,39 @@ const brand = createMemo(() => api.brand(product().brandId));
 `brand` reads `product().brandId`, so it cannot start until `product` resolves.
 The dependency is visible in the code, and that is the right shape when the data is sequential.
 
-When it is not, remove the dependency rather than working around it.
-Two common fixes:
+The trap is a chain the data does not need.
+A product page that also shows the brand's other products can be written as three steps or as two independent requests:
 
-- **Pass the input you already have.** If the route knows `brandId`, read it from `props` and both requests start together.
-- **Join on the server.** One server function that returns the product with its brand replaces two round trips with one.
+```tsx
+// Avoid: each request waits for the one before it, and only the first dependency is real
+const product = createMemo(() => api.product(props.id));
+const brand = createMemo(() => api.brand(product().brandId));
+const catalog = createMemo(() => api.brandProducts(brand().id));
 
-Development builds report long chains as `ASYNC_WATERFALL` when attribution is enabled; [Debugging reactivity](/guides/debugging-reactivity) shows the report.
+// Prefer: derive from the input you already have, so the requests start together
+const product = createMemo(() => api.product(props.id));
+const brand = createMemo(() => api.brand(product().brandId));
+const catalog = createMemo(() => api.brandProducts(product().brandId));
+```
+
+Run the `Avoid` version and the catalog request does not start until the brand has arrived, although `brandId` was known as soon as the product was.
+The page waits for the sum of the three requests instead of the product request plus the longer of the other two.
+With attribution enabled, and the memos named through their `name` option, development reports a chain of three or more sequential requests:
+
+```text
+[ASYNC_WATERFALL] 3 sequential async flights — "product" (120ms) → "brand" (80ms) → "catalog" (95ms) — 295ms serialized: each began only after the previous resolved (as far as this graph can see). If a later request doesn't need the earlier response, derive both from the same inputs so they start together; if the dependency is intrinsic, preload the dependent data or join the requests server-side.
+```
+
+A chain of two is recorded at `info` severity and does not reach the console, because two steps can be a real data dependency; three or more is a warning.
+Requests shorter than 50ms do not count as a step.
+[Something updates too often](/guides/debugging-reactivity#something-updates-too-often) explains how to enable attribution and read its reports.
+
+When the dependency is real, remove it from the client rather than working around it:
+
+- Pass the input you already have.
+  If the route knows `brandId`, read it from `props` and both requests start together.
+- Join on the server.
+  One server function that returns the product with its brand replaces two round trips with one.
 
 ## Paginate
 
@@ -212,10 +242,13 @@ function CartBadge() {
 }
 ```
 
+Render `CartBadge` in the header and a second reader in the cart drawer, and the network tab shows one cart request.
 Passing an accessor through context keeps the read lazy: nothing waits on the cart until a component reads `cart()`, and only that component's boundary is involved.
 
+:::note[Sharing across routes]
 For requests shared across routes, or for deduplication and caching by argument, use [`query`](/routing/solid-router/data#cache-reads-with-query) from Solid Router.
 It returns the same in-flight promise to every caller with the same arguments, keeps a result for a few seconds after the last reader leaves, and refetches when an action [revalidates](/routing/solid-router/data#revalidate) its key.
+:::
 
 ## Keep data fresh
 
@@ -233,9 +266,17 @@ onSettled(() => {
 });
 ```
 
+Every thirty seconds the numbers update in place; nothing dims and no skeleton shows.
 [`refresh(source)`](/reference/solid-js/lifecycle-actions/refresh) re-runs the computation with the same inputs and returns a promise for the settled result.
 A bare `refresh` is quiet: the current answer still fits the question, so `isPending` stays `false` and the new value replaces the old one without a pending phase.
 When the reload should be visible, declare it: call [`affects(stats)`](/reference/solid-js/lifecycle-actions/affects) inside an action before the `refresh`, and readers report pending until it lands.
+
+:::deep-dive[Why a refresh is quiet and a changed input is not]
+`isPending` answers the question "is a different answer on the way for a changed input?".
+When `page` goes from 1 to 2, the committed value answers a question that is no longer being asked, so readers of the held update report pending.
+A `refresh` asks the same question again; the committed value is still a valid answer to it, so nothing is pending and the new value lands as a plain update.
+`affects(source)` marks the source as pending for as long as the surrounding action is in flight, which is how a refetch inside an action is made visible.
+:::
 
 Polling is the fallback when the server cannot push.
 When it can, a [`live()` server function](/building-apps/server-functions/reads-and-live-data#declare-a-live-source) returns an async iterable that a memo consumes like any other async source, and each yielded value becomes the next answer.
@@ -282,15 +323,42 @@ A failed reviews request shows the retry panel and leaves the header alone.
 Throw from the request when the response is not usable, rather than returning a `{ success: false }` object and checking it at every read.
 On the server, [`markSafeError`](/reference/solid-web/request-response/safe-errors) marks a message that is intended for the client; unmarked errors are replaced with a generic message in production.
 
-## Checklist
+## Common problems
 
-- [ ] Each request is a memo or store created where the data is needed, or higher when it should start earlier.
-- [ ] Requests that do not depend on each other are created in the same scope so they run in parallel.
-- [ ] Each `Loading` boundary wraps the smallest region its fallback should replace; `on` is set where a changed subject should show the fallback again.
-- [ ] Controls whose writes feed a request read `latest` so they respond at once; `isPending` marks the content that is waiting.
-- [ ] No loading flags, request counters, or abort controllers remain for work Solid does.
-- [ ] Reloads use `refresh`, with `affects` when the reload should show as pending.
-- [ ] Failures throw and an `Errored` boundary covers each region that should fail on its own.
+### The search box lags behind what I typed
+
+The input is bound with `value={query()}`, and the write to `query` is held while the results load, so the input shows the previous value until the request lands.
+Bind `value={latest(query)}`, or leave the input uncontrolled.
+
+### Opening another product keeps showing the old one
+
+That is the default after a first answer: the current product stays on screen while the new one loads.
+Add `on={props.id}` to the `Loading` boundary when a changed subject should show the skeleton again, and pass the value rather than the accessor.
+
+### Two components make the same request
+
+Each component created its own memo, and each memo is its own request.
+Create the memo once in a common ancestor and pass the accessor down or through context, or use Solid Router's `query` when the callers are on different routes.
+
+### `refresh` runs but nothing shows as loading
+
+A bare `refresh` re-asks the same question, so `isPending` stays `false` and the new value lands quietly.
+Call `affects(source)` inside an action before the `refresh` when the reload should show as pending.
+
+### One request waits for another that it does not need
+
+A memo reads a value from another memo's response when the same value was available from props or the route.
+Read the input directly so both requests start together; with attribution enabled, a chain of three or more is reported as `[ASYNC_WATERFALL]`.
+
+## Recap
+
+- Make each request a memo or a store created where the data is needed, or higher when it should start earlier.
+- Create requests that do not depend on each other in the same scope so they run in parallel; derive from inputs you already have rather than from another response.
+- Wrap the smallest region each `Loading` fallback should replace, and set `on` where a changed subject should show the fallback again.
+- Read `latest` in controls whose writes feed a request, and mark waiting content with `isPending`.
+- Leave stale responses, loading flags, and abort controllers to Solid; returning a synchronous value is a settled answer.
+- Reload with `refresh`, and add `affects` inside an action when the reload should show as pending.
+- Throw from a request that fails and cover each region that should fail on its own with `Errored`.
 
 ## Next steps
 

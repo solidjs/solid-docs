@@ -1,18 +1,22 @@
 ---
 title: "Deployment"
 version: "2.0"
-description: "Deploy a Solid project with SSR or server functions: the server handler, static assets, environment, and host adapters."
+description: "Put a start-mode build on a host: serve dist/client as static files, route everything else to the built request handler, supply the server environment at boot, and pick a Node server or a provider adapter."
 ---
 
-A `bare` or `basic` project builds to a static directory, and any static host can serve it.
-This page is about the other case: a project with `ssr: true` or server functions, which builds to static assets plus a server handler.
-[Project shapes](/getting-started/project-shapes) explains which shape produces which output, and [App structure](/building-apps/app-structure) explains the entries the handler runs.
+The first deploy of a `fullstack` project usually fails in one of two ways.
+The HTML arrives but every `/assets/*.js` and `.css` request returns 404, so the page is unstyled and never hydrates.
+Or the home page works and refreshing `/account/orders` returns the host's 404 page.
+Both mean the host is serving one half of the build: `dist/client` is a directory of static files, `dist/server/server.js` is a request handler, and the host has to put the first in front of the second.
 
-Start mode produces a server handler with a web-standard request and response interface.
-The built module and static assets still require host-compatible module resolution, dependencies, environment access, and asset configuration.
-The official `solid-v2/fullstack` and `solid-v2/fullstack-tanstack` templates demonstrate the supported contract.
+A `bare` or `basic` project builds to `dist/client` alone, and any static host serves it.
+This page is about a project with `ssr: true` or server functions, which builds to static assets plus a server handler.
+[Project shapes](/getting-started/project-shapes) says which shape produces which output; [App structure](/building-apps/app-structure) explains the entries the handler runs.
 
-## Build output
+Most apps need the request handler section and one of the host sections after it: Node with the template's `server.js`, or one provider plugin.
+The rest is for checking a detail or wiring a host that is not listed.
+
+## What the build produces
 
 Run the configured Vite build:
 
@@ -22,15 +26,13 @@ pnpm build
 
 With `start` and `ssr: true`, one build produces:
 
-- `dist/client`, containing browser JavaScript, CSS, images, and other static assets.
+- `dist/client`, containing browser JavaScript, CSS, images, and other static assets, with hashed file names.
 - `dist/server/server.js`, containing the server entry and its exported request handler.
 
-When server functions are enabled, the server bundle also dispatches their configured endpoint.
-The default endpoint is `/_server`.
+When server functions are enabled, the server bundle also dispatches their endpoint, `/_server` by default.
 
-Without `ssr: true`, start mode prerenders a static document shell to `dist/client/index.html`.
-It removes `dist/server` when the application has no server functions.
-If server functions remain enabled, deploy `dist/client` for pages and keep `dist/server` for the function endpoint.
+Without `ssr: true`, start mode prerenders the static document shell to `dist/client/index.html` and removes `dist/server` when the application has no server functions.
+If server functions are enabled, deploy `dist/client` for pages and keep `dist/server` running for the function endpoint.
 
 ## The request handler
 
@@ -54,21 +56,43 @@ export default {
 };
 ```
 
-The wrapper intentionally accepts only the request.
+The wrapper accepts only the request on purpose.
 Some hosts call `fetch` with additional environment or execution-context arguments, which are not Solid handler options.
 
-The handler creates the request event, runs configured middleware, dispatches the server-function endpoint when enabled, renders pages, and commits response metadata.
-It also resolves built client entry and stylesheet URLs through the client build manifest.
+The handler creates the request event, runs the configured middleware, dispatches the server-function endpoint when enabled, renders pages, and commits response metadata.
+It also resolves the built client entry and stylesheet URLs through the client build manifest.
 
-Serve files from `dist/client` before passing unmatched requests to `handleRequest`.
-Static assets should not enter the page renderer.
-Preserve the request URL, method, headers, and non-`GET` or non-`HEAD` body when adapting a host request.
-Preserve the response status, headers, separate `Set-Cookie` values, and streamed body when adapting the result.
+Static files go first:
+
+```ts
+// Avoid: every request goes to the handler, assets included
+const server = createServer(async (req, res) => {
+	const response = await handleRequest(webRequest(req));
+	await sendWebResponse(res, response);
+});
+
+// Prefer: serve dist/client, then hand the rest to the handler
+const server = createServer(async (req, res) => {
+	if (await serveStatic("dist/client", req, res)) return;
+	const response = await handleRequest(webRequest(req));
+	await sendWebResponse(res, response);
+});
+```
+
+With the `Avoid` version, a request for `/assets/app-BpJ2g.js` renders the HTML page, because in production every request that reaches the end of the middleware chain renders; the browser receives a document where it expected a script.
+
+When adapting a host request, preserve the URL, method, headers, and the body of any request that is not `GET` or `HEAD`.
+When adapting the result, preserve the status, the headers, each `Set-Cookie` value separately, and the streamed body.
+
+:::caution[Set-Cookie must not be comma-joined]
+A response can carry several `Set-Cookie` headers, and joining them into one comma-separated value corrupts every cookie in it.
+The template's `server.js` reads them with `headers.getSetCookie()` and passes the array to Node; a bridge for another server needs the same care.
+:::
 
 ## Node
 
-The fullstack templates include `server.js` as the verified Node adapter example.
-It converts `node:http` requests to web `Request` objects, serves `dist/client`, calls `handleRequest`, and streams the resulting response.
+The fullstack templates include `server.js`, the verified Node adapter.
+It converts `node:http` requests to web `Request` objects, serves `dist/client`, calls `handleRequest`, and streams the response back.
 The template's start script runs that file:
 
 ```json
@@ -79,34 +103,34 @@ The template's start script runs that file:
 }
 ```
 
-Use the template adapter as a reference when integrating another Node server.
-The bridge must use a streamed request body for methods other than `GET` and `HEAD`.
-It must forward multiple `Set-Cookie` headers as separate values instead of joining them with commas.
+Run `pnpm build` and then `pnpm start`, and the server listens on `PORT` or `3000`.
+Any Node host that runs that command with `PORT` and the server environment set is done.
+
+Use the template adapter as the reference when integrating another Node server.
+The bridge must stream the request body for methods other than `GET` and `HEAD`, and it must forward multiple `Set-Cookie` headers as separate values.
+
+:::tip[The raw request is one option away]
+`server.js` passes the Node request into the event with `handleRequest(request, { event: { nativeEvent: req } })`.
+Middleware and server functions then read `getRequestEvent().nativeEvent` for platform details such as the socket's remote address.
+Behind a proxy, read the forwarding headers off `getRequestEvent().request` instead, and only when the proxy is trusted.
+:::
 
 ## Preview the production artifact
 
-The start-mode integration configures `vite preview` to serve `dist/client` and dispatch remaining requests through the built handler:
+The start-mode integration configures `vite preview` to serve `dist/client` and dispatch the remaining requests through the built handler:
 
 ```bash
 pnpm build
 pnpm exec vite preview
 ```
 
-The official fullstack templates name the Vite preview script `serve` and reserve `start` for the included Node server:
-
-```bash
-pnpm build
-pnpm serve
-```
-
-Preview verifies the built request handler and static assets together.
-It does not replace the target host's deployment test.
+The official fullstack templates name the Vite preview script `serve` and reserve `start` for the included Node server.
+Preview verifies the built handler and static assets together; it does not replace a test on the target host.
 
 ## Provider integrations
 
 Provider Vite plugins can add platform development features and prepare deployment output.
-The normal `ssr` environment exposes the default Fetchable handler as its `index` service entry in development and production.
-A provider plugin can adopt that environment, supply its runtime and build orchestration, and use the Solid entry without a custom source file or explicit Rollup input.
+The normal `ssr` environment exposes the default Fetchable handler as its `index` service entry in development and production, so a provider plugin can adopt that environment, supply its runtime and build orchestration, and use the Solid entry without a custom source file or explicit Rollup input.
 
 The integrations below adopt the normal `ssr` environment.
 Use `start.external` instead when a custom host controls a differently named or independently configured server environment.
@@ -185,7 +209,7 @@ export default defineConfig({
 Nitro discovers the Fetchable handler through the environment's `index` service entry.
 No custom server entry or Rollup input is required.
 
-Use the top-level `nitro` property for deployment presets, prerendering, tasks, WebSockets, and other Nitro options. See the [Nitro configuration reference](https://nitro.build/config).
+Use the top-level `nitro` property for deployment presets, prerendering, tasks, WebSockets, and other Nitro options; see the [Nitro configuration reference](https://nitro.build/config).
 
 ### Cloudflare Workers
 
@@ -218,7 +242,7 @@ Point the Worker at Solid's generated virtual handler in `wrangler.jsonc`:
 ```jsonc
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
-	"name": "solid-2",
+	"name": "solid-store",
 	"main": "virtual:solid-ssr-handler",
 	"compatibility_date": "2026-07-22",
 	"compatibility_flags": ["nodejs_compat"],
@@ -240,11 +264,57 @@ Follow the Cloudflare guide to add any platform bindings.
 ## Other Fetch runtimes
 
 When a runtime accepts a default Fetchable module, point it at `dist/server/server.js` and configure its static asset service for `dist/client`.
-For example, Bun and `deno serve` can start modules that default-export an object with a `fetch` method.
+Bun and `deno serve`, for example, start modules that default-export an object with a `fetch` method.
 The runtime still needs the server bundle's production dependencies and environment variables.
+
+## Common problems
+
+### A `public/` file 404s in production
+
+The host is not serving `dist/client` for that path.
+The build copies `public/` into `dist/client`, so whatever serves the hashed assets serves this file too; check that the static directory is `dist/client`, not `dist` or `public`.
+
+### Every `/assets/*` request 404s or returns HTML
+
+The host is not serving `dist/client` in front of the handler.
+A 404 means nothing serves the directory; HTML means every request reaches `handleRequest`, which renders a page at any URL that gets that far.
+Serve `dist/client` first and pass only unmatched requests to the handler.
+
+### Refreshing a client route returns the host's 404 page
+
+Under `ssr: true`, requests for pages are not reaching `handleRequest`; the host is serving only the static directory.
+Route every request that is not a file to the handler.
+For a static-shell project, there is no handler: configure the host to serve `dist/client/index.html` for paths that are not files, as any single-page app needs.
+
+### `Cannot find module './dist/server/server.js'`
+
+The build did not produce a server directory.
+Without `ssr: true` and without server functions, start mode removes `dist/server` after prerendering the shell; there is nothing to run, so deploy `dist/client` as static files.
+With `start.external`, the provider owns the server build and its output lands where that provider puts it.
+
+### The server exits at boot with `server env validation failed at boot`
+
+A `server` variable declared in `env.ts` is missing or invalid in the process environment.
+Server values are read at boot, not at build, so set them in the host's environment or secret settings; [Environment](/building-apps/environment) has the rules.
+Client `VITE_` values are the opposite: set them on the machine that runs `vite build`.
+
+### Sign-in works locally but the session is missing in production
+
+The bridge joined several `Set-Cookie` headers into one comma-separated value, which corrupts them.
+Forward them as separate headers, the way `server.js` does with `getSetCookie()`.
+
+## Recap
+
+- Serve `dist/client` as static files first and pass every other request to `handleRequest`.
+- `handleRequest(request)` and the default `{ fetch }` export are the same handler; the default export ignores host arguments after the request.
+- Preserve the method, headers, and streamed body on the way in, and the status, headers, separate `Set-Cookie` values, and streamed body on the way out.
+- Run the template's `server.js` on any Node host; `pnpm build` then `pnpm start`.
+- Set `server` environment variables on the host, because they are read at boot; `VITE_` values are fixed at build time.
+- A provider plugin adopts the `ssr` environment; reach for `start.external` only when the host names or configures its server environment differently.
+- `vite preview` runs the built handler and assets together, and does not replace a test on the target host.
 
 ## Next steps
 
-- [Environment](/building-apps/environment) explains which variables the host must supply at boot and which are fixed at build time.
-- [Choose a rendering mode](/guides/choose-a-rendering-mode) helps decide whether the project needs a server handler at all.
-- [Middleware and API routes](/building-apps/middleware-and-api-routes) covers the code that runs inside the handler before a page renders.
+- [Environment](/building-apps/environment): which variables the host must supply at boot and which are fixed at build time.
+- [Choose a rendering mode](/guides/choose-a-rendering-mode): whether the project needs a server handler at all, or a prerendered site would do.
+- [Middleware and API routes](/building-apps/middleware-and-api-routes): the code that runs inside the handler before a page renders.

@@ -4,7 +4,7 @@ version: "2.0"
 description: "Link between pages with plain anchors, build URLs the compiler checks, navigate from code, read the location and search parameters, show active and pending links, and guard against leaving a page."
 ---
 
-There is no `<Link>` component in Solid Router.
+The first thing to look for in a new router is its `<Link>` component, and Solid Router does not have one.
 A link is an `<a>`, and the router turns clicks on same-origin anchors inside it into client-side navigations.
 That choice shapes this whole page: the URL is the API, and the router's job is to help you build URLs that are correct and react to the one the user is on.
 
@@ -20,8 +20,9 @@ The examples continue the store from the [introduction](/routing/solid-router).
 </nav>
 ```
 
-The first two are handled by the router; the third is external and the browser handles it as usual.
-The router also leaves an anchor alone when it has a `target`, `rel="external"`, a `download` attribute, or a non-HTTP scheme.
+Click **Featured** and the product page renders without a document reload; click **Source** and the browser leaves for GitHub as it would for any anchor.
+The router handles the first two and leaves the third alone because it is another origin.
+It also leaves an anchor alone when it has a `target`, `rel="external"`, a `download` attribute, or a non-HTTP scheme.
 Anything a browser would treat as "leave this page" still does.
 
 Because they are anchors, links work before JavaScript loads, in reader modes, and when opened in a new tab, and every accessibility tool already knows what they are.
@@ -36,8 +37,20 @@ A few attributes adjust how the router treats one link:
 
 ## Build URLs with `paths`
 
-Writing `"/products/" + id` works until a route moves.
-`paths` is a proxy inferred from the route tree, so a URL that does not exist is a compile error:
+The tempting way to write a link is the string you can see in the address bar:
+
+```tsx
+// Avoid: a string the type checker cannot connect to a route
+<a href={"/products/" + product.id}>{product.name}</a>
+
+// Prefer: a node from the route tree
+<a href={paths.products(product.id)}>{product.name}</a>
+```
+
+Both render the same `href` today.
+Rename the route to `/catalog/:id` and the `Avoid` version becomes a link to the `*404` page that nothing reports; the `Prefer` version stops compiling until every call site is updated.
+
+`paths` is a proxy inferred from the route tree:
 
 ```tsx
 paths(); // "/"
@@ -78,11 +91,16 @@ function CheckoutButton() {
 }
 ```
 
+Click the button and the URL becomes `/checkout` with the cart page's history entry replaced, so **Back** returns to the page before the cart rather than to the cart.
+
 The options are the same as the link attributes: `replace`, `scroll`, and `state`, plus `resolve` for how a relative string is interpreted.
 A string starting with `/` resolves under the router's `base`; other strings resolve against the current location like a relative URL.
 A number moves through history: `navigate(-1)` is back.
 
-Inside a route component you can also navigate with `redirect()` from a server function or action; the [Data](/routing/solid-router/data#what-revalidates-after-a-mutation) page covers that path.
+:::tip[Let the server decide where to go]
+A mutation that ends in a navigation does not need `useNavigate` at all.
+Return `redirect(paths.account.orders(id))` from the server function or action and the router navigates when the response arrives, in the same update as the revalidation; the [Data](/routing/solid-router/data#what-revalidates-after-a-mutation) page covers that path.
+:::
 
 ## Read the location
 
@@ -124,6 +142,7 @@ const [search, setSearch] = useSearchParams();
 </button>;
 ```
 
+Click **Next page** and the URL gains `?page=2`, the page does not scroll, and a refresh lands on the same page of results.
 `setSearch` merges into the current query string and navigates without scrolling.
 Setting a key to `""`, `undefined`, or `null` removes it.
 
@@ -156,7 +175,11 @@ setSearch({ page: search.page + 1 });
 
 The router runs the schemas of every route in the current match, root to leaf, and merges the parsed outputs over the raw values.
 A schema that reports issues is skipped for that read, so the raw strings remain rather than the page throwing.
-Asynchronous schemas are not supported and throw.
+
+:::caution[Schemas run synchronously]
+An asynchronous schema throws `Async Standard Schema validation is not supported for search params`.
+Keep search schemas to synchronous parsing and coercion; a value that needs a server round trip to validate is a query, not a search parameter.
+:::
 
 ## Show active and pending links
 
@@ -228,26 +251,42 @@ useBeforeLeave((event) => {
 });
 ```
 
+Edit the checkout address, click **Store** in the header, and the confirm dialog appears; cancel it and the URL has not changed.
 The guard runs for router navigations and for the browser history traversal the router can intercept.
 `retry(true)` re-issues the navigation and skips the guards, so the confirmation does not appear twice.
 It cannot stop the user closing the tab; pair it with a `beforeunload` listener if that matters.
 
 ## Common problems
 
-**Clicking a link reloads the whole page.**
+### Clicking a link reloads the whole page
+
 The anchor is outside the `<Router>`, has a `target`, or points to a different origin.
 With `explicitLinks: true`, it is missing the `link` attribute.
 
-**`paths.products` is a type error.**
-The route is `/products/:id`, so the node needs a call: `paths.products(id)`.
-The reverse is also true; a static route is `paths.account`, not `paths.account()`.
+### `paths.products` is a type error
 
-**The active style is on every link.**
+The route is `/products/:id`, so the node needs a call that binds the parameter: `paths.products(id)`.
+A static route is the bare node, `paths.account`; it converts to a string on its own, so the call is only needed when an API insists on a `string`.
+
+### The active style is on every link
+
 The style targets `data-active` on the `/` link, which is a parent of everything.
 Use `aria-current="page"` for the home link, or `useLinkState` with `end: true`.
 
-**`search.page` is a string.**
+### `search.page` is a string
+
 There is no `search` schema on the route, or the path node was not passed to `useSearchParams`.
+Add the schema with a transform to `Number`, and read with `useSearchParams(Router.paths.search)`.
+
+## Recap
+
+- Write links as `<a href={...}>`; the router handles same-origin anchors inside it and leaves the rest to the browser.
+- Build every URL from `paths` so a route that moves fails to compile instead of linking to the 404 page.
+- Use `useNavigate` for navigation that is a consequence of something else; return `redirect()` from a mutation when the server knows the destination.
+- Read `useLocation()` fields individually; each is reactive on its own.
+- Put shareable state in search parameters, and give the route a synchronous `search` schema to get typed, parsed values.
+- Style `aria-current="page"`, `data-active`, and `data-pending` in CSS; the router sets them on the anchors it handles.
+- Guard unsaved changes with `useBeforeLeave`, and call `retry(true)` after the user confirms.
 
 ## Next steps
 

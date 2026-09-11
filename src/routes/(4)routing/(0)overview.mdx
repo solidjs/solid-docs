@@ -1,29 +1,34 @@
 ---
 title: "Routing overview"
 version: "2.0"
-description: "Pick a router for a Solid app, and what a router integration owns: matching, navigation, route data, and single-flight mutations."
+description: "Choose between Solid Router and TanStack Router for a Solid app, mount the router in App, and decide whether routes come from an array or from files under src/routes."
 ---
 
-Routing is an application integration rather than a requirement of Solid.
-A router integration owns URL matching, navigation, and route rendering.
-Route-level data can use the router's data APIs or a separate cache.
-The application renders the router as part of the component tree.
+The store from the [Quick start](/getting-started/quick-start) has one page.
+It needs a product page whose URL carries the product id, a cart at `/cart`, and a header that stays on screen while the page under it changes, and clicking between those pages must not reload the document.
 
-The `bare` project shape has no router.
-The `basic` and `fullstack` shapes use Solid Router, and `fullstack-tanstack` uses TanStack Router.
-This page explains what a router needs from the platform and how the two supported routers plug in.
-The router-specific guides are [Solid Router](/routing/solid-router) and [TanStack Router](/routing/tanstack).
+Solid does not ship a router.
+Routing is an integration: a router owns URL matching, navigation, and rendering the matched page, and the application renders it as part of the component tree like any other component.
+Two routers are supported, and both are mounted the same way.
+This page helps you pick one and shows the smallest routed app; the router-specific pages take over from there.
+
+:::note[Wiring a router that is not one of these two]
+If you are integrating a different router into start mode, [Integrate a router](/routing/integrate-a-router) covers the request pipeline and the single-flight extension points.
+Nothing on this page is required reading for that.
+:::
 
 ## Pick a router
 
 Use Solid Router when you do not have a reason to use something else.
 It is built for Solid's reactivity model: route params and location are reactive values, `query()` and `action()` are thin wrappers around server functions, forms submit before JavaScript loads, and single-flight mutations work by default.
 It also ships the file-system adapter that the CLI templates use, so routes are files under `src/routes`.
+The `basic` and `fullstack` project shapes install it.
 
 Use TanStack Router when you already build on TanStack Query, need its typed search-parameter schemas and loader model, or share routing conventions with a TanStack app in another framework.
 You give up the file-system convention shared with the rest of the Solid templates, and you own the data cache handoff between server and client, which the [TanStack Router](/routing/tanstack) page documents.
+The `fullstack-tanstack` project shape installs it.
 
-Both routers are mounted the same way and both use the same server-side hooks, so the rest of this page applies to either one.
+The `bare` shape has no router, for a single-page tool or a project that adds one later.
 
 ## The smallest routed app
 
@@ -65,71 +70,78 @@ export default function App() {
 }
 ```
 
+Run it and click **Users**.
+The URL changes to `/users/1`, the page under the `<nav>` changes, and the `<nav>` itself is not touched: the document did not reload.
+
 Each file under `src/routes` with a default export is a page.
-`paths` builds URLs from the route tree, so links are checked by the type checker.
+`paths` builds URLs from the route tree, so `paths.users(1)` is checked by the type checker and a link to a route that does not exist fails to compile.
 The `Loading` boundary around `props.children` is what lets a navigation keep the current page on screen while the next page's data loads.
 The [Solid Router setup page](/routing/solid-router/setup) shows the same app with an in-memory route tree instead of the file-system adapter.
 
 ## Mount the router in `App`
 
 The `@solidjs/vite-plugin` start mode uses `src/App.tsx` as the root component for its generated entries.
-With server-side rendering (SSR) enabled, its generated server and client entries both render `App` inside `src/Document.tsx`.
+With server-side rendering (SSR) enabled, the generated server and client entries both render `App` inside `src/Document.tsx`.
 Mount the router or its provider in `App` so both entries use the same router root.
-Site-wide providers can wrap the router, and shared layouts can live in the router's root route or inside its provider.
+
+Site-wide providers can wrap the router.
+Shared layouts belong inside it, in the router's root render prop or a layout route, so they can read the location:
+
+```tsx
+// Avoid: the header is outside the router, so it cannot read the location or mark the active link
+<>
+	<Header />
+	<Router>{(props) => props.children}</Router>
+</>
+
+// Prefer: the header is in the root render prop, where router primitives work
+<Router>
+	{(props) => (
+		<>
+			<Header />
+			{props.children}
+		</>
+	)}
+</Router>
+```
+
+Run the `Avoid` version with a `useLocation()` call inside `Header` and it throws `<A> and 'use' router primitives can be only used inside a Route.`
+The `Prefer` version keeps `Header` mounted for the life of the app and gives it access to every router primitive.
+
+:::caution[One router per app]
+Solid Router does not support a `<Router>` inside another `<Router>`; development warns `Mounting a router inside another router is not supported.`
+Compose one route tree instead, splitting large sections into [lazy subtrees](/routing/solid-router/route-definitions#load-a-route-subtree-lazily) when they should load on demand.
+:::
 
 ## Choose how routes are defined
 
 The platform does not prescribe route definitions or file naming.
-A router can consume an in-memory route tree, its own generated route tree, or a manifest from a file-system routing plugin.
+A router can consume a hand-written route array, its own generated route tree, or a manifest from a file-system routing plugin.
 
-The `filesystem-routing` Vite plugin exposes its manifest through `virtual:file-routes`.
-Solid Router can convert the manifest's `pageRoutes` export into route definitions with `fileRoutes` from `@solidjs/router/fs`.
-This import and adapter are Solid Router conventions, not requirements for other routers.
+With Solid Router, both forms produce the same route objects, so the decision is about where you want to read the route tree:
+
+- A hand-written array in `src/router.ts` keeps every path in one file and needs no plugin.
+  [Route definitions](/routing/solid-router/route-definitions) covers its fields.
+- The `filesystem-routing` Vite plugin exposes a manifest through `virtual:file-routes`, and `fileRoutes` from `@solidjs/router/fs` converts its `pageRoutes` export into route definitions.
+  The path lives in the filename, so adding a page is adding a file.
+  This is what the templates do.
 
 TanStack Router uses `@tanstack/router-plugin` to generate its own typed route tree from `src/routes`.
-An application can still use `virtual:file-routes` for HTTP handlers in another directory, as the Router + Query template does for `src/api`.
+An application can still use `virtual:file-routes` for HTTP handlers in another directory, as the `fullstack-tanstack` template does for `src/api`.
 
-## Connect routing to requests
+## Recap
 
-During SSR, a router needs the request URL and any request-scoped data required by its loaders.
-The start mode request handler creates a `RequestEvent` for each web `Request` and runs the render inside that event's scope.
-
-Solid Router reads the request URL from that event when it creates its server integration.
-That behavior belongs to Solid Router.
-
-Routers that need an asynchronous preparation step can use the platform's `start.setup` option.
-The configured server-only module runs when the middleware chain reaches the page render and before `renderToStream`.
-It can create request-local router and cache instances, load the matched routes, and return a component to render in place of `App`.
-The hook runs once each time a generated server entry renders an SSR request and is ignored when SSR is disabled.
-An authored server entry already owns the render function and must perform the same preparation itself.
-
-The separate `start.middleware` option installs fetch-style middleware in front of page renders, server-function calls, and other requests dispatched by the handler.
-The middleware chain and `start.setup` share the same request event, including values stored in `event.locals`.
-
-## Integrate single-flight mutations
-
-Single-flight combines a mutation result and refreshed page data in one server-function response.
-The platform transport supplies two router-neutral extension points:
-
-- Registering a client consumer with `subscribeFlightData` adds the single-flight request header to non-GET server-function calls.
-- A server `collectFlightData` hook receives the target URL, revalidation keys, and request headers with mutation cookies already folded in.
-
-The server-function runtime awaits the consumer before resolving the call with the mutation value.
-The integration decides how to match the target URL, rerun relevant loaders or preloads, produce a serializable payload, and apply it on the client.
-`serverFunctions.configure` provides a server-only module that the generated handler imports before dispatch in development and production.
-
-Solid Router supplies `createFlightDataCollector` from `@solidjs/router/server`.
-It consumes the router's route tree, base, and root preload, then collects matched `query` results for the target URL.
-On the client, Solid Router enables single-flight by default, registers the mounted router, and installs its flight consumer when the first router action is created.
-The router and action integrations use a rendezvous so either can load first.
-The consumer applies response metadata and seeds Solid Router's `query` cache from the payload.
-
-Other routers provide their own collection and cache-hydration policy.
-The [TanStack Router integration](/routing/tanstack) uses a dehydrated TanStack Query cache as the flight payload.
+- Use Solid Router unless you already build on TanStack Query or share routing with a TanStack app.
+- Create the router once at module scope and export `Router` and `paths` from `src/router.ts`.
+- Mount the router in `src/App.tsx` so the generated client and server entries render the same tree.
+- Put shared layout inside the router's render prop, not around the router, so it can use router primitives.
+- Wrap `props.children` in a `Loading` boundary so the first load has a fallback and later navigations keep the current page.
+- Build URLs with `paths` instead of string literals so the type checker catches a route that moved.
+- Choose the file-system adapter or a hand-written array in `src/router.ts`; everything else is unchanged either way.
 
 ## Next steps
 
-- [Solid Router](/routing/solid-router): routes, layouts, navigation, and data loading with the default router.
-- [TanStack Router](/routing/tanstack): the integration boundary used by the `fullstack-tanstack` template.
-- [App structure](/building-apps/app-structure): the `App`, `Document`, and `start.setup` conventions this page refers to.
-- [Async reactivity](/concepts/async-reactivity): why a navigation can hold the current page instead of flashing a fallback.
+- [Solid Router](/routing/solid-router): one small store built up page by page, then routes, layouts, navigation, and data loading in depth.
+- [TanStack Router](/routing/tanstack): how the `fullstack-tanstack` template hands the TanStack Query cache between server and client.
+- [App structure](/building-apps/app-structure): what the generated entries do with `App` and `Document`, and when to change them.
+- [Integrate a router](/routing/integrate-a-router): the request pipeline and single-flight hooks for a router Solid does not ship.

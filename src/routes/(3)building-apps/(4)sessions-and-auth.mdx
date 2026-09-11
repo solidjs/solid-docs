@@ -1,46 +1,51 @@
 ---
 title: "Sessions and auth"
 version: "2.0"
-description: "Build a signed cookie session on the request event, sign users in and out from server functions, and authorize every server entry point."
+description: "Build a signed cookie session on the request event, sign customers in and out from server functions, and authorize every server entry point against that session."
 ---
 
-Solid supplies the HTTP exchange that session and authentication code can use.
-It does not supply a built-in session store or authentication framework.
+The store's account area has an orders page.
+A request for it arrives with a `Cookie` header, and before the page renders or a server function returns a single order, the server has to answer two questions: who is this, and may they see this record.
+
+Solid supplies the HTTP exchange those answers are built on: the incoming request, a `locals` bag, and the outgoing response headers, all on the request event.
+It does not supply a session store or an authentication framework.
+The `fullstack` template composes a signed cookie from `@remix-run/cookie` with that event, and this page builds the account area on the same shape.
+
+Most apps need the two middle sections: the signed cookie session and the authorization check in every server function.
+The two short sections before them say what is Solid's and what is the library's, for when you choose a different library.
 
 This page assumes a `fullstack` project with [server functions](/building-apps/server-functions) enabled, because a session is read on the server and most reads happen inside a server function or [middleware](/building-apps/middleware-and-api-routes).
 
 ## What the platform supplies
 
-Code running under start mode can read the current request event with `getRequestEvent()`.
+Code running under start mode reads the current request event with `getRequestEvent()` from `@solidjs/web`.
 The event exposes:
 
 - `request`, including its `Cookie`, `Authorization`, and other request headers.
-- `locals`, where middleware can place request-scoped state such as an authenticated user.
+- `locals`, where middleware can place request-scoped state such as an authenticated customer.
 - `response`, whose headers collect outgoing `Set-Cookie` values before the response head commits.
 
 `@solidjs/web` also exports `parseCookieHeader()` and `serializeCookie()` for unsigned cookie encoding.
-Those functions do not sign, encrypt, rotate, persist, or revoke session data.
+Those functions do not sign, encrypt, rotate, persist, or revoke anything.
 
 ## What a session library supplies
 
-A cookie or session library defines the application-level protocol.
-Depending on the library, that can include:
+A cookie or session library defines the application-level protocol: signing or encryption, secret rotation, expiration and renewal, storage-backed session identifiers, and cookie serialization options.
 
-- Signing or encryption.
-- Secret rotation.
-- Expiration and renewal rules.
-- Storage-backed session identifiers.
-- Cookie serialization options.
+The `fullstack` template uses `@remix-run/cookie`.
+Its session cookie is signed and tamper-evident, and it is not encrypted, so the payload is readable by the browser.
 
-The official `solid-v2/fullstack` templates compose `@remix-run/cookie` with the request event.
-Their session cookie is signed and tamper-evident, but it is not encrypted.
-Do not place secrets in a client-readable cookie payload.
+:::danger[A signed cookie is not a secret]
+Anything placed in the session payload can be read by the person holding the cookie.
+Store an identifier such as `userId` and look the rest up on the server; never store a password hash, an API key, or another customer's data.
+:::
 
 ## A signed cookie session
 
-The following shape follows the fullstack template:
+The following module follows the template's `src/server/session.ts`:
 
 ```ts
+// src/server/session.ts
 import { createCookie } from "@remix-run/cookie";
 import {
 	getRequestEvent,
@@ -56,7 +61,7 @@ interface SessionData {
 const maxAge = 60 * 60 * 24 * 7;
 
 const sessionCookie = createCookie("session", {
-	secrets: env.SESSION_SECRET,
+	secrets: env.SESSION_SECRET.split(","),
 	httpOnly: true,
 	secure: true,
 	sameSite: "Lax",
@@ -85,12 +90,7 @@ export async function setSession(data: SessionData): Promise<void> {
 	const exp = Math.floor(Date.now() / 1000) + maxAge;
 	event().response.headers.append(
 		"set-cookie",
-		await sessionCookie.serialize(
-			JSON.stringify({
-				data,
-				exp,
-			})
-		)
+		await sessionCookie.serialize(JSON.stringify({ data, exp }))
 	);
 }
 
@@ -102,22 +102,82 @@ export async function clearSession(): Promise<void> {
 }
 ```
 
-Set cookie attributes explicitly because library defaults may not match the application's security requirements.
-Use a server-only environment source for signing secrets.
+Call `setSession({ userId })` inside a server function and the response that leaves carries a `Set-Cookie` header.
+Call `getSession()` on the next request and it returns `{ userId }`; an absent, tampered, or expired cookie returns `null`.
 
-The first secret signs new cookies, and every listed secret can verify existing cookies.
-Prepend a new secret during rotation, then remove the old secret after existing cookies have expired.
-The example stores its own expiry timestamp because browser `Max-Age` alone does not stop a client from replaying an old cookie.
+Three decisions in that file are deliberate.
+The cookie attributes are set explicitly, because the library's defaults may not match the application's requirements.
+The signing secret comes from `virtual:env/server`, which [Environment](/building-apps/environment) keeps out of the browser bundle; the first secret in the list signs new cookies and every listed secret verifies existing ones, so rotation is prepending a new secret and dropping the old one after `maxAge` has passed.
+The payload carries its own `exp`, because the browser's `Max-Age` is a request to the browser and a client is free to replay an old cookie past it.
 
-Cookie reads and writes are separate views.
+:::caution[A write does not change what this request read]
 `getSession()` reads the `Cookie` header that arrived with the request.
-Calling `setSession()` does not change that incoming header during the same request.
+`setSession()` appends to the outgoing response.
+Calling `setSession()` and then `getSession()` in the same request returns the old session, because the new cookie is on its way to the browser and has not come back yet.
+:::
+
+## Sign in and sign out
+
+Signing in is a server function that checks the credentials, writes the session, and redirects:
+
+```ts
+// src/data/account.ts
+import { markSafeError, redirect } from "@solidjs/web";
+import { clearSession, setSession } from "../server/session";
+import { verifyCredentials } from "../server/customers";
+
+export async function signIn(form: FormData) {
+	"use server";
+	const customer = await verifyCredentials(
+		String(form.get("email") ?? ""),
+		String(form.get("password") ?? "")
+	);
+	if (!customer) {
+		throw markSafeError(new Error("Email or password did not match"));
+	}
+
+	await setSession({ userId: customer.id });
+	throw redirect("/account");
+}
+
+export async function signOut() {
+	"use server";
+	await clearSession();
+	throw redirect("/");
+}
+```
+
+Submit the sign-in form and the response is a redirect to `/account` with the session cookie attached.
+The cookie write and the thrown `redirect()` ride the same response; start mode folds `Set-Cookie` values from the event onto page responses, middleware responses, API responses, and server-function responses alike.
+The failed-credentials error is wrapped in `markSafeError` so its message reaches the form; a plain thrown `Error` is replaced with `Internal Server Error` in production.
+[Mutations and responses](/building-apps/server-functions/mutations-and-responses) covers `redirect()`, `reload()`, and which thrown errors reach the browser.
 
 ## Authorize on the server
 
 Authentication identifies the caller.
 Authorization decides whether that caller may perform an operation.
-Both decisions belong in server code.
+Both decisions belong in server code, and the caller's identity comes from the session, never from an argument:
+
+```ts
+// Avoid: the browser names the customer
+export async function getOrders(customerId: string) {
+	"use server";
+	return database.orders.forCustomer(customerId);
+}
+
+// Prefer: the session names the customer
+export async function getOrders() {
+	"use server";
+	const session = await getSession();
+	if (!session?.userId) throw redirect("/sign-in");
+	return database.orders.forCustomer(session.userId);
+}
+```
+
+A server function is an HTTP endpoint, so the `Avoid` version returns any customer's orders to any caller who puts that customer's id in the request body.
+[Arguments and security](/building-apps/server-functions/arguments-and-security) covers what a caller controls and what the request event vouches for.
+
+Validate the arguments the caller does control the same way, then authorize access to the specific record:
 
 ::::tab-group[validation-library]
 
@@ -127,15 +187,20 @@ Both decisions belong in server code.
 import { redirect } from "@solidjs/web";
 import * as v from "valibot";
 
-const UserName = v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(100));
+const AccountName = v.pipe(
+	v.string(),
+	v.trim(),
+	v.minLength(1),
+	v.maxLength(100)
+);
 
-export async function renameCurrentUser(form: FormData) {
+export async function renameAccount(form: FormData) {
 	"use server";
 	const session = await getSession();
 	if (!session?.userId) throw redirect("/sign-in");
 
-	const name = v.parse(UserName, form.get("name"));
-	await database.users.rename(session.userId, name);
+	const name = v.parse(AccountName, form.get("name"));
+	await database.customers.rename(session.userId, name);
 }
 ```
 
@@ -147,15 +212,15 @@ export async function renameCurrentUser(form: FormData) {
 import { redirect } from "@solidjs/web";
 import { z } from "zod";
 
-const UserName = z.string().trim().min(1).max(100);
+const AccountName = z.string().trim().min(1).max(100);
 
-export async function renameCurrentUser(form: FormData) {
+export async function renameAccount(form: FormData) {
 	"use server";
 	const session = await getSession();
 	if (!session?.userId) throw redirect("/sign-in");
 
-	const name = UserName.parse(form.get("name"));
-	await database.users.rename(session.userId, name);
+	const name = AccountName.parse(form.get("name"));
+	await database.customers.rename(session.userId, name);
 }
 ```
 
@@ -163,33 +228,96 @@ export async function renameCurrentUser(form: FormData) {
 
 ::::
 
-Hiding a control in the browser does not authorize the corresponding server function or API route.
-Check the session or other credentials again at every protected server entry point, then authorize access to the specific record.
-Do not accept a user ID from the browser when the operation should target the signed-in user.
+Hiding the rename form from signed-out visitors does not protect `renameAccount`; the check inside the function is the gate.
+Repeat it at every protected server entry point: server functions, API route handlers, and the page render.
 
-Middleware can authenticate once and place the result on `event.locals`.
-Server functions, API handlers, and the page render can then read the same request-scoped value.
-Use TypeScript module augmentation on `RequestEventLocals` when the application needs a precise type for those fields.
+### Authenticate once in middleware
+
+When many entry points need the same answer, a [middleware](/building-apps/middleware-and-api-routes#add-a-middleware) can read the session once and place the result on `event.locals`:
+
+```ts
+// src/middleware.ts
+import { getRequestEvent } from "@solidjs/web";
+import { getSession } from "./server/session";
+
+async function attachCustomer(
+	_request: Request,
+	next: () => Promise<Response>
+) {
+	const session = await getSession();
+	getRequestEvent()!.locals.userId = session?.userId;
+	return next();
+}
+```
+
+Server functions, API handlers, and the page render for that request read the same event, so `locals.userId` set here is visible to all of them.
+Augment `RequestEventLocals` from `@solidjs/web` when the application wants a precise type for those fields:
+
+```ts
+declare module "@solidjs/web" {
+	interface RequestEventLocals {
+		userId?: string;
+	}
+}
+```
 
 ## Response behavior
 
-Session writes append `Set-Cookie` to the event response stub.
-Start mode folds those cookies onto page responses, middleware responses, API responses, and server-function responses.
-A session write followed by a thrown `redirect()` keeps both the cookie and redirect metadata.
+Session writes append `Set-Cookie` to the event's response stub, and start mode folds those headers onto whatever response leaves, a thrown `redirect()` included.
 
 Write cookies before the response head commits.
-During streaming server rendering, the response head commits when the shell flushes.
-A late response-header write throws in development and reports an error without changing the response in production.
+During streaming server rendering, the head commits when the shell flushes; for a server-function call or an API route, it commits when the handler folds the event onto the outgoing response, after the function has returned.
+A header write after that point throws in development and, in production, reports the error and leaves the response unchanged.
 
-:::note[Choose the session architecture]
-Cookie-backed sessions keep their payload in the browser and are limited by cookie size.
-Storage-backed sessions put only an opaque identifier in the cookie and keep revocable data in a database, key-value store, or other server storage.
-Solid supplies the same request and response seam for either architecture.
+:::note[Cookie-backed or storage-backed]
+A cookie-backed session keeps its payload in the browser and is limited by cookie size.
+A storage-backed session puts an opaque identifier in the cookie and keeps revocable data in a database or key-value store, which is what you want when signing out must invalidate other devices.
+Solid supplies the same request and response seam for either.
 :::
+
+## Common problems
+
+### `getSession()` returns `null` right after `setSession()`
+
+Both calls ran in the same request.
+The read sees the `Cookie` header that arrived; the write is on the outgoing response.
+Redirect after the write, as `signIn` does, and the next request carries the new cookie.
+
+### The cookie is set but never comes back
+
+Compare the `Set-Cookie` attributes in the response with the request that follows.
+A `secure` cookie is not sent over plain `http://`, a `path` that does not cover the endpoint is not sent to it, and a `domain` that does not match the host is dropped.
+Set the attributes explicitly rather than relying on library defaults.
+
+### `/sign-in` and `/account` redirect to each other forever
+
+The sign-in check runs on the sign-in page too, or the session cookie never comes back (see above) so every protected request redirects again.
+Guard only the routes that need a session, and confirm the cookie arrives on the request to `/account`.
+
+### `Response header write dropped: headers.append("set-cookie") ran after the response head was sent`
+
+`setSession()` or `clearSession()` ran after the shell flushed, for example from a component that rendered behind a `Loading` boundary.
+Move the write into a server function or middleware, or run it before the first flush.
+
+### `Missing request event`
+
+`getRequestEvent()` returned `undefined`.
+It is defined only on the server, inside a request: not in the browser, not at module scope, and not in a test that did not provide an event.
+Call the session helpers from a server function, middleware, or the page render.
+
+## Recap
+
+- Read the request and write `Set-Cookie` through `getRequestEvent()`; the session protocol comes from a cookie library.
+- Sign the cookie with a secret from `virtual:env/server`, set `httpOnly`, `secure`, and `sameSite` explicitly, and carry an expiry in the payload.
+- A signed cookie is readable by the browser; store an id, not data.
+- `getSession()` reads the request and `setSession()` writes the response; the two do not meet in one request.
+- Take the customer's identity from the session, never from an argument, and check it in every server function and API handler.
+- Read the session once in middleware and put the result on `event.locals` when many entry points need it.
+- Write cookies before the shell flushes or the function returns; a later write is dropped and reported.
 
 ## Next steps
 
-- [Arguments and security](/building-apps/server-functions/arguments-and-security) explains why the user identity must come from the request event and never from a server-function argument.
-- [Mutations and responses](/building-apps/server-functions/mutations-and-responses) covers `redirect()` and `reload()` after a sign-in or sign-out.
-- [Middleware and API routes](/building-apps/middleware-and-api-routes) shows where to place the session read so every request sees `event.locals.user`.
-- [Environment](/building-apps/environment) keeps the signing secret out of the client bundle.
+- [Arguments and security](/building-apps/server-functions/arguments-and-security): why the identity must come from the request event and never from a server-function argument.
+- [Mutations and responses](/building-apps/server-functions/mutations-and-responses): `redirect()` and `reload()` after a sign-in or sign-out, and which errors reach the browser.
+- [Middleware and API routes](/building-apps/middleware-and-api-routes): where the session read goes so every request sees `event.locals.userId`.
+- [Environment](/building-apps/environment): declaring `SESSION_SECRET` so the build fails if it would ship to the browser.

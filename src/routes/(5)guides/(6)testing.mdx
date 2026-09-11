@@ -1,22 +1,28 @@
 ---
 title: "Testing"
 version: "2.0"
-description: "Test Solid components in jsdom or a real browser, and test fullstack server code in a separate Node project."
+description: "Write a component test that clicks a button and asserts the label, run it in jsdom or a real browser, and test fullstack server code in a separate Node project."
 ---
 
-Use the smallest test environment that exercises the behavior under test.
+The first test most people write for a Solid component clicks the counter from the Quick start and asserts the label.
+The click fires, the assertion runs on the next line, and the DOM still says `Clicks: 0`.
+Nothing is broken: Solid applies writes in a batch after the current code finishes, and the test asserted before the batch landed.
+One call fixes it, and it is the one Solid-specific thing in a component test.
+
+Beyond that call, testing a Solid app is a question of picking the smallest environment that exercises the behavior under test:
 
 1. Start component tests in jsdom.
-   The maintained `basic` template uses this configuration for component DOM tests.
+   The `basic` template uses this configuration for component DOM tests.
 2. Use [Vitest browser mode](https://vitest.dev/guide/browser/) when the test depends on browser layout, CSS, focus, selection, or browser APIs.
-   The maintained browser-mode template runs the same component test in Chromium.
+   The browser-mode template runs the same component test in Chromium.
 3. Add a separate Node project for server code in a fullstack app.
-   The maintained `fullstack` template keeps DOM component tests and request-scoped server tests in different Vitest projects.
+   The `fullstack` template keeps DOM component tests and request-scoped server tests in different Vitest projects.
 
-Test the result that a user or caller can observe.
-For a component, query by an accessible role and assert its visible text or state.
+:::tip[Assert what the user sees]
+Query by an accessible role and assert visible text or state.
 Do not inspect signal values, effect counts, or compiled output when the public behavior gives the same evidence.
-This approach follows the [Testing Library guiding principles](https://testing-library.com/docs/guiding-principles/).
+This follows the [Testing Library guiding principles](https://testing-library.com/docs/guiding-principles/).
+:::
 
 ## Test components in jsdom
 
@@ -64,9 +70,11 @@ Register the jest-dom matchers in `vitest-setup.ts`:
 import "@testing-library/jest-dom/vitest";
 ```
 
-The template sets `isolate: false` as an optional performance setting for a small suite.
-With that setting, module state can survive between test files.
+:::caution[isolate: false shares module state between files]
+The template sets `isolate: false` as a performance setting for a small suite.
+With it, module state can survive from one test file to the next.
 Remove the setting when tests mutate module-level state, or reset that state after each test.
+:::
 
 ### Test a user-visible interaction
 
@@ -111,12 +119,26 @@ describe("<Counter />", () => {
 });
 ```
 
-The click event stages the signal update, and ordinary reads continue to return the last committed value.
-Call [`flush()`](/reference/solid-js/reactivity/flush) to commit the staged value and drain queued work before reading the DOM.
-Use asynchronous queries for behavior that is asynchronous by contract, such as a pending resource, rather than using `flush()` as a replacement for waiting on that work.
+Run it and the test passes.
+Remove the `flush()` line and it fails on the last assertion with the label still at `Clicks: 0`:
+
+```tsx
+// Avoid: asserting before the staged write has landed
+fireEvent.click(button);
+expect(button).toHaveTextContent("Clicks: 1");
+
+// Prefer: apply staged writes and run effects, then assert
+fireEvent.click(button);
+flush();
+expect(button).toHaveTextContent("Clicks: 1");
+```
+
+The click event stages the signal update, and ordinary reads continue to return the last committed value until the batch lands.
+[`flush()`](/reference/solid-js/reactivity/flush) commits the staged value and drains queued work so the DOM is current when the assertion runs.
+It does not wait for async work: for behavior that is asynchronous by contract, such as an async memo, use the asynchronous queries or [`resolve(fn)`](/reference/solid-js/advanced/interop-async/resolve) rather than `flush()`.
 
 Solid Testing Library tracks mounted containers and exports `cleanup`.
-The pinned release can register cleanup automatically when the test runner exposes a global `afterEach`.
+It can register cleanup automatically when the test runner exposes a global `afterEach`.
 The configuration above sets `globals: false`, so the explicit `afterEach(cleanup)` keeps disposal independent of test-runner globals.
 
 ## Test components in a real browser
@@ -124,9 +146,10 @@ The configuration above sets `globals: false`, so the explicit `afterEach(cleanu
 Choose browser mode when jsdom cannot provide the behavior that the test needs.
 The maintained browser-mode template uses the Playwright provider with headless Chromium.
 
-Keep jsdom installed and add the browser dependencies.
+:::note[Browser mode still needs jsdom installed]
 When `test.environment` is unset, `@solidjs/vite-plugin` supplies a jsdom environment and Vitest resolves that dependency before it starts the browser pool.
 Without jsdom, the Chromium test can pass while the Vitest command exits with a missing-dependency error.
+:::
 
 For a new test setup, install the complete dependency set:
 
@@ -166,7 +189,7 @@ Run the browser suite once and exit with:
 pnpm test --run
 ```
 
-The maintained templates demonstrate component tests, not browser-wide end-to-end flows.
+The templates demonstrate component tests, not browser-wide end-to-end flows.
 See the [Vitest browser-mode guide](https://vitest.dev/guide/browser/) for browser locators, interactions, and browser-mode limitations when a component test needs those APIs.
 
 ## Test server code in a Node project
@@ -325,12 +348,52 @@ test("reads a session on the next request", async () => {
 });
 ```
 
+Run it and the second request returns `{ userId: "user_1" }` from the cookie the first request set.
 The test asserts the public request-to-response contract: one request writes a cookie, and the next request reads the session.
 Reset modules before importing code that captures environment values at module initialization.
 Restore fake timers and mocks, delete changed environment variables, and dispose any other process-wide state in `afterEach`.
 
+## Common problems
+
+### The assertion after `fireEvent` sees the old DOM
+
+The write is staged and the batch has not landed when the next line runs.
+Call `flush()` after the event and before the assertion.
+For an async source, `flush()` does not help; await `resolve(() => value())` or use an asynchronous query.
+
+### The Chromium test passes but Vitest exits with a missing-dependency error
+
+jsdom is not installed.
+`@solidjs/vite-plugin` supplies a jsdom environment when `test.environment` is unset, and Vitest resolves that dependency before starting the browser pool.
+Keep `jsdom` in the development dependencies alongside the browser provider.
+
+### A server test runs under jsdom
+
+The server file matches the client project's `include` pattern.
+Keep `src/server/**/*.test.ts` and `src/**/*.test.tsx` as separate patterns so each file lands in one project.
+
+### The session module ignores the `SESSION_SECRET` set in the test
+
+The module captured the environment at import time, before the test set the variable.
+Set `process.env.SESSION_SECRET`, call `vi.resetModules()`, and import the module after both, as `loadSession` above does.
+
+### State leaks from one test file into the next
+
+`isolate: false` lets module state survive between files.
+Remove the setting, or reset the module-level state in `afterEach`.
+
+## Recap
+
+- Test in the smallest environment that exercises the behavior: jsdom for component DOM, browser mode for layout and browser APIs, a Node project for server code.
+- Pass a function to `render` so the component has a reactive owner, and query by role.
+- Call `flush()` after `fireEvent` and before the assertion; it lands the staged write and does not wait for async work.
+- Register `afterEach(cleanup)` when `globals` is off.
+- Keep jsdom installed in browser mode; the plugin resolves it before the browser pool starts.
+- Give client and server tests separate `include` patterns in separate Vitest projects.
+- Set environment variables and reset modules before importing code that reads them at import time, and undo both in `afterEach`.
+
 ## Next steps
 
-- [Debugging reactivity](/guides/debugging-reactivity): when a test sees the old DOM, the reason is usually a pending flush; that page explains `flush()` and where it does not belong.
+- [Debugging reactivity](/guides/debugging-reactivity#the-test-sees-the-old-dom): `flush()` in full, `resolve` for async values, and the one place `flush()` is not allowed.
 - [Sessions and auth](/building-apps/sessions-and-auth): the session module the server test above exercises.
 - [Environment](/building-apps/environment): why server code that reads `virtual:env/server` needs the module reset the last section describes.

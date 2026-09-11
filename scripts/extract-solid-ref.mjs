@@ -1780,8 +1780,8 @@ const LIST_PROBLEMS = {
 		"/guides/lists#editing-one-item-re-renders-the-whole-list",
 	],
 	pushNothing: [
-		"`todos.push(item)` does nothing",
-		"/guides/lists#todospushitem-does-nothing",
+		"`items.push(item)` does nothing",
+		"/guides/lists#itemspushitem-does-nothing",
 	],
 };
 const FORM_PROBLEMS = {

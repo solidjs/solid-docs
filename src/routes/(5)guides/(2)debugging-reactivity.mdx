@@ -4,13 +4,16 @@ version: "2.0"
 description: "Find out why a value does not update, why it updates too often, and how to read Solid's development diagnostics."
 ---
 
-Reactivity bugs come in two shapes.
-Something on the page does not change when it should, or something changes far more often than it should.
+A quantity input in the cart changes and the subtotal next to it does not.
+Or the subtotal changes, and so does every row in the list, on every keystroke.
+Those are the two shapes a reactivity bug takes: something does not update when it should, or something updates far more often than it should.
 Solid's development build reports the first kind as it happens and can explain the second kind on request.
 This guide shows how to read those reports and what to change.
 
-Everything here needs the development build.
+:::note[Development build only]
+Everything on this page needs the development build.
 Production builds strip the diagnostics and the `DEV` export is `undefined`.
+:::
 
 ## Read a diagnostic
 
@@ -73,11 +76,16 @@ Writes must go through the setter:
 ```ts
 const [cart, setCart] = createStore({ items: [] as Item[] });
 
-cart.items.push(item); // ignored: a store proxy drops writes made outside its setter
+// Avoid: a write to the proxy, which the store drops
+cart.items.push(item);
+
+// Prefer: a write to the setter's draft
 setCart((draft) => {
-	draft.items.push(item); // applied and tracked
+	draft.items.push(item);
 });
 ```
+
+Run the `Avoid` version and nothing happens: no error, no warning, and the list does not change.
 
 Objects held in a plain signal have the opposite failure.
 `items().push(item)` does mutate the array, but no one is notified because the signal's value is the same array; `setItems((current) => [...current, item])` gives the signal a new value to report.
@@ -89,15 +97,24 @@ The [Stores](/concepts/stores) page covers nested updates.
 A signal read in the second function does not re-run the effect:
 
 ```ts
+// Avoid: price() is read in the untracked effect function
 createEffect(
 	() => quantity(),
 	(value) => {
-		document.title = `${value} × ${price()}`; // price() is not tracked here
+		document.title = `${value} × ${price()}`;
+	}
+);
+
+// Prefer: read both in the compute function and hand the values across
+createEffect(
+	() => [quantity(), price()] as const,
+	([value, unitPrice]) => {
+		document.title = `${value} × ${unitPrice}`;
 	}
 );
 ```
 
-Move `price()` into the compute function and return both values.
+Run the `Avoid` version and change the price: the title keeps the old price until the quantity also changes.
 
 ### Is the value pending?
 
@@ -138,6 +155,11 @@ Writes made from an effect or an action are stamped with that effect or action; 
 While attribution is enabled, Solid also warns about the patterns below on its own.
 Each warning names the scope and the cause, so you usually do not need to query `why` for them.
 
+:::tip[Name the scopes before you record]
+Every report and every `why` chain refers to nodes by their `name` option, and an unnamed memo prints as `computed`, an unnamed effect as `effect`, and an unnamed signal as `signal`.
+Give the scopes you are investigating names first; a chain of anonymous nodes is hard to follow.
+:::
+
 The usual causes and their fixes:
 
 ### A memo depends on more than it uses
@@ -170,15 +192,19 @@ See [Stores](/concepts/stores).
 The store version of the same mistake is a spread copy:
 
 ```ts
+// Avoid: a fresh array to add one item, so every reader of items re-runs
 setCart((draft) => {
-	draft.items = [...draft.items, next]; // [IMMUTABLE_UPDATE_IN_STORE]
+	draft.items = [...draft.items, next];
 });
+
+// Prefer: change the draft, which notifies readers of the new index and the length only
 setCart((draft) => {
-	draft.items.push(next); // notifies readers of the new index and the length only
+	draft.items.push(next);
 });
 ```
 
-`[IMMUTABLE_UPDATE_IN_STORE]` fires when a store path is replaced with a container whose leaves are mostly the same values as before.
+Run the `Avoid` version and every reader of the `items` path re-runs for one added item; attribution reports `[IMMUTABLE_UPDATE_IN_STORE]`.
+It fires when a store path is replaced with a container whose leaves are mostly the same values as before.
 The store already tracks each leaf; a new container makes every reader of the path re-run for the one leaf that moved.
 Mutate the draft, or pass `reconcile()` for data that arrives as a fresh tree from the server.
 
@@ -233,8 +259,9 @@ The repair is always to add feedback, never to remove the hold:
 [Async reactivity](/concepts/async-reactivity#another-answer-is-coming-ispending) explains each of these.
 
 A `Loading` boundary above the async source is a different situation: the read never enters a hold, so there is no `SILENT_HOLD` to report.
-A hold that was acknowledged but still ran long is not a diagnostic either; it shows up as `late` in the tables below so the cost is visible without blaming code that waited correctly.
+A hold that was acknowledged but still ran long is not a diagnostic either; it is recorded as `late` in the feedback tables so the cost is visible without blaming code that waited correctly.
 
+:::deep-dive[Feedback tables, and how a router names its holds]
 `DEV.attribution.holds()` returns every hold from the session, reported or not.
 `DEV.attribution.feedback()` folds holds and re-runs into tables sorted worst-first:
 
@@ -243,9 +270,10 @@ A hold that was acknowledged but still ran long is not a diagnostic either; it s
 - `flights`: per async source, requests started, landed, and abandoned before landing; a high abandon count is the request-per-keystroke signature.
 - `fallbacks`: per `Loading` boundary, how often the fallback showed, for how long, and how many showings were under 150ms flashes.
 
-A router can name the holds its navigations cause by the route pattern that matched, `/users/:id` rather than `/users/42`, so occurrences fold together in these tables.
+A router can name the holds its navigations cause by the route pattern that matched, `/products/:id` rather than `/products/mug`, so occurrences fold together in these tables.
 It does so by wrapping its location write in `OBSERVE.attribution.withOrigin({ kind: "navigation", name, to, params }, write)`, which is router-agnostic; nothing else in attribution knows about routing.
 The [`DEV` reference](/reference/solid-js/advanced/diagnostics-dev-hooks/dev#navigationref) describes the `NavigationRef` fields, including how a router whose match is not final at write time fills them in later.
+:::
 
 ## The test sees the old DOM
 
@@ -360,9 +388,20 @@ Budget files accept `maxSilentHoldMs` and `maxHoldMs` next to the re-run limits.
 With `@solidjs/diagnostics` in `package.json`, the Vite plugin also serves the same capture controls at `/__solid/diagnostics` on the dev server, so a script or an agent can record a scenario against the running app.
 Set `diagnostics: false` in the plugin options to turn that off.
 
+## Recap
+
+- Read the bracketed code first; it is stable across releases and names the defect, and the `in` line names the scope that produced it.
+- For a value that does not update, check in order: is the read in a tracking scope, is the signal called, did the write go through the setter, is the read in the effect's compute function, is the value pending.
+- For a value that updates too often, name the scopes, enable attribution, reproduce, and ask `DEV.attribution.why(scope)`.
+- Change the one property on a store draft; a spread copy or a fresh array re-runs every reader of the path.
+- Replace an effect that copies state with a memo; keep the effect only when the write records something from outside the graph.
+- When a click looks dead, add feedback with `isPending`, `latest`, an optimistic value, or `affects`; do not remove the hold.
+- Call `flush()` in tests after firing an event, never inside an action body.
+- Put an `Errored` boundary around any subtree that can throw; an uncaught error halts every update.
+
 ## Next steps
 
 - [Reactivity](/concepts/reactivity): the rules the diagnostics enforce.
-- [Avoid unnecessary effects](/guides/avoid-unnecessary-effects): the fix for most write-placement warnings.
-- [Stores](/concepts/stores): per-property tracking, `reconcile`, and why write path matters.
+- [Avoid unnecessary effects](/guides/avoid-unnecessary-effects): the fix for most write-placement warnings, with the wrong version shown next to the right one.
+- [Stores](/concepts/stores): per-property tracking, `reconcile`, and why the write path matters.
 - [Testing](/guides/testing): the test environments the diagnostics run in.

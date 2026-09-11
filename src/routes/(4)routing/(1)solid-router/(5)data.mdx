@@ -4,32 +4,49 @@ version: "2.0"
 description: "Start route data early with preloads, cache and share reads with query, submit mutations with actions, show optimistic state, and control what revalidates."
 ---
 
-Everything on this page is optional.
-A Solid Router app can load data with plain async memos and submit forms with plain server functions, and the [Async reactivity](/concepts/async-reactivity) page is all it needs.
-The router's data APIs add three things on top: a way to start a request before the page's component exists, a cache so two readers share one request, and a mutation shape that works as a form without JavaScript and revalidates the cache when it finishes.
+The product page from the [introduction](/routing/solid-router) fetches its product inside a memo.
+That works, and three things about it are not quite right yet: the request does not start until the page component runs, a `ProductCard` in a list and the `Product` page fetch the same product twice, and the **Add to cart** form has no way to tell the cart it changed.
 
-This page continues the store from the [Solid Router](/routing/solid-router): a product page and a cart.
+The router's data APIs add one thing for each: `preload` starts a request before the page's component exists, `query` gives two readers one request, and `action` wraps a mutation so it works as a form without JavaScript and revalidates the cache when it finishes.
+This page continues the store: a product page and a cart.
+
+:::note[All of it is optional]
+A Solid Router app can load data with plain async memos and submit forms with plain server functions, and the [Async reactivity](/concepts/async-reactivity) page is all it needs.
+Each piece below earns its place on its own, so take the ones the page in front of you needs.
+:::
 
 ## The three pieces
 
-Here is the product page from the introduction with each piece labeled:
+Here is the product page with each piece labeled:
+
+```ts
+// src/data/products.ts
+import { query } from "@solidjs/router";
+
+// 1. A cached read. Same name + same arguments = same request.
+export const getProduct = query(async (id: string) => {
+	const response = await fetch(`/api/products/${id}`);
+	return (await response.json()) as Product;
+}, "product");
+```
+
+In the `routes` array of `src/router.ts`:
+
+```ts
+{
+	path: "/products/:id",
+	component: lazy(() => import("./pages/Product")),
+	// 2. Start it as soon as the route matches, before the component runs.
+	preload: ({ params }) => void getProduct(params.id),
+}
+```
 
 ```tsx
 // src/pages/Product.tsx
 import { createMemo } from "solid-js";
-import { query, type RouteDefinition, type RouteProps } from "@solidjs/router";
+import type { RouteProps } from "@solidjs/router";
+import { getProduct } from "../data/products";
 import type { Router } from "../router";
-
-// 1. A cached read. Same name + same arguments = same request.
-const getProduct = query(async (id: string) => {
-	const response = await fetch(`/api/products/${id}`);
-	return (await response.json()) as Product;
-}, "product");
-
-// 2. Start it as soon as the route matches, before the component runs.
-export const route = {
-	preload: ({ params }) => void getProduct(params.id),
-} satisfies RouteDefinition;
 
 // 3. Read it where it is displayed.
 export default function Product(
@@ -40,21 +57,22 @@ export default function Product(
 }
 ```
 
+Hover a product link and the request appears in the network tab before the click.
+Click, and the heading renders with the name already there.
+
 Delete piece 2 and the page still works; the request starts when the memo first runs, a few milliseconds later.
 Delete piece 1 and the page still works; two components that both need the product would each fetch it.
-Each piece earns its place on its own, which is why they are separate.
+With the file-system adapter, piece 2 moves into the route module's `route` export, as [Convert a file-system manifest](/routing/solid-router/route-definitions#convert-a-file-system-manifest) shows.
 
 ## Start work before the component runs
 
 A route's `preload` runs when the route is matched, with the matched `params`, the target `location`, and an `intent`:
 
 ```tsx
-export const route = {
-	preload: ({ params, intent }) => {
-		void getProduct(params.id);
-		if (intent !== "preload") void getReviews(params.id);
-	},
-} satisfies RouteDefinition;
+preload: ({ params, intent }) => {
+	void getProduct(params.id);
+	if (intent !== "preload") void getReviews(params.id);
+},
 ```
 
 The intent tells you why the work started:
@@ -68,8 +86,19 @@ The intent tells you why the work started:
 
 Use it to skip work that is too expensive to run on a hover.
 
-Whatever `preload` returns is available to the component as `props.data`, captured once when the route matched.
-For a value that should stay reactive to `params`, read the query in a memo as above and let `preload` return nothing.
+The tempting shape, from routers where the loader is the data, is to return what the page needs:
+
+```tsx
+// Avoid: props.data is captured once, so a param change shows the old product
+preload: async ({ params }) => getProduct(params.id),
+
+// Prefer: start the request and let the page read it reactively
+preload: ({ params }) => void getProduct(params.id),
+```
+
+With the `Avoid` version, a page that renders `props.data.name` shows the mug after navigating from `/products/mug` to `/products/bowl`, because `props.data` is whatever `preload` returned when the route first matched.
+The `Prefer` version reads the query in a memo that tracks `props.params.id`, so the bowl appears.
+Return a value from `preload` only for something that should not change while the route stays matched.
 
 ### Preloading from links
 
@@ -80,8 +109,8 @@ The query cache keeps the result for a few seconds so the navigation that follow
 Turn data preloading off for one link when it is expensive or has side effects:
 
 ```tsx
-<a href={paths.reports} preload="false">
-	Reports
+<a href={paths.account.orders} preload="false">
+	Orders
 </a>
 ```
 
@@ -109,9 +138,9 @@ That is what lets the preload and the component share a request, and what lets a
 
 The cache has a different lifetime in each place it runs:
 
-- **On the server** it lives for one request.
+- On the server it lives for one request.
   Two components rendering the same product during one server render make one call; the next request starts empty.
-- **In the browser** a fresh result is reused for a few seconds, so a preload and the navigation that follows share it.
+- In the browser a fresh result is reused for a few seconds, so a preload and the navigation that follows share it.
   After that, an entry stays alive as long as something is reading it and is swept a few minutes after the last reader goes away.
   Browser back and forward can reuse a retained entry, which is why returning to a page is usually instant.
 
@@ -141,7 +170,7 @@ revalidate(); // everything
 ```
 
 Keys match by prefix, so the broad key reaches every argument combination.
-You will rarely call this by hand; the usual trigger is an action finishing, covered below.
+Calling this by hand is rare; the usual trigger is an action finishing, covered below.
 
 ## Mutate with actions
 
@@ -184,13 +213,15 @@ Then the form:
 </form>
 ```
 
+Click **Add to cart** and the form gets `aria-busy="true"` until the call and its revalidation settle; then every reader of `getCart` shows the new line.
+
 Read that form as a browser would.
 It is a `POST` to a URL with `FormData`, and it works with JavaScript disabled: the server runs `addToCart`, sees the `reload`, and sends the browser back to the page.
-With JavaScript, the router intercepts the submit, calls the action over the server-function transport, sets `aria-busy="true"` on the form until the call and its revalidation settle, and applies the response.
+With JavaScript, the router intercepts the submit, calls the action over the server-function transport, and applies the response.
 
 Two rules follow from the form being the contract:
 
-- Actions accept `POST` forms only.
+- Actions accept `POST` forms only; a `GET` form throws `Only POST forms are supported for Actions`.
   A `GET` form describes a URL, not a mutation; for search and filters, use a route with [typed search parameters](/routing/solid-router/navigation#type-search-parameters).
 - Everything the action needs must be in the form or bound to the action.
   Hidden inputs are the plain way; `.with()` is the typed way.
@@ -233,8 +264,10 @@ const savePreference = action(async (form: FormData) => {
 }, "save-preference");
 ```
 
-A client action rendered on the server needs the explicit name so both sides agree on the form's URL.
+:::caution[Name a client action that renders on the server]
+A client action rendered on the server needs the explicit name so both sides agree on the form's URL; without it the server render throws `Client Actions need explicit names if server rendered`.
 A server function already has a stable URL and does not need one.
+:::
 
 ## Show what is happening
 
@@ -277,6 +310,7 @@ function AddToCartForm(props: { productId: string }) {
 }
 ```
 
+Submit a quantity of `0` and "Quantity must be a whole number" appears under the button.
 Each submission carries the `input` that was sent, the `result` or `error`, and `retry()` and `clear()`.
 A submission that redirected or returned nothing does not stay in the list; use `.onSettled` when you need to observe those too.
 
@@ -348,21 +382,58 @@ What you give up is the no-JavaScript path, which only a form provides.
 ## What revalidates after a mutation
 
 When an action completes, the router revalidates the query cache.
-By default that means **every** entry: the safest assumption after a write is that anything might have changed.
+By default that means every entry: the safest assumption after a write is that anything might have changed.
 
 Narrow it from the server function's response:
 
 ```ts
 return reload({ revalidate: getCart.key }); // this query only
 return respond(cart, { revalidate: [getCart.key, getTotals.key] }); // a value plus keys
-return redirect("/cart", { revalidate: getCart.key }); // navigate, then revalidate
+return redirect(paths.cart, { revalidate: getCart.key }); // navigate, then revalidate
 ```
 
 A same-origin `redirect` becomes a router navigation; anything else leaves the app.
 The revalidation runs in the same update as the navigation, so the destination page renders with fresh data rather than flashing stale data first.
 
-In a `fullstack` project with the router's single-flight collector installed, the server can go one step further and include the fresh query results in the mutation response, so the client does not make a second round trip.
+:::deep-dive[Why the redirect and the data land together]
+The router applies the response's redirect and revalidation metadata inside one update.
+Readers that survive the navigation, such as a cart count in the shared layout, refetch inside that update and hold the commit until they have a value, so the new page never paints with the old cart.
+In a `fullstack` project with the router's single-flight collector installed, the server goes one step further and includes the fresh query results in the mutation response, so the client seeds its cache from the payload instead of making a second round trip.
 [Server rendering and hydration](/routing/solid-router/server-rendering#one-round-trip-for-a-mutation) shows the setup.
+:::
+
+## Common problems
+
+### The list still shows the old data after a mutation
+
+The mutation did not go through an `action`, so nothing revalidated: a server function called directly from an event handler updates the database and leaves the cache as it was.
+Wrap it in `action` and submit it through a form or `useAction`.
+If it is an action and one list is stale, the response narrowed `revalidate` to keys that do not include that list's query; add the key or return `reload()` without keys to revalidate everything.
+
+### `'use' router primitives can be only used inside a Route` when a query runs
+
+A `query` read inside a reactive scope binds to the router, so a component that reads one outside the `<Router>`, for example next to it in `App`, throws this.
+Move the reader inside the router's render prop or a route component.
+
+### The action ran but `useSubmissions` shows nothing
+
+The action returned nothing or redirected.
+Only a submission that produced a result or an error enters the list; register `.onSettled` to observe every completion, including void ones.
+
+### The error message is `Internal Server Error` in production
+
+The action threw a plain `Error`.
+Wrap it in `markSafeError` to send the message to the browser, or return the validation issues with `respond()`.
+
+## Recap
+
+- Declare each read once with `query(fn, "name")`; the name plus the arguments is the cache key two readers share.
+- Start reads in the route's `preload` with `void`, and read them through a memo in the page; `props.data` is captured once.
+- Wrap a mutation in `action` and submit it with `<form method="post" action={...}>`, so it works before JavaScript loads.
+- Put everything the mutation needs in the form or bind it with `.with()`.
+- Show progress with `form[aria-busy]`, failures with `useSubmissions`, and optimistic state with `.onSubmit` on an optimistic store.
+- Throw `markSafeError` or return `respond()` for messages the user should see.
+- Narrow revalidation with `reload`, `respond`, or `redirect` options; without keys, every query revalidates.
 
 ## Next steps
 

@@ -7,7 +7,7 @@ description: "Wrap a group of pages in a shared layout, keep it mounted while pa
 Most apps have sections: an account area with its own sidebar, an admin area behind a sign-in check, a product catalog with a filter bar.
 Nested routes let you write the section's frame once and swap the page inside it.
 
-This page adds an account section to the store from the [Solid Router](/routing/solid-router).
+This page adds an account section to the store from the [Solid Router introduction](/routing/solid-router).
 
 ## A layout and its pages
 
@@ -52,12 +52,52 @@ export default function AccountLayout(props: RouteProps) {
 }
 ```
 
-Child paths are relative to the parent.
-`/account` renders `AccountLayout` with `Profile` inside; `/account/orders/42` renders `AccountLayout` with `Order` inside.
-`paths` follows the same nesting: `paths.account.orders(42)` is `/account/orders/42`.
+Visit `/account/orders` and the page shows the account `<nav>` with the orders list in the `<section>` below it.
+Child paths are relative to the parent: `/account` renders `AccountLayout` with `Profile` inside, and `/account/orders/42` renders `AccountLayout` with `Order` inside.
+`paths` follows the same nesting, so `paths.account.orders(42)` is `/account/orders/42`.
 
 Every level of the match receives the same four props: `params`, `location`, `data`, and `children`.
-A leaf page has no `children`; a layout that forgets to render `props.children` shows an empty section, which is the first thing to check when a nested page does not appear.
+A leaf page has no `children`.
+
+The habit from component libraries is to import the frame into each page and wrap the page in it:
+
+```tsx
+// Avoid: each page wraps itself, so every page change builds a new layout
+export default function Orders() {
+	return (
+		<AccountLayout>
+			<OrderList />
+		</AccountLayout>
+	);
+}
+
+// Prefer: the layout is a route with children, and the page renders only its own content
+export default function Orders() {
+	return <OrderList />;
+}
+```
+
+Run the `Avoid` version and click from Profile to Orders: the account `<nav>` is torn down and rebuilt, a search box in it loses its text, and two pages that both render `<AccountLayout>` are two separate layouts with nothing shared between them.
+With the layout as a route, the next section describes what happens instead.
+
+:::pitfall[A layout that does not render its children]
+A layout route whose component leaves out `props.children` renders its own frame and nothing else, without an error:
+
+```tsx
+// Avoid: the frame renders, the matched page does not
+export default function AccountLayout(props: RouteProps) {
+	return (
+		<div class="account">
+			<nav>…</nav>
+			<section />
+		</div>
+	);
+}
+```
+
+The `<section>` stays empty on every URL under `/account`.
+When a nested page does not appear, check that the layout renders `props.children` before looking anywhere else.
+:::
 
 ## What stays mounted
 
@@ -115,10 +155,16 @@ export default function RequireSignIn(props: RouteProps) {
 }
 ```
 
+Visit `/checkout` signed out and the page shows "Sign in to continue"; sign in and the same URL shows the checkout.
 `/account` and `/checkout` are still the URLs; `RequireSignIn` sits in front of both.
 Because a pathless route declares no parameters of its own, its `props.params` is the open `Params` type.
 
 A pathless route can also carry a `preload` without a component, when you want to start a request for a group of pages without wrapping them in anything.
+
+:::caution[A client-side check is not authorization]
+`RequireSignIn` decides what to render; it does not stop a request.
+The server functions behind `/account` and `/checkout` must check the session themselves, as [Sessions and auth](/building-apps/sessions-and-auth) shows, or anyone can call them directly.
+:::
 
 ## Parameters flow down
 
@@ -230,19 +276,36 @@ Typed `paths` still work through the import, so `paths.admin.users(7)` is checke
 
 ## Common problems
 
-**The nested page renders nothing.**
+### The nested page renders nothing
+
 The layout is not rendering `props.children`.
+Add `{props.children}` where the page should appear; there is no error when it is missing.
 
-**The layout re-runs on every page change.**
-Check that the layout is a route with `children`, not a component each page imports and wraps itself in.
+### The layout re-runs on every page change
+
+The layout is a component each page imports and wraps itself in, not a route with `children`.
 Two pages that each render `<AccountLayout>` create two separate layouts.
+Move the layout into the route tree and have each page render only its own content.
 
-**Two sections need different app shells.**
-Move the shell out of the `<Router>` function child and into a layout route for each section; the function child then renders only `props.children`.
+### Two sections need different app shells
 
-**A pathless layout needs a parameter from below.**
+The shell lives in the `<Router>` function child, which is shared by every route.
+Move it into a layout route for each section; the function child then renders only `props.children`.
+
+### A pathless layout needs a parameter from below
+
 It cannot have one; parameters flow down, not up.
 Read the location with `useLocation()`, or move the check into the child that owns the parameter.
+
+## Recap
+
+- Give a section its frame with a route that has `children`; the frame renders the matched page through `props.children`.
+- A route's component stays mounted as long as that route is still part of the match; only the levels that changed are created and disposed.
+- Put section state in the layout and page state in the page; the first survives page changes and the second resets.
+- Leave `path` off a route to add a component such as a sign-in check to the match without adding to the URL.
+- A child reads its own parameters and every parameter above it; type the leaf from its `paths` node so all of them are checked.
+- Give each level its own `preload`; the router starts them together, so the child does not wait for the parent.
+- Load a large section with `children: () => import(...)` and typed `paths` still work through the import.
 
 ## Next steps
 

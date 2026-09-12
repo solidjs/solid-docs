@@ -1,0 +1,149 @@
+<svg
+	xmlns="http://www.w3.org/2000/svg"
+	viewBox="0 0 1200 675"
+	role="img"
+	aria-labelledby="title description"
+>
+	<title id="title">The three pieces of a routed data read</title>
+	<desc id="description">
+		A timeline runs from hovering a link, through clicking it, to the
+		component running. Piece 2, the route preload, calls the query when the
+		link is hovered or the route matches, which starts the request. Piece 1,
+		the query, deduplicates the call by name and arguments and caches the
+		result. Piece 3, a memo in the component, reads the same query where the
+		value is displayed and finds the request already in flight or finished.
+	</desc>
+
+	<defs>
+		<marker
+			id="arrow"
+			viewBox="0 0 10 10"
+			refX="9"
+			refY="5"
+			markerWidth="8"
+			markerHeight="8"
+			orient="auto-start-reverse"
+		>
+			<path d="M0 0 10 5 0 10z" fill="#2563eb" />
+		</marker>
+		<marker
+			id="arrow-dark"
+			viewBox="0 0 10 10"
+			refX="9"
+			refY="5"
+			markerWidth="8"
+			markerHeight="8"
+			orient="auto-start-reverse"
+		>
+			<path d="M0 0 10 5 0 10z" fill="#0f2b55" />
+		</marker>
+	</defs>
+
+	<rect width="1200" height="675" rx="24" fill="#ffffff" />
+
+	<g
+		font-family="Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+		fill="#0f172a"
+	>
+		<text x="600" y="62" text-anchor="middle" font-size="36" font-weight="750">
+			Start the read early, display it where it is needed
+		</text>
+
+		<!-- timeline -->
+		<path
+			d="M80 150h1040"
+			fill="none"
+			stroke="#0f2b55"
+			stroke-width="3"
+			marker-end="url(#arrow-dark)"
+		/>
+		<g fill="#0f2b55">
+			<circle cx="220" cy="150" r="9" />
+			<circle cx="600" cy="150" r="9" />
+			<circle cx="900" cy="150" r="9" />
+		</g>
+		<g text-anchor="middle" font-size="18" font-weight="700" fill="#0f2b55">
+			<text x="220" y="125">hover the link</text>
+			<text x="600" y="125">click, route matches</text>
+			<text x="900" y="125">component runs</text>
+		</g>
+
+		<!-- piece 2: preload -->
+		<g stroke="#2563eb" stroke-width="2.5" fill="#eff6ff">
+			<rect x="90" y="200" width="380" height="130" rx="14" />
+		</g>
+		<rect x="110" y="182" width="34" height="34" rx="17" fill="#2563eb" />
+		<text x="127" y="206" text-anchor="middle" font-size="18" font-weight="750" fill="#ffffff">2</text>
+		<g text-anchor="middle">
+			<text x="280" y="248" font-size="22" font-weight="700">preload</text>
+			<text x="280" y="280" font-size="17" fill="#475569">
+				<tspan x="280">on the route definition; runs on hover</tspan>
+				<tspan x="280" dy="24">and when the route matches</tspan>
+			</text>
+		</g>
+
+		<!-- piece 3: memo read -->
+		<g stroke="#2563eb" stroke-width="2.5" fill="#eff6ff">
+			<rect x="730" y="200" width="380" height="130" rx="14" />
+		</g>
+		<rect x="750" y="182" width="34" height="34" rx="17" fill="#2563eb" />
+		<text x="767" y="206" text-anchor="middle" font-size="18" font-weight="750" fill="#ffffff">3</text>
+		<g text-anchor="middle">
+			<text x="920" y="248" font-size="22" font-weight="700">createMemo(() =&gt; getProduct(id))</text>
+			<text x="920" y="280" font-size="17" fill="#475569">
+				<tspan x="920">in the component, where the</tspan>
+				<tspan x="920" dy="24">value is displayed</tspan>
+			</text>
+		</g>
+
+		<!-- piece 1: query -->
+		<rect
+			x="330"
+			y="420"
+			width="540"
+			height="140"
+			rx="14"
+			fill="#f8fafc"
+			stroke="#0f2b55"
+			stroke-width="3"
+		/>
+		<rect x="350" y="402" width="34" height="34" rx="17" fill="#0f2b55" />
+		<text x="367" y="426" text-anchor="middle" font-size="18" font-weight="750" fill="#ffffff">1</text>
+		<g text-anchor="middle">
+			<text x="600" y="466" font-size="22" font-weight="700">getProduct = query(fn, "product")</text>
+			<text x="600" y="500" font-size="17" fill="#475569">
+				<tspan x="600">same name + same arguments = same request;</tspan>
+				<tspan x="600" dy="24">the result is cached for every reader</tspan>
+			</text>
+		</g>
+
+		<!-- calls into the query -->
+		<g fill="none" stroke="#2563eb" stroke-width="3" marker-end="url(#arrow)">
+			<path d="M280 330v50q0 20 20 20h20" />
+			<path d="M920 330v50q0 20-20 20h-20" />
+		</g>
+		<g font-size="15" font-weight="650" fill="#1d4ed8">
+			<text x="266" y="368" text-anchor="end">calls getProduct(params.id)</text>
+			<text x="934" y="368" text-anchor="start">reads getProduct(props.params.id)</text>
+		</g>
+
+		<!-- request out -->
+		<path
+			d="M600 560v40"
+			fill="none"
+			stroke="#0f2b55"
+			stroke-width="2.5"
+			marker-end="url(#arrow-dark)"
+		/>
+		<text x="600" y="632" text-anchor="middle" font-size="17" font-weight="650" fill="#0f2b55">
+			one request, started at the earliest call
+		</text>
+
+		<text x="1080" y="600" text-anchor="end" font-size="15" fill="#475569">
+			Delete 2: the request starts when the memo first runs.
+		</text>
+		<text x="120" y="600" text-anchor="start" font-size="15" fill="#475569">
+			Delete 1: each reader fetches on its own.
+		</text>
+	</g>
+</svg>

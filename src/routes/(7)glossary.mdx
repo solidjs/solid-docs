@@ -1,0 +1,536 @@
+---
+title: "Glossary"
+version: "2.0"
+description: "Solid's own words, each defined in a few sentences and linked to the page that teaches it."
+---
+
+This page is for a term you met on another page and want the short version of.
+Each entry gives the meaning in a few sentences and links to the page that explains the idea in full, with its examples and its trade-offs.
+Where an idea goes by another name elsewhere, an "Also called" line gives that name so you can connect what you already know.
+
+## Reactivity
+
+### Batch
+
+Writes to signals and stores are staged, and Solid applies all staged writes together in a microtask after the current code finishes, so a read on the next line still sees the old value.
+`flush()` applies the staged writes synchronously, which tests call after firing an event.
+
+See [When updates land](/concepts/reactivity#when-updates-land).
+
+### Computation
+
+A scope that Solid re-runs when the reactive values it read change: a memo's function, an effect's compute function, or a JSX expression.
+A computation that returns a promise is still a computation, and its readers wait for the result.
+
+See [Derived values](/concepts/reactivity#derived-values) and [A memo that returns a promise](/concepts/async-reactivity#a-memo-that-returns-a-promise).
+
+### Custom primitive
+
+A `createX` function you write that packages signals, memos, effects, and cleanup so several components can call it.
+It follows the same rules as a core primitive: call it in a component body or in another primitive, accept accessors, and return accessors.
+
+Also called: hook.
+
+See [A primitive is a function that runs inside an owner](/guides/custom-primitives#a-primitive-is-a-function-that-runs-inside-an-owner).
+
+### Effect
+
+The primitive that moves data out of Solid into something Solid does not own, such as storage, the document title, or a chart library.
+`createEffect` takes a compute function, which runs in a tracking scope and returns a value, and an effect function, which receives that value, runs untracked after the update has landed, and may return a cleanup.
+
+Also called: side effect.
+
+See [Effects](/concepts/reactivity#effects).
+
+### Memo
+
+A cached derived value.
+`createMemo` runs its function in a tracking scope, stores the result, and notifies readers only when the result changes, which makes it a useful boundary in a chain of derivations.
+
+Also called: derived value, computed.
+
+See [Derived values](/concepts/reactivity#derived-values).
+
+### Owner
+
+The scope that was running when a primitive was created, and that disposes it later.
+A component is an owner: when Solid removes it, every memo, effect, and cleanup it created is disposed with it, which is what ownership means; a primitive created in an event handler has no owner and is never cleaned up.
+
+See [Ownership](/concepts/reactivity#ownership).
+
+### Primitive
+
+A function that serves as a building block of reactivity or behavior and attaches to the current owner when it runs; its name usually begins with `create` or `use`.
+
+See [A primitive is a function that runs inside an owner](/guides/custom-primitives#a-primitive-is-a-function-that-runs-inside-an-owner).
+
+### Reactive value
+
+Any value Solid can track: a signal, a memo, a store property, or a property of `props`.
+Reading one inside a tracking scope subscribes that scope; reading one anywhere else returns a one-time snapshot.
+
+See [Signals](/concepts/reactivity#signals).
+
+### Root
+
+An owner with no owner of its own.
+`createRoot` creates one by hand and returns its disposer; it is for tests and integrations that run reactivity outside any component, and application code shares state through context instead.
+
+See [Roots](/concepts/reactivity#roots).
+
+### Signal
+
+A container for one value that knows who reads it.
+`createSignal` returns a getter and a setter; a read inside a tracking scope subscribes that scope, and a write re-runs the subscribed scopes.
+
+See [Signals](/concepts/reactivity#signals).
+
+### Tracking scope
+
+A part of the code where Solid records which reactive values are read: a JSX expression, a memo's function, or an effect's compute function.
+Each value read there becomes a dependency of the scope, and the component body is not a tracking scope, so a read there is a one-time snapshot.
+
+Also called: tracking context, reactive context, reactive scope.
+
+See [Signals](/concepts/reactivity#signals).
+
+### untrack
+
+Reads a reactive value inside a tracking scope without subscribing to it, and without the development warning about an untracked read.
+
+See [Signals](/concepts/reactivity#signals) and the [`untrack` reference](/reference/solid-js/reactivity/untrack).
+
+## Updates and async
+
+### Action
+
+A generator function wrapped in `action` from `solid-js` that runs a mutation as one transaction: each `yield` waits for its promise and then restores the transaction, so the write before the `yield` and the refresh after it belong to the same update, and a plain `await` would leave it.
+Solid Router has its own `action`, which adds a form URL, submissions, and revalidation on top of a server function.
+
+See [Move the cart to the server](/concepts/mutations#move-the-cart-to-the-server) and [Mutate with actions](/routing/solid-router/data#mutate-with-actions).
+
+### affects
+
+Marks a source, a store, or one store property as pending while the surrounding action is in flight, without predicting its value, so readers of that data report `isPending`.
+
+See [Mark data as changing](/concepts/mutations#mark-data-as-changing-affects).
+
+### Held update
+
+A write whose commit waits for async work after a previous answer exists.
+The current view stays on screen, other writes in the same update wait with it, and everything commits together when the work settles, so the page never shows a mix of old and new data.
+
+Also called: transition.
+
+See [Settled view and in-flight work](/concepts/async-reactivity#settled-view-and-in-flight-work).
+
+### isPending
+
+A question about one expression: is a newer answer on the way for a value that already has one?
+It is `true` from the moment a write is held until everything downstream has settled, and it does not report the first load.
+
+See [Another answer is coming](/concepts/async-reactivity#another-answer-is-coming-ispending).
+
+### latest
+
+Reads the value an update is moving toward instead of the value it has committed.
+Put it on the control the user touched, such as a tab or a selected row, so the control moves at once while the content below it waits.
+
+See [Show the input now](/concepts/async-reactivity#show-the-input-now-latest).
+
+### Not ready
+
+The status of an async value before its first answer arrives.
+A read of a not-ready value makes the reader wait and the nearest loading boundary renders its fallback; the runtime carries this status as `NotReadyError`, which boundaries handle so application code does not catch it.
+
+See [A memo that returns a promise](/concepts/async-reactivity#a-memo-that-returns-a-promise) and the [`NotReadyError` reference](/reference/solid-js/advanced/interop-async/not-ready-error).
+
+### Optimistic value
+
+The expected result of a mutation, shown before the server confirms it.
+A write made inside an action on a `createOptimisticStore` is an overlay on the durable value; Solid discards the overlay when the action settles, on success and on failure, so there is no rollback code.
+
+Also called: optimistic update.
+
+See [Optimistic stores](/concepts/stores#optimistic-stores) and [Move the cart to the server](/concepts/mutations#move-the-cart-to-the-server).
+
+### Pending
+
+Work is in flight: a held update is pending until its async work settles, an action is pending until it resolves, and `affects` marks data as pending by declaration.
+
+See [Another answer is coming](/concepts/async-reactivity#another-answer-is-coming-ispending) and [Show that a row is saving](/concepts/mutations#show-that-a-row-is-saving).
+
+### refresh
+
+Asks an async source the same question again without changing its inputs; after a mutation, `refresh(items)` re-runs the derivation so the store reconciles against what the server has.
+
+See [Move the cart to the server](/concepts/mutations#move-the-cart-to-the-server).
+
+### Revalidation
+
+Marking cached reads as stale and re-running the ones that are being read.
+A server function returns `reload`, `respond`, or `redirect` with a `revalidate` option to name the keys; Solid Router matches them against its `query` cache when the action completes, and with no keys every query revalidates.
+
+See [Revalidate](/routing/solid-router/data#revalidate) and [Request revalidation](/building-apps/server-functions/mutations-and-responses#request-revalidation).
+
+### Settled
+
+Async work has finished and its answer is the one the user can see.
+Once a value has settled, a change to its input is held rather than blanking the screen; `onSettled` runs a callback once the first render has settled.
+
+See [Settled view and in-flight work](/concepts/async-reactivity#settled-view-and-in-flight-work).
+
+### Superseded
+
+A run of an async computation that a newer run has replaced because an input changed again; Solid drops the answer to a superseded run, so there is no request counter and no `AbortController` to write.
+
+See [Put asynchronous work in a derivation](/guides/avoid-unnecessary-effects#put-asynchronous-work-in-a-derivation).
+
+### Tentative and authoritative
+
+A tentative value is an optimistic write inside an action: it shows immediately and is removed when the action settles.
+The authoritative value is the one the store derives from its source, which is what the page shows once the overlay is gone and what `until` reads.
+
+Also called: durable value, for the authoritative side.
+
+See [Optimistic stores](/concepts/stores#optimistic-stores) and [Wait for the server to echo the write](/concepts/mutations#wait-for-the-server-to-echo-the-write-until).
+
+### Transaction
+
+The unit an action runs in: its writes are held until the action settles, and the writes before and after a `yield` belong to the same update.
+
+See [Move the cart to the server](/concepts/mutations#move-the-cart-to-the-server).
+
+### until
+
+Holds an action open until a predicate over authoritative data becomes true, for transports where the confirmation arrives later on a live source instead of in the response.
+
+See [Wait for the server to echo the write](/concepts/mutations#wait-for-the-server-to-echo-the-write-until).
+
+## Components and rendering
+
+### Boundary
+
+A component that decides how much of the page a pending or failed read affects by rendering a fallback, a placeholder or an error message, in place of its content.
+The nearest matching boundary handles status produced by reads in its own subtree, and controls placed outside it stay on screen in every state.
+
+See [Boundaries](/concepts/boundaries).
+
+### Children
+
+The JSX a parent places between a component's tags, received as `props.children`; a component accepts children only when its props type includes a `children` property.
+
+Also called: slots.
+
+See [Children and composition](/concepts/components-and-jsx#children-and-composition).
+
+### Client rendering
+
+`render` mounts a tree into a DOM container in the browser and returns a disposer; the static-shell project shapes ship an empty document shell and render the whole app this way.
+
+See [Client rendering](/concepts/rendering-and-ssr#client-rendering).
+
+### clientOnly
+
+Wraps a component that cannot run on the server: the server renders its fallback and does not start the import, and the browser swaps the component in after the module has loaded and hydration has settled.
+
+See [Server and client boundaries](/concepts/rendering-and-ssr#server-and-client-boundaries).
+
+### Component
+
+A function that runs once: it sets up state, returns JSX, and is not called again, while the JSX expressions it returned keep updating on their own.
+
+See [How JSX executes](/concepts/components-and-jsx#how-jsx-executes).
+
+### Context
+
+Passes a value through a component subtree without forwarding it through every intermediate component.
+`createContext` returns a context that is also its provider; `useContext` reads the value for the current owner, and throws `ContextNotFoundError` outside a provider when the context has no default.
+
+See [Context](/concepts/components-and-jsx#context).
+
+### Directive
+
+A function you pass to `ref`; there is no separate directive syntax.
+A directive factory creates owned primitives during component setup and returns the callback that applies the behavior to an element.
+
+Also called: `use:` directive, custom directive.
+
+See [Refs and directives](/concepts/components-and-jsx#refs-and-directives).
+
+### Error boundary
+
+`Errored` catches an error thrown by a read or computation in its subtree, including a rejected async source, and renders its fallback in place of the content.
+The error is a status that clears when an input changes or a refresh succeeds; `reset` re-runs the failed sources.
+
+See [Error boundaries](/concepts/boundaries#error-boundaries).
+
+### Hydration
+
+Attaching event handlers and reactive bindings to HTML the server already rendered, without recreating the nodes.
+Solid assigns a hydration key to each template root during server rendering so the client can claim the matching node, which is why the server and client must render the same initial structure.
+
+See [Hydrating server HTML](/concepts/rendering-and-ssr#hydrating-server-html) and [Reading the hydration warnings](/guides/ssr-safe-code#reading-the-hydration-warnings).
+
+### isServer
+
+A build-time constant from `@solidjs/web`: `true` in the server build and `false` in the browser build, so a bundler removes the unreachable side.
+
+See [Server and client boundaries](/concepts/rendering-and-ssr#server-and-client-boundaries).
+
+### Loading boundary
+
+`Loading` renders its fallback while an async value read in its subtree has not produced a first answer.
+Once it has shown content it keeps that content during later updates; the `on` prop names the value whose change should bring the fallback back.
+
+Also called: `Suspense`.
+
+See [Loading boundaries](/concepts/boundaries#loading-boundaries).
+
+### Portal
+
+Renders its children into another element, `document.body` by default, while they stay in the component's reactive scope; the server renders nothing for a portal, and its children render in the browser after hydration settles.
+
+See [Render Solid into a foreign container](/guides/integrate-non-solid-code#render-solid-into-a-foreign-container).
+
+### Prerendering
+
+Server rendering that happens once, during `vite build`: a crawler renders each reachable page through the server build and writes the HTML, so the deployed site is static files with content as fresh as the last build.
+
+Also called: static site generation, SSG.
+
+See [Prerendered at build time](/guides/choose-a-rendering-mode#prerendered-at-build-time).
+
+### Props
+
+The one object a component receives.
+The compiler turns a dynamic attribute into a getter, so `props.quantity` is read where it is used, inside the child's JSX; destructuring reads it once and the child stops updating.
+
+See [Props](/concepts/components-and-jsx#props).
+
+### Reveal order
+
+The order in which sibling loading regions appear.
+`Reveal` coordinates the `Loading` boundaries created directly within it, each of which is a slot: `sequential` reveals slots in registration order, `together` releases them as a group, and `natural` lets each reveal on its own.
+
+See [Reveal order](/concepts/boundaries#reveal-order).
+
+### Server rendering
+
+Running the same components on the server to produce HTML for a request.
+`renderToString` returns the shell with fallbacks in it; `renderToStream` sends the shell first and streams each boundary's content as it settles.
+
+Also called: server-side rendering, SSR.
+
+See [Rendering and SSR](/concepts/rendering-and-ssr).
+
+### Streaming
+
+Server rendering that emits the synchronous shell first and then a fragment for each `Loading` boundary as its content settles; an async read with no boundary above it blocks the shell, so boundary placement is a server decision too.
+
+See [Streaming rendering](/concepts/rendering-and-ssr#streaming-rendering).
+
+## Data and the server
+
+### API route
+
+A route module under `src/routes` that exports uppercase HTTP methods such as `GET` or `POST` instead of, or as well as, a page component, for callers that are not the app: webhooks, scripts, and other services.
+
+See [API routes](/building-apps/middleware-and-api-routes#api-routes).
+
+### Draft
+
+The argument a store setter passes to its callback.
+Mutate it with normal property assignments and array methods, and Solid applies the changes to the store when the callback returns; a write to the store proxy itself is ignored.
+
+See [Update with a draft](/concepts/stores#update-with-a-draft).
+
+### locals
+
+A bag on the request event where middleware places request-scoped state, such as the signed-in customer's id, for server functions, API handlers, and the page render of the same request to read.
+
+See [Read trusted request context](/building-apps/server-functions/arguments-and-security#read-trusted-request-context).
+
+### Middleware
+
+A function of the request and a `next` continuation that runs in front of every request start mode handles; the request travels down the exported array and the response travels back up it.
+
+See [Add a middleware](/building-apps/middleware-and-api-routes#add-a-middleware).
+
+### Origin check
+
+The server-function handler refuses a state-changing request whose `Sec-Fetch-Site`, `Origin`, or `Referer` headers say it came from another origin, or that carries none of them.
+It stops cross-site request forgery from a browser; it does not replace validation and authorization.
+
+Also called: CSRF protection.
+
+See [Same-origin protection](/building-apps/server-functions/arguments-and-security#same-origin-protection).
+
+### Progressive enhancement
+
+A form that posts to a server function's URL works before the client bundle loads, and the router takes it over after hydration.
+
+See [Post a form through a router action](/building-apps/server-functions/progressive-enhancement#post-a-form-through-a-router-action).
+
+### Projection
+
+A store whose value is computed from other reactive values.
+Where a memo derives one value, a projection derives an object or array whose properties are tracked separately and whose items keep their identity, because results are reconciled into the seed by `id`.
+
+See [Derive a store with a projection](/concepts/stores#derive-a-store-with-a-projection).
+
+### Reconcile
+
+Matching incoming data into an existing store by key so that unchanged items keep their proxies and their DOM.
+A projection and the function form of `createStore` reconcile each result by `id`; the `reconcile` helper does the same for a value passed to a setter.
+
+See [Derive a store with a projection](/concepts/stores#derive-a-store-with-a-projection) and the [`reconcile` reference](/reference/solid-js/stores/reconcile).
+
+### redirect
+
+Returns a `Response` with a `Location` header from a server function: a router action navigates without a page load, a form post without JavaScript follows a 303, and plain code receives the `Response` object.
+
+See [Redirect the caller](/building-apps/server-functions/mutations-and-responses#redirect-the-caller).
+
+### Request event
+
+The object that carries one HTTP exchange on the server: the `request`, a `locals` bag, and the outgoing `response` headers.
+`getRequestEvent()` returns it from middleware, a server function, or a render, and a server function called during rendering runs under an event derived from the page request.
+
+See [What the platform supplies](/building-apps/sessions-and-auth#what-the-platform-supplies).
+
+### respond
+
+Pairs a return value with a status and headers.
+Returned, it resolves the caller with the value; thrown, it rejects the caller with the value and is the way to send a 400 the browser can show.
+
+See [Return a value with response metadata](/building-apps/server-functions/mutations-and-responses#return-a-value-with-response-metadata).
+
+### Safe error
+
+An error marked with `markSafeError` so its message crosses to the browser in production; every other thrown value becomes `Internal Server Error` there, so a database driver's message cannot leak.
+
+See [Handle thrown errors](/building-apps/server-functions/mutations-and-responses#handle-thrown-errors).
+
+### Seed
+
+The starting object a projection or an async store reconciles its results into, which gives the root proxy a stable identity across recomputations; with an async function it is not shown as a first answer unless `seedLoadingValue` says so.
+
+See [Derive a store with a projection](/concepts/stores#derive-a-store-with-a-projection).
+
+### Server function
+
+A function whose body runs on the server because its first statement is `"use server"`.
+The build leaves a typed stub in the browser that makes the HTTP request, and the call returns a promise on both sides.
+
+Also called: server action, RPC.
+
+See [Declare a server function](/building-apps/server-functions#declare-a-server-function).
+
+### Session
+
+The state that identifies a caller across requests.
+Solid supplies the request event; a cookie library supplies the signing and expiry, and the `fullstack` template composes a signed cookie whose payload holds an id to look up on the server.
+
+See [A signed cookie session](/building-apps/sessions-and-auth#a-signed-cookie-session).
+
+### Single-flight mutation
+
+A mutation whose response also carries the refreshed query results the page will need, so the browser makes one request instead of a mutation followed by a revalidation fetch.
+
+See [One round trip for a mutation](/routing/solid-router/server-rendering#one-round-trip-for-a-mutation).
+
+### Store
+
+A proxy over an object or array that tracks each property on its own: readers subscribe to the properties they read, writes go through the setter's draft, and changing one quantity updates the one text node that reads it.
+
+See [Create nested state](/concepts/stores#create-nested-state).
+
+## Routing
+
+### File-system routing
+
+Files under `src/routes` become the route tree: `filesystem-routing` scans the directory and `@solidjs/router/fs` converts its manifest into the same route objects a hand-written array would contain.
+
+See [Where the file-system adapter fits](/routing/solid-router#where-the-file-system-adapter-fits).
+
+### Layout route
+
+A route with `children` whose component renders around whichever child matched, receiving it as `props.children`; the router keeps the layout mounted while pages change under it.
+
+See [A layout and its pages](/routing/solid-router/nested-routes#a-layout-and-its-pages).
+
+### Pathless route
+
+A route with no `path` that adds a component or a `preload` to the match without adding to the URL, such as a sign-in check around a group of pages.
+
+See [Layouts without a URL segment](/routing/solid-router/nested-routes#layouts-without-a-url-segment).
+
+### preload
+
+A route function that runs when the route matches, before the page component exists, with the matched `params` and an `intent`.
+Start queries in it with `void` rather than returning data, because whatever it returns is captured once as `props.data`.
+
+Also called: loader.
+
+See [Start work before the component runs](/routing/solid-router/data#start-work-before-the-component-runs).
+
+### query
+
+Wraps an async function and gives it a name; the name plus the arguments form a cache key, and every call with the same key during the cache lifetime shares one request.
+
+See [Cache reads with query](/routing/solid-router/data#cache-reads-with-query).
+
+### Route definition
+
+A plain object with a path pattern, the component to render, and optionally a `preload`, `children`, match filters, and metadata; the route array is also where the types for `paths` and `params` come from.
+
+See [Route definitions](/routing/solid-router/route-definitions).
+
+### Search params
+
+The query string of the URL, the right home for state that should survive a refresh and be shareable; `useSearchParams` reads and writes them, and a route `search` schema turns the strings into typed values.
+
+See [Type search parameters](/routing/solid-router/navigation#type-search-parameters).
+
+### Start mode
+
+The Vite plugin's `start: true` option, which generates the client entry, the server entry, and the request handler around `App.tsx` and `Document.tsx`; server functions, middleware, and the request event run under it.
+
+See [Three rendering modes, one layout](/building-apps/app-structure#three-rendering-modes-one-layout).
+
+### Submission
+
+One run of a router action: the `input` that was sent, its `result` or `error`, and `retry()` and `clear()`.
+`useSubmissions` returns the completed submissions that produced a result or an error, including ones recorded from a form posted without JavaScript.
+
+See [When it fails](/routing/solid-router/data#when-it-fails).
+
+### Typed paths
+
+`paths`, a proxy inferred from the route tree, so `paths.products("mug")` is checked by the compiler and a renamed route is a type error at every call site.
+
+See [Build URLs with paths](/routing/solid-router/navigation#build-urls-with-paths).
+
+## Tooling and diagnostics
+
+### Attribution
+
+A development-build recording of every scope that re-ran, what changed to cause it, and how long it took.
+Enable it, reproduce the behavior, and ask `attribution.why(scope)`; while it is on, Solid also reports cost and responsiveness findings such as `SILENT_HOLD`.
+
+See [Something updates too often](/guides/debugging-reactivity#something-updates-too-often).
+
+### Development build and production build
+
+The development build prints diagnostics, records attribution, and returns real error messages from server functions.
+The production build strips the diagnostics and sanitizes unbranded errors to `Internal Server Error`; on the server the line between the two is the `development` export condition rather than `NODE_ENV`.
+
+See [Measure before changing](/guides/performance#measure-before-changing) and [Handle thrown errors](/building-apps/server-functions/mutations-and-responses#handle-thrown-errors).
+
+### Diagnostic code
+
+The bracketed name at the start of a development console entry, such as `[STRICT_READ_UNTRACKED]`.
+The code is stable across releases, the sentence after it says what the runtime observed, and the `in` line names the chain of owners down to the scope that produced it.
+
+See [Read a diagnostic](/guides/debugging-reactivity#read-a-diagnostic).

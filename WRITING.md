@@ -318,6 +318,22 @@ The first time a page uses one, say what it means in a clause and link the page 
 "the write is held (kept back until the data it needs has arrived; see Async reactivity)".
 After the first use, the bare term is fine.
 One new term per section; a paragraph that introduces three is a paragraph the reader will not finish.
+The Glossary page (`/glossary`) holds every term with its definition and a link to the page that teaches it; link a gloss there when no single section explains the term better.
+
+### Describe Solid on its own terms
+
+Concepts, Building apps, Routing, Guides, and Reference do not name another framework.
+A reader who arrives with a wrong mental model from elsewhere is corrected by describing the construct, not by attributing it: "there is no dependency array to fill in; the compute function tracks what it reads" rather than "unlike React's `useEffect`".
+At most one such sentence per page, and only where it prevents a specific mistake; the rest of the page describes what Solid does.
+
+Two places may name other frameworks and compare at length: the Thinking in Solid guide and the Migration pages.
+They exist so the rest of the docs do not have to.
+On those pages, name the other framework's construct at each step and say what Solid does instead, without evaluative words ("simpler", "faster", "cleaner").
+Nowhere in the docs compare performance, bundle size, or popularity.
+
+Two uses are not comparisons and are fine anywhere: a pointer that sends a reader to the venue pages ("If you know React or Vue, read Thinking in Solid"), and a library named as something Solid integrates with (a MobX store as an external source, a TanStack Router integration).
+
+The Glossary may give a term's common synonym on an `Also called` line ("hook", "transition", "computed") without naming where the synonym comes from, and without listing another framework's API names.
 
 ### Close with a recap
 

@@ -1,0 +1,160 @@
+<svg
+	xmlns="http://www.w3.org/2000/svg"
+	viewBox="0 0 1200 675"
+	role="img"
+	aria-labelledby="title description"
+>
+	<title id="title">The request travels down the chain and the response travels back up</title>
+	<desc id="description">
+		Four middleware boxes sit in a row: requireHttps, securityHeaders,
+		attachCustomer, and the API handler, followed by the page render. A
+		request arrow passes through each box from left to right, and a response
+		arrow returns through them from right to left. requireHttps can return a
+		Response early and stop the chain; securityHeaders sets a header on the
+		response as it comes back; attachCustomer writes locals.userId on the way
+		in, which every later step can read.
+	</desc>
+
+	<defs>
+		<marker
+			id="arrow"
+			viewBox="0 0 10 10"
+			refX="9"
+			refY="5"
+			markerWidth="8"
+			markerHeight="8"
+			orient="auto-start-reverse"
+		>
+			<path d="M0 0 10 5 0 10z" fill="#2563eb" />
+		</marker>
+		<marker
+			id="arrow-dark"
+			viewBox="0 0 10 10"
+			refX="9"
+			refY="5"
+			markerWidth="8"
+			markerHeight="8"
+			orient="auto-start-reverse"
+		>
+			<path d="M0 0 10 5 0 10z" fill="#0f2b55" />
+		</marker>
+	</defs>
+
+	<rect width="1200" height="675" rx="24" fill="#ffffff" />
+
+	<g
+		font-family="Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+		fill="#0f172a"
+	>
+		<text x="600" y="62" text-anchor="middle" font-size="36" font-weight="750">
+			Down the array with the request, back up with the response
+		</text>
+
+		<!-- middleware boxes -->
+		<g stroke="#2563eb" stroke-width="2.5" fill="#eff6ff">
+			<rect x="150" y="230" width="190" height="180" rx="14" />
+			<rect x="380" y="230" width="190" height="180" rx="14" />
+			<rect x="610" y="230" width="190" height="180" rx="14" />
+			<rect x="840" y="230" width="190" height="180" rx="14" />
+		</g>
+		<rect
+			x="1070"
+			y="230"
+			width="100"
+			height="180"
+			rx="14"
+			fill="#f8fafc"
+			stroke="#0f2b55"
+			stroke-width="3"
+		/>
+
+		<g text-anchor="middle" font-size="19" font-weight="700">
+			<text x="245" y="266">requireHttps</text>
+			<text x="475" y="266">securityHeaders</text>
+			<text x="705" y="266">attachCustomer</text>
+			<text x="935" y="266">API handler</text>
+			<text x="1120" y="266">
+				<tspan x="1120">page</tspan>
+				<tspan x="1120" dy="22">render</tspan>
+			</text>
+		</g>
+
+		<!-- request line -->
+		<path
+			d="M40 310h1070"
+			fill="none"
+			stroke="#2563eb"
+			stroke-width="3"
+			marker-end="url(#arrow)"
+		/>
+		<text x="40" y="296" font-size="15" font-weight="650" fill="#1d4ed8">request</text>
+
+		<!-- response line -->
+		<path
+			d="M1110 370h-1060"
+			fill="none"
+			stroke="#0f2b55"
+			stroke-width="3"
+			marker-end="url(#arrow-dark)"
+		/>
+		<text x="40" y="396" font-size="15" font-weight="650" fill="#0f2b55">response</text>
+
+		<!-- per-box notes -->
+		<g text-anchor="middle" font-size="14" fill="#475569">
+			<text x="245" y="336">http: gets a 308 redirect</text>
+			<text x="245" y="356">otherwise next()</text>
+
+			<text x="475" y="336">await next()</text>
+			<text x="475" y="356">then set a header</text>
+
+			<text x="705" y="336">sets locals.userId</text>
+			<text x="705" y="356">then next()</text>
+
+			<text x="935" y="336">matches a method</text>
+			<text x="935" y="356">export, or next()</text>
+		</g>
+
+		<!-- early return from requireHttps -->
+		<path
+			d="M245 230v-50q0-14-14-14H100"
+			fill="none"
+			stroke="#0f2b55"
+			stroke-width="2.5"
+			stroke-dasharray="6 5"
+			marker-end="url(#arrow-dark)"
+		/>
+		<text x="200" y="120" text-anchor="middle" font-size="15" font-weight="650" fill="#0f2b55">
+			<tspan x="200">return a Response</tspan>
+			<tspan x="200" dy="20">without next(): the chain stops</tspan>
+		</text>
+
+		<!-- locals visible to later steps -->
+		<path
+			d="M705 410v40q0 14 14 14h381q14 0 14-14v-40"
+			fill="none"
+			stroke="#2563eb"
+			stroke-width="2"
+			stroke-dasharray="6 5"
+		/>
+		<text x="915" y="490" text-anchor="middle" font-size="15" font-weight="650" fill="#1d4ed8">
+			locals set on the way in are visible to every later step
+		</text>
+
+		<!-- header on the way out -->
+		<path
+			d="M475 410v90"
+			fill="none"
+			stroke="#0f2b55"
+			stroke-width="2"
+			stroke-dasharray="6 5"
+		/>
+		<text x="475" y="525" text-anchor="middle" font-size="15" font-weight="650" fill="#0f2b55">
+			<tspan x="475">headers set after await next()</tspan>
+			<tspan x="475" dy="20">reach the browser, even on a stream</tspan>
+		</text>
+
+		<text x="600" y="620" text-anchor="middle" font-size="19" fill="#334155">
+			Nothing is written to the network until the outermost middleware returns.
+		</text>
+	</g>
+</svg>

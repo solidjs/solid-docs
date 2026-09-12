@@ -4,7 +4,8 @@
  *
  * Enforces the mechanical rules from the "AI-assisted writing" section of
  * WRITING.md over src/routes mdx files: no filler, no marketing language,
- * no exclamation marks, none of the sentence shapes that read as generated.
+ * no exclamation marks, none of the sentence shapes that read as generated,
+ * and no other framework named outside the pages that exist to compare.
  *
  * Violations in generated reference pages are reported as warnings: the fix
  * belongs in the upstream JSDoc, not in the generated file. Violations in
@@ -51,6 +52,20 @@ const RULES = [
 		pattern: /\bjust\b/gi,
 		severity: "warning",
 	},
+	{
+		// WRITING.md "Describe Solid on its own terms": only Thinking in Solid
+		// and the Migration pages name another framework. Elsewhere a name is
+		// allowed only in a pointer to one of those pages.
+		name: "framework-name",
+		pattern:
+			/\b(React|Vue|Svelte|SvelteKit|Angular|Preact|Qwik|Astro|Next\.js|Nuxt|Remix|Ember|Lit|Alpine|htmx|jQuery|Marko|Inferno)\b/g,
+		severity: "error",
+		skipFile: (file) => /thinking-in-solid\.mdx$|\(\d+\)migration\//.test(file),
+		// Upstream JSDoc names integration targets ("MobX or Vue"); policy allows that.
+		skipGenerated: true,
+		skipLine: (line) =>
+			/\]\(\/(?:guides\/thinking-in-solid|migration\/)/.test(line),
+	},
 ];
 
 function walk(dir) {
@@ -83,6 +98,8 @@ for (const file of walk(CONTENT_ROOT)) {
 
 	lines.forEach((line, index) => {
 		for (const rule of RULES) {
+			if (rule.skipFile?.(file) || rule.skipLine?.(line)) continue;
+			if (generated && rule.skipGenerated) continue;
 			rule.pattern.lastIndex = 0;
 			let match;
 			while ((match = rule.pattern.exec(line)) !== null) {

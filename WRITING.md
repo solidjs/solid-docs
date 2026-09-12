@@ -333,6 +333,8 @@ Nowhere in the docs compare performance, bundle size, or popularity.
 
 Two uses are not comparisons and are fine anywhere: a pointer that sends a reader to the venue pages ("If you know React or Vue, read Thinking in Solid"), and a library named as something Solid integrates with (a MobX store as an external source, a TanStack Router integration).
 
+`pnpm lint:tone` reports a framework name outside the venue pages as an error unless the line links to one of them, so write the pointer and the link in the same sentence.
+
 The Glossary may give a term's common synonym on an `Also called` line ("hook", "transition", "computed") without naming where the synonym comes from, and without listing another framework's API names.
 
 ### Close with a recap
@@ -347,6 +349,7 @@ A page with fewer than four rules to recap does not need one.
 Each example must run against the current release of the package it documents, on the branch being documented.
 Run it before committing it.
 If an example cannot be run because it depends on a database or a server, mark the stand-in clearly (`database.todos.insert`) and keep the Solid-specific parts exact.
+`pnpm check:examples` type-checks every `ts` and `tsx` block against the sibling checkouts (`../solid`, `../solid-router`, `../solid-meta`, `../vite-plugin-solid`) and reports wrong imports, renamed APIs, and changed signatures; run it after touching examples and after moving the checkouts forward.
 
 Behavioral claims are held to the same standard as Reference: if you cannot point to the source line or a test that demonstrates it, do not write the sentence.
 

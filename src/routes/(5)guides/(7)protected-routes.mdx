@@ -117,11 +117,12 @@ Moving from `/account` to `/account/orders` keeps the pathless route mounted, th
 ## Redirect before render
 
 `requireUser` is the guard the preload starts and the component reads.
-It is a `query` around a plain async function that calls a server function and throws a redirect when there is no user:
+It is a server function wrapped in `query` that throws a redirect when the session has no user:
 
 ```ts
 // src/data/account.ts
 export const requireUser = query(async (next: string) => {
+	"use server";
 	const user = await getCurrentUser();
 	if (!user) throw redirect(paths["sign-in"]({ next }));
 	return user;
@@ -133,22 +134,15 @@ Click **Account** in the header signed out and the URL becomes the same sign-in 
 Sign in, and the next visit to the account area runs the check again and finds the user, because a router action's completion invalidates every cached query.
 
 The preload is what starts the check as soon as the route matches, and on hover, before `RequireUser` exists; the memo is what holds the navigation until the check answers.
-Both call the same function, and the function has no `"use server"` directive of its own.
-It runs where the read happens, on the server during server rendering and in the browser during a navigation, and calls `getCurrentUser` across the boundary.
-
-:::caution[Throw the redirect in the query, not inside the server function]
-Moving the `throw redirect(...)` into a `"use server"` body and wrapping that function in `query` redirects on a full page request, because the function runs in-process during server rendering, but not on a client-side navigation.
-The server-function transport delivers a redirect to its caller as a response object with the target in an `X-Server-Function-Redirect` header and no `Location`; `query` navigates only on `Location`, so the read settles with that object and the navigation completes as if the check had passed.
-Router actions decode that header, which is why `throw redirect()` inside a server function works from a form or an action.
-For a read, build the redirect in the function `query` wraps, as above.
-:::
+Both call the same function.
+Its body runs on the server either way: in-process during server rendering, where it shares the request's `getCurrentUser` result with the header, and through the server-function endpoint during a navigation, where the thrown redirect travels back to the router as the response.
 
 Hovering the **Account** link runs the preload with the `"preload"` intent, which starts the request and does not act on its outcome, so a hover never redirects; the click that follows does, whether it reuses that answer or fetches a new one.
 
 :::deep-dive[What the router does with a thrown redirect]
 `query` treats a value thrown by the wrapped function the same way as a returned one.
-When the value is a `Response`, the router copies its headers onto the request event's response and reads its `Location` header.
-A relative `Location` becomes a call to the router's `navigate` with `replace: true`.
+When the value is a redirect `Response`, whether thrown in-process or delivered by the server-function transport, the router copies its headers onto the request event's response and reads the target.
+A same-origin target becomes a call to the router's `navigate` with `replace: true`.
 On the server, `navigate` records a 302 with that `Location` on the request event, and the read resolves `undefined` so the render can finish; a `Location` set before the shell flushes turns the whole response into a redirect with no body, and one set after the flush is appended to the stream as a script that sets `window.location`, as the [streaming renderer](/concepts/rendering-and-ssr#streaming-rendering) documents.
 In the browser the read stays pending forever, because the navigation unmounts everything that was waiting on it; the account page never receives a value, `undefined` included.
 Any `X-Revalidate` keys on the redirect are invalidated before the navigation so the destination fetches fresh.
@@ -332,7 +326,7 @@ Chained client-side redirects stop after 100 with `Too many redirects` from the 
 ### The account page paints, then the sign-in page replaces it
 
 The guard navigates after the user data has arrived, from an effect or a callback, so the page commits and the navigation follows it.
-Throw the redirect from inside the `query` function instead; the read stays pending, the navigation is held, and the sign-in page replaces the target before anything paints.
+Throw the redirect from inside the server function the `query` wraps instead; the read stays pending, the navigation is held, and the sign-in page replaces the target before anything paints.
 On a full page request, add the middleware so the server answers with a redirect status instead of rendering the shell first.
 
 ### The server function returns orders for a signed-out caller
@@ -349,7 +343,7 @@ Accept only paths that start with a single `/` and reject `//` and `/\`; run tha
 
 - Decide once, on `locals.userId`, and run the decision in every server function, in the route guard, and in middleware; each layer covers a way in that the others do not see.
 - Put the account pages under a pathless route whose `preload` starts the check and whose component renders `props.children` behind it, and keep `/sign-in` beside the group.
-- Make the guard a `query` around a plain async function that calls a server function and throws `redirect()` itself, so the router sees the `Location` on the server and in the browser.
+- Make the guard a server function wrapped in `query` that throws `redirect()` when the session has no user; the router navigates on it during server rendering and on client-side navigations alike.
 - Build the sign-in target with `paths["sign-in"]({ next })`; the search object encodes the path.
 - Validate `next` inside the server function: a single leading `/`, no `//`, no `/\`, and not the sign-in page itself.
 - Return a redirect from middleware for full page requests under `/account`, and keep the function checks, because middleware does not see `/_server` or client-side navigations.
@@ -360,4 +354,4 @@ Accept only paths that start with a single `/` and reject `//` and `/\`; run tha
 - [Sessions and auth](/building-apps/sessions-and-auth): the cookie, `getSession()`, and the middleware that puts `userId` on the event this guide reads.
 - [Middleware and API routes](/building-apps/middleware-and-api-routes): the chain the `requireAccountSession` middleware joins, and how to protect API routes the same way.
 - [Forms](/guides/forms): inline validation messages and pending state for the sign-in form.
-- [SSR-safe code](/guides/ssr-safe-code): the checklist for code such as `requireUser` that runs on both sides.
+- [SSR-safe code](/guides/ssr-safe-code): the checklist for code such as `RequireUser` that runs on both sides.

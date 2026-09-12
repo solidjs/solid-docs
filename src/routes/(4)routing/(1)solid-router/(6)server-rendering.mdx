@@ -49,8 +49,8 @@ Two things follow:
 
 - Keep the name and arguments stable across server and client.
   A key built from `Date.now()` or a random id never matches, and the page fetches twice.
-- The adoption window is the cache retention limit, three minutes.
-  A lazy route module that first reads a query well after load, on a tab that sat idle, runs the query fresh rather than presenting an old server value as new.
+- Adoption has no age limit for a read outside a navigation, so a lazy route module that first reads a query well after load still adopts the server value.
+  During a navigation the serialized value is accepted only while a preload of the same age would be, five seconds, or three minutes for back and forward; anything older runs fresh rather than presenting an old server value as new.
 
 Adoption also works for reads that happen after hydration finishes, so a lazy chunk that loads later still finds its server data.
 
@@ -127,15 +127,15 @@ There is no `Loading` boundary around `props.children` in `App`.
 An async read with no boundary above it blocks the shell until it settles, so the server sends nothing until the slowest query returns.
 Wrap `props.children` in `<Loading fallback={...}>` as the [setup](/routing/solid-router/setup#mount-it-at-the-application-root) page shows; the shell then streams with the fallback and the page follows.
 
-### `Hydration structure mismatch` in the console on a routed page
+### `Hydration tag mismatch` or `Hydration structure mismatch` in the console on a routed page
 
 The server and the client rendered different trees for the same URL.
-The usual causes are a component that branches on `isServer` or `typeof window`, a value such as `Date.now()` in the render, or a `url` prop on the server that does not match what the browser loaded.
+The usual causes are a component that branches on `isServer` or `typeof window`, which reports a tag mismatch when the branches are different elements, a value such as `Date.now()` in the render, or a `url` prop on the server that does not match what the browser loaded.
 Render the same structure on both sides and fill in browser-only values after hydration; [Hydrating server HTML](/concepts/rendering-and-ssr#hydrating-server-html) covers the general case.
 
 ### The page fetches data the server already rendered
 
-The query key differs between server and client, or the page read the query more than three minutes after load.
+The query key differs between server and client, or the read happened during a navigation more than five seconds after load.
 Check that the name and arguments are the same on both sides and contain nothing time-dependent or random.
 
 ### The mutation still makes two requests

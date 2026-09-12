@@ -26,7 +26,7 @@ solid({ start: true });
 ```
 
 This is the `bare` and `basic` project shape.
-The build prerenders the document shell from `Document.tsx`, without the app inside it, to `dist/client/index.html`.
+The build writes the empty document shell from `Document.tsx`, without the app inside it, to `dist/client/index.html`.
 The browser downloads the JavaScript and `render()` mounts the app.
 
 What the user sees first is the shell: whatever `Document.tsx` puts in `<body>` around the app, which in the templates is nothing.
@@ -66,7 +66,7 @@ prerender({ mode: "static", integrations: [serverFunctions()] });
 
 Both go in the `plugins` array, the crawler after the Solid plugin.
 
-This is the `ssg` template.
+This is the `fullstack` shape with the crawler plugin added; no shape ships it preconfigured.
 The server rendering happens once, during `vite build`.
 The `prerender-crawler` plugin starts at `/`, renders each page through the server build, writes the HTML, and follows same-origin links to find the rest.
 Server functions wrapped in `prerendered()` from `@solidjs/prerender` run during the build and their results are written as JSON files that the deployed client fetches instead of calling a server.
@@ -173,10 +173,10 @@ A module or component body reads a browser API, and with `ssr: true` that code n
 Move the read into an effect function or an `onSettled` callback, guard it with `isServer`, or wrap the component in `clientOnly`.
 [Server and client boundaries](/concepts/rendering-and-ssr#server-and-client-boundaries) shows each option.
 
-### `Hydration structure mismatch` in the console
+### `Hydration tag mismatch` or `Hydration structure mismatch` in the console
 
 The server and the browser rendered different structures for the same region, so the client could not claim the node it expected and its bindings attached to the wrong nodes.
-The usual causes are a conditional on `isServer` that picks a different element, a `Show` whose condition depends on a random value, or data that differs between the request and the browser.
+The usual causes are a conditional on `isServer` that picks a different element, which reports a tag mismatch, a `Show` whose condition depends on a random value, or data that differs between the request and the browser.
 Render the same structure on both sides and fill in browser-only values after hydration; [Hydrating server HTML](/concepts/rendering-and-ssr#hydrating-server-html) has the pair, and [SSR-safe code](/guides/ssr-safe-code) goes through the fixes line by line.
 
 ### Server function calls fail on a static host

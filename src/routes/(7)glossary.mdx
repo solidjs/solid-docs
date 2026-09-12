@@ -47,7 +47,7 @@ See [Effects](/concepts/reactivity#effects).
 A cached derived value.
 `createMemo` runs its function in a tracking scope, stores the result, and notifies readers only when the result changes, which makes it a useful boundary in a chain of derivations.
 
-Also called: derived value, computed.
+Also called: computed.
 
 See [Derived values](/concepts/reactivity#derived-values).
 
@@ -56,11 +56,13 @@ See [Derived values](/concepts/reactivity#derived-values).
 The scope that was running when a primitive was created, and that disposes it later.
 A component is an owner: when Solid removes it, every memo, effect, and cleanup it created is disposed with it, which is what ownership means; a primitive created in an event handler has no owner and is never cleaned up.
 
+Also called: reactive context, reactive scope, which is how the runtime's warnings name it.
+
 See [Ownership](/concepts/reactivity#ownership).
 
 ### Primitive
 
-A function that serves as a building block of reactivity or behavior and attaches to the current owner when it runs; its name usually begins with `create` or `use`.
+A function that serves as a building block of reactivity or behavior and, when it creates something that needs disposal, attaches it to the current owner; its name usually begins with `create` or `use`.
 
 See [A primitive is a function that runs inside an owner](/guides/custom-primitives#a-primitive-is-a-function-that-runs-inside-an-owner).
 
@@ -73,8 +75,9 @@ See [Signals](/concepts/reactivity#signals).
 
 ### Root
 
-An owner with no owner of its own.
-`createRoot` creates one by hand and returns its disposer; it is for tests and integrations that run reactivity outside any component, and application code shares state through context instead.
+An owner created by hand with `createRoot`, which returns its disposer.
+Created where nothing is running it stands alone; created inside a component it belongs to that component and is disposed with it.
+It is for tests and integrations that run reactivity outside any component, and application code shares state through context instead.
 
 See [Roots](/concepts/reactivity#roots).
 
@@ -90,7 +93,7 @@ See [Signals](/concepts/reactivity#signals).
 A part of the code where Solid records which reactive values are read: a JSX expression, a memo's function, or an effect's compute function.
 Each value read there becomes a dependency of the scope, and the component body is not a tracking scope, so a read there is a one-time snapshot.
 
-Also called: tracking context, reactive context, reactive scope.
+Also called: tracking context.
 
 See [Signals](/concepts/reactivity#signals).
 
@@ -176,7 +179,7 @@ See [Revalidate](/routing/solid-router/data#revalidate) and [Request revalidatio
 ### Settled
 
 Async work has finished and its answer is the one the user can see.
-Once a value has settled, a change to its input is held rather than blanking the screen; `onSettled` runs a callback once the first render has settled.
+Once a value has settled, a change to its input is held rather than blanking the screen; `onSettled` runs a callback once the first render has settled; a router action's `.onSettled(hook)` is a different API that runs after each submission completes.
 
 See [Settled view and in-flight work](/concepts/async-reactivity#settled-view-and-in-flight-work).
 
@@ -220,7 +223,7 @@ See [Boundaries](/concepts/boundaries).
 
 The JSX a parent places between a component's tags, received as `props.children`; a component accepts children only when its props type includes a `children` property.
 
-Also called: slots.
+Also called: function child, for a function passed as `children` and called by the parent.
 
 See [Children and composition](/concepts/components-and-jsx#children-and-composition).
 
@@ -388,7 +391,7 @@ See [Derive a store with a projection](/concepts/stores#derive-a-store-with-a-pr
 
 ### redirect
 
-Returns a `Response` with a `Location` header from a server function: a router action or query navigates without a page load, a form post without JavaScript follows a 303, and plain code receives the `Response` object.
+Returns a `Response` with a `Location` header from a server function: a router action or query navigates without a page load, a form post without JavaScript follows the redirect, and plain code receives the `Response` object.
 
 See [Redirect the caller](/building-apps/server-functions/mutations-and-responses#redirect-the-caller).
 
@@ -523,7 +526,7 @@ See [Something updates too often](/guides/debugging-reactivity#something-updates
 
 ### Development build and production build
 
-The development build prints diagnostics, records attribution, and returns real error messages from server functions.
+The development build prints diagnostics, records attribution once `attribution.enable()` is called, and returns real error messages from server functions.
 The production build strips the diagnostics and sanitizes unbranded errors to `Internal Server Error`; on the server the line between the two is the `development` export condition rather than `NODE_ENV`.
 
 See [Measure before changing](/guides/performance#measure-before-changing) and [Handle thrown errors](/building-apps/server-functions/mutations-and-responses#handle-thrown-errors).

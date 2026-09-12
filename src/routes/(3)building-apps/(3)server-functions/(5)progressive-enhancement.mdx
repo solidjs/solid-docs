@@ -52,7 +52,7 @@ const addToCartAction = action(addToCart);
 ```
 
 Load the page with JavaScript disabled and submit.
-The browser posts to the function's URL, the server runs `addToCart`, and the 303 it answers sends the browser to `/cart`.
+The browser posts to the function's URL, the server runs `addToCart`, and the redirect it answers sends the browser to `/cart`.
 With JavaScript on, the router intercepts the submit, calls the function over the transport, and navigates to `/cart` without a page load.
 
 The wiring that makes this work is the form, not the handler:
@@ -177,7 +177,7 @@ Bind a string or number and convert inside the function, or pass the value throu
 ### The form submits but the page reloads instead of staying put
 
 The router is not mounted around the form, so nothing intercepts the submit and the browser follows the `action` URL as a full-page navigation.
-The result is still correct, because the function ran and the 303 was followed; mount the form inside the `Router` to get the scripted path.
+The result is still correct, because the function ran and the redirect was followed; mount the form inside the `Router` to get the scripted path.
 
 ### The 400 shows nothing after a no-JavaScript submit
 
@@ -190,7 +190,7 @@ Solid Router reads the cookie on the next server render and records the submissi
 - Put every mutation behind `<form method="post" action={...}>` so the browser can submit it before the client bundle runs.
 - Wrap the server function with the router's `action()`; it serializes to the function's plain-HTTP URL and takes over after hydration.
 - Pending state, `useSubmissions`, and `.onSubmit` optimistic writes are layers the hydrated page adds; the HTML and the server function stay the same.
-- A browser form post is answered with a 303 and a flash cookie; the router turns the cookie into a submission on the next render.
+- A browser form post follows a returned redirect; any other outcome is answered with a 303 back to the page and a flash cookie, which the router turns into a submission on the next render.
 - Use `method="get"` and `fn.url` only for a `GET()` read; the function receives the fields as `URLSearchParams`.
 - `url` is on every reference at runtime and only on `GET()` and `live()` references in the type.
 - Bound arguments travel in the `args` query parameter and must be JSON-safe.

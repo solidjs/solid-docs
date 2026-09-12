@@ -69,7 +69,7 @@ export default function App() {
 
 Click **Featured** now and the URL changes without a reload: the header keeps its DOM and any state it holds.
 
-The render-prop child is the app shell.
+The function child is the app shell.
 It is never part of a route match, so it stays mounted for the life of the app while matched route components render through `props.children`.
 The `Loading` boundary gives the first page load a fallback while a lazy page or its data is pending; later navigations keep the current page on screen without it.
 If the router config has a top-level `preload`, its return value is available as `props.data`.
@@ -122,7 +122,7 @@ The other options exist for a specific situation each:
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | `base`              | The app is served under a prefix such as `/app`; matching and `paths` both include it.                                            |
 | `history`           | The app is not a normal page: an Electron shell or `file://` needs `hashHistory()`, tests need `memoryHistory()`.                 |
-| `preload`           | The root layout needs data of its own; it runs once per mount or server request and reaches the root render prop as `props.data`. |
+| `preload`           | The root layout needs data of its own; it runs once per mount or server request and reaches the function child as `props.data`.   |
 | `preloadLinks`      | Hover and focus preloading costs more than it saves; set `false` and use `preload="false"` per link for finer control.            |
 | `explicitLinks`     | Some anchors inside the router must stay as full page loads; only anchors with a `link` attribute are then handled by the router. |
 | `scrollRestoration` | The app manages scroll itself; set `false` to stop the router restoring the position on back and forward (on by default).         |
@@ -153,7 +153,7 @@ The first turns off the consumer that seeds the `query` cache from a mutation re
 ### `'use' router primitives can be only used inside a Route`
 
 A component that calls `useNavigate`, `useLocation`, or another router primitive is rendered outside the `<Router>`, for example next to it in `App` or in `Document.tsx`.
-Move the component into the render-prop child, where every router primitive works, or pass the value it needs down as a prop.
+Move the component into the function child, where every router primitive works, or pass the value it needs down as a prop.
 
 ### Clicking a link still reloads the page
 
@@ -164,7 +164,7 @@ With `explicitLinks: true`, it is missing the `link` attribute.
 ## Recap
 
 - Create the router once at module scope and export `Router` and `paths` from `src/router.ts`.
-- Mount `<Router>` once, at the application root; the render-prop child is the root layout.
+- Mount `<Router>` once, at the application root; the function child is the root layout.
 - Wrap `props.children` in a `Loading` boundary so the first load has a fallback.
 - Do not nest a `<Router>` inside another; compose one route tree, with lazy subtrees for sections.
 - Pass only `routes` unless you have a specific reason for `base`, `history`, or a preloading option.

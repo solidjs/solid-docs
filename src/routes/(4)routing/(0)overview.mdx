@@ -75,7 +75,7 @@ The URL changes to `/users/1`, the page under the `<nav>` changes, and the `<nav
 
 Each file under `src/routes` with a default export is a page.
 `paths` builds URLs from the route tree, so `paths.users(1)` is checked by the type checker and a link to a route that does not exist fails to compile.
-The `Loading` boundary around `props.children` is what lets a navigation keep the current page on screen while the next page's data loads.
+The `Loading` boundary around `props.children` gives the first load a fallback; later navigations keep the current page on screen without it, because the update is held until the next page's data arrives.
 The [Solid Router setup page](/routing/solid-router/setup) shows the same app with an in-memory route tree instead of the file-system adapter.
 
 ## Mount the router in `App`
@@ -85,7 +85,7 @@ With server-side rendering (SSR) enabled, the generated server and client entrie
 Mount the router or its provider in `App` so both entries use the same router root.
 
 Site-wide providers can wrap the router.
-Shared layouts belong inside it, in the router's root render prop or a layout route, so they can read the location:
+Shared layouts belong inside it, in the router's function child or a layout route, so they can read the location:
 
 ```tsx
 // Avoid: the header is outside the router, so it cannot read the location or mark the active link
@@ -94,7 +94,7 @@ Shared layouts belong inside it, in the router's root render prop or a layout ro
 	<Router>{(props) => props.children}</Router>
 </>
 
-// Prefer: the header is in the root render prop, where router primitives work
+// Prefer: the header is in the router's function child, where router primitives work
 <Router>
 	{(props) => (
 		<>
@@ -134,7 +134,7 @@ An application can still use `virtual:file-routes` for HTTP handlers in another 
 - Use Solid Router unless you already build on TanStack Query or share routing with a TanStack app.
 - Create the router once at module scope and export `Router` and `paths` from `src/router.ts`.
 - Mount the router in `src/App.tsx` so the generated client and server entries render the same tree.
-- Put shared layout inside the router's render prop, not around the router, so it can use router primitives.
+- Put shared layout inside the router's function child, not around the router, so it can use router primitives.
 - Wrap `props.children` in a `Loading` boundary so the first load has a fallback and later navigations keep the current page.
 - Build URLs with `paths` instead of string literals so the type checker catches a route that moved.
 - Choose the file-system adapter or a hand-written array in `src/router.ts`; everything else is unchanged either way.

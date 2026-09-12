@@ -53,7 +53,7 @@ The rest of this page is about making that choice deliberately, one fetch at a t
 ## Migrate in this order
 
 1. **Make the app run on Solid 2 without changing how it fetches.**
-   Split effects into compute and apply phases, fix reads that expect to see a write immediately, and replace `onMount` and `Suspense`.
+   Split effects into compute and effect phases, fix reads that expect to see a write immediately, and replace `onMount` and `Suspense`.
    Your fetching code keeps its shape and its timing.
    Test here; this is your baseline.
 2. **Convert one fetch at a time to an async computation.**
@@ -105,7 +105,7 @@ function TabPanel() {
 ### Step 1: keep it working
 
 Solid 2 effects have two phases.
-The compute phase tracks reads and returns a value; the apply phase receives that value, runs untracked, may do imperative work, and may return a cleanup.
+The compute phase tracks reads and returns a value; the effect phase receives that value, runs untracked, may do imperative work, and may return a cleanup.
 Effects run once on creation, so the `onMount` call folds into the effect:
 
 ```tsx
@@ -138,7 +138,7 @@ function TabPanel() {
 ```
 
 This works and produces no diagnostics.
-Writing to a signal or store from the apply phase is what the apply phase is for, and the [`createEffect`](/reference/solid-js/reactivity/create-effect) reference uses a fetch with an abort cleanup as its own example.
+Writing to a signal or store from the effect phase is what the effect phase is for, and the [`createEffect`](/reference/solid-js/reactivity/create-effect) reference uses a fetch with an abort cleanup as its own example.
 The graph does not know that `tabData` comes from a request, so nothing is held: the period write commits at once, the panel shows its indicator, and the rows replace themselves when the response lands.
 That is Solid 1 behavior, on Solid 2.
 

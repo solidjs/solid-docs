@@ -84,7 +84,7 @@ Fill in the three fields and click **Continue to shipping**: the browser posts t
 
 :::note[Where the server function file lives]
 The server function is in `src/data/`, not next to the page.
-With method discovery on, a `.ts` file under `src/routes` is an [API route](/building-apps/middleware-and-api-routes#api-routes), and this file is not one.
+With method discovery on, a file under `src/routes` becomes an [API route](/building-apps/middleware-and-api-routes#api-routes) as soon as it exports an uppercase HTTP method; keeping server functions in `src/data` means a later export cannot turn one into a route by accident.
 :::
 
 `action(saveAddress)` returns a value that serializes to the server function's URL, so `action={submitAddress}` renders as an ordinary `action="..."` attribute in the HTML.
@@ -250,7 +250,7 @@ A submission that returned a redirect does not stay in the list.
 
 :::deep-dive[How the error reaches the page without JavaScript]
 When the form posts without the client, the server-function runtime cannot hand the `400` to a script.
-It stores the status and the value in a one-shot cookie and redirects back to the form's URL.
+It stores the thrown value in a one-shot cookie and redirects back to the form's URL.
 The router reads that cookie during the next server render and records the same submission it would have recorded from a scripted call, and the cookie is cleared once it has been read.
 `useSubmissions` sees one entry either way, so the inline errors render on that page load.
 :::
@@ -463,7 +463,7 @@ Use `throw respond(value, { status })` for structured failures.
 ## Recap
 
 - Post a `FormData` argument to a server function through a router `action`, and the form works before JavaScript loads.
-- Keep the server function outside `src/routes`, or the file is treated as an API route.
+- Keep server functions outside `src/routes`, where an uppercase method export would make the file an API route.
 - Import `action` from `@solidjs/router` for forms; the core `action` has no URL.
 - Leave inputs uncontrolled unless a field needs feedback while typing; the browser assembles the `FormData` on submit.
 - Validate on the server with a schema; browser attributes are a convenience anyone can bypass with `curl`.

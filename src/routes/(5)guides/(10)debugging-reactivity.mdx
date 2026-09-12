@@ -56,7 +56,7 @@ The first three account for most reports.
 
 Look for `[STRICT_READ_UNTRACKED]` in the console.
 If it names the component you are looking at, a signal, memo, store property, or prop is read in the component body.
-The body runs once; only JSX expressions, memo functions, and effect compute functions are tracked.
+The body runs once; JSX expressions, memo functions, effect compute functions, and the function form of `createSignal` and `createStore` are tracked.
 Move the read there, or wrap the calculation in a function and call the function from the JSX.
 The [Reactivity](/concepts/reactivity) page has the full explanation.
 
@@ -249,7 +249,7 @@ was held — the interaction was dead for 640ms.
 ```
 
 A hold is silent when none of the following is true while it is open: an `isPending()` or `latest()` read on the held graph, an optimistic value, an `affects()` declaration, or an effect that ran and painted.
-Holds under 300ms are recorded but not reported; from 300ms the finding is `info`, from 500ms it is a warning.
+Holds under 100ms are recorded but not reported; from 100ms the finding is `info`, from 200ms it is a warning.
 Both thresholds are options to `attribution.enable({ holds: { infoMs, warnMs } })`.
 
 The repair is always to add feedback, never to remove the hold:
@@ -261,8 +261,10 @@ The repair is always to add feedback, never to remove the hold:
 
 [Async reactivity](/concepts/async-reactivity#another-answer-is-coming-ispending) explains each of these.
 
-A `Loading` boundary above the async source is a different situation: the read never enters a hold, so there is no `SILENT_HOLD` to report.
-A hold that was acknowledged but still ran long is not a diagnostic either; it is recorded as `late` in the feedback tables so the cost is visible without blaming code that waited correctly.
+A `Loading` boundary that has not shown content yet, or whose `on` value changed, is a different situation: the read shows the fallback instead of entering a hold, so there is no `SILENT_HOLD` to report.
+A boundary that has already revealed holds like everything else.
+A hold that was acknowledged but still ran long is reported as `[LONG_HOLD]` from 500ms of waiting, a warning from 1000ms, with the suggestion to add a `Loading on={...}` boundary; the thresholds are `attribution.enable({ longHolds: { infoMs, warnMs } })`.
+Shorter acknowledged holds are recorded as `late` in the feedback tables so the cost is visible without blaming code that waited correctly.
 
 :::deep-dive[Feedback tables, and how a router names its holds]
 `attribution.holds()` returns every hold from the session, reported or not.

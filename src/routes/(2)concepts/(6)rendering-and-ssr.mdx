@@ -141,7 +141,7 @@ onSettled(() => setRenderedAt(Date.now()));
 </p>;
 ```
 
-The `Avoid` version logs, in development, a warning such as `Hydration structure mismatch: expected <time> as first child of` followed by the node it found instead, and the client's bindings for that region attach to the wrong nodes.
+The `Avoid` version logs, in development, a warning such as `Hydration tag mismatch for key "...": expected <time> but found` followed by the `<p>` it found instead, and the client's bindings for that region attach to the wrong node.
 The `Prefer` version hydrates cleanly and updates the text once the browser has taken over.
 A value that differs only in its text, such as `<p>{Date.now()}</p>`, produces no warning: hydration adopts the server's text node as it is, so the page keeps showing the server's value until a reactive update replaces it.
 [SSR-safe code](/guides/ssr-safe-code#values-that-differ-on-every-run) goes through these cases and how to read each warning.
@@ -297,9 +297,9 @@ A module or component body reads a browser API while the server renders.
 Move the read into an effect function or an `onSettled` callback, guard it with `isServer`, or wrap the component in `clientOnly`.
 See [Server and client boundaries](#server-and-client-boundaries).
 
-### `Hydration structure mismatch` or `Hydration key miss` in the console
+### `Hydration tag mismatch`, `Hydration structure mismatch`, or `Hydration key miss` in the console
 
-The server and the client rendered different elements for the same region: a conditional on `isServer` that picks a different tag, a `Show` whose condition depends on `Math.random()`, or data that differs between the request and the browser.
+The server and the client rendered different elements for the same region: a conditional on `isServer` that picks a different tag reports a tag mismatch; a `Show` whose condition depends on `Math.random()`, or data that differs between the request and the browser, reports a structure mismatch inside the template.
 Render the same structure on both sides and fill in browser-only values after hydration; [Reading the hydration warnings](/guides/ssr-safe-code#reading-the-hydration-warnings) explains what each message checks.
 A key miss whose message mentions namespaces means a subtree was hydrated with a different `renderId` than the server used; see [Controlling hydration](#controlling-hydration).
 

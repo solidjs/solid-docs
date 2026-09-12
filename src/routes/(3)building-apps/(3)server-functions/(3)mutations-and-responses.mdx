@@ -75,7 +75,7 @@ Both reach the caller the same way.
 
 What the browser does next depends on who made the call.
 A Solid Router `action()` navigates to `/goodbye` without a page load.
-An HTML form post without JavaScript is answered with a 303 and the browser follows it.
+An HTML form post without JavaScript is answered with the redirect itself, 302 by default, and the browser follows it.
 Plain code that called `deleteAccount()` directly receives the `Response` object as the resolved value, because the transport hands navigation metadata back whole for the caller to apply.
 
 The target can be a string or an `Href` produced by a router's typed paths helper; a branded `Href` redirects to its logical path.
@@ -197,7 +197,7 @@ export const addToCartAction = action(addToCart);
 ```
 
 Render `<form method="post" action={addToCartAction}>` and the form posts to the function's URL before JavaScript loads; after hydration the router intercepts the submit, calls the function over the transport, and applies the `reload`.
-The router tracks the submission while it runs and turns the thrown envelope's value into `submission.error`, which the [Forms guide](/guides/forms) reads to show messages next to the fields.
+The router marks the form `aria-busy` while it runs and, once it settles, records a submission whose `error` is the thrown envelope's value, which the [Forms guide](/guides/forms) reads to show messages next to the fields.
 
 Keep the server function a named export and wrap it separately, as above, so a test or an API route can call `addToCart` without the form.
 When the function exists only for the form, write the body inline, `action(async (form: FormData) => { "use server"; ... })`; the [Data loading and mutations](/routing/solid-router/data#mutate-with-actions) page uses that shape throughout, and the two behave the same.
@@ -236,7 +236,7 @@ Pass a string path, or the value a router's typed paths helper returns.
 ## Recap
 
 - Return a plain value when the caller needs data and nothing else; use `respond()` to add a status or headers to it.
-- Return or throw `redirect(path)`; a router action navigates, a form post follows a 303, and direct code receives the `Response`.
+- Return or throw `redirect(path)`; a router action navigates, a form post follows the redirect, and direct code receives the `Response`.
 - Return `reload({ revalidate })` after a write so the router refetches the named reads.
 - Throw `respond(value, { status })` for a failure the caller should see; a returned envelope resolves the caller whatever its status.
 - A plain thrown value becomes `Internal Server Error` in production; `markSafeError()` opts one `Error` out of that.

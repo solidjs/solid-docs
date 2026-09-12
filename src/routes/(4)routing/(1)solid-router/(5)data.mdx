@@ -116,7 +116,7 @@ Turn data preloading off for one link when it is expensive or has side effects:
 </a>
 ```
 
-Or globally with `preloadLinks: false` in `createRouter`.
+Or turn off link preloading altogether, chunk and data, with `preloadLinks: false` in `createRouter`.
 To warm a route from code, for example when a list scrolls into view:
 
 ```tsx
@@ -317,7 +317,7 @@ Each submission carries the `input` that was sent, the `result` or `error`, and 
 A submission that redirected or returned nothing does not stay in the list; use `.onSettled` when you need to observe those too.
 
 The message reaches the browser because `addToCart` threw it through `markSafeError`.
-A plain `throw new Error(...)` arrives in production as `Internal Server Error`, so database and infrastructure details do not leak; [Mutations and responses](/building-apps/server-functions/mutations-and-responses) covers `markSafeError` and the alternative of returning validation issues with `respond()`.
+A plain `throw new Error(...)` arrives in production as `Internal Server Error`, so database and infrastructure details do not leak; [Mutations and responses](/building-apps/server-functions/mutations-and-responses) covers `markSafeError` and the alternative of throwing validation issues with `respond()`.
 
 ### Before the server confirms
 
@@ -420,7 +420,7 @@ If it is an action and one list is stale, the response narrowed `revalidate` to 
 ### `'use' router primitives can be only used inside a Route` when a query runs
 
 A `query` read inside a reactive scope binds to the router, so a component that reads one outside the `<Router>`, for example next to it in `App`, throws this.
-Move the reader inside the router's render prop or a route component.
+Move the reader inside the router's function child or a route component.
 
 ### The action ran but `useSubmissions` shows nothing
 
@@ -430,7 +430,7 @@ Only a submission that produced a result or an error enters the list; register `
 ### The error message is `Internal Server Error` in production
 
 The action threw a plain `Error`.
-Wrap it in `markSafeError` to send the message to the browser, or return the validation issues with `respond()`.
+Wrap it in `markSafeError` to send the message to the browser, or throw the validation issues with `respond(issues, { status: 400 })`; a returned envelope is a successful result, not an error.
 
 ## Recap
 
@@ -439,7 +439,7 @@ Wrap it in `markSafeError` to send the message to the browser, or return the val
 - Wrap a mutation in `action` and submit it with `<form method="post" action={...}>`, so it works before JavaScript loads.
 - Put everything the mutation needs in the form or bind it with `.with()`.
 - Show progress with `form[aria-busy]`, failures with `useSubmissions`, and optimistic state with `.onSubmit` on an optimistic store.
-- Throw `markSafeError` or return `respond()` for messages the user should see.
+- Throw `markSafeError` or throw `respond()` for messages the user should see.
 - Narrow revalidation with `reload`, `respond`, or `redirect` options; without keys, every query revalidates.
 
 ## Next steps

@@ -95,7 +95,7 @@ Consecutive writes already share the default microtask batch.
 Replacing each `batch` call with `flush` would change deferred work into synchronous work.
 
 Development mode also rejects writes in ordinary owned scopes such as component bodies and memo computations.
-Replace write-back derivations with [`createMemo`](/reference/solid-js/reactivity/create-memo), and invoke setters from event handlers, actions, or effect apply functions.
+Replace write-back derivations with [`createMemo`](/reference/solid-js/reactivity/create-memo), and invoke setters from event handlers, actions, or effect effect functions.
 Reserve `ownedWrite: true` for an internal signal that intentionally accepts in-scope writes.
 
 Solid 2 warns when a component body reads a reactive value at top level because the read is outside a tracking scope.
@@ -117,7 +117,7 @@ function Heading(props: { title: string }) {
 Function-form `createSignal(fn)` is new.
 It creates a writable derived signal and can replace a derivation that previously wrote back into another signal.
 
-## Split effects into compute and apply phases
+## Split effects into compute and effect phases
 
 [`createEffect`](/reference/solid-js/reactivity/create-effect) now separates dependency tracking from the side effect:
 
@@ -137,8 +137,8 @@ createEffect(
 ```
 
 The compute function tracks reactive reads and must remain free of application writes.
-The apply function is untracked, may perform imperative work, and may return a cleanup function.
-Extract store properties in the compute phase instead of passing a store proxy through and reading it in the untracked apply phase.
+The effect function is untracked, may perform imperative work, and may return a cleanup function.
+Extract store properties in the compute phase instead of passing a store proxy through and reading it in the untracked effect phase.
 
 ```ts
 createEffect(
@@ -147,7 +147,7 @@ createEffect(
 );
 ```
 
-Return effect cleanup from the apply function:
+Return effect cleanup from the effect function:
 
 ```ts
 createEffect(
@@ -168,7 +168,7 @@ Replace common lifecycle and effect helpers as follows:
 
 - Replace `on(...)` with the compute function and use the effect `defer` option when needed.
 - Replace `onMount` with [`onSettled`](/reference/solid-js/lifecycle-actions/on-settled) and return cleanup from its callback.
-- Replace effect-local `onCleanup` calls with cleanup returned from the apply function.
+- Replace effect-local `onCleanup` calls with cleanup returned from the effect function.
 - Use `createTrackedEffect` only when one tracked callback is required.
   It and `onSettled` cannot create nested primitives.
 - Replace `catchError` or `onError` with an [`Errored`](/reference/solid-js/components-jsx/errored) boundary or the effect bundle `error` callback.
@@ -248,7 +248,7 @@ Place reads that can be initially unresolved under [`Loading`](/reference/solid-
 
 This is the primary first-load model.
 The boundary owns branch readiness and renders its fallback until the required reads settle.
-After content has rendered, a revalidation normally keeps the committed content visible.
+After content has rendered, a later update is held and keeps the committed content visible.
 
 :::caution[Async computations change when the screen updates]
 A write to an input of an async computation is held until that computation has its next answer, and everything else in the same update waits with it.
@@ -391,13 +391,13 @@ flush();
 expect(count()).toBe(2);
 ```
 
-Flush after effect creation before asserting the apply callback.
+Flush after effect creation before asserting the effect function.
 Flush after setters before asserting reactive values, effects, or DOM.
 Prefer `await user.click(...)` for user-level tests because event tooling also drains its event sequence.
 
 Use [`resolve(() => value())`](/reference/solid-js/advanced/interop-async/resolve) when a test must wait for a reactive expression to settle.
 Await action calls before asserting their final committed or reverted state.
-Test the initial `Loading` fallback, the settled content, revalidation pending state, and error boundary as separate states.
+Test the initial `Loading` fallback, the settled content, the held-update pending state, and error boundary as separate states.
 
 Run migration tests in development mode.
 Fix top-level reactive-read warnings, writes from owned scopes, actions called from computations, and async reads outside a `Loading` boundary instead of suppressing the diagnostics.
@@ -412,7 +412,7 @@ Before merging the migration:
 1. Search for old package paths and removed symbols.
 2. Run TypeScript, lint, and the production client build.
 3. Run unit and component tests with explicit flush points.
-4. Exercise initial load, changed-input revalidation, manual refresh, successful mutation, failed mutation, and boundary recovery.
+4. Exercise initial load, a changed-input update, manual refresh, successful mutation, failed mutation, and boundary recovery.
 5. Compare SSR shell output, streamed completion, hydration, and event behavior with the recorded Solid 1 baseline.
 6. Verify each third-party primitive, renderer, router, and metaframework package against an explicit Solid 2-compatible release.
 

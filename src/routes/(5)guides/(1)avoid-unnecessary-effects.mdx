@@ -60,9 +60,9 @@ Keep memo computations free of side effects.
 :::deep-dive[Why the copy is one flush behind]
 Solid applies writes in a batch.
 Within one batch it runs every tracked compute function that depends on the changed values, and only then runs the effect functions whose inputs changed.
-A write made inside an effect function cannot join the batch that is finishing; it starts the next one.
-Readers of the copied signal therefore update one batch after readers of the source, and the screen paints in between.
-A memo is a compute function, so it lands in the same batch as its inputs and there is no frame in which the two disagree.
+A write made inside an effect function cannot join the pass that is finishing; it starts a second pass inside the same flush.
+Readers of the copied signal therefore update one pass after readers of the source, and every effect and DOM write in the first pass saw the stale copy.
+A memo is a compute function, so it lands in the same pass as its inputs and there is no moment in which the two disagree.
 :::
 
 ## Put asynchronous work in a derivation
@@ -261,7 +261,7 @@ const save = action(function* () {
 
 Run the `Avoid` version and click **Save** twice.
 The first click saves one flush after the click; the second does nothing, because writing `true` to a signal that already holds `true` notifies no one, and the flag has to be reset somewhere before the button works again.
-In the `Prefer` version each click runs the [`action`](/reference/solid-js/lifecycle-actions/action), which runs the request as one transaction: writes made inside it, such as an optimistic value, are held until it settles.
+In the `Prefer` version each click runs the [`action`](/reference/solid-js/lifecycle-actions/action), which runs the request as one transaction: ordinary writes made inside it are held until it settles, while an optimistic value shows at once and is discarded when it settles.
 
 ## Use an effect at an imperative boundary
 
@@ -303,7 +303,7 @@ If a compute function reaches pending async work, its effect function waits for 
 
 :::caution[An effect function is not a place to write reactive state]
 The effect function runs after the batch has landed.
-A setter called there starts a new batch, which is the copy pattern this guide opened with.
+A setter called there starts a second pass, which is the copy pattern this guide opened with.
 If the write is needed, ask whether the value could be a memo instead; if it records something the browser produced, see the next section.
 :::
 

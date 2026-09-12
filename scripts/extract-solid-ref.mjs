@@ -1778,8 +1778,8 @@ const LIST_PROBLEMS = {
 		"/guides/lists#a-row-shows-the-wrong-index-after-reordering",
 	],
 	wholeList: [
-		"Editing one item re-renders the whole list",
-		"/guides/lists#editing-one-item-re-renders-the-whole-list",
+		"Editing one item rebuilds the whole list",
+		"/guides/lists#editing-one-item-rebuilds-the-whole-list",
 	],
 	pushNothing: [
 		"`items.push(item)` does nothing",

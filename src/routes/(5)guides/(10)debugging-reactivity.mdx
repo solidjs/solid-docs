@@ -188,7 +188,7 @@ Return the same reference when nothing changed, keep the data in a store, or pas
 
 ### A write replaces an object that did not change
 
-`setItems(await fetchItems())` replaces every item with a new object, so every row that reads an item re-renders.
+`setItems(await fetchItems())` replaces every item with a new object, so every row that reads an item is recreated.
 Use a store with `reconcile` to merge the new data into the existing objects, so only the properties that changed notify their readers.
 See [Stores](/concepts/stores).
 
@@ -320,7 +320,7 @@ Server render is pure: state changes flow from async sources (promises, async it
 ```
 
 A server render is one pass from inputs to HTML.
-A setter called during that pass lands as inert data and nothing re-renders, so the write is a sign the code expects a client-side update loop that does not exist on the server.
+A setter called during that pass lands as inert data and nothing updates, so the write is a sign the code expects a client-side update loop that does not exist on the server.
 The fix depends on what the write was for:
 
 - Bridging a subscription or a promise into a signal: make the source itself the value, `createSignal(() => source)` or `createStore(async () => ..., seed)`, so both server and client read it the same way.

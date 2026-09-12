@@ -39,7 +39,7 @@ export const Router = createRouter({
 import type { RouteProps } from "@solidjs/router";
 import { paths } from "../../router";
 
-export default function AccountLayout(props: RouteProps) {
+export default function AccountLayout(props: RouteProps<typeof paths.account>) {
 	return (
 		<div class="account">
 			<nav>
@@ -85,7 +85,7 @@ A layout route whose component leaves out `props.children` renders its own frame
 
 ```tsx
 // Avoid: the frame renders, the matched page does not
-export default function AccountLayout(props: RouteProps) {
+export default function AccountLayout(props: RouteProps<typeof paths.account>) {
 	return (
 		<div class="account">
 			<nav>…</nav>
@@ -139,11 +139,11 @@ Leave `path` off and the route adds a component to the match without adding to t
 ```tsx
 // src/pages/RequireSignIn.tsx
 import { Show, createMemo } from "solid-js";
-import type { RouteProps } from "@solidjs/router";
+import type { RouteSectionProps } from "@solidjs/router";
 import { getSession } from "../data/session";
 import { paths } from "../router";
 
-export default function RequireSignIn(props: RouteProps) {
+export default function RequireSignIn(props: RouteSectionProps) {
 	const session = createMemo(() => getSession());
 
 	return (
@@ -159,7 +159,7 @@ export default function RequireSignIn(props: RouteProps) {
 
 Visit `/checkout` signed out and the page shows "Sign in to continue"; sign in and the same URL shows the checkout.
 `/account` and `/checkout` are still the URLs; `RequireSignIn` sits in front of both.
-Because a pathless route declares no parameters of its own, its `props.params` is the open `Params` type.
+A pathless route has no `paths` node to give `RouteProps` as a witness, so its component takes the untyped `RouteSectionProps`, whose `params` is the open `Params` type.
 
 A pathless route can also carry a `preload` without a component, when you want to start a request for a group of pages without wrapping them in anything.
 

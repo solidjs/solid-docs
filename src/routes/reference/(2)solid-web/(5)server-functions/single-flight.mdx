@@ -30,7 +30,11 @@ Decodes a server-function response, including response envelopes and single-flig
 ## Import
 
 ```ts
-import { decodeResponse, registerFlightDataSource, subscribeFlightData } from "@solidjs/web/server-functions";
+import {
+	decodeResponse,
+	subscribeFlightData,
+} from "@solidjs/web/server-functions";
+import { registerFlightDataSource } from "@solidjs/web/server-functions/server";
 ```
 
 ## `decodeResponse`
@@ -39,8 +43,8 @@ import { decodeResponse, registerFlightDataSource, subscribeFlightData } from "@
 
 ```ts
 function decodeResponse<T = unknown>(
-  response: Response,
-  codecOptions?: JSONCodecOptions
+	response: Response,
+	codecOptions?: JSONCodecOptions
 ): Promise<T | undefined>;
 ```
 
@@ -64,7 +68,10 @@ function.
 ### Type signature
 
 ```ts
-function registerFlightDataSource(source: string, hook: CollectFlightDataHook): () => void;
+function registerFlightDataSource(
+	source: string,
+	hook: CollectFlightDataHook
+): () => void;
 ```
 
 ### Parameters
@@ -84,10 +91,12 @@ Registers the integration that receives data folded into a mutation response.
 ### Type signature
 
 ```ts
-function subscribeFlightData<D = unknown>(consumer: FlightDataConsumer<D>): () => void;
 function subscribeFlightData<D = unknown>(
-  source: string,
-  consumer: FlightDataConsumer<D>
+	consumer: FlightDataConsumer<D>
+): () => void;
+function subscribeFlightData<D = unknown>(
+	source: string,
+	consumer: FlightDataConsumer<D>
 ): () => void;
 ```
 
@@ -125,8 +134,8 @@ pre-digested on the outcome (`targetUrl`, `revalidateKeys`,
 
 ```ts
 type CollectFlightDataHook = (
-  event: ServerFunctionEvent,
-  outcome: ServerFunctionOutcome
+	event: ServerFunctionEvent,
+	outcome: ServerFunctionOutcome
 ) => unknown | Promise<unknown>;
 ```
 
@@ -139,8 +148,8 @@ value is returned to the caller, so caches are seeded first.
 
 ```ts
 type FlightDataConsumer<D = unknown> = (
-  data: D,
-  context: FlightDataContext
+	data: D,
+	context: FlightDataContext
 ) => void | Promise<void>;
 ```
 
@@ -154,8 +163,8 @@ not from here.
 
 ```ts
 interface FlightDataContext {
-  response: Response;
-};
+	response: Response;
+}
 ```
 
 #### `response`
@@ -172,15 +181,15 @@ assuming one.
 
 ```ts
 interface ServerFunctionOutcome {
-  id: string;
-  value: unknown;
-  response: Response | undefined;
-  request: Request;
-  thrown: boolean;
-  targetUrl: string | undefined;
-  revalidateKeys: string[] | undefined;
-  foldedHeaders: Headers;
-};
+	id: string;
+	value: unknown;
+	response: Response | undefined;
+	request: Request;
+	thrown: boolean;
+	targetUrl: string | undefined;
+	revalidateKeys: string[] | undefined;
+	foldedHeaders: Headers;
+}
 ```
 
 #### `id`
@@ -264,9 +273,9 @@ codec-serializable value.
 
 ```ts
 interface SingleFlightPayload<T = unknown, D = unknown> {
-  value: T;
-  data: D;
-};
+	value: T;
+	data: D;
+}
 ```
 
 #### `value`

@@ -38,7 +38,7 @@ const ENTRYPOINTS = [
 		path: "packages/web/server-functions/src/client.ts",
 	},
 	{
-		packageName: "@solidjs/web/server-functions",
+		packageName: "@solidjs/web/server-functions/server",
 		path: "packages/web/server-functions/src/server.ts",
 	},
 	{
@@ -2840,8 +2840,8 @@ function mergeDuplicateEntry(existing, incoming) {
 		existing.line = incoming.line;
 	}
 	if (
-		incoming.packageName === "@solidjs/web/server-functions" &&
-		existing.packageName !== "@solidjs/web/server-functions"
+		incoming.packageName.startsWith("@solidjs/web/server-functions") &&
+		!existing.packageName.startsWith("@solidjs/web/server-functions")
 	) {
 		existing.packageName = incoming.packageName;
 	}

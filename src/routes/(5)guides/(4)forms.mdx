@@ -1,17 +1,18 @@
 ---
 title: "Forms"
 version: "2.0"
-description: "Build a form with a server function and a Solid Router action: it works before JavaScript loads, validates on the server, and shows pending state and inline errors after hydration."
+description: "Build a form with a server function and a Solid Router action: it works before JavaScript loads, validates on the server, and after hydration shows pending state, inline errors, and the saved result before the server confirms."
 ---
 
 The checkout needs a shipping address.
 The form has to save the address when the user clicks **Continue**, reject a postal code that is not five digits even when someone posts to it with `curl`, and show the user which field was wrong.
 On a slow connection it has to do the first of those before the JavaScript has loaded.
 
-This guide builds that form in three passes.
+This guide builds that form in four passes.
 The first is a form that posts to a server function through a Solid Router action, with no JavaScript in the browser at all.
 The second adds validation the user cannot bypass.
 The third shows the validation messages inline and marks the form as pending, without changing the HTML.
+The fourth turns the form into an address book entry that appears in the list before the server has confirmed it.
 Each pass is a working form on its own; stop at the one that matches what the app needs.
 
 The guide assumes a `fullstack` project with [server functions](/building-apps/server-functions) enabled and [Solid Router](/routing/solid-router) mounted.
@@ -264,6 +265,108 @@ form[aria-busy] button[type="submit"] {
 }
 ```
 
+## Pass 4: show the saved address before the server confirms
+
+A returning customer has an address book, and the form adds to it rather than moving on to shipping.
+The list should show the new address the moment the user clicks **Save**, marked as unconfirmed until the server has it.
+
+The server side gets a cached read for the list and a second function that saves without redirecting:
+
+```ts
+// src/data/address.ts
+import { action, query } from "@solidjs/router";
+import { reload } from "@solidjs/web";
+
+export type SavedAddress = v.InferOutput<typeof Address> & {
+	id: string;
+	pending?: boolean;
+};
+
+export const getAddresses = query(async () => {
+	"use server";
+	return database.addresses.forCustomer(currentCustomerId());
+}, "addresses");
+
+export async function addAddress(form: FormData) {
+	"use server";
+
+	const parsed = v.safeParse(Address, Object.fromEntries(form));
+	if (!parsed.success) {
+		throw respond({ issues: toIssues(parsed.issues) }, { status: 400 });
+	}
+
+	await database.addresses.add(currentCustomerId(), parsed.output);
+	return reload({ revalidate: getAddresses.key });
+}
+```
+
+`toIssues` is the loop from pass 2 moved into a helper, and `currentCustomerId()` stands for the session read from [Sessions and auth](/building-apps/sessions-and-auth).
+`reload({ revalidate: getAddresses.key })` tells the router which query to refetch when the action completes.
+
+The page reads the list through an optimistic store and pushes the submitted fields into it from the action's `.onSubmit` hook:
+
+```tsx
+// src/routes/checkout/address.tsx
+import { For, createOptimisticStore } from "solid-js";
+import { action } from "@solidjs/router";
+import {
+	addAddress,
+	getAddresses,
+	type SavedAddress,
+} from "../../data/address";
+
+const submitAddress = action(addAddress);
+
+export default function AddressPage() {
+	const [addresses, setAddresses] = createOptimisticStore(
+		() => getAddresses(),
+		[] as SavedAddress[]
+	);
+
+	submitAddress.onSubmit((form) => {
+		setAddresses((draft) => {
+			draft.push({
+				id: "unsaved",
+				name: String(form.get("name")),
+				street: String(form.get("street")),
+				postalCode: String(form.get("postalCode")),
+				pending: true,
+			});
+		});
+	});
+
+	return (
+		<>
+			<ul>
+				<For each={addresses}>
+					{(address) => (
+						<li class={{ pending: !!address.pending }}>
+							{address.name}, {address.street} {address.postalCode}
+						</li>
+					)}
+				</For>
+			</ul>
+			<form method="post" action={submitAddress}>
+				{/* the fields and messages from pass 3 */}
+				<button type="submit">Save address</button>
+			</form>
+		</>
+	);
+}
+```
+
+Click **Save address** and the new line appears at the bottom of the list with the `pending` class before any request has finished.
+When `addAddress` returns, the router revalidates `getAddresses`, the store reconciles the server's list, and the unsaved line is replaced by the saved one with its real `id`.
+Post a bad postal code and the line disappears when the `400` arrives, because an optimistic write is an overlay that Solid discards when the action settles, on success and on failure alike; the inline message from pass 3 explains why.
+
+`.onSubmit` receives the action's arguments, here the `FormData`, and runs as the first step of the action's transaction, so the write is held with the mutation instead of committing on its own.
+[Before the server confirms](/routing/solid-router/data#before-the-server-confirms) covers the hook, and [Mutations](/concepts/mutations) explains why the overlay needs no rollback code.
+
+Disable JavaScript and submit the same form.
+The browser posts, `addAddress` runs, the `reload` sends the browser back to the page, and the server renders the list with the new address in it.
+The `createOptimisticStore` and the `.onSubmit` hook did nothing on that path, and nothing had to be written to make the form fall back to it.
+Each pass in this guide added a layer to the same `<form method="post" action={submitAddress}>`: pass 1 made it work, pass 2 made it safe, pass 3 made it explain itself, and pass 4 made it feel immediate; the shopper whose bundle has not arrived yet still gets pass 1.
+
 ## Live validation while typing
 
 The passes above validate on submit.
@@ -302,7 +405,7 @@ The input keeps its `name`, so the same `FormData` reaches the server function a
 
 :::tip[Control only the fields that need live feedback]
 A controlled input updates its text on every keystroke; an uncontrolled one costs nothing until submit.
-Leave the fields that validate on submit uncontrolled, as in the three passes above.
+Leave the fields that validate on submit uncontrolled, as in the four passes above.
 :::
 
 ## Editing an existing record
@@ -367,10 +470,12 @@ Use `throw respond(value, { status })` for structured failures.
 - Throw `respond(value, { status: 400 })` for a validation failure; a plain `Error` reaches production clients as `Internal Server Error`.
 - Read failures from `useSubmissions(action)`, where the envelope's value is `submission.error`.
 - Style the pending state from `form[aria-busy]`; the router sets and clears the attribute.
+- Push the submitted fields into a `createOptimisticStore` from the action's `.onSubmit` hook to show the result at once; the overlay is discarded when the action settles and the revalidated list replaces it.
+- Every layer after pass 1 exists only on the hydrated page; the same form still posts and re-renders without JavaScript.
 
 ## Next steps
 
-- [Data loading and mutations](/routing/solid-router/data): `.with()` for bound arguments, `.onSubmit` for optimistic updates, and revalidation after a mutation.
+- [Data loading and mutations](/routing/solid-router/data): `.with()` for bound arguments, what revalidates after a mutation, and the cart version of the optimistic pattern from pass 4.
 - [Progressive enhancement](/building-apps/server-functions/progressive-enhancement): what the server-function runtime does with an unscripted request, for forms outside the router.
 - [Arguments and security](/building-apps/server-functions/arguments-and-security): the other argument encodings and the same-origin check that protects POSTs.
 - [Sessions and auth](/building-apps/sessions-and-auth): the same form shape applied to sign-in and sign-out.

@@ -362,6 +362,11 @@ The new line appears at once with the `pending` class.
 When the action finishes, the `reload` revalidates `getCart`, the store reconciles the server's cart, and the optimistic line is replaced by the real one, or disappears if the server rejected it.
 Registering `.onSubmit` inside a component ties the hook to that component's lifetime.
 
+The form did not change to get this.
+Before hydration it is the same `POST` as in [Mutate with actions](#mutate-with-actions): the browser submits, the server runs `addToCart`, and the page re-renders with the cart from the database.
+After hydration the router intercepts the submit, runs the `.onSubmit` hooks as the first step of the action's transaction, sends the call, and reconciles the revalidated data over the prediction.
+The optimistic layer is something the hydrated page adds on top of a form that already works; the server function and the HTML are the same in both cases.
+
 [Mutations](/concepts/mutations) explains the optimistic model in depth; this is the same model with the router providing the action.
 
 ## Invoke an action from code

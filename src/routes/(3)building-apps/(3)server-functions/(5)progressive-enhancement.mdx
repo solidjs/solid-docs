@@ -69,7 +69,11 @@ The wiring that makes this work is the form, not the handler:
 
 Before hydration, the `Avoid` version has no handler attached, so the click does nothing; the `Prefer` version posts.
 
-The [Forms guide](/guides/forms) builds the checkout address form on this shape, with validation messages and pending state.
+Everything the hydrated page does with a submission is a layer over that post.
+Once the router is running it intercepts the submit, calls the same function over the server-function transport, sets `aria-busy` on the form while the call runs, records the result in `useSubmissions`, and runs any `.onSubmit` hook before the call is sent, which is where an [optimistic write](/routing/solid-router/data#before-the-server-confirms) goes.
+None of that changes the HTML or the server function, so a shopper whose bundle has not arrived gets the post and the re-render, and a shopper whose bundle has arrived gets the same result painted before the server answers.
+
+The [Forms guide](/guides/forms) builds the checkout address form on this shape, with validation messages, pending state, and an address list that updates before the server confirms.
 
 ## Submit a GET form
 
@@ -185,6 +189,7 @@ Solid Router reads the cookie on the next server render and records the submissi
 
 - Put every mutation behind `<form method="post" action={...}>` so the browser can submit it before the client bundle runs.
 - Wrap the server function with the router's `action()`; it serializes to the function's plain-HTTP URL and takes over after hydration.
+- Pending state, `useSubmissions`, and `.onSubmit` optimistic writes are layers the hydrated page adds; the HTML and the server function stay the same.
 - A browser form post is answered with a 303 and a flash cookie; the router turns the cookie into a submission on the next render.
 - Use `method="get"` and `fn.url` only for a `GET()` read; the function receives the fields as `URLSearchParams`.
 - `url` is on every reference at runtime and only on `GET()` and `live()` references in the type.
@@ -193,6 +198,6 @@ Solid Router reads the cookie on the next server render and records the submissi
 
 ## Next steps
 
-- [Forms](/guides/forms): the checkout address form, working before hydration and showing inline messages after it.
+- [Forms](/guides/forms): the checkout address form, working before hydration and adding inline messages and an optimistic address list after it.
 - [Data loading and mutations](/routing/solid-router/data): what `action()` adds on top of this transport, including `.with()`, submissions, and revalidation.
 - [Sessions and auth](/building-apps/sessions-and-auth): the sign-in form, the most common no-JavaScript submission in a storefront.

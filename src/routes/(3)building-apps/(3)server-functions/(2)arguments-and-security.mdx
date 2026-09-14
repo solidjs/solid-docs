@@ -232,6 +232,24 @@ Read identity and permissions from the request event, and look up prices and sto
 Authorize the requested operation against that context in every function that changes data.
 :::
 
+The request also carries its trace.
+When your host runs distributed tracing, an incoming `traceparent` header names the trace this request belongs to, and a server function that calls another service should pass it along so the tracing tool shows that call under the page or action that made it:
+
+```ts
+import { getTraceContext } from "@solidjs/web";
+
+export async function fetchInventory(sku: string) {
+	"use server";
+	return fetch(`https://inventory.internal/${sku}`, {
+		headers: { ...getTraceContext()?.entries },
+	});
+}
+```
+
+[`getTraceContext()`](/reference/solid-web/request-response/get-trace-context) returns the same object for every read in the request, so call it where you build the outbound request.
+When no `traceparent` came in, the runtime starts a trace of its own, so the header is always well formed; a downstream service that is not tracing ignores it.
+On the client, and outside any request, the function returns `undefined` and the spread adds nothing.
+
 ## Same-origin protection
 
 The server-function handler checks where a state-changing request came from before running it.

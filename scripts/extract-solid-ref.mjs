@@ -958,6 +958,12 @@ const event = getRequestEvent();
 const userId = event?.locals.userId;
 \`\`\``,
 	],
+	getTraceContext: [
+		`\
+\`\`\`ts
+await fetch(url, { headers: { ...getTraceContext()?.entries } });
+\`\`\``,
+	],
 	respond: [
 		`\
 \`\`\`ts
@@ -2218,6 +2224,12 @@ const ENTRY_LEARN = {
 	getRequestEvent: [
 		["Sessions and auth", "/building-apps/sessions-and-auth"],
 		["Middleware and API routes", "/building-apps/middleware-and-api-routes"],
+	],
+	getTraceContext: [
+		[
+			"Read trusted request context",
+			"/building-apps/server-functions/arguments-and-security#read-trusted-request-context",
+		],
 	],
 	parseCookieHeader: [
 		["Sessions and auth", "/building-apps/sessions-and-auth"],

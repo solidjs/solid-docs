@@ -51,9 +51,9 @@ acknowledgements by `kind:source` (`isPending:posts`).
 
 ```ts
 interface Acknowledgement {
-    kind: "isPending" | "latest" | "optimistic" | "affects";
-    source: string;
-    reader?: string[];
+  kind: "isPending" | "latest" | "optimistic" | "affects";
+  source: string;
+  reader?: string[];
 };
 ```
 
@@ -338,10 +338,10 @@ consumer never polls the ring buffers to learn that something finished.
 
 ```ts
 interface AttributionRecords {
-    rerun: RerunEvent;
-    interaction: InteractionEvent;
-    hold: HoldEvent;
-    navigation: NavigationEvent;
+  rerun: RerunEvent;
+  interaction: InteractionEvent;
+  hold: HoldEvent;
+  navigation: NavigationEvent;
 };
 ```
 
@@ -449,15 +449,15 @@ interaction that paid for it.
 
 ```ts
 interface ChangeOrigin {
-    kind: "interaction" | "effect" | "action" | "async" | "navigation" | "external";
-    name?: string;
-    target?: string;
-    at?: number;
-    interaction?: ChangeOrigin;
-    run?: number;
-    to?: string;
-    from?: string;
-    params?: Readonly<Record<string, string | undefined>>;
+  kind: "interaction" | "effect" | "action" | "async" | "navigation" | "external";
+  name?: string;
+  target?: string;
+  at?: number;
+  interaction?: ChangeOrigin;
+  run?: number;
+  to?: string;
+  from?: string;
+  params?: Readonly<Record<string, string | undefined>>;
 };
 ```
 
@@ -505,15 +505,15 @@ interface ChangeOrigin {
 
 ```ts
 interface ChangeRecord {
-    seq: number;
-    kind: ChangeKind;
-    name: string;
-    prev?: string;
-    value?: string;
-    stack?: string[];
-    causes?: ChangeRecord[];
-    origin?: ChangeOrigin;
-    at?: number;
+  seq: number;
+  kind: ChangeKind;
+  name: string;
+  prev?: string;
+  value?: string;
+  stack?: string[];
+  causes?: ChangeRecord[];
+  origin?: ChangeOrigin;
+  at?: number;
 };
 ```
 
@@ -713,7 +713,22 @@ type DiagnosticCode =
   | "EFFECT_WRITES_OWN_SOURCE"
   | "EFFECT_RELAY_TEAR"
   | "IMMUTABLE_UPDATE_IN_STORE"
-  | "UNSTABLE_LIST_IDENTITY";
+  | "UNSTABLE_LIST_IDENTITY"
+  // Server / SSR — emitted by the server runtimes (`solid-js`'s server
+  // facade, `@solidjs/web`'s server entries) through `OBSERVE.diagnostics.emit`.
+  | "SSR_RENDER_ERROR_CONTAINED"
+  | "SSR_SUBTREE_ABANDONED"
+  | "SSR_STREAM_ABANDONED"
+  | "LATE_HEADER_WRITE"
+  | "SERVER_FN_ERROR_SANITIZED"
+  | "SERVER_WRITE"
+  | "REVEAL_IN_RENDER_TO_STRING"
+  | "LAZY_ASSET_UNMAPPED"
+  | "PRELOAD_DESCRIPTOR_INVALID"
+  | "HEAD_TAG_INVALID"
+  | "UNRECOGNIZED_INSERT_VALUE"
+  | "BEHAVIOR_CLAIM_DROPPED"
+  | "FRAME_MARKER_CORRUPTED";
 ```
 
 ### `DiagnosticEvent`
@@ -792,7 +807,10 @@ type DiagnosticKind =
   | "error"
   | "perf"
   | "graph"
-  | "responsiveness";
+  | "responsiveness"
+  | "ssr"
+  | "head"
+  | "render";
 ```
 
 ### `DiagnosticListener`
@@ -855,10 +873,10 @@ type DiagnosticSubject = Owner | Signal<any> | Computed<any>;
 
 ```ts
 interface HeldWrite {
-    name: string;
-    prev?: string;
-    value?: string;
-    origin?: ChangeOrigin;
+  name: string;
+  prev?: string;
+  value?: string;
+  origin?: ChangeOrigin;
 };
 ```
 
@@ -882,17 +900,17 @@ interface HeldWrite {
 
 ```ts
 interface HoldEvent {
-    at: number;
-    holdMs: number;
-    tailMs: number;
-    interaction?: ChangeOrigin;
-    origin?: ChangeOrigin;
-    flushes: number;
-    heldWrites: HeldWrite[];
-    blockers: string[];
-    acknowledgements: Acknowledgement[];
-    paintedDuringHold: number;
-    action: boolean;
+  at: number;
+  holdMs: number;
+  tailMs: number;
+  interaction?: ChangeOrigin;
+  origin?: ChangeOrigin;
+  flushes: number;
+  heldWrites: HeldWrite[];
+  blockers: string[];
+  acknowledgements: Acknowledgement[];
+  paintedDuringHold: number;
+  action: boolean;
 };
 ```
 
@@ -981,19 +999,19 @@ The hold was opened (or joined) by an `action()`.
 
 ```ts
 interface InteractionEvent {
-    name: string;
-    target?: string;
-    at: number;
-    handlerMs: number;
-    writes: number;
-    runs: number;
-    created: number;
-    runMs: number;
-    holds: HoldEvent[];
-    navigations: NavigationEvent[];
-    settledMs?: number;
-    outcome?: "idle" | "committed" | "held";
-    origin: ChangeOrigin;
+  name: string;
+  target?: string;
+  at: number;
+  handlerMs: number;
+  writes: number;
+  runs: number;
+  created: number;
+  runMs: number;
+  holds: HoldEvent[];
+  navigations: NavigationEvent[];
+  settledMs?: number;
+  outcome?: "idle" | "committed" | "held";
+  origin: ChangeOrigin;
 };
 ```
 
@@ -1107,22 +1125,147 @@ The element hit, e.g. `button#next "Next →"`.
 
 Dispatch time on the `performance.now()` clock; defaults to now.
 
+### `InvocationChannel`
+
+The server-function invocation channel — `OBSERVE.server.invocations`.
+An observer's seam, as opposed to `wrapInvocation`, the app's single
+policy hook: any number of listeners, none of them able to replace the
+result or alter the call. Listeners run synchronously at settle; one
+that throws is reported and the call is unaffected.
+
+```ts
+interface InvocationChannel {
+  subscribe(type: "invocation", listener: InvocationListener): () => void;
+};
+```
+
+#### `subscribe`
+
+- **Type:** `() => void`
+
+### `InvocationEvent`
+
+One server function execution, delivered on `OBSERVE.server.invocations`
+once it settled. Serializable — the live handles (`event`, `args`, the
+thrown error) travel beside it in `InvocationLive`, not on it.
+
+```ts
+interface InvocationEvent {
+  id: string;
+  direct: boolean;
+  at: number;
+  durationMs: number;
+  outcome: "ok" | "error";
+  deferred?: true;
+};
+```
+
+#### `id`
+
+- **Type:** `string`
+
+The function id — the name a span or a log line carries.
+
+#### `direct`
+
+- **Type:** `boolean`
+
+`true` for an in-process call during SSR, `false` for HTTP dispatch.
+
+#### `at`
+
+- **Type:** `number`
+
+`performance.now()` when the execution started.
+
+#### `durationMs`
+
+- **Type:** `number`
+
+Start → settle of the execution, in milliseconds. The execution is the
+`wrapInvocation`-wrapped run: what the request spent on the call,
+policy included (auth guards, per-function middleware). A generator or
+stream body settles at handoff — see `deferred`.
+
+#### `outcome`
+
+- **Type:** `"ok" | "error"`
+
+#### `deferred`
+
+- **Type:** `true`
+
+The settled value is a body the caller drives — a generator, a
+`ReadableStream` — so `durationMs` covers the call that produced it,
+not its consumption.
+
+### `InvocationListener`
+
+```ts
+type InvocationListener = (event: InvocationEvent, live: InvocationLive) => void;
+```
+
+### `InvocationLive`
+
+The live half of an invocation, for in-process consumers. Not part of the
+record: `args` and `result` are application data (name/PII policy belongs
+to the consumer), `error` is the value AS THROWN — before the HTTP
+handler's production sanitization replaces it on the wire — and `event`
+is the request event the call ran under (the per-call derived event for
+direct calls).
+
+```ts
+interface InvocationLive {
+  event: RequestEvent;
+  request?: Request;
+  args: unknown[];
+  result?: unknown;
+  error?: unknown;
+};
+```
+
+#### `event`
+
+- **Type:** `RequestEvent`
+
+#### `request`
+
+- **Type:** `Request`
+
+HTTP dispatch only; absent for direct calls.
+
+#### `args`
+
+- **Type:** `unknown[]`
+
+#### `result`
+
+- **Type:** `unknown`
+
+The settled value, when `outcome` is `"ok"`.
+
+#### `error`
+
+- **Type:** `unknown`
+
+The thrown value, when `outcome` is `"error"`.
+
 ### `NavigationEvent`
 
 ```ts
 interface NavigationEvent {
-    name?: string;
-    to?: string;
-    from?: string;
-    params?: Readonly<Record<string, string | undefined>>;
-    at: number;
-    interaction?: ChangeOrigin;
-    writes: number;
-    redirects?: NavigationHop[];
-    settledMs?: number;
-    outcome?: "committed" | "held" | "superseded";
-    hold?: HoldEvent;
-    origin: ChangeOrigin;
+  name?: string;
+  to?: string;
+  from?: string;
+  params?: Readonly<Record<string, string | undefined>>;
+  at: number;
+  interaction?: ChangeOrigin;
+  writes: number;
+  redirects?: NavigationHop[];
+  settledMs?: number;
+  outcome?: "committed" | "held" | "superseded";
+  hold?: HoldEvent;
+  origin: ChangeOrigin;
 };
 ```
 
@@ -1199,10 +1342,10 @@ A destination a navigation abandoned when a redirect sent it elsewhere.
 
 ```ts
 interface NavigationHop {
-    name?: string;
-    to?: string;
-    params?: Readonly<Record<string, string | undefined>>;
-    at: number;
+  name?: string;
+  to?: string;
+  params?: Readonly<Record<string, string | undefined>>;
+  at: number;
 };
 ```
 
@@ -1309,6 +1452,7 @@ assumes a developer at a console. Present in dev and observe builds
 interface Observe {
   diagnostics: Diagnostics;
   attribution: AttributionSlot;
+  server: ServerObserve;
   subjectOf(event: DiagnosticEvent): DiagnosticSubject | undefined;
   exclude(owner: Owner): void;
   isExcluded(subject: DiagnosticSubject | null | undefined): boolean;
@@ -1324,6 +1468,12 @@ interface Observe {
 - **Type:** `AttributionSlot`
 
 The attribution hook slot and interaction frame — see `AttributionSlot`.
+
+#### `server`
+
+- **Type:** `ServerObserve`
+
+The server runtime's surface — see `ServerObserve`.
 
 #### `subjectOf`
 
@@ -1379,22 +1529,22 @@ type OriginRef = NavigationRef;
 
 ```ts
 interface RerunEvent {
-    run: number;
-    at: number;
-    nodeRuns: number;
-    nodeKind: "effect" | "memo";
-    nodeName: string;
-    node: Computed<any>;
-    causes: ChangeRecord[];
-    depCount: number;
-    depsAdded: string[];
-    depsRemoved: string[];
-    selfMs: number;
-    totalMs: number;
-    changed: boolean;
-    phase: "plain" | "held" | "optimistic";
-    held: boolean;
-    interaction?: ChangeOrigin;
+  run: number;
+  at: number;
+  nodeRuns: number;
+  nodeKind: "effect" | "memo";
+  nodeName: string;
+  node: Computed<any>;
+  causes: ChangeRecord[];
+  depCount: number;
+  depsAdded: string[];
+  depsRemoved: string[];
+  selfMs: number;
+  totalMs: number;
+  changed: boolean;
+  phase: "plain" | "held" | "optimistic";
+  held: boolean;
+  interaction?: ChangeOrigin;
 };
 ```
 
@@ -1505,3 +1655,26 @@ runs are excluded from waste accounting.
 - **Type:** `ChangeOrigin`
 
 The user interaction this run traces back to through its causes, if any.
+
+### `ServerObserve`
+
+The server runtime's observe surface — the one place a server-side
+consumer (an APM adapter's `init()`) installs on, beside `diagnostics`.
+Declared EMPTY here and typed by the runtime that owns the facts:
+`@solidjs/web`'s server entries augment this interface with their
+members (the server-function invocation channel, the trace-provider
+slot), so the core never learns those shapes and the consumer still finds
+everything on the one `OBSERVE`.
+
+The OBJECTS behind those members are not the core's either: the core has
+one artifact per tier for both platforms, and the client would carry
+them for nothing. `solid-js`'s server entry replaces this empty literal
+with the process-wide slots the moment it evaluates (see `serverSlots`
+in solid-js/src/server/observe.ts), so a consumer that imports only
+`solid-js` can subscribe or provide before the web runtime that emits
+into them has loaded, and from a second copy when a host bundles one.
+On the client this stays `{}`.
+
+```ts
+interface ServerObserve {};
+```

@@ -124,7 +124,6 @@ const CANONICAL_ROUTES = {
 	lazy: ["components-context/lazy.mdx", "Components & Context"],
 	useContext: ["components-context/use-context.mdx", "Components & Context"],
 
-	Dynamic: ["web-components/dynamic-component.mdx", "Components"],
 	Errored: ["components-jsx/errored.mdx", "Components (JSX)"],
 	For: ["components-jsx/for.mdx", "Components (JSX)"],
 	Loading: ["components-jsx/loading.mdx", "Components (JSX)"],
@@ -169,6 +168,10 @@ const CANONICAL_ROUTES = {
 	],
 	provideRequestEvent: [
 		"request-response/provide-request-event.mdx",
+		"Request & response",
+	],
+	getTraceContext: [
+		"request-response/get-trace-context.mdx",
 		"Request & response",
 	],
 	redirect: ["request-response/redirect.mdx", "Request & response"],
@@ -395,7 +398,14 @@ const FOLD_INTO = {
 	RerunEvent: "DEV",
 	Observe: "DEV",
 	OBSERVE: "DEV",
-	DynamicProps: "Dynamic",
+	ServerObserve: "DEV",
+	InvocationChannel: "DEV",
+	InvocationEvent: "DEV",
+	InvocationListener: "DEV",
+	InvocationLive: "DEV",
+	TraceContext: "getTraceContext",
+	TraceProvider: "getTraceContext",
+	TraceSlot: "getTraceContext",
 	DynamicOptions: "dynamic",
 	Truthy: "until",
 	UntilOptions: "until",
@@ -646,12 +656,14 @@ const HIDDEN_EXPORTS = new Set([
 	"FetchMiddleware",
 	"getExpectedRedirectStatus",
 	"ResolvedAssets",
+	// Deprecated JSX form of dynamic(). Not documented outside the Solid 1
+	// migration guide, which points at dynamic().
+	"Dynamic",
+	"DynamicProps",
 ]);
 const ENTRY_CALLOUTS = {
 	clientOnly:
 		"> With the supported bundler transform, server rendering can emit preload hints for the component's JavaScript and CSS. The server does not run the importer or render the imported component.",
-	Dynamic:
-		"> `<Dynamic>` is a JSX convenience wrapper. General application code should use `dynamic()` to create a reusable stable component reference.",
 	createRoot:
 		"> `render()` creates the root for normal app code. Reach for `createRoot` in tests, libraries, or non-render entry points that need to host a reactive scope.",
 	dynamic:
@@ -873,8 +885,11 @@ const storePath: StorePath;`,
 const OMIT_MEMBER_DOCS = new Set(["JSX", "Owner"]);
 const OMIT_REMARKS = new Set(["render"]);
 const VALUE_IMPORTS = new Set(["storePath"]);
+// Exports with a client stub and a server implementation: the page reads
+// from the implementation.
 const PREFERRED_SOURCE_PATHS = {
 	getRequestEvent: "packages/web/src/server.ts",
+	getTraceContext: "packages/web/src/server.ts",
 };
 
 const ENTRY_EXAMPLES = {
@@ -1460,10 +1475,6 @@ const PROP_DOCS = {
 		mount: "Element to render into. Defaults to `document.body`.",
 		children: "Content to render at the mount point.",
 	},
-	Dynamic: {
-		component:
-			"Component function or intrinsic element name to render. A falsy value renders nothing. All other props are forwarded to it.",
-	},
 };
 
 // Return-value descriptions when the upstream JSDoc has no `@returns` tag.
@@ -1692,10 +1703,6 @@ const ENTRY_CAVEATS = {
 		"The server renders nothing for a portal; its children render on the client after hydration settles.",
 		"Async reads inside a portal start on the client. Fetch above the portal and pass the data down, and give async content inside its own `Loading` boundary.",
 		"The portal shares its parent's reactive scope and disposes with it.",
-	],
-	Dynamic: [
-		"Prefer `dynamic()` for a component reference you render in several places; `<Dynamic>` is the inline JSX form of the same primitive.",
-		"Every prop other than `component` is forwarded to the rendered component, including `children`.",
 	],
 	dynamic: [
 		"The returned component is stable; render it once and let `source` change. Creating it inside the render path recreates the subtree.",
@@ -2078,9 +2085,6 @@ const ENTRY_LEARN = {
 		],
 	],
 	Reveal: [["Reveal order", "/concepts/boundaries#reveal-order"]],
-	Dynamic: [
-		["Dynamic components", "/concepts/components-and-jsx#dynamic-components"],
-	],
 	dynamic: [
 		["Dynamic components", "/concepts/components-and-jsx#dynamic-components"],
 	],
@@ -2577,6 +2581,7 @@ function createProgram(root) {
 		paths: {
 			"solid-js": ["packages/solid/src/index.ts"],
 			"@solidjs/signals": ["packages/signals/src/index.ts"],
+			"@solidjs/signals/attribution": ["packages/signals/src/attribution.ts"],
 			"@solidjs/web": ["packages/web/src/index.ts"],
 			"@solidjs/web/server-functions": [
 				"packages/web/server-functions/src/client.ts",
@@ -2628,6 +2633,7 @@ function resolveAlias(root, moduleName) {
 	const aliases = {
 		"solid-js": "packages/solid/src/index.ts",
 		"@solidjs/signals": "packages/signals/src/index.ts",
+		"@solidjs/signals/attribution": "packages/signals/src/attribution.ts",
 		"@solidjs/web": "packages/web/src/index.ts",
 		"@solidjs/web/server-functions":
 			"packages/web/server-functions/src/client.ts",
@@ -2838,6 +2844,12 @@ function mergeDuplicateEntry(existing, incoming) {
 	if (incoming.sourcePath === PREFERRED_SOURCE_PATHS[incoming.name]) {
 		existing.sourcePath = incoming.sourcePath;
 		existing.line = incoming.line;
+		if (incoming.docs.summary) {
+			existing.docs = incoming.docs;
+			existing.signature = incoming.signature;
+			existing.parameters = incoming.parameters;
+			return;
+		}
 	}
 	if (
 		incoming.packageName.startsWith("@solidjs/web/server-functions") &&

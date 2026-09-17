@@ -354,14 +354,16 @@ The `on` prop names the value whose change should make the boundary eligible to 
 </Loading>
 ```
 
-When `accountId()` changes and the new account is not ready, the boundary offers to take its region out of the update: it will show the skeleton and wait on its own, so the rest of the update can commit without it.
-If the panel was the only thing waiting, the update accepts.
+A `Loading` boundary is the update's chance to finish without waiting for that content: the region shows its fallback and waits on its own.
+Normally the update takes that chance only on the region's first load.
+`on` extends the offer to later updates: when `accountId()` changes and the new account is not ready, the boundary is willing to go back to its skeleton if that lets the update finish earlier.
+If the panel was the only thing waiting, it does.
 Controls outside the boundary see the new id at once, the panel shows its skeleton, and the content arrives when the account does.
 Pending work caused by other values, such as a refresh of the same account, leaves the content in place as usual.
 
-The update accepts the offer only when the region was the only thing waiting.
+The update goes back to the fallback only when that helps it finish earlier.
 An update commits when everything it changed is ready, and `on` does not change that; it only lets one region stop being a reason to wait.
-When something outside the boundary is also waiting on the new account, the update stays held, and the region waits inside it with everything else, old content in place and no skeleton:
+When something outside the boundary is also waiting on the new account, the update cannot finish any earlier, so the region stays on its old content with everything else, and no skeleton shows:
 
 ```tsx
 // account is createMemo(() => fetchAccount(accountId()))
@@ -381,15 +383,39 @@ When something outside the boundary is also waiting on the new account, the upda
 
 In the `Avoid` version, picking another account looks like nothing happened until the account loads, then the heading and the details change together; the `on` had no visible effect because the heading kept the update waiting.
 So the rule for `on` is that nothing outside the boundary may be waiting on the same change.
-Enclose every reader of the new subject's data, and when that is not possible, because a breadcrumb, a title, or a sibling panel shows the same subject, drop `on` and acknowledge the wait with `isPending` and `latest` instead.
+A page with several `Loading` boundaries, some with `on` and some without, behaves as if none had it: the boundaries without `on` have already revealed, so they hold the update, and the ones with `on` cannot help it finish earlier.
+
+That leaves a choice, and it is a design choice rather than a rule about where boundaries go:
+
+- One boundary with `on` around every reader of the subject.
+  The whole subject shows one skeleton and appears together.
+- A boundary with `on` around each region.
+  The update commits on the click, every region shows its own skeleton, and each appears as its own data lands.
+
+When neither fits, because a breadcrumb, a title, or a sibling panel shows the same subject and should stay, drop `on` and acknowledge the wait with `isPending` and `latest` instead.
 
 `on` is a value, not an accessor.
 The boundary compares it across updates, so pass `accountId()` rather than `accountId`.
 
-The same rule decides the dashboard above.
+The same choice decides the dashboard above.
 Give each panel its own boundary with `on={period()}` and the period write commits at once: the selector flips, every panel shows its skeleton, and each panel's content arrives as its own request lands.
 Give `on` to one panel only and the other two, reading the shared input the normal way, still hold the write; the page waits for the slowest request, and the panel with `on` shows no skeleton either.
 [Boundaries](/concepts/boundaries) covers placement and how `Reveal` orders several boundaries.
+
+:::deep-dive[A skeleton on every refetch: on={data()}]
+`on` names a subject, so a refetch of the same subject leaves the content in place.
+When a region should show its skeleton for every refetch as well, key the boundary on the data itself:
+
+```tsx
+<Loading on={account()} fallback={<AccountSkeleton />}>
+	<AccountDetails account={account()} />
+</Loading>
+```
+
+While the refetch is in flight `account()` has no settled value, which the boundary counts as a change, so `refresh(account)` or a revalidation after an action brings the skeleton back at once, even when the same value lands.
+The every-reader rule still applies: another reader of `account()` outside the boundary holds the update, and the skeleton does not show.
+This is a skeleton on every refresh; for most regions the default, old content with `isPending`, is the kinder treatment.
+:::
 
 :::deep-dive[A placeholder value instead of a fallback: loadingValue]
 Most first loads should reach a `Loading` boundary.

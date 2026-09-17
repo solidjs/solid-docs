@@ -241,9 +241,9 @@ The cost is that the fast panel waits for the slow one, and if nothing on the pa
 Neither behavior is right for every screen.
 A detail page, a form, or a set of totals that must add up should change together.
 A set of independent widgets should not have to.
-The question to ask about any refetch is one your designer can answer:
+The question to ask is about the update, not about any one request, and it is one your designer can answer:
 
-**While this data is being refetched, what should the user see?**
+**While this update is in flight, what should the user see?**
 
 | The user should see…                                                   | Use                                                                                           |
 | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
@@ -354,15 +354,41 @@ The `on` prop names the value whose change should make the boundary eligible to 
 </Loading>
 ```
 
-When `accountId()` changes and the new account is not ready, this boundary shows its fallback and handles the wait itself instead of holding the update.
-The panel no longer keeps the write from committing, so controls outside the boundary see the new id as soon as nothing else in the update is holding it, and the panel shows its skeleton until the new account arrives.
+When `accountId()` changes and the new account is not ready, the boundary offers to take its region out of the update: it will show the skeleton and wait on its own, so the rest of the update can commit without it.
+If the panel was the only thing waiting, the update accepts.
+Controls outside the boundary see the new id at once, the panel shows its skeleton, and the content arrives when the account does.
 Pending work caused by other values, such as a refresh of the same account, leaves the content in place as usual.
+
+The update accepts the offer only when the region was the only thing waiting.
+An update commits when everything it changed is ready, and `on` does not change that; it only lets one region stop being a reason to wait.
+When something outside the boundary is also waiting on the new account, the update stays held, and the region waits inside it with everything else, old content in place and no skeleton:
+
+```tsx
+// account is createMemo(() => fetchAccount(accountId()))
+
+// Avoid: the heading reads the same account outside the boundary
+<h1>{account().name}</h1>
+<Loading on={accountId()} fallback={<AccountSkeleton />}>
+	<AccountDetails account={account()} />
+</Loading>
+
+// Prefer: everything that reads the new account is inside the boundary
+<Loading on={accountId()} fallback={<AccountSkeleton />}>
+	<h1>{account().name}</h1>
+	<AccountDetails account={account()} />
+</Loading>
+```
+
+In the `Avoid` version, picking another account looks like nothing happened until the account loads, then the heading and the details change together; the `on` had no visible effect because the heading kept the update waiting.
+So the rule for `on` is that nothing outside the boundary may be waiting on the same change.
+Enclose every reader of the new subject's data, and when that is not possible, because a breadcrumb, a title, or a sibling panel shows the same subject, drop `on` and acknowledge the wait with `isPending` and `latest` instead.
 
 `on` is a value, not an accessor.
 The boundary compares it across updates, so pass `accountId()` rather than `accountId`.
 
-Put `on` on each panel that should show its own placeholder.
-A panel without it reads the shared input the normal way and still holds the write, so in the dashboard above, one panel with `on` and two without still waits for the two.
+The same rule decides the dashboard above.
+Give each panel its own boundary with `on={period()}` and the period write commits at once: the selector flips, every panel shows its skeleton, and each panel's content arrives as its own request lands.
+Give `on` to one panel only and the other two, reading the shared input the normal way, still hold the write; the page waits for the slowest request, and the panel with `on` shows no skeleton either.
 [Boundaries](/concepts/boundaries) covers placement and how `Reveal` orders several boundaries.
 
 :::deep-dive[A placeholder value instead of a fallback: loadingValue]
@@ -449,7 +475,7 @@ Read every reactive input at the top of the function, before the first `await`.
 - Requests are ordered by data dependency, not by component nesting; a waterfall exists only when one request needs another's response.
 - After a value has settled, a change to its input is held: the current screen stays visible and everything commits together when the new value lands.
 - Acknowledge a held update with `isPending` on the content and `latest` on the control the user touched.
-- Put `on={key}` on a `Loading` boundary whose subject changed and should show a placeholder instead of the old content.
+- Put `on={key}` on a `Loading` boundary whose subject changed and should show a placeholder instead of the old content; it takes effect only when nothing outside the boundary is waiting on the same change.
 - Read every reactive input before the first `await`.
 
 ## Next steps

@@ -90,6 +90,10 @@ The `on` prop names the value whose change should make an initialized boundary s
 Without it, choosing a new product keeps the old product on screen while the new one loads; with `on={productId()}`, the boundary compares the id across updates and shows the skeleton when the subject changed.
 Pending work caused by anything else, such as a refresh of the same product, leaves the content in place.
 
+`on` lets the region stop being a reason for the update to wait; it does not make the update commit.
+When something outside the boundary also waits on the new product, such as a heading that reads the same product or a sibling region without `on`, the update stays held and the boundary shows no skeleton.
+Enclose every reader of the new subject, or give each sibling its own boundary with `on`; the [Async reactivity](/concepts/async-reactivity#show-a-placeholder-again-loading-on) page shows both cases.
+
 :::pitfall[Passing the accessor to on instead of its value]
 `on` is compared with `!==` across updates, so pass a primitive; join several inputs into one string rather than passing an array.
 
@@ -255,6 +259,10 @@ The request can stay where it was; the [Async reactivity](/concepts/async-reacti
 That is the default: after a first answer, the boundary keeps its content and the update is held.
 Add `on={id()}` to the boundary when a change of subject should show the fallback, and pass the value rather than the accessor.
 
+If `on` is already there and the old item still stays, something outside the boundary is waiting on the same change: a title reading the same item, or a sibling boundary without `on`.
+The update cannot commit until that reader is ready, so the fallback never shows.
+Move the boundary out to enclose the other reader, give the sibling its own `on`, or drop `on` and show the wait with `isPending`.
+
 ### Retry shows the same error
 
 `reset` re-runs the failed sources with the same inputs.
@@ -271,6 +279,7 @@ Give the group `order="natural"`, wrap the independent regions in a nested `<Rev
 - Put `Loading` around the smallest region its fallback should replace, and keep the controls the user needs outside it.
 - Put `Errored` around the smallest region that can fail and recover as a unit; both boundaries can wrap the same region.
 - After a first answer, `Loading` keeps its content during updates; add `on={key()}` when a changed subject should show the fallback again, and pass a value, not an accessor.
+  It takes effect only when nothing outside the boundary is waiting on the same change.
 - An errored region recovers when an input changes or a refresh succeeds; `reset` is for when nothing upstream will change.
 - An error thrown by a fallback needs a boundary above it.
 - Use `Reveal` to control the order sibling regions appear in; it changes timing, not what each boundary observes.

@@ -30,9 +30,11 @@ With `start` and `ssr: true`, one build produces:
 - `dist/server/server.js`, containing the server entry and its exported request handler.
 
 When server functions are enabled, the server bundle also dispatches their endpoint, `/_server` by default.
+Pages and server functions are one deployment: a render calls a server function directly, in the same process, with the request event and its `locals` in hand, so the server bundle cannot be split with pages on one host and functions on another.
 
 Without `ssr: true`, start mode writes the empty document shell to `dist/client/index.html` and removes `dist/server` when the application has no server functions.
 If server functions are enabled, deploy `dist/client` for pages and keep `dist/server` running for the function endpoint.
+The two can live on different hosts as long as the browser sees one origin: the server-function client calls are same-origin by contract, so route `/_server/*` to the function host from the CDN or proxy that serves the pages rather than pointing the client at another origin.
 
 ## The request handler
 

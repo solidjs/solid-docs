@@ -30,10 +30,7 @@ Decodes a server-function response, including response envelopes and single-flig
 ## Import
 
 ```ts
-import {
-	decodeResponse,
-	subscribeFlightData,
-} from "@solidjs/web/server-functions";
+import { decodeResponse, subscribeFlightData } from "@solidjs/web/server-functions";
 import { registerFlightDataSource } from "@solidjs/web/server-functions/server";
 ```
 
@@ -43,8 +40,8 @@ import { registerFlightDataSource } from "@solidjs/web/server-functions/server";
 
 ```ts
 function decodeResponse<T = unknown>(
-	response: Response,
-	codecOptions?: JSONCodecOptions
+  response: Response,
+  codecOptions?: JSONCodecOptions
 ): Promise<T | undefined>;
 ```
 
@@ -68,10 +65,7 @@ function.
 ### Type signature
 
 ```ts
-function registerFlightDataSource(
-	source: string,
-	hook: CollectFlightDataHook
-): () => void;
+function registerFlightDataSource(source: string, hook: CollectFlightDataHook): () => void;
 ```
 
 ### Parameters
@@ -91,12 +85,10 @@ Registers the integration that receives data folded into a mutation response.
 ### Type signature
 
 ```ts
+function subscribeFlightData<D = unknown>(consumer: FlightDataConsumer<D>): () => void;
 function subscribeFlightData<D = unknown>(
-	consumer: FlightDataConsumer<D>
-): () => void;
-function subscribeFlightData<D = unknown>(
-	source: string,
-	consumer: FlightDataConsumer<D>
+  source: string,
+  consumer: FlightDataConsumer<D>
 ): () => void;
 ```
 
@@ -134,8 +126,8 @@ pre-digested on the outcome (`targetUrl`, `revalidateKeys`,
 
 ```ts
 type CollectFlightDataHook = (
-	event: ServerFunctionEvent,
-	outcome: ServerFunctionOutcome
+  event: ServerFunctionEvent,
+  outcome: ServerFunctionOutcome
 ) => unknown | Promise<unknown>;
 ```
 
@@ -143,13 +135,16 @@ type CollectFlightDataHook = (
 
 Consumer receiving single-flight data on the client: `data` is the
 integration-produced payload (opaque to the protocol), `context` carries
-the envelope metadata. Async consumers are awaited before the function
-value is returned to the caller, so caches are seeded first.
+the envelope metadata. `data` is `undefined` when the response carried
+integration metadata (a redirect, revalidation keys) but the server
+folded no slice for this source — the consumer still runs, to apply the
+metadata. Async consumers are awaited before the function value is
+returned to the caller, so caches are seeded first.
 
 ```ts
 type FlightDataConsumer<D = unknown> = (
-	data: D,
-	context: FlightDataContext
+  data: D | undefined,
+  context: FlightDataContext
 ) => void | Promise<void>;
 ```
 
@@ -163,8 +158,8 @@ not from here.
 
 ```ts
 interface FlightDataContext {
-	response: Response;
-}
+  response: Response;
+};
 ```
 
 #### `response`
@@ -181,15 +176,15 @@ assuming one.
 
 ```ts
 interface ServerFunctionOutcome {
-	id: string;
-	value: unknown;
-	response: Response | undefined;
-	request: Request;
-	thrown: boolean;
-	targetUrl: string | undefined;
-	revalidateKeys: string[] | undefined;
-	foldedHeaders: Headers;
-}
+  id: string;
+  value: unknown;
+  response: Response | undefined;
+  request: Request;
+  thrown: boolean;
+  targetUrl: string | undefined;
+  revalidateKeys: string[] | undefined;
+  foldedHeaders: Headers;
+};
 ```
 
 #### `id`
@@ -247,7 +242,9 @@ when this is undefined.
 
 The outcome's `X-Revalidate` keys, split — the invalidation scope the
 mutation declared. Undefined when the outcome carries none (integrations
-typically collect everything for the target in that case).
+typically collect everything for the target in that case); `[""]` for
+an empty declaration (nothing); `["*"]` for `REVALIDATE_ALL`, delivered
+as declared so a collector can tell "everything" from named keys.
 
 #### `foldedHeaders`
 
@@ -273,9 +270,9 @@ codec-serializable value.
 
 ```ts
 interface SingleFlightPayload<T = unknown, D = unknown> {
-	value: T;
-	data: D;
-}
+  value: T;
+  data: D;
+};
 ```
 
 #### `value`

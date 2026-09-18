@@ -21,13 +21,13 @@ That tells you where the milliseconds went; the next tool tells you why that cod
 Attribution is Solid's development-build recorder of every scope that re-ran, what changed to cause it, and how long it took:
 
 ```ts
-import { attribution } from "solid-js/attribution";
+import { attribution, costs, feedback } from "solid-js/attribution";
 
 attribution.enable();
 
 // type in the search box, then:
-console.table(attribution.costs().scopes);
-console.table(attribution.feedback().flights);
+console.table(costs().scopes);
+console.table(feedback().flights);
 ```
 
 `costs().scopes` ranks scopes by `selfMs`, with `wastedMs` for the time spent on runs whose result did not change, and `costs().writes` ranks root writes by the downstream re-run time each one caused.
@@ -35,7 +35,7 @@ console.table(attribution.feedback().flights);
 `feedback().fallbacks` counts how often each `Loading` boundary showed its fallback and how many of those were `flashes` under 150ms.
 
 Name the scopes first: `createMemo(fn, { name: "visible" })`, `createStore(value, { name: "catalog" })`.
-Every table and every `attribution.why(visible)` chain refers to nodes by that name, and an unnamed memo prints as `computed`.
+Every table and every `why(visible)` chain refers to nodes by that name, and an unnamed memo prints as `computed`.
 
 While attribution is enabled, Solid also warns on its own when a scope re-runs 120 or more times in one second (`HOT_SCOPE_RERUNS`), spends 8ms or more of compute in one second (`HOT_SCOPE_TIME`), tracks 30 or more sources (`WIDE_SCOPE_DEPS`), or when one write reaches 250 or more subscribers (`WIDE_WRITE`).
 Two warnings are always on in development: `HUGE_FAN_OUT` and `HUGE_FAN_IN`, from 2,000 subscribers or sources.
@@ -89,7 +89,7 @@ const visible = createMemo(
 ```
 
 Run the `Avoid` version and type one character: the filter runs twice, once for the count and once for the list, because a plain function is re-evaluated by each tracking scope that calls it.
-In `attribution.costs()`, `visible` does not appear at all, since a plain function is not a scope; its time is charged to the scopes that called it.
+In `costs()`, `visible` does not appear at all, since a plain function is not a scope; its time is charged to the scopes that called it.
 In the `Prefer` version the memo runs once, both readers receive the stored array, and `costs()` shows one `visible` row.
 
 A memo costs a node in the graph and a comparison on each run; for a cheap expression with one reader, the function is smaller.

@@ -55,16 +55,13 @@ A promise that resolves with the first truthy result of `fn`, narrowed by `Truth
 
 ```ts
 const send = action(async function* (text: string) {
-	const clientId = crypto.randomUUID();
-	setMessages((m) => {
-		m.push({ clientId, text, pending: true });
-	}); // optimistic
-	await socket.send({ clientId, text }); // fire-and-forget transport
-	// Hold until the live source echoes the write (authoritative view —
-	// the optimistic row above cannot satisfy this):
-	yield until(() => messages.some((m) => m.clientId === clientId), {
-		timeout: 10_000,
-	});
+  const clientId = crypto.randomUUID();
+  setMessages(m => { m.push({ clientId, text, pending: true }); }); // optimistic
+  await socket.send({ clientId, text }); // fire-and-forget transport
+  yield; // re-enter the transaction after the await
+  // Hold until the live source echoes the write (authoritative view —
+  // the optimistic row above cannot satisfy this):
+  yield until(() => messages.some(m => m.clientId === clientId), { timeout: 10_000 });
 });
 ```
 
@@ -101,11 +98,11 @@ optimistic state reverts.
 
 ```ts
 class TimeoutError extends Error {
-	constructor(message = "Timed out waiting for condition") {
-		super(message);
-		this.name = "TimeoutError";
-	}
-}
+  constructor(message = "Timed out waiting for condition") {
+    super(message);
+    this.name = "TimeoutError";
+  }
+};
 ```
 
 ### `Truthy`
@@ -120,9 +117,9 @@ type Truthy<T> = Exclude<T, false | 0 | 0n | "" | null | undefined>;
 
 ```ts
 interface UntilOptions {
-	timeout?: number;
-	signal?: AbortSignal;
-}
+  timeout?: number;
+  signal?: AbortSignal;
+};
 ```
 
 #### `timeout`

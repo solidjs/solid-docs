@@ -28,11 +28,7 @@ Attaches declaration metadata to a server-function reference and returns the ref
 ## Import
 
 ```ts
-import {
-	withMeta,
-	getServerFunctionMetadata,
-	isServerFunction,
-} from "@solidjs/web/server-functions";
+import { withMeta, getServerFunctionMetadata, isServerFunction } from "@solidjs/web/server-functions";
 ```
 
 ## `withMeta`
@@ -93,7 +89,9 @@ Returns whether a value is a server-function reference.
 ### Type signature
 
 ```ts
-function isServerFunction(fn: unknown): fn is ServerFunction;
+function isServerFunction(
+	fn: unknown
+): fn is ServerFunction;
 ```
 
 ### Parameters
@@ -117,10 +115,10 @@ build-stable identity.
 
 ```ts
 interface ServerFunction<A extends readonly any[] = any[], T = any> {
-	(...args: A): Promise<T>;
-	readonly id: string;
-	readonly url: string;
-}
+  (...args: A): Promise<T>;
+  readonly id: string;
+  readonly url: string;
+};
 ```
 
 #### `id`
@@ -133,7 +131,10 @@ The build-stable function id (stable across the client and server builds).
 
 - **Type:** `string`
 
-URL invoking this function directly over HTTP (form `action`s, raw fetches).
+The plain-HTTP address of this function — what a `<form action>` posts
+to without the runtime (the integration behind `action={fn}` reads it).
+Not where the reference's own call goes: that is `serverFunctionUrl(fn,
+...args)`, for a `GET()` reference — the url to preload or fetch.
 
 ### `ServerFunctionMetadata`
 
@@ -146,10 +147,10 @@ over earlier ones.
 
 ```ts
 interface ServerFunctionMetadata {
-	readonly method?: "GET" | "POST";
-	readonly name?: string;
-	readonly [key: string]: unknown;
-}
+  readonly method?: "GET" | "POST";
+  readonly name?: string;
+  readonly [key: string]: unknown;
+};
 ```
 
 #### `method`

@@ -50,6 +50,7 @@ await fetch(url, { headers: { ...getTraceContext()?.entries } });
 ## Learn more
 
 - [Read trusted request context](/building-apps/server-functions/arguments-and-security#read-trusted-request-context)
+- [Follow a request into the browser](/guides/observability#follow-a-request-into-the-browser)
 - [Mutations and responses](/building-apps/server-functions/mutations-and-responses)
 - [Middleware and API routes](/building-apps/middleware-and-api-routes)
 
@@ -63,14 +64,14 @@ otherwise. Read with `getTraceContext()`.
 
 ```ts
 interface TraceContext {
-	traceId: string;
-	spanId: string;
-	parentId?: string;
-	sampled?: boolean;
-	state?: string;
-	baggage?: string;
-	entries: Record<string, string>;
-}
+  traceId: string;
+  spanId: string;
+  parentId?: string;
+  sampled?: boolean;
+  state?: string;
+  baggage?: string;
+  entries: Record<string, string>;
+};
 ```
 
 #### `traceId`
@@ -131,25 +132,13 @@ shell flush or the first `getTraceContext()`, whichever comes first.
 Return `undefined` to leave the derivation alone.
 
 ```ts
-type TraceProvider = (
-	request: Request | undefined
-) => Partial<TraceContext> | undefined;
+type TraceProvider = (request: Request | undefined) => Partial<TraceContext> | undefined;
 ```
 
 ### `TraceSlot`
 
-`OBSERVE.server.trace` — the provider slot. One provider at a time: an
-observer installs its answer once at startup (Sentry's `init()`), and a
-later install replaces it — the single-plugin shape, not a chain.
+The provider slot's type, as this package names it — `solid-js`'s `ServerTrace`, filled in above.
 
 ```ts
-interface TraceSlot {
-	provide(provider: TraceProvider): () => void;
-}
+type TraceSlot = ServerTrace;
 ```
-
-#### `provide`
-
-- **Type:** `() => void`
-
-Installs `provider`, replacing any current one. Returns the uninstall.

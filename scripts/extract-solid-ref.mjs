@@ -34,6 +34,12 @@ const ENTRYPOINTS = [
 		path: "packages/signals/src/index.ts",
 	},
 	{
+		// Re-exported by solid-js/attribution as-is; read from the engine so the
+		// page carries the engine's JSDoc.
+		packageName: "solid-js/attribution",
+		path: "packages/signals/src/attribution.ts",
+	},
+	{
 		packageName: "@solidjs/web/server-functions",
 		path: "packages/web/server-functions/src/client.ts",
 	},
@@ -174,6 +180,10 @@ const CANONICAL_ROUTES = {
 		"request-response/get-trace-context.mdx",
 		"Request & response",
 	],
+	configureServerErrors: [
+		"request-response/configure-server-errors.mdx",
+		"Request & response",
+	],
 	redirect: ["request-response/redirect.mdx", "Request & response"],
 	reload: ["request-response/reload.mdx", "Request & response"],
 	respond: ["request-response/respond.mdx", "Request & response"],
@@ -287,6 +297,42 @@ const ADVANCED_ROUTES = {
 		"advanced/diagnostics-dev-hooks/dev.mdx",
 		"Advanced / Diagnostics & Dev Hooks",
 	],
+	OBSERVE: [
+		"advanced/diagnostics-dev-hooks/observe.mdx",
+		"Advanced / Diagnostics & Dev Hooks",
+	],
+	configureClientErrors: [
+		"advanced/diagnostics-dev-hooks/configure-client-errors.mdx",
+		"Advanced / Diagnostics & Dev Hooks",
+	],
+	attribution: [
+		"advanced/diagnostics-dev-hooks/attribution.mdx",
+		"Advanced / Diagnostics & Dev Hooks",
+	],
+	feedback: [
+		"advanced/diagnostics-dev-hooks/attribution.mdx",
+		"Advanced / Diagnostics & Dev Hooks",
+	],
+	costs: [
+		"advanced/diagnostics-dev-hooks/attribution.mdx",
+		"Advanced / Diagnostics & Dev Hooks",
+	],
+	why: [
+		"advanced/diagnostics-dev-hooks/attribution.mdx",
+		"Advanced / Diagnostics & Dev Hooks",
+	],
+	subscriptions: [
+		"advanced/diagnostics-dev-hooks/attribution.mdx",
+		"Advanced / Diagnostics & Dev Hooks",
+	],
+	formatRerun: [
+		"advanced/diagnostics-dev-hooks/attribution.mdx",
+		"Advanced / Diagnostics & Dev Hooks",
+	],
+	formatOrigin: [
+		"advanced/diagnostics-dev-hooks/attribution.mdx",
+		"Advanced / Diagnostics & Dev Hooks",
+	],
 	configureServerFunctionsServer: [
 		"server-functions/host-configuration.mdx",
 		"Server functions / Integration",
@@ -311,6 +357,14 @@ const ADVANCED_ROUTES = {
 		"server-functions/addressing.mdx",
 		"Server functions / Integration",
 	],
+	serverFunctionActionUrl: [
+		"server-functions/addressing.mdx",
+		"Server functions / Integration",
+	],
+	parseServerFunctionActionUrl: [
+		"server-functions/addressing.mdx",
+		"Server functions / Integration",
+	],
 	createNoJSHandler: [
 		"server-functions/progressive-enhancement.mdx",
 		"Server functions / Integration",
@@ -325,10 +379,6 @@ const ADVANCED_ROUTES = {
 	],
 	decodeResponse: [
 		"server-functions/single-flight.mdx",
-		"Server functions / Integration",
-	],
-	observeServerFunctionCalls: [
-		"server-functions/observe-calls.mdx",
 		"Server functions / Integration",
 	],
 };
@@ -372,37 +422,81 @@ const FOLD_INTO = {
 	ArrayElement: "JSXElement",
 	Dev: "DEV",
 	DevHooks: "DEV",
-	DiagnosticCapture: "DEV",
-	DiagnosticCode: "DEV",
-	DiagnosticEvent: "DEV",
-	DiagnosticKind: "DEV",
-	DiagnosticListener: "DEV",
-	DiagnosticSubject: "DEV",
-	Diagnostics: "DEV",
-	DiagnosticSeverity: "DEV",
-	AttributionHooks: "DEV",
-	AttributionSlot: "DEV",
-	AttributionRecords: "DEV",
-	AttributionRecordType: "DEV",
-	Acknowledgement: "DEV",
-	ChangeOrigin: "DEV",
-	ChangeRecord: "DEV",
-	HeldWrite: "DEV",
-	HoldEvent: "DEV",
-	InteractionEvent: "DEV",
-	InteractionRef: "DEV",
-	NavigationEvent: "DEV",
-	NavigationHop: "DEV",
-	NavigationRef: "DEV",
-	OriginRef: "DEV",
-	RerunEvent: "DEV",
-	Observe: "DEV",
-	OBSERVE: "DEV",
-	ServerObserve: "DEV",
-	InvocationChannel: "DEV",
-	InvocationEvent: "DEV",
-	InvocationListener: "DEV",
-	InvocationLive: "DEV",
+	// The diagnostics channel is OBSERVE's; DEV reports from it.
+	DiagnosticCapture: ["OBSERVE", "DEV"],
+	DiagnosticCode: ["OBSERVE", "DEV"],
+	DiagnosticEvent: ["OBSERVE", "DEV"],
+	DiagnosticKind: ["OBSERVE", "DEV"],
+	DiagnosticListener: ["OBSERVE", "DEV"],
+	DiagnosticSubject: ["OBSERVE", "DEV"],
+	Diagnostics: ["OBSERVE", "DEV"],
+	DiagnosticSeverity: ["OBSERVE", "DEV"],
+	// OBSERVE: the wiring — channels, slots, records.
+	Observe: "OBSERVE",
+	ServerObserve: "OBSERVE",
+	ServerTrace: "OBSERVE",
+	AttributionSlot: "OBSERVE",
+	Records: "OBSERVE",
+	RecordTypes: "OBSERVE",
+	HostRecordTypes: "OBSERVE",
+	RecordType: "OBSERVE",
+	RecordEvent: "OBSERVE",
+	RecordLive: "OBSERVE",
+	RecordListener: "OBSERVE",
+	BoundaryEvent: "OBSERVE",
+	BoundaryListener: "OBSERVE",
+	BoundaryLive: "OBSERVE",
+	CallEvent: "OBSERVE",
+	CallListener: "OBSERVE",
+	CallLive: "OBSERVE",
+	FrameEvent: "OBSERVE",
+	FrameProducedEvent: "OBSERVE",
+	FrameAppliedEvent: "OBSERVE",
+	FrameListener: "OBSERVE",
+	FrameLive: "OBSERVE",
+	InvocationChannel: "OBSERVE",
+	InvocationEvent: "OBSERVE",
+	InvocationListener: "OBSERVE",
+	InvocationLive: "OBSERVE",
+	// solid-js/attribution: the engine and its records.
+	Attribution: "attribution",
+	AttributionOptions: "attribution",
+	AttributionHooks: "attribution",
+	AttributionRecords: "attribution",
+	AttributionRecordType: "attribution",
+	Acknowledgement: "attribution",
+	ChangeKind: "attribution",
+	ChangeOrigin: "attribution",
+	ChangeRecord: "attribution",
+	FlightLink: "attribution",
+	HeldWrite: "attribution",
+	HoldEvent: "attribution",
+	InteractionEvent: "attribution",
+	InteractionRef: "attribution",
+	NavigationEvent: "attribution",
+	NavigationHop: "attribution",
+	NavigationRef: "attribution",
+	OriginRef: "attribution",
+	RerunEvent: "attribution",
+	WaterfallRecord: "attribution",
+	AttributionCostTables: "costs",
+	ScopeCost: "costs",
+	WriteCost: "costs",
+	AttributionFeedbackTables: "feedback",
+	FallbackStats: "feedback",
+	FeedbackInteraction: "feedback",
+	FeedbackNavigation: "feedback",
+	FeedbackSource: "feedback",
+	FlightStats: "feedback",
+	// Error hooks.
+	ClientErrorHook: "configureClientErrors",
+	ClientErrorContext: "configureClientErrors",
+	ClientErrorsConfig: "configureClientErrors",
+	ServerErrorHook: "configureServerErrors",
+	ServerErrorContext: "configureServerErrors",
+	ServerErrorsConfig: "configureServerErrors",
+	ServerErrorSite: "configureServerErrors",
+	REVALIDATE_ALL: "respond",
 	TraceContext: "getTraceContext",
 	TraceProvider: "getTraceContext",
 	TraceSlot: "getTraceContext",
@@ -475,9 +569,6 @@ const FOLD_INTO = {
 	ServerFunctionOutcome: "subscribeFlightData",
 	SingleFlightPayload: "subscribeFlightData",
 	ServerFunctionInvocation: "getServerFunctionInvocation",
-	ServerFunctionCall: "observeServerFunctionCalls",
-	ServerFunctionRequestCall: "observeServerFunctionCalls",
-	ServerFunctionResponseCall: "observeServerFunctionCalls",
 	NoJSHandlerOptions: "createNoJSHandler",
 	FlashSubmission: "createNoJSHandler",
 	WrapInvocationHook: "configureServerFunctionsServer",
@@ -602,6 +693,18 @@ const HIDDEN_EXPORTS = new Set([
 	"storeHasFamily",
 	"storeHasOptimisticFamily",
 	"storeIsShallow",
+	// Store-source kinds and the static-key probe: consumed by the merge/omit
+	// views and the DOM list driver.
+	"SOURCE_MEMO",
+	"SOURCE_MERGE",
+	"SOURCE_OMIT",
+	"SOURCE_PROXY",
+	"SourceKind",
+	"isStatic",
+	// The root error hook's storage key; configureClientErrors is the API.
+	"ROOT_ERROR_HOOK",
+	// Engine-side owner labelling; records carry the result as `ownerPath`.
+	"ownerPath",
 	// Compiler-emitted tracked one-layer read for object-valued style/class bindings.
 	"readShallow",
 	"RequestContext",
@@ -681,6 +784,14 @@ const ENTRY_CALLOUTS = {
 };
 
 const ENTRY_SUMMARY_OVERRIDES = {
+	OBSERVE:
+		"The observe tier's wiring: the records channel, the diagnostics channel, the attribution slot, and on the server the boundary channel and the trace-provider slot. `undefined` in a production build; an object in the observe and dev builds.",
+	attribution:
+		"The attribution engine from `solid-js/attribution`: install it with `enable()`, read the interaction, navigation, hold, and re-run records it settles through `subscribe()`, and fold them with `costs()`, `feedback()`, `why()`, and `subscriptions()`. Inert in a production build.",
+	configureClientErrors:
+		"Registers the ambient client error hook: called once per error object when an error boundary renders its fallback, with where the error was thrown and where it was met.",
+	configureServerErrors:
+		"Registers the ambient server error hook: called once per error object for every failure the server runtime handles or fails on, with the site that met it; the return value, when given, replaces what the client receives.",
 	SourceAccessor:
 		"The getter `createSignal` and `createMemo` return: an `Accessor<T>` carrying the `Refreshable` brand, which is what lets [`refresh()`](/reference/solid-js/lifecycle-actions/refresh) accept it. A plain `Accessor<T>` parameter accepts a `SourceAccessor<T>`; the reverse does not hold.",
 	until:
@@ -741,8 +852,6 @@ const ENTRY_SUMMARY_OVERRIDES = {
 		"Registers the integration that receives data folded into a mutation response.",
 	decodeResponse:
 		"Decodes a server-function response, including response envelopes and single-flight payloads.",
-	observeServerFunctionCalls:
-		"Subscribes to cloned client requests and responses for development tools and diagnostics.",
 	provideRequestEvent:
 		"Runs a callback in a server request-event scope backed by `AsyncLocalStorage`.",
 	getRequestEvent:
@@ -890,6 +999,10 @@ const VALUE_IMPORTS = new Set(["storePath"]);
 const PREFERRED_SOURCE_PATHS = {
 	getRequestEvent: "packages/web/src/server.ts",
 	getTraceContext: "packages/web/src/server.ts",
+	configureServerErrors: "packages/web/src/server.ts",
+	ServerErrorContext: "packages/web/src/server.ts",
+	ServerErrorHook: "packages/web/src/server.ts",
+	ServerErrorsConfig: "packages/web/src/server.ts",
 };
 
 const ENTRY_EXAMPLES = {
@@ -1878,6 +1991,54 @@ const ENTRY_PROBLEMS = {
 // apply to every page in the category; entry links are listed first.
 // Shape: [["Label", "/path"], ...].
 const ENTRY_LEARN = {
+	OBSERVE: [
+		["Observability", "/guides/observability"],
+		["Build an observability adapter", "/guides/observability-adapters"],
+	],
+	configureClientErrors: [
+		[
+			"Hear the errors your boundaries catch",
+			"/guides/observability#hear-the-errors-your-boundaries-catch",
+		],
+		["Build an observability adapter", "/guides/observability-adapters"],
+	],
+	configureServerErrors: [
+		[
+			"Hear every failure the server handles",
+			"/guides/observability#hear-every-failure-the-server-handles",
+		],
+		["Build an observability adapter", "/guides/observability-adapters"],
+	],
+	attribution: [
+		[
+			"Something updates too often",
+			"/guides/debugging-reactivity#something-updates-too-often",
+		],
+		[
+			"What each interaction cost",
+			"/guides/observability#what-each-interaction-cost",
+		],
+		["Build an observability adapter", "/guides/observability-adapters"],
+	],
+	why: [
+		[
+			"Something updates too often",
+			"/guides/debugging-reactivity#something-updates-too-often",
+		],
+	],
+	subscriptions: [
+		[
+			"Something updates too often",
+			"/guides/debugging-reactivity#something-updates-too-often",
+		],
+	],
+	costs: [["Performance", "/guides/performance"]],
+	feedback: [
+		[
+			"The screen looks dead after a click",
+			"/guides/debugging-reactivity#the-screen-looks-dead-after-a-click",
+		],
+	],
 	onCleanup: [
 		[
 			"Clean up what you start",
@@ -2230,6 +2391,10 @@ const ENTRY_LEARN = {
 			"Read trusted request context",
 			"/building-apps/server-functions/arguments-and-security#read-trusted-request-context",
 		],
+		[
+			"Follow a request into the browser",
+			"/guides/observability#follow-a-request-into-the-browser",
+		],
 	],
 	parseCookieHeader: [
 		["Sessions and auth", "/building-apps/sessions-and-auth"],
@@ -2355,6 +2520,8 @@ const COLLAPSED_RELATED_TYPES = new Set([
 	"MemoOptions",
 	"SignalOptions",
 	"HydrationProjectionOptions",
+	// The core's hook interface: for engine implementers, not engine users.
+	"AttributionHooks",
 ]);
 
 const REFERENCE_FIXUPS = [
@@ -3407,7 +3574,15 @@ function dedent(value) {
 }
 
 function cleanTypeText(value) {
-	return rewriteTypeText(String(value).replace(/\s+/g, " ").trim());
+	// Inline object types carry their members' JSDoc; a one-line type has no
+	// room for it, and the member docs are rendered in their own sections.
+	return rewriteTypeText(
+		String(value)
+			.replace(/\/\*\*[\s\S]*?\*\//g, "")
+			.replace(/\s+/g, " ")
+			.replace(/\{ /g, "{ ")
+			.trim()
+	);
 }
 
 function rewriteTypeText(value) {

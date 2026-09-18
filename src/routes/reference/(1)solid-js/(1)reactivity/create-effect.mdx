@@ -20,15 +20,15 @@ source_path: "packages/solid/src/client/hydration.ts"
 
 Creates a reactive effect with **separate compute and effect phases**.
 
-- `compute(prev)` runs reactively — _put all reactive reads here_.
+- `compute(prev)` runs reactively — *put all reactive reads here*.
   The returned value is passed to `effect` and is also the new
   "previous" value for the next run.
 - `effect(next, prev?)` runs imperatively (untracked) after the
-  queue flushes. _Put DOM writes / fetch / logging / subscriptions
-  here._ It may return a cleanup function which runs before the
+  queue flushes. *Put DOM writes / fetch / logging / subscriptions
+  here.* It may return a cleanup function which runs before the
   next effect or on disposal.
 
-Reactive reads inside `effect` will _not_ re-trigger this effect —
+Reactive reads inside `effect` will *not* re-trigger this effect —
 that's intentional. If you need a single-phase tracked effect, use
 `createTrackedEffect` (with the tradeoffs noted there).
 
@@ -50,9 +50,9 @@ import { createEffect } from "solid-js";
 
 ```ts
 function createEffect<T>(
-	compute: ComputeFunction<undefined | NoInfer<T>, T>,
-	effectFn: EffectFunction<NoInfer<T>, T> | EffectBundle<NoInfer<T>, T>,
-	options?: EffectOptions
+  compute: ComputeFunction<undefined | NoInfer<T>, T>,
+  effectFn: EffectFunction<NoInfer<T>, T> | EffectBundle<NoInfer<T>, T>,
+  options?: EffectOptions
 ): void;
 ```
 
@@ -87,8 +87,8 @@ Nothing. The effect is owned by the surrounding scope and disposed with it.
 const [count, setCount] = createSignal(0);
 
 createEffect(
-	() => count(), // compute: tracks `count`
-	(value) => console.log(value) // effect: side effect
+  () => count(),                  // compute: tracks `count`
+  value => console.log(value)     // effect: side effect
 );
 
 setCount(1); // logs 1 after the next flush
@@ -96,12 +96,12 @@ setCount(1); // logs 1 after the next flush
 
 ```ts
 createEffect(
-	() => userId(),
-	(id) => {
-		const ctrl = new AbortController();
-		fetch(`/users/${id}`, { signal: ctrl.signal });
-		return () => ctrl.abort(); // cleanup before next run / disposal
-	}
+  () => userId(),
+  id => {
+    const ctrl = new AbortController();
+    fetch(`/users/${id}`, { signal: ctrl.signal });
+    return () => ctrl.abort(); // cleanup before next run / disposal
+  }
 );
 ```
 
@@ -140,7 +140,7 @@ server never created.
 
 ```ts
 type ComputeFunction<Prev, Next extends Prev = Prev> = (
-	v: Prev
+  v: Prev
 ) => PromiseLike<Next> | AsyncIterable<Next> | Next;
 ```
 
@@ -148,8 +148,8 @@ type ComputeFunction<Prev, Next extends Prev = Prev> = (
 
 ```ts
 type EffectBundle<Prev, Next extends Prev = Prev> = {
-	effect: EffectFunction<Prev, Next>;
-	error: (err: unknown, cleanup: () => void) => void;
+  effect: EffectFunction<Prev, Next>;
+  error: (err: unknown, cleanup: () => void) => void;
 };
 ```
 
@@ -175,8 +175,8 @@ outcomes — an error that recovers before the effect phase runs the
 
 ```ts
 type EffectFunction<Prev, Next extends Prev = Prev> = (
-	v: Next,
-	p?: Prev
+  v: Next,
+  p?: Prev
 ) => (() => void) | void;
 ```
 
@@ -186,13 +186,13 @@ Options for effect primitives that support deferring/scheduling their initial ru
 
 ```ts
 interface EffectOptions extends BaseEffectOptions {
-	defer?: boolean;
-	schedule?: boolean;
-	sync?: boolean;
-	transparent?: boolean;
-	deferStream?: boolean;
-	ssrSource?: "server" | "hybrid" | "client";
-}
+  defer?: boolean;
+  schedule?: boolean;
+  sync?: boolean;
+  transparent?: boolean;
+  deferStream?: boolean;
+  ssrSource?: "server" | "hybrid" | "client";
+};
 ```
 
 #### `defer`
@@ -265,7 +265,7 @@ its fallback into the HTML. Server-only; ignored on the client.
 Hydration policy. Decides what initial value the client uses and
 whether the compute re-runs.
 
-- `"server"` _(default)_: client uses the serialized server value
+- `"server"` *(default)*: client uses the serialized server value
   as initial state. Compute does **not** re-run for the initial
   value — the serialized result is authoritative. Choose this when
   the compute is deterministic from server-available inputs.

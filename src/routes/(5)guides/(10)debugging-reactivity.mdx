@@ -131,7 +131,7 @@ Give the scopes you care about names, enable attribution, reproduce the behavior
 
 ```ts
 import { createMemo, createStore } from "solid-js";
-import { attribution } from "solid-js/attribution";
+import { attribution, why } from "solid-js/attribution";
 
 const [cart, setCart] = createStore(initialCart, { name: "cart" });
 const total = createMemo(() => sum(cart.items), { name: "total" });
@@ -139,17 +139,17 @@ const total = createMemo(() => sum(cart.items), { name: "total" });
 attribution.enable();
 
 // reproduce the interaction in the app, then:
-for (const event of attribution.why(total)) {
+for (const event of why(total)) {
 	console.log(event.nodeName, event.causes, `${event.selfMs}ms`);
 }
 ```
 
-`solid-js/attribution` resolves to the recording engine in development and to an inert object with the same methods in production, so the import can stay in the code.
+`solid-js/attribution` resolves to the recording engine in the development and observe builds and to an inert twin with the same exports in production, so the import can stay in the code.
 
 Each entry names the write that started the update, the dependency that changed, and the time the recompute took.
 While attribution is enabled the same chains print to the console as collapsed `[why-run]` groups, one per re-run, with the cause chain and dependency changes inside.
-`attribution.costs()` ranks scopes by self time, including time spent on runs whose result did not change, and ranks writes by how much downstream work each one caused.
-The `Attribution` interface exported from `solid-js/attribution` lists the rest of the surface: `history()`, `waterfalls()`, `interactions()`, `navigations()`, and `subscribe()`.
+`costs()` ranks scopes by self time, including time spent on runs whose result did not change, and ranks writes by how much downstream work each one caused.
+`why`, `costs`, `feedback`, and `subscriptions` are separate exports of `solid-js/attribution`, so a build that only records ships none of them; the `attribution` object itself carries `enable()`, `subscribe()`, `history()`, `waterfalls()`, `holds()`, `interactions()`, and `navigations()`.
 
 A chain ends at whatever made the root write, not only at the signal's name.
 Writes made inside a compiled event handler are stamped with the interaction (`click on button#add "Add"`), so `event.interaction` on a re-run names the click it traces back to, however many effects relayed it in between.
@@ -169,7 +169,7 @@ The usual causes and their fixes:
 
 A memo that reads a whole store object, or spreads it, depends on every property.
 Read the properties the calculation needs, inside the memo, and nothing else.
-`attribution.subscriptions(total)` lists the current dependencies of a scope so you can compare them to what the calculation uses.
+`subscriptions(total)` lists the current dependencies of a scope so you can compare them to what the calculation uses.
 
 ### A chain recomputes because an early link has no equality boundary
 
@@ -269,7 +269,7 @@ Shorter acknowledged holds are recorded as `late` in the feedback tables so the 
 
 :::deep-dive[Feedback tables, and how a router names its holds]
 `attribution.holds()` returns every hold from the session, reported or not.
-`attribution.feedback()` folds holds and re-runs into tables sorted worst-first:
+`feedback()` folds holds and re-runs into tables sorted worst-first:
 
 - `sources`: per async source, how many holds it caused, how many were silent, and which affordance acknowledged the rest.
 - `interactions`: per user event, the re-run time it caused and the time it was held, which are the two ways an interaction feels slow.
@@ -278,7 +278,7 @@ Shorter acknowledged holds are recorded as `late` in the feedback tables so the 
 
 A router can name the holds its navigations cause by the route pattern that matched, `/products/:id` rather than `/products/mug`, so occurrences fold together in these tables.
 It does so by wrapping its location write in `OBSERVE.attribution.withOrigin({ kind: "navigation", name, to, params }, write)`, which is router-agnostic; nothing else in attribution knows about routing.
-The [`DEV` reference](/reference/solid-js/advanced/diagnostics-dev-hooks/dev#navigationref) describes the `NavigationRef` fields, including how a router whose match is not final at write time fills them in later.
+The [attribution reference](/reference/solid-js/advanced/diagnostics-dev-hooks/attribution#navigationref) describes the `NavigationRef` fields, including how a router whose match is not final at write time fills them in later.
 :::
 
 ## The test sees the old DOM
@@ -398,7 +398,7 @@ Set `diagnostics: false` in the plugin options to turn that off.
 
 - Read the bracketed code first; it is stable across releases and names the defect, and the `in` line names the scope that produced it.
 - For a value that does not update, check in order: is the read in a tracking scope, is the signal called, did the write go through the setter, is the read in the effect's compute function, is the value pending.
-- For a value that updates too often, name the scopes, enable attribution, reproduce, and ask `attribution.why(scope)`.
+- For a value that updates too often, name the scopes, enable attribution, reproduce, and ask `why(scope)`.
 - Change the one property on a store draft; a spread copy or a fresh array re-runs every reader of the path.
 - Replace an effect that copies state with a memo; keep the effect only when the write records something from outside the graph.
 - When a click looks dead, add feedback with `isPending`, `latest`, an optimistic value, or `affects`; do not remove the hold.
@@ -411,4 +411,5 @@ Set `diagnostics: false` in the plugin options to turn that off.
 - [Avoid unnecessary effects](/guides/avoid-unnecessary-effects): the fix for most write-placement warnings, with the wrong version shown next to the right one.
 - [Stores](/concepts/stores): per-property tracking, `reconcile`, and why the write path matters.
 - [Performance](/guides/performance): when the extra runs are also slow, which knob each attribution table points at.
+- [Observability](/guides/observability): the same records and the error hooks in production, on the observe build.
 - [Testing](/guides/testing): the test environments the diagnostics run in.

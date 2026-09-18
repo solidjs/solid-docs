@@ -209,6 +209,34 @@ Set `start.errorBoundary: false` when middleware owns error handling; [Middlewar
 The project has an authored `src/entry-server.*` (or `start.entryServer`) and `start.setup` at the same time.
 Call the setup step from your own `render()` and remove `start.setup`, or remove the authored entry.
 
+## Loading instrumentation first
+
+An error monitor or a tracing SDK on the server patches `node:http` and the other modules it observes, so it has to run before those modules are imported.
+Writing `import "./instrument"` at the top of an entry does not achieve that in ESM: static imports are hoisted and evaluated in dependency order, so the entry's own dependencies load first.
+`start.instrument` names a server-only module the plugin awaits before anything else in the server graph:
+
+```ts
+// vite.config.ts
+solid({
+	start: {
+		instrument: "./src/instrument.ts",
+	},
+	ssr: true,
+});
+```
+
+```ts
+// src/instrument.ts
+import * as monitor from "my-monitor/server";
+
+monitor.init({ dsn: process.env.MONITOR_DSN });
+```
+
+The generated handler entry becomes `await import(instrument); await import(handler)`, so the module runs to completion — top-level `await` included — before the app, the middleware, `@solidjs/web`, or any dependency evaluates.
+The plugin honors it on every surface: `vite dev`, `vite build`, `vite preview`, and a host importing the handler entry directly, which replaces a `node --import` flag per host.
+The module needs no exports.
+Keep code splitting on in the server build (the default); inlining dynamic imports would hoist the handler graph back above the instrument.
+
 ## Recap
 
 - Edit `src/App.tsx` for what every page shares and `src/Document.tsx` for the HTML shell; the plugin generates the entries around them.
@@ -218,6 +246,7 @@ Call the setup step from your own `render()` and remove `start.setup`, or remove
 - The static `<title>` in `Document` is the fallback; per-page titles come from head metadata.
 - Author `entry-server` and `entry-client` together, and only when the generated pair cannot produce the response you need.
 - Use `start.setup` when a router must load against the request before the server render; it applies only to generated entries under `ssr: true`.
+- Use `start.instrument` for a module that must run before the server graph loads, such as a monitoring SDK's `init()`; a static import at the top of an entry does not run first.
 
 ## Next steps
 
@@ -225,3 +254,4 @@ Call the setup step from your own `render()` and remove `start.setup`, or remove
 - [Head and metadata](/building-apps/head-and-metadata): per-page titles and meta tags on top of the `Document` shell.
 - [Choose a rendering mode](/guides/choose-a-rendering-mode): which of the three modes fits the project, by what the user sees and what the host runs.
 - [Deployment](/building-apps/deployment): what to do with `dist/client` and `dist/server` on the first deploy.
+- [Observability](/guides/observability): what the instrument module hooks into, and the `observe` build that carries records and traces in production.

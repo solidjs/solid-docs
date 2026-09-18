@@ -87,9 +87,9 @@ function isHref(value: unknown): value is Href;
 
 ```ts
 interface Href {
-	[HREF]: true | string;
-	toString(): string;
-}
+  [HREF]: true | string;
+  toString(): string;
+};
 ```
 
 #### `[HREF]`
@@ -97,7 +97,7 @@ interface Href {
 - **Type:** `true | string`
 
 The brand doubles as a channel: when the slot holds a string it is the
-value's _logical_ path — the routable pathname before an integration's
+value's *logical* path — the routable pathname before an integration's
 display rendering (for example, a hash router's `#` prefix). `redirect()` prefers
 it over coercion so Location headers carry routable paths; `toString()`
 remains the display href for the DOM. `true` brands a value whose
@@ -113,10 +113,19 @@ string form is already logical.
 
 ```ts
 interface ResponseHelperInit extends ResponseInit {
-	revalidate?: string | string[];
-}
+  revalidate?: string | string[];
+};
 ```
 
 #### `revalidate`
 
 - **Type:** `string | string[]`
+
+The cache keys the mutation invalidated, sent as the `X-Revalidate`
+header for the client's integrations to apply. Three declarations, three
+scopes: omitted sends no header — the host's default (Solid Router
+revalidates everything after an action; a router without that
+convention reloads only what it owns); an empty list sends an empty
+header — nothing, explicitly; `REVALIDATE_ALL` (`"*"`) — every entry,
+whatever the host's default. How named keys are matched (prefixes,
+namespaces) is each integration's business.

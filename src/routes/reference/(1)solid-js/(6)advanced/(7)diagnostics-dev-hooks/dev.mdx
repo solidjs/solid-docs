@@ -39,542 +39,6 @@ const DEV: Dev | undefined;
 
 ## Related types
 
-### `Acknowledgement`
-
-One way the screen acknowledged a hold. `reader` is where it was painted —
-the owner path of the first effect the census found reading the
-affordance (`["<App>", "<Feed>", "effect"]`), so a consumer can say WHICH
-screen answered, not only that one did. Absent when the affordance was
-registered but the census found no reader through the graph (an optimistic
-store: its readers are proxy traps, not nodes). `feedback()` ranks
-acknowledgements by `kind:source` (`isPending:posts`).
-
-```ts
-interface Acknowledgement {
-	kind: "isPending" | "latest" | "optimistic" | "affects";
-	source: string;
-	reader?: string[];
-}
-```
-
-#### `kind`
-
-- **Type:** `"isPending" | "latest" | "optimistic" | "affects"`
-
-#### `source`
-
-- **Type:** `string`
-
-The node the affordance hangs on — the async source for `isPending`/`latest`, the optimistic/affected node otherwise.
-
-#### `reader`
-
-- **Type:** `string[]`
-
-### `AttributionHooks`
-
-Observe-tier hook points for the reactive core.
-
-Core's obligation is to call these with true facts at the moments they
-happen; all attribution semantics (stamps, cause chains, timings, warnings)
-live in the engine that installs them — `@solidjs/signals/attribution`, a
-separate entry so an observe build that never enables it never ships it
-(same pattern as the GlobalQueue.\_\* feature slots). `attrHooks` is null
-unless an engine is installed, so the disabled cost is one null check per
-site, and prod builds fold every site out behind **OBSERVE**.
-
-Important for implementers of call sites: a hook call must never sit inside
-a `try` block — rollup's tryCatchDeoptimization retains functions referenced
-inside `try` even behind a folded **OBSERVE** guard, which re-couples the
-engine into prod bundles (#2883 harness). Set a local flag inside the try
-and call the hook after the catch.
-
-```ts
-interface AttributionHooks {
-	interactionStart(ref: InteractionRef): void;
-	interactionEnd(): void;
-	originStart(ref: OriginRef): void;
-	originEnd(): void;
-	flushEnd(): void;
-	recomputeStart(el: Computed<any>, create: boolean): void;
-	recomputeEnd(
-		el: Computed<any>,
-		create: boolean,
-		changed: boolean,
-		optimistic: boolean,
-		transition: boolean,
-		held: boolean
-	): void;
-	derivedChanged(el: Computed<any>): void;
-	write(el: Signal<any> | Computed<any>, prev: unknown, value: unknown): void;
-	refreshed(el: Computed<any>): void;
-	flightStart(el: Computed<any>, flight: object): void;
-	asyncStart(el: Computed<any>): void;
-	asyncEnd(
-		el: Computed<any>,
-		prev: unknown,
-		value: unknown,
-		direct: boolean
-	): void;
-	effectRunStart(el: Computed<any>): void;
-	effectRunEnd(el: Computed<any>): void;
-	actionStepStart(it: object, name: string | undefined): void;
-	actionStepEnd(it: object): void;
-	holdStart(t: Transition): void;
-	holdEnd(): void;
-	transitionSettled(t: Transition): void;
-	transitionMerged(target: Transition, outgoing: Transition): void;
-	storeReplaced(
-		path: string,
-		isArray: boolean,
-		total: number,
-		unchanged: number,
-		prevTotal: number
-	): void;
-	listChurn(
-		el: Computed<any>,
-		removed: unknown[],
-		created: unknown[],
-		newLen: number,
-		keyed: boolean
-	): void;
-	boundaryFallback(
-		boundary: object,
-		tree: Computed<any> | undefined,
-		shown: boolean
-	): void;
-}
-```
-
-#### `interactionStart`
-
-- **Type:** `void`
-
-`withInteraction` opened a user-interaction frame: root writes until the
-matching `interactionEnd` were performed by the handler of `ref`. Frames
-nest strictly (synchronous dispatch), so the engine keeps a stack.
-
-#### `interactionEnd`
-
-- **Type:** `void`
-
-#### `originStart`
-
-- **Type:** `void`
-
-`withOrigin` opened a declared-origin frame: root writes until the
-matching `originEnd` are the unit of work `ref` describes (a router's
-navigation). Nests inside an interaction frame — a link click that
-navigates — or stands alone (a redirect from an action, a programmatic
-`navigate()`). Frames nest strictly, so the engine keeps a stack.
-
-#### `originEnd`
-
-- **Type:** `void`
-
-#### `flushEnd`
-
-- **Type:** `void`
-
-A `flush()` drain finished: every batch it processed either committed
-(its effects have run) or was parked in a held update (`holdStart`
-fired for it). Fires once per drain, after the loop — not per batch, and
-not for a `flush()` call that found nothing to do. Gives the engine the
-"committed, screen updated" instant for writes no transition ever held.
-
-#### `recomputeStart`
-
-- **Type:** `void`
-
-A recompute is starting; `el._deps` still holds the previous run's links.
-Always paired with `recomputeEnd` (recompute has no early returns).
-
-#### `recomputeEnd`
-
-- **Type:** `void`
-
-The recompute finished. `changed` = committed a changed value (false for
-errored runs); `optimistic` = ran under an optimistic lane / lane-dirty
-posture; `transition` = a transition was active or owns this node;
-`held` = the value went to `_pendingValue` (a transition hold) rather
-than committing directly — its reveal happens later on the transition's
-own schedule.
-
-#### `derivedChanged`
-
-- **Type:** `void`
-
-A non-effect computed committed a changed value during a re-run.
-
-#### `write`
-
-- **Type:** `void`
-
-A signal write committed (value passed the equality gate).
-
-#### `refreshed`
-
-- **Type:** `void`
-
-Refresh() invalidated this node (self-invalidation, no dep changed).
-
-#### `flightStart`
-
-- **Type:** `void`
-
-A new async flight entered the system (`_inFlight` was assigned
-during a recompute of `el`). Always fired inside the owning recompute —
-both call paths (core's recompute and the projection self-registration)
-run within one — so the engine can read the current frame stack to link
-the flight to the change that caused it (waterfall chaining). `flight`
-is the registered thenable/iterable itself: the engine keys a first-seen
-origin registry on its identity, so shared and preloader-marked promises
-carry their true start time instead of the moment the graph saw them.
-
-#### `asyncStart`
-
-- **Type:** `void`
-
-An async landing is about to apply its value (before any branch).
-
-#### `asyncEnd`
-
-- **Type:** `void`
-
-The async landing finished. `direct` = the landing applies the value
-itself (lane/override paths); false = it went through setSignal, whose
-own `write` hook already saw any committed change. Fired whether or not
-the landing committed — call sites cannot carry that fact out of their
-try blocks (see the try rule above), so the engine derives committed-ness
-from the node's state against its asyncStart snapshot.
-
-#### `effectRunStart`
-
-- **Type:** `void`
-
-An effect's imperative half (its effect callback) is about to run /
-has run. Both fire outside the run's try; `effectRunEnd` fires whether
-or not the callback threw. Writes between the two are the effect's.
-
-#### `effectRunEnd`
-
-- **Type:** `void`
-
-#### `actionStepStart`
-
-- **Type:** `void`
-
-One synchronous step of an `action()` generator is about to run / has
-run (`it.next()`/`it.throw()` up to the next yield). `it` is the
-invocation's iterator — stable identity across its steps; `name` the
-generator function's name. Writes between the two are the action's.
-
-#### `actionStepEnd`
-
-- **Type:** `void`
-
-#### `holdStart`
-
-- **Type:** `void`
-
-A flush found `t` incomplete (transitionComplete's false verdict): its
-writes stay staged and its queues are about to be parked. Fired before
-this flush's lane effects (the visible acknowledgers — isPending
-companions, optimistic values) run; `holdEnd` fires from the root
-stashQueues call after them, so effect runs between the two are runs that
-painted _during_ the hold.
-
-#### `holdEnd`
-
-- **Type:** `void`
-
-#### `transitionSettled`
-
-- **Type:** `void`
-
-`t` was judged complete (transitionComplete's true verdict, before `_done`
-flips). Fired before its held writes commit, so `t._pendingNodes` still
-lists what was staged.
-
-#### `transitionMerged`
-
-- **Type:** `void`
-
-`outgoing` was folded into `target` (`outgoing._done = target`).
-
-#### `storeReplaced`
-
-- **Type:** `void`
-
-A store setter batch replaced the container at `path` (e.g. `store.user`)
-with a different one (both non-null, same array-ness, not the same
-logical slot), and this is the leaf census of the new container against
-the old: `total` leaves (own keys, or items) in the new one, `unchanged`
-of which are the same value as before (identity, judged on unwrapped
-values — object keys compared by key, array items by membership), and
-`prevTotal` leaves in the old one. Containers above 64 leaves are not
-announced. Fired per written key from the write channel's notify. The
-engine decides whether the replacement was a spread-copy worth a
-diagnostic.
-
-#### `listChurn`
-
-- **Type:** `void`
-
-A `mapArray` update both disposed and created rows: `removed` are the
-items whose rows were disposed, `created` the items that got new rows,
-`newLen` the list's new length, `keyed` whether a key function is in use
-(false = identity or by-index). Fired after commit. The engine judges
-whether the churn replaced equivalent records (unstable identity).
-
-#### `boundaryFallback`
-
-- **Type:** `void`
-
-A loading boundary started (`shown` true) or stopped showing its
-fallback. `boundary` is the boundary's queue (stable identity); `tree`
-its bound subtree computed when already constructed — the first show can
-fire while the subtree is still being built — whose owner chain names
-the boundary. Fired at the source-set transitions (first pending source
-registers / last one clears), not per flush.
-
-### `AttributionRecords`
-
-The records the engine delivers, by `subscribe(type, …)` name. Every one is
-delivered synchronously at the moment it is complete — a re-run when its
-recompute ends, an interaction / hold / navigation when it settles — so a
-consumer never polls the ring buffers to learn that something finished.
-
-```ts
-interface AttributionRecords {
-	rerun: RerunEvent;
-	interaction: InteractionEvent;
-	hold: HoldEvent;
-	navigation: NavigationEvent;
-}
-```
-
-#### `rerun`
-
-- **Type:** `RerunEvent`
-
-#### `interaction`
-
-- **Type:** `InteractionEvent`
-
-#### `hold`
-
-- **Type:** `HoldEvent`
-
-#### `navigation`
-
-- **Type:** `NavigationEvent`
-
-### `AttributionRecordType`
-
-```ts
-type AttributionRecordType = keyof AttributionRecords;
-```
-
-### `AttributionSlot`
-
-The core's side of attribution: the hook slot an engine installs into, and
-the interaction frame the rendering runtime opens around event dispatch.
-The engine itself — "why did this run", costs, holds, feedback — is
-`@solidjs/signals/attribution`, a separate entry so an observe build pays
-for it only when something imports it.
-
-```ts
-interface AttributionSlot {
-	install(hooks: AttributionHooks | null): void;
-	readonly installed: AttributionHooks | null;
-	withInteraction<T>(ref: InteractionRef, fn: () => T): T;
-	withOrigin<T>(ref: OriginRef, fn: () => T): T;
-}
-```
-
-#### `install`
-
-- **Type:** `void`
-
-Installs `hooks` as the engine the core reports facts to (`null`
-uninstalls). One engine at a time; the built-in engine's `enable()` calls
-this, and an external consumer (devtools) may install its own instead.
-
-#### `installed`
-
-- **Type:** `AttributionHooks | null`
-
-The installed engine's hooks, or `null` when none is installed.
-
-#### `withInteraction`
-
-- **Type:** `T`
-
-Run `fn` as a user interaction's handler: root writes inside stamp it as
-their origin, and actions/effects/flights it causes carry it. The web
-runtime wraps every event dispatch in this; custom renderers and test
-harnesses call it themselves. `fn()` when no engine is installed.
-
-#### `withOrigin`
-
-- **Type:** `T`
-
-Run `fn` as a declared unit of work — a router's navigation, described
-by the parametrized route it matched: root writes inside are attributed
-to it (under the enclosing interaction, if any), so the hold behind the
-route's data, the re-runs and the verdicts carry the route's name. Any
-router calls this around its location write; nothing else is
-router-specific. `fn()` when no engine is installed.
-
-### `ChangeOrigin`
-
-Provenance of a root change: the imperative frame that performed it.
-
-- `interaction` — a user event handler (the web runtime marks dispatch via
-  `withInteraction`). `name` is the event type, `target` the element hit
-  (`button#next "Next →"`), `at` the dispatch time on the `performance.now()`
-  clock — the base every feedback-latency number is measured from.
-- `effect` — an effect callback (`name` = the effect's name; `run` = the
-  compute run whose effect phase performed the write, when that run was
-  recorded — so a write can be joined to the re-run that produced it).
-- `action` — a step of an `action()` generator (`name` = the generator's
-  name, when it has one). Writes after an `await` (not a `yield`) run in a
-  bare microtask and stamp `external` — the documented escape.
-- `async` — an async landing (`name` = the node whose flight landed).
-- `navigation` — a router's navigation, declared via `withOrigin` around
-  the location write (`name` = the matched route pattern `/users/:id`;
-  `to`/`from` the concrete paths; `params` what the pattern bound; `at`
-  when it was requested). The router-agnostic seam: any router that wraps
-  its write gets navigations named by route in every hold, re-run and
-  verdict, with no per-router knowledge anywhere in the engine.
-- `external` — none of the above: timers, sockets, promise callbacks, setup.
-
-`interaction` on a non-interaction frame is the user event the frame runs
-under — an action started by a click, an effect whose run was caused by a
-click's write, a landing whose flight a click started, a navigation a link
-click performed. It is what lets every downstream cost be keyed by the
-interaction that paid for it.
-
-```ts
-interface ChangeOrigin {
-	kind:
-		"interaction" | "effect" | "action" | "async" | "navigation" | "external";
-	name?: string;
-	target?: string;
-	at?: number;
-	interaction?: ChangeOrigin;
-	run?: number;
-	to?: string;
-	from?: string;
-	params?: Readonly<Record<string, string | undefined>>;
-}
-```
-
-#### `kind`
-
-- **Type:** `"interaction" | "effect" | "action" | "async" | "navigation" | "external"`
-
-#### `name`
-
-- **Type:** `string`
-
-#### `target`
-
-- **Type:** `string`
-
-#### `at`
-
-- **Type:** `number`
-
-#### `interaction`
-
-- **Type:** `ChangeOrigin`
-
-#### `run`
-
-- **Type:** `number`
-
-`effect` only: the `RerunEvent.run` of the compute run this callback belongs to.
-
-#### `to`
-
-- **Type:** `string`
-
-`navigation` only: concrete destination and departure paths, and the bound params.
-
-#### `from`
-
-- **Type:** `string`
-
-#### `params`
-
-- **Type:** `Readonly<Record<string, string | undefined>>`
-
-### `ChangeRecord`
-
-```ts
-interface ChangeRecord {
-	seq: number;
-	kind: ChangeKind;
-	name: string;
-	prev?: string;
-	value?: string;
-	stack?: string[];
-	causes?: ChangeRecord[];
-	origin?: ChangeOrigin;
-	at?: number;
-}
-```
-
-#### `seq`
-
-- **Type:** `number`
-
-Global monotonic change sequence — orders causes across the app.
-
-#### `kind`
-
-- **Type:** `ChangeKind`
-
-#### `name`
-
-- **Type:** `string`
-
-#### `prev`
-
-- **Type:** `string`
-
-Short previews of the value transition (writes only).
-
-#### `value`
-
-- **Type:** `string`
-
-#### `stack`
-
-- **Type:** `string[]`
-
-First user frames of the triggering write's stack (opt-in).
-
-#### `causes`
-
-- **Type:** `ChangeRecord[]`
-
-For derived changes: the upstream changes that produced this one.
-
-#### `origin`
-
-- **Type:** `ChangeOrigin`
-
-Root changes only: who performed the write.
-
-#### `at`
-
-- **Type:** `number`
-
-Root changes only: when the write was stamped (`performance.now()` clock).
-
 ### `Dev`
 
 The dev tier: devtools hooks, graph traversal, and the console face of the
@@ -582,17 +46,15 @@ diagnostics channel. Present only in dev builds (`__DEV__`).
 
 ```ts
 interface Dev {
-	hooks: DevHooks;
-	getChildren: typeof getChildren;
-	getSignals: typeof getSignals;
-	getParent: typeof getParent;
-	getSources: typeof getSources;
-	getObservers: typeof getObservers;
-	report(entry: DiagnosticEvent): void;
-	setConsoleFooter(
-		footer: ((event: DiagnosticEvent) => string | undefined) | undefined
-	): void;
-}
+  hooks: DevHooks;
+  getChildren: typeof getChildren;
+  getSignals: typeof getSignals;
+  getParent: typeof getParent;
+  getSources: typeof getSources;
+  getObservers: typeof getObservers;
+  report(entry: DiagnosticEvent): void;
+  setConsoleFooter(footer: ((event: DiagnosticEvent) => string | undefined) | undefined): void;
+};
 ```
 
 #### `hooks`
@@ -641,16 +103,11 @@ resets the once-per-code memory.
 
 ```ts
 interface DevHooks {
-	onOwner?: (owner: Owner) => void;
-	onGraph?: (value: any, owner: Owner | null) => void;
-	onUpdate?: () => void;
-	onStoreNodeUpdate?: (
-		state: any,
-		property: PropertyKey,
-		value: any,
-		prev: any
-	) => void;
-}
+  onOwner?: (owner: Owner) => void;
+  onGraph?: (value: any, owner: Owner | null) => void;
+  onUpdate?: () => void;
+  onStoreNodeUpdate?: (state: any, property: PropertyKey, value: any, prev: any) => void;
+};
 ```
 
 #### `onOwner`
@@ -673,10 +130,10 @@ interface DevHooks {
 
 ```ts
 interface DiagnosticCapture {
-	readonly events: readonly DiagnosticEvent[];
-	clear(): void;
-	stop(): DiagnosticEvent[];
-}
+  readonly events: readonly DiagnosticEvent[];
+  clear(): void;
+  stop(): DiagnosticEvent[];
+};
 ```
 
 #### `events`
@@ -695,74 +152,77 @@ interface DiagnosticCapture {
 
 ```ts
 type DiagnosticCode =
-	| "STRICT_READ_UNTRACKED"
-	| "PENDING_ASYNC_UNTRACKED_READ"
-	| "PENDING_ASYNC_FORBIDDEN_SCOPE"
-	| "REACTIVE_WRITE_IN_OWNED_SCOPE"
-	| "ACTION_CALLED_IN_OWNED_SCOPE"
-	| "RUN_WITH_DISPOSED_OWNER"
-	| "NO_OWNER_CLEANUP"
-	| "CLEANUP_IN_FORBIDDEN_SCOPE"
-	| "SETTLED_CLEANUP_UNOWNED"
-	| "SETTLE_WALK_UNINITIALIZED_SOURCE"
-	| "FLUSH_IN_EFFECT_CALLBACK"
-	| "PRIMITIVE_IN_FORBIDDEN_SCOPE"
-	| "NO_OWNER_EFFECT"
-	| "NO_OWNER_BOUNDARY"
-	| "ASYNC_OUTSIDE_LOADING_BOUNDARY"
-	| "INVALID_REFRESH_TARGET"
-	| "INVALID_AFFECTS_TARGET"
-	| "MISSING_EFFECT_FN"
-	| "SYNC_NODE_RECEIVED_ASYNC"
-	| "REACTIVITY_HALTED"
-	| "INVARIANT_VIOLATION"
-	| "HUGE_FAN_OUT"
-	| "HUGE_FAN_IN"
-	| "HOT_SCOPE_RERUNS"
-	| "HOT_SCOPE_TIME"
-	| "WIDE_SCOPE_DEPS"
-	| "UNSTABLE_MEMO_OUTPUT"
-	| "WIDE_WRITE"
-	| "ASYNC_WATERFALL"
-	| "HOT_SCOPE_FANOUT"
-	| "SILENT_HOLD"
-	| "LONG_HOLD"
-	| "EFFECT_WRITES_OWN_SOURCE"
-	| "EFFECT_RELAY_TEAR"
-	| "IMMUTABLE_UPDATE_IN_STORE"
-	| "UNSTABLE_LIST_IDENTITY"
-	// Server / SSR — emitted by the server runtimes (`solid-js`'s server
-	// facade, `@solidjs/web`'s server entries) through `OBSERVE.diagnostics.emit`.
-	| "SSR_RENDER_ERROR_CONTAINED"
-	| "SSR_SUBTREE_ABANDONED"
-	| "SSR_STREAM_ABANDONED"
-	| "LATE_HEADER_WRITE"
-	| "SERVER_FN_ERROR_SANITIZED"
-	| "SERVER_WRITE"
-	| "REVEAL_IN_RENDER_TO_STRING"
-	| "LAZY_ASSET_UNMAPPED"
-	| "PRELOAD_DESCRIPTOR_INVALID"
-	| "HEAD_TAG_INVALID"
-	| "UNRECOGNIZED_INSERT_VALUE"
-	| "BEHAVIOR_CLAIM_DROPPED"
-	| "FRAME_MARKER_CORRUPTED";
+  | "STRICT_READ_UNTRACKED"
+  | "PENDING_ASYNC_UNTRACKED_READ"
+  | "PENDING_ASYNC_FORBIDDEN_SCOPE"
+  | "REACTIVE_WRITE_IN_OWNED_SCOPE"
+  | "ASYNC_STORE_SETTER"
+  | "ACTION_CALLED_IN_OWNED_SCOPE"
+  | "RUN_WITH_DISPOSED_OWNER"
+  | "NO_OWNER_CLEANUP"
+  | "CLEANUP_IN_FORBIDDEN_SCOPE"
+  | "SETTLED_CLEANUP_UNOWNED"
+  | "SETTLE_WALK_UNINITIALIZED_SOURCE"
+  | "FLUSH_IN_EFFECT_CALLBACK"
+  | "PRIMITIVE_IN_FORBIDDEN_SCOPE"
+  | "NO_OWNER_EFFECT"
+  | "NO_OWNER_BOUNDARY"
+  | "ASYNC_OUTSIDE_LOADING_BOUNDARY"
+  | "INVALID_REFRESH_TARGET"
+  | "INVALID_AFFECTS_TARGET"
+  | "MISSING_EFFECT_FN"
+  | "SYNC_NODE_RECEIVED_ASYNC"
+  | "REACTIVITY_HALTED"
+  | "INVARIANT_VIOLATION"
+  | "HUGE_FAN_OUT"
+  | "HUGE_FAN_IN"
+  | "HOT_SCOPE_RERUNS"
+  | "HOT_SCOPE_TIME"
+  | "WIDE_SCOPE_DEPS"
+  | "UNSTABLE_MEMO_OUTPUT"
+  | "WIDE_WRITE"
+  | "ASYNC_WATERFALL"
+  | "HOT_SCOPE_FANOUT"
+  | "SILENT_HOLD"
+  | "LONG_HOLD"
+  | "EFFECT_WRITES_OWN_SOURCE"
+  | "EFFECT_RELAY_TEAR"
+  | "IMMUTABLE_UPDATE_IN_STORE"
+  | "UNSTABLE_LIST_IDENTITY"
+  // Server / SSR — emitted by the server runtimes (`solid-js`'s server
+  // facade, `@solidjs/web`'s server entries) through `OBSERVE.diagnostics.emit`.
+  | "SSR_RENDER_ERROR_CONTAINED"
+  | "SSR_SUBTREE_ABANDONED"
+  | "SSR_STREAM_ABANDONED"
+  | "SSR_CLIENT_CONTENT_MASKED"
+  | "LATE_HEADER_WRITE"
+  | "SERVER_FN_ERROR_SANITIZED"
+  | "SSR_ERROR_SANITIZED"
+  | "SERVER_WRITE"
+  | "REVEAL_IN_RENDER_TO_STRING"
+  | "LAZY_ASSET_UNMAPPED"
+  | "PRELOAD_DESCRIPTOR_INVALID"
+  | "HEAD_TAG_INVALID"
+  | "UNRECOGNIZED_INSERT_VALUE"
+  | "BEHAVIOR_CLAIM_DROPPED"
+  | "FRAME_MARKER_CORRUPTED";
 ```
 
 ### `DiagnosticEvent`
 
 ```ts
 interface DiagnosticEvent {
-	sequence: number;
-	code: DiagnosticCode;
-	kind: DiagnosticKind;
-	severity: DiagnosticSeverity;
-	message: string;
-	ownerId?: string;
-	ownerName?: string;
-	nodeName?: string;
-	ownerPath?: string[];
-	data?: Record<string, unknown>;
-}
+  sequence: number;
+  code: DiagnosticCode;
+  kind: DiagnosticKind;
+  severity: DiagnosticSeverity;
+  message: string;
+  ownerId?: string;
+  ownerName?: string;
+  nodeName?: string;
+  ownerPath?: string[];
+  data?: Record<string, unknown>;
+};
 ```
 
 #### `sequence`
@@ -816,18 +276,18 @@ is usually the finding itself).
 
 ```ts
 type DiagnosticKind =
-	| "strict-read"
-	| "async"
-	| "write"
-	| "lifecycle"
-	| "owner"
-	| "error"
-	| "perf"
-	| "graph"
-	| "responsiveness"
-	| "ssr"
-	| "head"
-	| "render";
+  | "strict-read"
+  | "async"
+  | "write"
+  | "lifecycle"
+  | "owner"
+  | "error"
+  | "perf"
+  | "graph"
+  | "responsiveness"
+  | "ssr"
+  | "head"
+  | "render";
 ```
 
 ### `DiagnosticListener`
@@ -840,13 +300,13 @@ type DiagnosticListener = (event: DiagnosticEvent) => void;
 
 ```ts
 interface Diagnostics {
-	subscribe(listener: DiagnosticListener): () => void;
-	capture(): DiagnosticCapture;
-	emit(
-		event: Omit<DiagnosticEvent, "sequence">,
-		subject?: DiagnosticSubject | null
-	): DiagnosticEvent;
-}
+  subscribe(listener: DiagnosticListener): () => void;
+  capture(): DiagnosticCapture;
+  emit(
+    event: Omit<DiagnosticEvent, "sequence">,
+    subject?: DiagnosticSubject | null
+  ): DiagnosticEvent;
+};
 ```
 
 #### `subscribe`
@@ -884,817 +344,4 @@ Anything a diagnostic can be about: an owner (root, computed, effect) or a signa
 
 ```ts
 type DiagnosticSubject = Owner | Signal<any> | Computed<any>;
-```
-
-### `HeldWrite`
-
-```ts
-interface HeldWrite {
-	name: string;
-	prev?: string;
-	value?: string;
-	origin?: ChangeOrigin;
-}
-```
-
-#### `name`
-
-- **Type:** `string`
-
-#### `prev`
-
-- **Type:** `string`
-
-#### `value`
-
-- **Type:** `string`
-
-#### `origin`
-
-- **Type:** `ChangeOrigin`
-
-### `HoldEvent`
-
-```ts
-interface HoldEvent {
-	at: number;
-	holdMs: number;
-	tailMs: number;
-	interaction?: ChangeOrigin;
-	origin?: ChangeOrigin;
-	flushes: number;
-	heldWrites: HeldWrite[];
-	blockers: string[];
-	acknowledgements: Acknowledgement[];
-	paintedDuringHold: number;
-	action: boolean;
-}
-```
-
-#### `at`
-
-- **Type:** `number`
-
-When the wait began (`performance.now()` clock): the interaction that
-performed the held writes when one is known (`interaction.at`) or the
-first flush that parked them, whichever is earlier. `at + holdMs` is the
-commit.
-
-#### `holdMs`
-
-- **Type:** `number`
-
-Wall time the user waited: `at` to the commit.
-
-#### `tailMs`
-
-- **Type:** `number`
-
-The quiescent tail: from the LAST held write to join (the user's final
-input) to the commit. Equal to `holdMs` for a single write; shorter when
-the hold kept taking input. The LONG_HOLD measure.
-
-#### `interaction`
-
-- **Type:** `ChangeOrigin`
-
-The user interaction whose writes were held, when the stamp is known.
-
-#### `origin`
-
-- **Type:** `ChangeOrigin`
-
-The declared unit of work the held writes belong to — the `navigation`
-a router described via `withOrigin` — when one is known. What names the
-hold by route (`navigation to /users/:id`) rather than by signal; the
-same object as `navigations()[].origin`, so the two join by identity.
-
-#### `flushes`
-
-- **Type:** `number`
-
-Flushes that ended with the hold still open.
-
-#### `heldWrites`
-
-- **Type:** `HeldWrite[]`
-
-Root signal writes staged behind the hold (the user's unanswered input).
-
-#### `blockers`
-
-- **Type:** `string[]`
-
-Async nodes the hold waited on (union across its parked flushes).
-
-#### `acknowledgements`
-
-- **Type:** `Acknowledgement[]`
-
-Feedback the graph provably rendered for this hold — an `isPending()`
-reader, a `latest()` shadow, an optimistic value, an `affects()` mark —
-one entry per affordance, in the order found. Empty and
-`paintedDuringHold === 0` is the SILENT_HOLD signature.
-
-#### `paintedDuringHold`
-
-- **Type:** `number`
-
-Effect callbacks that ran inside the hold's parked flushes. Mainline
-effects are stashed while a hold is open, so these are lane effects —
-readers of optimistic values and of `isPending()`/`latest()` companions,
-i.e. the screen changing in response to the hold. An unrelated effect
-cannot land here: it waits with everything else.
-
-#### `action`
-
-- **Type:** `boolean`
-
-The hold was opened (or joined) by an `action()`.
-
-### `InteractionEvent`
-
-```ts
-interface InteractionEvent {
-	name: string;
-	target?: string;
-	at: number;
-	handlerMs: number;
-	writes: number;
-	runs: number;
-	created: number;
-	runMs: number;
-	holds: HoldEvent[];
-	navigations: NavigationEvent[];
-	settledMs?: number;
-	outcome?: "idle" | "committed" | "held";
-	origin: ChangeOrigin;
-}
-```
-
-#### `name`
-
-- **Type:** `string`
-
-Event type — `click`, `keydown`, `input`…
-
-#### `target`
-
-- **Type:** `string`
-
-The element hit, as the runtime described it — `button#next "Next →"`.
-
-#### `at`
-
-- **Type:** `number`
-
-Dispatch time (`performance.now()` clock).
-
-#### `handlerMs`
-
-- **Type:** `number`
-
-Wall time of the handler itself, dispatch to return.
-
-#### `writes`
-
-- **Type:** `number`
-
-Root writes attributed to the frame: the handler's, and those of frames it opened (a navigation).
-
-#### `runs`
-
-- **Type:** `number`
-
-Re-runs traced back to this interaction while the record was open.
-
-#### `created`
-
-- **Type:** `number`
-
-Computations created in those runs or in the frame's flushes (the "create 1,000 rows" work).
-
-#### `runMs`
-
-- **Type:** `number`
-
-Summed self-time of `runs` and `created` (ms). Quantized per run; `settledMs` is the wall clock.
-
-#### `holds`
-
-- **Type:** `HoldEvent[]`
-
-Holds its writes waited in, in settle order.
-
-#### `navigations`
-
-- **Type:** `NavigationEvent[]`
-
-Navigations performed under it, in open order.
-
-#### `settledMs`
-
-- **Type:** `number`
-
-Dispatch to settle: the handler's return when it wrote nothing, the end of
-the drain that committed its writes, or the commit of the last hold they
-waited in — whichever came last. `undefined` while unsettled.
-
-#### `outcome`
-
-- **Type:** `"idle" | "committed" | "held"`
-
-#### `origin`
-
-- **Type:** `ChangeOrigin`
-
-The frame object every downstream fact carries — `ChangeOrigin.interaction`
-on writes and frames, `RerunEvent.interaction`, `HoldEvent.interaction`,
-`NavigationEvent.interaction`. Join key, by identity.
-
-### `InteractionRef`
-
-A user interaction, as a rendering runtime describes it to `withInteraction`.
-
-```ts
-interface InteractionRef {
-	type: string;
-	target?: string;
-	at?: number;
-}
-```
-
-#### `type`
-
-- **Type:** `string`
-
-Event type — `click`, `keydown`, `input`…
-
-#### `target`
-
-- **Type:** `string`
-
-The element hit, e.g. `button#next "Next →"`.
-
-#### `at`
-
-- **Type:** `number`
-
-Dispatch time on the `performance.now()` clock; defaults to now.
-
-### `InvocationChannel`
-
-The server-function invocation channel — `OBSERVE.server.invocations`.
-An observer's seam, as opposed to `wrapInvocation`, the app's single
-policy hook: any number of listeners, none of them able to replace the
-result or alter the call. Listeners run synchronously at settle; one
-that throws is reported and the call is unaffected.
-
-```ts
-interface InvocationChannel {
-	subscribe(type: "invocation", listener: InvocationListener): () => void;
-}
-```
-
-#### `subscribe`
-
-- **Type:** `() => void`
-
-### `InvocationEvent`
-
-One server function execution, delivered on `OBSERVE.server.invocations`
-once it settled. Serializable — the live handles (`event`, `args`, the
-thrown error) travel beside it in `InvocationLive`, not on it.
-
-```ts
-interface InvocationEvent {
-	id: string;
-	direct: boolean;
-	at: number;
-	durationMs: number;
-	outcome: "ok" | "error";
-	deferred?: true;
-}
-```
-
-#### `id`
-
-- **Type:** `string`
-
-The function id — the name a span or a log line carries.
-
-#### `direct`
-
-- **Type:** `boolean`
-
-`true` for an in-process call during SSR, `false` for HTTP dispatch.
-
-#### `at`
-
-- **Type:** `number`
-
-`performance.now()` when the execution started.
-
-#### `durationMs`
-
-- **Type:** `number`
-
-Start → settle of the execution, in milliseconds. The execution is the
-`wrapInvocation`-wrapped run: what the request spent on the call,
-policy included (auth guards, per-function middleware). A generator or
-stream body settles at handoff — see `deferred`.
-
-#### `outcome`
-
-- **Type:** `"ok" | "error"`
-
-#### `deferred`
-
-- **Type:** `true`
-
-The settled value is a body the caller drives — a generator, a
-`ReadableStream` — so `durationMs` covers the call that produced it,
-not its consumption.
-
-### `InvocationListener`
-
-```ts
-type InvocationListener = (
-	event: InvocationEvent,
-	live: InvocationLive
-) => void;
-```
-
-### `InvocationLive`
-
-The live half of an invocation, for in-process consumers. Not part of the
-record: `args` and `result` are application data (name/PII policy belongs
-to the consumer), `error` is the value AS THROWN — before the HTTP
-handler's production sanitization replaces it on the wire — and `event`
-is the request event the call ran under (the per-call derived event for
-direct calls).
-
-```ts
-interface InvocationLive {
-	event: RequestEvent;
-	request?: Request;
-	args: unknown[];
-	result?: unknown;
-	error?: unknown;
-}
-```
-
-#### `event`
-
-- **Type:** `RequestEvent`
-
-#### `request`
-
-- **Type:** `Request`
-
-HTTP dispatch only; absent for direct calls.
-
-#### `args`
-
-- **Type:** `unknown[]`
-
-#### `result`
-
-- **Type:** `unknown`
-
-The settled value, when `outcome` is `"ok"`.
-
-#### `error`
-
-- **Type:** `unknown`
-
-The thrown value, when `outcome` is `"error"`.
-
-### `NavigationEvent`
-
-```ts
-interface NavigationEvent {
-	name?: string;
-	to?: string;
-	from?: string;
-	params?: Readonly<Record<string, string | undefined>>;
-	at: number;
-	interaction?: ChangeOrigin;
-	writes: number;
-	redirects?: NavigationHop[];
-	settledMs?: number;
-	outcome?: "committed" | "held" | "superseded";
-	hold?: HoldEvent;
-	origin: ChangeOrigin;
-}
-```
-
-#### `name`
-
-- **Type:** `string`
-
-The matched route pattern the router gave — `/users/:id`. After a redirect, the final one.
-
-#### `to`
-
-- **Type:** `string`
-
-#### `from`
-
-- **Type:** `string`
-
-#### `params`
-
-- **Type:** `Readonly<Record<string, string | undefined>>`
-
-#### `at`
-
-- **Type:** `number`
-
-When the navigation was requested (`performance.now()` clock).
-
-#### `interaction`
-
-- **Type:** `ChangeOrigin`
-
-The user interaction it ran under, when known — a link click.
-
-#### `writes`
-
-- **Type:** `number`
-
-Root writes the frame performed, redirect hops included.
-
-#### `redirects`
-
-- **Type:** `NavigationHop[]`
-
-Destinations abandoned along the way, in order — present only when a redirect occurred.
-
-#### `settledMs`
-
-- **Type:** `number`
-
-Wall time from the request to settle: the end of the drain that committed
-its writes, or the commit of the hold they waited in. `undefined` while
-unsettled.
-
-#### `outcome`
-
-- **Type:** `"committed" | "held" | "superseded"`
-
-#### `hold`
-
-- **Type:** `HoldEvent`
-
-The hold its writes waited in, when hold tracking recorded one.
-
-#### `origin`
-
-- **Type:** `ChangeOrigin`
-
-The frame object its writes were stamped with — `ChangeRecord.origin` on
-each, `HoldEvent.origin` on the hold. Join key, by identity.
-
-### `NavigationHop`
-
-A destination a navigation abandoned when a redirect sent it elsewhere.
-
-```ts
-interface NavigationHop {
-	name?: string;
-	to?: string;
-	params?: Readonly<Record<string, string | undefined>>;
-	at: number;
-}
-```
-
-#### `name`
-
-- **Type:** `string`
-
-#### `to`
-
-- **Type:** `string`
-
-#### `params`
-
-- **Type:** `Readonly<Record<string, string | undefined>>`
-
-#### `at`
-
-- **Type:** `number`
-
-When the redirect away from it was declared (`performance.now()` clock).
-
-### `NavigationRef`
-
-A navigation, as a router describes it to `withOrigin` around the location
-write it is about to perform. Match eagerly and describe before writing:
-the engine keys the work the write causes — the hold behind route data,
-the re-runs, the verdicts — to this record, and names it by the
-parametrized route so occurrences fold together.
-
-The engine keeps the object and reads `name`, `to` and `params` again when
-the navigation settles (and when a hold on it is judged), so a router whose
-match is not final at write time — a lazy route subtree that resolves inside
-the hold — may describe coarsely (`/admin/*`) and assign the exact pattern
-and params onto the same object once it knows them. `from` and `at` are
-read once, when the frame opens.
-
-```ts
-interface NavigationRef {
-	kind: "navigation";
-	name?: string;
-	to?: string;
-	from?: string;
-	params?: Readonly<Record<string, string | undefined>>;
-	at?: number;
-	redirect?: number;
-}
-```
-
-#### `kind`
-
-- **Type:** `"navigation"`
-
-#### `name`
-
-- **Type:** `string`
-
-The matched route pattern — `/users/:id`. The name every consumer groups by.
-
-#### `to`
-
-- **Type:** `string`
-
-Concrete destination path.
-
-#### `from`
-
-- **Type:** `string`
-
-Concrete path being left.
-
-#### `params`
-
-- **Type:** `Readonly<Record<string, string | undefined>>`
-
-Route params the pattern bound — `{ id: "42" }` (optional params unbound: `undefined`).
-
-#### `at`
-
-- **Type:** `number`
-
-When the navigation was requested on the `performance.now()` clock;
-defaults to now. A router whose request predates the write (loaders
-awaited before the location moves) passes its own start here.
-
-#### `redirect`
-
-- **Type:** `number`
-
-`>= 1`: this frame is the Nth redirect hop of the navigation still
-pending — a guard or loader sent it elsewhere before it landed — not a
-new navigation. The engine folds it onto that pending record: the record
-keeps the user's request time and interaction, its destination becomes
-this one, and the abandoned destination is kept in `redirects`. Without
-a pending navigation to fold onto it opens a navigation of its own.
-
-### `Observe`
-
-The observe tier: the structured channel and the attribution wiring —
-everything a production observability consumer needs, and nothing that
-assumes a developer at a console. Present in dev and observe builds
-(`__OBSERVE__`); `undefined` in prod.
-
-```ts
-interface Observe {
-	diagnostics: Diagnostics;
-	attribution: AttributionSlot;
-	server: ServerObserve;
-	subjectOf(event: DiagnosticEvent): DiagnosticSubject | undefined;
-	exclude(owner: Owner): void;
-	isExcluded(subject: DiagnosticSubject | null | undefined): boolean;
-}
-```
-
-#### `diagnostics`
-
-- **Type:** `Diagnostics`
-
-#### `attribution`
-
-- **Type:** `AttributionSlot`
-
-The attribution hook slot and interaction frame — see `AttributionSlot`.
-
-#### `server`
-
-- **Type:** `ServerObserve`
-
-The server runtime's surface — see `ServerObserve`.
-
-#### `subjectOf`
-
-- **Type:** `DiagnosticSubject | undefined`
-
-The live node an emitted event was about, when the emitter knew it.
-Events are serializable records and never carry the node; consumers that
-run in-process (devtools, the console reporter) look it up here.
-
-#### `exclude`
-
-- **Type:** `void`
-
-Marks `owner`'s subtree as the observer's own. A consumer that renders
-inside the app it watches — an APM adapter's panel, devtools — would
-otherwise see its own effects, stores and holds reported as findings about
-the app. Under an excluded owner: diagnostics whose subject sits in the
-subtree are neither delivered nor reported (the entry is still built, so
-a site that throws its message still throws), and the attribution engine
-records no runs for its computations. Mark the root as it is created
-(`createRoot(() => { OBSERVE.exclude(getOwner()!); … })`) and perform
-writes from outside the graph under it (`runWithOwner`), so the writer's
-context is excluded too. Irrevocable for the owner's lifetime.
-
-#### `isExcluded`
-
-- **Type:** `boolean`
-
-Whether `subject` sits under an excluded owner (itself included).
-
-### `OBSERVE`
-
-Observe tier (diagnostics channel, attribution hook slot + interaction
-frame): dev and observe builds. The attribution engine itself is the
-`@solidjs/signals/attribution` entry.
-
-```ts
-const OBSERVE: Observe | undefined;
-```
-
-### `OriginRef`
-
-What `withOrigin` accepts: a declared unit of work whose writes the engine
-should attribute as a whole. A discriminated union so kinds can be added
-(a form submission, a tab switch) without the seam changing shape; the
-engine knows `navigation` today.
-
-```ts
-type OriginRef = NavigationRef;
-```
-
-### `RerunEvent`
-
-```ts
-interface RerunEvent {
-	run: number;
-	at: number;
-	nodeRuns: number;
-	nodeKind: "effect" | "memo";
-	nodeName: string;
-	node: Computed<any>;
-	causes: ChangeRecord[];
-	depCount: number;
-	depsAdded: string[];
-	depsRemoved: string[];
-	selfMs: number;
-	totalMs: number;
-	changed: boolean;
-	phase: "plain" | "held" | "optimistic";
-	held: boolean;
-	interaction?: ChangeOrigin;
-}
-```
-
-#### `run`
-
-- **Type:** `number`
-
-Global monotonic run sequence.
-
-#### `at`
-
-- **Type:** `number`
-
-When the run started (`performance.now()` clock).
-
-#### `nodeRuns`
-
-- **Type:** `number`
-
-How many times this node has re-run since attribution was enabled.
-
-#### `nodeKind`
-
-- **Type:** `"effect" | "memo"`
-
-#### `nodeName`
-
-- **Type:** `string`
-
-#### `node`
-
-- **Type:** `Computed<any>`
-
-#### `causes`
-
-- **Type:** `ChangeRecord[]`
-
-The deps that changed since this node's previous run. Empty means the
-re-run was not triggered by a tracked value change (creation-adjacent
-pull, error retry, or a cause this prototype does not stamp yet).
-
-#### `depCount`
-
-- **Type:** `number`
-
-Dependency count after this run.
-
-#### `depsAdded`
-
-- **Type:** `string[]`
-
-Names of deps this run subscribed to that the previous run did not.
-
-#### `depsRemoved`
-
-- **Type:** `string[]`
-
-Names of deps the previous run had that this run dropped.
-
-#### `selfMs`
-
-- **Type:** `number`
-
-Wall time of this run excluding nested recomputes (ms).
-
-#### `totalMs`
-
-- **Type:** `number`
-
-Wall time of this run including nested recomputes (ms).
-
-#### `changed`
-
-- **Type:** `boolean`
-
-Whether the run produced a changed value. A PLAIN memo run with
-`changed: false` was pure waste — the equality cutoff stopped it from
-notifying anyone. Effects run with `_equals: false` in core (their
-effect phase re-fires on every recompute), so the engine derives this
-fact itself: an effect run whose compute output is identical to the
-previous run's reports `changed: false` — the phase re-fired with the
-same input, pure waste. Side-effect-only computes (`undefined` output)
-are exempt: identity of `undefined` proves nothing about their work.
-Summed as `wastedMs` in costs() (plain, non-held runs only — see
-`phase`).
-
-#### `phase`
-
-- **Type:** `"plain" | "held" | "optimistic"`
-
-Which posture this run executed under. "optimistic" = under an
-optimistic lane (overlay recompute); "held" = a hold was open or owns
-the node (the run may be replayed/settled later); "plain" = an ordinary
-committed run. Overlay runs are real work (they count toward time
-budgets) but are never blamed as waste, and costs() reports their time
-separately as `overlayMs`.
-
-#### `held`
-
-- **Type:** `boolean`
-
-The changed value was parked in `_pendingValue` (held) rather than
-committed directly; its reveal happens on the hold's own schedule. Held
-runs are excluded from waste accounting.
-
-#### `interaction`
-
-- **Type:** `ChangeOrigin`
-
-The user interaction this run traces back to through its causes, if any.
-
-### `ServerObserve`
-
-The server runtime's observe surface — the one place a server-side
-consumer (an APM adapter's `init()`) installs on, beside `diagnostics`.
-Declared EMPTY here and typed by the runtime that owns the facts:
-`@solidjs/web`'s server entries augment this interface with their
-members (the server-function invocation channel, the trace-provider
-slot), so the core never learns those shapes and the consumer still finds
-everything on the one `OBSERVE`.
-
-The OBJECTS behind those members are not the core's either: the core has
-one artifact per tier for both platforms, and the client would carry
-them for nothing. `solid-js`'s server entry replaces this empty literal
-with the process-wide slots the moment it evaluates (see `serverSlots`
-in solid-js/src/server/observe.ts), so a consumer that imports only
-`solid-js` can subscribe or provide before the web runtime that emits
-into them has loaded, and from a second copy when a host bundles one.
-On the client this stays `{}`.
-
-```ts
-interface ServerObserve {}
 ```

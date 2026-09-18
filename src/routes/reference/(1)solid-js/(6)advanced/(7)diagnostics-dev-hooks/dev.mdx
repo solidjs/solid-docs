@@ -51,10 +51,10 @@ acknowledgements by `kind:source` (`isPending:posts`).
 
 ```ts
 interface Acknowledgement {
-  kind: "isPending" | "latest" | "optimistic" | "affects";
-  source: string;
-  reader?: string[];
-};
+	kind: "isPending" | "latest" | "optimistic" | "affects";
+	source: string;
+	reader?: string[];
+}
 ```
 
 #### `kind`
@@ -79,62 +79,71 @@ Core's obligation is to call these with true facts at the moments they
 happen; all attribution semantics (stamps, cause chains, timings, warnings)
 live in the engine that installs them — `@solidjs/signals/attribution`, a
 separate entry so an observe build that never enables it never ships it
-(same pattern as the GlobalQueue._* feature slots). `attrHooks` is null
+(same pattern as the GlobalQueue.\_\* feature slots). `attrHooks` is null
 unless an engine is installed, so the disabled cost is one null check per
-site, and prod builds fold every site out behind __OBSERVE__.
+site, and prod builds fold every site out behind **OBSERVE**.
 
 Important for implementers of call sites: a hook call must never sit inside
 a `try` block — rollup's tryCatchDeoptimization retains functions referenced
-inside `try` even behind a folded __OBSERVE__ guard, which re-couples the
+inside `try` even behind a folded **OBSERVE** guard, which re-couples the
 engine into prod bundles (#2883 harness). Set a local flag inside the try
 and call the hook after the catch.
 
 ```ts
 interface AttributionHooks {
-  interactionStart(ref: InteractionRef): void;
-  interactionEnd(): void;
-  originStart(ref: OriginRef): void;
-  originEnd(): void;
-  flushEnd(): void;
-  recomputeStart(el: Computed<any>, create: boolean): void;
-  recomputeEnd(
-    el: Computed<any>,
-    create: boolean,
-    changed: boolean,
-    optimistic: boolean,
-    transition: boolean,
-    held: boolean
-  ): void;
-  derivedChanged(el: Computed<any>): void;
-  write(el: Signal<any> | Computed<any>, prev: unknown, value: unknown): void;
-  refreshed(el: Computed<any>): void;
-  flightStart(el: Computed<any>, flight: object): void;
-  asyncStart(el: Computed<any>): void;
-  asyncEnd(el: Computed<any>, prev: unknown, value: unknown, direct: boolean): void;
-  effectRunStart(el: Computed<any>): void;
-  effectRunEnd(el: Computed<any>): void;
-  actionStepStart(it: object, name: string | undefined): void;
-  actionStepEnd(it: object): void;
-  holdStart(t: Transition): void;
-  holdEnd(): void;
-  transitionSettled(t: Transition): void;
-  transitionMerged(target: Transition, outgoing: Transition): void;
-  storeReplaced(
-    path: string,
-    isArray: boolean,
-    total: number,
-    unchanged: number,
-    prevTotal: number
-  ): void;
-  listChurn(
-    el: Computed<any>,
-    removed: unknown[],
-    created: unknown[],
-    newLen: number,
-    keyed: boolean
-  ): void;
-  boundaryFallback(boundary: object, tree: Computed<any> | undefined, shown: boolean): void;
-};
+	interactionStart(ref: InteractionRef): void;
+	interactionEnd(): void;
+	originStart(ref: OriginRef): void;
+	originEnd(): void;
+	flushEnd(): void;
+	recomputeStart(el: Computed<any>, create: boolean): void;
+	recomputeEnd(
+		el: Computed<any>,
+		create: boolean,
+		changed: boolean,
+		optimistic: boolean,
+		transition: boolean,
+		held: boolean
+	): void;
+	derivedChanged(el: Computed<any>): void;
+	write(el: Signal<any> | Computed<any>, prev: unknown, value: unknown): void;
+	refreshed(el: Computed<any>): void;
+	flightStart(el: Computed<any>, flight: object): void;
+	asyncStart(el: Computed<any>): void;
+	asyncEnd(
+		el: Computed<any>,
+		prev: unknown,
+		value: unknown,
+		direct: boolean
+	): void;
+	effectRunStart(el: Computed<any>): void;
+	effectRunEnd(el: Computed<any>): void;
+	actionStepStart(it: object, name: string | undefined): void;
+	actionStepEnd(it: object): void;
+	holdStart(t: Transition): void;
+	holdEnd(): void;
+	transitionSettled(t: Transition): void;
+	transitionMerged(target: Transition, outgoing: Transition): void;
+	storeReplaced(
+		path: string,
+		isArray: boolean,
+		total: number,
+		unchanged: number,
+		prevTotal: number
+	): void;
+	listChurn(
+		el: Computed<any>,
+		removed: unknown[],
+		created: unknown[],
+		newLen: number,
+		keyed: boolean
+	): void;
+	boundaryFallback(
+		boundary: object,
+		tree: Computed<any> | undefined,
+		shown: boolean
+	): void;
+}
 ```
 
 #### `interactionStart`
@@ -273,7 +282,7 @@ writes stay staged and its queues are about to be parked. Fired before
 this flush's lane effects (the visible acknowledgers — isPending
 companions, optimistic values) run; `holdEnd` fires from the root
 stashQueues call after them, so effect runs between the two are runs that
-painted *during* the hold.
+painted _during_ the hold.
 
 #### `holdEnd`
 
@@ -338,11 +347,11 @@ consumer never polls the ring buffers to learn that something finished.
 
 ```ts
 interface AttributionRecords {
-  rerun: RerunEvent;
-  interaction: InteractionEvent;
-  hold: HoldEvent;
-  navigation: NavigationEvent;
-};
+	rerun: RerunEvent;
+	interaction: InteractionEvent;
+	hold: HoldEvent;
+	navigation: NavigationEvent;
+}
 ```
 
 #### `rerun`
@@ -377,11 +386,11 @@ for it only when something imports it.
 
 ```ts
 interface AttributionSlot {
-  install(hooks: AttributionHooks | null): void;
-  readonly installed: AttributionHooks | null;
-  withInteraction<T>(ref: InteractionRef, fn: () => T): T;
-  withOrigin<T>(ref: OriginRef, fn: () => T): T;
-};
+	install(hooks: AttributionHooks | null): void;
+	readonly installed: AttributionHooks | null;
+	withInteraction<T>(ref: InteractionRef, fn: () => T): T;
+	withOrigin<T>(ref: OriginRef, fn: () => T): T;
+}
 ```
 
 #### `install`
@@ -449,16 +458,17 @@ interaction that paid for it.
 
 ```ts
 interface ChangeOrigin {
-  kind: "interaction" | "effect" | "action" | "async" | "navigation" | "external";
-  name?: string;
-  target?: string;
-  at?: number;
-  interaction?: ChangeOrigin;
-  run?: number;
-  to?: string;
-  from?: string;
-  params?: Readonly<Record<string, string | undefined>>;
-};
+	kind:
+		"interaction" | "effect" | "action" | "async" | "navigation" | "external";
+	name?: string;
+	target?: string;
+	at?: number;
+	interaction?: ChangeOrigin;
+	run?: number;
+	to?: string;
+	from?: string;
+	params?: Readonly<Record<string, string | undefined>>;
+}
 ```
 
 #### `kind`
@@ -505,16 +515,16 @@ interface ChangeOrigin {
 
 ```ts
 interface ChangeRecord {
-  seq: number;
-  kind: ChangeKind;
-  name: string;
-  prev?: string;
-  value?: string;
-  stack?: string[];
-  causes?: ChangeRecord[];
-  origin?: ChangeOrigin;
-  at?: number;
-};
+	seq: number;
+	kind: ChangeKind;
+	name: string;
+	prev?: string;
+	value?: string;
+	stack?: string[];
+	causes?: ChangeRecord[];
+	origin?: ChangeOrigin;
+	at?: number;
+}
 ```
 
 #### `seq`
@@ -572,15 +582,17 @@ diagnostics channel. Present only in dev builds (`__DEV__`).
 
 ```ts
 interface Dev {
-  hooks: DevHooks;
-  getChildren: typeof getChildren;
-  getSignals: typeof getSignals;
-  getParent: typeof getParent;
-  getSources: typeof getSources;
-  getObservers: typeof getObservers;
-  report(entry: DiagnosticEvent): void;
-  setConsoleFooter(footer: ((event: DiagnosticEvent) => string | undefined) | undefined): void;
-};
+	hooks: DevHooks;
+	getChildren: typeof getChildren;
+	getSignals: typeof getSignals;
+	getParent: typeof getParent;
+	getSources: typeof getSources;
+	getObservers: typeof getObservers;
+	report(entry: DiagnosticEvent): void;
+	setConsoleFooter(
+		footer: ((event: DiagnosticEvent) => string | undefined) | undefined
+	): void;
+}
 ```
 
 #### `hooks`
@@ -629,11 +641,16 @@ resets the once-per-code memory.
 
 ```ts
 interface DevHooks {
-  onOwner?: (owner: Owner) => void;
-  onGraph?: (value: any, owner: Owner | null) => void;
-  onUpdate?: () => void;
-  onStoreNodeUpdate?: (state: any, property: PropertyKey, value: any, prev: any) => void;
-};
+	onOwner?: (owner: Owner) => void;
+	onGraph?: (value: any, owner: Owner | null) => void;
+	onUpdate?: () => void;
+	onStoreNodeUpdate?: (
+		state: any,
+		property: PropertyKey,
+		value: any,
+		prev: any
+	) => void;
+}
 ```
 
 #### `onOwner`
@@ -656,10 +673,10 @@ interface DevHooks {
 
 ```ts
 interface DiagnosticCapture {
-  readonly events: readonly DiagnosticEvent[];
-  clear(): void;
-  stop(): DiagnosticEvent[];
-};
+	readonly events: readonly DiagnosticEvent[];
+	clear(): void;
+	stop(): DiagnosticEvent[];
+}
 ```
 
 #### `events`
@@ -678,74 +695,74 @@ interface DiagnosticCapture {
 
 ```ts
 type DiagnosticCode =
-  | "STRICT_READ_UNTRACKED"
-  | "PENDING_ASYNC_UNTRACKED_READ"
-  | "PENDING_ASYNC_FORBIDDEN_SCOPE"
-  | "REACTIVE_WRITE_IN_OWNED_SCOPE"
-  | "ACTION_CALLED_IN_OWNED_SCOPE"
-  | "RUN_WITH_DISPOSED_OWNER"
-  | "NO_OWNER_CLEANUP"
-  | "CLEANUP_IN_FORBIDDEN_SCOPE"
-  | "SETTLED_CLEANUP_UNOWNED"
-  | "SETTLE_WALK_UNINITIALIZED_SOURCE"
-  | "FLUSH_IN_EFFECT_CALLBACK"
-  | "PRIMITIVE_IN_FORBIDDEN_SCOPE"
-  | "NO_OWNER_EFFECT"
-  | "NO_OWNER_BOUNDARY"
-  | "ASYNC_OUTSIDE_LOADING_BOUNDARY"
-  | "INVALID_REFRESH_TARGET"
-  | "INVALID_AFFECTS_TARGET"
-  | "MISSING_EFFECT_FN"
-  | "SYNC_NODE_RECEIVED_ASYNC"
-  | "REACTIVITY_HALTED"
-  | "INVARIANT_VIOLATION"
-  | "HUGE_FAN_OUT"
-  | "HUGE_FAN_IN"
-  | "HOT_SCOPE_RERUNS"
-  | "HOT_SCOPE_TIME"
-  | "WIDE_SCOPE_DEPS"
-  | "UNSTABLE_MEMO_OUTPUT"
-  | "WIDE_WRITE"
-  | "ASYNC_WATERFALL"
-  | "HOT_SCOPE_FANOUT"
-  | "SILENT_HOLD"
-  | "LONG_HOLD"
-  | "EFFECT_WRITES_OWN_SOURCE"
-  | "EFFECT_RELAY_TEAR"
-  | "IMMUTABLE_UPDATE_IN_STORE"
-  | "UNSTABLE_LIST_IDENTITY"
-  // Server / SSR — emitted by the server runtimes (`solid-js`'s server
-  // facade, `@solidjs/web`'s server entries) through `OBSERVE.diagnostics.emit`.
-  | "SSR_RENDER_ERROR_CONTAINED"
-  | "SSR_SUBTREE_ABANDONED"
-  | "SSR_STREAM_ABANDONED"
-  | "LATE_HEADER_WRITE"
-  | "SERVER_FN_ERROR_SANITIZED"
-  | "SERVER_WRITE"
-  | "REVEAL_IN_RENDER_TO_STRING"
-  | "LAZY_ASSET_UNMAPPED"
-  | "PRELOAD_DESCRIPTOR_INVALID"
-  | "HEAD_TAG_INVALID"
-  | "UNRECOGNIZED_INSERT_VALUE"
-  | "BEHAVIOR_CLAIM_DROPPED"
-  | "FRAME_MARKER_CORRUPTED";
+	| "STRICT_READ_UNTRACKED"
+	| "PENDING_ASYNC_UNTRACKED_READ"
+	| "PENDING_ASYNC_FORBIDDEN_SCOPE"
+	| "REACTIVE_WRITE_IN_OWNED_SCOPE"
+	| "ACTION_CALLED_IN_OWNED_SCOPE"
+	| "RUN_WITH_DISPOSED_OWNER"
+	| "NO_OWNER_CLEANUP"
+	| "CLEANUP_IN_FORBIDDEN_SCOPE"
+	| "SETTLED_CLEANUP_UNOWNED"
+	| "SETTLE_WALK_UNINITIALIZED_SOURCE"
+	| "FLUSH_IN_EFFECT_CALLBACK"
+	| "PRIMITIVE_IN_FORBIDDEN_SCOPE"
+	| "NO_OWNER_EFFECT"
+	| "NO_OWNER_BOUNDARY"
+	| "ASYNC_OUTSIDE_LOADING_BOUNDARY"
+	| "INVALID_REFRESH_TARGET"
+	| "INVALID_AFFECTS_TARGET"
+	| "MISSING_EFFECT_FN"
+	| "SYNC_NODE_RECEIVED_ASYNC"
+	| "REACTIVITY_HALTED"
+	| "INVARIANT_VIOLATION"
+	| "HUGE_FAN_OUT"
+	| "HUGE_FAN_IN"
+	| "HOT_SCOPE_RERUNS"
+	| "HOT_SCOPE_TIME"
+	| "WIDE_SCOPE_DEPS"
+	| "UNSTABLE_MEMO_OUTPUT"
+	| "WIDE_WRITE"
+	| "ASYNC_WATERFALL"
+	| "HOT_SCOPE_FANOUT"
+	| "SILENT_HOLD"
+	| "LONG_HOLD"
+	| "EFFECT_WRITES_OWN_SOURCE"
+	| "EFFECT_RELAY_TEAR"
+	| "IMMUTABLE_UPDATE_IN_STORE"
+	| "UNSTABLE_LIST_IDENTITY"
+	// Server / SSR — emitted by the server runtimes (`solid-js`'s server
+	// facade, `@solidjs/web`'s server entries) through `OBSERVE.diagnostics.emit`.
+	| "SSR_RENDER_ERROR_CONTAINED"
+	| "SSR_SUBTREE_ABANDONED"
+	| "SSR_STREAM_ABANDONED"
+	| "LATE_HEADER_WRITE"
+	| "SERVER_FN_ERROR_SANITIZED"
+	| "SERVER_WRITE"
+	| "REVEAL_IN_RENDER_TO_STRING"
+	| "LAZY_ASSET_UNMAPPED"
+	| "PRELOAD_DESCRIPTOR_INVALID"
+	| "HEAD_TAG_INVALID"
+	| "UNRECOGNIZED_INSERT_VALUE"
+	| "BEHAVIOR_CLAIM_DROPPED"
+	| "FRAME_MARKER_CORRUPTED";
 ```
 
 ### `DiagnosticEvent`
 
 ```ts
 interface DiagnosticEvent {
-  sequence: number;
-  code: DiagnosticCode;
-  kind: DiagnosticKind;
-  severity: DiagnosticSeverity;
-  message: string;
-  ownerId?: string;
-  ownerName?: string;
-  nodeName?: string;
-  ownerPath?: string[];
-  data?: Record<string, unknown>;
-};
+	sequence: number;
+	code: DiagnosticCode;
+	kind: DiagnosticKind;
+	severity: DiagnosticSeverity;
+	message: string;
+	ownerId?: string;
+	ownerName?: string;
+	nodeName?: string;
+	ownerPath?: string[];
+	data?: Record<string, unknown>;
+}
 ```
 
 #### `sequence`
@@ -799,18 +816,18 @@ is usually the finding itself).
 
 ```ts
 type DiagnosticKind =
-  | "strict-read"
-  | "async"
-  | "write"
-  | "lifecycle"
-  | "owner"
-  | "error"
-  | "perf"
-  | "graph"
-  | "responsiveness"
-  | "ssr"
-  | "head"
-  | "render";
+	| "strict-read"
+	| "async"
+	| "write"
+	| "lifecycle"
+	| "owner"
+	| "error"
+	| "perf"
+	| "graph"
+	| "responsiveness"
+	| "ssr"
+	| "head"
+	| "render";
 ```
 
 ### `DiagnosticListener`
@@ -823,13 +840,13 @@ type DiagnosticListener = (event: DiagnosticEvent) => void;
 
 ```ts
 interface Diagnostics {
-  subscribe(listener: DiagnosticListener): () => void;
-  capture(): DiagnosticCapture;
-  emit(
-    event: Omit<DiagnosticEvent, "sequence">,
-    subject?: DiagnosticSubject | null
-  ): DiagnosticEvent;
-};
+	subscribe(listener: DiagnosticListener): () => void;
+	capture(): DiagnosticCapture;
+	emit(
+		event: Omit<DiagnosticEvent, "sequence">,
+		subject?: DiagnosticSubject | null
+	): DiagnosticEvent;
+}
 ```
 
 #### `subscribe`
@@ -873,11 +890,11 @@ type DiagnosticSubject = Owner | Signal<any> | Computed<any>;
 
 ```ts
 interface HeldWrite {
-  name: string;
-  prev?: string;
-  value?: string;
-  origin?: ChangeOrigin;
-};
+	name: string;
+	prev?: string;
+	value?: string;
+	origin?: ChangeOrigin;
+}
 ```
 
 #### `name`
@@ -900,18 +917,18 @@ interface HeldWrite {
 
 ```ts
 interface HoldEvent {
-  at: number;
-  holdMs: number;
-  tailMs: number;
-  interaction?: ChangeOrigin;
-  origin?: ChangeOrigin;
-  flushes: number;
-  heldWrites: HeldWrite[];
-  blockers: string[];
-  acknowledgements: Acknowledgement[];
-  paintedDuringHold: number;
-  action: boolean;
-};
+	at: number;
+	holdMs: number;
+	tailMs: number;
+	interaction?: ChangeOrigin;
+	origin?: ChangeOrigin;
+	flushes: number;
+	heldWrites: HeldWrite[];
+	blockers: string[];
+	acknowledgements: Acknowledgement[];
+	paintedDuringHold: number;
+	action: boolean;
+}
 ```
 
 #### `at`
@@ -999,20 +1016,20 @@ The hold was opened (or joined) by an `action()`.
 
 ```ts
 interface InteractionEvent {
-  name: string;
-  target?: string;
-  at: number;
-  handlerMs: number;
-  writes: number;
-  runs: number;
-  created: number;
-  runMs: number;
-  holds: HoldEvent[];
-  navigations: NavigationEvent[];
-  settledMs?: number;
-  outcome?: "idle" | "committed" | "held";
-  origin: ChangeOrigin;
-};
+	name: string;
+	target?: string;
+	at: number;
+	handlerMs: number;
+	writes: number;
+	runs: number;
+	created: number;
+	runMs: number;
+	holds: HoldEvent[];
+	navigations: NavigationEvent[];
+	settledMs?: number;
+	outcome?: "idle" | "committed" | "held";
+	origin: ChangeOrigin;
+}
 ```
 
 #### `name`
@@ -1101,10 +1118,10 @@ A user interaction, as a rendering runtime describes it to `withInteraction`.
 
 ```ts
 interface InteractionRef {
-  type: string;
-  target?: string;
-  at?: number;
-};
+	type: string;
+	target?: string;
+	at?: number;
+}
 ```
 
 #### `type`
@@ -1135,8 +1152,8 @@ that throws is reported and the call is unaffected.
 
 ```ts
 interface InvocationChannel {
-  subscribe(type: "invocation", listener: InvocationListener): () => void;
-};
+	subscribe(type: "invocation", listener: InvocationListener): () => void;
+}
 ```
 
 #### `subscribe`
@@ -1151,13 +1168,13 @@ thrown error) travel beside it in `InvocationLive`, not on it.
 
 ```ts
 interface InvocationEvent {
-  id: string;
-  direct: boolean;
-  at: number;
-  durationMs: number;
-  outcome: "ok" | "error";
-  deferred?: true;
-};
+	id: string;
+	direct: boolean;
+	at: number;
+	durationMs: number;
+	outcome: "ok" | "error";
+	deferred?: true;
+}
 ```
 
 #### `id`
@@ -1202,7 +1219,10 @@ not its consumption.
 ### `InvocationListener`
 
 ```ts
-type InvocationListener = (event: InvocationEvent, live: InvocationLive) => void;
+type InvocationListener = (
+	event: InvocationEvent,
+	live: InvocationLive
+) => void;
 ```
 
 ### `InvocationLive`
@@ -1216,12 +1236,12 @@ direct calls).
 
 ```ts
 interface InvocationLive {
-  event: RequestEvent;
-  request?: Request;
-  args: unknown[];
-  result?: unknown;
-  error?: unknown;
-};
+	event: RequestEvent;
+	request?: Request;
+	args: unknown[];
+	result?: unknown;
+	error?: unknown;
+}
 ```
 
 #### `event`
@@ -1254,19 +1274,19 @@ The thrown value, when `outcome` is `"error"`.
 
 ```ts
 interface NavigationEvent {
-  name?: string;
-  to?: string;
-  from?: string;
-  params?: Readonly<Record<string, string | undefined>>;
-  at: number;
-  interaction?: ChangeOrigin;
-  writes: number;
-  redirects?: NavigationHop[];
-  settledMs?: number;
-  outcome?: "committed" | "held" | "superseded";
-  hold?: HoldEvent;
-  origin: ChangeOrigin;
-};
+	name?: string;
+	to?: string;
+	from?: string;
+	params?: Readonly<Record<string, string | undefined>>;
+	at: number;
+	interaction?: ChangeOrigin;
+	writes: number;
+	redirects?: NavigationHop[];
+	settledMs?: number;
+	outcome?: "committed" | "held" | "superseded";
+	hold?: HoldEvent;
+	origin: ChangeOrigin;
+}
 ```
 
 #### `name`
@@ -1342,11 +1362,11 @@ A destination a navigation abandoned when a redirect sent it elsewhere.
 
 ```ts
 interface NavigationHop {
-  name?: string;
-  to?: string;
-  params?: Readonly<Record<string, string | undefined>>;
-  at: number;
-};
+	name?: string;
+	to?: string;
+	params?: Readonly<Record<string, string | undefined>>;
+	at: number;
+}
 ```
 
 #### `name`
@@ -1384,14 +1404,14 @@ read once, when the frame opens.
 
 ```ts
 interface NavigationRef {
-  kind: "navigation";
-  name?: string;
-  to?: string;
-  from?: string;
-  params?: Readonly<Record<string, string | undefined>>;
-  at?: number;
-  redirect?: number;
-};
+	kind: "navigation";
+	name?: string;
+	to?: string;
+	from?: string;
+	params?: Readonly<Record<string, string | undefined>>;
+	at?: number;
+	redirect?: number;
+}
 ```
 
 #### `kind`
@@ -1450,13 +1470,13 @@ assumes a developer at a console. Present in dev and observe builds
 
 ```ts
 interface Observe {
-  diagnostics: Diagnostics;
-  attribution: AttributionSlot;
-  server: ServerObserve;
-  subjectOf(event: DiagnosticEvent): DiagnosticSubject | undefined;
-  exclude(owner: Owner): void;
-  isExcluded(subject: DiagnosticSubject | null | undefined): boolean;
-};
+	diagnostics: Diagnostics;
+	attribution: AttributionSlot;
+	server: ServerObserve;
+	subjectOf(event: DiagnosticEvent): DiagnosticSubject | undefined;
+	exclude(owner: Owner): void;
+	isExcluded(subject: DiagnosticSubject | null | undefined): boolean;
+}
 ```
 
 #### `diagnostics`
@@ -1529,23 +1549,23 @@ type OriginRef = NavigationRef;
 
 ```ts
 interface RerunEvent {
-  run: number;
-  at: number;
-  nodeRuns: number;
-  nodeKind: "effect" | "memo";
-  nodeName: string;
-  node: Computed<any>;
-  causes: ChangeRecord[];
-  depCount: number;
-  depsAdded: string[];
-  depsRemoved: string[];
-  selfMs: number;
-  totalMs: number;
-  changed: boolean;
-  phase: "plain" | "held" | "optimistic";
-  held: boolean;
-  interaction?: ChangeOrigin;
-};
+	run: number;
+	at: number;
+	nodeRuns: number;
+	nodeKind: "effect" | "memo";
+	nodeName: string;
+	node: Computed<any>;
+	causes: ChangeRecord[];
+	depCount: number;
+	depsAdded: string[];
+	depsRemoved: string[];
+	selfMs: number;
+	totalMs: number;
+	changed: boolean;
+	phase: "plain" | "held" | "optimistic";
+	held: boolean;
+	interaction?: ChangeOrigin;
+}
 ```
 
 #### `run`
@@ -1676,5 +1696,5 @@ into them has loaded, and from a second copy when a host bundles one.
 On the client this stays `{}`.
 
 ```ts
-interface ServerObserve {};
+interface ServerObserve {}
 ```

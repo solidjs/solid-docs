@@ -29,6 +29,7 @@ interface StartOptions {
 	setup?: string;
 	env?: boolean | string;
 	external?: boolean;
+	node?: boolean;
 }
 ```
 
@@ -165,6 +166,29 @@ The plugin ignores `external` in client mode.
 A host-owned, non-runnable `ssr` development environment is detected without this option.
 Use `serverFunctions.devMiddleware: false` to hand over only development endpoint dispatch.
 
+### `node`
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Emits `dist/server/node.js`, a complete Node server, next to `dist/server/server.js` during `vite build`.
+`server.js`, `handleRequest`, and the default `{ fetch }` export do not change.
+
+The emitted module:
+
+- Serves `dist/client` as static files before the handler.
+  `/assets/*` responses carry `Cache-Control: public, max-age=31536000, immutable`; other files carry `must-revalidate` and `Last-Modified`.
+- Passes remaining requests to `handleRequest(request, { event: { nativeEvent: req } })` through the bridge used by `vite dev` and `vite preview`.
+- In client mode with server functions, serves `dist/client/index.html` for HTML `GET` requests that match no file and dispatches the server-function endpoint.
+- Listens on `PORT` (default `3000`) and `HOST` when run directly with `node dist/server/node.js`.
+- Exports `listener`, a Node `(req, res)` request listener, and `serve()`, which starts the listener.
+
+```js
+import { listener } from "./dist/server/node.js";
+```
+
+The plugin warns and ignores `node` when the build writes no server bundle.
+
 ## Valid mode combinations
 
 ### Transform only
@@ -196,6 +220,7 @@ solidPlugin({ start: true, ssr: true });
 
 - Development streams HTML through the runnable `ssr` environment.
 - `vite build` builds the client first, writes client assets and a Vite manifest to `dist/client`, and writes `dist/server/server.js`.
+- With `node: true`, the build also writes `dist/server/node.js`.
 - The server bundle exports `handleRequest(request, options?)`.
 - `vite preview` serves client assets and sends other requests through the built handler.
 
@@ -203,4 +228,5 @@ solidPlugin({ start: true, ssr: true });
 
 `serverFunctions` composes with either start mode.
 In client mode, pages remain static while `dist/server/server.js` remains available for endpoint requests.
+With `node: true`, `dist/server/node.js` serves the static pages and the endpoint from one process.
 In SSR mode, the same handler dispatches the endpoint before rendering a page.

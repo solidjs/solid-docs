@@ -135,11 +135,13 @@ Any Node host that runs that command with `PORT` and the server environment set 
 The emitted entry is the `Prefer` version from [the request handler section](#the-request-handler), with the details a production bridge needs:
 
 - It serves `dist/client` first.
-  Hashed `/assets/*` files get `Cache-Control: public, max-age=31536000, immutable`; other files get `must-revalidate` and a `Last-Modified` header.
-  A path containing `..` cannot leave the directory.
+  Hashed files under `assets/` get `Cache-Control: public, max-age=31536000, immutable`; other files get `public, max-age=0, must-revalidate` and a `Last-Modified` header.
+  A path containing `..` cannot leave the directory, and a path with a dot segment such as `.vite/manifest.json` is never served.
 - It passes every request that matched no file to `handleRequest(request, { event: { nativeEvent: req } })` through the same Node-to-web bridge that `vite dev` and `vite preview` use.
   The bridge streams the request body for methods other than `GET` and `HEAD`, forwards each `Set-Cookie` header separately, answers `HEAD` without a body, aborts the render when the client disconnects, and waits for the socket to drain before writing more.
 - In client start mode with server functions, it serves `dist/client/index.html` for HTML-accepting `GET` requests that match no file, and routes the server-function endpoint to the handler.
+- It speaks plain HTTP.
+  Terminate TLS and compress at a reverse proxy or CDN in front of it, or mount it in Express behind `compression()` as shown below.
 
 :::tip[The raw request is one option away]
 The emitted entry passes the Node request into the event with `handleRequest(request, { event: { nativeEvent: req } })`, so `getRequestEvent().nativeEvent` is the Node `IncomingMessage`.
@@ -150,7 +152,7 @@ Behind a proxy, read the forwarding headers off `getRequestEvent().request` inst
 ### Your own Node server
 
 Keep a hand-written entry when the app needs compression, a custom `http` server, or a place inside an existing Express or Fastify app.
-`dist/server/node.js` exports `listener`, a `(req, res)` function that does everything the emitted server does, and `serve()`, which starts the listener on `PORT` and `HOST`.
+`dist/server/node.js` exports three things for that: `listener`, the `(req, res)` function the emitted server runs; `createListener(options)`, which builds a listener with options; and `serve(options)`, which creates and starts an `http.Server` on `PORT` and `HOST` and returns it.
 Importing the file does not start a server; only running it directly does.
 
 ```js
@@ -161,11 +163,38 @@ import { listener } from "./dist/server/node.js";
 createServer(listener).listen(process.env.PORT || 3000);
 ```
 
-Pass `listener` to `http.createServer`, or mount it as the last handler of a framework that accepts a Node request listener.
-Static files and the handler come together; to serve `dist/client` yourself or to skip it, import `handleRequest` from `dist/server/server.js` and write the bridge.
+With Express, either put compression in front and let the listener serve everything:
 
-A bridge you write must meet the same requirements the emitted entry does.
-It must stream the request body for methods other than `GET` and `HEAD`, forward multiple `Set-Cookie` headers as separate values, and pass the Node request as `event.nativeEvent` if middleware or server functions read it.
+```js
+// server.js
+import express from "express";
+import compression from "compression";
+import { listener } from "./dist/server/node.js";
+
+const app = express();
+app.use(compression());
+app.use(listener); // static files, pages, server functions
+app.listen(process.env.PORT || 3000);
+```
+
+Or let Express own the static files and keep only the bridge:
+
+```js
+// server.js
+import express from "express";
+import { createListener } from "./dist/server/node.js";
+
+const app = express();
+app.use(express.static("dist/client", { immutable: true, maxAge: "1y" }));
+app.use(createListener({ static: false }));
+app.listen(process.env.PORT || 3000);
+```
+
+`static: false` skips the file lookup and, in client start mode, the `index.html` history fallback; Express owns both.
+`createListener({ event: (req) => ({ ...fields }) })` merges extra fields next to `nativeEvent` in the request event, and `serve()` accepts `static` and `event` alongside `port` and `host`.
+
+A bridge written against `handleRequest` from `dist/server/server.js` is the last resort, for a server that cannot mount a Node request listener.
+It must meet the requirements in [the request handler section](#the-request-handler): stream the request body for methods other than `GET` and `HEAD`, forward multiple `Set-Cookie` headers as separate values, and pass the Node request as `event.nativeEvent`.
 
 ## Preview the production artifact
 

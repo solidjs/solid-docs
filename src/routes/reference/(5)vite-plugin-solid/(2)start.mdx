@@ -176,18 +176,37 @@ Emits `dist/server/node.js`, a complete Node server, next to `dist/server/server
 
 The emitted module:
 
-- Serves `dist/client` as static files before the handler.
-  `/assets/*` responses carry `Cache-Control: public, max-age=31536000, immutable`; other files carry `must-revalidate` and `Last-Modified`.
+- Serves the client build as static files before the handler, under a root-relative `base`.
+  Files under `build.assetsDir` carry `Cache-Control: public, max-age=31536000, immutable`; other files carry `public, max-age=0, must-revalidate` and `Last-Modified`.
+  Dot-segment paths and `..` traversal are refused.
 - Passes remaining requests to `handleRequest(request, { event: { nativeEvent: req } })` through the bridge used by `vite dev` and `vite preview`.
+  A thrown error logs to `console.error` and answers `500`.
 - In client mode with server functions, serves `dist/client/index.html` for HTML `GET` requests that match no file and dispatches the server-function endpoint.
 - Listens on `PORT` (default `3000`) and `HOST` when run directly with `node dist/server/node.js`.
-- Exports `listener`, a Node `(req, res)` request listener, and `serve()`, which starts the listener.
 
-```js
-import { listener } from "./dist/server/node.js";
+```ts
+// dist/server/node.js
+import type { IncomingMessage, Server, ServerResponse } from "node:http";
+
+type Listener = (req: IncomingMessage, res: ServerResponse) => Promise<void>;
+
+interface ListenerOptions {
+	static?: boolean;
+	event?: (req: IncomingMessage) => Record<string, unknown>;
+}
+
+export declare const listener: Listener; // createListener()
+export declare function createListener(options?: ListenerOptions): Listener;
+export declare function serve(
+	options?: { port?: number; host?: string } & ListenerOptions
+): Server;
 ```
 
-The plugin warns and ignores `node` when the build writes no server bundle.
+`static: false` skips the file lookup and the client-mode `index.html` fallback.
+`event` returns fields merged over `{ nativeEvent: req }`.
+
+The build emits `node.js` only in the `ssr` environment and only when that build contains `server.js`.
+The plugin warns and emits nothing with `external`, and in client mode without `serverFunctions`.
 
 ## Valid mode combinations
 

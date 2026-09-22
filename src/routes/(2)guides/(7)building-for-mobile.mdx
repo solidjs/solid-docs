@@ -1,0 +1,106 @@
+---
+title: Building for mobile
+category: Guides
+order: 7
+use_cases: >-
+  mobile apps, ios, android, capacitor, tauri, custom renderers, native views,
+  react native
+tags:
+  - mobile
+  - capacitor
+  - tauri
+  - solid-js/universal
+  - createRenderer
+  - native
+version: "1.0"
+description: >-
+  Ship a Solid app to iOS and Android by wrapping it as an SPA with Capacitor
+  or Tauri, or by driving real native views with solid-js/universal.
+---
+
+Solid doesn't ship a mobile renderer, but three routes get a Solid app onto iOS and Android: keep rendering through the DOM (a WebView, or a DOM shim over native views), or drive native views directly with Solid's custom-renderer API.
+[`solid-native`](https://github.com/tjjfvi/solid-native), listed on solidjs.com's [Resources](https://www.solidjs.com/resources) page, is flagged `maintained: false` there; the options below are the current routes.
+
+## Keeping the DOM renderer
+
+Capacitor and Tauri wrap a regular Solid [SPA](/solid-router/rendering-modes/spa) in a native WebView. NativeScript shims a DOM-like API over its own native views instead.
+Either way, your Solid app, styling, and `solid-js/web` renderer stay unchanged.
+
+### Capacitor
+
+[Capacitor](https://capacitorjs.com/) wraps a web build in a native iOS/Android project and exposes native APIs to your Solid app through JavaScript plugins.
+The [`ionic-team/capacitor-solidjs-templates`](https://github.com/ionic-team/capacitor-solidjs-templates) repository provides official starter templates for Solid with Capacitor already configured.
+
+### Tauri
+
+[Tauri](https://v2.tauri.app/) also wraps a web build in a native shell, using the platform's system WebView instead of bundling one, for a smaller binary.
+Tauri's [Solid frontend guide](https://v2.tauri.app/start/frontend/solidjs/) covers setting up a Solid project as the frontend for a Tauri app, and Tauri's mobile support extends this to iOS and Android.
+
+### NativeScript
+
+[`@nativescript-community/solid-js`](https://github.com/nativescript-community/solid-js) shims a DOM-like API over [NativeScript](https://nativescript.org/)'s native views, so Solid's regular DOM renderer targets real native views with no WebView involved.
+
+:::note
+Capacitor and Tauri still render to a real DOM inside a WebView; NativeScript renders to a shimmed one over native views.
+Both keep your existing Solid codebase and `solid-js/web` mental model.
+For native views with no DOM shim at all, see the next section.
+:::
+
+## Native views with `solid-js/universal`
+
+Solid ships a framework-level custom-renderer API in `solid-js/universal`.
+Its `createRenderer` function takes an object describing how to create, mutate, and traverse nodes on a non-DOM host. It returns a full set of Solid primitives (`render`, `effect`, `memo`, `insert`, and more) wired to that host instead of the DOM:
+
+```ts
+import { createRenderer } from "solid-js/universal";
+
+const {
+	render,
+	effect,
+	memo,
+	createComponent,
+	createElement,
+	createTextNode,
+	insertNode,
+	insert,
+	spread,
+	setProp,
+	mergeProps,
+	use,
+} = createRenderer({
+	createElement(tag) {
+		/* create a node for your host */
+	},
+	createTextNode(value) {
+		/* create a text node for your host */
+	},
+	replaceText(textNode, value) {
+		/* update a text node's value */
+	},
+	setProperty(node, name, value) {
+		/* apply a prop/attribute to a node */
+	},
+	insertNode(parent, node, anchor) {
+		/* attach node to parent, before anchor if given */
+	},
+	removeNode(parent, node) {
+		/* detach node from parent */
+	},
+	isTextNode(node) {
+		/* return whether node is a text node */
+	},
+	getParentNode(node) {},
+	getFirstChild(node) {},
+	getNextSibling(node) {},
+});
+```
+
+This lets a renderer drive Solid's fine-grained reactivity against any tree-shaped host, not just the DOM, with no dependency on `solid-js/web`.
+`createRenderer` only gets you as far as creating and updating nodes on that host. None of a platform's native views, layout engine, or gesture handling comes with it, so building on it directly is a project of its own.
+
+Two projects build on it today. [SolidTV](https://github.com/solid-tv/solid) targets [LightningJS](https://lightningjs.io/), the WebGL renderer used by TV apps at Angel Studios and Bell Fibe TV.
+
+[Symbiote Native](https://docs.symbiote-native.dev/) targets React Native, driving its Fabric renderer directly.
+Solid mounts and controls the whole app, not just individual components, on React Native's native stack (Fabric, JSI, Yoga) on iOS and Android, with React itself removed from the render path.
+
+For the full `createRenderer` signature, see its [source on GitHub](https://github.com/solidjs/solid/blob/main/packages/solid/universal/src/index.ts).

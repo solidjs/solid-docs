@@ -34,7 +34,16 @@ The attribution engine from `solid-js/attribution`: take a hold with `enable()`,
 ## Import
 
 ```ts
-import { attribution, costs, feedback, formatOrigin, formatRerun, graphSize, subscriptions, why } from "solid-js/attribution";
+import {
+	attribution,
+	costs,
+	feedback,
+	formatOrigin,
+	formatRerun,
+	graphSize,
+	subscriptions,
+	why,
+} from "solid-js/attribution";
 ```
 
 ## `attribution`
@@ -195,10 +204,10 @@ acknowledgements by `kind:source` (`isPending:posts`).
 
 ```ts
 interface Acknowledgement {
-  kind: "isPending" | "latest" | "optimistic" | "affects";
-  source: string;
-  reader?: string[];
-};
+	kind: "isPending" | "latest" | "optimistic" | "affects";
+	source: string;
+	reader?: string[];
+}
 ```
 
 #### `kind`
@@ -231,11 +240,11 @@ importing a fold is what turns its accounting on.
 
 ```ts
 interface Attribution {
-  enable(opts?: AttributionOptions): () => void;
-  disable(): void;
-  history<K extends HistoryType>(type: K): readonly HistoryRecords[K][];
-  markFlight(flight: object, startedAt?: number): void;
-};
+	enable(opts?: AttributionOptions): () => void;
+	disable(): void;
+	history<K extends HistoryType>(type: K): readonly HistoryRecords[K][];
+	markFlight(flight: object, startedAt?: number): void;
+}
 ```
 
 #### `enable`
@@ -332,9 +341,9 @@ later enable()).
 
 ```ts
 interface AttributionCostTables {
-  scopes: ScopeCost[];
-  writes: WriteCost[];
-};
+	scopes: ScopeCost[];
+	writes: WriteCost[];
+}
 ```
 
 #### `scopes`
@@ -353,12 +362,12 @@ Ranked by the total downstream re-run time each root write caused.
 
 ```ts
 interface AttributionFeedbackTables {
-  sources: FeedbackSource[];
-  interactions: FeedbackInteraction[];
-  navigations: FeedbackNavigation[];
-  flights: FlightStats[];
-  fallbacks: FallbackStats[];
-};
+	sources: FeedbackSource[];
+	interactions: FeedbackInteraction[];
+	navigations: FeedbackNavigation[];
+	flights: FlightStats[];
+	fallbacks: FallbackStats[];
+}
 ```
 
 #### `sources`
@@ -391,26 +400,28 @@ Loading boundaries ranked by flashes, then by time shown.
 
 ```ts
 interface AttributionOptions {
-  log?: boolean;
-  values?: AttributionValues;
-  checks?: boolean;
-  stacks?: boolean;
-  historyLimit?: number;
-  hotRuns?: { count: number; windowMs: number } | false;
-  wideDeps?: number | false;
-  hotTime?: { budgetMs: number; windowMs: number } | false;
-  unstableMemos?: number | false;
-  wastedRecompute?: { minRuns: number; ratio: number; budgetMs: number; windowMs: number } | false;
-  fanOut?: number | false;
-  waterfalls?: { minFlightMs: number } | false;
-  holds?: { infoMs: number; warnMs: number } | false;
-  longHolds?: { infoMs: number; warnMs: number } | false;
-  graphGrowth?: { visits: number; ratio: number } | false;
-  abandonedFlights?: { count: number; windowMs: number } | false;
-  fallbackFlashes?: boolean;
-  stackedHolds?: { count: number } | false;
-  optimisticReverts?: boolean;
-};
+	log?: boolean;
+	values?: AttributionValues;
+	checks?: boolean;
+	stacks?: boolean;
+	historyLimit?: number;
+	hotRuns?: { count: number; windowMs: number } | false;
+	wideDeps?: number | false;
+	hotTime?: { budgetMs: number; windowMs: number } | false;
+	unstableMemos?: number | false;
+	wastedRecompute?:
+		| { minRuns: number; ratio: number; budgetMs: number; windowMs: number }
+		| false;
+	fanOut?: number | false;
+	waterfalls?: { minFlightMs: number } | false;
+	holds?: { infoMs: number; warnMs: number } | false;
+	longHolds?: { infoMs: number; warnMs: number } | false;
+	graphGrowth?: { visits: number; ratio: number } | false;
+	abandonedFlights?: { count: number; windowMs: number } | false;
+	fallbackFlashes?: boolean;
+	stackedHolds?: { count: number } | false;
+	optimisticReverts?: boolean;
+}
 ```
 
 #### `log`
@@ -673,9 +684,9 @@ whose `causes` chain back to root writes). When a computation re-executes,
 the deps whose stamp is newer than the node's last run are its causes, so
 each re-run can be explained as a chain down to the originating write:
 
-  [why-run] effect "docTitle" ran (run 4)
-    ← memo "userLabel" changed (#6)
-      ← signal "notifications" write (#5) 2 → 3
+[why-run] effect "docTitle" ran (run 4)
+← memo "userLabel" changed (#6)
+← signal "notifications" write (#5) 2 → 3
 
 This module is the attribution ENGINE: all semantics live here, and it is
 decoupled from the core. `enable()` installs it into the core's narrow
@@ -723,16 +734,17 @@ interaction that paid for it.
 
 ```ts
 interface ChangeOrigin {
-  kind: "interaction" | "effect" | "action" | "async" | "navigation" | "external";
-  name?: string;
-  target?: string;
-  at?: number;
-  interaction?: ChangeOrigin;
-  run?: number;
-  to?: string;
-  from?: string;
-  params?: Readonly<Record<string, string | undefined>>;
-};
+	kind:
+		"interaction" | "effect" | "action" | "async" | "navigation" | "external";
+	name?: string;
+	target?: string;
+	at?: number;
+	interaction?: ChangeOrigin;
+	run?: number;
+	to?: string;
+	from?: string;
+	params?: Readonly<Record<string, string | undefined>>;
+}
 ```
 
 #### `kind`
@@ -783,17 +795,17 @@ When the frame opened (`performance.now()` clock). Always set for
 
 ```ts
 interface ChangeRecord {
-  seq: number;
-  kind: ChangeKind;
-  name: string;
-  nodeId?: number;
-  prev?: string;
-  value?: string;
-  stack?: string[];
-  causes?: ChangeRecord[];
-  origin?: ChangeOrigin;
-  at?: number;
-};
+	seq: number;
+	kind: ChangeKind;
+	name: string;
+	nodeId?: number;
+	prev?: string;
+	value?: string;
+	stack?: string[];
+	causes?: ChangeRecord[];
+	origin?: ChangeOrigin;
+	at?: number;
+}
 ```
 
 #### `seq`
@@ -868,17 +880,17 @@ the stack. Creation time is already charged to the interaction record's
 
 ```ts
 interface CreateEvent {
-  at: number;
-  nodeKind: "effect" | "memo";
-  nodeName: string;
-  nodeId: number;
-  depCount: number;
-  selfMs: number;
-  totalMs: number;
-  phase: "plain" | "held" | "optimistic";
-  held: boolean;
-  interaction?: ChangeOrigin;
-};
+	at: number;
+	nodeKind: "effect" | "memo";
+	nodeName: string;
+	nodeId: number;
+	depCount: number;
+	selfMs: number;
+	totalMs: number;
+	phase: "plain" | "held" | "optimistic";
+	held: boolean;
+	interaction?: ChangeOrigin;
+}
 ```
 
 #### `at`
@@ -947,13 +959,13 @@ re-run and is absent for a creation's first callback.
 
 ```ts
 interface EffectRunEvent {
-  at: number;
-  durationMs: number;
-  nodeId: number;
-  nodeName: string;
-  run?: number;
-  interaction?: ChangeOrigin;
-};
+	at: number;
+	durationMs: number;
+	nodeId: number;
+	nodeName: string;
+	run?: number;
+	interaction?: ChangeOrigin;
+}
 ```
 
 #### `at`
@@ -998,11 +1010,11 @@ with the flash verdict.
 
 ```ts
 interface FallbackEvent {
-  ownerPath?: string[];
-  at: number;
-  shownMs: number;
-  interaction?: ChangeOrigin;
-};
+	ownerPath?: string[];
+	at: number;
+	shownMs: number;
+	interaction?: ChangeOrigin;
+}
 ```
 
 #### `ownerPath`
@@ -1033,12 +1045,12 @@ Per loading boundary: how long, and how briefly, it showed its fallback.
 
 ```ts
 interface FallbackStats {
-  boundary: string;
-  shows: number;
-  shownMs: number;
-  worstMs: number;
-  flashes: number;
-};
+	boundary: string;
+	shows: number;
+	shownMs: number;
+	worstMs: number;
+	flashes: number;
+}
 ```
 
 #### `boundary`
@@ -1076,16 +1088,16 @@ fetch above the boundary removes the flash.
 
 ```ts
 interface FeedbackInteraction {
-  interaction: string;
-  dispatches: number;
-  runs: number;
-  selfMs: number;
-  worstDispatchMs: number;
-  holds: number;
-  heldMs: number;
-  silentMs: number;
-  worstHoldMs: number;
-};
+	interaction: string;
+	dispatches: number;
+	runs: number;
+	selfMs: number;
+	worstDispatchMs: number;
+	holds: number;
+	heldMs: number;
+	silentMs: number;
+	worstHoldMs: number;
+}
 ```
 
 #### `interaction`
@@ -1142,16 +1154,16 @@ have to build itself, from the runtime's own facts.
 
 ```ts
 interface FeedbackNavigation {
-  name: string;
-  navigations: number;
-  settledMs: number;
-  worstMs: number;
-  held: number;
-  heldMs: number;
-  silent: number;
-  superseded: number;
-  redirected: number;
-};
+	name: string;
+	navigations: number;
+	settledMs: number;
+	worstMs: number;
+	held: number;
+	heldMs: number;
+	silent: number;
+	superseded: number;
+	redirected: number;
+}
 ```
 
 #### `name`
@@ -1206,20 +1218,20 @@ Navigations a redirect sent elsewhere on the way (keyed by where they ended up).
 
 ```ts
 interface FeedbackSource {
-  sources: string[];
-  holds: number;
-  heldMs: number;
-  worstMs: number;
-  silent: number;
-  silentMs: number;
-  latestOnly: number;
-  long: number;
-  longMs: number;
-  acknowledgedBy: { by: string; holds: number }[];
-  interactions: { interaction: string; holds: number }[];
-  writes: string[];
-  actions: number;
-};
+	sources: string[];
+	holds: number;
+	heldMs: number;
+	worstMs: number;
+	silent: number;
+	silentMs: number;
+	latestOnly: number;
+	long: number;
+	longMs: number;
+	acknowledgedBy: { by: string; holds: number }[];
+	interactions: { interaction: string; holds: number }[];
+	writes: string[];
+	actions: number;
+}
 ```
 
 #### `sources`
@@ -1307,14 +1319,14 @@ produces no record.
 
 ```ts
 interface FlightEvent {
-  nodeId: number;
-  nodeName: string;
-  ownerPath?: string[];
-  at: number;
-  durationMs: number;
-  outcome: "landed" | "abandoned";
-  interaction?: ChangeOrigin;
-};
+	nodeId: number;
+	nodeName: string;
+	ownerPath?: string[];
+	at: number;
+	durationMs: number;
+	outcome: "landed" | "abandoned";
+	interaction?: ChangeOrigin;
+}
 ```
 
 #### `nodeId`
@@ -1359,9 +1371,9 @@ One landed flight: its node name, wall duration, and upstream chain.
 
 ```ts
 interface FlightLink {
-  name: string;
-  ms: number;
-};
+	name: string;
+	ms: number;
+}
 ```
 
 #### `name`
@@ -1378,13 +1390,13 @@ Per async source: how many flights it started, and how many it threw away.
 
 ```ts
 interface FlightStats {
-  source: string;
-  flights: number;
-  landed: number;
-  abandoned: number;
-  landedMs: number;
-  worstMs: number;
-};
+	source: string;
+	flights: number;
+	landed: number;
+	abandoned: number;
+	landedMs: number;
+	worstMs: number;
+}
 ```
 
 #### `source`
@@ -1432,13 +1444,13 @@ scopes not counted).
 
 ```ts
 interface FlushEvent {
-  at: number;
-  durationMs: number;
-  runs: number;
-  created: number;
-  held: boolean;
-  interaction?: ChangeOrigin;
-};
+	at: number;
+	durationMs: number;
+	runs: number;
+	created: number;
+	held: boolean;
+	interaction?: ChangeOrigin;
+}
 ```
 
 #### `at`
@@ -1490,10 +1502,10 @@ made only when something listens or `graphGrowth` is on.
 
 ```ts
 interface GraphEvent extends GraphSize {
-  at: number;
-  route?: string;
-  navigation: NavigationEvent;
-};
+	at: number;
+	route?: string;
+	navigation: NavigationEvent;
+}
 ```
 
 #### `at`
@@ -1524,12 +1536,12 @@ is found — and the edges between them.
 
 ```ts
 interface GraphSize {
-  roots: number;
-  owners: number;
-  computations: number;
-  signals: number;
-  edges: number;
-};
+	roots: number;
+	owners: number;
+	computations: number;
+	signals: number;
+	edges: number;
+}
 ```
 
 #### `roots`
@@ -1566,11 +1578,11 @@ Dependency links — each computation's sources, counted once.
 
 ```ts
 interface HeldWrite {
-  name: string;
-  prev?: string;
-  value?: string;
-  origin?: ChangeOrigin;
-};
+	name: string;
+	prev?: string;
+	value?: string;
+	origin?: ChangeOrigin;
+}
 ```
 
 #### `name`
@@ -1599,12 +1611,12 @@ the thresholded view.
 
 ```ts
 interface HistoryRecords {
-  rerun: RerunEvent;
-  waterfall: WaterfallRecord;
-  hold: HoldEvent;
-  navigation: NavigationEvent;
-  interaction: InteractionEvent;
-};
+	rerun: RerunEvent;
+	waterfall: WaterfallRecord;
+	hold: HoldEvent;
+	navigation: NavigationEvent;
+	interaction: InteractionEvent;
+}
 ```
 
 #### `rerun`
@@ -1637,20 +1649,20 @@ type HistoryType = keyof HistoryRecords;
 
 ```ts
 interface HoldEvent {
-  at: number;
-  holdMs: number;
-  tailMs: number;
-  interaction?: ChangeOrigin;
-  origin?: ChangeOrigin;
-  flushes: number;
-  heldWrites: HeldWrite[];
-  blockers: string[];
-  acknowledgements: Acknowledgement[];
-  paintedDuringHold: number;
-  action: boolean;
-  silent: boolean;
-  long: boolean;
-};
+	at: number;
+	holdMs: number;
+	tailMs: number;
+	interaction?: ChangeOrigin;
+	origin?: ChangeOrigin;
+	flushes: number;
+	heldWrites: HeldWrite[];
+	blockers: string[];
+	acknowledgements: Acknowledgement[];
+	paintedDuringHold: number;
+	action: boolean;
+	silent: boolean;
+	long: boolean;
+}
 ```
 
 #### `at`
@@ -1758,22 +1770,22 @@ verdict, tiered by `warnMs`.
 
 ```ts
 interface InteractionEvent {
-  name: string;
-  target?: string;
-  at: number;
-  inputDelayMs?: number;
-  handlerMs: number;
-  writes: number;
-  runs: number;
-  created: number;
-  runMs: number;
-  holds: HoldEvent[];
-  navigations: NavigationEvent[];
-  settledMs?: number;
-  outcome?: "idle" | "committed" | "held";
-  continuationMs?: number;
-  origin: ChangeOrigin;
-};
+	name: string;
+	target?: string;
+	at: number;
+	inputDelayMs?: number;
+	handlerMs: number;
+	writes: number;
+	runs: number;
+	created: number;
+	runMs: number;
+	holds: HoldEvent[];
+	navigations: NavigationEvent[];
+	settledMs?: number;
+	outcome?: "idle" | "committed" | "held";
+	continuationMs?: number;
+	origin: ChangeOrigin;
+}
 ```
 
 #### `name`
@@ -1882,10 +1894,10 @@ A user interaction, as a rendering runtime describes it to `withInteraction`.
 
 ```ts
 interface InteractionRef {
-  type: string;
-  target?: string;
-  at?: number;
-};
+	type: string;
+	target?: string;
+	at?: number;
+}
 ```
 
 #### `type`
@@ -1913,19 +1925,19 @@ Dispatch time on the `performance.now()` clock; defaults to now.
 
 ```ts
 interface NavigationEvent {
-  name?: string;
-  to?: string;
-  from?: string;
-  params?: Readonly<Record<string, string | undefined>>;
-  at: number;
-  interaction?: ChangeOrigin;
-  writes: number;
-  redirects?: NavigationHop[];
-  settledMs?: number;
-  outcome?: "committed" | "held" | "superseded";
-  hold?: HoldEvent;
-  origin: ChangeOrigin;
-};
+	name?: string;
+	to?: string;
+	from?: string;
+	params?: Readonly<Record<string, string | undefined>>;
+	at: number;
+	interaction?: ChangeOrigin;
+	writes: number;
+	redirects?: NavigationHop[];
+	settledMs?: number;
+	outcome?: "committed" | "held" | "superseded";
+	hold?: HoldEvent;
+	origin: ChangeOrigin;
+}
 ```
 
 #### `name`
@@ -2001,11 +2013,11 @@ A destination a navigation abandoned when a redirect sent it elsewhere.
 
 ```ts
 interface NavigationHop {
-  name?: string;
-  to?: string;
-  params?: Readonly<Record<string, string | undefined>>;
-  at: number;
-};
+	name?: string;
+	to?: string;
+	params?: Readonly<Record<string, string | undefined>>;
+	at: number;
+}
 ```
 
 #### `name`
@@ -2047,14 +2059,14 @@ read once, when the frame opens.
 
 ```ts
 interface NavigationRef {
-  kind: "navigation";
-  name?: string;
-  to?: string;
-  from?: string;
-  params?: Readonly<Record<string, string | undefined>>;
-  at?: number;
-  redirect?: number;
-};
+	kind: "navigation";
+	name?: string;
+	to?: string;
+	from?: string;
+	params?: Readonly<Record<string, string | undefined>>;
+	at?: number;
+	redirect?: number;
+}
 ```
 
 #### `kind`
@@ -2108,23 +2120,23 @@ a pending navigation to fold onto it opens a navigation of its own.
 
 ```ts
 interface RerunEvent {
-  run: number;
-  at: number;
-  nodeRuns: number;
-  nodeKind: "effect" | "memo";
-  nodeName: string;
-  nodeId: number;
-  causes: ChangeRecord[];
-  depCount: number;
-  depsAdded: string[];
-  depsRemoved: string[];
-  selfMs: number;
-  totalMs: number;
-  changed: boolean;
-  phase: "plain" | "held" | "optimistic";
-  held: boolean;
-  interaction?: ChangeOrigin;
-};
+	run: number;
+	at: number;
+	nodeRuns: number;
+	nodeKind: "effect" | "memo";
+	nodeName: string;
+	nodeId: number;
+	causes: ChangeRecord[];
+	depCount: number;
+	depsAdded: string[];
+	depsRemoved: string[];
+	selfMs: number;
+	totalMs: number;
+	changed: boolean;
+	phase: "plain" | "held" | "optimistic";
+	held: boolean;
+	interaction?: ChangeOrigin;
+}
 ```
 
 #### `run`
@@ -2248,13 +2260,13 @@ The user interaction this run traces back to through its causes, if any.
 
 ```ts
 interface ScopeCost {
-  name: string;
-  kind: "effect" | "memo";
-  runs: number;
-  selfMs: number;
-  wastedMs: number;
-  overlayMs: number;
-};
+	name: string;
+	kind: "effect" | "memo";
+	runs: number;
+	selfMs: number;
+	wastedMs: number;
+	overlayMs: number;
+}
 ```
 
 #### `name`
@@ -2292,9 +2304,9 @@ Self-time spent in optimistic/transition (overlay) runs.
 
 ```ts
 interface WaterfallRecord {
-  chain: FlightLink[];
-  sequentialMs: number;
-};
+	chain: FlightLink[];
+	sequentialMs: number;
+}
 ```
 
 #### `chain`
@@ -2313,10 +2325,10 @@ Summed wall time of the chain — the serialized cost.
 
 ```ts
 interface WriteCost {
-  name: string;
-  runs: number;
-  downstreamMs: number;
-};
+	name: string;
+	runs: number;
+	downstreamMs: number;
+}
 ```
 
 #### `name`

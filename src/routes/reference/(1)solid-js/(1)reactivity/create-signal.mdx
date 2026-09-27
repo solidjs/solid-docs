@@ -33,9 +33,9 @@ Creates a simple reactive state with a getter and setter.
 // Plain
 const [count, setCount] = createSignal(0);
 
-count();              // 0
-setCount(1);          // explicit value
-setCount(c => c + 1); // updater
+count(); // 0
+setCount(1); // explicit value
+setCount((c) => c + 1); // updater
 
 // Writable memo: starts as `fn()`, can be locally overwritten.
 const [user, setUser] = createSignal(() => fetchUser(userId()));
@@ -56,14 +56,17 @@ import { createSignal } from "solid-js";
 
 ```ts
 function createSignal<T>(): Signal<T | undefined>;
-function createSignal<T>(value: Exclude<T, Function>, options?: SignalOptions<T>): Signal<T>;
 function createSignal<T>(
-  fn: ComputeFunction<NoInfer<T>, T>,
-  options: SignalOptions<T> & MemoOptions<T> & { loadingValue: T }
+	value: Exclude<T, Function>,
+	options?: SignalOptions<T>
 ): Signal<T>;
 function createSignal<T>(
-  fn: ComputeFunction<undefined | NoInfer<T>, T>,
-  options?: SignalOptions<T> & MemoOptions<T>
+	fn: ComputeFunction<NoInfer<T>, T>,
+	options: SignalOptions<T> & MemoOptions<T> & { loadingValue: T }
+): Signal<T>;
+function createSignal<T>(
+	fn: ComputeFunction<undefined | NoInfer<T>, T>,
+	options?: SignalOptions<T> & MemoOptions<T>
 ): Signal<T>;
 ```
 
@@ -99,9 +102,9 @@ A tuple. The accessor reads the value and tracks it in the surrounding scope; th
 ```ts
 const [count, setCount] = createSignal(0);
 
-count();              // 0
-setCount(1);          // explicit value
-setCount(c => c + 1); // updater
+count(); // 0
+setCount(1); // explicit value
+setCount((c) => c + 1); // updater
 ```
 
 ```ts
@@ -147,17 +150,17 @@ Also used in combination with `SignalOptions` for writable memos
 
 ```ts
 interface MemoOptions<T> {
-  id?: string;
-  name?: string;
-  transparent?: boolean;
-  equals?: false | ((prev: T, next: T) => boolean);
-  unobserved?: () => void;
-  lazy?: boolean;
-  sync?: boolean;
-  loadingValue?: T;
-  deferStream?: boolean;
-  ssrSource?: "server" | "hybrid" | "client";
-};
+	id?: string;
+	name?: string;
+	transparent?: boolean;
+	equals?: false | ((prev: T, next: T) => boolean);
+	unobserved?: () => void;
+	lazy?: boolean;
+	sync?: boolean;
+	loadingValue?: T;
+	deferStream?: boolean;
+	ssrSource?: "server" | "hybrid" | "client";
+}
 ```
 
 **`id`** — `string`
@@ -243,7 +246,7 @@ its fallback into the HTML. Server-only; ignored on the client.
 Hydration policy. Decides what initial value the client uses and
 whether the compute re-runs.
 
-- `"server"` *(default)*: client uses the serialized server value
+- `"server"` _(default)_: client uses the serialized server value
   as initial state. Compute does **not** re-run for the initial
   value — the serialized result is authoritative. Choose this when
   the compute is deterministic from server-available inputs.
@@ -262,7 +265,7 @@ whether the compute re-runs.
   sources (`loadingValue: undefined` is a valid declaration),
   `seedLoadingValue: true` on store-family sources — which renders
   provisional data with no boundary involvement.
-:::
+  :::
 
 ### `SignalOptions`
 
@@ -271,13 +274,13 @@ Options for plain signals created with `createSignal(value)` or `createOptimisti
 
 ```ts
 interface SignalOptions<T> {
-  name?: string;
-  equals?: false | ((prev: T, next: T) => boolean);
-  ownedWrite?: boolean;
-  unobserved?: () => void;
-  deferStream?: boolean;
-  ssrSource?: "server" | "hybrid" | "client";
-};
+	name?: string;
+	equals?: false | ((prev: T, next: T) => boolean);
+	ownedWrite?: boolean;
+	unobserved?: () => void;
+	deferStream?: boolean;
+	ssrSource?: "server" | "hybrid" | "client";
+}
 ```
 
 **`name`** — `string`
@@ -311,7 +314,7 @@ its fallback into the HTML. Server-only; ignored on the client.
 Hydration policy. Decides what initial value the client uses and
 whether the compute re-runs.
 
-- `"server"` *(default)*: client uses the serialized server value
+- `"server"` _(default)_: client uses the serialized server value
   as initial state. Compute does **not** re-run for the initial
   value — the serialized result is authoritative. Choose this when
   the compute is deterministic from server-available inputs.
@@ -330,4 +333,4 @@ whether the compute re-runs.
   sources (`loadingValue: undefined` is a valid declaration),
   `seedLoadingValue: true` on store-family sources — which renders
   provisional data with no boundary involvement.
-:::
+  :::

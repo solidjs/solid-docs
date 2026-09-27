@@ -55,6 +55,10 @@ const ENTRYPOINTS = [
 		packageName: "@solidjs/web/storage",
 		path: "packages/web/storage/src/index.ts",
 	},
+	{
+		packageName: "@solidjs/web/performance-tracks",
+		path: "packages/web/performance-tracks/src/index.ts",
+	},
 ];
 
 // Package export-map exclusions are intentional:
@@ -80,6 +84,7 @@ const TOP_LEVEL_ROUTE_ORDER = {
 	"web-components": "(2)solid-web/(3)components",
 	"server-functions": "(2)solid-web/(5)server-functions",
 	"request-response": "(2)solid-web/(6)request-response",
+	"performance-tracks": "(2)solid-web/(7)performance-tracks",
 	advanced: "(1)solid-js/(6)advanced",
 	types: "(1)solid-js/(7)types",
 };
@@ -333,6 +338,14 @@ const ADVANCED_ROUTES = {
 		"advanced/diagnostics-dev-hooks/attribution.mdx",
 		"Advanced / Diagnostics & Dev Hooks",
 	],
+	graphSize: [
+		"advanced/diagnostics-dev-hooks/attribution.mdx",
+		"Advanced / Diagnostics & Dev Hooks",
+	],
+	enablePerformanceTracks: [
+		"performance-tracks/enable-performance-tracks.mdx",
+		"Performance tracks",
+	],
 	configureServerFunctionsServer: [
 		"server-functions/host-configuration.mdx",
 		"Server functions / Integration",
@@ -454,21 +467,33 @@ const FOLD_INTO = {
 	FrameAppliedEvent: "OBSERVE",
 	FrameListener: "OBSERVE",
 	FrameLive: "OBSERVE",
-	InvocationChannel: "OBSERVE",
 	InvocationEvent: "OBSERVE",
 	InvocationListener: "OBSERVE",
 	InvocationLive: "OBSERVE",
-	// solid-js/attribution: the engine and its records.
+	RecoveryEvent: "OBSERVE",
+	RecoveryListener: "OBSERVE",
+	RecoveryLive: "OBSERVE",
+	RenderEvent: "OBSERVE",
+	RenderListener: "OBSERVE",
+	RenderLive: "OBSERVE",
+	// solid-js/attribution: the engine, its options and its records. The
+	// records are delivered on OBSERVE.records; their shapes live here.
 	Attribution: "attribution",
 	AttributionOptions: "attribution",
-	AttributionHooks: "attribution",
-	AttributionRecords: "attribution",
-	AttributionRecordType: "attribution",
+	AttributionValues: "attribution",
+	HistoryRecords: "attribution",
+	HistoryType: "attribution",
 	Acknowledgement: "attribution",
 	ChangeKind: "attribution",
 	ChangeOrigin: "attribution",
 	ChangeRecord: "attribution",
+	CreateEvent: "attribution",
+	EffectRunEvent: "attribution",
+	FallbackEvent: "attribution",
+	FlightEvent: "attribution",
 	FlightLink: "attribution",
+	FlushEvent: "attribution",
+	GraphEvent: "attribution",
 	HeldWrite: "attribution",
 	HoldEvent: "attribution",
 	InteractionEvent: "attribution",
@@ -476,9 +501,11 @@ const FOLD_INTO = {
 	NavigationEvent: "attribution",
 	NavigationHop: "attribution",
 	NavigationRef: "attribution",
-	OriginRef: "attribution",
 	RerunEvent: "attribution",
 	WaterfallRecord: "attribution",
+	GraphSize: "graphSize",
+	// @solidjs/web/performance-tracks: the Chrome Performance panel adapter.
+	PerformanceTracksOptions: "enablePerformanceTracks",
 	AttributionCostTables: "costs",
 	ScopeCost: "costs",
 	WriteCost: "costs",
@@ -499,7 +526,6 @@ const FOLD_INTO = {
 	REVALIDATE_ALL: "respond",
 	TraceContext: "getTraceContext",
 	TraceProvider: "getTraceContext",
-	TraceSlot: "getTraceContext",
 	DynamicOptions: "dynamic",
 	Truthy: "until",
 	UntilOptions: "until",
@@ -613,6 +639,7 @@ const HIDDEN_EXPORTS = new Set([
 	"ssrAttribute",
 	"ssrClassList",
 	"ssrElement",
+	"ssrElementAttribute",
 	"ssrHandleError",
 	"ssrHydrationKey",
 	"ssrRunInScope",
@@ -720,6 +747,7 @@ const HIDDEN_EXPORTS = new Set([
 	"createServerReference",
 	"decodeErrorHeaderValue",
 	"deserializeStream",
+	"serializeStream",
 	"encodeErrorHeaderValue",
 	"frameAddress",
 	"getFlightDataConsumer",
@@ -785,9 +813,9 @@ const ENTRY_CALLOUTS = {
 
 const ENTRY_SUMMARY_OVERRIDES = {
 	OBSERVE:
-		"The observe tier's wiring: the records channel, the diagnostics channel, the attribution slot, and on the server the boundary channel and the trace-provider slot. `undefined` in a production build; an object in the observe and dev builds.",
+		"The observe tier's wiring: the records channel the runtimes and the attribution engine deliver on, the diagnostics channel, the attribution slot, `ownerPath()`, and on the server the trace-provider slot. `undefined` in a production build; an object in the observe and dev builds.",
 	attribution:
-		"The attribution engine from `solid-js/attribution`: install it with `enable()`, read the interaction, navigation, hold, and re-run records it settles through `subscribe()`, and fold them with `costs()`, `feedback()`, `why()`, and `subscriptions()`. Inert in a production build.",
+		"The attribution engine from `solid-js/attribution`: take a hold with `enable()`, read its interaction, navigation, hold, and re-run records on `OBSERVE.records.subscribe(type, …)` or from `history(type)`, and fold them with `costs()`, `feedback()`, `why()`, and `subscriptions()`. Inert in a production build.",
 	configureClientErrors:
 		"Registers the ambient client error hook: called once per error object when an error boundary renders its fallback, with where the error was thrown and where it was met.",
 	configureServerErrors:
@@ -2033,6 +2061,14 @@ const ENTRY_LEARN = {
 		],
 	],
 	costs: [["Performance", "/guides/performance"]],
+	graphSize: [["Performance", "/guides/performance"]],
+	enablePerformanceTracks: [
+		[
+			"See the records on the Performance panel",
+			"/guides/performance#see-the-records-on-the-performance-panel",
+		],
+		["Debugging reactivity", "/guides/debugging-reactivity"],
+	],
 	feedback: [
 		[
 			"The screen looks dead after a click",
@@ -2520,8 +2556,6 @@ const COLLAPSED_RELATED_TYPES = new Set([
 	"MemoOptions",
 	"SignalOptions",
 	"HydrationProjectionOptions",
-	// The core's hook interface: for engine implementers, not engine users.
-	"AttributionHooks",
 ]);
 
 const REFERENCE_FIXUPS = [

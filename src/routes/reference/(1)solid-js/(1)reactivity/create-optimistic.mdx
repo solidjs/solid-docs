@@ -41,14 +41,17 @@ import { createOptimistic } from "solid-js";
 
 ```ts
 function createOptimistic<T>(): Signal<T | undefined>;
-function createOptimistic<T>(value: Exclude<T, Function>, options?: SignalOptions<T>): Signal<T>;
 function createOptimistic<T>(
-  fn: ComputeFunction<NoInfer<T>, T>,
-  options: SignalOptions<T> & MemoOptions<T> & { loadingValue: T }
+	value: Exclude<T, Function>,
+	options?: SignalOptions<T>
 ): Signal<T>;
 function createOptimistic<T>(
-  fn: ComputeFunction<undefined | NoInfer<T>, T>,
-  options?: SignalOptions<T> & MemoOptions<T>
+	fn: ComputeFunction<NoInfer<T>, T>,
+	options: SignalOptions<T> & MemoOptions<T> & { loadingValue: T }
+): Signal<T>;
+function createOptimistic<T>(
+	fn: ComputeFunction<undefined | NoInfer<T>, T>,
+	options?: SignalOptions<T> & MemoOptions<T>
 ): Signal<T>;
 ```
 
@@ -85,8 +88,8 @@ A tuple with the same shape as `createSignal`. Writes made inside an action are 
 const [name, setName] = createOptimistic("Ada");
 
 const rename = action(function* (next: string) {
-  setName(next);                 // optimistic
-  yield api.rename(next);        // commits or reverts on settle
+	setName(next); // optimistic
+	yield api.rename(next); // commits or reverts on settle
 });
 ```
 

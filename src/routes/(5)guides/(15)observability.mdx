@@ -24,7 +24,7 @@ Solid ships three builds of every runtime package, selected by export condition.
 | dev     | `development` | observe, plus the development checks and the console reporter. Unminified.                                                                | object    | object    |
 
 The builds nest: whatever works on the observe build works on the dev build.
-In Solid's size suite, the observe build's cap for a small client-rendered app is 16.80 KB against 15.25 KB for the production build (brotli), and enabling the attribution engine on top raises the cap to 27.25 KB; the engine is a separate entry, so an observe build that never imports it never ships it.
+In Solid's size suite, the observe build's cap for a small client-rendered app is 17.83 KB against 16.04 KB for the production build (brotli), and enabling the attribution engine on top raises the cap to 31.98 KB; the engine is a separate entry, so an observe build that never imports it never ships it.
 
 Opt into the observe build in the Vite plugin:
 
@@ -37,9 +37,9 @@ export default defineConfig({
 });
 ```
 
-`observe: true` adds the `observe` condition to every environment and turns on the compiler's `componentNames` option, so component labels such as `<Checkout>` survive minification and the paths below name components rather than `computed`.
+`observe: true` adds the `observe` condition to every environment and turns on source names ([`solid.sourceNames`](/reference/vite-plugin-solid/options#sourcenames)), so component labels such as `<Checkout>`, binding names such as `span.textContent`, and primitive names such as `count` survive minification and the paths below name components rather than `computed`.
 Under `vite dev` the `development` condition still wins; the dev build is a superset, so what you observe there holds in production.
-Without the plugin, set `resolve.conditions` in your bundler (or `node --conditions=observe` for an unbundled server) and the compiler option yourself.
+Without the plugin, set `resolve.conditions` in your bundler (or `node --conditions=observe` for an unbundled server) and pass `sourceNames: true` to the compiler yourself; in a dev build the option is on by default.
 
 :::note[Errors report on every build]
 The two error hooks are part of the runtime, not of `OBSERVE`.
@@ -175,12 +175,16 @@ The fields it returns replace the runtime's derivation; its `entries` merge by n
 
 `OBSERVE.records` delivers a plain record each time the runtime finishes something worth attributing, on both platforms:
 
-| Type           | Platform | One record per                                                                                       |
-| -------------- | -------- | ---------------------------------------------------------------------------------------------------- |
-| `"boundary"`   | server   | A `Loading` boundary that waited during a render; one that rendered on its first pass emits nothing. |
-| `"invocation"` | server   | A server-function execution, from HTTP dispatch or an in-process call.                               |
-| `"call"`       | client   | A server-function call the page made, as the caller awaited it.                                      |
-| `"frame"`      | both     | A frame stream produced (server) or applied (client).                                                |
+| Type           | Platform | One record per                                                                                                    |
+| -------------- | -------- | ----------------------------------------------------------------------------------------------------------------- |
+| `"render"`     | server   | A `renderToString` or `renderToStream` render: how long the shell took and how many boundaries it waited on.      |
+| `"boundary"`   | server   | A `Loading` boundary that waited during a render; one that rendered on its first pass emits nothing.              |
+| `"invocation"` | server   | A server-function execution, from HTTP dispatch or an in-process call.                                            |
+| `"call"`       | client   | A server-function call the page made, as the caller awaited it.                                                   |
+| `"frame"`      | both     | A frame stream produced (server) or applied (client).                                                             |
+| `"recovery"`   | client   | A `Loading` boundary the server gave up on, re-rendered as fresh DOM on the client; joins its `"boundary"` by id. |
+
+The attribution engine's own records — `"interaction"`, `"hold"`, `"navigation"`, `"rerun"`, and the timeline records behind the [Performance panel tracks](/guides/performance#see-the-records-on-the-performance-panel) — arrive on the same channel once the engine is enabled, so an adapter has one `subscribe` to call.
 
 Log the boundaries that kept a shopper waiting:
 
@@ -212,11 +216,12 @@ The attribution engine answers the second question from the opening: a click fel
 It is the same engine [Debugging reactivity](/guides/debugging-reactivity#something-updates-too-often) uses in development, and on the observe build it runs in production when you enable it:
 
 ```ts
+import { OBSERVE } from "solid-js";
 import { attribution } from "solid-js/attribution";
 
-attribution.enable();
+const release = attribution.enable({ values: "labels" });
 
-attribution.subscribe("interaction", (event) => {
+OBSERVE?.records.subscribe("interaction", (event) => {
 	if (event.settledMs === undefined || event.settledMs < 300) return;
 	console.log(
 		`${event.name} on ${event.target} took ${Math.round(event.settledMs)}ms to settle:`,
@@ -229,11 +234,17 @@ attribution.subscribe("interaction", (event) => {
 
 Click "Place order" and the line reads `click on button#place-order "Place order" took 840ms to settle: ["placeOrder held 812ms"]`.
 An interaction record carries the handler's own time, the writes it made, the re-runs and creations they caused, when the last effect that traces back to it ran (`settledMs`), and the holds and navigations it performed, each settled before the interaction is.
-A hold names what blocked the write, how long, and whether the screen acknowledged the wait with `isPending`, `latest`, or an optimistic value; a hold nothing acknowledged is what the shopper experiences as a dead click.
+A hold names what blocked the write, how long, and whether the screen acknowledged the wait with `isPending`, `latest`, or an optimistic value; `silent` is `true` on a hold nothing acknowledged, which is what the shopper experiences as a dead click, and `long` on one whose wait ran past the point a fallback should have taken over.
 A router that wraps its location write in `OBSERVE.attribution.withOrigin` gives its navigations the matched route pattern as their name, so `/orders/:id` folds together across shoppers.
+
+`enable()` takes a hold on the engine and returns its release.
+The engine is shared by every tool on the page — an adapter, the Performance panel tracks, a diagnostics capture — so each takes its own hold, options combine by the most demanding request per key, and the engine stays on until the last release; `attribution.disable()` tears everything down regardless.
+Record subscriptions belong to `OBSERVE.records`, not to the engine, so they survive a release and are dropped only by the function `subscribe` returned.
+`attribution.history("interaction")`, `history("hold")`, `history("navigation")`, and `history("rerun")` return the same records from a ring buffer for a console session that did not subscribe ahead of time.
 
 The engine records; the tables are separate.
 `feedback()`, `costs()`, `why()`, and `subscriptions()` are their own exports of `solid-js/attribution`, so a build that only subscribes to records ships none of them.
+A `"rerun"` record is built only while something wants it — a `"rerun"` listener, an imported fold, or the console log — so `history("rerun")` and `why()` are empty for runs before one appeared; `subscriptions()` reads the live graph and is unaffected.
 
 ## What leaves the process
 
@@ -243,7 +254,19 @@ Beyond names, four fields carry data from the page, and a tool that ships record
 - `target` on an interaction and on a call's origin: the element as `tag#id "text"`, with up to 30 characters of its text content.
 - `prev` and `value` on a change record and on a held write: previews of the values, strings cut at 40 characters.
 - `to`, `from`, and `params` on a navigation: the concrete URL and the bound parameters.
-- `data.error` on the server's render-error findings: the error as thrown.
+- `data.error` on the server's error findings (`SSR_RENDER_ERROR_CONTAINED`, `SERVER_ERROR_SANITIZED`): the error as thrown.
+
+The first two are governed at the source by the engine's `values` option, so a record never carries what the level excludes and nothing downstream has to scrub:
+
+| `values`   | `prev` / `value` | `target`                               | Default in    |
+| ---------- | ---------------- | -------------------------------------- | ------------- |
+| `"full"`   | previews         | element and text: `button#save "Save"` | dev build     |
+| `"labels"` | absent           | text kept on a `button` or an `a` only |               |
+| `"none"`   | absent           | element only: `button#save`            | observe build |
+
+Across holds the least permissive level wins, so a production adapter that passes `values: "none"` keeps it beside a panel asking for `"full"`.
+Pass the level explicitly in a tool that exports records; it is the tool's contract, not a default to rely on.
+`to`, `from`, `params`, and `data.error` are outside the level: a tool that exports them treats them as it treats any URL or captured exception.
 
 A tool that renders inside the app it watches — a diagnostics panel, devtools — marks its root as its own, so its effects and stores never appear as findings about the app:
 
@@ -265,9 +288,9 @@ Check that the bundler applied the `observe` condition to the environment that i
 
 ### The paths say `computed` and `effect` but never a component
 
-The compiler's `componentNames` option is off, so components have no labels to record.
-`solid({ observe: true })` turns it on; with another setup, pass `componentNames: true` to the compiler.
-Under `vite dev` the labels are always present.
+The compiler's `sourceNames` option is off, so components have no labels to record.
+`solid({ observe: true })` turns it on; with another setup, pass `sourceNames: true` to the compiler.
+Under `vite dev` the labels are present by default.
 
 ### No `Server-Timing` entry and no `<meta>` on the page
 
@@ -283,10 +306,11 @@ Writes into the excluded subtree stay excluded wherever they come from; do not r
 
 - Errors report on every build through `configureClientErrors` and `configureServerErrors`, once per error object, with where the error was thrown (`ownerPath`) and where it was met (`boundaryPath`).
 - The server hook's return value is what the client receives; return a reference, not the error.
-- Records, traces, and attribution need the observe build: `solid({ observe: true })`, or the `observe` condition and `componentNames` by hand.
-- `OBSERVE.records` delivers settled, serializable records; live handles travel beside them, and a listener must not write signals.
+- Records, traces, and attribution need the observe build: `solid({ observe: true })`, or the `observe` condition and `sourceNames` by hand.
+- `OBSERVE.records` delivers settled, serializable records, the runtime's and the attribution engine's alike; live handles travel beside them, and a listener must not write signals.
 - The runtime carries a sampled or provided trace into the browser on `Server-Timing` and `<meta>`; no middleware.
-- `attribution.enable()` then `attribution.subscribe("interaction", …)` says what each click waited on; the fold tables are separate exports you pay for only when you import them.
+- `attribution.enable()` then `OBSERVE.records.subscribe("interaction", …)` says what each click waited on; the fold tables are separate exports you pay for only when you import them.
+- `values` on `enable()` decides whether records carry value previews and element text; an exporter passes it explicitly.
 - Mark a tool's own root with `OBSERVE.exclude` so it never reports on itself.
 
 ## Next steps

@@ -119,6 +119,7 @@ const paths = {
 	"@solidjs/web/frames": `${solid}/packages/web/types/frames/client.d.ts`,
 	"@solidjs/web/frames/server": `${solid}/packages/web/types/frames/server.d.ts`,
 	"@solidjs/web/frames/client": `${solid}/packages/web/types/frames/client.d.ts`,
+	"@solidjs/web/performance-tracks": `${solid}/packages/web/performance-tracks/types/index.d.ts`,
 	"@solidjs/diagnostics": `${solid}/packages/diagnostics/dist/index.d.ts`,
 	"@solidjs/diagnostics/vitest": `${solid}/packages/diagnostics/dist/vitest.d.ts`,
 	"@solidjs/diagnostics/browser": `${solid}/packages/diagnostics/dist/browser.d.ts`,

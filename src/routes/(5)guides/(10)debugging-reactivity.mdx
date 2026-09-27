@@ -34,12 +34,16 @@ The first time each code appears, Solid adds a footer pointing to the repair gui
 Codes fall into a few groups:
 
 - Reads in the wrong place: `STRICT_READ_UNTRACKED`, `PENDING_ASYNC_UNTRACKED_READ`.
-- Writes in the wrong place: `REACTIVE_WRITE_IN_OWNED_SCOPE`, `ACTION_CALLED_IN_OWNED_SCOPE`, `FLUSH_IN_ACTION`, `SERVER_WRITE`.
+- Writes in the wrong place: `REACTIVE_WRITE_IN_OWNED_SCOPE`, `ACTION_CALLED_IN_OWNED_SCOPE`, `FLUSH_IN_EFFECT_CALLBACK`, `SERVER_WRITE`.
 - Leaks: `NO_OWNER_EFFECT`, `NO_OWNER_BOUNDARY`, `NO_OWNER_CLEANUP`.
 - Async placement: `ASYNC_OUTSIDE_LOADING_BOUNDARY`.
-- Graph size, always on: `HUGE_FAN_OUT`, `HUGE_FAN_IN`.
-- Cost, only while attribution is enabled: `HOT_SCOPE_RERUNS`, `WIDE_WRITE`, `ASYNC_WATERFALL`, `UNSTABLE_MEMO_OUTPUT`, `EFFECT_WRITES_OWN_SOURCE`, `EFFECT_RELAY_TEAR`, `IMMUTABLE_UPDATE_IN_STORE`, `UNSTABLE_LIST_IDENTITY`.
-- Responsiveness, only while attribution is enabled: `SILENT_HOLD`.
+- Graph size, always on: `HUGE_FAN_OUT`, `HUGE_FAN_IN`; while attribution is enabled, `HUGE_FAN_OUT` also fires at the engine's lower `fanOut` threshold and `data.write` says which write reached it.
+- Cost, only while attribution is enabled: `HOT_SCOPE_RERUNS`, `HOT_SCOPE_TIME`, `WIDE_SCOPE_DEPS`, `WASTED_RECOMPUTE`, `ASYNC_WATERFALL`, `UNSTABLE_MEMO_OUTPUT`, `EFFECT_WRITES_OWN_SOURCE`, `EFFECT_RELAY_TEAR`, `IMMUTABLE_UPDATE_IN_STORE`, `UNSTABLE_LIST_IDENTITY`, `GRAPH_GROWTH`.
+- Responsiveness, only while attribution is enabled: `SILENT_HOLD`, `LONG_HOLD`, `UNTRACKED_ASYNC_HANDLER`, `ABANDONED_FLIGHTS`, `FALLBACK_FLASH`, `STACKED_HOLDS`, `OPTIMISTIC_REVERTED`.
+- Server rendering: `SSR_RENDER_ERROR_CONTAINED`, `SSR_BOUNDARY_WATERFALL`, `SERVER_ERROR_SANITIZED`, `SSR_STREAM_ABANDONED`; [Observability](/guides/observability) covers the server side.
+
+Not every bracketed message is a diagnostic.
+`[FLUSH_IN_ACTION]` is an error `flush()` throws in development; it never reaches the diagnostics channel, and [The test sees the old DOM](#the-test-sees-the-old-dom) covers it.
 
 Each finding has one of three severities.
 An error throws and halts execution; the behavior is broken.
@@ -149,7 +153,10 @@ for (const event of why(total)) {
 Each entry names the write that started the update, the dependency that changed, and the time the recompute took.
 While attribution is enabled the same chains print to the console as collapsed `[why-run]` groups, one per re-run, with the cause chain and dependency changes inside.
 `costs()` ranks scopes by self time, including time spent on runs whose result did not change, and ranks writes by how much downstream work each one caused.
-`why`, `costs`, `feedback`, and `subscriptions` are separate exports of `solid-js/attribution`, so a build that only records ships none of them; the `attribution` object itself carries `enable()`, `subscribe()`, `history()`, `waterfalls()`, `holds()`, `interactions()`, and `navigations()`.
+`why`, `costs`, `feedback`, and `subscriptions` are separate exports of `solid-js/attribution`, so a build that only records ships none of them; the `attribution` object itself carries `enable()`, which returns a release for the hold it took, `disable()`, `history(type)` for the `"rerun"`, `"hold"`, `"interaction"`, `"navigation"`, and `"waterfall"` ring buffers, and `markFlight()`.
+The records themselves arrive on `OBSERVE.records.subscribe(type, (event, live) => …)`, the same channel the runtime's own records use, with the node that ran as `live`.
+A `"rerun"` record is built only while something wants it — a `"rerun"` listener, an imported fold such as `costs`, or the console log — so `why(total)` answers for the runs after one of those appeared; `subscriptions(total)` reads the live graph and always answers.
+To see the same records on a timeline instead of at the console, [`enablePerformanceTracks()`](/reference/solid-web/performance-tracks/enable-performance-tracks) from `@solidjs/web/performance-tracks` paints them in the Chrome Performance panel; [Performance](/guides/performance#see-the-records-on-the-performance-panel) shows the tracks.
 
 A chain ends at whatever made the root write, not only at the signal's name.
 Writes made inside a compiled event handler are stamped with the interaction (`click on button#add "Add"`), so `event.interaction` on a re-run names the click it traces back to, however many effects relayed it in between.
@@ -265,10 +272,10 @@ A `Loading` boundary that has not shown content yet, or whose `on` value changed
 A boundary that has already revealed holds like everything else.
 So does a boundary with `on` when something outside it waits on the same change: the update is held regardless, the fallback never shows, and the report names the source the click waited on; look for a reader of that source outside the boundary.
 A hold that was acknowledged but still ran long is reported as `[LONG_HOLD]` from 500ms of waiting, a warning from 1000ms, with the suggestion to add a `Loading on={...}` boundary; the thresholds are `attribution.enable({ longHolds: { infoMs, warnMs } })`.
-Shorter acknowledged holds are recorded as `late` in the feedback tables so the cost is visible without blaming code that waited correctly.
+Acknowledged holds under those thresholds still count in the feedback tables: `feedback().sources` tallies every hold and its wait in `holds` and `heldMs`, ranks the affordances that answered in `acknowledgedBy`, and counts a hold whose only acknowledgment was a `latest()` shadow as `latestOnly`, next to the `silent` and `long` columns, so the cost is visible without blaming code that waited correctly.
 
 :::deep-dive[Feedback tables, and how a router names its holds]
-`attribution.holds()` returns every hold from the session, reported or not.
+`attribution.history("hold")` returns every hold from the session, reported or not, each with `silent` and `long` already judged.
 `feedback()` folds holds and re-runs into tables sorted worst-first:
 
 - `sources`: per async source, how many holds it caused, how many were silent, and which affordance acknowledged the rest.
@@ -388,11 +395,11 @@ The re-run budget and waste checks catch the second kind of bug: a change that m
 `toHaveNoSilentHolds` is the responsiveness gate: it fails when a write was held on async work and nothing on screen acknowledged the wait, and its message names the interaction, the held write, and the source it waited on.
 `toStayWithinHoldBudget(ms)` bounds every hold, acknowledged or not.
 
-The artifact also carries `attribution.holds` and `attribution.feedback`, the same data the `holds()` and `feedback()` methods return, so a test can assert on them directly.
+The artifact also carries `attribution.holds` and `attribution.feedback`, the same data `history("hold")` and `feedback()` return, so a test can assert on them directly.
 Budget files accept `maxSilentHoldMs` and `maxHoldMs` next to the re-run limits.
 
 With `@solidjs/diagnostics` in `package.json`, the Vite plugin also serves the same capture controls at `/__solid/diagnostics` on the dev server, so a script or an agent can record a scenario against the running app.
-Set `diagnostics: false` in the plugin options to turn that off.
+Set [`diagnostics: false`](/reference/vite-plugin-solid/options#diagnostics) in the plugin options to turn that off.
 
 ## Recap
 

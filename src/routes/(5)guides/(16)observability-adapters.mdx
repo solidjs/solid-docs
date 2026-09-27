@@ -16,15 +16,15 @@ This page is for whoever writes the tool.
 
 ## What an adapter is made of
 
-| You need                                                            | Solid provides                                                                                 | Build   |
-| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------- |
-| Errors a boundary caught, in the browser                            | `configureClientErrors` from `solid-js`                                                        | every   |
-| Every failure the server handled or failed on                       | `configureServerErrors` from `@solidjs/web`                                                    | every   |
-| Boundary waits, server-function executions and calls, frame streams | `OBSERVE.records.subscribe(type, listener)`                                                    | observe |
-| User interactions, navigations, holds, re-runs                      | `attribution.enable()` and `attribution.subscribe(type, listener)` from `solid-js/attribution` | observe |
-| The runtime's findings as issues                                    | `OBSERVE.diagnostics.subscribe(listener)`                                                      | observe |
-| Your trace ids on the request, carried to the browser               | `OBSERVE.server.trace.provide(provider)`                                                       | observe |
-| Your own UI kept out of the data                                    | `OBSERVE.exclude(owner)`                                                                       | observe |
+| You need                                                                     | Solid provides                                                                                         | Build   |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| Errors a boundary caught, in the browser                                     | `configureClientErrors` from `solid-js`                                                                | every   |
+| Every failure the server handled or failed on                                | `configureServerErrors` from `@solidjs/web`                                                            | every   |
+| Renders, boundary waits, server-function executions and calls, frame streams | `OBSERVE.records.subscribe(type, listener)`                                                            | observe |
+| User interactions, navigations, holds, re-runs                               | `attribution.enable()` from `solid-js/attribution`, then the same `OBSERVE.records.subscribe(type, …)` | observe |
+| The runtime's findings as issues                                             | `OBSERVE.diagnostics.subscribe(listener)`                                                              | observe |
+| Your trace ids on the request, carried to the browser                        | `OBSERVE.server.trace.provide(provider)`                                                               | observe |
+| Your own UI kept out of the data                                             | `OBSERVE.exclude(owner)`                                                                               | observe |
 
 Import from `solid-js` and `@solidjs/web` only.
 Both packages resolve to the build the app chose, so your adapter sees the same `OBSERVE` the app does; `@solidjs/signals`, the engine underneath, is not a public surface.
@@ -47,7 +47,7 @@ An adapter that offers this — a reference the user can quote — owns the prom
 
 ## Records: settled, serializable, delivered inside the runtime
 
-`OBSERVE.records` delivers four record types, described in [Observability](/guides/observability#see-what-the-runtime-did).
+`OBSERVE.records` delivers the runtime's six record types, described in [Observability](/guides/observability#see-what-the-runtime-did), and the attribution engine's once it is enabled.
 The contract that shapes a span builder:
 
 - A record is complete when you receive it, with `at` on the `performance.now()` clock and durations in milliseconds.
@@ -84,25 +84,32 @@ Keep the returned `unsubscribe`: an SDK initialized twice (tests, hot reload) sh
 
 ## Attribution: the interaction behind the write
 
-The attribution engine is a separate entry, `solid-js/attribution`, that installs into `OBSERVE.attribution` and delivers its records through its own `subscribe`.
-`enable()` first; every subscription is dropped by `disable()`.
+The attribution engine is a separate entry, `solid-js/attribution`, that installs into `OBSERVE.attribution` and delivers its records on `OBSERVE.records` beside the runtime's.
+`enable()` takes a hold on the engine and returns its release; the subscriptions are the channel's and outlive the hold.
 
 ```ts
+import { OBSERVE } from "solid-js";
 import { attribution } from "solid-js/attribution";
 
-attribution.enable();
+const release = attribution.enable({ values: "none" });
 
-attribution.subscribe("interaction", (event) => {
+OBSERVE?.records.subscribe("interaction", (event) => {
 	// event.holds and event.navigations are settled; event.origin is the identity below
 });
-attribution.subscribe("navigation", (event) => {});
-attribution.subscribe("hold", (event) => {});
-attribution.subscribe("rerun", (event) => {});
+OBSERVE?.records.subscribe("navigation", (event) => {});
+OBSERVE?.records.subscribe("hold", (event, heldSignal) => {});
+OBSERVE?.records.subscribe("rerun", (event, node) => {});
 ```
 
 Each record arrives when it settles.
 An interaction's record already holds its `holds` and `navigations`, so a listener building a span tree receives the children before, or inside, the parent; a navigation or hold no interaction performed arrives on its own.
-Fold `"rerun"` records into a per-interaction hot list rather than shipping one per run; the `nodeId` on a re-run is a number, not a node.
+A hold's `silent` and `long` flags are the `SILENT_HOLD` and `LONG_HOLD` verdicts, computed at settle, so a span can carry them without re-deriving the thresholds.
+Fold `"rerun"` records into a per-interaction hot list rather than shipping one per run; the `nodeId` on a re-run is a number, and the node itself is the listener's second argument, in-process only.
+A `"rerun"` record is built only while a listener, an imported fold, or the console log wants it; an adapter that never subscribes to `"rerun"` never pays for one.
+
+Other tools share the engine.
+The Performance panel tracks, a diagnostics capture, and your adapter each take a hold, and options combine by the most demanding request per key, except `values`, where the least permissive level wins: pass `values: "none"` and your records carry no value previews and no element text whatever another holder asked for.
+Release your hold on re-init; `attribution.disable()` drops everyone's, which is a test harness's reset and not an adapter's.
 
 Records join by identity, not by time.
 The `origin` object on an interaction is the same object the runtime stamps on a client `"call"` record made under that interaction's handler, and on the holds and navigations it caused.
@@ -140,10 +147,11 @@ Set `parentId` when your SDK continues from a different header than the runtime 
 
 ## Diagnostics: issues, not spans
 
-`OBSERVE.diagnostics.subscribe(listener)` delivers the runtime's findings: a hold nothing acknowledged (`SILENT_HOLD`), a scope re-running hot (`HOT_SCOPE_RERUNS`), a waterfall of dependent requests (`ASYNC_WATERFALL`), a render error the server contained (`SSR_RENDER_ERROR_CONTAINED`).
+`OBSERVE.diagnostics.subscribe(listener)` delivers the runtime's findings: a hold nothing acknowledged (`SILENT_HOLD`), a scope re-running hot (`HOT_SCOPE_RERUNS`), a waterfall of dependent requests in the browser (`ASYNC_WATERFALL`) or of sequential waits inside one server boundary (`SSR_BOUNDARY_WATERFALL`), a render error the server contained (`SSR_RENDER_ERROR_CONTAINED`), an error replaced by a generic one on the wire (`SERVER_ERROR_SANITIZED`, with `data.source` naming the road: `"ssr"` or `"server-function"`).
 A finding has a stable identity and recurs, so it is an issue: fingerprint by `code` and `ownerPath`, and let the count grow.
+The listener's second argument is the live node the finding is about, when the runtime located one; like `live` on a record, it stays in the process, and `OBSERVE.ownerPath(subject)` reads the same labels the event carries.
 Severity is the runtime's — `info`, `warn`, `error` — and `info` findings never reach the console in any build, so an adapter decides whether to forward them.
-`data.error` on the server's render-error findings is the error as thrown; the error hook has captured it already.
+`data.error` on the server's error findings is the error as thrown; the error hook has captured it already.
 
 ## Keep the adapter out of its own data
 
@@ -173,6 +181,7 @@ Point the tests at the observe artifacts explicitly, and keep both packages insi
 - Import from `solid-js` and `@solidjs/web`; the app's build decides which `OBSERVE` you both see.
 - Capture exceptions from the error hooks only; set span status from records.
 - Records are settled and serializable, delivered synchronously inside the runtime; build spans in a microtask from `at` and `durationMs`, and keep `live` in the process.
+- The engine's records arrive on the same `OBSERVE.records`; `enable()` is a hold you release, and `values: "none"` keeps user data off your records whatever another holder asked for.
 - Join a call to its interaction by the identity of `origin`, not by time; a call dispatched in the handler carries it even when it lands after the interaction settled.
 - Answer `OBSERVE.server.trace.provide` once per request; the runtime carries the entries to the browser on `Server-Timing` and `<meta>`.
 - Treat diagnostics as issues fingerprinted by `code` and `ownerPath`.
@@ -182,5 +191,5 @@ Point the tests at the observe artifacts explicitly, and keep both packages insi
 
 - [Observability](/guides/observability): what an app author enables, and the tables of error sites and record types this page relies on.
 - [`OBSERVE` reference](/reference/solid-js/advanced/diagnostics-dev-hooks/observe): every record field and channel method.
-- [Attribution reference](/reference/solid-js/advanced/diagnostics-dev-hooks/attribution): the interaction, navigation, hold, and re-run record shapes.
+- [Attribution reference](/reference/solid-js/advanced/diagnostics-dev-hooks/attribution): the engine's options, including `values`, and the interaction, navigation, hold, and re-run record shapes.
 - [Debugging reactivity](/guides/debugging-reactivity): the diagnostic codes and what each one means.

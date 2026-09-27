@@ -37,14 +37,43 @@ console.table(feedback().flights);
 Name the scopes first: `createMemo(fn, { name: "visible" })`, `createStore(value, { name: "catalog" })`.
 Every table and every `why(visible)` chain refers to nodes by that name, and an unnamed memo prints as `computed`.
 
-While attribution is enabled, Solid also warns on its own when a scope re-runs 120 or more times in one second (`HOT_SCOPE_RERUNS`), spends 8ms or more of compute in one second (`HOT_SCOPE_TIME`), tracks 30 or more sources (`WIDE_SCOPE_DEPS`), or when one write reaches 250 or more subscribers (`WIDE_WRITE`).
-Two warnings are always on in development: `HUGE_FAN_OUT` and `HUGE_FAN_IN`, from 2,000 subscribers or sources.
+While attribution is enabled, Solid also warns on its own when a scope re-runs 120 or more times in one second (`HOT_SCOPE_RERUNS`), spends 8ms or more of compute in one second (`HOT_SCOPE_TIME`), tracks 30 or more sources (`WIDE_SCOPE_DEPS`), or when one write reaches 250 or more subscribers (`HUGE_FAN_OUT` at the engine's `fanOut` threshold, with `data.write` naming the write).
+Two warnings are always on in development: `HUGE_FAN_OUT` from 2,000 subscribers and `HUGE_FAN_IN` from 2,000 sources.
 [Debugging reactivity](/guides/debugging-reactivity#something-updates-too-often) explains how to read each report.
 
-:::note[Development build only]
-Attribution and the diagnostics on this page exist in the development build.
+:::note[Development and observe builds only]
+Attribution and the diagnostics on this page exist in the development build and, without console output, in the [observe build](/guides/observability#three-builds).
 A production build strips them, so measure the production bundle with the browser profiler and the development bundle with attribution, and expect the second to be slower in absolute terms.
 :::
+
+## See the records on the Performance panel
+
+The tables say which scope ran; the Performance panel says when, against the browser's own main-thread and network tracks.
+`@solidjs/web/performance-tracks` paints the attribution engine's records there as a `Solid` track group, so the two measurements sit on one timeline:
+
+```ts
+import { enablePerformanceTracks } from "@solidjs/web/performance-tracks";
+
+const release = enablePerformanceTracks();
+// record, type one character in the search box, stop; then:
+release();
+```
+
+Record a profile, type one character, and the group shows a wave on **Propagation** labelled by the write and what it reached, `query "m" → "mu" — input on input#search · 2,003 runs, 2,000 unchanged`, with every run inside it beneath, labelled by what made it run.
+**Effects** and **Memos** carry one span per re-run, coloured by self time and marked as a warning when the run changed nothing; **Async** shows each request from kickoff to landing, with abandoned ones as warnings, and each `Loading` fallback from shown to hidden; **Holds** shows each wait labelled by its blockers; **Interactions** shows the keystroke from input delay through the handler to settle; **Navigations** shows each route change; **Server** shows the page's server-function calls and, beneath each, the server's own time for it.
+Every finding while the tracks are on is also a marker on the panel's Timings track, `HOT_SCOPE_RERUNS — <Catalog>`, and a warning or worse is annotated for the Insights sidebar with a link to the code's repair guide.
+
+A label starts at the nearest component you wrote, `<Catalog> › visible` rather than the full path from the document root, because the panel elides the middle of a label that does not fit.
+Solid's own flow components (`Show`, `For`, `Loading`, and the rest) never anchor a label, so a node under one reads `<Card> › <Show> › effect`; the unshortened path is the span's `Owner path` property, `Node` its runtime name, and in dev the span's tooltip is the same `[why-run]` chain the console prints.
+Give scopes names before you record here for the same reason as above: an unnamed memo is `computed` on the track as well.
+
+The **Server** track reads the response's `Server-Timing` header, which a dev server writes for every request and an observe server writes while something on the server subscribes to the matching record: `solid-invocation` from an `"invocation"` record on a server-function response, and on a document `solid-shell` from the `"render"` record plus one `solid-boundary` per `Loading` boundary the shell waited on.
+The document's own metrics appear as `shell · server` and `boundary <App> › <Loading> · server` when the tracks enable, and a call's appear beneath its span once the browser's resource timing places it.
+
+`enablePerformanceTracks()` takes its own hold on the engine with `log: false`, so it coexists with the console session above or with an adapter, and the console stays quiet only while nothing else asks for the log.
+It accepts `attribution` options for that hold, `minMs` to floor the spans it paints (`0` in dev, `0.05` in the observe build), and `rich` to switch between `performance.measure` entries with tooltips and properties and plain `console.timeStamp` entries.
+An observe build's tracks inherit the engine's `values: "none"`, so no value previews and no element text reach the panel; pass `attribution: { values: "labels" }` for the control labels, or in dev `"none"` for a timeline without user data.
+The [`enablePerformanceTracks` reference](/reference/solid-web/performance-tracks/enable-performance-tracks) lists the options.
 
 ## What does not re-run
 
@@ -57,7 +86,7 @@ The failure modes that do exist are narrower, and each has a name in the console
 | What the profile shows                                  | Code                                                  | Fix                                                            |
 | ------------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------- |
 | One derivation runs on every keystroke, in every reader | `HOT_SCOPE_RERUNS`, `HOT_SCOPE_TIME`                  | [Expensive derivations](#expensive-derivations)                |
-| One write re-runs thousands of small scopes             | `HUGE_FAN_OUT`, `WIDE_WRITE`                          | [Stores at scale](#stores-at-scale)                            |
+| One write re-runs thousands of small scopes             | `HUGE_FAN_OUT`                                        | [Stores at scale](#stores-at-scale)                            |
 | Readers update twice per change, one flush apart        | `EFFECT_RELAY_TEAR`                                   | [Avoid unnecessary effects](/guides/avoid-unnecessary-effects) |
 | Rows are disposed and recreated for the same records    | `UNSTABLE_LIST_IDENTITY`, `IMMUTABLE_UPDATE_IN_STORE` | [Lists](#lists)                                                |
 | A memo notifies readers although nothing changed        | `UNSTABLE_MEMO_OUTPUT`                                | [Expensive derivations](#expensive-derivations)                |
@@ -231,7 +260,7 @@ Refetch the catalog after a price change and one text node updates; the other 1,
 Add an item to the cart and `inCart` gains one key, so one row's `inCart` read runs.
 
 The alternative, every row reading `cart.items.some((item) => item.id === product.id)`, subscribes 2,000 scopes to `cart.items`, and adding an item re-runs all of them.
-Development reports that write as `[HUGE_FAN_OUT]`, and with attribution on the lower threshold `[WIDE_WRITE]` names the signal from 250 subscribers.
+Development reports that write as `[HUGE_FAN_OUT]` from 2,000 subscribers, and with attribution on the same code names the signal from 250, the engine's `fanOut` threshold.
 A [projection](/concepts/stores#derive-a-store-with-a-projection) or a store used as a map keyed by id is the repair both messages suggest.
 
 For a record map whose rows are replaced wholesale rather than edited, `createStore(value, { shallow: true })` tracks the root keys and stores each value by reference, so no per-field nodes are created for rows nothing reads field by field.
@@ -267,7 +296,7 @@ Measure timings on a production build; use the development build to find out whi
 
 ## Recap
 
-- Record a profile first, then enable `attribution` and read `costs()` and `feedback()` to see which scope ran and what caused it.
+- Record a profile first, then enable `attribution` and read `costs()` and `feedback()` to see which scope ran and what caused it; `enablePerformanceTracks()` puts the same records on the Performance panel's timeline.
 - A component runs once; look for a hot derivation, a wide write, a relaying effect, or a rebuilt list, not a re-rendering component.
 - Put a shared or expensive derivation in a memo, and put an equality boundary on a primitive so a change that settles to the same value stops there.
 - Hand `For` the store's objects; a `map` that produces new objects rebuilds every row.

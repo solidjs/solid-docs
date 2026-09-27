@@ -25,9 +25,30 @@ Any computation (`createMemo`, `createSignal(fn)`, `createStore(fn)`,
 nearest enclosing `<Loading>`. The boundary swaps to its `fallback` until
 every pending read has resolved, then renders the children.
 
-The optional `on` prop scopes the boundary.
-The boundary keeps its previous content for updates caused by writes to other
-reactive sources, while `isPending()` reports the pending work.
+Once content has rendered, a refetch keeps it visible: the boundary reads
+the pending value like any other reader and holds the write that made it
+pending until the data lands (`isPending()` flips meanwhile).
+
+The optional `on` prop is a dependency list. The expression is tracked and
+its value is irrelevant — what matters is what it reads. Whenever anything
+it reads changes (a plain write, an optimistic write, a source going
+pending or landing), the boundary stops waiting on its current content and
+shows `fallback` again if something under it is still pending, until the
+new content is ready; if nothing is pending, nothing happens. The fallback
+lands with the same frame as the change that caused it: immediately when
+nothing else holds that frame; together with the rest of the new page
+during a held navigation (a write inside an `action`, or one whose data
+other readers are still waiting on) — never a spinner beside a page the
+change has not reached yet. If the same data is also read outside the
+boundary, the frame waits on it and the fallback can never be seen; DEV
+warns `LOADING_ON_OUTSIDE_HOLD`, and the fix is structural — move the
+outside read under the boundary so one hold owns the data. A frame held
+past the content's landing by something else (the write's action, other
+pending data) shows no fallback either; that is a race, a legitimate
+outcome, and not reported — show the wait with `isPending()` instead.
+A display-ahead read in `on` (`latest()`) shows the fallback now, beside
+the held frame; that is a capability, not the recommended shape. The
+children are not re-created; they stay alive behind the fallback.
 
 Scope `<Loading>` around the data-dependent slot, not the surrounding
 shell. Wrapping layout chrome (header, nav, footer) in the same boundary
@@ -84,9 +105,15 @@ const Profile = lazy(() => import("./Profile"));
 ```
 
 ```tsx
-// Only show the fallback for updates caused by writes to `route`.
-<Loading fallback={<Skeleton />} on={route}>
-	<Page />
+// Depend on the route: a navigation shows the skeleton with the new route
+// while the page loads; a refetch of the same route keeps the page visible.
+<Loading fallback={<Skeleton />} on={route()}>
+  <Page />
+</Loading>
+
+// Several dependencies: a change to any of them shows the fallback.
+<Loading fallback={<Skeleton />} on={[query(), page()]}>
+  <Results />
 </Loading>
 ```
 

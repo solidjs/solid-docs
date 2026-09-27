@@ -33,6 +33,14 @@ copy it: `{ ...merged }` snapshots the current values.
 Use this in component bodies to merge defaults / overrides without losing
 Solid's per-property tracking.
 
+Reading props, here and anywhere: a prop's getter is defined only for a
+read through its own object (`props.x`, `{ ...props }`, `Reflect.get`,
+these views). Forwarding its descriptor onto another object and reading it
+there is not supported — the compiler's server-side props keep their state
+on the instance, so the getter needs its object as receiver. A copy that
+must stay live defines its own getter that reads through the source, as
+the no-Proxy paths of merge() and omit() do.
+
 ## Import
 
 ```ts

@@ -37,14 +37,19 @@ count(); // 0
 setCount(1); // explicit value
 setCount((c) => c + 1); // updater
 
-// Writable memo: starts as `fn()`, can be locally overwritten.
+// Writable memo: derives from `fn()` and can be written like a signal.
+// Within the frame the write wins over a same-tick recompute; the next
+// change to `userId` re-derives (the compute receives the written value
+// as `prev`). While a transaction holds a re-derived value, a write from
+// outside it does not replace that derivation — it becomes its `prev`.
 const [user, setUser] = createSignal(() => fetchUser(userId()));
-setUser({ ...user(), name: "Alice" }); // temporary local edit
+setUser({ ...user(), name: "Alice" });
 ```
 
 **Hydration:** in the function form, `SignalOptions & MemoOptions`
 accepts an `ssrSource` field (`"server"` | `"hybrid"` | `"client"`)
-that controls what initial value the client uses and whether `fn` re-runs.
+that controls what initial value the client uses and whether `fn` re-runs. `transparent: true` and the
+ownerless / id-less cases behave as for `createMemo`.
 
 ## Import
 
@@ -108,10 +113,14 @@ setCount((c) => c + 1); // updater
 ```
 
 ```ts
-// Writable memo: starts as `fn()`, can be locally overwritten by setter.
+// Writable memo: derives from `fn()` and can be written like a signal.
 const [user, setUser] = createSignal(() => fetchUser(userId()));
 
-setUser({ ...user(), name: "Alice" }); // temporary local edit
+// Within the frame the write wins over a same-tick recompute; the next
+// change to `userId` re-derives (the compute receives the written value
+// as `prev`). While a transaction holds a re-derived value, a write from
+// outside it does not replace that derivation — it becomes its `prev`.
+setUser({ ...user(), name: "Alice" });
 ```
 
 ## Caveats
@@ -153,6 +162,7 @@ interface MemoOptions<T> {
 	id?: string;
 	name?: string;
 	transparent?: boolean;
+	_plumbing?: boolean;
 	equals?: false | ((prev: T, next: T) => boolean);
 	unobserved?: () => void;
 	lazy?: boolean;
@@ -179,6 +189,8 @@ child slot, and during hydration it computes live instead of adopting
 the serialized server value. For client-only memos with no
 server-rendered counterpart — see `EffectOptions.transparent` for
 the full semantics. No-op outside hydration.
+
+**`_plumbing`** — `boolean`
 
 **`equals`** — `false | ((prev: T, next: T) => boolean)`
 
@@ -250,10 +262,15 @@ whether the compute re-runs.
   as initial state. Compute does **not** re-run for the initial
   value — the serialized result is authoritative. Choose this when
   the compute is deterministic from server-available inputs.
-- `"hybrid"`: client uses the serialized server value, then
-  re-runs the compute to take over. Choose this for computes that
-  mix server data with client-only signals (e.g. window size,
-  user-locale).
+- `"hybrid"`: client uses the serialized server value first; then,
+  for a compute that returns an **async iterable**, the client
+  continues the stream from it (the server consumed exactly one
+  yield; the client's first yield duplicates it and is discarded,
+  later yields update the node). For a sync or promise-shaped
+  compute, `"hybrid"` is identical to `"server"`: the serialized
+  value is adopted and the compute does not re-run until a
+  dependency changes or `refresh()`. Choose this for streaming
+  sources the client should keep consuming after hydration.
 - `"client"`: skip the server value entirely. Compute is deferred
   until hydration completes, then runs as if first-mounted.
   Choose this for client-only state where serialization is
@@ -318,10 +335,15 @@ whether the compute re-runs.
   as initial state. Compute does **not** re-run for the initial
   value — the serialized result is authoritative. Choose this when
   the compute is deterministic from server-available inputs.
-- `"hybrid"`: client uses the serialized server value, then
-  re-runs the compute to take over. Choose this for computes that
-  mix server data with client-only signals (e.g. window size,
-  user-locale).
+- `"hybrid"`: client uses the serialized server value first; then,
+  for a compute that returns an **async iterable**, the client
+  continues the stream from it (the server consumed exactly one
+  yield; the client's first yield duplicates it and is discarded,
+  later yields update the node). For a sync or promise-shaped
+  compute, `"hybrid"` is identical to `"server"`: the serialized
+  value is adopted and the compute does not re-run until a
+  dependency changes or `refresh()`. Choose this for streaming
+  sources the client should keep consuming after hydration.
 - `"client"`: skip the server value entirely. Compute is deferred
   until hydration completes, then runs as if first-mounted.
   Choose this for client-only state where serialization is

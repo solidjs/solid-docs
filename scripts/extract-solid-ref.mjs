@@ -4,6 +4,7 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
+import * as prettier from "prettier";
 
 const REPO_URL = "https://github.com/solidjs/solid.git";
 const DEFAULT_SOURCE = "/tmp/solid-v2-source";
@@ -2718,7 +2719,7 @@ const files = buildOutputFiles(reference, {
 if (dryRun) {
 	printDryRun(files, reference, sourceSha);
 } else {
-	writeFiles(files);
+	await writeFiles(files);
 	console.log(
 		`Wrote ${files.length} reference file(s) to ${path.relative(repoRoot, outDir)}`
 	);
@@ -4141,7 +4142,10 @@ function toDescription(value) {
 }
 
 function inlineCode(value) {
-	const text = String(value);
+	// A code span must stay on one line: Prettier re-indents a multi-line span
+	// inside a list item on every pass, so a printed multi-line type (a union
+	// of a function type and `null`) is collapsed to single-space separators.
+	const text = String(value).replace(/\s*\n\s*/g, " ").trim();
 	const fence = text.includes("`") ? "``" : "`";
 	return `${fence}${text}${fence}`;
 }
@@ -4255,11 +4259,19 @@ function escapeAnglesOutsideInlineCode(value) {
 		.join("");
 }
 
-function writeFiles(files) {
+// Generated pages are written in the repository's Prettier style so that
+// `prettier --check` passes on them and a regeneration never fights the
+// formatter: the output of `sync:ref` is what autofix would produce.
+async function writeFiles(files) {
 	cleanGeneratedFiles(outDir);
+	const config = (await prettier.resolveConfig(outDir)) ?? {};
 	for (const file of files) {
 		fs.mkdirSync(path.dirname(file.fullPath), { recursive: true });
-		fs.writeFileSync(file.fullPath, file.content);
+		const content = await prettier.format(file.content, {
+			...config,
+			filepath: file.fullPath,
+		});
+		fs.writeFileSync(file.fullPath, content);
 	}
 }
 

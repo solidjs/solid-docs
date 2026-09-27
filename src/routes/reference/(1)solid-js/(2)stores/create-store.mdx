@@ -211,10 +211,15 @@ whether the compute re-runs.
   as initial state. Compute does **not** re-run for the initial
   value — the serialized result is authoritative. Choose this when
   the compute is deterministic from server-available inputs.
-- `"hybrid"`: client uses the serialized server value, then
-  re-runs the compute to take over. Choose this for computes that
-  mix server data with client-only signals (e.g. window size,
-  user-locale).
+- `"hybrid"`: client uses the serialized server value first; then,
+  for a compute that returns an **async iterable**, the client
+  continues the stream from it (the server consumed exactly one
+  yield; the client's first yield duplicates it and is discarded,
+  later yields update the node). For a sync or promise-shaped
+  compute, `"hybrid"` is identical to `"server"`: the serialized
+  value is adopted and the compute does not re-run until a
+  dependency changes or `refresh()`. Choose this for streaming
+  sources the client should keep consuming after hydration.
 - `"client"`: skip the server value entirely. Compute is deferred
   until hydration completes, then runs as if first-mounted.
   Choose this for client-only state where serialization is
@@ -250,7 +255,9 @@ interface StoreOptions {
 
 - **Type:** `string`
 
-Debug name (dev mode only)
+Debug name (dev and observe builds). Property nodes are labelled
+`<name>.<key>` in attribution output (`todos.title`); a derived store's
+projection node carries the name itself.
 
 #### `shallow`
 

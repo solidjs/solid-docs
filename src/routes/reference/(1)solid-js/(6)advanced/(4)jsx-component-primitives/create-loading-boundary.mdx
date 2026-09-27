@@ -63,8 +63,27 @@ The fallback shown while async reads in `fn` are unresolved
 - **Type:** `{ on?: () => any }`
 - Optional
 
-`on` — accessor whose value scopes the boundary; when set,
-updates caused by writes to other reactive sources are _not_ caught
+`on` — a dependency list: a tracked function whose reads
+re-arm the boundary. Its return value is irrelevant (never compared);
+what matters is what it reads. Without `on`, a boundary that has shown
+content keeps it through a refetch (the pending holds with the
+transaction). With `on`, a write to anything it reads makes the boundary
+fresh again: it stops waiting on its current content, and if something
+under it is pending it shows `fallback` until the new content is ready;
+if nothing is pending, the notification is a no-op. The fallback lands
+with the same frame as the change that caused it — now, when nothing
+else holds that frame; together with the rest of the new page during a
+held navigation, not before it. If the same data is also read outside
+the boundary, the frame waits on it and the fallback can never be seen
+(DEV warns `LOADING_ON_OUTSIDE_HOLD`); the fix is structural — move the
+outside read under the boundary so one hold owns the data. A frame held
+past the content's landing by something else (the write's action, other
+pending data) also shows no fallback; that is a race the fallback may
+lose, a legitimate outcome, and not reported. A display-ahead read in
+`on` (`latest()`) shows the fallback now, beside the held frame; that
+is a capability, not the recommended shape. Optimistic writes and a
+source going pending notify like any other. The children are not
+re-created — they stay alive behind the fallback.
 
 ## Examples
 

@@ -4145,7 +4145,9 @@ function inlineCode(value) {
 	// A code span must stay on one line: Prettier re-indents a multi-line span
 	// inside a list item on every pass, so a printed multi-line type (a union
 	// of a function type and `null`) is collapsed to single-space separators.
-	const text = String(value).replace(/\s*\n\s*/g, " ").trim();
+	const text = String(value)
+		.replace(/\s*\n\s*/g, " ")
+		.trim();
 	const fence = text.includes("`") ? "``" : "`";
 	return `${fence}${text}${fence}`;
 }

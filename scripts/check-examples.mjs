@@ -32,9 +32,11 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(fileURLToPath(import.meta.url), "../..");
 const args = process.argv.slice(2);
+// `--solid ../solid` names a checkout; a bare `--solid` keeps the default.
 const flag = (name, fallback) => {
 	const i = args.indexOf(`--${name}`);
-	return i === -1 ? fallback : args[i + 1];
+	const next = i === -1 ? undefined : args[i + 1];
+	return next === undefined || next.startsWith("--") ? fallback : next;
 };
 const solid = resolve(root, flag("solid", "../solid"));
 const router = resolve(root, flag("router", "../solid-router"));

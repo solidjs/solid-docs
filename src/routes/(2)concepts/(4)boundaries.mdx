@@ -86,26 +86,29 @@ Place a boundary around the smallest region its fallback should replace, and lea
 Run the `Avoid` version and the picker is gone until the slowest of the two requests lands.
 In the `Prefer` version the picker is always there, the detail pane appears when the product arrives, and the recommendations appear when they do.
 
-The `on` prop names the value whose change should make an initialized boundary show its fallback again.
-Without it, choosing a new product keeps the old product on screen while the new one loads; with `on={productId()}`, the boundary compares the id across updates and shows the skeleton when the subject changed.
-Pending work caused by anything else, such as a refresh of the same product, leaves the content in place.
+The `on` prop is a dependency list: an expression the boundary tracks, whose reads say which changes should bring the fallback back.
+Without it, choosing a new product keeps the old product on screen while the new one loads; with `on={productId()}`, a change to the id makes the boundary stop waiting on its current content and show the skeleton while the new product loads.
+Its value does not matter, only what it reads, so several inputs go in as an array, `on={[productId(), variant()]}`.
+Pending work caused by anything `on` does not read, such as a refresh of the same product, leaves the content in place.
 
-`on` lets the region stop being a reason for the update to wait; it does not make the update commit.
-When something outside the boundary also waits on the new product, such as a heading that reads the same product or a sibling region without `on`, the update stays held and the boundary shows no skeleton.
-Enclose every reader of the new subject, or give each sibling its own boundary with `on`; the [Async reactivity](/concepts/async-reactivity#show-a-placeholder-again-loading-on) page shows both cases.
+The fallback appears with the same frame as the change that caused it.
+When nothing else is waiting on that change, that is at once.
+When other content outside the boundary is waiting on the same change, the page swaps when that content is ready, and the boundary shows its skeleton from that swap if its own content is still loading.
+When the very same data is also read outside the boundary, the frame waits on it and the fallback can never appear; development warns `LOADING_ON_OUTSIDE_HOLD`, and the fix is structural: move the outside read under the boundary so one hold owns the data.
+The [Async reactivity](/concepts/async-reactivity#show-a-placeholder-again-loading-on) page shows each case.
 
-:::pitfall[Passing the accessor to on instead of its value]
-`on` is compared with `!==` across updates, so pass a primitive; join several inputs into one string rather than passing an array.
+:::pitfall[Passing the accessor to on instead of reading it]
+`on` is tracked, so the expression has to read the signal; an accessor that is never called reads nothing.
 
 ```tsx
-// Avoid: the function reference never changes, so the fallback never returns
+// Avoid: nothing is read, so no change ever re-arms the boundary
 <Loading on={productId} fallback={<DetailSkeleton />}>
 
-// Prefer: pass the value
+// Prefer: read the value
 <Loading on={productId()} fallback={<DetailSkeleton />}>
 ```
 
-With the accessor, picking another product keeps the old product on screen for the whole load, which is the behavior `on` was meant to change.
+With the uncalled accessor, picking another product keeps the old product on screen for the whole load, which is the behavior `on` was meant to change.
 :::
 
 ## Error boundaries
@@ -257,11 +260,12 @@ The request can stay where it was; the [Async reactivity](/concepts/async-reacti
 ### Choosing a new item keeps the old one on screen
 
 That is the default: after a first answer, the boundary keeps its content and the update is held.
-Add `on={id()}` to the boundary when a change of subject should show the fallback, and pass the value rather than the accessor.
+Add `on={id()}` to the boundary when a change of subject should show the fallback, and read the signal inside it rather than passing the accessor.
 
-If `on` is already there and the old item still stays, something outside the boundary is waiting on the same change: a title reading the same item, or a sibling boundary without `on`.
-The update cannot commit until that reader is ready, so the fallback never shows.
-Move the boundary out to enclose the other reader, give the sibling its own `on`, or drop `on` and show the wait with `isPending`.
+If `on` is already there and the old item still stays, check the console: `LOADING_ON_OUTSIDE_HOLD` means the same data is also read outside the boundary, such as a title showing the item's name, so the frame waits on that read and the fallback can never appear.
+Move the outside read under the boundary.
+Without the warning, the page is held by other content that reads the same input, such as a sibling boundary without `on`; the skeleton appears when that content is ready, or not at all if this item lands first.
+Give the sibling its own `on`, or drop `on` and show the wait with `isPending`.
 
 ### Retry shows the same error
 
@@ -278,8 +282,8 @@ Give the group `order="natural"`, wrap the independent regions in a nested `<Rev
 
 - Put `Loading` around the smallest region its fallback should replace, and keep the controls the user needs outside it.
 - Put `Errored` around the smallest region that can fail and recover as a unit; both boundaries can wrap the same region.
-- After a first answer, `Loading` keeps its content during updates; add `on={key()}` when a changed subject should show the fallback again, and pass a value, not an accessor.
-  It takes effect only when nothing outside the boundary is waiting on the same change.
+- After a first answer, `Loading` keeps its content during updates; add `on={key()}` when a changed subject should show the fallback again.
+  `on` is tracked, so read the signal inside it; the fallback appears with the frame the change lands in, and never when the same data is also read outside the boundary.
 - An errored region recovers when an input changes or a refresh succeeds; `reset` is for when nothing upstream will change.
 - An error thrown by a fallback needs a boundary above it.
 - Use `Reveal` to control the order sibling regions appear in; it changes timing, not what each boundary observes.

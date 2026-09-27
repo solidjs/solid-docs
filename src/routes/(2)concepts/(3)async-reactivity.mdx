@@ -346,7 +346,7 @@ Once a `Loading` boundary has shown content, a later update does not bring the f
 Some content should not stay.
 An account panel showing account 1 while account 2 loads is worse than a skeleton, and the same is true for any content whose subject changed rather than whose data refreshed.
 
-The `on` prop names the value whose change should make the boundary eligible to show its fallback again:
+The `on` prop is a dependency list: the boundary tracks the expression, and a change to anything it reads makes the boundary stop waiting on its current content and show the fallback again while the new content loads.
 
 ```tsx
 <Loading on={accountId()} fallback={<AccountSkeleton />}>
@@ -356,14 +356,15 @@ The `on` prop names the value whose change should make the boundary eligible to 
 
 A `Loading` boundary is the update's chance to finish without waiting for that content: the region shows its fallback and waits on its own.
 Normally the update takes that chance only on the region's first load.
-`on` extends the offer to later updates: when `accountId()` changes and the new account is not ready, the boundary is willing to go back to its skeleton if that lets the update finish earlier.
-If the panel was the only thing waiting, it does.
-Controls outside the boundary see the new id at once, the panel shows its skeleton, and the content arrives when the account does.
-Pending work caused by other values, such as a refresh of the same account, leaves the content in place as usual.
+`on` extends the offer to later updates: when `accountId()` changes and the new account is not ready, the boundary gives up its old content and takes the wait back from the update.
+If the panel was the only thing waiting, the update finishes at once.
+Controls outside the boundary see the new id, the panel shows its skeleton, and the content arrives when the account does.
+Pending work caused by anything `on` does not read, such as a refresh of the same account, leaves the content in place as usual.
 
-The update goes back to the fallback only when that helps it finish earlier.
-An update commits when everything it changed is ready, and `on` does not change that; it only lets one region stop being a reason to wait.
-When something outside the boundary is also waiting on the new account, the update cannot finish any earlier, so the region stays on its old content with everything else, and no skeleton shows:
+The fallback lands in the same frame as the change that caused it.
+When nothing else is waiting on that change, that frame is immediate.
+When other content is waiting on the same change, say two sibling panels reading the new account's orders and activity, the frame lands when they are ready, and this boundary shows its skeleton from that swap if its own content is still loading; the skeleton never appears beside a page the change has not reached.
+When the very same data is also read outside the boundary, the frame waits on that read, which does not finish before the boundary's own content does, so the fallback can never appear:
 
 ```tsx
 // account is createMemo(() => fetchAccount(accountId()))
@@ -381,30 +382,32 @@ When something outside the boundary is also waiting on the new account, the upda
 </Loading>
 ```
 
-In the `Avoid` version, picking another account looks like nothing happened until the account loads, then the heading and the details change together; the `on` had no visible effect because the heading kept the update waiting.
-So the rule for `on` is that nothing outside the boundary may be waiting on the same change.
-A page with several `Loading` boundaries, some with `on` and some without, behaves as if none had it: the boundaries without `on` have already revealed, so they hold the update, and the ones with `on` cannot help it finish earlier.
+In the `Avoid` version, picking another account looks like nothing happened until the account loads, then the heading and the details change together; the `on` had no visible effect because the heading kept the frame waiting on the data the boundary was about to show a skeleton for.
+Development reports this as `LOADING_ON_OUTSIDE_HOLD`, naming the source, and the fix is structural: move the outside read under the boundary so one hold owns the data.
+The `Prefer` version is that fix.
 
-That leaves a choice, and it is a design choice rather than a rule about where boundaries go:
+So the rule for `on` is that the boundary encloses every reader of the data it waits on.
+Other content waiting on the same input through its own data is fine; the skeleton arrives with the frame that content lands in.
+That leaves a design choice rather than a rule about where boundaries go:
 
 - One boundary with `on` around every reader of the subject.
   The whole subject shows one skeleton and appears together.
 - A boundary with `on` around each region.
-  The update commits on the click, every region shows its own skeleton, and each appears as its own data lands.
+  Every region shows its own skeleton as soon as its frame lands, and each appears as its own data arrives.
 
-When neither fits, because a breadcrumb, a title, or a sibling panel shows the same subject and should stay, drop `on` and acknowledge the wait with `isPending` and `latest` instead.
+When neither fits, because a breadcrumb, a title, or a sibling panel shows the same data and should stay, drop `on` and acknowledge the wait with `isPending` and `latest` instead.
 
-`on` is a value, not an accessor.
-The boundary compares it across updates, so pass `accountId()` rather than `accountId`.
+`on` is tracked, so the expression has to read the signal: `on={accountId()}`, not `on={accountId}`.
+Its value is irrelevant; several inputs go in as an array, `on={[accountId(), tab()]}`, and a change to any of them re-arms the boundary.
 
 The same choice decides the dashboard above.
 Give each panel its own boundary with `on={period()}` and the period write commits at once: the selector flips, every panel shows its skeleton, and each panel's content arrives as its own request lands.
-Give `on` to one panel only and the other two, reading the shared input the normal way, still hold the write; the page waits for the slowest request, and the panel with `on` shows no skeleton either.
+Give `on` to one panel only and the other two, reading the shared input the normal way, still hold the write; the page swaps when both have answered, and the panel with `on` shows its skeleton from that swap until its own request lands, or shows nothing if it landed first.
 [Boundaries](/concepts/boundaries) covers placement and how `Reveal` orders several boundaries.
 
 :::deep-dive[A skeleton on every refetch: on={data()}]
-`on` names a subject, so a refetch of the same subject leaves the content in place.
-When a region should show its skeleton for every refetch as well, key the boundary on the data itself:
+`on` reads a subject, so a refetch of the same subject leaves the content in place.
+When a region should show its skeleton for every refetch as well, make the boundary depend on the data itself:
 
 ```tsx
 <Loading on={account()} fallback={<AccountSkeleton />}>
@@ -412,8 +415,8 @@ When a region should show its skeleton for every refetch as well, key the bounda
 </Loading>
 ```
 
-While the refetch is in flight `account()` has no settled value, which the boundary counts as a change, so `refresh(account)` or a revalidation after an action brings the skeleton back at once, even when the same value lands.
-The every-reader rule still applies: another reader of `account()` outside the boundary holds the update, and the skeleton does not show.
+A source going pending counts as a change to what `on` reads, so `refresh(account)` or a revalidation after an action brings the skeleton back, even when the same value lands.
+The same-data rule applies: another reader of `account()` outside the boundary holds the frame on the data the boundary waits for, the skeleton never appears, and development warns.
 This is a skeleton on every refresh; for most regions the default, old content with `isPending`, is the kinder treatment.
 :::
 
@@ -501,7 +504,7 @@ Read every reactive input at the top of the function, before the first `await`.
 - Requests are ordered by data dependency, not by component nesting; a waterfall exists only when one request needs another's response.
 - After a value has settled, a change to its input is held: the current screen stays visible and everything commits together when the new value lands.
 - Acknowledge a held update with `isPending` on the content and `latest` on the control the user touched.
-- Put `on={key}` on a `Loading` boundary whose subject changed and should show a placeholder instead of the old content; it takes effect only when nothing outside the boundary is waiting on the same change.
+- Put `on={key()}` on a `Loading` boundary whose subject changed and should show a placeholder instead of the old content; `on` is tracked, and the fallback never appears when the same data is also read outside the boundary.
 - Read every reactive input before the first `await`.
 
 ## Next steps

@@ -34,7 +34,11 @@ Pages and server functions are one deployment: a render calls a server function 
 
 Without `ssr: true`, start mode writes the empty document shell to `dist/client/index.html` and removes `dist/server` when the application has no server functions.
 If server functions are enabled, deploy `dist/client` for pages and keep `dist/server` running for the function endpoint.
-The two can live on different hosts as long as the browser sees one origin: the server-function client calls are same-origin by contract, so route `/_server/*` to the function host from the CDN or proxy that serves the pages rather than pointing the client at another origin.
+The two can live on different hosts.
+The simplest arrangement keeps one origin: route `/_server/*` from the CDN or proxy that serves the pages to the function host, and nothing changes in the app.
+When the pages must be served from another origin, such as a static site on its own domain or a WebView whose local server owns every path on its hostname, point the client at the function host with `configureServerFunctionsClient({ endpoint: "https://api.example.com/_server" })` and list the page origin on the server with `configureServerFunctionsServer({ csrf: { origin: ["https://app.example.com"] } })`.
+Same-origin callers are admitted by default; a listed origin is the opt-in for a cross-origin caller, which the server then answers with the CORS headers the browser needs.
+Authenticate such a client with a bearer token through the client's `prepareRequest` rather than cookies; cookies cross origins only with `credentials: "include"` on the fetch, `SameSite=None; Secure` on the cookie, and `csrf: { allowCredentials: true }` on the server.
 
 ## The request handler
 

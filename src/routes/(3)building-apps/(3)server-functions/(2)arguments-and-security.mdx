@@ -253,10 +253,13 @@ On the client, and outside any request, the function returns `undefined` and the
 ## Same-origin protection
 
 The server-function handler checks where a state-changing request came from before running it.
-It reads `Sec-Fetch-Site`, then `Origin`, then `Referer`, and accepts the request when those say same-origin; a request with cross-origin metadata is refused with status 403, and so is a request with none of the three headers.
+It reads `Sec-Fetch-Site`, then `Origin`, then `Referer`, and accepts the request when those say same-origin; a request with cross-origin metadata is refused with status 403 unless the host has listed that origin, and so is a request with none of the three headers.
 
 That gate stops a page on another site from submitting to your server functions with the visitor's cookies, which is the cross-site request forgery (CSRF) case.
 It does not stop a script that sets its own `Origin` header, which is why the `curl` request at the top of the page went through, and why the gate is no substitute for validation and authorization.
+
+A client that legitimately runs on another origin, such as a static build on its own domain or in a WebView, is admitted by listing its origin in `configureServerFunctionsServer({ csrf: { origin: [...] } })`; the server then answers it with the CORS headers the browser needs, and without cookies unless `allowCredentials` is also set.
+[Deployment](/building-apps/deployment#what-the-build-produces) shows the client side of that arrangement.
 
 `GET` and `HEAD` requests to a `GET()`-declared read skip the check, because a declared read is safe to run from any origin by contract and the check's `Vary` headers would fragment the shared caches the declaration exists to enable.
 Declare `GET()` only for a read that is safe and idempotent.
@@ -279,6 +282,7 @@ Convert the value to a JSON-safe shape, or call `enableRichArguments()` once in 
 The request carried no `Sec-Fetch-Site`, `Origin`, or `Referer` header, or carried one naming another origin.
 A legitimate script sends an `Origin` header matching the site.
 A server-to-server integration that cannot do that runs behind a host with its own check and `allowRequestsWithoutOriginCheck` set, per [Host configuration](/reference/solid-web/server-functions/host-configuration).
+A browser client served from another origin is a different case: list its origin in `csrf.origin`, as [Same-origin protection](#same-origin-protection) describes.
 
 ### Validation runs in development but a raw request skipped it
 

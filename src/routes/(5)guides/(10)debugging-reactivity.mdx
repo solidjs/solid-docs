@@ -36,7 +36,7 @@ Codes fall into a few groups:
 - Reads in the wrong place: `STRICT_READ_UNTRACKED`, `PENDING_ASYNC_UNTRACKED_READ`.
 - Writes in the wrong place: `REACTIVE_WRITE_IN_OWNED_SCOPE`, `ACTION_CALLED_IN_OWNED_SCOPE`, `FLUSH_IN_EFFECT_CALLBACK`, `SERVER_WRITE`.
 - Leaks: `NO_OWNER_EFFECT`, `NO_OWNER_BOUNDARY`, `NO_OWNER_CLEANUP`.
-- Async placement: `ASYNC_OUTSIDE_LOADING_BOUNDARY`.
+- Async placement: `ASYNC_OUTSIDE_LOADING_BOUNDARY`, `LOADING_ON_OUTSIDE_HOLD`.
 - Graph size, always on: `HUGE_FAN_OUT`, `HUGE_FAN_IN`; while attribution is enabled, `HUGE_FAN_OUT` also fires at the engine's lower `fanOut` threshold and `data.write` says which write reached it.
 - Cost, only while attribution is enabled: `HOT_SCOPE_RERUNS`, `HOT_SCOPE_TIME`, `WIDE_SCOPE_DEPS`, `WASTED_RECOMPUTE`, `ASYNC_WATERFALL`, `UNSTABLE_MEMO_OUTPUT`, `EFFECT_WRITES_OWN_SOURCE`, `EFFECT_RELAY_TEAR`, `IMMUTABLE_UPDATE_IN_STORE`, `UNSTABLE_LIST_IDENTITY`, `GRAPH_GROWTH`.
 - Responsiveness, only while attribution is enabled: `SILENT_HOLD`, `LONG_HOLD`, `UNTRACKED_ASYNC_HANDLER`, `ABANDONED_FLIGHTS`, `FALLBACK_FLASH`, `STACKED_HOLDS`, `OPTIMISTIC_REVERTED`.
@@ -268,9 +268,9 @@ The repair is always to add feedback, never to remove the hold:
 
 [Async reactivity](/concepts/async-reactivity#another-answer-is-coming-ispending) explains each of these.
 
-A `Loading` boundary that has not shown content yet, or whose `on` value changed, is a different situation: the read shows the fallback instead of entering a hold, so there is no `SILENT_HOLD` to report.
+A `Loading` boundary that has not shown content yet, or whose `on` dependencies changed, is a different situation: the read shows the fallback instead of entering a hold, so there is no `SILENT_HOLD` to report.
 A boundary that has already revealed holds like everything else.
-So does a boundary with `on` when something outside it waits on the same change: the update is held regardless, the fallback never shows, and the report names the source the click waited on; look for a reader of that source outside the boundary.
+A boundary with `on` whose fallback can never appear, because the same data is also read outside it, is reported on its own as `[LOADING_ON_OUTSIDE_HOLD]`, naming the source; move that outside read under the boundary.
 A hold that was acknowledged but still ran long is reported as `[LONG_HOLD]` from 500ms of waiting, a warning from 1000ms, with the suggestion to add a `Loading on={...}` boundary; the thresholds are `attribution.enable({ longHolds: { infoMs, warnMs } })`.
 Acknowledged holds under those thresholds still count in the feedback tables: `feedback().sources` tallies every hold and its wait in `holds` and `heldMs`, ranks the affordances that answered in `acknowledgedBy`, and counts a hold whose only acknowledgment was a `latest()` shadow as `latestOnly`, next to the `silent` and `long` columns, so the cost is visible without blaming code that waited correctly.
 

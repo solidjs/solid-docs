@@ -122,6 +122,23 @@ In the `Prefer` version the server renders `class="drawer"`, the browser hydrate
 Resizing the window updates it again through the listener, and the returned cleanup removes the listener when the drawer is disposed.
 [Custom primitives](/guides/custom-primitives#clean-up-what-you-start) turns this into a reusable `createMediaQuery`.
 
+The `false` seed is right while the browser is claiming server HTML, and wrong when the drawer is created later by a client-side navigation: there is no server markup to agree with, and the class still flips one frame after it appears.
+[`isHydrating`](/reference/solid-js/advanced/manual-hydration/is-hydrating) tells the two apart, so the seed can ask the browser whenever the answer will not be checked against the server:
+
+```tsx
+import { createSignal, isHydrating, onSettled } from "solid-js";
+import { isServer } from "@solidjs/web";
+
+const [compact, setCompact] = createSignal(
+	isServer || isHydrating()
+		? false
+		: window.matchMedia("(max-width: 40rem)").matches
+);
+```
+
+`isHydrating()` is `true` during the root pass of `hydrate()` and while a streamed boundary resumes, and `false` on the server, in client-only renders, and after hydration; it is not reactive, so read it where the signal is created.
+The `onSettled` callback stays: it is still what updates the value after a hydrated first paint.
+
 Some helpers are called from places that have no owner, such as a formatting function shared with server code.
 For those, [`isServer`](/reference/solid-web/rendering-ssr/is-server) from `@solidjs/web` is a build-time constant, `true` in the server build and `false` in the browser build, so the bundler drops the branch that cannot run:
 

@@ -216,36 +216,30 @@ Wrapping a descendant in another loading boundary does not let it escape an oute
 
 ## Primitive forms
 
-The components above are built from three primitives.
-Application code does not need them; they exist for custom boundary components and renderer integrations.
-
-- [`createLoadingBoundary(fn, fallback, options?)`](/reference/solid-js/advanced/jsx-component-primitives/create-loading-boundary) returns an accessor that switches between the tracked `fn` and the fallback.
-  Its `on` option takes an accessor, because the primitive does not receive JSX props.
-- [`createErrorBoundary(fn, fallback)`](/reference/solid-js/advanced/jsx-component-primitives/create-error-boundary) returns an accessor and passes the fallback an error accessor and a reset function.
-- [`createRevealOrder(fn, options?)`](/reference/solid-js/advanced/jsx-component-primitives/create-reveal-order) runs `fn` under a reveal controller; its `order` and `collapsed` options are accessors.
+The components above are built from three primitives, `createLoadingBoundary`, `createErrorBoundary`, and `createRevealOrder`.
+They stay runtime exports of `solid-js`, but their types live in `solid-js/internal`, which carries no semver guarantee: they exist for renderer integrations, not for application code.
+A custom boundary component composes `Loading`, `Errored`, and `Reveal` instead:
 
 ```tsx
-import { createErrorBoundary, createLoadingBoundary } from "solid-js";
+import { Errored, Loading } from "solid-js";
+import type { JSX } from "@solidjs/web";
 
 function StatusBoundary(props: {
 	children: JSX.Element;
 	loading: JSX.Element;
 }) {
-	const output = createErrorBoundary(
-		() =>
-			createLoadingBoundary(
-				() => props.children,
-				() => props.loading
-			)(),
-		(error, reset) => (
-			<section>
-				<p>{String(error())}</p>
-				<button onClick={reset}>Retry</button>
-			</section>
-		)
+	return (
+		<Errored
+			fallback={(error, reset) => (
+				<section>
+					<p>{String(error())}</p>
+					<button onClick={reset}>Retry</button>
+				</section>
+			)}
+		>
+			<Loading fallback={props.loading}>{props.children}</Loading>
+		</Errored>
 	);
-
-	return output() as JSX.Element;
 }
 ```
 

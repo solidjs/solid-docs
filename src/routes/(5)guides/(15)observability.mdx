@@ -180,6 +180,7 @@ The fields it returns replace the runtime's derivation; its `entries` merge by n
 | `"render"`     | server   | A `renderToString` or `renderToStream` render: how long the shell took and how many boundaries it waited on.      |
 | `"boundary"`   | server   | A `Loading` boundary that waited during a render; one that rendered on its first pass emits nothing.              |
 | `"invocation"` | server   | A server-function execution, from HTTP dispatch or an in-process call.                                            |
+| `"request"`    | client   | A server-function request the page sent, delivered at the send, so a call still in flight has a row.              |
 | `"call"`       | client   | A server-function call the page made, as the caller awaited it.                                                   |
 | `"frame"`      | both     | A frame stream produced (server) or applied (client).                                                             |
 | `"recovery"`   | client   | A `Loading` boundary the server gave up on, re-rendered as fresh DOM on the client; joins its `"boundary"` by id. |
@@ -204,6 +205,8 @@ Render `/orders` with a slow database and the line reads `<Loading> at <App> ›
 A record is data: ids, names, an outcome, `at` on the `performance.now()` clock, durations, counts.
 Anything live — the request, the response, the arguments, the error as thrown — travels in a second argument to the listener, never on the record, so a record can leave the process as it is.
 A client `"call"` and the server `"invocation"` it caused share an `id`; the difference between their durations is the wire.
+The `"request"` and `"call"` records of one call share their `live` object by identity, filled in as the call proceeds, so a listener holding it from the send reads the outcome off it at settle.
+Request and response bodies are taken only for a listener that asked, `subscribe("call", fn, { bodies: true })`; a listener that reads ids, statuses, and timings never pays for them.
 An invocation made during a boundary's render pass names that boundary, so a wait can be read as the calls it consisted of.
 
 Listeners run synchronously inside the runtime, the moment the record is complete.
@@ -235,7 +238,7 @@ OBSERVE?.records.subscribe("interaction", (event) => {
 Click "Place order" and the line reads `click on button#place-order "Place order" took 840ms to settle: ["placeOrder held 812ms"]`.
 An interaction record carries the handler's own time, the writes it made, the re-runs and creations they caused, when the last effect that traces back to it ran (`settledMs`), and the holds and navigations it performed, each settled before the interaction is.
 A hold names what blocked the write, how long, and whether the screen acknowledged the wait with `isPending`, `latest`, or an optimistic value; `silent` is `true` on a hold nothing acknowledged, which is what the shopper experiences as a dead click, and `long` on one whose wait ran past the point a fallback should have taken over.
-A router that wraps its location write in `OBSERVE.attribution.withOrigin` gives its navigations the matched route pattern as their name, so `/orders/:id` folds together across shoppers.
+A router that wraps its location write in `OBSERVE.attribution.withOrigin` gives its navigations the matched route pattern as their name, so `/orders/:id` folds together across shoppers; the route the document arrived on is declared the same way, so the first navigation has a name too, and a server `"render"` record carries it as `route`.
 
 `enable()` takes a hold on the engine and returns its release.
 The engine is shared by every tool on the page — an adapter, the Performance panel tracks, a diagnostics capture — so each takes its own hold, options combine by the most demanding request per key, and the engine stays on until the last release; `attribution.disable()` tears everything down regardless.
@@ -278,6 +281,8 @@ createRoot(() => {
 	// the panel's signals, stores, and effects
 });
 ```
+
+A tool that renders the app inside its own shell, `<DevToolbar><App /></DevToolbar>`, excludes the shell and re-admits the app with `OBSERVE.include(owner)` at the app's root; each owner answers by its nearest marked ancestor.
 
 ## Common problems
 

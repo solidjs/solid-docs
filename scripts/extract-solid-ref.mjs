@@ -266,18 +266,6 @@ const ADVANCED_ROUTES = {
 		"Advanced / Store Advanced",
 	],
 
-	createErrorBoundary: [
-		"advanced/jsx-component-primitives/create-error-boundary.mdx",
-		"Advanced / JSX Component Primitives",
-	],
-	createLoadingBoundary: [
-		"advanced/jsx-component-primitives/create-loading-boundary.mdx",
-		"Advanced / JSX Component Primitives",
-	],
-	createRevealOrder: [
-		"advanced/jsx-component-primitives/create-reveal-order.mdx",
-		"Advanced / JSX Component Primitives",
-	],
 	mapArray: [
 		"advanced/jsx-component-primitives/map-array.mdx",
 		"Advanced / JSX Component Primitives",
@@ -632,6 +620,11 @@ const HIDDEN_EXPORTS = new Set([
 	"SLOT_FACE_MARKUP",
 	"isSlotValue",
 	"$DEVCOMP",
+	// Runtime exports typed only through solid-js/internal (#3709): the
+	// primitives behind Errored, Loading, and Reveal, for renderers.
+	"createErrorBoundary",
+	"createLoadingBoundary",
+	"createRevealOrder",
 	"$PROXY",
 	"$REFRESH",
 	"$TRACK",
@@ -1056,6 +1049,8 @@ const VALUE_IMPORTS = new Set(["storePath"]);
 // from the implementation.
 const PREFERRED_SOURCE_PATHS = {
 	getHydrationWriter: "packages/web/src/server.ts",
+	HydrationWriter: "packages/web/src/server.ts",
+	HydrationValue: "packages/web/src/server.ts",
 	getRequestEvent: "packages/web/src/server.ts",
 	getTraceContext: "packages/web/src/server.ts",
 	configureServerErrors: "packages/web/src/server.ts",
@@ -2510,6 +2505,31 @@ const ENTRY_LEARN = {
 	parseCookieHeader: [
 		["Sessions and auth", "/building-apps/sessions-and-auth"],
 	],
+	isHydrating: [
+		["Browser APIs", "/guides/ssr-safe-code#browser-apis"],
+		[
+			"Controlling hydration",
+			"/concepts/rendering-and-ssr#controlling-hydration",
+		],
+	],
+	isHydratable: [
+		[
+			"Controlling hydration",
+			"/concepts/rendering-and-ssr#controlling-hydration",
+		],
+	],
+	getHydrationWriter: [
+		[
+			"Controlling hydration",
+			"/concepts/rendering-and-ssr#controlling-hydration",
+		],
+	],
+	takeHydrationValue: [
+		[
+			"Controlling hydration",
+			"/concepts/rendering-and-ssr#controlling-hydration",
+		],
+	],
 };
 const CATEGORY_LEARN = {
 	Reactivity: [
@@ -2588,6 +2608,9 @@ const TYPE_TEXT_REWRITES = [
 	// The core `Element` type is imported as `SolidElement` inside the
 	// package; app code knows it as `JSX.Element`.
 	[/\bSolidElement\b/g, "JSX.Element"],
+	// `until`'s abort option: the global type when a lib declares one, a
+	// minimal abort surface otherwise. App code knows it as `AbortSignal`.
+	[/\bGlobalAbortSignal\b/g, "AbortSignal"],
 	// Underscore-prefixed parameter names in server-side stubs.
 	[/([(,]\s*)_+([a-z]\w*\??:)/g, "$1$2"],
 ];
@@ -3732,7 +3755,7 @@ function getMemberDocs(declarations) {
 			if (!member.name) return null;
 			const name = member.name.getText();
 			const type = member.type
-				? member.type.getText(member.getSourceFile())
+				? cleanTypeText(member.type.getText(member.getSourceFile()))
 				: "";
 			const text = (member.jsDoc ?? [])
 				.map((doc) => normalizeMarkdown(renderComment(doc.comment)))

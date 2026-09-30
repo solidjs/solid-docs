@@ -60,6 +60,9 @@ The contract that shapes a span builder:
 - Server records are delivered during the request, so a Node SDK whose active span is the request's parents them without anything passing a parent around.
 - A client `"call"` and the server `"invocation"` it caused share `id`.
   An invocation made during a boundary's render pass carries `boundary`, the `id` of that boundary's record.
+- A `"request"` record leaves at the send, before the transport's `fetch`, for a call the `"call"` record cannot show yet: one still in flight, or one that never settles.
+  The two share one `live` object by identity.
+- Bodies cost the call a copy, so they are taken only under `subscribe(type, fn, { bodies: true })`; without it `live.request` is absent and `live.response` is the transport's own, already consumed.
 
 ```ts
 import { OBSERVE } from "solid-js";
@@ -117,6 +120,7 @@ Keep a `WeakMap` from origin to span and a call finds its parent without a clock
 The stamp is read at dispatch: a call made synchronously in the handler carries it even when the response lands after the interaction settled, which is the usual shape of `onClick={async () => set(await call())}`; a call made after an `await` in the handler carries nothing, the same escape a write there has.
 
 Routers declare their navigations to the engine with `OBSERVE.attribution.withOrigin`, so navigation records carry the matched route pattern as `name`; an adapter needs no router code.
+The route the document arrived on is declared with the same call around the router's initial match, so the first `"navigation"` record names it with `initial: true`, timed from the document's navigation start, and the server `"render"` record carries the matched route as `route`; a router that resolves guards or loaders before it writes the location hands the interaction it captured back as `interaction`, and the write joins the click as if it had been synchronous.
 
 ## Trace context: answer once, the runtime carries it
 
@@ -168,6 +172,7 @@ createRoot(() => {
 ```
 
 Under an excluded owner, diagnostics about the subtree are neither delivered nor reported, and the engine records no runs for its computations.
+An adapter that renders the app inside its own shell excludes the shell and calls `OBSERVE.include(owner)` at the app's root to re-admit it; the verdict comes from the nearest marked ancestor, and a mark belongs at the owner's creation.
 The signals and stores created under it stay excluded wherever their writes come from, so the writes need no `runWithOwner` and must not use one: a write under an owner is a write in an owned scope, which the dev build flags.
 
 ## Test against the observe build

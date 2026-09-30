@@ -601,7 +601,7 @@ type DiagnosticCode =
 	| "HEAD_TAG_INVALID"
 	| "UNRECOGNIZED_INSERT_VALUE"
 	| "UNSCOPED_HOLE_ALLOCATED_IDS"
-	| "BEHAVIOR_CLAIM_DROPPED"
+	| "BINDING_SLOT_POSITION"
 	| "FRAME_MARKER_CORRUPTED"
 	| "DYNAMIC_ASYNC_COMPONENT";
 ```
@@ -1003,6 +1003,7 @@ interface Observe {
 	attribution: AttributionSlot;
 	server: ServerObserve;
 	exclude(owner: Owner): void;
+	include(owner: Owner): void;
 	isExcluded(subject: DiagnosticSubject | null | undefined): boolean;
 	ownerPath(
 		subject: DiagnosticSubject | null | undefined
@@ -1047,14 +1048,35 @@ records no runs for its computations. Mark the root as it is created
 and stores created under it are excluded subjects wherever their writes
 come from (a click handler, an adapter callback), so writes need no
 `runWithOwner` — and must not use one: a write under an owner is a write
-in an owned scope (REACTIVE_WRITE_IN_OWNED_SCOPE). Irrevocable for the
-owner's lifetime.
+in an owned scope (REACTIVE_WRITE_IN_OWNED_SCOPE). One mark per owner:
+a later `exclude` or `include` on the same owner replaces it, and
+`include` re-admits a subtree beneath it.
+
+#### `include`
+
+- **Type:** `void`
+
+Marks `owner`'s subtree as the app's again, beneath an excluded owner.
+The verdict for a subject is the NEAREST marked ancestor's (the subject
+itself included): an `include` under an `exclude` re-admits that
+subtree, an `exclude` under an `include` excludes it again, and the
+markers nest to any depth. For an observer that WRAPS the app it
+watches — a toolbar rendering `<DevToolbar><App/></DevToolbar>` — so
+the toolbar's own root is excluded and the app's root, created under
+it, is included back. Mark the root as it is created, as with
+`exclude`: the attribution engine caches each node's verdict the first
+time it asks and keeps it for the node's life, so a mark set after a
+node was judged does not reach it. Alone — with no excluded ancestor —
+an included owner is what it already was. One mark per owner: a later
+`exclude` or `include` on the same owner replaces it.
 
 #### `isExcluded`
 
 - **Type:** `boolean`
 
-Whether `subject` sits under an excluded owner (itself included).
+Whether `subject` sits under an excluded owner (itself included) — the
+nearest marked ancestor on its owner chain answers, with the one mark
+(the latest `exclude`/`include`) that owner carries.
 
 #### `ownerPath`
 

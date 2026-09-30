@@ -289,6 +289,13 @@ const accountRoot = document.getElementById("account")!;
 hydrate(() => <Account />, accountRoot, { renderId: "account" });
 ```
 
+Two functions answer questions about the hydration in progress.
+[`isHydrating()`](/reference/solid-js/advanced/manual-hydration/is-hydrating) is `true` while the running code is claiming server-rendered DOM, during the root pass of `hydrate()` or while a streamed boundary resumes, and `false` on the server, in client-only renders, and afterwards; a component reads it to seed a browser-measured value with what the server rendered only when the server rendered anything, as [SSR-safe code](/guides/ssr-safe-code#browser-apis) shows.
+[`isHydratable()`](/reference/solid-js/advanced/manual-hydration/is-hydratable) is `true` when the calling owner sits where hydration applies, so `false` under `NoHydration` and `true` again inside a nested `Hydration`.
+
+Those two, with [`getHydrationWriter`](/reference/solid-web/rendering-ssr/get-hydration-writer) and [`takeHydrationValue`](/reference/solid-web/rendering-ssr/take-hydration-value) from `@solidjs/web`, are the surface a data library uses to carry its own values from the server render to the hydrating client: the server side writes a value under a namespaced key when `isHydratable()` allows it, and the client side takes it back by key, as a resolved value, a rejection, or a promise still streaming in.
+Application code does not need them; Solid moves its own state this way already.
+
 ## Common problems
 
 ### `window is not defined` or `document is not defined`

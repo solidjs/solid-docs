@@ -70,9 +70,50 @@ createEffect(
 );
 ```
 
+### Take a non-suspending snapshot of an async source
+
+An uninitialized async read still throws `NotReadyError` inside `untrack`.
+If it reaches the owning computation, that computation suspends, participates
+in the surrounding `Loading` boundary, and retries when the source first
+settles. This retry resolves the async graph; it does not subscribe the
+computation to future changes of the untracked source.
+
+`isPending` reports pending updates to an existing value, and `latest`
+reads the freshest available value. Neither provides an initial fallback:
+inside a computation, both can still suspend before the first value exists.
+For an advanced one-shot read that must return immediately, handle only
+`NotReadyError` and let real errors propagate:
+
+```ts
+import { isPending, latest, NotReadyError, untrack } from "solid-js";
+
+// getColor is an async accessor returning a string once ready.
+const readColorSnapshot = () =>
+	untrack(() => {
+		try {
+			return isPending(getColor) ? "gray" : latest(getColor);
+		} catch (error) {
+			if (error instanceof NotReadyError) return "gray";
+			throw error;
+		}
+	});
+```
+
+This returns `"gray"` before the first value or during a pending update,
+and the available color otherwise. Catching an initial `NotReadyError`
+prevents that suspension from reaching the owner, so it does not arrange
+an initial retry. During a pending update, an untracked read inside a
+computation can still cause its owner to retry once when that update settles.
+The owner does not subscribe to later changes. Outside a computation, call
+`readColorSnapshot` again when you need a new snapshot. For content that
+should keep updating as data changes, use a tracked read with a `Loading`
+boundary instead.
+
 ## Caveats
 
 - Untracking a read does not stop the computation from re-running for its other tracked reads.
+- Untracking does not opt out of async settlement. An initial `NotReadyError` still suspends the owning computation and retries it when the source first settles.
+- `isPending` and `latest` can also suspend before a first value exists; they do not supply a fallback for an uninitialized read.
 - Inside an effect, prefer the two-phase form: reads in `effectFn` are already untracked.
 
 ## Common problems

@@ -147,6 +147,10 @@ const CANONICAL_ROUTES = {
 	Switch: ["components-jsx/switch-and-match.mdx", "Components (JSX)"],
 
 	clientOnly: ["rendering-ssr/client-only.mdx", "Rendering & SSR"],
+	getHydrationWriter: [
+		"rendering-ssr/get-hydration-writer.mdx",
+		"Rendering & SSR",
+	],
 	httpHeader: ["rendering-ssr/http-header.mdx", "Rendering & SSR"],
 	httpStatus: ["rendering-ssr/http-status.mdx", "Rendering & SSR"],
 	hydrate: ["rendering-ssr/hydrate.mdx", "Rendering & SSR"],
@@ -155,6 +159,10 @@ const CANONICAL_ROUTES = {
 	render: ["rendering-ssr/render.mdx", "Rendering & SSR"],
 	renderToStream: ["rendering-ssr/render-to-stream.mdx", "Rendering & SSR"],
 	renderToString: ["rendering-ssr/render-to-string.mdx", "Rendering & SSR"],
+	takeHydrationValue: [
+		"rendering-ssr/take-hydration-value.mdx",
+		"Rendering & SSR",
+	],
 
 	GET: ["server-functions/get.mdx", "Server functions"],
 	live: ["server-functions/live.mdx", "Server functions"],
@@ -281,6 +289,14 @@ const ADVANCED_ROUTES = {
 
 	Hydration: [
 		"advanced/manual-hydration/hydration.mdx",
+		"Advanced / Manual Hydration",
+	],
+	isHydratable: [
+		"advanced/manual-hydration/is-hydratable.mdx",
+		"Advanced / Manual Hydration",
+	],
+	isHydrating: [
+		"advanced/manual-hydration/is-hydrating.mdx",
 		"Advanced / Manual Hydration",
 	],
 	NoHydration: [
@@ -457,11 +473,14 @@ const FOLD_INTO = {
 	RecordEvent: "OBSERVE",
 	RecordLive: "OBSERVE",
 	RecordListener: "OBSERVE",
+	RecordSubscribeOptions: "OBSERVE",
 	BoundaryEvent: "OBSERVE",
 	BoundaryListener: "OBSERVE",
 	BoundaryLive: "OBSERVE",
 	CallEvent: "OBSERVE",
 	CallListener: "OBSERVE",
+	CallRequestEvent: "OBSERVE",
+	CallRequestListener: "OBSERVE",
 	CallLive: "OBSERVE",
 	FrameEvent: "OBSERVE",
 	FrameProducedEvent: "OBSERVE",
@@ -477,6 +496,7 @@ const FOLD_INTO = {
 	RenderEvent: "OBSERVE",
 	RenderListener: "OBSERVE",
 	RenderLive: "OBSERVE",
+	RenderRoute: "OBSERVE",
 	// solid-js/attribution: the engine, its options and its records. The
 	// records are delivered on OBSERVE.records; their shapes live here.
 	Attribution: "attribution",
@@ -575,6 +595,8 @@ const FOLD_INTO = {
 	RequestEvent: "getRequestEvent",
 	RequestEventLocals: "getRequestEvent",
 	ResponseStub: "getRequestEvent",
+	HydrationWriter: "getHydrationWriter",
+	HydrationValue: "takeHydrationValue",
 	ServerFunction: "withMeta",
 	ServerFunctionMetadata: "withMeta",
 	LiveSource: "live",
@@ -602,6 +624,13 @@ const FOLD_INTO = {
 };
 
 const HIDDEN_EXPORTS = new Set([
+	// Compiler slot protocol; not part of the application-facing reference.
+	"SLOT_VALUE",
+	"SLOT_MARKER",
+	"SLOT_FACE_STREAM",
+	"SLOT_FACE_DATA",
+	"SLOT_FACE_MARKUP",
+	"isSlotValue",
 	"$DEVCOMP",
 	"$PROXY",
 	"$REFRESH",
@@ -1026,6 +1055,7 @@ const VALUE_IMPORTS = new Set(["storePath"]);
 // Exports with a client stub and a server implementation: the page reads
 // from the implementation.
 const PREFERRED_SOURCE_PATHS = {
+	getHydrationWriter: "packages/web/src/server.ts",
 	getRequestEvent: "packages/web/src/server.ts",
 	getTraceContext: "packages/web/src/server.ts",
 	configureServerErrors: "packages/web/src/server.ts",
@@ -2560,6 +2590,10 @@ const COLLAPSED_RELATED_TYPES = new Set([
 ]);
 
 const REFERENCE_FIXUPS = [
+	[
+		/onSettled\(\(\) => setWidth\(el\.offsetWidth\)\);/g,
+		"onSettled(() => { setWidth(el.offsetWidth); });",
+	],
 	[
 		/createSignal<T>\(fn, initialValue\?, options\?:/g,
 		"createSignal<T>(fn, options?:",

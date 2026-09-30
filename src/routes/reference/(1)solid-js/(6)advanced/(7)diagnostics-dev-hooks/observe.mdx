@@ -231,6 +231,7 @@ handler's `intercept`, at t = 0) made no request and emits nothing.
 ```ts
 interface CallEvent {
 	id: string;
+	name?: string;
 	at: number;
 	durationMs: number;
 	method: "GET" | "POST";
@@ -246,6 +247,17 @@ interface CallEvent {
 - **Type:** `string`
 
 The function id — the same `id` the server's `"invocation"` record carries.
+
+#### `name`
+
+- **Type:** `string`
+
+The function's source name, from the reference's metadata
+(`ServerFunctionMetadata.name`): the compiled function's name, which
+the compiler seeds in development builds only, or an explicit label
+(`withMeta`, the `name` argument to `createServerReference`), which
+survives to production. A label, not an identity: not unique, and
+absent when the metadata carries none.
 
 #### `at`
 
@@ -310,15 +322,33 @@ type CallListener = (event: CallEvent, live: CallLive) => void;
 
 ### `CallLive`
 
-The live half of a call, for in-process consumers. `response` is the
-transport's own object, not a clone: its status and headers are
-readable, its body is the decode's (already consumed, or being consumed
-by the caller for a streaming result). `error` is the value as thrown to
-the caller — a decoded server error, or the transport's own failure.
+The live half of a call, for in-process consumers — ONE object across
+the call's records: the same `CallLive` is handed to the `"request"`
+listener at the send and to the `"call"` listener at settle, filled in
+as the call proceeds (`args` from the start, `request` at the send,
+`response` and `result`/`error` at settle — filled on every settle,
+whether or not a `"call"` record goes out, so a `"request"` listener
+holding it reads the outcome off it too), so an in-process consumer
+joins a call's request to its settle by identity — the way `origin`
+joins a record to the interaction's — with no id-plus-time join and no
+sequence number. One MUTABLE object shared by both records' listeners:
+treat it as read-only — a write shows up on the other record's
+listener. `error` is the value as thrown to the caller — a
+decoded server error, or the transport's own failure. The bodies —
+`request`, and `response` as an unread clone — are a body viewer's
+(devtools' network panel), and are taken only while a listener asked for
+them (`OBSERVE.records.subscribe("call", fn, { bodies: true })`, or the
+same on `"request"` for the request alone): each costs the call a
+reconstruction and a transient double-buffer of the payload, which a
+consumer that reads ids, statuses and timings never pays. With no such
+listener `request` is absent and `response` is the transport's own
+object, consumed by its decode. Whether bodies are taken is read once,
+as the call starts.
 
 ```ts
 interface CallLive {
 	args: unknown[];
+	request?: Request;
 	response?: Response;
 	result?: unknown;
 	error?: unknown;
@@ -329,9 +359,57 @@ interface CallLive {
 
 - **Type:** `unknown[]`
 
+#### `request`
+
+- **Type:** `Request`
+
+Bodies opted in — by a `"call"` listener or a `"request"` listener
+(`observed("call", "bodies") || observed("request", "bodies")`): the
+request as dispatched — the final url and `RequestInit` (the
+transport's headers, the `prepareRequest` hook applied), built into a
+`Request` of the listener's own at the send, so its headers and body
+are readable in full and reading them touches nothing the transport
+sent. Set before the `"request"` record is delivered, so that listener
+reads it too — and it is ONE `Request`, shared by the call's
+`"request"` and `"call"` records: a body reads once, so a listener that
+wants it reads through `request.clone()` (`live.request.clone().text()`)
+and the other record's listener can still read it; a direct
+`live.request.text()` leaves `bodyUsed` true for whoever reads next.
+Built WITH the body only when the body has a shape a
+second `Request` can hold without a competing consumer — `string`,
+`URLSearchParams`, `FormData`, `Blob`, `ArrayBuffer` or a view of one
+— and WITHOUT it otherwise (a `ReadableStream` or an async iterable,
+the transport's streaming-upload contract: reconstructing one would
+consume it ahead of the send), so the request then reads as bodyless.
+Absent without the opt-in; when the call failed before the request was
+built (argument serialization threw); when the address is relative and
+there is no `location` to resolve it against (absent beats a URL that
+was never sent); and when the reconstruction itself failed (an init
+the `Request` constructor rejects but the configured `fetch`
+tolerates) — a reconstruction never fails the call.
+
 #### `response`
 
 - **Type:** `Response`
+
+The response: with bodies opted in, one with an UNREAD body — a
+`clone()` taken as the response arrived, before the transport's
+decode, so the listener reads status, headers and body while the
+caller still gets its result from the original. The transport's own
+object instead — status and headers readable, body consumed by the
+transport's decode — without the opt-in, and, with it, for a response
+whose clone would be a branch nobody drains: an event-stream response
+(a `live()` source, `text/event-stream`, a connection open for the
+page's life), a deferred result (a generator's stream, `deferred:
+true`, served for the stream's life — its clone, taken before the
+result's shape was known, is cancelled at settle), and a response the
+`clone()` refused (one a configured `fetch` handed over already read).
+A response a `responseHandler` claimed whose result is not a deferred
+body — a non-live `application/x-frame-stream` frame render the frames
+transport claims, say — keeps its clone, so under the opt-in the
+clone's branch buffers that render until the listener reads it or
+drops the record; live frames are `text/event-stream` and are never
+cloned. Absent when the fetch itself rejected.
 
 #### `result`
 
@@ -344,6 +422,96 @@ The settled value, when `outcome` is `"ok"`.
 - **Type:** `unknown`
 
 The thrown value, when `outcome` is `"error"`.
+
+### `CallRequestEvent`
+
+One server-function request LEFT the browser — delivered on
+`OBSERVE.records.subscribe("request", …)` at the send: after the
+arguments were serialized and `prepareRequest` had its say, immediately
+before the transport's `fetch` is handed the request. "Left" means
+HANDED TO `fetch`, not that it reached the network: a `fetch` that
+throws synchronously still has its `"request"` (and a `"call"` with
+`outcome: "error"`). The `"call"` record of the same call follows at
+settle; this one exists because that one cannot show a call that is
+still in flight, or one that never settles (a hung fetch) — a network
+panel's pending row. The two records share their `CallLive` by identity
+(see `CallLive`): the object handed here is the object handed to the
+`"call"` listener, so an in-process consumer joins them with no
+id-plus-time join and no sequence number.
+
+Emitted only for a request that was handed over: a call that failed
+before its request was built (argument serialization threw, or
+`prepareRequest` did) emits no `"request"` — only its `"call"` settle; a
+call an integration answered locally (a handler's `intercept`) made no
+request and emits neither. A deferred or streaming result emits
+`"request"` at the send and `"call"` at handoff, as today. Serializable;
+`live.request` (under `bodies`) rides beside it.
+
+Listeners run synchronously, on the call's path, BEFORE the send: a slow
+listener delays the fetch and the time it spends is inside the call's
+`durationMs`. Read what is needed and hand the work off to a microtask
+(the same guidance the engine's records give).
+
+```ts
+interface CallRequestEvent {
+	side: "client";
+	id: string;
+	name?: string;
+	at: number;
+	method: "GET" | "POST";
+	origin?: ChangeOrigin;
+}
+```
+
+#### `side`
+
+- **Type:** `"client"`
+
+Which end recorded it. Only `"client"` exists today — the request left
+the browser. The server half (the request arrived, ahead of its
+`"invocation"`) is `"server"`, additive later, the way the `"frame"`
+record has two halves.
+
+#### `id`
+
+- **Type:** `string`
+
+The function id — the same `id` the call's `"call"` and the server's `"invocation"` carry.
+
+#### `name`
+
+- **Type:** `string`
+
+The function's source name, by the same rule as `CallEvent.name`.
+
+#### `at`
+
+- **Type:** `number`
+
+`performance.now()` at the send — when the request was handed to
+`fetch`, after serialization and `prepareRequest`. NOT the call's
+`CallEvent.at`, which is when the call was made: the gap between them
+is what building the request cost (an async `prepareRequest`
+included), and `CallEvent.at + durationMs` is never before this.
+
+#### `method`
+
+- **Type:** `"GET" | "POST"`
+
+`GET` for a GET-encoded read (`GET(fn)`), `POST` otherwise — as on `CallEvent`.
+
+#### `origin`
+
+- **Type:** `ChangeOrigin`
+
+What the call ran for — the same object `CallEvent.origin` carries,
+read at dispatch (see `CallEvent.origin` for the rule).
+
+### `CallRequestListener`
+
+```ts
+type CallRequestListener = (event: CallRequestEvent, live: CallLive) => void;
+```
 
 ### `DiagnosticCapture`
 
@@ -955,9 +1123,11 @@ prod with the rest of `OBSERVE`.
 interface Records {
 	subscribe<K extends RecordType>(
 		type: K,
-		listener: RecordListener<K>
+		listener: RecordListener<K>,
+		options?: RecordSubscribeOptions
 	): () => void;
 	observed(type: RecordType): boolean;
+	observed(type: RecordType, facet: "bodies"): boolean;
 	emit<K extends RecordType>(
 		type: K,
 		event: RecordEvent<K>,
@@ -973,7 +1143,13 @@ interface Records {
 Deliver `type` records as they complete; returns the unsubscribe. The
 subscription is the channel's, not any emitter's: it outlives the
 attribution engine's `enable()`/`disable()` cycles and is dropped only
-by its own unsubscribe.
+by its own unsubscribe. `options` asks the emitter for more than the
+record — see `RecordSubscribeOptions`. One entry per listener function:
+its options are read at its first subscription to the type, a repeat
+subscription of the same function changes nothing, and either disposer
+removes it. What an emitter takes is decided once per record from the
+union of the type's subscribers, so a listener without `bodies` that
+shares a call with one that asked receives the same `live` — the clone.
 
 #### `observed`
 
@@ -981,6 +1157,16 @@ by its own unsubscribe.
 
 Whether anything is subscribed to `type` — an emitter's pre-check, so
 a record nobody will hear costs nothing to not build (no clock read).
+
+#### `observed`
+
+- **Type:** `boolean`
+
+Whether a listener of `type` asked for its bodies
+(`subscribe(type, listener, { bodies: true })`) — the emitter's
+pre-check for the live handles that cost something per record to take.
+`false` while every listener of the type is a plain one, and once the
+last body-wanting one unsubscribed.
 
 #### `emit`
 
@@ -991,6 +1177,31 @@ runtime publishes. Snapshot semantics without a snapshot — the listener
 list is replaced, never mutated, on subscribe/unsubscribe — so a
 listener unsubscribing mid-delivery neither skips nor double-calls
 anyone this round, and delivery allocates nothing.
+
+### `RecordSubscribeOptions`
+
+What a `Records.subscribe` asks of the emitter beyond the record itself.
+
+```ts
+interface RecordSubscribeOptions {
+	bodies?: boolean;
+}
+```
+
+#### `bodies`
+
+- **Type:** `boolean`
+
+Ask for the record's BODIES: the live handles that cost the emitter
+something per record to take, and are taken only while a listener of
+the type has asked — so a consumer that reads ids, statuses and
+timings (an APM adapter, the performance tracks) never pays for what a
+body viewer (devtools' network panel) reads. Accepted for any type, the
+channel being generic; meaningful today for `"call"`, whose
+`live.request` (a reconstruction of the dispatched request) and
+`live.response` (an unread clone, a transient double-buffer of the
+payload) are taken only under it — without it, the transport's own
+objects. An emitter asks with `observed(type, "bodies")`.
 
 ### `RecordType`
 
@@ -1173,6 +1384,7 @@ interface RenderEvent {
 	durationMs: number;
 	boundaries: number;
 	outcome: "complete" | "abandoned" | "error";
+	route?: RenderRoute;
 }
 ```
 
@@ -1229,6 +1441,21 @@ left mid-stream (the sink threw, the readable was cancelled — the
 render was torn down; `"error"` — the render failed: a string render
 threw, a stream's uncontained failure wound it down through `onError`.
 
+#### `route`
+
+- **Type:** `RenderRoute`
+
+The route the render resolved to, as the router declared it while
+building its context under this render (`OBSERVE.attribution.withOrigin`
+with an `initial` ref — the same declaration the client's first
+`"navigation"` record comes from): `name` the matched pattern
+(`/users/:id`), `to` the concrete path, `params` what the pattern
+bound. Read from the router's ref when the render settles, so a match
+refined during the render is what lands. Absent when no router declared
+one — a render without a router, or a router that does not yet. What a
+consumer names the request by (`http.route`), where the URL would
+scatter one page across as many names as it has parameters.
+
 ### `RenderListener`
 
 ```ts
@@ -1257,6 +1484,36 @@ The request event the render ran under; absent for a render outside a request sc
 - **Type:** `TraceContext`
 
 The trace the render belongs to — `getTraceContext()`'s answer for it.
+
+### `RenderRoute`
+
+`RenderEvent.route` — the route a render resolved to, as the router matched it.
+
+```ts
+interface RenderRoute {
+	name?: string;
+	to?: string;
+	params?: Readonly<Record<string, string | undefined>>;
+}
+```
+
+#### `name`
+
+- **Type:** `string`
+
+The matched route pattern — `/users/:id`.
+
+#### `to`
+
+- **Type:** `string`
+
+The concrete path.
+
+#### `params`
+
+- **Type:** `Readonly<Record<string, string | undefined>>`
+
+The params the pattern bound (optional params unbound: `undefined`).
 
 ### `ServerObserve`
 

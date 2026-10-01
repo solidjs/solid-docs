@@ -1,0 +1,115 @@
+---
+title: Building for mobile
+category: Guides
+order: 7
+use_cases: >-
+  mobile apps, ios, android, capacitor, tauri, nativescript, webview, custom
+  renderers, native views
+tags:
+  - mobile
+  - capacitor
+  - tauri
+  - nativescript
+  - webview
+  - solid-js/universal
+  - createRenderer
+  - native
+version: "1.0"
+description: >-
+  Run Solid on iOS and Android with a WebView shell (Capacitor, Tauri),
+  NativeScript, or a custom renderer built on solid-js/universal.
+---
+
+Three routes get a Solid app onto iOS and Android:
+
+- **WebView shell:** a native app embeds a browser engine (a WebView) that runs your web build. Use [Capacitor](https://capacitorjs.com/) or [Tauri](https://v2.tauri.app/).
+- **DOM shim over native views:** Solid renders to real native views through a DOM-like layer. Use [NativeScript](https://nativescript.org/).
+- **Custom renderer:** you implement a renderer with `solid-js/universal` and drive native views directly.
+
+Solid's reactivity is the same in every route. What changes is what your components render to, which decides how much of your markup and CSS carries over.
+
+## Comparing the routes
+
+|                 | Renders to                        | Markup and styling                    | Native APIs                                            | Pick it when                                          |
+| --------------- | --------------------------------- | ------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------- |
+| Capacitor       | WebView                           | HTML and CSS, unchanged               | JavaScript plugins backed by Swift and Java or Kotlin  | You want to ship an existing web app with few changes |
+| Tauri           | System WebView                    | HTML and CSS, unchanged               | Rust commands, plus plugins in Rust, Swift, and Kotlin | You want a small binary and a Rust backend            |
+| NativeScript    | Native views                      | NativeScript elements instead of HTML | Direct access to platform APIs from JavaScript         | You want native views without writing a renderer      |
+| Custom renderer | Native views, or any non-DOM host | The host's own elements               | Whatever the host provides                             | No existing integration covers your platform          |
+
+## WebView shells
+
+A WebView is a browser engine embedded in a native app.
+The shell loads your Solid [SPA](/solid-router/rendering-modes/spa) into it, so components, routing, and CSS run as on the web, and plugins bridge to native features like the camera or push notifications.
+
+### Capacitor
+
+[Capacitor](https://capacitorjs.com/) wraps a web build in a native iOS/Android project and exposes native APIs to your Solid app through JavaScript plugins.
+The [`ionic-team/capacitor-solidjs-templates`](https://github.com/ionic-team/capacitor-solidjs-templates) repository provides official starter templates for Solid with Capacitor already configured.
+
+### Tauri
+
+[Tauri](https://v2.tauri.app/) uses the platform's system WebView instead of bundling one, for a smaller binary.
+Its [Solid frontend guide](https://v2.tauri.app/start/frontend/solidjs/) covers the setup, and Tauri 2 targets iOS and Android.
+
+## NativeScript
+
+[NativeScript](https://nativescript.org/) renders native views and exposes platform APIs to JavaScript.
+[`@nativescript-community/solid-js`](https://github.com/nativescript-community/solid-js) shims a DOM-like API over those views, so Solid's regular DOM renderer drives them without a WebView.
+
+Your reactive code carries over, but your markup does not: you write NativeScript elements such as `<stacklayout>` and `<label>`, not HTML.
+
+## Custom renderers with `solid-js/universal`
+
+Solid's default renderer, `solid-js/web`, assumes a DOM.
+A host without one, such as native views, needs its own way to create, update, and remove nodes, and `solid-js/universal` exposes `createRenderer` for that.
+It takes an object describing how to create, mutate, and traverse nodes on your host, and returns Solid's primitives (`render`, `effect`, `memo`, `insert`, and more) wired to it:
+
+```ts
+import { createRenderer } from "solid-js/universal";
+
+const {
+	render,
+	effect,
+	memo,
+	createComponent,
+	createElement,
+	createTextNode,
+	insertNode,
+	insert,
+	spread,
+	setProp,
+	mergeProps,
+	use,
+} = createRenderer({
+	createElement(tag) {
+		/* create a node for your host */
+	},
+	createTextNode(value) {
+		/* create a text node for your host */
+	},
+	replaceText(textNode, value) {
+		/* update a text node's value */
+	},
+	setProperty(node, name, value) {
+		/* apply a prop/attribute to a node */
+	},
+	insertNode(parent, node, anchor) {
+		/* attach node to parent, before anchor if given */
+	},
+	removeNode(parent, node) {
+		/* detach node from parent */
+	},
+	isTextNode(node) {
+		/* return whether node is a text node */
+	},
+	getParentNode(node) {},
+	getFirstChild(node) {},
+	getNextSibling(node) {},
+});
+```
+
+That lets Solid's fine-grained reactivity drive any tree-shaped host, not just the DOM.
+`createRenderer` only covers creating and updating nodes. Native views, a layout engine, and gesture handling are not included, so building on it directly is a project of its own.
+
+For the full `createRenderer` signature, see its [source on GitHub](https://github.com/solidjs/solid/blob/main/packages/solid/universal/src/index.ts).

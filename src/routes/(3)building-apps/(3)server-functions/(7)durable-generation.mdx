@@ -1,0 +1,437 @@
+---
+title: "Durable generation"
+version: "2.0"
+description: "Run an AI reply as a job that outlives the request that started it, store the reply as it grows, and deliver it through a live source so a closed tab loses nothing and two tabs read the same reply."
+---
+
+The support assistant from [Streaming AI responses](/building-apps/server-functions/streaming-ai-responses) answers while the shopper watches, and stops when they leave.
+That is the right contract for a quick question.
+It is the wrong one for a summary of a forty-message order dispute: the shopper closes the tab to find the order number, comes back, and the summary starts over, because the request that was writing it ended with the tab.
+
+The difference is who owns the generation.
+In the streaming guide the request owns it, and the reactive graph cancels it.
+On this page a job on the server owns it: an action starts the job and returns, the job writes the reply into storage as the model produces it, and every page that shows the reply reads what is stored through a live source.
+Pick the request-scoped shape when the reader is the only consumer and an abandoned answer has no value; pick this shape when the reply must finish without its reader, be found again on reload, or be read from more than one tab.
+
+Two deliveries are shown.
+The client-owned one sends the reply as data through [`live()`](/reference/solid-web/server-functions/live) and renders it in the browser.
+The server-owned one renders the whole thread on the server as a live server component, which is the shape of the `chat` example in the Solid repository; server components are an experimental preview, and that section says so.
+The job, the storage, and the actions are the same in both.
+
+## The job
+
+Three modules carry the shape: a store the job writes into, a registry of running jobs that no request owns, and the actions that start and stop one.
+
+The store keeps each reply and tells watchers when it changes:
+
+```ts
+// src/server/replies.ts
+export type Reply = {
+	id: string;
+	text: string;
+	status: "generating" | "complete" | "stopped" | "failed";
+	error?: string;
+};
+
+const replies = new Map<string, Reply & { version: number }>();
+const waiters = new Map<string, Set<() => void>>();
+
+export function write(id: string, patch: Partial<Reply>) {
+	const current = replies.get(id)!;
+	replies.set(id, { ...current, ...patch, version: current.version + 1 });
+	const waiting = waiters.get(id);
+	waiters.delete(id);
+	waiting?.forEach((wake) => wake());
+}
+
+function changed(id: string, signal?: AbortSignal) {
+	return new Promise<void>((wake) => {
+		(waiters.get(id) ?? waiters.set(id, new Set()).get(id)!).add(wake);
+		signal?.addEventListener("abort", () => wake(), { once: true });
+	});
+}
+
+// The reply as it stands now, then again after every write.
+export async function* watch(id: string, signal?: AbortSignal) {
+	let seen = -1;
+	while (!signal?.aborted) {
+		const current = replies.get(id);
+		if (current && current.version !== seen) {
+			seen = current.version;
+			yield current as Reply;
+			continue;
+		}
+		await changed(id, signal);
+	}
+}
+```
+
+`watch` checks the version after every yield before it waits, so a write that lands while the consumer holds the previous value is not missed.
+The `chat` example keeps the same shape in `src/server/db.ts`, written through to disk so a reply survives a restart.
+
+The job reads from the model and writes into the store.
+It belongs to the module, not to a request:
+
+```ts
+// src/server/generations.ts
+import * as replies from "./replies";
+
+const running = new Map<string, AbortController>();
+
+export function start(replyId: string, history: Message[]) {
+	const abort = new AbortController();
+	running.set(replyId, abort);
+	void (async () => {
+		let text = "";
+		try {
+			for await (const chunk of model.stream({
+				history,
+				signal: abort.signal,
+			})) {
+				text += chunk.text;
+				replies.write(replyId, { text });
+			}
+			replies.write(replyId, { status: "complete" });
+		} catch (error) {
+			if (abort.signal.aborted) replies.write(replyId, { status: "stopped" });
+			else
+				replies.write(replyId, {
+					status: "failed",
+					error: "The model stopped answering",
+				});
+		} finally {
+			running.delete(replyId);
+		}
+	})();
+}
+
+export function stop(replyId: string) {
+	running.get(replyId)?.abort();
+}
+```
+
+`model.stream` is a stand-in for the provider SDK, as in the streaming guide.
+The signal it receives is the job's own, not a request's: Stop aborts it, and nothing else does.
+A reply that fails keeps the text that had arrived, with the reason beside it; a reply that was stopped keeps its text and says so.
+Write at most every few tens of milliseconds when the model is fast, as the example does, since every write wakes every watcher.
+
+The actions start and stop a job and return at once:
+
+```ts
+// src/data/replies.ts
+import { action } from "@solidjs/router";
+import * as generations from "../server/generations";
+import * as replies from "../server/replies";
+import * as threads from "../server/threads";
+
+export const sendMessage = action(
+	async (threadId: string, messageId: string, text: string) => {
+		"use server";
+		const { replyId, history } = await threads.append(
+			threadId,
+			messageId,
+			text
+		);
+		generations.start(replyId, history);
+	},
+	"sendMessage"
+);
+
+export const stopReply = action(async (replyId: string) => {
+	"use server";
+	generations.stop(replyId);
+}, "stopReply");
+```
+
+`sendMessage` stores the shopper's message and an empty reply with status `generating`, starts the job, and returns.
+The response closes while the job is still writing; the server-function runtime does not dispose work a function started, so the job runs to its end whether or not anyone is watching.
+`threads.append` is the thread half of the store, which keeps the message list and the history the model reads; the `chat` example's `db.send` is one.
+Both actions are Solid Router [actions](/routing/solid-router/data#mutate-with-actions), so they work as a form before JavaScript has loaded and from code through `useAction`.
+
+:::caution[An orphan is a fact, not a hang]
+A server restart ends every running job and leaves the replies they were writing at `generating`.
+Mark them `failed` with a reason when the store loads, as the `chat` example does, so a reader sees a message with a Retry rather than a reply that never finishes.
+:::
+
+## Client-owned: the browser renders the reply
+
+The live source yields the reply so far, whole, on every write:
+
+```ts
+// src/data/replies.ts
+import { getRequestEvent } from "@solidjs/web";
+import { GET, live } from "@solidjs/web/server-functions";
+import * as replies from "../server/replies";
+
+export const watchReply = live(
+	GET(async function* (replyId: string) {
+		"use server";
+		const signal = getRequestEvent()?.request.signal;
+		for await (const reply of replies.watch(replyId, signal)) yield reply;
+	})
+);
+```
+
+The request's signal ends the watcher when the reader leaves; the job does not see it.
+The first yield on every connection is the current reply, which is the contract `live()` reconnects on, as [Declare a live source](/building-apps/server-functions/reads-and-live-data#declare-a-live-source) describes.
+
+In the browser, [`createProjection`](/reference/solid-js/stores/create-projection) with an async generator turns the stream into a store:
+
+```tsx
+// src/pages/Reply.tsx
+import { Show, createProjection } from "solid-js";
+import { stopReply, watchReply } from "../data/replies";
+
+type ReplyView = { text: string; status: string; error?: string };
+
+function Reply(props: { replyId: string }) {
+	const reply = createProjection(
+		async function* (draft: ReplyView) {
+			for await (const next of watchReply(props.replyId)) {
+				draft.text = next.text;
+				draft.status = next.status;
+				draft.error = next.error;
+				yield;
+			}
+		},
+		{ text: "", status: "generating" },
+		{ seedLoadingValue: true }
+	);
+
+	return (
+		<article>
+			<p>{reply.text}</p>
+			<Show when={reply.status === "generating"}>
+				<form action={stopReply.with(props.replyId)} method="post">
+					<button type="submit">Stop</button>
+				</form>
+			</Show>
+			<Show when={reply.status === "failed"}>
+				<p role="alert">{reply.error}</p>
+			</Show>
+		</article>
+	);
+}
+```
+
+Send a message, close the tab while the reply is being written, and open the page again.
+The component calls `watchReply` again, the first yield is the reply as far as it had got, and the paragraph keeps growing from there.
+Open the page in two tabs and both show the same reply; press Stop in one and the status changes in both, because Stop aborted the job and the job wrote `stopped` into the store every watcher reads.
+
+The projection reads `props.replyId` before its first `await`, so a different reply re-runs it, which ends the previous iteration and its connection.
+A projection rather than a memo keeps readers of `reply.status` out of every text update, and gives the Markdown block split from [Render Markdown without re-rendering the answer](/building-apps/server-functions/streaming-ai-responses#render-markdown-without-re-rendering-the-answer) a draft to write into.
+`refresh(reply)` re-runs the projection, which opens a new connection; it does not touch the job.
+
+Every call site that iterates a live source holds its own connection.
+When the thread list and the thread both need the same reply, hoist the read, or declare it with Solid Router's [`liveQuery`](/reference/solid-router/data#livequery), which keeps one connection per key for every consumer; the spelling is `liveQuery(watchReply, "reply")`, and a function already declared with `live(GET())` passes through unchanged.
+
+## Hold the bubble until the stream confirms
+
+The shopper's own message should be on screen the moment they press Enter, and should give way to the server's row when the thread shows it.
+The thread is read through a live source, so the confirmation arrives on the stream rather than in the action's response.
+That is what [`until`](/reference/solid-js/lifecycle-actions/until) waits for:
+
+```tsx
+// src/components/Composer.tsx
+import { For, action, createOptimisticStore, until } from "solid-js";
+import { useAction } from "@solidjs/router";
+import { sendMessage } from "../data/replies";
+
+type Pending = { id: string; text: string };
+
+function Composer(props: { threadId: string; seen: string[] }) {
+	const send = useAction(sendMessage);
+	const [outbox, setOutbox] = createOptimisticStore<Pending[]>([]);
+
+	const submit = action(function* (text: string) {
+		const id = crypto.randomUUID();
+		setOutbox((list) => {
+			list.push({ id, text });
+		});
+		yield send(props.threadId, id, text);
+		yield until(() => props.seen.includes(id), { timeout: 15_000 });
+	});
+
+	return (
+		<>
+			<For each={outbox.filter((m) => !props.seen.includes(m.id))}>
+				{(message) => <p class="pending">{message.text}</p>}
+			</For>
+			<form
+				onSubmit={(event) => {
+					event.preventDefault();
+					const data = new FormData(event.currentTarget);
+					void submit(String(data.get("text") ?? ""));
+				}}
+			>
+				<textarea name="text" required />
+				<button type="submit">Send</button>
+			</form>
+		</>
+	);
+}
+```
+
+`seen` is the list of message ids the live thread shows; the parent reads it from the thread's live source and passes it down.
+The push onto `outbox` is an optimistic write: it shows at once and is held by the action's transaction.
+`until` reads the authoritative `seen`, so the optimistic row cannot satisfy it; only the stream can.
+When the row arrives, `until` resolves, the action settles, and the overlay drops.
+A timeout or a server error rejects the action, which drops the overlay the same way and leaves the shopper's text to send again.
+
+The `For` also filters the outbox by `seen`.
+The action's overlay is released a task after the data that satisfied its `until` lands, so without the filter a frame can show the bubble and the row together; deriving the bubble's visibility from `seen` closes that gap, and `until` keeps its job of settling the action on failure and timeout.
+
+`action` here is the one from `solid-js`, which runs a generator as one transaction; `sendMessage` is a Solid Router action, bound to the router with `useAction` so a call from code carries its revalidation and submission tracking.
+
+## Server-owned: the thread as a live server component
+
+:::caution[Server components are an experimental preview]
+A function returned from a `"use server"` function is a server component, mounted in the browser with `dynamicComponent`.
+The runtime ships in `@solidjs/web` and is excluded from Solid 2.0's stability guarantees: the API and the wire format may change between prereleases.
+The `chat` example in the Solid repository is this section's reference implementation.
+:::
+
+When the markdown renderer, the highlighter, and the model client should stay on the server, the thread can be server markup that keeps changing.
+The server function returns a component instead of data, and `live()` holds the response open while it re-renders:
+
+```tsx
+// src/routes/thread.tsx
+import { createMemo, onCleanup } from "solid-js";
+import { getRequestEvent } from "@solidjs/web";
+import { GET, live } from "@solidjs/web/server-functions";
+import type { Slot } from "@solidjs/web/frames";
+import { liveQuery } from "@solidjs/router";
+import { stopReply } from "../data/replies";
+import * as threads from "../server/threads";
+
+type ComposerSlot = Slot<{ threadId: string; seen: string[] }>;
+
+export const getThread = liveQuery(
+	live(
+		GET(async (id: string) => {
+			"use server";
+			return (props: { composer: ComposerSlot }) => {
+				const gone = new AbortController();
+				onCleanup(() => gone.abort());
+				getRequestEvent()?.request.signal.addEventListener("abort", () =>
+					gone.abort()
+				);
+				const view = createMemo(() => threads.watch(id, gone.signal));
+				return (
+					<article>
+						{view().messages.map((message) => (
+							<section data-id={message.id}>
+								<div innerHTML={renderMarkdown(message.text)} />
+								{message.status === "generating" && (
+									<form action={stopReply.with(message.id)} method="post">
+										<button type="submit">Stop</button>
+									</form>
+								)}
+							</section>
+						))}
+						<props.composer
+							$key={id}
+							threadId={id}
+							seen={view().messages.map((m) => m.id)}
+						/>
+					</article>
+				);
+			};
+		})
+	),
+	"thread"
+);
+```
+
+`threads.watch` is the thread-level watcher: it yields the thread and its messages after every write to any of them.
+The route component mounts the call and fills the slot:
+
+```tsx
+// src/routes/thread.tsx
+import { Loading } from "solid-js";
+import { dynamicComponent } from "@solidjs/web";
+import type { RouteSectionProps } from "@solidjs/router";
+import Composer from "../components/Composer";
+
+export default function ThreadRoute(props: RouteSectionProps) {
+	const Thread = dynamicComponent(() => getThread(String(props.params.id)));
+	return (
+		<Loading fallback={<p>Loading the conversation…</p>}>
+			<Thread
+				composer={(p) => <Composer threadId={p.threadId} seen={p.seen} />}
+			/>
+		</Loading>
+	);
+}
+```
+
+The composer from the previous section is the slot's fill: the server positions it at the foot of the thread and passes `seen` as a slot argument, so `until` reads the same ids the server rendered.
+`$key={id}` makes a new composer per thread, so a half-typed message stays with its conversation.
+
+What this shape adds over the client-owned one:
+
+- The page's source carries the reply as far as it had got, because the document face renders the live source's first value, and hydration adopts it and connects.
+- The browser bundle has no Markdown parser, no highlighter, and no model client.
+- Every mutation is a form the server rendered, which works before JavaScript loads; a form that has been submitted stays marked busy while the markup around it changes.
+
+What it costs: the server holds one render per open thread per tab, and the thread and the sidebar are two connections per tab, which is why the example serves HTTP/2 in development.
+
+The example reads the thread through one watcher at the top of the render and cuts the markup into the finished messages and the reply being written, so a token re-sends the reply and nothing else.
+A watcher created per message inside the list never settles, because each retry of the render makes a new one.
+
+## Reconnect, and where a reply resumes from
+
+`live()` reconnects a stream that dies after it has connected, with exponential backoff, and the first yield of the new connection replaces whatever the page shows.
+Each event on the wire carries an id, and every reconnect sends the last id it received back as `Last-Event-ID`.
+When that id equals the digest of the source's first yield, the server drops that yield: the client already holds it, so an unchanged reply costs nothing on reconnect.
+For a live server component the reconnect also names the pieces of markup the page shows, and the server sends only the pieces whose digest differs.
+After hydration, the first connection names the value the page was served with, so a server that still holds that value sends nothing.
+
+What this does not do is replay the part of a reply between the last event and now.
+The source yields the whole reply, so a reconnect gets the reply so far in one value, and a long reply costs its length each time.
+Partial replay is a join with the job's log: keep an append-only log of chunks per reply, read the header in the source with `getRequestEvent()?.request.headers.get("last-event-id")`, and yield the chunks after that position.
+A source that reads the header itself is a cursor source; the runtime's digest skip does not apply to it.
+`@tanstack/ai-durable-stream` and Electric's Durable Streams are off-the-shelf logs of that kind, for a team that wants one rather than a table.
+
+## Common problems
+
+### The reply stops when the shopper leaves
+
+The job received the request's signal instead of its own.
+Give the job an `AbortController` the registry owns, and pass `request.signal` only to the watcher.
+
+### Stop does nothing
+
+The Stop action aborted a controller the job was not reading, or the job was started by a server that has since restarted.
+Check that `generations.start` passes `abort.signal` to the model call, and that the store marks orphaned replies `failed` on load.
+
+### Two tabs show different replies
+
+Each tab is reading a copy the job made rather than the store.
+The job writes once, into the store; every page reads the store through its watcher.
+
+### The bubble and the server's row show together for a frame
+
+The bubble leaves when the action settles, which is a task after the row landed.
+Filter the outbox by `seen` as well as waiting on it with `until`.
+
+### `Cannot call until inside a reactive scope`
+
+`until` was called inside a memo or an effect.
+Await it from an action body or another imperative scope.
+
+## Recap
+
+- Start the generation from an action that returns at once; the job belongs to a module-level registry and writes the reply into a store as it arrives.
+- Pass the job its own abort signal; the request's signal ends only the watcher.
+- Deliver the reply through `live(GET(async function*))`, yielding the whole reply so far and the current reply first on every connection.
+- Render it in the browser with `createProjection`, or on the server as a live server component mounted with `dynamicComponent` through `liveQuery(live(GET(fn)), key)`.
+- Hold an optimistic row with `createOptimisticStore` inside an `action`, confirm it with `until` over the live thread's ids, and filter the row by the same ids.
+- A reconnect sends `Last-Event-ID`; an unchanged first value is skipped, and partial replay needs a log the source reads the header against.
+
+## Next steps
+
+- [Streaming AI responses](/building-apps/server-functions/streaming-ai-responses): the request-scoped shape, and the cancellation contract that decides between the two.
+- [Reads, streams, and live data](/building-apps/server-functions/reads-and-live-data): `live()`, its reconnect, and `onstatus`.
+- [Mutations](/concepts/mutations): actions, optimistic stores, and `until`.
+- [Data loading and mutations](/routing/solid-router/data): Solid Router's `action`, `useAction`, and forms.

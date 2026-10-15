@@ -118,13 +118,26 @@ interface ServerFunctionsClientConfig {
 		capture?(info: { id: string; meta: unknown }): unknown;
 		handle(
 			response: Response,
-			ctx: { id: string; meta: unknown; args: unknown[]; context: unknown }
+			ctx: {
+				id: string;
+				meta: unknown;
+				args: unknown[];
+				context: unknown;
+				retry(): Promise<unknown>;
+			}
 		): unknown;
+		intercept?(info: {
+			id: string;
+			meta: unknown;
+			args: unknown[];
+			retry(): Promise<unknown>;
+		}): unknown;
 		resume?(info: {
 			id: string;
 			meta: unknown;
 			args: unknown[];
 		}): { position?: string; headers?: Record<string, string> } | undefined;
+		onLive?(): void;
 	};
 	serializeArgs?(args: unknown[]): string | Promise<string>;
 }
@@ -212,9 +225,13 @@ configureServerFunctionsClient({
 });
 ```
 
+Return synchronously when you can: hydration adopts a server-rendered
+read only if its request is sent in the same tick, so an async hook
+makes every hydrated read fetch again from the browser.
+
 #### `responseHandler`
 
-- **Type:** `{ capture?(info: { id: string; meta: unknown }): unknown; handle( response: Response, ctx: { id: string; meta: unknown; args: unknown[]; context: unknown } ): unknown; resume?(info: { id: string; meta: unknown; args: unknown[]; }): { position?: string; headers?: Record<string, string> } | undefined; }`
+- **Type:** `{ capture?(info: { id: string; meta: unknown }): unknown; handle( response: Response, ctx: { id: string; meta: unknown; args: unknown[]; context: unknown; retry(): Promise<unknown>; } ): unknown; intercept?(info: { id: string; meta: unknown; args: unknown[]; retry(): Promise<unknown>; }): unknown; resume?(info: { id: string; meta: unknown; args: unknown[]; }): { position?: string; headers?: Record<string, string> } | undefined; onLive?(): void; }`
 
 Response-side integration seam — the client mirror of the handler's
 `transformResult`. `handle(response, ctx)` sees every response before

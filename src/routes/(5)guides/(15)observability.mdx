@@ -98,14 +98,18 @@ configureServerErrors({
 
 `kind` and `handling` say which road the failure took:
 
-| `kind`            | `handling`  | What happened                                                                       |
-| ----------------- | ----------- | ----------------------------------------------------------------------------------- |
-| `render`          | `fallback`  | An `Errored` boundary rendered its fallback.                                        |
-| `render`          | `client`    | A `Loading` fragment rejected; the client re-renders that subtree.                  |
-| `render`          | `failed`    | Nothing contained it; the request fails.                                            |
-| `render`          | `serialize` | A value written to the hydration stream would not serialize.                        |
-| `server-function` | `thrown`    | The function threw. `direct` is `true` for an in-process call during a render.      |
-| `server-function` | `channel`   | A rejection escaped through a returned stream or iterable after the head committed. |
+| `kind`            | `handling`  | What happened                                                                             |
+| ----------------- | ----------- | ----------------------------------------------------------------------------------------- |
+| `render`          | `fallback`  | An `Errored` boundary rendered its fallback.                                              |
+| `render`          | `client`    | A `Loading` fragment rejected; the client re-renders that subtree.                        |
+| `render`          | `failed`    | Nothing contained it; the request fails.                                                  |
+| `render`          | `serialize` | A value written to the hydration stream would not serialize.                              |
+| `server-function` | `thrown`    | The function threw. `direct` is `true` for an in-process call during a render.            |
+| `server-function` | `channel`   | A rejection escaped through a returned stream or iterable after the head committed.       |
+| `request`         | `failed`    | Code outside the runtime, such as middleware, passed a failure to `reportRequestFailure`. |
+
+A request failure the runtime never met, such as a throw a middleware catches before any render starts, reaches the hook only when that code calls `reportRequestFailure(error, event)` from `@solidjs/web`; [Catching errors](/building-apps/middleware-and-api-routes#catching-errors) shows the call.
+The context then carries the request's `event`, and the hook's return value is ignored, as it is for every `failed` handling.
 
 The hook runs inside the request scope, so `getRequestEvent()` works in it.
 `renderToStream(App, { onError })` and `renderToString(App, { onError })` take a per-request hook that wins over the ambient one for that request.

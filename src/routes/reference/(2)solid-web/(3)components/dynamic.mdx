@@ -1,9 +1,10 @@
 ---
-title: "dynamic"
+title: "dynamic / dynamicComponent"
 category: "Components"
 use_cases: "components api, dynamic usage"
 tags:
   - "dynamic"
+  - "component"
   - "components"
   - "reference"
   - "api"
@@ -25,9 +26,12 @@ Creates a stable component whose rendered component comes from a reactive source
 
 ```ts
 import { dynamic } from "@solidjs/web";
+import { dynamicComponent } from "solid-js";
 ```
 
-## Type signature
+## `dynamic`
+
+### Type signature
 
 ```ts
 function dynamic<T extends ValidComponent>(
@@ -36,26 +40,48 @@ function dynamic<T extends ValidComponent>(
 ): Component<ComponentProps<T>>;
 ```
 
-## Parameters
+### Parameters
 
-### `source`
+#### `source`
 
 - **Type:** `() => T | Promise<T> | AsyncIterable<T> | null | undefined | false`
 
 Reactive function that returns the component to render: a component function, an intrinsic element name, a promise of either, or a falsy value to render nothing.
 
-### `options`
+#### `options`
 
 - **Type:** `DynamicOptions`
 - Optional
 
 `deferStream` holds the SSR shell until the source settles.
 
-## Return value
+### Return value
 
 A stable component. Render it as `<Component />` and pass the target component's props to it.
 
-## Examples
+### Examples
+
+```tsx
+// `source` can return either a custom Component or a native tag
+// name — they're interchangeable, and the returned reference is a
+// stable Component you can use anywhere a normal one would go.
+const Field = dynamic(() => (multiline() ? RichTextEditor : "input"));
+return <Field value={value()} onInput={onInput} />;
+
+// An ambiguous tag inside an SVG tree: say which namespace you mean.
+const Link = dynamic(() => "a");
+<svg>
+	<Link xmlns="http://www.w3.org/2000/svg" href="/x">
+		…
+	</Link>
+</svg>;
+
+// A polymorphic component: no memo when `as` arrived as a literal.
+function Polymorphic(props) {
+	const Tag = dynamic(() => props.as, { static: isStatic(props, "as") });
+	return <Tag {...omit(props, "as")} />;
+}
+```
 
 ```tsx
 const CurrentPage = dynamic(() => pages[route()]);
@@ -63,9 +89,62 @@ const CurrentPage = dynamic(() => pages[route()]);
 return <CurrentPage />;
 ```
 
-## Caveats
+### Caveats
 
 - The returned component is stable; render it once and let `source` change. Creating it inside the render path recreates the subtree.
+
+## `dynamicComponent`
+
+`dynamic` for a source that only ever answers with a component — never a
+tag name. A reactive, optionally async source; a stable `Component` back;
+`{ static: true }` and `{ deferStream: true }`. The source's type excludes
+strings, so a tag name is a compile error here — use `@solidjs/web`'s
+`dynamic` for one.
+
+Cost model, which is the reason this exists: `dynamic` must be able to
+render a tag, so one `dynamic` anywhere on a page retains the element
+runtime — `createElement`, `spread` and the prop-collection helpers, the
+SVG/MathML tables — for everyone, whether or not any source ever answers
+with a string (a bundler cannot know what a source will resolve to).
+`dynamicComponent` has no tag arm and never references that runtime, so a
+page whose only dynamic mounts are components pays nothing for it.
+
+This is the documented way to mount a server component: a server
+function's answer is a component reference, and the frames transport
+resolves every call for the same function to the same mount identity, so
+a refetch or an argument change is delivered into the mounted instance
+rather than remounting it.
+
+### Type signature
+
+```ts
+const dynamicComponent: <C extends Component<any>>(
+	source: () => C | Promise<C> | AsyncIterable<C> | null | undefined | false,
+	options?: DynamicOptions
+) => Component<ComponentProps<C>>;
+```
+
+### Parameters
+
+#### `source`
+
+- **Type:** `() => C | Promise<C> | AsyncIterable<C> | null | undefined | false`
+
+#### `options`
+
+- **Type:** `DynamicOptions`
+- Optional
+
+### Examples
+
+```tsx
+const Story = dynamicComponent(() => getStory(props.storyId));
+return <Story comment={(p) => <Comment cid={p.cid}>{p.children}</Comment>} />;
+
+// A client component chosen by (sync) data — the same thing `dynamic`
+// does, without retaining the element runtime for the page.
+const Page = dynamicComponent(() => (page().editable ? Editor : Viewer));
+```
 
 ## Learn more
 
@@ -75,6 +154,9 @@ return <CurrentPage />;
 ## Related types
 
 ### `DynamicOptions`
+
+Options for `dynamicComponent` (and for `@solidjs/web`'s `dynamic`, which
+passes them through to the same core).
 
 ```ts
 interface DynamicOptions {
@@ -90,12 +172,13 @@ interface DynamicOptions {
 SSR only: hold the document's first flush until the source settles, so
 the resolved component renders into the shell instead of streaming in
 behind its boundary's fallback. Same meaning as `createMemo`'s
-`deferStream`. Ignored on the client.
+`deferStream`. Default `false` — a source is data of unknown cost and
+streams by default. Ignored on the client.
 
 #### `static`
 
 - **Type:** `boolean`
 
 The source cannot change: call it once, untracked, now, and render the
-result with no computation per instance (see `dynamic`). The source must
-resolve synchronously.
+result with no computation per instance. The source must resolve
+synchronously.

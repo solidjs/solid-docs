@@ -192,6 +192,25 @@ pnpm test --run
 The templates demonstrate component tests, not browser-wide end-to-end flows.
 See the [Vitest browser-mode guide](https://vitest.dev/guide/browser/) for browser locators, interactions, and browser-mode limitations when a component test needs those APIs.
 
+An end-to-end test against a server-rendered page has to wait until the page is interactive before it clicks.
+The experimental [`onHydrationEnd`](/reference/solid-js/advanced/manual-hydration/on-hydration-end) runs its callback once the hydration phase ends, so the client entry can set a marker for the test to wait for:
+
+```tsx
+// src/entry-client.tsx
+import { onHydrationEnd } from "solid-js";
+import { hydrate } from "@solidjs/web";
+import App from "./App";
+
+hydrate(() => <App />, document);
+onHydrationEnd(() => {
+	document.documentElement.dataset.hydrated = "";
+});
+```
+
+The test then waits for `html[data-hydrated]` before it interacts with the page.
+Register the callback after `hydrate()`; registered before hydration starts, it runs in the next microtask without waiting.
+The marker means the hydration phase ended, not that it succeeded, so use it for tests and not to change what the app renders.
+
 ## Test server code in a Node project
 
 A fullstack app needs separate client and server test environments.

@@ -1,7 +1,7 @@
 ---
 title: "Data APIs"
 version: "2.0"
-description: "Reference for Solid Router query caching, revalidation, actions, action invocation, and settled submissions."
+description: "Reference for Solid Router query caching, live queries, revalidation, actions, action invocation, and settled submissions."
 source_repo: "solidjs/solid-router"
 source_ref: "next"
 source_path: "src/data/index.ts"
@@ -12,6 +12,7 @@ source_path: "src/data/index.ts"
 ```ts
 import {
 	action,
+	liveQuery,
 	query,
 	revalidate,
 	useAction,
@@ -63,6 +64,50 @@ query.clear(): void;
 `query.get` returns the settled cached value.
 `query.get` throws when no entry exists.
 `query.set` does not accept a promise value.
+
+## `liveQuery`
+
+```ts
+function liveQuery<T extends (...args: any) => any>(
+	fn: T,
+	name: string
+): LiveFunction<T>;
+```
+
+Declares a keyed query over an async-iterable producer.
+Each value the producer yields is the next value of the query.
+The producer must yield the current state each time it is invoked.
+
+```ts
+type LiveFunction<T extends (...args: any) => any> = ((
+	...args: Parameters<T>
+) => AsyncIterable<Value>) & {
+	key: string;
+	keyFor(...args: Parameters<T>): string;
+	status(...args: Parameters<T>): LiveQueryStatus;
+};
+
+type LiveQueryStatus =
+	"idle" | "connecting" | "connected" | "reconnecting" | "closed";
+```
+
+`Value` is the producer's yielded type, or its resolved return type when it does not return an iterable.
+
+```ts
+const roomMessages = liveQuery(getMessages, "messages");
+
+const messages = createMemo(() => roomMessages(props.room));
+```
+
+- Keys combine `name` with the arguments, as `query` keys do.
+- Consumers of one key share one connection. A late consumer receives the latest value first. The connection closes when the last consumer leaves.
+- A stream that has delivered a value and then fails with a network error or a 5xx status reconnects with exponential backoff. The latest value stays available meanwhile.
+- A failure before the first value, or a 4xx status, ends the channel and throws to consumers.
+- When `fn` is a server function without a declared method, `liveQuery` wraps it as a GET server function.
+- A call under preload intent connects the channel and holds it open for 5 seconds.
+- Mutations do not revalidate live keys. `revalidate(key)` with `force` reconnects the matching channels.
+- On the server, the document renders the first value. Hydration adopts it and reconnects.
+- `status(...args)` is a reactive read of the channel's connection state.
 
 ## `revalidate`
 
@@ -117,7 +162,9 @@ Server functions supply their own URL.
 ```
 
 Only POST forms are accepted by delegated action handling.
-The form has `aria-busy="true"` while its delegated submission is running.
+The form has `aria-busy="true"` from its delegated submission until the action's held update commits.
+Busy state is keyed by the form's `action` URL, so every form posting to that URL shows it.
+The router does not overwrite or remove an `aria-busy` value the author set.
 
 ### `with`
 
@@ -133,6 +180,8 @@ Registration under an owner is removed when the owner is disposed.
 
 Registers a callback for every completed invocation.
 The callback receives a `Submission`, including for void, redirect, and metadata-only outcomes.
+Callbacks run when the action's held update commits, after any revalidation or redirect it holds has rendered.
+The submission record appears in `useSubmissions` at the same point.
 
 ## `useAction`
 
@@ -143,6 +192,7 @@ function useAction<T extends any[], U, V>(
 ```
 
 Binds direct action invocation to the current router context.
+The returned promise resolves when the action body finishes, which can be before the action settles and `onSettled` runs.
 
 ## `useSubmissions`
 

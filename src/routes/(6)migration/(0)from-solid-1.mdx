@@ -193,14 +193,25 @@ Delete `produce(...)` wrappers and pass the producer body directly to the setter
 Replace `createMutable` and `modifyMutable` with `createStore` and explicit draft setters.
 Store writes follow the same staged-write timing as signals.
 
-[`storePath`](/reference/solid-js/advanced/store-advanced/store-path) is a migration helper for path setters that cannot be converted at once:
+The setter takes no path arguments.
+A Solid 1 path setter becomes a draft write to the same path; ranges and filters become ordinary loops, and setting `undefined` to remove a key becomes `delete`:
 
 ```ts
-setState(storePath("user", "address", "city", "Paris"));
-```
+// Solid 1: setState("items", { from: 1, to: 4, by: 2 }, 99)
+setState((draft) => {
+	for (let i = 1; i <= 4; i += 2) draft.items[i] = 99;
+});
 
-Prefer draft setters for new code.
-`storePath` also supports indexed, filtered, and ranged paths, so preserve the original path semantics when converting complex setters.
+// Solid 1: setState("todos", (todo) => todo.done, "archived", true)
+setState((draft) => {
+	for (const todo of draft.todos) if (todo.done) todo.archived = true;
+});
+
+// Solid 1: setState("nickname", undefined)
+setState((draft) => {
+	delete draft.nickname;
+});
+```
 
 `reconcile` now runs against the selected draft:
 
@@ -318,6 +329,7 @@ Apply these direct UI migrations:
   `Dynamic` is deprecated.
   Create the component once, outside the JSX, and render it wherever it is needed; a falsy source renders nothing, as before.
 - Replace direct `createDynamic(source, props)` calls with `dynamic(source)`.
+- Use [`dynamicComponent`](/reference/solid-web/components/dynamic) from `solid-js` instead when the source only ever answers with a component, never a tag name; it does not keep the element runtime in the bundle.
 
 Update removed JSX forms:
 
@@ -325,6 +337,8 @@ Update removed JSX forms:
 - Replace `use:directive` with a `ref` callback or directive factory, and use a `ref` array to compose callbacks.
 - Replace `on:` and `oncapture:` with camel-case Solid event props.
   Use a `ref` callback and `addEventListener` when native listener options are required.
+- Rename lowercase handlers such as `onclick={fn}` to `onClick`.
+  Only `on` followed by an uppercase letter is an event handler; a lowercase `onclick` or a leftover `on:click` compiles to a plain attribute without an error, and development warns `[LOWERCASE_EVENT_ATTRIBUTE]` when it receives a function.
 - Replace `attr:` and `bool:` with standard attributes and boolean presence.
 - Remove `/*@once*/`.
   Keep values reactive, use DOM default properties such as `defaultValue` for initial state, or take a narrow JavaScript snapshot with `untrack`.

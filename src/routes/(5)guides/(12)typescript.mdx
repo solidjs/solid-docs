@@ -229,7 +229,9 @@ The draft is a `Cart`, so a write to the wrong property or a half-built item is 
 Because `Store<Cart>` is `Cart`, the proxy passes anywhere a `Cart` or a `CartItem[]` is expected, such as `<CartLines items={cart.items} />`, with no cast.
 `reconcile(value)` returns `(state: Cart) => Cart`, which is exactly what the setter takes.
 
-The function form, `createStore(async () => getCart(), seed)`, is typed by its seed and return value, and [`createProjection`](/reference/solid-js/stores/create-projection) returns a `Store<T>` of its seed type.
+The function form without a seed, `createStore(async () => getCart())`, is typed by the function's return value, so `cart` is a `Store<Cart>`; this form takes object roots only.
+With a seed, `createStore((draft) => { ... }, seed)`, the store is typed by the seed and the function, and the seed must be a complete `T`: a partial object such as `{ items: [] }` for a `Cart` is a type error, and an array store takes `[]`.
+[`createProjection`](/reference/solid-js/stores/create-projection) follows the same two forms and returns a `Store<T>`.
 [Stores](/concepts/stores#update-with-a-draft) explains what the draft does at runtime.
 
 ## Events and refs

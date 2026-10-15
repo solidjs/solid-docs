@@ -35,9 +35,9 @@ the same transactional semantics — with form binding, serialization, and
 submission tracking layered on top. The shared name is deliberate.
 
 Wraps a generator function so each invocation runs as a single transaction
-that batches every signal/store write between yields. The
-surrounding UI sees one atomic update per yielded step; nothing is committed
-until the action either completes or the next `yield` resolves.
+that holds every signal/store write between yields. The surrounding UI sees
+one atomic update when the action completes; nothing is committed until
+every action in the transaction has returned.
 
 `yield` is the transaction-safe suspension point: the action waits for a
 yielded promise and re-enters the transaction before running the code after
@@ -47,8 +47,7 @@ the next `yield` runs OUTSIDE the transaction: writes to fresh signals
 commit immediately, and anything that creates a reader there — `until()`,
 `latest()`, a memo or effect, a mount — is created mainline, where a read of
 this action's held state makes it born held (A29): staged with the
-transaction and replayed at its commit. For `until()` that commit is the
-settle its own promise holds open (#3482). `await` is still the ergonomic
+transaction and replayed at its commit. `await` is still the ergonomic
 choice for typed results; just put a bare `yield` before any write or
 reader creation that follows it — including the expression of the next
 `yield`, which is evaluated before the step re-enters:
@@ -61,7 +60,7 @@ yield until(() => todos.some(t => t.id === saved.id));
 ```
 
 (For the same reason, don't call `flush()` inside an action body — it
-drains the transaction mid-step.)
+cannot reveal the held writes and is refused.)
 
 Each call returns a `Promise` that resolves with the generator's return
 value, or rejects if it throws. Pair with `createOptimistic` /

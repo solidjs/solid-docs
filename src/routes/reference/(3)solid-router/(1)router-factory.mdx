@@ -10,7 +10,16 @@ source_path: "src/routers/factory.tsx"
 ## Import
 
 ```ts
-import { createRouter, defineRoute, defineRoutes } from "@solidjs/router";
+import {
+	createRouter,
+	defineRoute,
+	defineRoutes,
+	eagerPreload,
+	intentPreload,
+	pendingLinks,
+	tapPreload,
+	viewportPreload,
+} from "@solidjs/router";
 ```
 
 ## `createRouter`
@@ -36,7 +45,8 @@ interface RouterConfig<
 	singleFlight?: boolean;
 	actionBase?: string;
 	explicitLinks?: boolean;
-	preloadLinks?: boolean;
+	links?: LinksPlugin;
+	preloadLinks?: LinkPreload | readonly LinkPreload[];
 	scrollRestoration?: boolean;
 	transformUrl?: (url: string) => string;
 }
@@ -49,7 +59,8 @@ interface RouterConfig<
 - `singleFlight` defaults to `true`.
 - `actionBase` defaults to `/_server`.
 - `explicitLinks` defaults to `false`.
-- `preloadLinks` defaults to `true`.
+- `links` adds state to claimed anchors. Pass [`pendingLinks`](#pendinglinks) for `data-pending`. Client-only.
+- `preloadLinks` takes one [link preload strategy](#link-preload-strategies) or an array of them. Links do not preload by default. Client-only.
 - `scrollRestoration` defaults to `true` with the default browser history.
 - `transformUrl` rewrites pathnames before matching and preloading.
 
@@ -91,6 +102,112 @@ interface RouterProps {
 `url` selects a server-rendered location when no request event exists.
 A request event takes precedence.
 The client ignores `url`.
+
+## Link preload strategies
+
+A `LinkPreload` is a strategy for the `preloadLinks` option.
+It runs once under the router's owner on the client and cleans up with it.
+Each strategy warms the link's route code, and runs the matched routes' `preload` functions when `data` is `true`.
+A link with `preload="false"` is never preloaded.
+
+```ts
+type LinkPreload = (ctx: LinkPreloadContext) => void;
+```
+
+```ts
+const Router = createRouter({
+	routes,
+	preloadLinks: [intentPreload(), viewportPreload()],
+});
+```
+
+### `intentPreload`
+
+```ts
+function intentPreload(options?: {
+	delay?: number;
+	data?: boolean;
+}): LinkPreload;
+```
+
+Preloads a link when the pointer rests on it for `delay` ms (default `20`), when it takes focus, and on `touchstart`.
+A link preloads once per visit, whichever of these comes first.
+`data` defaults to `true`.
+
+### `tapPreload`
+
+```ts
+function tapPreload(options?: { data?: boolean }): LinkPreload;
+```
+
+Preloads a link on `pointerdown`, ahead of its click.
+`data` defaults to `true`.
+
+### `viewportPreload`
+
+```ts
+function viewportPreload(options?: {
+	all?: boolean;
+	data?: boolean;
+	delay?: number;
+	rootMargin?: string;
+}): LinkPreload;
+```
+
+Preloads a link once it has stayed in the viewport for `delay` ms (default `100`), when the browser is next idle.
+Each link preloads once, and again after its `href` changes.
+Applies to links with `preload="viewport"`, or with `all: true` to every link except `preload="false"`.
+`rootMargin` is passed to the shared `IntersectionObserver`.
+`data` defaults to `false`.
+Skips preloading when the browser reports Save-Data or a 2g connection.
+
+### `eagerPreload`
+
+```ts
+function eagerPreload(options?: { all?: boolean; data?: boolean }): LinkPreload;
+```
+
+Preloads links once the page has loaded and the browser is idle, including links mounted later.
+Applies to links with `preload="eager"`, or with `all: true` to every link except `preload="false"`.
+`data` defaults to `false`.
+Skips preloading when the browser reports Save-Data or a 2g connection.
+
+## `pendingLinks`
+
+A `LinksPlugin` that adds `data-pending` to claimed anchors whose path covers the in-flight destination of a link click or `navigate()` call.
+Back and forward navigation does not set it.
+The attribute is removed when the navigation lands.
+
+```ts
+const pendingLinks: LinksPlugin;
+```
+
+```ts
+const Router = createRouter({ routes, links: pendingLinks });
+```
+
+```css
+a[data-pending] {
+	opacity: 0.6;
+}
+```
+
+`useLinkState().pending` works without this plugin.
+
+### `LinksPlugin`
+
+```ts
+type LinksPlugin = (
+	router: RouterContext,
+	base: string
+) => {
+	track(): unknown;
+	pending(target: string | undefined): boolean;
+};
+```
+
+The router builds the plugin once with its base path.
+The claims sweep re-runs when `track()` changes, and reads `pending(target)` for each anchor while `track()` is truthy.
 
 ## `defineRoutes`
 

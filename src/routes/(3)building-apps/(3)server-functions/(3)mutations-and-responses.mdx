@@ -41,10 +41,13 @@ export async function createProduct(input: CreateProductInput) {
 ```
 
 Call `createProduct(input)` from the admin page and the promise resolves to `product`, not to the envelope.
-The transport applies the 201 and the header to the HTTP response, and a plain HTTP caller such as `curl` receives a JSON body with the same product in it.
+`respond<T>()` is typed as `T`, so the function's inferred return type is the product's, and a direct call made on the server during SSR unwraps the envelope the same way.
+The transport applies the 201 and the header to the HTTP response.
+A plain HTTP caller such as `curl` receives a JSON body with the same product in it when JSON carries the value faithfully; a value JSON cannot represent, such as a `bigint`, is encoded the same way as a plain return.
 
 :::deep-dive[The envelope on the wire]
-`respond()` returns a `ResponseEnvelope`, an object holding the `Response` that carries the metadata and the `value` the caller should see.
+At runtime `respond()` returns a `ResponseEnvelope`, a `Response` subclass that carries the status, headers, and body, plus the `value` the caller should see.
+Because it is a real `Response`, a fetch-style handler with no Solid knowledge can answer with it as it is.
 The server-function handler forwards the response's status and headers and encodes the value as the body.
 Integration code that has to recognize an envelope, such as a router applying revalidation, uses [`isResponseEnvelope()`](/reference/solid-web/request-response/respond); the check is a registered symbol, so it works when a bundle contains two copies of the runtime.
 Application code never touches the envelope directly.
@@ -52,7 +55,8 @@ Application code never touches the envelope directly.
 
 ## Redirect the caller
 
-`redirect()` returns a `Response` with a `Location` header:
+`redirect()` returns a `Response` with a `Location` header.
+Its return type defaults to `never`, so a returned redirect drops out of the function's inferred return type; `reload()` is typed the same way:
 
 ```ts
 // src/data/account.ts

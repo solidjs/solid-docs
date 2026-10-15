@@ -147,17 +147,21 @@ Production has no Vite pipeline, so every request that reaches the end of the ch
 A middleware that wraps `next()` in `try`/`catch` sees anything the rest of the chain throws:
 
 ```ts
+import { getRequestEvent, reportRequestFailure } from "@solidjs/web";
+
 async function catchErrors(_request: Request, next: () => Promise<Response>) {
 	try {
 		return await next();
 	} catch (error) {
-		console.error(error);
+		reportRequestFailure(error, getRequestEvent()!);
 		return Response.json({ error: "Internal Server Error" }, { status: 500 });
 	}
 }
 ```
 
-Log the real error and return a generic body.
+Report the real error and return a generic body.
+`reportRequestFailure` hands the error to the server error hook as `kind: "request"`, the same hook that hears render and server-function failures, and logs it with `console.error` when no hook is registered; [Observability](/guides/observability#hear-every-failure-the-server-handles) sets that hook up.
+An error the hook already heard, such as a failed render, is reported once.
 Exception messages can carry database, filesystem, or token details; the only errors whose text belongs in a response are the ones the app marked safe, which [Mutations and responses](/building-apps/server-functions/mutations-and-responses#handle-thrown-errors) covers for server functions.
 Production builds also wrap the generated page render in a default error boundary; set `start.errorBoundary: false` when this middleware owns errors, as [App structure](/building-apps/app-structure#common-problems) notes.
 

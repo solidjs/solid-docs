@@ -72,6 +72,16 @@ export const Router = createRouter({
 export const { paths } = Router;
 ```
 
+Link preloading on hover, focus, and touch is off by default in Router 2.
+To keep the 1.x behavior, add `preloadLinks: intentPreload()` to the config.
+Drop a `preload={false}` prop from the old `<Router>`; leaving `preloadLinks` out has the same effect.
+
+```tsx
+import { createRouter, intentPreload } from "@solidjs/router";
+
+export const Router = createRouter({ routes, preloadLinks: intentPreload() });
+```
+
 Mount the returned instance as the provider component.
 Replace the old `root` prop with the provider's function child.
 The factory-level `preload` result is available as `props.data`.
@@ -231,7 +241,14 @@ import { Router } from "./router";
 </nav>;
 ```
 
-The router adds state attributes to anchors that it claims:
+The router adds state attributes to anchors that it claims.
+`data-pending` needs the `pendingLinks` plugin:
+
+```tsx
+import { createRouter, pendingLinks } from "@solidjs/router";
+
+export const Router = createRouter({ routes, links: pendingLinks });
+```
 
 ```css
 nav a[data-active] {
@@ -247,13 +264,14 @@ a[data-pending] {
 }
 ```
 
-Use `[data-active]` for an exact or descendant match.
-Use `[aria-current="page"]` for an exact match.
+Use `[data-active]` for an exact or descendant path match.
+Use `[aria-current="page"]` for an exact match of the path and query; parameter order and the hash are ignored.
+The router leaves an `aria-current` value the author set on the anchor alone.
 The root path has exact-only active behavior.
 
 Move old link props onto the anchor:
 
-- `noScroll`, `replace`, `state`, and `preload` become anchor attributes, typed on `<a>` by `@solidjs/web`; like every other HTML attribute they are lowercase, so `noScroll` becomes `noscroll`.
+- `noScroll`, `replace`, `state`, and `preload` become anchor attributes, typed on `<a>` by the router's augmentation of `JSX.AnchorHTMLAttributes`; like every other HTML attribute they are lowercase, so `noScroll` becomes `noscroll`.
 - `activeClass` and `inactiveClass` become CSS selectors for the state attributes.
 - `end` becomes an exact-match selector with `[aria-current="page"]`.
 
@@ -284,8 +302,12 @@ See [Navigation and typed paths](/routing/solid-router/navigation) for the remai
 
 ## Type params and search values
 
-`useParams()` and an untyped `useSearchParams()` keep their runtime behavior.
-Path parameters remain strings, and search values remain strings or string arrays without a schema.
+An untyped `useSearchParams()` keeps its runtime behavior: search values remain strings or string arrays without a schema.
+Path parameters remain strings, and are now decoded.
+`useParams()`, `props.params`, and `Router.match()` return `"猫"` for `/item/%E7%8C%AB`, and match filters test the decoded value.
+Remove any `decodeURIComponent` call on a parameter, or the value is decoded twice.
+Encode a parameter when interpolating it into a URL by hand, or build the URL with `paths`.
+`location.pathname` keeps the URL's encoding.
 
 Router 2 adds definition-driven types.
 Use `defineRoute` when the component or preload is declared with the route:
@@ -713,7 +735,9 @@ See the [router factory reference](/reference/solid-router/router-factory) and [
 - [ ] Move `root` to the provider's function child and `rootPreload` to factory `preload`.
 - [ ] Convert nested routes to `children` arrays and keep layouts rendering `props.children`.
 - [ ] Replace `Router`, `HashRouter`, and `MemoryRouter` components with `createRouter` and a history adapter.
-- [ ] Replace `<A>` with `<a>` and move active styling to state-attribute selectors.
+- [ ] Add `preloadLinks: intentPreload()` if links should preload on hover, focus, and touch.
+- [ ] Replace `<A>` with `<a>` and move active styling to state-attribute selectors; add `links: pendingLinks` for `data-pending`.
+- [ ] Remove `decodeURIComponent` calls on route parameters.
 - [ ] Replace `<Navigate>` and rename `useCurrentMatches`.
 - [ ] Replace `cache` with `query`.
 - [ ] Remove `createAsync`, `createAsyncStore`, and `useSubmission`.

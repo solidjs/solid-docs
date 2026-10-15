@@ -33,19 +33,10 @@ read:
 
 - Accessor targets resolve with the settled value; store targets resolve
   with the store node passed (reads through it are fresh after the await).
-- A failed re-ask rejects with the error (inside an action's generator,
-  `yield refresh(x)` throws back at the yield point and the action reverts
-  like any other failure).
+- A failed re-ask rejects with the error.
 - Semantics are quiescence, not flight identity: if another refresh (or
   any invalidation) supersedes this one mid-flight, the promise waits for
   — and delivers — whatever finally lands.
-- Inside an action, truth landing into the held transaction is staged;
-  the promise still settles then (matching `until()`)
-  and delivers the staged value — the caller's own optimistic override is
-  never the delivered value.
-- The re-ask itself stays verdict-quiet exactly as before: `isPending`
-  does not flip for a bare refresh (pair with `affects()` for a visible
-  pending window).
 
 ## Import
 

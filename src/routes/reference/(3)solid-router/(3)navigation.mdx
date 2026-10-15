@@ -13,6 +13,7 @@ source_path: "src/routing.ts"
 import {
 	useBeforeLeave,
 	useHref,
+	useInRouter,
 	useIsRouting,
 	useLinkState,
 	useLocation,
@@ -26,7 +27,20 @@ import {
 } from "@solidjs/router";
 ```
 
-All primitives on this page require a mounted router context.
+All primitives on this page except `useInRouter` throw when called outside a router.
+All of them throw when called with no reactive owner, such as from an event handler.
+
+## `useInRouter`
+
+```ts
+function useInRouter(): boolean;
+```
+
+Returns whether the calling component is rendered under a router.
+
+```ts
+const location = useInRouter() ? useLocation() : undefined;
+```
 
 ## `useNavigate`
 
@@ -86,6 +100,11 @@ function useParams<P extends Params>(
 
 Returns the reactive merged parameters for the current route chain.
 The path argument is a type witness and is not matched at runtime.
+
+Each value is decoded with `decodeURIComponent` after matching, so `/item/%E7%8C%AB` gives `id: "猫"`.
+An encoded slash stays inside its parameter: `/a%2Fb/view` matched by `/:name/view` gives `name: "a/b"`.
+A splat parameter is decoded segment by segment.
+A malformed escape is left as written.
 
 ## `useSearchParams`
 
@@ -166,8 +185,8 @@ interface LinkState {
 }
 ```
 
-`active` includes descendants unless `end` is true.
-`current` is exact.
+`active` compares the path only and includes descendants unless `end` is true.
+`current` requires the same path and the same query, ignoring parameter order and the hash.
 `pending` matches the active in-flight target.
 
 ## `useResolvedPath`

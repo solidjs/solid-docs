@@ -1,0 +1,215 @@
+---
+title: "Solid for AI tools"
+version: "2.0"
+description: "Point a coding assistant at the cheatsheet, skills, diagnostics, lint configs, and Markdown docs that ship with Solid 2.0, and paste a rules block into its instructions file."
+---
+
+An assistant asked to add a feature to a Solid 2.0 app writes code from what it learned elsewhere: props destructured in the signature, an effect with one function, a store written through a path setter, `Suspense` and `createResource`.
+Each of those is wrong in 2.0, and some of them run without an error, so the mistake shows up as a value that never updates rather than as a stack trace.
+
+Solid 2.0 ships the material that corrects this, and most of it is installed with the packages so it matches the exact version in `node_modules`.
+This page lists every piece, says what it is for, and ends with a block to paste into the assistant's instructions file.
+
+## What ships with the packages
+
+### The cheatsheet
+
+`node_modules/solid-js/CHEATSHEET.md` is a one-page reference for Solid 2.0: imports, every primitive with a short example, and a section at the end titled "What changed from 1.x" that lists the renamed and removed names with their replacements.
+Point an assistant at it before its first edit; the section at the end is written for a model whose training data is 1.x.
+
+### Skills
+
+A skill is a Markdown file an assistant reads on demand, placed under `skills/<name>/SKILL.md` inside the package that owns the behavior it describes.
+Four ship with Solid 2.0:
+
+| Path                                                            | Read it when                                                                                                                                                   |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `node_modules/solid-js/skills/solid-2.0/SKILL.md`               | Before the first edit. The primer: the run-once component model, where reads and writes may happen, and the shapes that replace 1.x APIs.                      |
+| `node_modules/solid-js/skills/reactivity-diagnostics/SKILL.md`  | A diagnostic code such as `[REACTIVE_WRITE_IN_OWNED_SCOPE]` appears in the console or a test. One section per code: what the runtime observed, what to change. |
+| `node_modules/@solidjs/diagnostics/skills/agent-loops/SKILL.md` | Verifying a reactive change: how to capture which scopes re-ran and why, and how to turn that into a budget a test asserts.                                    |
+| `node_modules/@solidjs/web/skills/server-components/SKILL.md`   | Writing a `"use server"` component: where server markup ends, where a client slot begins, and the rules for binding the two.                                   |
+
+The versions in `node_modules` match the installed runtime, which is why the paths above point there rather than at GitHub.
+The same files are in the [solid repository](https://github.com/solidjs/solid/tree/next/packages) for reading in a browser.
+
+### The template's AGENTS.md
+
+Every project created with `pnpm create solid@latest` from a `solid-v2` template contains an `AGENTS.md` at its root.
+It names the installed skills, explains the diagnostics endpoint, and tells the assistant to name its signals, memos, and effects so attribution reports read well.
+Keep it; an assistant that supports the file reads it on every task.
+
+## Diagnostics an assistant can read
+
+A development build of Solid reports structural mistakes as coded console warnings, and the same findings are available as data in tests and over HTTP.
+An assistant that works from evidence rather than from reading the code makes fewer wrong fixes, so each channel is listed here with how to reach it.
+
+### Coded warnings with a repair-guide footer
+
+In development, the runtime reports a structural mistake as a console diagnostic: a reactive value read outside a tracking scope, a write from inside a memo, an effect that re-runs because of its own write.
+Each report carries a stable code in brackets and an `in` line naming the owners that enclose the subject.
+The first report of each code ends with a footer that names the installed repair guide and the same file on GitHub, anchored to that code:
+
+```
+[REACTIVE_WRITE_IN_OWNED_SCOPE] repair guide: node_modules/solid-js/skills/reactivity-diagnostics/SKILL.md — https://github.com/solidjs/solid/blob/next/packages/solid/skills/reactivity-diagnostics/SKILL.md#reactive_write_in_owned_scope
+```
+
+Tell the assistant to treat every code as a defect to look up in the guide, not as noise to suppress.
+[Debugging reactivity](/guides/debugging-reactivity) explains how to read a report.
+
+### `DEV` and `OBSERVE`
+
+[`DEV`](/reference/solid-js/advanced/diagnostics-dev-hooks/dev) is the development-only hook object exported from `solid-js`; it is `undefined` in a production build.
+[`OBSERVE`](/reference/solid-js/advanced/diagnostics-dev-hooks/observe) is its counterpart in the observe build, which also carries the records and attribution channels that tooling subscribes to.
+An assistant does not call these directly in app code; they are what the diagnostics package and the Vite plugin are built on, and they are listed here so an assistant that finds them in a stack trace knows what they are.
+
+### `@solidjs/diagnostics` in tests
+
+`captureArtifact` from `@solidjs/diagnostics` runs a scenario and returns a serializable artifact of every diagnostic and every re-run with its cause.
+`expectNoDiagnostics(artifact)` throws with the offending events as evidence, and `expectRerunBudget` bounds how often a named scope may re-run.
+The same checks are Vitest matchers, `toHaveNoDiagnostics` and `toStayWithinRerunBudget`, when the setup file imports `@solidjs/diagnostics/vitest`.
+
+```ts
+import {
+	captureArtifact,
+	expectNoDiagnostics,
+	expectRerunBudget,
+} from "@solidjs/diagnostics";
+
+const { artifact } = await captureArtifact(
+	() => {
+		// mount a tree, perform the interaction under test
+	},
+	{ scenario: "cart-add" }
+);
+
+expectNoDiagnostics(artifact);
+expectRerunBudget(artifact, 1, { scope: "total" });
+```
+
+An assistant can run this loop on its own: generate, capture, read the events, fix, capture again, until the artifact is empty.
+[Check for regressions in tests](/guides/debugging-reactivity#check-for-regressions-in-tests) shows the matcher form.
+
+### The dev server endpoint
+
+With `diagnostics: true` in the `@solidjs/vite-plugin` options, the dev server serves `/__solid/diagnostics`.
+`GET` returns the status, including whether a page is connected.
+`POST` with a JSON body `{"method": ...}` drives a capture session against the open page:
+
+| Method      | Params                     | Result                                      |
+| ----------- | -------------------------- | ------------------------------------------- |
+| `begin`     | optional `{ attribution }` | opens a capture session                     |
+| `end`       | none                       | closes it and returns the captured payload  |
+| `active`    | none                       | whether a session is open                   |
+| `whyDidRun` | `{ "name": "..." }`        | the recorded re-runs of one named scope     |
+| `costs`     | none                       | the running cost tables of the open session |
+
+```sh
+curl -X POST localhost:3000/__solid/diagnostics -d '{"method":"begin"}'
+# interact with the page in a browser
+curl -X POST localhost:3000/__solid/diagnostics -d '{"method":"whyDidRun","params":{"name":"CartTotal"}}'
+curl -X POST localhost:3000/__solid/diagnostics -d '{"method":"end"}'
+```
+
+Scopes are reported by name, so an assistant that names its memos and effects with the `{ name }` option gets answers it can grep.
+The endpoint is development-only and does nothing in a build.
+
+## Lint
+
+`eslint-plugin-solid` ships two configs for Solid 2.0.
+`eslint-plugin-solid/configs/v2`, which the templates enable, switches the version-aware rules to 2.0 semantics and turns on the 2.0-specific rules as errors: `removed-api`, `no-single-arg-create-effect`, `no-accessor-as-prop`, `no-store-mutation-outside-setter`, `no-write-in-pure-computation`, and the server function rules.
+`eslint-plugin-solid/configs/v2-strict` adds `no-module-scope-reactive-primitive` and `no-restated-default-options` as errors and promotes the warnings of `v2` to errors.
+Each of those rules names a mistake an assistant makes often, so running the linter after an edit reports it before the code runs.
+The templates wire the config through oxlint:
+
+```ts
+// oxlint.config.ts
+import { defineConfig } from "oxlint";
+import solidV2 from "eslint-plugin-solid/configs/v2";
+
+export default defineConfig({
+	jsPlugins: ["eslint-plugin-solid"],
+	settings: solidV2.settings,
+	rules: solidV2.rules,
+});
+```
+
+## These docs as Markdown
+
+This site serves its content in the forms an assistant can fetch:
+
+- [`/llms.txt`](/llms.txt) is an index of every page with its one-line description.
+- [`/llms-full.txt`](/llms-full.txt) is the whole site in one Markdown file.
+- Every page is available as Markdown at its own URL with `.md` appended, for example `/concepts/reactivity.md`.
+
+Give an assistant the index and let it fetch the pages it needs; the full corpus is for tools that load everything once.
+
+## Rules to paste into an instructions file
+
+Drop this block into `AGENTS.md`, `CLAUDE.md`, `.cursor/rules`, or whichever file the assistant reads, and keep it next to the project's own conventions.
+It holds the three rules that account for most generated bugs, the names that no longer exist, and pointers to the files above.
+
+```md
+## Solid 2.0
+
+This project uses Solid 2.0 (`solid-js` 2.x with `@solidjs/web`). Components run once;
+there is no re-render. Read `node_modules/solid-js/CHEATSHEET.md` before writing Solid code,
+especially its last section, "What changed from 1.x".
+
+Rules that matter most:
+
+- Props are read, never destructured: `props.name` inside JSX, a memo, or an effect.
+  `function Comp({ name })` loses reactivity. Pass values, not accessors: `<Child count={count()} />`.
+- `createEffect(compute, apply)` takes two functions. The first reads reactive values and
+  returns a result; the second receives it and performs side effects. One argument is an error.
+- Stores are written through the draft: `setStore(s => { s.user.name = "Ada" })`.
+  There are no path setters and no `produce`.
+- Read reactive values inside JSX, a memo, or an effect, never at the top of a component body.
+- Do not write a signal or store from a memo, an effect's compute function, or a component body.
+  Write from event handlers, `onSettled`, or actions.
+
+Names that no longer exist, and what to use:
+
+- `solid-js/web` -> `@solidjs/web`; `solid-js/store` -> `solid-js`
+- `Suspense` -> `Loading`; `SuspenseList` -> `Reveal`; `ErrorBoundary` -> `Errored`
+- `mergeProps` -> `merge`; `splitProps` -> `omit`; `unwrap` -> `snapshot`; `onMount` -> `onSettled`
+- `createResource` -> an async `createMemo` or `createStore(fn)` read under `<Loading>`
+- `createSelector` -> `createProjection`; `createComputed` -> `createMemo` or a two-function `createEffect`
+- `batch` -> writes batch on a microtask (`flush()` applies them now); `on()` -> the compute half of `createEffect`
+- `startTransition` / `useTransition` -> built in; `isPending()` reports an in-flight change
+- `Index` -> `<For keyed={false}>`; `indexArray` -> `mapArray`; `createMutable` -> `createStore` with draft setters
+- `onError` / `catchError` -> `<Errored>` or the `error` option of `createEffect`
+- `classList` -> `class={{ active: isActive() }}`; `use:` directives -> `ref={factory(args)}`
+- `Context.Provider` -> `<Context value={...}>`; `equalFn` -> `isEqual`; `getListener` -> `getObserver`
+
+Tooling:
+
+- Skills: `node_modules/solid-js/skills/solid-2.0/SKILL.md` (primer),
+  `node_modules/solid-js/skills/reactivity-diagnostics/SKILL.md` (every warning code and its fix),
+  `node_modules/@solidjs/diagnostics/skills/agent-loops/SKILL.md` (capture evidence, assert budgets),
+  `node_modules/@solidjs/web/skills/server-components/SKILL.md` (server components and slots).
+- A console warning with a bracketed code, such as `[REACTIVE_WRITE_IN_OWNED_SCOPE]`, is a defect.
+  Look it up in the repair guide; do not suppress it.
+- Verify a reactive change with `captureArtifact` and `expectNoDiagnostics` from `@solidjs/diagnostics`,
+  or `POST /__solid/diagnostics` on the dev server with `{"method":"begin"}` ... `{"method":"end"}`.
+- Lint with `eslint-plugin-solid/configs/v2` (or `v2-strict`).
+- Docs: https://v2.solidjs.com/llms.txt; append `.md` to any page URL for its Markdown.
+```
+
+Every name in the block is checked against the installed cheatsheet; when the cheatsheet and this page disagree, the cheatsheet matches your version.
+
+## Recap
+
+- The cheatsheet, four skills, and the template's `AGENTS.md` are installed with the packages, so they match the version in `node_modules`.
+- A development build reports structural mistakes with a stable code and a footer that names the repair guide; every code is a defect.
+- `captureArtifact` with `expectNoDiagnostics` and `expectRerunBudget` turns a reactive claim into evidence a test or an assistant can check.
+- With `diagnostics: true`, `POST /__solid/diagnostics` drives `begin`, `end`, `active`, `whyDidRun`, and `costs` against the running page.
+- `eslint-plugin-solid/configs/v2` catches destructured props and the other common generated mistakes before the code runs.
+- `/llms.txt`, `/llms-full.txt`, and every page's `.md` URL serve these docs as Markdown.
+- Paste the rules block into the assistant's instructions file and keep the project's own conventions beside it.
+
+## Next steps
+
+- [Debugging reactivity](/guides/debugging-reactivity): how to read a diagnostic report and the test matchers that fail on one.
+- [Thinking in Solid](/guides/thinking-in-solid): the mental model the rules above come from, built up over one feature.
+- [Streaming AI responses](/building-apps/server-functions/streaming-ai-responses): forward a model's stream through a server function into a store, with cancellation.
+- [Chat state for the AI SDK](/guides/ai-sdk-chat): a store-backed adapter for the AI SDK's chat class.

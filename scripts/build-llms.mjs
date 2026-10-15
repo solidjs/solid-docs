@@ -177,6 +177,7 @@ async function buildSmallCorpus(title) {
 		"",
 		`Index: ${new URL("/llms.txt", SITE_ORIGIN)}`,
 		`Full corpus: ${new URL("/llms-full.txt", SITE_ORIGIN)}`,
+		`Diagnostic codes: ${new URL("/reference/solid-js/diagnostics.md", SITE_ORIGIN)} (one page per code, linked from each console report)`,
 		"",
 		primerBody,
 		"",

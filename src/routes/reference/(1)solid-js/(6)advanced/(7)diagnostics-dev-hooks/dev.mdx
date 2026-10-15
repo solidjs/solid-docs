@@ -85,18 +85,27 @@ interface Dev {
 
 - **Type:** `void`
 
-Console face of an emitted event — see `reportDiagnostic`.
+Console face of an emitted event — see `reportDiagnostic`: one entry
+per finding — the message, the `in` line built from `ownerPath`
+(`in <App> › <TodoRow> › effect`), the `at` line built from `loc`
+(`at src/App.tsx:18:3`; in a browser `at http://localhost:5173/src/App.tsx:18:3`,
+which Chrome and Firefox link to the Sources panel — a path that leaves
+the root prints as-is), the once-per-code footer, and, for a binding
+effect the rendering runtime tagged, the element it writes as a second
+console argument.
 
 #### `guideUrl`
 
 - **Type:** `string`
 
-The stable URL of `code`'s section in the repair guide — the
-`reactivity-diagnostics` skill shipped with `solid-js`, one section per
-code. The one place the URL is built: the console footer prints it and
-the performance tracks' Insights link (`learnMoreUrl`) reads it, so both
-name the same section. Dev-tier: it is guidance for a developer, and a
-URL string on a retained object is a cost every observe build would pay.
+The URL of `code`'s page in the docs — what the finding means and how
+to fix it, one page per code
+([`/reference/solid-js/diagnostics/<slug>`](/reference/solid-js/diagnostics),
+slug = the code lowercased with `-` for `_`). The one place the URL is
+built: the console footer prints it and the performance tracks' Insights
+link (`learnMoreUrl`) reads it, so both name the same page. Dev-tier: it
+is guidance for a developer, and a URL string on a retained object is a
+cost every observe build would pay.
 
 ### `DevHooks`
 
@@ -239,6 +248,7 @@ interface DiagnosticEvent {
 	ownerName?: string;
 	nodeName?: string;
 	ownerPath?: string[];
+	loc?: string;
 	data?: Record<string, unknown>;
 }
 ```
@@ -285,6 +295,17 @@ the `effect`/`computed` default) — e.g. `["<App>", "<TodoRow>", "effect"]`.
 Unnamed owners (plain roots) are skipped. Absent when the subject has no
 named owner at all (a top-level scope, or an unowned primitive — which
 is usually the finding itself).
+
+#### `loc`
+
+- **Type:** `string`
+
+Source location of the innermost located node enclosing the subject
+(`file:line:col`, relative to the project root — the compiler's
+`sourceNames` `locations` kind): the subject's own `loc`, else the
+nearest owner's up the chain (a component root carries its JSX site).
+Absent when nothing on the chain was compiled with locations. A host
+event that sets it keeps it.
 
 #### `data`
 

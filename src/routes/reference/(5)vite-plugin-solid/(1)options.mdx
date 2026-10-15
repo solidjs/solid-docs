@@ -82,7 +82,7 @@ The same flag is passed to the compilers as `dev` and decides the default for [`
 - **Default:** `false`
 
 Selects the observe exports of `solid-js` and `@solidjs/web`: the production-speed runtime that keeps the diagnostics and attribution channels (`OBSERVE`) alive.
-Adds the `observe` condition to every environment, client and server, and turns on every kind of [`solid.sourceNames`](#sourcenames) so graph labels survive minification.
+Adds the `observe` condition to every environment, client and server, and turns on every naming kind of [`solid.sourceNames`](#sourcenames) so graph labels survive minification; `locations` stays off unless set.
 Applies to `build` and `preview`; during `serve` the `development` condition still wins.
 
 ### `diagnostics`
@@ -187,6 +187,7 @@ interface SourceNamesOptions {
 	components?: boolean;
 	bindings?: boolean;
 	primitives?: boolean;
+	locations?: boolean;
 }
 ```
 
@@ -206,17 +207,24 @@ Selects which names written in source are carried into the output so the develop
 - `bindings` names compiled binding effects by what they write, such as `span.textContent` or `div.children`.
 - `primitives` names `createSignal`, `createMemo`, `createStore`, and the other primitives after the identifier they are declared as (`count`, `todos.title`), prefixed with the enclosing non-component function for composed primitives (`createCounter.value`).
   An explicit `name` option is never overridden.
+- `locations` adds the source position to every label the other three kinds write, as `file:line:col` relative to the Vite root (`src/App.tsx:18:3`): a component's JSX element, a binding's attribute or hole, a primitive's call.
+  The development and observe runtimes carry it as `loc` on the node, print it as the `at` line of a console report, and deliver it as `DiagnosticEvent.loc`; [Diagnostics](/reference/solid-js/diagnostics#read-a-report) shows the report.
+  An explicit `loc` option is never overridden.
 
-`components` and `bindings` are passed to the selected JSX compiler as its `sourceNames` option.
-`primitives` runs `@solidjs/compiler`'s standalone `transformSourceNames` pass on every module outside `node_modules` that imports `solid-js` or `@solidjs/signals`, `.ts` and `.js` files included, with either JSX compiler.
-A `@solidjs/compiler` without that pass leaves primitives unnamed and warns once.
+`components`, `bindings`, and `locations` are passed to the selected JSX compiler as its `sourceNames` option.
+`primitives` runs `@solidjs/compiler`'s standalone `transformSourceNames` pass on every module outside `node_modules` that imports `solid-js` or `@solidjs/signals`, `.ts` and `.js` files included, with either JSX compiler; `locations` is passed to that pass as well.
+The plugin passes the Vite `root` to both compilers and to the pass, so a location is root-relative and a dev server resolves `${origin}/${path}` to the module.
+A `@solidjs/compiler` without that pass leaves primitives unnamed and warns once; a compiler that predates `locations` or `root` does not receive them, with the same one-time warning.
 
-| `sourceNames`          | `dev` or `observe`    | Production build       |
-| ---------------------- | --------------------- | ---------------------- |
-| Omitted                | Every kind on         | Every kind off         |
-| `true`                 | Every kind on         | Every kind on          |
-| `false`                | Every kind off        | Every kind off         |
-| `{ kind: true/false }` | As given; the rest on | As given; the rest off |
+| `sourceNames`          | `dev` or `observe`                      | Production build       |
+| ---------------------- | --------------------------------------- | ---------------------- |
+| Omitted                | Every kind on (`locations`: `dev` only) | Every kind off         |
+| `true`                 | Every kind on                           | Every kind on          |
+| `false`                | Every kind off                          | Every kind off         |
+| `{ kind: true/false }` | As given; the rest on                   | As given; the rest off |
+
+`locations` is the one kind that `observe` leaves off: an observe build is a production bundle, and a source path inside it is something to opt into with `sourceNames: { locations: true }`.
+Under `dev` it is on like the others.
 
 The plugin always passes the resolved value to the compiler, so `sourceNames: false` disables names during `serve` rather than falling through to the compiler's own development default.
 

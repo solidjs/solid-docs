@@ -90,6 +90,17 @@ pnpm dev
 
 This will start your the app at [localhost:3000](http://localhost:3000) or the next available port.
 
+### Generated reference pages
+
+Two scripts write reference pages from a local checkout of [solidjs/solid](https://github.com/solidjs/solid) (branch `next`); the pages they write carry a comment naming the script, and edits belong upstream, not in the page.
+
+```sh
+pnpm sync:ref --source ../solid --skip-fetch   # solid-js, @solidjs/web, @solidjs/signals from the JSDoc
+pnpm sync:diagnostics --source ../solid         # one page per diagnostic code from the repair skill
+```
+
+Without `--source`, `sync:ref` makes a sparse checkout under `/tmp/solid-v2-source` that `sync:diagnostics` reads too.
+
 ### Framework and Theme
 
 The docs are built on [SolidBase](https://solidbase.dev) and uses the [Osmium Theme](./osmium).

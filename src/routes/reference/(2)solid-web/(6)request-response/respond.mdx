@@ -24,7 +24,13 @@ A value paired with response metadata (status, headers, `revalidate`) —
 for the things a naked return can't express. Progressive enhancement
 stays invisible: the carried response holds a plain JSON body so
 consumers without the client runtime (no-JS form posts, direct HTTP)
-get real JSON, while integrations read `value` — no reparse.
+get real JSON, while integrations read `value` — no reparse. The body is
+encoded when read, so `value` may be anything a plain return may.
+
+Typed as `value`'s type: every caller of the function returning it —
+over HTTP or in-process — receives the value, never the envelope. At
+runtime it is a `ResponseEnvelope`, a real `Response` that integrations
+recognize with `isResponseEnvelope()`.
 
 ## Import
 
@@ -97,8 +103,14 @@ payloads); the HTTP handler forwards `response`'s headers and
 (non-redirect) status and encodes `value` as the body through the codec,
 while client-only integrations read `value` directly — no reparse.
 
+The envelope IS a `Response` — the given response's body, status and
+headers — so a consumer that knows nothing of Solid (a filesystem
+router's API dispatch, any fetch-style handler) answers with it as-is.
+`response` is the envelope itself, or `undefined` when constructed
+without one.
+
 ```ts
-interface ResponseEnvelope<T = unknown> {
+interface ResponseEnvelope<T = unknown> extends Response {
 	response: Response | undefined;
 	value: T;
 }

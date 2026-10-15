@@ -38,7 +38,7 @@ function until<T>(fn: () => T, options?: UntilOptions): Promise<Truthy<T>>;
 
 - **Type:** `() => T`
 
-A reactive predicate over authoritative state
+A reactive predicate
 
 ### `options`
 
@@ -54,18 +54,11 @@ A promise that resolves with the first truthy result of `fn`, narrowed by `Truth
 ## Examples
 
 ```ts
-const send = action(async function* (text: string) {
-	const clientId = crypto.randomUUID();
-	setMessages((m) => {
-		m.push({ clientId, text, pending: true });
-	}); // optimistic
-	await socket.send({ clientId, text }); // fire-and-forget transport
-	yield; // re-enter the transaction after the await
-	// Hold until the live source echoes the write (authoritative view —
-	// the optimistic row above cannot satisfy this):
-	yield until(() => messages.some((m) => m.clientId === clientId), {
-		timeout: 10_000,
-	});
+const clientId = crypto.randomUUID();
+await socket.send({ clientId, text }); // fire-and-forget transport
+// Wait until the live source echoes the write:
+await until(() => messages.some((m) => m.clientId === clientId), {
+	timeout: 10_000,
 });
 ```
 

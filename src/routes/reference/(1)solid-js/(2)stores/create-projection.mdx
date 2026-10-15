@@ -41,8 +41,13 @@ import { createProjection } from "solid-js";
 
 ```ts
 function createProjection<T extends object = {}>(
+	fn: () => T | Promise<T> | AsyncIterable<T>,
+	seed?: null,
+	options?: Omit<ProjectionOptions, "seedLoadingValue">
+): Store<T>;
+function createProjection<T extends object = {}>(
 	fn: (draft: T) => void | T | Promise<void | T> | AsyncIterable<void | T>,
-	seed: Partial<T> | Store<T>,
+	seed: T | Store<T>,
 	options?: ProjectionOptions
 ): Store<T>;
 ```
@@ -51,19 +56,20 @@ function createProjection<T extends object = {}>(
 
 ### `fn`
 
-- **Type:** `(draft: T) => void | T | Promise<void | T> | AsyncIterable<void | T>`
+- **Type:** `(() => T | Promise<T> | AsyncIterable<T>) | (draft: T) => void | T | Promise<void | T> | AsyncIterable<void | T>`
 
 Derive function. Receives a draft and either mutates it or returns a new value; may be sync, async, or an `AsyncIterable`. The result is reconciled by `options.key`.
 
 ### `seed`
 
-- **Type:** `Partial<T> | Store<T>`
+- **Type:** `null | T | Store<T>`
+- Optional
 
 Initial contents and the draft the first derive receives. With an async `fn`, readers see the seed before the first result only when `seedLoadingValue` is set; otherwise they suspend.
 
 ### `options`
 
-- **Type:** `ProjectionOptions`
+- **Type:** `Omit<ProjectionOptions, "seedLoadingValue"> | ProjectionOptions`
 - Optional
 
 `key` (default `"id"`), `seedLoadingValue`, `name`, `shallow`, `deferStream`, and `ssrSource`.

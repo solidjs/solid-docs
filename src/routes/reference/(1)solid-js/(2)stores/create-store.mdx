@@ -60,8 +60,13 @@ function createStore<T extends object = {}>(
 	options?: StoreOptions
 ): [get: Store<T>, set: StoreSetter<T>];
 function createStore<T extends object = {}>(
+	fn: () => T | Promise<T> | AsyncIterable<T>,
+	seed?: null,
+	options?: Omit<ProjectionOptions, "seedLoadingValue">
+): [get: Store<T>, set: StoreSetter<T>];
+function createStore<T extends object = {}>(
 	fn: (draft: T) => void | T | Promise<void | T> | AsyncIterable<void | T>,
-	seed: Partial<T> | Store<T>,
+	seed: T | Store<T>,
 	options?: ProjectionOptions
 ): [get: Store<T>, set: StoreSetter<T>];
 ```
@@ -83,13 +88,14 @@ Plain object or array to wrap, or an existing store to share.
 
 ### `fn`
 
-- **Type:** `(draft: T) => void | T | Promise<void | T> | AsyncIterable<void | T>`
+- **Type:** `(() => T | Promise<T> | AsyncIterable<T>) | (draft: T) => void | T | Promise<void | T> | AsyncIterable<void | T>`
 
 Derive function for the projection form. Receives a draft and either mutates it or returns a new value; may be sync, async, or an `AsyncIterable`.
 
 ### `seed`
 
-- **Type:** `Partial<T> | Store<T>`
+- **Type:** `null | T | Store<T>`
+- Optional
 
 Initial contents of the projection store and the draft the first derive receives. With an async `fn`, readers see the seed before the first result only when `seedLoadingValue` is set; otherwise they suspend.
 

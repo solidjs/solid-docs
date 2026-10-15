@@ -133,7 +133,9 @@ const CANONICAL_ROUTES = {
 		"Components & Context",
 	],
 	dynamic: ["web-components/dynamic.mdx", "Components"],
+	dynamicComponent: ["web-components/dynamic.mdx", "Components"],
 	lazy: ["components-context/lazy.mdx", "Components & Context"],
+	lazyModule: ["components-context/lazy.mdx", "Components & Context"],
 	useContext: ["components-context/use-context.mdx", "Components & Context"],
 
 	Errored: ["components-jsx/errored.mdx", "Components (JSX)"],
@@ -195,6 +197,10 @@ const CANONICAL_ROUTES = {
 		"Request & response",
 	],
 	configureServerErrors: [
+		"request-response/configure-server-errors.mdx",
+		"Request & response",
+	],
+	reportRequestFailure: [
 		"request-response/configure-server-errors.mdx",
 		"Request & response",
 	],
@@ -261,6 +267,10 @@ const ADVANCED_ROUTES = {
 		"advanced/store-advanced/snapshot.mdx",
 		"Advanced / Store Advanced",
 	],
+	markRaw: [
+		"advanced/store-advanced/mark-raw.mdx",
+		"Advanced / Store Advanced",
+	],
 	storePath: [
 		"advanced/store-advanced/store-path.mdx",
 		"Advanced / Store Advanced",
@@ -291,6 +301,10 @@ const ADVANCED_ROUTES = {
 		"advanced/manual-hydration/no-hydration.mdx",
 		"Advanced / Manual Hydration",
 	],
+	onHydrationEnd: [
+		"advanced/manual-hydration/on-hydration-end.mdx",
+		"Advanced / Manual Hydration",
+	],
 
 	enableExternalSource: [
 		"advanced/interop-async/enable-external-source.mdx",
@@ -313,6 +327,10 @@ const ADVANCED_ROUTES = {
 	],
 	configureClientErrors: [
 		"advanced/diagnostics-dev-hooks/configure-client-errors.mdx",
+		"Advanced / Diagnostics & Dev Hooks",
+	],
+	dispatchAsInteraction: [
+		"advanced/diagnostics-dev-hooks/dispatch-as-interaction.mdx",
 		"Advanced / Diagnostics & Dev Hooks",
 	],
 	attribution: [
@@ -667,6 +685,7 @@ const HIDDEN_EXPORTS = new Set([
 	"ssrHydrationKey",
 	"ssrRunInScope",
 	"ssrStyle",
+	"ssrStyleProperties",
 	"template",
 	// Compiler and DOM-runtime ABI. These exports support generated code and
 	// renderer integrations rather than application code.
@@ -2604,6 +2623,9 @@ const TYPE_TEXT_REWRITES = [
 	[/\bHydrationMemoOptions</g, "MemoOptions<"],
 	[/\bHydrationProjectionOptions\b/g, "ProjectionOptions"],
 	[/\bNoFn<([^<>]+)>/g, "$1"],
+	// The seedless derived form rejects array roots with an `& NoArray<T>`
+	// brand on its function; the prose says so, the signature need not.
+	[/\s*&\s*NoArray<[^<>]+>/g, ""],
 	[/\bRefreshable<((?:[^<>]|<[^<>]*>)+)>/g, "$1"],
 	// The core `Element` type is imported as `SolidElement` inside the
 	// package; app code knows it as `JSX.Element`.

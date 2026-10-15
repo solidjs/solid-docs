@@ -1,12 +1,14 @@
 ---
-title: "configureServerErrors"
+title: "configureServerErrors / reportRequestFailure"
 category: "Request & response"
 use_cases: "request & response api, configureservererrors usage"
 tags:
   - "configure"
   - "server"
   - "errors"
+  - "report"
   - "request"
+  - "failure"
   - "response"
   - "reference"
   - "api"
@@ -25,20 +27,44 @@ Registers the ambient server error hook: called once per error object for every 
 ## Import
 
 ```ts
-import { configureServerErrors } from "@solidjs/web";
+import { configureServerErrors, reportRequestFailure } from "@solidjs/web";
 ```
 
-## Type signature
+## `configureServerErrors`
+
+### Type signature
 
 ```ts
 function configureServerErrors(config: ServerErrorsConfig): void;
 ```
 
-## Parameters
+### Parameters
 
-### `config`
+#### `config`
 
 - **Type:** `ServerErrorsConfig`
+
+## `reportRequestFailure`
+
+Reports a failure that fails a request outside any render (see the
+server entry's `reportRequestFailure`). Server-only; on the client this is
+a no-op.
+
+### Type signature
+
+```ts
+function reportRequestFailure(error: unknown, event: RequestEvent): void;
+```
+
+### Parameters
+
+#### `error`
+
+- **Type:** `unknown`
+
+#### `event`
+
+- **Type:** `RequestEvent`
 
 ## Learn more
 
@@ -54,7 +80,7 @@ function configureServerErrors(config: ServerErrorsConfig): void;
 Where a server-side failure was met, as the server error hook hears it —
 the client's view of the server entry's type (see `configureServerErrors`
 there). `kind: "render"`: `fallback`/`client`/`failed`; `kind:
-"server-function"`: `thrown`/`channel`.
+"server-function"`: `thrown`/`channel`; `kind: "request"`: `failed`.
 
 ```ts
 interface ServerErrorContext extends Omit<ServerErrorSite, "event"> {
@@ -108,7 +134,7 @@ Where a server failure was met, as the server error hook hears it (see `@solidjs
 
 ```ts
 interface ServerErrorSite {
-	kind: "render" | "server-function";
+	kind: "render" | "server-function" | "request";
 	handling:
 		"fallback" | "client" | "failed" | "serialize" | "thrown" | "channel";
 	boundary?: string;
@@ -122,7 +148,7 @@ interface ServerErrorSite {
 
 #### `kind`
 
-- **Type:** `"render" | "server-function"`
+- **Type:** `"render" | "server-function" | "request"`
 
 #### `handling`
 

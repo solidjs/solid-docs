@@ -552,6 +552,7 @@ type DiagnosticCode =
 	| "SETTLE_WALK_UNINITIALIZED_SOURCE"
 	| "FLUSH_IN_EFFECT_CALLBACK"
 	| "PRIMITIVE_IN_FORBIDDEN_SCOPE"
+	| "PRIMITIVE_IN_EFFECT_CALLBACK"
 	| "NO_OWNER_EFFECT"
 	| "NO_OWNER_BOUNDARY"
 	| "ASYNC_OUTSIDE_LOADING_BOUNDARY"
@@ -594,6 +595,7 @@ type DiagnosticCode =
 	| "SERVER_ERROR_SANITIZED"
 	| "SSR_BOUNDARY_WATERFALL"
 	| "SSR_UNDECLARED_LIVE_SOURCE"
+	| "SSR_LIVE_HOLE_LATCHED"
 	| "SERVER_WRITE"
 	| "REVEAL_IN_RENDER_TO_STRING"
 	| "LAZY_ASSET_UNMAPPED"
@@ -601,6 +603,7 @@ type DiagnosticCode =
 	| "HEAD_TAG_INVALID"
 	| "UNRECOGNIZED_INSERT_VALUE"
 	| "UNSCOPED_HOLE_ALLOCATED_IDS"
+	| "LOWERCASE_EVENT_ATTRIBUTE"
 	| "BINDING_SLOT_POSITION"
 	| "FRAME_MARKER_CORRUPTED"
 	| "DYNAMIC_ASYNC_COMPONENT";
@@ -1460,8 +1463,10 @@ the boundaries are not measured and this is `0`.
 `"complete"` — the render ran to its end; `"abandoned"` — the consumer
 left mid-stream (the sink threw, the readable was cancelled — the
 `SSR_STREAM_ABANDONED` finding is that request's account) and the
-render was torn down; `"error"` — the render failed: a string render
-threw, a stream's uncontained failure wound it down through `onError`.
+render was torn down, or `createSSRResponse` discarded the page for a
+pre-flush redirect (no finding); `"error"` — the render failed: a
+string render threw, a stream's uncontained failure wound it down
+through `onError`.
 
 #### `route`
 

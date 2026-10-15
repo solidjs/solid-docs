@@ -512,8 +512,11 @@ not cry wolf). `false` disables.
 - **Type:** `number | false`
 
 Wide-scope warning: emit a diagnostic when a scope's dependency count
-reaches this (default 30) — the coarse-read / helper-leak signature.
-Re-warns only if the count then grows by another 50%. `false` disables.
+reaches this (default 200) — the coarse-read / helper-leak signature.
+Re-warns only if the count then grows by another 50%. HMR plumbing is
+not counted, and in dev builds the renderer's insert child-resolution
+pass (which must track every row's resolved child) is not judged;
+HUGE_FAN_IN (2000, always on) still covers both. `false` disables.
 
 #### `hotTime`
 
@@ -559,8 +562,8 @@ reaches a node with at least this many subscribers (default 250). The
 same code the always-on core check emits from GRAPH_SIZE_WARN_AT (2000)
 up, with `data.write` naming the invalidation; the engine hands over to
 the core there, so one change never carries two findings. Once per
-node, re-warning once the count has grown by another 500. `false`
-leaves only the always-on threshold.
+node, re-warning once the count has grown by another 500. HMR plumbing
+subscribers are not counted. `false` leaves only the always-on threshold.
 
 #### `waterfalls`
 
@@ -620,9 +623,13 @@ long hold stays one SILENT_HOLD with the boundary repair appended.
 
 Graph-growth warning: emit GRAPH_GROWTH when the live owner count at the
 settle of the same route has climbed on `visits` consecutive visits
-(default 3) to `ratio` or more of the first (default 1.25) — a root or a
+(default 3) to `ratio` or more of the first (default 1.25), and so has
+the part of it that outlived each of those navigations — a root or a
 subscription each visit leaves behind, the leak class a heap snapshot
-finds. The count is a walk at settle, never per node. `false` disables.
+finds, not content a visit owns and leaving disposes. The count is a walk
+when a navigation opens and at its settle, never per node. Navigations
+that stay on a route pattern continue its visit and are not compared.
+`false` disables.
 
 #### `abandonedFlights`
 
@@ -632,7 +639,9 @@ Abandoned-flights warning: emit ABANDONED_FLIGHTS when one async source
 abandons `count` flights within `windowMs` — each superseded by the
 next before it landed (default 3 / 1000ms: the request-per-keystroke
 signature, every input asking again and the answers discarded). Once
-per window per source. `false` disables.
+per window per source. In dev builds a framework node that supersedes
+its own flights by design (a frames slot arg re-read by each re-shipped
+record) is not judged. `false` disables.
 
 #### `fallbackFlashes`
 
@@ -1819,7 +1828,9 @@ INP counts as input delay. Present only when `at` predates the frame.
 
 - **Type:** `number`
 
-Wall time of the handler itself, entry to return.
+Wall time of the handler itself, entry to return — for the frames of one
+event (`InteractionRef.event`), the first listener's entry to the last
+one's return, as Event Timing measures processing.
 
 #### `writes`
 
@@ -1874,7 +1885,8 @@ waited in — whichever came last. `undefined` while unsettled.
 - **Type:** `number`
 
 The handler returned a thenable (`async () => { await save(); … }`) and
-the record waited for it: handler return → the promise settling, in
+the record waited for it: handler return → the promise settling (the last
+one, when several listeners of one event returned one), in
 milliseconds, capped at `ASYNC_HANDLER_CAP_MS`. The continuation runs
 with no frame on the stack, so writes it makes are not attributed to
 this interaction — only its duration is. Absent when the handler
@@ -1897,6 +1909,7 @@ interface InteractionRef {
 	type: string;
 	target?: string;
 	at?: number;
+	event?: object;
 }
 ```
 
@@ -1920,6 +1933,23 @@ record's `target` is its own string, this one is never mutated).
 - **Type:** `number`
 
 Dispatch time on the `performance.now()` clock; defaults to now.
+
+#### `event`
+
+- **Type:** `object`
+
+The dispatch this frame handles — the DOM `Event` itself. Frames with the
+same `event` are one interaction: the first opens the record (its `type`,
+`target` and `at` describe it) and every later one re-enters it, so each
+listener of one dispatch adds its work to one record. Such a record stays
+open for joining until the next task — every listener of a dispatch runs
+within its task — and is recorded no earlier; a frame for the event after
+that opens a new interaction. Without `event` the record is the frame's
+alone and can settle as it closes.
+
+A join key only, compared by identity and held weakly: it is never
+recorded — no `InteractionEvent`, origin or other record carries it — and
+the engine keeps no strong reference to it.
 
 ### `NavigationEvent`
 

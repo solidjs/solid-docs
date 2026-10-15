@@ -131,6 +131,8 @@ const orderRoute = defineRoute({
 
 `/account/orders/42` matches; `/account/orders/latest` falls through to the next route that matches, usually the `*404` catch-all.
 
+Filters test the decoded parameter value, so `{ tag: ["café"] }` matches `/tags/caf%C3%A9`.
+
 The built-in `int` filter accepts integer strings at runtime.
 It also changes the corresponding `Router.paths` argument to `number`, so `paths.account.orders(42)` type-checks and `paths.account.orders("latest")` does not.
 
@@ -193,7 +195,7 @@ export default defineRoutes([
 ```
 
 Visit `/` and the admin route table is not downloaded.
-Visit `/admin/products/mug`, or hover a link to it, and the thunk runs, the router adds the resolved subtree to the compiled route tree, and the match completes.
+Visit `/admin/products/mug`, or preload a link to it with a [link preload strategy](/routing/solid-router/data#preloading-from-links), and the thunk runs, the router adds the resolved subtree to the compiled route tree, and the match completes.
 TypeScript infers `paths.admin.products("mug")` through the import's promise type when the imported route array retains literal types.
 
 Use a deterministic thunk such as `() => import("./admin/routes")`.

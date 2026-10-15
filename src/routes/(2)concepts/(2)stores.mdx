@@ -150,8 +150,9 @@ Store writes are staged and applied in the same batch as signal writes, so a rea
 [When updates land](/concepts/reactivity#when-updates-land) explains the batch and when to call `flush()`.
 
 :::note[Path setters from Solid 1]
-[`storePath`](/reference/solid-js/advanced/store-advanced/store-path) accepts the path-and-value form Solid 1 used, `setCart(storePath("coupon", "SAVE10"))`, for code that has not moved yet.
-New code uses the draft.
+The setter takes no path arguments.
+A Solid 1 path setter such as `setCart("coupon", "SAVE10")` becomes a draft write to the same path, `setCart((draft) => { draft.coupon = "SAVE10"; })`.
+Ranges and filters become ordinary loops over the draft, and setting a key to `undefined` to remove it becomes `delete`.
 :::
 
 ## Derive a store with a projection
@@ -160,7 +161,8 @@ A projection is a store whose value is computed from other reactive values.
 Where a memo derives one value, a projection derives an object or array whose properties are tracked separately, and whose items keep their identity from one computation to the next.
 
 [`createProjection`](/reference/solid-js/stores/create-projection) takes a function and a seed.
-The function receives a draft of the seed and may mutate it or return a replacement; a returned array is reconciled into the store by `id`:
+The function receives a draft of the seed and may mutate it or return a replacement; a returned array is reconciled into the store by `id`.
+The seed is a complete value of the store's type, and an array projection always takes one, `[]`:
 
 ```tsx
 import { For, createProjection, createSignal, createStore } from "solid-js";
@@ -213,23 +215,23 @@ The projection function may return a promise.
 The function form of `createStore` is a projection with a setter, and it is the normal way to load server data into a store:
 
 ```ts
-const [cart, setCart] = createStore(async () => api.cart(), {
-	items: [] as CartItem[],
-});
+const [cart, setCart] = createStore(async () => api.cart());
 ```
 
 The request starts when the store is created, and again whenever a reactive value the function read changes.
 Each response reconciles into the same proxy by `id`, so items the server did not change keep their identity and their DOM.
 A [`Loading`](/concepts/boundaries) boundary shows a fallback before the first response, [`isPending(() => cart.items)`](/reference/solid-js/reactivity/is-pending) reports a refetch, and [`refresh(cart)`](/reference/solid-js/lifecycle-actions/refresh) asks the server again.
 
-With an async function, the seed is not shown as a first answer by default; readers wait for the first response the same way they wait for an async memo.
-[Async reactivity](/concepts/async-reactivity) explains that wait, and the `seedLoadingValue` option that makes the seed an acceptable first answer.
+This form takes no seed: the function reads no draft, and each response is a complete cart.
+Readers wait for the first response the same way they wait for an async memo.
+A store with an object root may omit the seed this way; an array root still takes `[]`, and a seed, when given, is a complete value of the store's type, not a partial one.
+[Async reactivity](/concepts/async-reactivity) explains that wait, and the `seedLoadingValue` option that makes a seed an acceptable first answer; that option needs a seed.
 
 Split the request into its own memo only when a second reader shapes the same response differently:
 
 ```ts
 const response = createMemo(() => api.cart());
-const [cart] = createStore(() => response(), { items: [] as CartItem[] });
+const [cart] = createStore(() => response());
 const itemCount = createMemo(() => response().items.length);
 ```
 
@@ -243,9 +245,7 @@ It shows immediately, and when the action settles Solid removes it and shows the
 ```ts
 import { action, createOptimisticStore, refresh } from "solid-js";
 
-const [cart, setCart] = createOptimisticStore(async () => api.cart(), {
-	items: [] as CartItem[],
-});
+const [cart, setCart] = createOptimisticStore(async () => api.cart());
 
 const setQuantity = action(function* (id: string, quantity: number) {
 	setCart((draft) => {
@@ -293,7 +293,7 @@ Reassign the property to a new instance through the setter to notify readers, or
 - Change state on the setter's draft; a write to the proxy itself is ignored.
 - Assign the one property that changed rather than rebuilding the collection, so rows keep their identity.
 - Derive a collection with `createProjection`, which reconciles results by `id`; derive a scalar with `createMemo`.
-- Load server data with `createStore(async () => ..., seed)`; each response reconciles into the same proxy.
+- Load server data with `createStore(async () => ...)`; each response reconciles into the same proxy, and an array root takes a `[]` seed.
 - Make optimistic writes inside an `action` on a `createOptimisticStore`, and `refresh` the source when the request settles.
 
 ## Next steps

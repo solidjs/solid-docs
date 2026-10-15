@@ -37,7 +37,7 @@ export const { paths } = Router;
 Because the route tree is a literal, `paths.products()` without an argument is a type error, and so is `paths.produts`.
 
 `lazy` splits each page into its own chunk.
-The router loads a chunk when a link to it is hovered or when the route is matched, whichever comes first.
+The router loads a chunk when the route is matched, or earlier when a [link preload strategy](/routing/solid-router/data#preloading-from-links) warms it.
 
 ## Mount it and add a layout
 
@@ -141,10 +141,11 @@ export const getProduct = query(async (id: string) => {
 ```tsx
 // src/router.ts
 import { lazy } from "solid-js";
-import { createRouter } from "@solidjs/router";
+import { createRouter, intentPreload } from "@solidjs/router";
 import { getProduct } from "./data/products";
 
 export const Router = createRouter({
+	preloadLinks: intentPreload(),
 	routes: [
 		{ path: "/", component: lazy(() => import("./pages/Home")) },
 		{
@@ -179,6 +180,7 @@ export default function Product(
 }
 ```
 
+`preloadLinks: intentPreload()` turns on link preloading, which is off by default.
 Hover **Featured** and watch the network tab: the product request starts before the click.
 Click, and the page renders with the data already there.
 

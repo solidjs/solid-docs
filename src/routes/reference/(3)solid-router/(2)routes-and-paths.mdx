@@ -100,6 +100,23 @@ const route = defineRoute({
 
 Runtime route parameters remain strings.
 
+### Parameter decoding
+
+The router decodes each dynamic segment with `decodeURIComponent` after matching.
+`useParams()`, `props.params`, `useMatch`, and `Router.match` return the decoded values, and match filters test them.
+
+| Pattern        | URL               | Parameter       |
+| -------------- | ----------------- | --------------- |
+| `/item/:id`    | `/item/%E7%8C%AB` | `id: "猫"`      |
+| `/:name/view`  | `/a%2Fb/view`     | `name: "a/b"`   |
+| `/files/*rest` | `/files/a%20b/c`  | `rest: "a b/c"` |
+| `/item/:id`    | `/item/100%`      | `id: "100%"`    |
+
+An encoded slash stays inside its parameter.
+A splat parameter is decoded segment by segment.
+A malformed escape is left as written.
+Matched paths and `location.pathname` keep the URL's encoding.
+
 ## `Router.paths`
 
 `Router.paths` has type `RoutePaths<typeof routes>`.
@@ -156,6 +173,7 @@ interface OutputMatch {
 
 Returns matches from root to leaf.
 Returns `[]` when no route matches.
+`params` holds decoded values; `match` keeps the URL's encoding.
 The router's `transformUrl`, `base`, and resolved lazy subtrees apply.
 
 ## Route component types

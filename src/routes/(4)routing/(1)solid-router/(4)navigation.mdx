@@ -32,7 +32,8 @@ A few attributes adjust how the router treats one link:
 - `replace` replaces the current history entry instead of pushing.
 - `noscroll` keeps the scroll position after navigation.
 - `state` supplies a JSON value for `location.state` on the destination.
-- `preload="false"` skips the route-data preload on hover for this link; the code chunk still warms.
+- `preload="false"` opts the link out of every [preload strategy](/routing/solid-router/data#preloading-from-links), for both route code and data.
+- `preload="viewport"` and `preload="eager"` mark the link for the `viewportPreload()` and `eagerPreload()` strategies.
 - `link` marks an anchor for the router when `explicitLinks: true` is set, in apps where most anchors should stay full page loads.
 
 ## Build URLs with `paths`
@@ -129,6 +130,10 @@ params.id; // string
 
 Inside a route component, `props.params` is the same object, already typed when the component is declared with `RouteProps`.
 
+Parameter values are decoded: on `/products/caf%C3%A9`, `params.id` is `"café"`.
+An encoded slash stays inside its parameter, so `%2F` in one segment reads as `/` in one value.
+`location.pathname` keeps the URL's encoding.
+
 ## Type search parameters
 
 Search parameters are the right home for state that should survive a refresh and be shareable: a filter, a sort order, a page number.
@@ -184,14 +189,23 @@ Keep search schemas to synchronous parsing and coercion; a value that needs a se
 ## Show active and pending links
 
 Click a link to a page whose data takes a moment.
-The current page stays on screen, and the clicked link gets a `data-pending` attribute until the destination is ready.
-That is the visible half of the held update described in [Async reactivity](/concepts/async-reactivity#settled-view-and-in-flight-work), and it is why an app without any loading spinner still feels responsive: the link itself shows that something is happening.
+The current page stays on screen until the destination is ready.
+That is the held update described in [Async reactivity](/concepts/async-reactivity#settled-view-and-in-flight-work), and marking the clicked link is what makes an app without any loading spinner still feel responsive.
 
-The router sets three attributes on the anchors it handles:
+The router sets two attributes on the anchors it handles:
 
-- `aria-current="page"` on an exact match.
-- `data-active` on an exact or descendant match, so the Account link is active on `/account/orders/42`.
-- `data-pending` on the target of an in-flight navigation.
+- `aria-current="page"` when the path and the query match, ignoring parameter order and the hash.
+  On `/?filter=active`, a link to `/?filter=active` is current and a link to `/` is not.
+- `data-active` on an exact or descendant path match, ignoring the query, so the Account link is active on `/account/orders/42`.
+
+A third, `data-pending` on the target of an in-flight link click or `navigate()` call, needs the `pendingLinks` plugin:
+
+```ts
+// src/router.ts
+import { createRouter, pendingLinks } from "@solidjs/router";
+
+export const Router = createRouter({ routes, links: pendingLinks });
+```
 
 Style them in CSS with no component code:
 
@@ -211,8 +225,9 @@ a[data-pending] {
 ```
 
 The root path `/` is active only on an exact match; otherwise it would be active everywhere.
+An `aria-current` value you set yourself, such as `aria-current="step"`, is left alone.
 
-For a component that is not an anchor, or an anchor that needs the state in JSX, `useLinkState` returns the same three as accessors:
+For a component that is not an anchor, or an anchor that needs the state in JSX, `useLinkState` returns the same three as accessors, and its `pending` works without the plugin:
 
 ```tsx
 import { useLinkState } from "@solidjs/router";
@@ -233,7 +248,7 @@ function Tab(props: { href: string; children: JSX.Element }) {
 ## Observe and guard navigation
 
 `useIsRouting()` is true while a navigation is waiting on route work.
-Use it for a top-of-page progress bar; for a single link, `data-pending` is already there.
+Use it for a top-of-page progress bar; for a single link, use `data-pending` or `useLinkState().pending`.
 
 `useMatch(() => pattern)` tests a pattern against the current pathname without needing a route for it, and `useRouteMatches()` returns the matched route definitions with their `info`, which is how a breadcrumb reads route metadata.
 
@@ -285,12 +300,12 @@ Add the schema with a transform to `Number`, and read with `useSearchParams(Rout
 - Use `useNavigate` for navigation that is a consequence of something else; return `redirect()` from a mutation when the server knows the destination.
 - Read `useLocation()` fields individually; each is reactive on its own.
 - Put shareable state in search parameters, and give the route a synchronous `search` schema to get typed, parsed values.
-- Style `aria-current="page"`, `data-active`, and `data-pending` in CSS; the router sets them on the anchors it handles.
+- Style `aria-current="page"` and `data-active` in CSS; the router sets them on the anchors it handles. Add `links: pendingLinks` for `data-pending`.
 - Guard unsaved changes with `useBeforeLeave`, and call `retry(true)` after the user confirms.
 
 ## Next steps
 
 - [Nested routes and layouts](/routing/solid-router/nested-routes): where section navigation lives and what stays mounted across links.
-- [Data loading and mutations](/routing/solid-router/data): what the router preloads on hover, and `redirect()` from an action.
+- [Data loading and mutations](/routing/solid-router/data): how links preload ahead of a click, and `redirect()` from an action.
 - [State management](/guides/state-management#state-in-the-url): which page state belongs in the URL at all.
 - [Navigation API reference](/reference/solid-router/navigation): signatures for every primitive on this page.

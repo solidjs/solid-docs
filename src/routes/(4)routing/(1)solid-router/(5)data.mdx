@@ -57,7 +57,7 @@ export default function Product(
 }
 ```
 
-Hover a product link and the request appears in the network tab before the click.
+With [link preloading](#preloading-from-links) turned on, hover a product link and the request appears in the network tab before the click.
 Click, and the heading renders with the name already there.
 
 ![A timeline from hovering the link, to the click, to the component running. The preload calls the query on hover; the memo in the component reads the same query; both reach one cached request, started at the earliest call.](/images/diagrams/router-three-data-pieces.svg)
@@ -84,7 +84,7 @@ The intent tells you why the work started:
 | `"initial"`  | First render, including the server render    |
 | `"navigate"` | A link click or `navigate()` call            |
 | `"native"`   | Browser back or forward                      |
-| `"preload"`  | The user hovered, focused, or touched a link |
+| `"preload"`  | A link preload strategy or `usePreloadRoute` |
 
 Use it to skip work that is too expensive to run on a hover.
 
@@ -104,11 +104,32 @@ Return a value from `preload` only for something that should not change while th
 
 ### Preloading from links
 
-The router starts preloading when a user hovers, focuses, or touches a link, after a short delay.
-By default that warms the lazy component chunk and runs the route's `preload`.
+Links do not preload until you give the router a strategy with `preloadLinks`.
+`intentPreload()` preloads when a user rests the pointer on a link, focuses it, or touches it:
+
+```ts
+// src/router.ts
+import { createRouter, intentPreload } from "@solidjs/router";
+
+export const Router = createRouter({ routes, preloadLinks: intentPreload() });
+```
+
+That warms the lazy component chunk and runs the route's `preload`.
 The query cache keeps the result for a few seconds so the navigation that follows finds it ready.
 
-Turn data preloading off for one link when it is expensive or has side effects:
+The other strategies combine with it in an array:
+
+| Strategy            | Preloads                                                                        | Runs route `preload` by default |
+| ------------------- | ------------------------------------------------------------------------------- | ------------------------------- |
+| `intentPreload()`   | On hover after a short delay, on focus, and on touch                            | Yes                             |
+| `tapPreload()`      | On `pointerdown`, ahead of the click                                            | Yes                             |
+| `viewportPreload()` | Links marked `preload="viewport"` once they have stayed in view                 | No                              |
+| `eagerPreload()`    | Links marked `preload="eager"` once the page has loaded and the browser is idle | No                              |
+
+Pass `{ data: false }` or `{ data: true }` to change the last column.
+The [router factory reference](/reference/solid-router/router-factory#link-preload-strategies) lists every option.
+
+Opt one link out of preloading, chunk and data, when it is expensive or has side effects:
 
 ```tsx
 <a href={paths.account.orders} preload="false">
@@ -116,7 +137,6 @@ Turn data preloading off for one link when it is expensive or has side effects:
 </a>
 ```
 
-Or turn off link preloading altogether, chunk and data, with `preloadLinks: false` in `createRouter`.
 To warm a route from code, for example when a list scrolls into view:
 
 ```tsx
@@ -277,7 +297,7 @@ A mutation has three moments the UI may want to reflect: while it runs, when it 
 
 ### While it runs
 
-The router sets `aria-busy="true"` on the submitting form.
+The router sets `aria-busy="true"` on the submitting form until the action's result is on screen, including any revalidation or redirect it triggers.
 Style it in CSS and no component code is needed:
 
 ```css
@@ -384,6 +404,7 @@ onKeyDown={(event) => {
 ```
 
 Everything else is the same: revalidation, submissions, `.onSubmit`.
+The promise from `remove()` resolves when the action body finishes, which can be before the revalidated data renders and `.onSettled` runs.
 What you give up is the no-JavaScript path, which only a form provides.
 
 ## What revalidates after a mutation
@@ -448,4 +469,4 @@ Wrap it in `markSafeError` to send the message to the browser, or throw the vali
 - [Server rendering and hydration](/routing/solid-router/server-rendering): hydrating query results and single-flight mutations.
 - [Data fetching patterns](/guides/data-fetching-patterns): search, pagination, sharing, polling, and failures, with or without the router.
 - [Protected routes](/guides/protected-routes#redirect-before-render): a `preload` and a `query` that redirect a signed-out visitor before the page paints.
-- [Data API reference](/reference/solid-router/data): signatures for `query`, `revalidate`, `action`, `useAction`, and `useSubmissions`.
+- [Data API reference](/reference/solid-router/data): signatures for `query`, `liveQuery`, `revalidate`, `action`, `useAction`, and `useSubmissions`.

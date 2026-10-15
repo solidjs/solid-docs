@@ -1,0 +1,270 @@
+---
+title: "Streaming AI responses"
+version: "2.0"
+description: "Forward a model's token stream through a server function into a store one chunk at a time, stop it from the browser or by asking a new question, and render the Markdown without re-rendering what has already landed."
+---
+
+The storefront gets a support assistant: a shopper types a question and the answer appears word by word as the model produces it.
+Halfway through, the shopper asks a different question, or presses Stop, or the model call fails and they want to try again.
+Written by hand, that is a `fetch` with a body reader, a flag for "streaming", an `AbortController` kept somewhere, and a text state that is replaced on every chunk.
+
+In Solid the model call is a server function that returns an async generator, the browser side is a projection that writes one store commit per chunk, and cancellation is what the reactive graph does with a computation it no longer needs.
+This guide builds that assistant and ends with the cancellation contract, because deciding who may stop a generation is the part that does not fall out of the code.
+
+## Stream from the server
+
+A `"use server"` function can be an async generator; the transport sends each yielded value over the open response as it is produced, as [Reads, streams, and live data](/building-apps/server-functions/reads-and-live-data#return-a-stream) describes.
+Read the request's abort signal and hand it to the model call:
+
+```ts
+// src/data/assistant.ts
+import { getRequestEvent } from "@solidjs/web";
+
+export async function* answer(question: string) {
+	"use server";
+	const signal = getRequestEvent()?.request.signal;
+	const stream = await model.stream({ prompt: question, signal });
+	for await (const chunk of stream) {
+		yield chunk.text;
+	}
+}
+```
+
+`model.stream` is a stand-in for the provider SDK; provider SDKs take an `AbortSignal` for a streaming call under a name such as `signal` or `abortSignal`.
+The parts that are Solid's are exact: [`getRequestEvent()`](/reference/solid-web/request-response/get-request-event) returns the request event on the server, and `request` is the standard `Request`, whose `signal` aborts when the client disconnects before the response has ended.
+
+Call `answer("Do you ship to Portugal?")` from the browser and the first words arrive before the model has finished the sentence.
+Each `yield` is one chunk on the wire; the function's `for await` loop is the only buffering there is.
+
+:::caution[The signal is the host's to keep live]
+`request.signal` fires on a dropped connection only when the server integration aborts it when the socket closes.
+The Vite plugin's dev server does; a hand-written Node server must abort the controller on the response's `close` event, or the signal never fires and the model keeps generating for a reader that is gone.
+:::
+
+## Collect the chunks in a store
+
+In the browser, [`createProjection`](/reference/solid-js/stores/create-projection) with an async generator turns the stream into a store.
+Each `yield` commits the writes made to the draft since the previous one, so the component reads `reply.text` and sees it grow:
+
+```tsx
+// src/pages/Assistant.tsx
+import { Errored, Show, createProjection, createSignal } from "solid-js";
+import { invoke } from "@solidjs/web/server-functions";
+import { answer } from "../data/assistant";
+
+type Reply = { text: string; done: boolean };
+
+function Assistant() {
+	const [question, setQuestion] = createSignal("");
+	let current: AbortController | undefined;
+
+	const reply = createProjection(
+		async function* (draft: Reply) {
+			const asked = question();
+			draft.text = "";
+			draft.done = !asked;
+			yield;
+			if (!asked) return;
+
+			const controller = (current = new AbortController());
+			try {
+				const chunks = await invoke(
+					answer,
+					{ signal: controller.signal },
+					asked
+				);
+				for await (const chunk of chunks) {
+					draft.text += chunk;
+					yield;
+				}
+			} catch (error) {
+				if (!controller.signal.aborted) throw error;
+			}
+			draft.done = true;
+		},
+		{ text: "", done: true },
+		{ seedLoadingValue: true }
+	);
+
+	return (
+		<>
+			<form
+				onSubmit={(event) => {
+					event.preventDefault();
+					const data = new FormData(event.currentTarget);
+					setQuestion(String(data.get("question") ?? ""));
+				}}
+			>
+				<input name="question" placeholder="Ask about an order" />
+				<button type="submit">Ask</button>
+				<button
+					type="button"
+					disabled={reply.done}
+					onClick={() => current?.abort()}
+				>
+					Stop
+				</button>
+			</form>
+			<Errored
+				fallback={(error, reset) => (
+					<p role="alert">
+						{String(error())} <button onClick={reset}>Retry</button>
+					</p>
+				)}
+			>
+				<p>{reply.text}</p>
+				<Show when={!reply.done}>
+					<span aria-live="polite">Writing…</span>
+				</Show>
+			</Errored>
+		</>
+	);
+}
+```
+
+Submit a question and the paragraph fills in chunk by chunk while "Writing…" shows; when the generator finishes, `done` flips and the indicator goes away.
+Submit a second question while the first is still streaming and the text clears and starts again with the new answer; nothing from the first answer arrives afterwards.
+
+What happens on that second submit is the whole cancellation story on the client side.
+The projection's function read `question()`, so the new value re-runs it.
+A re-run supersedes the previous flight: the runtime calls `return()` on the previous generator, which exits its `for await` loop, which in turn closes the server function's iterable and aborts the request.
+Draft writes the old generator makes after that point are ignored, which is why a late chunk from the first answer cannot land in the second.
+
+The `seedLoadingValue` option makes the seed, `{ text: "", done: true }`, the store's first committed value, so the first render shows an empty reply and no [`Loading`](/concepts/boundaries) boundary is needed above the paragraph.
+
+### Two ways to stop
+
+The second submit stops the first answer by superseding the read.
+That is the shape to prefer: there is no controller to keep, and anything that re-runs the projection, including a `refresh(reply)`, cancels the same way.
+
+The Stop button is the explicit form.
+[`invoke()`](/reference/solid-web/server-functions/invoke) calls a server function reference with options that belong to one call, and `signal` is one of them: aborting it rejects the call and cancels the request.
+The `catch` turns that rejection into a normal end when the abort was ours, so the text so far stays on screen and `done` flips; any other failure is rethrown.
+Without the `catch`, Stop would be an error the boundary shows, which is not what the shopper asked for.
+
+The controller lives in a plain variable rather than a signal on purpose: assigning it is not a reactive write, so the projection's function may do it, and nothing renders from it.
+
+### Errors and retry
+
+A rejected model call, a network failure after the first chunk, or an exception in the generator ends the projection's flight with an error, and the nearest [`Errored`](/reference/solid-js/components-jsx/errored) boundary renders its fallback.
+The fallback's `reset` re-runs the sources that failed, so Retry asks the same question again with no state to clear by hand.
+
+## Render Markdown without re-rendering the answer
+
+A model answers in Markdown, and parsing the whole text on every chunk gets slower as the answer grows and rebuilds DOM the reader is looking at.
+Split the answer into completed blocks and one trailing block: a completed block never changes, so it is parsed once and keyed; only the trailing block is re-rendered per chunk.
+
+```tsx
+// src/pages/Assistant.tsx
+import { For, createProjection, createSignal } from "solid-js";
+import { answer } from "../data/assistant";
+
+type Block = { id: number; source: string };
+type Reply = { blocks: Block[]; tail: string; done: boolean };
+
+function Assistant() {
+	const [question, setQuestion] = createSignal("");
+	let nextId = 0;
+
+	const reply = createProjection(
+		async function* (draft: Reply) {
+			const asked = question();
+			draft.blocks = [];
+			draft.tail = "";
+			draft.done = !asked;
+			yield;
+			if (!asked) return;
+
+			for await (const chunk of await answer(asked)) {
+				draft.tail += chunk;
+				const parts = draft.tail.split("\n\n");
+				draft.tail = parts.pop() ?? "";
+				for (const source of parts) draft.blocks.push({ id: nextId++, source });
+				yield;
+			}
+			if (draft.tail) draft.blocks.push({ id: nextId++, source: draft.tail });
+			draft.tail = "";
+			draft.done = true;
+		},
+		{ blocks: [], tail: "", done: true },
+		{ seedLoadingValue: true }
+	);
+
+	return (
+		<article>
+			<For each={reply.blocks} keyed={(block) => block.id}>
+				{(block) => <div innerHTML={renderMarkdown(block().source)} />}
+			</For>
+			<div innerHTML={renderMarkdown(reply.tail)} />
+		</article>
+	);
+}
+```
+
+`renderMarkdown` is a stand-in for the Markdown library of your choice; sanitize its output before using `innerHTML` on text a model produced.
+A blank line closes a block, which is a good enough boundary for paragraphs, headings, and lists; a parser that reports where a block ends can replace the `split`.
+
+Ask a long question and watch the DOM: each completed paragraph is inserted once and never touched again, and only the last `div` changes as chunks arrive.
+`For` keyed by `id` keeps a block's element when the array is replaced, for example when the finished answer is written back from a saved conversation, and `push` on the draft adds a row without rebuilding the others.
+
+## The cancellation contract
+
+Three parties can stop a generation, and the code above connects them in one direction.
+State the contract in the server function's comment, because a reader of either side cannot see the other:
+
+1. The browser aborts: a superseding read, a Stop button, or a closed tab ends the iteration or the request.
+2. The server's `request.signal` aborts, and the runtime calls `return()` on the generator, so its `finally` blocks run.
+3. The generator forwarded that signal to the model call, so the provider stops generating.
+
+Step 3 is the one the author decides.
+A generator that does not pass the signal on still ends, but only at its next `yield`, after the model has produced one more chunk for nobody; a model call that runs to completion for a reader who left is the cost of forgetting it.
+
+Forwarding is right for a chat answer, where the shopper is the only consumer and an abandoned answer has no value.
+It is wrong for a durable job: a report the shopper asked to be generated into their account should finish whether or not they stay on the page, and reloading the page should show its progress rather than start it again.
+Do not forward the signal to such a job.
+Start it with an action, store its output on the server as it is produced, expose progress as a [live source](/building-apps/server-functions/reads-and-live-data#declare-a-live-source) the page reads, and expose Stop as a second action that the job checks between steps.
+In that shape the request's abort means only "this reader left", which is the correct meaning; the job's own lifetime belongs to the server.
+
+:::note[What a superseded read cannot do]
+Cancellation from the reactive graph stops the stream the component was reading.
+It cannot stop work the server function started and did not tie to the signal, such as a job enqueued before the first `yield`.
+If the function has side effects beyond the stream, give them the server-owned shape above.
+:::
+
+## Common problems
+
+### The old answer's chunks appear after a new question
+
+The generator reads the question after its first `await`, so the re-run tracked nothing and the first flight was never superseded.
+Read every reactive input before the first `await` or `yield`, as `asked` is read above.
+
+### Stop shows the error fallback
+
+The abort's rejection reached the boundary.
+Catch it in the generator and rethrow only when `controller.signal.aborted` is false.
+
+### The model keeps running after the tab closes
+
+`request.signal` never fired.
+Check that the server integration aborts the request on a closed socket, and that the generator passes the signal to the model call rather than only reading it.
+
+### The fallback flashes before the first chunk
+
+The projection was read under a `Loading` boundary without `seedLoadingValue`, so the seed was not observable until the first `yield` landed, and the boundary showed its fallback for that window.
+Pass `{ seedLoadingValue: true }` when the seed is a valid first render, or keep the boundary and accept the fallback.
+
+## Recap
+
+- Return an async generator from a `"use server"` function and pass `getRequestEvent()?.request.signal` to the model call.
+- Consume the stream in `createProjection(async function* (draft) { ... })`; each `yield` commits the draft writes made since the last one.
+- Read every reactive input before the first `await` so a change supersedes the flight, which closes the previous generator and aborts its request.
+- Use `invoke(fn, { signal }, ...args)` for an explicit Stop, and catch the abort so the text so far stays on screen.
+- Put completed Markdown blocks in a `For` keyed by `id` and re-render only the trailing block.
+- Forward the signal when the reader is the only consumer; for a durable job, do not forward it, and expose Stop as an action.
+
+## Next steps
+
+- [Reads, streams, and live data](/building-apps/server-functions/reads-and-live-data): the transport behind the stream, and `live()` for a value that replaces itself over time.
+- [Metadata and transport](/building-apps/server-functions/metadata-and-transport#configure-one-call): the other per-call options `invoke()` accepts, and what it refuses.
+- [Mutations](/concepts/mutations): actions and optimistic stores, for the server-owned job shape.
+- [Chat state for the AI SDK](/guides/ai-sdk-chat): the same ideas through the AI SDK's chat class and a store-backed adapter.

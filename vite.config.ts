@@ -149,6 +149,11 @@ export default defineConfig({
 			},
 			llms: true,
 			sitemap: true,
+			// Every host serves llms.txt, llms-full.txt, and each page's `.md`
+			// form to any client. The canonical host is indexed; a preview or
+			// release-candidate host is kept out of search results by the
+			// `X-Robots-Tag: noindex` header below, not by a crawl block, so
+			// that AI fetchers and link previews still reach the content.
 			robots: {
 				rules: isProductionSite
 					? [
@@ -158,7 +163,7 @@ export default defineConfig({
 								disallow: ["/i18n-status/"],
 							},
 						]
-					: [{ userAgent: "*", disallow: ["/"] }],
+					: [{ userAgent: "*", allow: ["/"] }],
 			},
 		}),
 		solidStart(
@@ -166,6 +171,11 @@ export default defineConfig({
 		),
 		nitro({
 			preset: "netlify",
+			// The Netlify preset writes route-rule headers to `_headers`, so the
+			// header also covers prerendered pages served from the CDN.
+			routeRules: isProductionSite
+				? {}
+				: { "/**": { headers: { "X-Robots-Tag": "noindex" } } },
 			prerender: {
 				crawlLinks: true,
 				autoSubfolderIndex: false,

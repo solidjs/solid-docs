@@ -1,0 +1,238 @@
+---
+title: "Chat state for the AI SDK"
+version: "2.0"
+description: "Drive the AI SDK's chat class from a Solid store with a short ChatState adapter, so messages, status, and errors update the exact nodes that read them."
+---
+
+You have an API route that answers `POST /api/chat` with `streamText(...).toUIMessageStreamResponse()` from the `ai` package, and you want the chat screen in Solid.
+The package's own framework adapters hold messages in their framework's state, and `@ai-sdk/solid` is deprecated: its README says so, names AI SDK 5 as the release that removes it, and its last version stops at the `useChat` hook of that era.
+
+Nothing in the chat logic depends on a framework, though.
+`AbstractChat` in `ai` does the transport, the stream parsing, tool calls, and status; it reads and writes its messages through a small `ChatState` interface that the adapter supplies.
+This recipe is that adapter on a Solid store, about sixty lines, with no throttle, because a store update already touches only the nodes that read the changed value.
+
+This recipe targets `ai` 7.x; the interface is quoted from its source.
+Install the package with your package manager, no `@ai-sdk/*` UI package is needed.
+
+## The interface to implement
+
+`ChatState` has seven members:
+
+```ts
+export interface ChatState<UI_MESSAGE extends UIMessage> {
+	status: ChatStatus;
+	error: Error | undefined;
+	messages: UI_MESSAGE[];
+	pushMessage: (message: UI_MESSAGE) => void;
+	popMessage: () => void;
+	replaceMessage: (index: number, message: UI_MESSAGE) => void;
+	snapshot: <T>(thing: T) => T;
+}
+```
+
+`AbstractChat` sets `status` and `error` as the request moves through `submitted`, `streaming`, `ready`, and `error`, reads `messages` to build the next request, and writes through `pushMessage`, `popMessage`, and `replaceMessage` as chunks arrive.
+`snapshot` must return a copy it can mutate: the stream processor keeps one working message object and hands it to `replaceMessage` after every chunk.
+
+## The adapter
+
+```ts
+// src/lib/chat.ts
+import {
+	AbstractChat,
+	type ChatInit,
+	type ChatState,
+	type ChatStatus,
+	type UIMessage,
+} from "ai";
+import { createSignal, createStore, reconcile, snapshot } from "solid-js";
+
+class SolidChatState<M extends UIMessage> implements ChatState<M> {
+	#messages = createStore<M[]>([]);
+	#status = createSignal<ChatStatus>("ready");
+	#error = createSignal<Error | undefined>();
+
+	constructor(initial: M[] = []) {
+		this.messages = initial;
+	}
+
+	get status() {
+		return this.#status[0]();
+	}
+	set status(value: ChatStatus) {
+		this.#status[1](value);
+	}
+
+	get error() {
+		return this.#error[0]();
+	}
+	set error(value: Error | undefined) {
+		this.#error[1](value);
+	}
+
+	get messages() {
+		return this.#messages[0];
+	}
+	set messages(value: M[]) {
+		this.#messages[1](reconcile(value.map((m) => this.snapshot(m))));
+	}
+
+	pushMessage = (message: M) => {
+		this.#messages[1]((draft) => {
+			draft.push(this.snapshot(message));
+		});
+	};
+
+	popMessage = () => {
+		this.#messages[1]((draft) => {
+			draft.pop();
+		});
+	};
+
+	replaceMessage = (index: number, message: M) => {
+		const copy = this.snapshot(message);
+		this.#messages[1](
+			reconcile(this.messages.map((m, i) => (i === index ? copy : m)))
+		);
+	};
+
+	snapshot<T>(thing: T): T {
+		return structuredClone(snapshot(thing));
+	}
+}
+
+export class Chat<M extends UIMessage = UIMessage> extends AbstractChat<M> {
+	constructor({ messages, ...init }: ChatInit<M> = {}) {
+		super({ ...init, state: new SolidChatState<M>(messages) });
+	}
+}
+```
+
+Three decisions in that file are worth knowing about.
+
+`status` and `error` are signals and `messages` is a store, so a component that reads `chat.status` re-runs only when the status changes, and a component that reads one message's text re-runs only when that text changes.
+The stream processor calls `replaceMessage` once per chunk with a message whose last text part has grown.
+Assigning that object into the array slot would replace the row and re-run every reader of it, so the adapter passes the array through [`reconcile`](/reference/solid-js/stores/reconcile) instead: rows match by `id` and keep their proxies, the unchanged rows are skipped by reference, and inside the changed row only the `text` leaf that differs notifies its readers.
+
+`pushMessage` and `popMessage` write the draft directly, because adding and removing a row is what `push` and `pop` do on a store without touching the other rows.
+
+`snapshot` copies twice on purpose.
+Solid's [`snapshot`](/reference/solid-js/advanced/store-advanced/snapshot) turns a store proxy into plain data, which `structuredClone` can then copy; a plain object passes through the first call unchanged and is copied by the second.
+The copy matters in `replaceMessage` as much as in `snapshot`: the stream processor goes on mutating the message object it handed over, and a store that adopted that same object as its backing would see the data change underneath it with no write to track.
+
+:::note[No throttle]
+The framework adapters that ship with the AI SDK accept a `throttleWaitMs` that batches message updates for a view that re-renders on each one.
+A Solid store update is per key, so there is no view to re-render and nothing to throttle.
+If a model produces chunks faster than the screen can paint, the writes are already batched to a microtask.
+:::
+
+## Use it in a component
+
+```tsx
+// src/pages/Support.tsx
+import { For, Show } from "solid-js";
+import { DefaultChatTransport, type UIMessage } from "ai";
+import { Chat } from "../lib/chat";
+
+function text(part: UIMessage["parts"][number]) {
+	return part.type === "text" ? part.text : "";
+}
+
+function Support() {
+	const chat = new Chat({
+		transport: new DefaultChatTransport({ api: "/api/chat" }),
+	});
+
+	return (
+		<>
+			<ul>
+				<For each={chat.messages} keyed={(message) => message.id}>
+					{(message) => (
+						<li>
+							<b>{message().role}</b>
+							<For each={message().parts}>
+								{(part) => <span>{text(part)}</span>}
+							</For>
+						</li>
+					)}
+				</For>
+			</ul>
+			<form
+				onSubmit={(event) => {
+					event.preventDefault();
+					const input = event.currentTarget.elements.namedItem(
+						"text"
+					) as HTMLInputElement;
+					chat.sendMessage({ text: input.value });
+					input.value = "";
+				}}
+			>
+				<input name="text" disabled={chat.status !== "ready"} />
+				<button type="submit">Send</button>
+				<button
+					type="button"
+					disabled={chat.status !== "streaming"}
+					onClick={() => chat.stop()}
+				>
+					Stop
+				</button>
+			</form>
+			<Show when={chat.error}>
+				{(error) => <p role="alert">{error().message}</p>}
+			</Show>
+		</>
+	);
+}
+```
+
+Type a question and send it.
+The user message appears, the input disables while `status` is `submitted` and then `streaming`, and the assistant's reply fills in as the stream arrives; press Stop and the reply keeps what has landed, and `status` returns to `ready`.
+
+`chat.messages` is the store, so the `For` reads it as a reactive list; keyed by `id`, a message's `li` survives every chunk, and only the `span` whose part text changed updates.
+`text(part)` is called inside the JSX expression, so the read of `part.text` is tracked there; reading it at the top of the callback would freeze it at the first chunk.
+`chat.status` and `chat.error` read the signals through the getters on `AbstractChat`, which is why `disabled` and the error paragraph follow them.
+
+The `Chat` instance is created in the component body, which gives its signals and store an owner, so they are disposed with the component.
+
+## The server side
+
+The route is the AI SDK's own and has nothing Solid-specific in it; this is the shape that [API routes](/building-apps/middleware-and-api-routes#api-routes) take with the filesystem router:
+
+```ts
+// src/routes/api/chat.ts
+import type { APIHandler } from "filesystem-routing/api";
+import { convertToModelMessages, streamText, type UIMessage } from "ai";
+
+export const POST: APIHandler = async ({ request }) => {
+	const { messages }: { messages: UIMessage[] } = await request.json();
+	const result = streamText({
+		model: provider("your-model"),
+		messages: await convertToModelMessages(messages),
+		abortSignal: request.signal,
+	});
+	return result.toUIMessageStreamResponse();
+};
+```
+
+`provider` is a stand-in for the model provider package you install.
+Passing `request.signal` as `abortSignal` is the same cancellation contract as in [Streaming AI responses](/building-apps/server-functions/streaming-ai-responses#the-cancellation-contract): `chat.stop()` aborts the fetch, the request's signal fires on the server, and the model call stops.
+
+## What you give up
+
+`AbstractChat` reads and writes every message through the adapter, so the adapter is the whole integration, but the chat is not a Solid computation.
+It does not participate in a `Loading` boundary, `isPending` does not report its requests, and a navigation during a stream does not hold the frame; `status` is the only progress signal.
+For a chat that must take part in the page's async coordination, read the stream through a projection as the streaming guide does, and use the AI SDK only on the server.
+
+## Recap
+
+- `AbstractChat` from `ai` 7.x takes a `ChatState` with `status`, `error`, `messages`, `pushMessage`, `popMessage`, `replaceMessage`, and `snapshot`.
+- Hold `status` and `error` in signals and `messages` in a store; push and pop on the draft, and replace through `reconcile` so rows keep their identity.
+- `snapshot` returns a copy, and `replaceMessage` stores a copy too, because the stream processor keeps mutating the object it hands over.
+- No throttle: a store write touches only the nodes that read the changed key.
+- Create the `Chat` in the component body so its reactive state has an owner.
+- `@ai-sdk/solid` is deprecated; this adapter replaces it.
+
+## Next steps
+
+- [Streaming AI responses](/building-apps/server-functions/streaming-ai-responses): the same stream as a projection, with the cancellation contract spelled out.
+- [Stores](/concepts/stores): drafts, `snapshot`, and why a keyed list keeps its rows.
+- [Middleware and API routes](/building-apps/middleware-and-api-routes): where the `/api/chat` route lives and what the handler receives.

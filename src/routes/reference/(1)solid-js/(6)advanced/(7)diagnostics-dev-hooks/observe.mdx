@@ -622,6 +622,7 @@ interface DiagnosticEvent {
 	ownerName?: string;
 	nodeName?: string;
 	ownerPath?: string[];
+	loc?: string;
 	data?: Record<string, unknown>;
 }
 ```
@@ -668,6 +669,17 @@ the `effect`/`computed` default) — e.g. `["<App>", "<TodoRow>", "effect"]`.
 Unnamed owners (plain roots) are skipped. Absent when the subject has no
 named owner at all (a top-level scope, or an unowned primitive — which
 is usually the finding itself).
+
+#### `loc`
+
+- **Type:** `string`
+
+Source location of the innermost located node enclosing the subject
+(`file:line:col`, relative to the project root — the compiler's
+`sourceNames` `locations` kind): the subject's own `loc`, else the
+nearest owner's up the chain (a component root carries its JSX site).
+Absent when nothing on the chain was compiled with locations. A host
+event that sets it keeps it.
 
 #### `data`
 
@@ -736,7 +748,7 @@ Records an event on the channel from outside the reactive core — a host
 runtime reporting its own findings (hydration mismatches, server render
 faults) so consumers see one stream. `subject` locates it like the
 internal sites do; a host whose owners are not signals' owners passes
-`ownerPath` on the event instead and it is used as-is.
+`ownerPath` (and `loc`) on the event instead and they are used as-is.
 
 ### `DiagnosticSeverity`
 

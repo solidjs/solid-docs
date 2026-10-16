@@ -38,6 +38,10 @@ function transformSidebarItem(item: SidebarItemWithMeta): SidebarItemWithMeta {
 	if (item.title === "Advanced") {
 		return { ...item, collapsed: true };
 	}
+	// One page per diagnostic code; the group's index is the way in.
+	if (item.title === "Diagnostics" && item.filePath?.includes("/reference/")) {
+		return { ...item, collapsed: true };
+	}
 	if (item.title === "Jsx Properties") {
 		return { ...item, title: "JSX properties" };
 	}

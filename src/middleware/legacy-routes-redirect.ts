@@ -66,7 +66,7 @@ const LEGACY_ROUTES = {
 	"/references/api-reference/reactive-utilities/observable":
 		"/reference/reactive-utilities/observable",
 	"/references/api-reference/reactive-utilities/on":
-		"/reference/reactive-utilities/on",
+		"/reference/reactive-utilities/on-util",
 	"/references/api-reference/reactive-utilities/regularstartTransition":
 		"/reference/reactive-utilities/start-transition",
 	"/references/api-reference/reactive-utilities/runWithOwner":
@@ -154,7 +154,7 @@ const LEGACY_ROUTES = {
 		"/guides/styling-components/uno",
 
 	// trailing slash removal
-	"/routing/migration/": "/routing/migration",
+	"/routing/migration/": "/solid-router/guides/migration",
 	"/concepts/refs/": "/concepts/refs",
 	"/guides/state-management/": "/guides/state-management",
 
@@ -163,7 +163,7 @@ const LEGACY_ROUTES = {
 	"/guides/foundations/understanding-components": "/concepts/components/basics",
 	"/guides/foundations/why-solid": "/#advantages-of-using-solid",
 	"/guides/how-to-guides/routing-in-solid/solid-router":
-		"/routing/installation-and-setup",
+		"/solid-router/getting-started/installation-and-setup",
 	"/guides/tutorials/getting-started-with-solid/installing-solid":
 		"/quick-start",
 	"/references/concepts/reactivity": "/concepts/intro-to-reactivity",
@@ -177,6 +177,7 @@ const LEGACY_ROUTES = {
 
 	// solid-docs-next moves/new location for old pages/solid api updates
 	"/reference/jsx-attributes/on-and-oncapture": "/reference/jsx-attributes/on",
+	"/routing/migration": "/solid-router/guides/migration",
 
 	"/solid-router/reference/response-helpers/revalidate":
 		"/solid-router/reference/data-apis/revalidate",

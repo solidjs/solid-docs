@@ -56,7 +56,7 @@ Adoption also works for reads that happen after hydration finishes, so a lazy ch
 
 ## One round trip for a mutation
 
-Submit a form backed by an `action` on a page that also reads a `query`.
+Submit a form backed by a `formAction`, or call a server function from a click handler, on a page that also reads a `query`.
 Without the server-side collector, the browser makes two requests: the mutation, then the revalidation fetch when the router reloads the affected queries.
 With it, the browser makes one: the mutation response carries the fresh query values, and the router seeds its cache from them before the action's caller even receives the return value.
 
@@ -91,7 +91,7 @@ Submit **Add to cart** with both in place and the network tab shows one `POST /_
 :::deep-dive[What the collector does on each mutation]
 When a mutation finishes, the collector works out which URL the client will show next, whether that is the current page or a `redirect` target.
 It resolves any lazy subtrees on that path, runs the root preload and the matched route preloads in data-only mode, and folds every `query` result they produced into the response.
-On the client, the router applies the response's revalidation and redirect metadata, seeds the delivered values, and only then resolves the action call.
+On the client, the router applies the response's revalidation and redirect metadata, seeds the delivered values, and only then resolves the mutation call.
 That is why the [Data](/routing/solid-router/data#what-revalidates-after-a-mutation) page recommends putting the reads a page needs in its `preload`: the collector can only refresh what the preloads touch.
 [Integrate a router](/routing/integrate-a-router#integrate-single-flight-mutations) describes the transport hooks the collector is built on.
 :::
@@ -156,6 +156,6 @@ With a custom server-function handler, pass `collectFlightData` to `handleServer
 ## Next steps
 
 - [Choose a rendering mode](/guides/choose-a-rendering-mode): static shell, streaming SSR, or prerendering, and what each asks of your route code.
-- [Server functions](/building-apps/server-functions): the runtime under `query` and `action` in a `fullstack` project.
+- [Server functions](/building-apps/server-functions): the runtime under `query` and `formAction` in a `fullstack` project.
 - [Deployment](/building-apps/deployment): where the server handler runs.
 - [`@solidjs/router/server` reference](/reference/solid-router/server): `createFlightDataCollector` options.

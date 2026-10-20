@@ -442,12 +442,57 @@ When `query` wraps a server function that has no declared method, it obtains a G
 A plain function passed to `query` remains a plain function and does not load or use that transport.
 The router reads the function's [declaration metadata](/reference/solid-web/server-functions/metadata) when it needs to identify the transport method.
 
+### Rename `action` to `formAction`
+
+The router's `action` is now `formAction`, and its `Action` type is `FormAction`.
+The old names remain as deprecated aliases that log a development warning, and will be removed in a later major release.
+Only the router's import changes; the `action` exported by `solid-js` is Solid's own primitive and keeps its name.
+
+Before:
+
+```tsx
+import { action, type Action } from "@solidjs/router";
+
+const addTodo: Action<[FormData], void> = action(saveTodo, "add-todo");
+```
+
+After:
+
+```tsx
+import { formAction, type FormAction } from "@solidjs/router";
+
+const addTodo: FormAction<[FormData], void> = formAction(saveTodo, "add-todo");
+```
+
+`useAction` is deprecated and has no replacement.
+It still works, with a development warning.
+Outside a form, call the server function directly, or wrap it in a core `action` from `solid-js` when the call also writes optimistic state.
+
+Before:
+
+```tsx
+const remove = useAction(removeTodo);
+
+<button onClick={() => remove(todo.id)}>Remove</button>;
+```
+
+After:
+
+```tsx
+<button onClick={() => deleteTodo(todo.id)}>Remove</button>
+```
+
+Here `deleteTodo` is the server function that `removeTodo` wrapped.
+A mounted router applies the response of any server function call, form or not: its `revalidate` keys, `redirect()`, `reload()`, and single-flight data.
+Unless `singleFlight: false` is set, every `POST` server function call counts as a mutation, and one that declares no `revalidate` keys revalidates every query on screen.
+Reads through `query` and functions declared with `GET()` are exempt; a `POST` that changes nothing returns `respond(value, { revalidate: "" })` to touch nothing.
+
 ### Replace pending submissions
 
 Router 0.x/1.x submissions represented pending and completed action calls.
 Router 2 separates those concerns:
 
-- Use action `.onSubmit(...)` with Solid optimistic primitives for in-flight UI.
+- Use form action `.onSubmit(...)` with Solid optimistic primitives for in-flight UI.
 - Use a form's `aria-busy="true"` state for form-level pending styling.
 - Use `useSubmissions()` for settled results and errors.
 - Use `.onSettled(...)` when every completion must be observed, including a void result or redirect.
@@ -469,9 +514,9 @@ After:
 
 ```tsx
 import { For, createOptimisticStore } from "solid-js";
-import { action, useSubmissions } from "@solidjs/router";
+import { formAction, useSubmissions } from "@solidjs/router";
 
-const addTodo = action(async (form: FormData) => {
+const addTodo = formAction(async (form: FormData) => {
 	return saveTodo(String(form.get("title") ?? ""));
 }, "add-todo");
 
@@ -522,7 +567,7 @@ Registering it inside the component ties the hook to the component's lifetime.
 
 Router 2 retains a submission only when the action produces a result or error.
 A void or metadata-only completion still reaches `.onSettled(...)`.
-Keep `method="post"` on action forms, and give a server-rendered client action a stable name.
+Keep `method="post"` on form action forms, and give a server-rendered client form action a stable name.
 The rewritten [Data loading and mutations](/routing/solid-router/data#show-what-is-happening) page walks through this split with a running example.
 
 ### Move response helpers
@@ -544,10 +589,10 @@ const save = action(async (form: FormData) => {
 After:
 
 ```tsx
-import { action } from "@solidjs/router";
+import { formAction } from "@solidjs/router";
 import { redirect, reload, respond } from "@solidjs/web";
 
-const save = action(async (form: FormData) => {
+const save = formAction(async (form: FormData) => {
 	const item = await saveItem(form);
 	return respond(item, { revalidate: ["items"] });
 }, "save-item");
@@ -740,6 +785,7 @@ See the [router factory reference](/reference/solid-router/router-factory) and [
 - [ ] Remove `decodeURIComponent` calls on route parameters.
 - [ ] Replace `<Navigate>` and rename `useCurrentMatches`.
 - [ ] Replace `cache` with `query`.
+- [ ] Rename the router's `action` and `Action` to `formAction` and `FormAction`, and replace `useAction` calls with direct server function calls.
 - [ ] Remove `createAsync`, `createAsyncStore`, and `useSubmission`.
 - [ ] Move pending UI to optimistic primitives or form `aria-busy`.
 - [ ] Import `redirect`, `reload`, and `respond` from `@solidjs/web`.
@@ -748,4 +794,4 @@ See the [router factory reference](/reference/solid-router/router-factory) and [
 - [ ] Register the single-flight collector before server-function dispatch when the application uses it.
 - [ ] Convert `<FileRoutes />` output through `fileRoutes(pageRoutes)`.
 - [ ] Replace widened route-array types with `defineRoutes`, `defineRoute`, and path witnesses.
-- [ ] Remove the final imports of `Route`, `A`, `Navigate`, `createAsync`, `createAsyncStore`, `useSubmission`, `cache`, and router response helpers.
+- [ ] Remove the final imports of `Route`, `A`, `Navigate`, `createAsync`, `createAsyncStore`, `useSubmission`, `useAction`, the router's `action`, `cache`, and router response helpers.

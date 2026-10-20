@@ -1,13 +1,13 @@
 ---
 title: "Data loading and mutations"
 version: "2.0"
-description: "Start route data early with preloads, cache and share reads with query, submit mutations with actions, show optimistic state, and control what revalidates."
+description: "Start route data early with preloads, cache and share reads with query, submit mutations with form actions, show optimistic state, and control what revalidates."
 ---
 
 The product page from the [introduction](/routing/solid-router) fetches its product inside a memo.
 That works, and three things about it are not quite right yet: the request does not start until the page component runs, a `ProductCard` in a list and the `Product` page fetch the same product twice, and the **Add to cart** form has no way to tell the cart it changed.
 
-The router's data APIs add one thing for each: `preload` starts a request before the page's component exists, `query` gives two readers one request, and `action` wraps a mutation so it works as a form without JavaScript and revalidates the cache when it finishes.
+The router's data APIs add one thing for each: `preload` starts a request before the page's component exists, `query` gives two readers one request, and `formAction` wraps a mutation so it works as a form without JavaScript and revalidates the cache when it finishes.
 This page continues the store: a product page and a cart.
 
 :::note[All of it is optional]
@@ -192,16 +192,16 @@ revalidate(); // everything
 ```
 
 Keys match by prefix, so the broad key reaches every argument combination.
-Calling this by hand is rare; the usual trigger is an action finishing, covered below.
+Calling this by hand is rare; the usual trigger is a mutation finishing, covered below.
 
 ## Mutate with actions
 
-An `action` wraps a mutation so it can be submitted as a form, tracked while it runs, and followed by revalidation.
+A `formAction` wraps a mutation so it can be submitted as a form, tracked while it runs, and followed by revalidation.
 Start with the server function:
 
 ```ts
 // src/data/cart.ts
-import { query, action } from "@solidjs/router";
+import { query, formAction } from "@solidjs/router";
 import { markSafeError, reload } from "@solidjs/web";
 import { currentSessionId } from "./session";
 
@@ -210,7 +210,7 @@ export const getCart = query(async () => {
 	return db.cart.forSession(currentSessionId());
 }, "cart");
 
-export const addToCart = action(async (form: FormData) => {
+export const addToCart = formAction(async (form: FormData) => {
 	"use server";
 	const productId = String(form.get("productId"));
 	const quantity = Number(form.get("quantity") ?? 1);
@@ -239,13 +239,13 @@ Click **Add to cart** and the form gets `aria-busy="true"` until the call and it
 
 Read that form as a browser would.
 It is a `POST` to a URL with `FormData`, and it works with JavaScript disabled: the server runs `addToCart`, sees the `reload`, and sends the browser back to the page.
-With JavaScript, the router intercepts the submit, calls the action over the server-function transport, and applies the response.
+With JavaScript, the router intercepts the submit, calls the form action over the server-function transport, and applies the response.
 
 Two rules follow from the form being the contract:
 
-- Actions accept `POST` forms only; a `GET` form throws `Only POST forms are supported for Actions`.
+- Form actions accept `POST` forms only; a `GET` form throws `Only POST forms are supported for Actions`.
   A `GET` form describes a URL, not a mutation; for search and filters, use a route with [typed search parameters](/routing/solid-router/navigation#type-search-parameters).
-- Everything the action needs must be in the form or bound to the action.
+- Everything the form action needs must be in the form or bound to it.
   Hidden inputs are the plain way; `.with()` is the typed way.
 
 The [Forms guide](/guides/forms) builds a complete form on this shape, including validation messages and no-JavaScript outcomes.
@@ -255,7 +255,7 @@ The [Forms guide](/guides/forms) builds a complete form on this shape, including
 When the argument is known where the form is rendered, bind it instead of adding a hidden input:
 
 ```tsx
-export const removeFromCart = action(
+export const removeFromCart = formAction(
 	async (productId: string, form: FormData) => {
 		"use server";
 		await db.cart.remove(currentSessionId(), productId);
@@ -272,22 +272,22 @@ export const removeFromCart = action(
 </For>;
 ```
 
-`.with(...)` returns an action whose remaining parameters start after the bound ones.
+`.with(...)` returns a form action whose remaining parameters start after the bound ones.
 The bound values travel in the action URL, so the no-JavaScript path receives them too.
 
 ### Client-side actions
 
-An action does not have to call a server function.
+A form action does not have to call a server function.
 A plain async function works, for a client-only mutation or a call to a third-party API:
 
 ```ts
-const savePreference = action(async (form: FormData) => {
+const savePreference = formAction(async (form: FormData) => {
 	localStorage.setItem("theme", String(form.get("theme")));
 }, "save-preference");
 ```
 
 :::caution[Name a client action that renders on the server]
-A client action rendered on the server needs the explicit name so both sides agree on the form's URL; without it the server render throws `Client Actions need explicit names if server rendered`.
+A client form action rendered on the server needs the explicit name so both sides agree on the form's URL; without it the server render throws `Client Actions need explicit names if server rendered`.
 A server function already has a stable URL and does not need one.
 :::
 
@@ -389,28 +389,40 @@ The optimistic layer is something the hydrated page adds on top of a form that a
 
 [Mutations](/concepts/mutations) explains the optimistic model in depth; this is the same model with the router providing the action.
 
-## Invoke an action from code
+## Call a mutation from code
 
-When there is no form, for example a keyboard shortcut or a drag-and-drop handler, bind the action to the router and call it:
+When there is no form, for example a keyboard shortcut or a drag-and-drop handler, call the server function directly:
+
+```ts
+// src/data/cart.ts
+export async function deleteCartLine(productId: string) {
+	"use server";
+	await db.cart.remove(currentSessionId(), productId);
+	return reload({ revalidate: getCart.key });
+}
+```
 
 ```tsx
-import { useAction } from "@solidjs/router";
-
-const remove = useAction(removeFromCart);
-
 onKeyDown={(event) => {
-	if (event.key === "Delete") void remove(selectedId(), new FormData());
+	if (event.key === "Delete") void deleteCartLine(selectedId());
 }}
 ```
 
-Everything else is the same: revalidation, submissions, `.onSubmit`.
-The promise from `remove()` resolves when the action body finishes, which can be before the revalidated data renders and `.onSettled` runs.
-What you give up is the no-JavaScript path, which only a form provides.
+The mounted router applies the response the same way it does for a form: the `reload` revalidates `getCart`, a `redirect` navigates, and single-flight data seeds the cache.
+No wrapper is needed for that; wrap the call in a core `action` from `solid-js` when the handler also writes optimistic state, as [Mutations](/concepts/mutations) shows.
+What you give up is what the form provides: the no-JavaScript path, `aria-busy`, `useSubmissions`, and the `.onSubmit` and `.onSettled` hooks.
+
+:::note[`useAction` is deprecated]
+Earlier releases bound a router action to code with `useAction`.
+It still works, with a development warning, and has no replacement: call the server function, or a core `action` around it, directly.
+:::
 
 ## What revalidates after a mutation
 
-When an action completes, the router revalidates the query cache.
-By default that means every entry: the safest assumption after a write is that anything might have changed.
+When a mutation completes, the router revalidates the query cache.
+A mutation is a form action or any `POST` server function call, whether it came from a form, a core `action`, or an event handler; `POST` is the default method for server functions.
+By default that means every query on screen: the safest assumption after a write is that anything might have changed.
+Reads are exempt: `query` declares its server function as a `GET`, and so does wrapping one in `GET(fn)`.
 
 Narrow it from the server function's response:
 
@@ -418,6 +430,12 @@ Narrow it from the server function's response:
 return reload({ revalidate: getCart.key }); // this query only
 return respond(cart, { revalidate: [getCart.key, getTotals.key] }); // a value plus keys
 return redirect(paths.cart, { revalidate: getCart.key }); // navigate, then revalidate
+```
+
+A `POST` that does not change anything, such as a log call or a search sent on each keystroke, declares an empty `revalidate` so it touches nothing:
+
+```ts
+return respond(results, { revalidate: "" }); // revalidate nothing
 ```
 
 A same-origin `redirect` becomes a router navigation; anything else leaves the app.
@@ -434,39 +452,40 @@ In a `fullstack` project with the router's single-flight collector installed, th
 
 ### The list still shows the old data after a mutation
 
-The mutation did not go through an `action`, so nothing revalidated: a server function called directly from an event handler updates the database and leaves the cache as it was.
-Wrap it in `action` and submit it through a form or `useAction`.
-If it is an action and one list is stale, the response narrowed `revalidate` to keys that do not include that list's query; add the key or return `reload()` without keys to revalidate everything.
+The response narrowed `revalidate` to keys that do not include that list's query; add the key or return `reload()` without keys to revalidate everything.
+If nothing revalidated at all, the mutation did not go through the router: a plain `fetch` to an API route, a call made where no router is mounted, or a server function called directly with `singleFlight: false` set on the router.
+Call a server function, submit a form action, or call `revalidate` yourself after the write.
 
 ### `'use' router primitives can be only used inside a Route` when a query runs
 
 A `query` read inside a reactive scope binds to the router, so a component that reads one outside the `<Router>`, for example next to it in `App`, throws this.
 Move the reader inside the router's function child or a route component.
 
-### The action ran but `useSubmissions` shows nothing
+### The form action ran but `useSubmissions` shows nothing
 
-The action returned nothing or redirected.
+The form action returned nothing or redirected.
 Only a submission that produced a result or an error enters the list; register `.onSettled` to observe every completion, including void ones.
 
 ### The error message is `Internal Server Error` in production
 
-The action threw a plain `Error`.
+The mutation threw a plain `Error`.
 Wrap it in `markSafeError` to send the message to the browser, or throw the validation issues with `respond(issues, { status: 400 })`; a returned envelope is a successful result, not an error.
 
 ## Recap
 
 - Declare each read once with `query(fn, "name")`; the name plus the arguments is the cache key two readers share.
 - Start reads in the route's `preload` with `void`, and read them through a memo in the page; `props.data` is captured once.
-- Wrap a mutation in `action` and submit it with `<form method="post" action={...}>`, so it works before JavaScript loads.
+- Wrap a mutation in `formAction` and submit it with `<form method="post" action={...}>`, so it works before JavaScript loads.
 - Put everything the mutation needs in the form or bind it with `.with()`.
 - Show progress with `form[aria-busy]`, failures with `useSubmissions`, and optimistic state with `.onSubmit` on an optimistic store.
 - Throw `markSafeError` or throw `respond()` for messages the user should see.
-- Narrow revalidation with `reload`, `respond`, or `redirect` options; without keys, every query revalidates.
+- Call a server function directly when there is no form; the router still applies its revalidation and redirect.
+- Narrow revalidation with `reload`, `respond`, or `redirect` options; without keys, every query revalidates after any `POST` server function, and `revalidate: ""` opts out.
 
 ## Next steps
 
-- [Forms](/guides/forms): a complete form on router actions, from no-JavaScript through inline validation.
+- [Forms](/guides/forms): a complete form on form actions, from no-JavaScript through inline validation.
 - [Server rendering and hydration](/routing/solid-router/server-rendering): hydrating query results and single-flight mutations.
 - [Data fetching patterns](/guides/data-fetching-patterns): search, pagination, sharing, polling, and failures, with or without the router.
 - [Protected routes](/guides/protected-routes#redirect-before-render): a `preload` and a `query` that redirect a signed-out visitor before the page paints.
-- [Data API reference](/reference/solid-router/data): signatures for `query`, `liveQuery`, `revalidate`, `action`, `useAction`, and `useSubmissions`.
+- [Data API reference](/reference/solid-router/data): signatures for `query`, `liveQuery`, `revalidate`, `formAction`, and `useSubmissions`.

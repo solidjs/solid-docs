@@ -1,7 +1,7 @@
 ---
 title: "Data APIs"
 version: "2.0"
-description: "Reference for Solid Router query caching, live queries, revalidation, actions, action invocation, and settled submissions."
+description: "Reference for Solid Router query caching, live queries, revalidation, form actions, and settled submissions."
 source_repo: "solidjs/solid-router"
 source_ref: "next"
 source_path: "src/data/index.ts"
@@ -11,11 +11,10 @@ source_path: "src/data/index.ts"
 
 ```ts
 import {
-	action,
+	formAction,
 	liveQuery,
 	query,
 	revalidate,
-	useAction,
 	useSubmissions,
 } from "@solidjs/router";
 ```
@@ -120,36 +119,38 @@ Keys match by prefix.
 Omit `key` to match all entries.
 `force` defaults to `true` and marks the matched entries stale before retriggering them.
 
-## `action`
+## `formAction`
 
 ```ts
-function action<T extends any[], U = void>(
+function formAction<T extends any[], U = void>(
 	fn: (...args: T) => Promise<U>,
 	name?: string
-): Action<T, U>;
+): FormAction<T, U>;
 
-function action<T extends any[], U = void>(
+function formAction<T extends any[], U = void>(
 	fn: (...args: T) => Promise<U>,
 	options?: { name?: string }
-): Action<T, U>;
+): FormAction<T, U>;
 ```
 
 ```ts
-type Action<T extends any[], U, V = T> = ((
+type FormAction<T extends any[], U, V = T> = ((
 	...variables: T
 ) => Promise<NarrowResponse<U>>) & {
 	url: string;
-	with<A extends any[], B extends any[]>(...args: A): Action<B, U, V>;
-	onSubmit(hook: (...args: V extends any[] ? V : T) => void): Action<T, U, V>;
+	with<A extends any[], B extends any[]>(...args: A): FormAction<B, U, V>;
+	onSubmit(
+		hook: (...args: V extends any[] ? V : T) => void
+	): FormAction<T, U, V>;
 	onSettled(
 		hook: (
 			submission: Submission<V extends any[] ? V : T, NarrowResponse<U>>
 		) => void
-	): Action<T, U, V>;
+	): FormAction<T, U, V>;
 };
 ```
 
-Form-compatible actions implement Solid's serializable JSX attribute value.
+Form actions whose arguments are `[FormData]`, `[URLSearchParams]`, or `[]` implement Solid's serializable JSX attribute value.
 Client actions need a stable name when rendered on the server.
 Server functions supply their own URL.
 
@@ -168,7 +169,7 @@ The router does not overwrite or remove an `aria-busy` value the author set.
 
 ### `with`
 
-Binds leading action arguments and returns an action for the remaining arguments.
+Binds leading arguments and returns a form action for the remaining arguments.
 The bound arguments are represented in the action URL.
 
 ### `onSubmit`
@@ -183,27 +184,51 @@ The callback receives a `Submission`, including for void, redirect, and metadata
 Callbacks run when the action's held update commits, after any revalidation or redirect it holds has rendered.
 The submission record appears in `useSubmissions` at the same point.
 
-## `useAction`
+## Server function responses
+
+While a router is mounted and `singleFlight` is not `false`, the router applies the response of every non-`GET` server-function call, whether or not a form action made it.
+It applies `X-Revalidate` keys, `redirect()`, `reload()`, and single-flight data.
+A `POST` call that declares no `revalidate` keys revalidates every query.
+Functions wrapped by `query` or declared with `GET()` are reads and are exempt.
+`revalidate: ""` declares no keys, the same as `revalidate: []`.
+
+## Deprecated
+
+### `action`
+
+```ts
+const action: typeof formAction;
+type Action<T extends any[], U, V = T> = FormAction<T, U, V>;
+```
+
+Deprecated alias of `formAction`, and of the `FormAction` type.
+Logs a development warning on first use.
+Unrelated to the `action` exported by `solid-js`.
+
+### `useAction`
 
 ```ts
 function useAction<T extends any[], U, V>(
-	action: Action<T, U, V>
+	action: FormAction<T, U, V>
 ): (...args: T) => Promise<NarrowResponse<U>>;
 ```
 
-Binds direct action invocation to the current router context.
+Deprecated, with no replacement.
+Logs a development warning.
+Call the server function directly, or a core `action` from `solid-js` around it.
+Binds direct form action invocation to the current router context.
 The returned promise resolves when the action body finishes, which can be before the action settles and `onSettled` runs.
 
 ## `useSubmissions`
 
 ```ts
 function useSubmissions<T extends any[], U, V>(
-	action: Action<T, U, V>,
+	action: FormAction<T, U, V>,
 	filter?: (input: V) => boolean
 ): Submission<V, NarrowResponse<U>>[];
 ```
 
-Returns a reactive array proxy of settled records for the action.
+Returns a reactive array proxy of settled records for the form action.
 The router retains only records with a result or error.
 
 ```ts

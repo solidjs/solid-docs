@@ -119,25 +119,22 @@ The actions start and stop a job and return at once:
 
 ```ts
 // src/data/replies.ts
-import { action } from "@solidjs/router";
+import { formAction } from "@solidjs/router";
 import * as generations from "../server/generations";
 import * as replies from "../server/replies";
 import * as threads from "../server/threads";
 
-export const sendMessage = action(
-	async (threadId: string, messageId: string, text: string) => {
-		"use server";
-		const { replyId, history } = await threads.append(
-			threadId,
-			messageId,
-			text
-		);
-		generations.start(replyId, history);
-	},
-	"sendMessage"
-);
+export async function sendMessage(
+	threadId: string,
+	messageId: string,
+	text: string
+) {
+	"use server";
+	const { replyId, history } = await threads.append(threadId, messageId, text);
+	generations.start(replyId, history);
+}
 
-export const stopReply = action(async (replyId: string) => {
+export const stopReply = formAction(async (replyId: string) => {
 	"use server";
 	generations.stop(replyId);
 }, "stopReply");
@@ -146,7 +143,8 @@ export const stopReply = action(async (replyId: string) => {
 `sendMessage` stores the shopper's message and an empty reply with status `generating`, starts the job, and returns.
 The response closes while the job is still writing; the server-function runtime does not dispose work a function started, so the job runs to its end whether or not anyone is watching.
 `threads.append` is the thread half of the store, which keeps the message list and the history the model reads; the `chat` example's `db.send` is one.
-Both actions are Solid Router [actions](/routing/solid-router/data#mutate-with-actions), so they work as a form before JavaScript has loaded and from code through `useAction`.
+`stopReply` is a Solid Router [form action](/routing/solid-router/data#mutate-with-actions), so the Stop button works as a form before JavaScript has loaded.
+`sendMessage` is a plain server function the composer calls from code; the mounted router applies its response, revalidation included, the same way it does for a form.
 
 :::caution[An orphan is a fact, not a hang]
 A server restart ends every running job and leaves the replies they were writing at `generating`.
@@ -234,13 +232,11 @@ That is what [`until`](/reference/solid-js/lifecycle-actions/until) waits for:
 ```tsx
 // src/components/Composer.tsx
 import { For, action, createOptimisticStore, until } from "solid-js";
-import { useAction } from "@solidjs/router";
 import { sendMessage } from "../data/replies";
 
 type Pending = { id: string; text: string };
 
 function Composer(props: { threadId: string; seen: string[] }) {
-	const send = useAction(sendMessage);
 	const [outbox, setOutbox] = createOptimisticStore<Pending[]>([]);
 
 	const submit = action(function* (text: string) {
@@ -248,7 +244,7 @@ function Composer(props: { threadId: string; seen: string[] }) {
 		setOutbox((list) => {
 			list.push({ id, text });
 		});
-		yield send(props.threadId, id, text);
+		yield sendMessage(props.threadId, id, text);
 		yield until(() => props.seen.includes(id), { timeout: 15_000 });
 	});
 
@@ -281,7 +277,7 @@ A timeout or a server error rejects the action, which drops the overlay the same
 The `For` also filters the outbox by `seen`.
 The action's overlay is released a task after the data that satisfied its `until` lands, so without the filter a frame can show the bubble and the row together; deriving the bubble's visibility from `seen` closes that gap, and `until` keeps its job of settling the action on failure and timeout.
 
-`action` here is the one from `solid-js`, which runs a generator as one transaction; `sendMessage` is a Solid Router action, bound to the router with `useAction` so a call from code carries its revalidation and submission tracking.
+`action` here is the one from `solid-js`, which runs a generator as one transaction; `sendMessage` is the server function itself, called directly, and the mounted router still applies its revalidation and any redirect.
 
 ## Server-owned: the thread as a live server component
 
@@ -422,7 +418,7 @@ Await it from an action body or another imperative scope.
 
 ## Recap
 
-- Start the generation from an action that returns at once; the job belongs to a module-level registry and writes the reply into a store as it arrives.
+- Start the generation from a server function that returns at once; the job belongs to a module-level registry and writes the reply into a store as it arrives.
 - Pass the job its own abort signal; the request's signal ends only the watcher.
 - Deliver the reply through `live(GET(async function*))`, yielding the whole reply so far and the current reply first on every connection.
 - Render it in the browser with `createProjection`, or on the server as a live server component mounted with `dynamicComponent` through `liveQuery(live(GET(fn)), key)`.
@@ -434,4 +430,4 @@ Await it from an action body or another imperative scope.
 - [Streaming AI responses](/building-apps/server-functions/streaming-ai-responses): the request-scoped shape, and the cancellation contract that decides between the two.
 - [Reads, streams, and live data](/building-apps/server-functions/reads-and-live-data): `live()`, its reconnect, and `onstatus`.
 - [Mutations](/concepts/mutations): actions, optimistic stores, and `until`.
-- [Data loading and mutations](/routing/solid-router/data): Solid Router's `action`, `useAction`, and forms.
+- [Data loading and mutations](/routing/solid-router/data): Solid Router's `formAction`, forms, and revalidation.

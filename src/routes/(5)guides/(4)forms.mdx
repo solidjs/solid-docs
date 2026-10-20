@@ -1,7 +1,7 @@
 ---
 title: "Forms"
 version: "2.0"
-description: "Build a form with a server function and a Solid Router action: it works before JavaScript loads, validates on the server, and after hydration shows pending state, inline errors, and the saved result before the server confirms."
+description: "Build a form with a server function and a Solid Router form action: it works before JavaScript loads, validates on the server, and after hydration shows pending state, inline errors, and the saved result before the server confirms."
 ---
 
 The checkout needs a shipping address.
@@ -9,7 +9,7 @@ The form has to save the address when the user clicks **Continue**, reject a pos
 On a slow connection it has to do the first of those before the JavaScript has loaded.
 
 This guide builds that form in four passes.
-The first is a form that posts to a server function through a Solid Router action, with no JavaScript in the browser at all.
+The first is a form that posts to a server function through a Solid Router form action, with no JavaScript in the browser at all.
 The second adds validation the user cannot bypass.
 The third shows the validation messages inline and marks the form as pending, without changing the HTML.
 The fourth turns the form into an address book entry that appears in the list before the server has confirmed it.
@@ -17,14 +17,14 @@ Each pass is a working form on its own; stop at the one that matches what the ap
 
 The guide assumes a `fullstack` project with [server functions](/building-apps/server-functions) enabled and [Solid Router](/routing/solid-router) mounted.
 
-:::pitfall[Two functions named action]
-This guide uses `action` from `@solidjs/router`.
+:::pitfall[`formAction`, not `action`]
+This guide uses `formAction` from `@solidjs/router`.
 It wraps a function so a form can submit to it and the router can track the submission.
+Earlier router releases called it `action`; that name still works as a deprecated alias with a development warning.
 
-`solid-js` also exports an [`action`](/reference/solid-js/lifecycle-actions/action); that one runs a generator as a reactive transaction and is covered in [Mutations](/concepts/mutations).
-Editor auto-import offers both, and `<form action={coreAction}>` fails at the type level because the core `action` does not produce a URL.
-The router's `action` uses the core one internally.
-Every `action` in the code on this page is the router's.
+`solid-js` exports its own [`action`](/reference/solid-js/lifecycle-actions/action); that one runs a generator as a reactive transaction and is covered in [Mutations](/concepts/mutations).
+`<form action={coreAction}>` fails at the type level because the core `action` does not produce a URL.
+The router's `formAction` uses the core one internally.
 :::
 
 ## Pass 1: a form that posts to a server function
@@ -49,14 +49,14 @@ export async function saveAddress(form: FormData) {
 }
 ```
 
-Wrap it in a router `action` and pass the action to the form:
+Wrap it in a router `formAction` and pass the form action to the form:
 
 ```tsx
 // src/routes/checkout/address.tsx
-import { action } from "@solidjs/router";
+import { formAction } from "@solidjs/router";
 import { saveAddress } from "../../data/address";
 
-const submitAddress = action(saveAddress);
+const submitAddress = formAction(saveAddress);
 
 export default function AddressPage() {
 	return (
@@ -87,7 +87,7 @@ The server function is in `src/data/`, not next to the page.
 With method discovery on, a file under `src/routes` becomes an [API route](/building-apps/middleware-and-api-routes#api-routes) as soon as it exports an uppercase HTTP method; keeping server functions in `src/data` means a later export cannot turn one into a route by accident.
 :::
 
-`action(saveAddress)` returns a value that serializes to the server function's URL, so `action={submitAddress}` renders as an ordinary `action="..."` attribute in the HTML.
+`formAction(saveAddress)` returns a value that serializes to the server function's URL, so `action={submitAddress}` renders as an ordinary `action="..."` attribute in the HTML.
 The browser posts to that URL, the server-function runtime sees that the request came from an HTML form rather than the Solid client, decodes the body as `FormData`, runs `saveAddress`, and follows the redirect.
 
 With JavaScript on, the router intercepts the submit instead.
@@ -182,10 +182,10 @@ Read the recorded submissions with `useSubmissions` and show the messages next t
 ```tsx
 // src/routes/checkout/address.tsx
 import { Show } from "solid-js";
-import { action, useSubmissions } from "@solidjs/router";
+import { formAction, useSubmissions } from "@solidjs/router";
 import { saveAddress, type AddressIssues } from "../../data/address";
 
-const submitAddress = action(saveAddress);
+const submitAddress = formAction(saveAddress);
 
 export default function AddressPage() {
 	const submissions = useSubmissions(submitAddress);
@@ -274,7 +274,7 @@ The server side gets a cached read for the list and a second function that saves
 
 ```ts
 // src/data/address.ts
-import { action, query } from "@solidjs/router";
+import { formAction, query } from "@solidjs/router";
 import { reload } from "@solidjs/web";
 
 export type SavedAddress = v.InferOutput<typeof Address> & {
@@ -308,14 +308,14 @@ The page reads the list through an optimistic store and pushes the submitted fie
 ```tsx
 // src/routes/checkout/address.tsx
 import { For, createOptimisticStore } from "solid-js";
-import { action } from "@solidjs/router";
+import { formAction } from "@solidjs/router";
 import {
 	addAddress,
 	getAddresses,
 	type SavedAddress,
 } from "../../data/address";
 
-const submitAddress = action(addAddress);
+const submitAddress = formAction(addAddress);
 
 export default function AddressPage() {
 	const [addresses, setAddresses] = createOptimisticStore(
@@ -445,9 +445,9 @@ Check that the page is rendered inside the `Router`.
 
 ### `action` is not a function, or the form attribute renders as source code
 
-The `action` came from `solid-js` instead of `@solidjs/router`.
+The form was given the core `action` from `solid-js` instead of `formAction` from `@solidjs/router`.
 The core `action` wraps generator functions for reactive transactions and has no URL to serialize.
-Import `action` from `@solidjs/router` for forms.
+Import `formAction` from `@solidjs/router` for forms.
 
 ### Errors show for a moment and then vanish
 
@@ -462,9 +462,9 @@ Use `throw respond(value, { status })` for structured failures.
 
 ## Recap
 
-- Post a `FormData` argument to a server function through a router `action`, and the form works before JavaScript loads.
+- Post a `FormData` argument to a server function through a router `formAction`, and the form works before JavaScript loads.
 - Keep server functions outside `src/routes`, where an uppercase method export would make the file an API route.
-- Import `action` from `@solidjs/router` for forms; the core `action` has no URL.
+- Import `formAction` from `@solidjs/router` for forms; the core `action` has no URL.
 - Leave inputs uncontrolled unless a field needs feedback while typing; the browser assembles the `FormData` on submit.
 - Validate on the server with a schema; browser attributes are a convenience anyone can bypass with `curl`.
 - Throw `respond(value, { status: 400 })` for a validation failure; a plain `Error` reaches production clients as `Internal Server Error`.

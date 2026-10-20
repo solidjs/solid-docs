@@ -1,13 +1,13 @@
 ---
 title: "Data loading and mutations"
 version: "2.0"
-description: "Start route data early with preloads, cache and share reads with query, submit mutations with form actions, show optimistic state, and control what revalidates."
+description: "Start route data early with preloads, cache and share reads with query, write through server functions called from actions, add forms with formAction, show optimistic state, and control what revalidates."
 ---
 
 The product page from the [introduction](/routing/solid-router) fetches its product inside a memo.
 That works, and three things about it are not quite right yet: the request does not start until the page component runs, a `ProductCard` in a list and the `Product` page fetch the same product twice, and the **Add to cart** form has no way to tell the cart it changed.
 
-The router's data APIs add one thing for each: `preload` starts a request before the page's component exists, `query` gives two readers one request, and `formAction` wraps a mutation so it works as a form without JavaScript and revalidates the cache when it finishes.
+The router's data APIs add one thing for each: `preload` starts a request before the page's component exists, `query` gives two readers one request, and a server function called from an `action` writes, with the router revalidating the cache from its response; `formAction` puts the same mutation behind a form that works without JavaScript.
 This page continues the store: a product page and a cart.
 
 :::note[All of it is optional]
@@ -194,14 +194,14 @@ revalidate(); // everything
 Keys match by prefix, so the broad key reaches every argument combination.
 Calling this by hand is rare; the usual trigger is a mutation finishing, covered below.
 
-## Mutate with form actions
+## Mutate with a server function
 
-A `formAction` wraps a mutation so it can be submitted as a form, tracked while it runs, and followed by revalidation.
+A mutation is a server function that writes, called from an [`action`](/reference/solid-js/lifecycle-actions/action).
 Start with the server function:
 
 ```ts
 // src/data/cart.ts
-import { query, formAction } from "@solidjs/router";
+import { query } from "@solidjs/router";
 import { markSafeError, reload } from "@solidjs/web";
 import { currentSessionId } from "./session";
 
@@ -210,36 +210,132 @@ export const getCart = query(async () => {
 	return db.cart.forSession(currentSessionId());
 }, "cart");
 
-export const addToCart = formAction(async (form: FormData) => {
+export async function addToCart(productId: string, quantity = 1) {
 	"use server";
-	const productId = String(form.get("productId"));
-	const quantity = Number(form.get("quantity") ?? 1);
 	if (!Number.isInteger(quantity) || quantity < 1) {
 		throw markSafeError(new Error("Quantity must be a whole number"));
 	}
 	await db.cart.add(currentSessionId(), productId, quantity);
 	return reload({ revalidate: getCart.key });
-});
+}
 ```
 
 `currentSessionId()` stands for whatever your session layer provides; [Sessions and auth](/building-apps/sessions-and-auth) shows one built on a signed cookie.
 
-Then the form:
+Then call it from an action:
 
 ```tsx
 // src/pages/Product.tsx
-<form method="post" action={addToCart}>
+import { action } from "solid-js";
+import { addToCart } from "../data/cart";
+
+const add = action(function* (productId: string) {
+	yield addToCart(productId);
+});
+
+<button onClick={() => add(props.params.id)}>Add to cart</button>;
+```
+
+Click **Add to cart** and every reader of `getCart` shows the new line once the call returns.
+Nothing here is router-specific except the response: the mounted router applies the response of every server function call, so the `reload` revalidates `getCart`, a `redirect` navigates, and in a `fullstack` project single-flight data seeds the cache.
+The action makes the call one transaction, so the revalidated cart and anything the action wrote land as one update.
+A call made straight from an event handler, with no action around it, gets the same revalidation; the action is what lets the page predict the result and hold it together.
+
+### Before the server confirms
+
+Write the expected result into an optimistic store before the `yield`:
+
+```tsx
+import { For, action, createOptimisticStore } from "solid-js";
+import { getCart, addToCart } from "../data/cart";
+
+function CartPanel(props: { productId: string }) {
+	const [cart, setCart] = createOptimisticStore(
+		() => getCart(),
+		[] as CartLine[]
+	);
+
+	const add = action(function* (productId: string) {
+		setCart((draft) => {
+			draft.push({ productId, quantity: 1, pending: true });
+		});
+		yield addToCart(productId);
+	});
+
+	return (
+		<>
+			<button onClick={() => add(props.productId)}>Add to cart</button>
+			<ul>
+				<For each={cart}>
+					{(line) => (
+						<li class={{ pending: !!line.pending }}>
+							{line.productId} × {line.quantity}
+						</li>
+					)}
+				</For>
+			</ul>
+		</>
+	);
+}
+```
+
+The new line appears at once with the `pending` class.
+When the call returns, the router's revalidation of `getCart` and the release of the optimistic line commit together: the line is replaced by the server's copy, or disappears if the server rejected it, with no frame of the old cart in between.
+[Mutations](/concepts/mutations) explains the optimistic model in depth.
+
+### When it fails
+
+A server function that throws rejects the `yield`, so the action can catch it:
+
+```tsx
+import { action, createSignal } from "solid-js";
+
+const [failure, setFailure] = createSignal<Error>();
+
+const add = action(function* (productId: string, quantity: number) {
+	setFailure(undefined);
+	try {
+		yield addToCart(productId, quantity);
+	} catch (error) {
+		setFailure(error as Error);
+	}
+});
+```
+
+Ask for a quantity of `0` and `failure()` holds "Quantity must be a whole number".
+The message reaches the browser because `addToCart` threw it through `markSafeError`.
+A plain `throw new Error(...)` arrives in production as `Internal Server Error`, so database and infrastructure details do not leak; [Mutations and responses](/building-apps/server-functions/mutations-and-responses) covers `markSafeError` and the alternative of throwing validation issues with `respond()`.
+
+## Add a form with `formAction`
+
+A `formAction` puts the same mutation behind a `<form>`.
+It adds what a form needs: a URL the browser can post to before JavaScript loads, `aria-busy` while the submission runs, a record of each submission, and hooks around it.
+
+```ts
+// src/data/cart.ts
+import { formAction } from "@solidjs/router";
+
+export const addToCartForm = formAction(async (form: FormData) => {
+	"use server";
+	return addToCart(
+		String(form.get("productId")),
+		Number(form.get("quantity") ?? 1)
+	);
+});
+```
+
+```tsx
+// src/pages/Product.tsx
+<form method="post" action={addToCartForm}>
 	<input type="hidden" name="productId" value={props.params.id} />
 	<input type="number" name="quantity" value="1" min="1" />
 	<button>Add to cart</button>
 </form>
 ```
 
-Click **Add to cart** and the form gets `aria-busy="true"` until the call and its revalidation settle; then every reader of `getCart` shows the new line.
-
 Read that form as a browser would.
-It is a `POST` to a URL with `FormData`, and it works with JavaScript disabled: the server runs `addToCart`, sees the `reload`, and sends the browser back to the page.
-With JavaScript, the router intercepts the submit, calls the form action over the server-function transport, and applies the response.
+It is a `POST` to a URL with `FormData`, and it works with JavaScript disabled: the server runs the form action, sees the `reload`, and sends the browser back to the page.
+With JavaScript, the router intercepts the submit, calls the form action over the server-function transport, and applies the response the same way it does for a direct call.
 
 Two rules follow from the form being the contract:
 
@@ -275,26 +371,6 @@ export const removeFromCart = formAction(
 `.with(...)` returns a form action whose remaining parameters start after the bound ones.
 The bound values travel in the form action's URL, so the no-JavaScript path receives them too.
 
-### Client-side form actions
-
-A form action does not have to call a server function.
-A plain async function works, for a client-only mutation or a call to a third-party API:
-
-```ts
-const savePreference = formAction(async (form: FormData) => {
-	localStorage.setItem("theme", String(form.get("theme")));
-}, "save-preference");
-```
-
-:::caution[Name a client form action that renders on the server]
-A client form action rendered on the server needs the explicit name so both sides agree on the form's URL; without it the server render throws `Client Actions need explicit names if server rendered`.
-A server function already has a stable URL and does not need one.
-:::
-
-## Show what is happening
-
-A mutation has three moments the UI may want to reflect: while it runs, when it fails, and before the server confirms it.
-
 ### While it runs
 
 The router sets `aria-busy="true"` on the submitting form until the form action's result is on screen, including any revalidation or redirect it triggers.
@@ -307,20 +383,20 @@ form[aria-busy] button {
 }
 ```
 
-### When it fails
+### Read results with `useSubmissions`
 
-`useSubmissions(addToCart)` returns a reactive list of the form action's completed submissions that produced a result or an error:
+`useSubmissions(addToCartForm)` returns a reactive list of the form action's completed submissions that produced a result or an error:
 
 ```tsx
 import { Show } from "solid-js";
 import { useSubmissions } from "@solidjs/router";
 
 function AddToCartForm(props: { productId: string }) {
-	const submissions = useSubmissions(addToCart);
+	const submissions = useSubmissions(addToCartForm);
 	const failure = () => submissions.at(-1)?.error as Error | undefined;
 
 	return (
-		<form method="post" action={addToCart}>
+		<form method="post" action={addToCartForm}>
 			<input type="hidden" name="productId" value={props.productId} />
 			<input type="number" name="quantity" value="1" min="1" />
 			<button>Add to cart</button>
@@ -336,81 +412,44 @@ Submit a quantity of `0` and "Quantity must be a whole number" appears under the
 Each submission carries the `input` that was sent, the `result` or `error`, and `retry()` and `clear()`.
 A submission that redirected or returned nothing does not stay in the list; use `.onSettled` when you need to observe those too.
 
-The message reaches the browser because `addToCart` threw it through `markSafeError`.
-A plain `throw new Error(...)` arrives in production as `Internal Server Error`, so database and infrastructure details do not leak; [Mutations and responses](/building-apps/server-functions/mutations-and-responses) covers `markSafeError` and the alternative of throwing validation issues with `respond()`.
+### Optimistic writes from a form
 
-### Before the server confirms
-
-`.onSubmit` runs a callback with the action's arguments before the mutation is sent, inside the same transaction as the mutation.
-Pair it with an optimistic store and the write reverts on its own when the form action settles and the revalidated data lands:
+A form has no action body to write in, so `.onSubmit` runs a callback with the form action's arguments before the mutation is sent, inside the same transaction:
 
 ```tsx
-import { For, createOptimisticStore } from "solid-js";
-import { getCart, addToCart } from "../data/cart";
-
-function CartPanel() {
-	const [cart, setCart] = createOptimisticStore(
-		() => getCart(),
-		[] as CartLine[]
-	);
-
-	addToCart.onSubmit((form) => {
-		setCart((draft) => {
-			draft.push({
-				productId: String(form.get("productId")),
-				quantity: Number(form.get("quantity") ?? 1),
-				pending: true,
-			});
+addToCartForm.onSubmit((form) => {
+	setCart((draft) => {
+		draft.push({
+			productId: String(form.get("productId")),
+			quantity: Number(form.get("quantity") ?? 1),
+			pending: true,
 		});
 	});
-
-	return (
-		<ul>
-			<For each={cart}>
-				{(line) => (
-					<li class={{ pending: !!line.pending }}>
-						{line.productId} × {line.quantity}
-					</li>
-				)}
-			</For>
-		</ul>
-	);
-}
+});
 ```
 
-The new line appears at once with the `pending` class.
-When the form action finishes, the `reload` revalidates `getCart`, the store reconciles the server's cart, and the optimistic line is replaced by the real one, or disappears if the server rejected it.
+With `setCart` from the optimistic store in [Before the server confirms](#before-the-server-confirms), the form shows the same pending line and the same release as the action did.
 Registering `.onSubmit` inside a component ties the hook to that component's lifetime.
 
 The form did not change to get this.
-Before hydration it is the same `POST` as in [Mutate with form actions](#mutate-with-form-actions): the browser submits, the server runs `addToCart`, and the server renders the page again with the cart from the database.
-After hydration the router intercepts the submit, runs the `.onSubmit` hooks as the first step of the action's transaction, sends the call, and reconciles the revalidated data over the prediction.
-The optimistic layer is something the hydrated page adds on top of a form that already works; the server function and the HTML are the same in both cases.
+Before hydration it is the same `POST` as before: the browser submits, the server runs the form action, and the server renders the page again with the cart from the database.
+After hydration the router intercepts the submit, runs the `.onSubmit` hooks as the first step of the transaction, sends the call, and reconciles the revalidated data over the prediction.
 
-[Mutations](/concepts/mutations) explains the optimistic model in depth; this is the same model with the router's form action in place of a core `action`.
+### Client-side form actions
 
-## Call a mutation from code
-
-When there is no form, for example a keyboard shortcut or a drag-and-drop handler, call the server function directly:
+A form action does not have to call a server function.
+A plain async function works, for a client-only mutation or a call to a third-party API:
 
 ```ts
-// src/data/cart.ts
-export async function deleteCartLine(productId: string) {
-	"use server";
-	await db.cart.remove(currentSessionId(), productId);
-	return reload({ revalidate: getCart.key });
-}
+const savePreference = formAction(async (form: FormData) => {
+	localStorage.setItem("theme", String(form.get("theme")));
+}, "save-preference");
 ```
 
-```tsx
-onKeyDown={(event) => {
-	if (event.key === "Delete") void deleteCartLine(selectedId());
-}}
-```
-
-The mounted router applies the response the same way it does for a form: the `reload` revalidates `getCart`, a `redirect` navigates, and single-flight data seeds the cache.
-No wrapper is needed for that; wrap the call in a core `action` from `solid-js` when the handler also writes optimistic state, as [Mutations](/concepts/mutations) shows.
-What you give up is what the form provides: the no-JavaScript path, `aria-busy`, `useSubmissions`, and the `.onSubmit` and `.onSettled` hooks.
+:::caution[Name a client form action that renders on the server]
+A client form action rendered on the server needs the explicit name so both sides agree on the form's URL; without it the server render throws `Client Actions need explicit names if server rendered`.
+A server function already has a stable URL and does not need one.
+:::
 
 ## What revalidates after a mutation
 
@@ -470,11 +509,10 @@ Wrap it in `markSafeError` to send the message to the browser, or throw the vali
 
 - Declare each read once with `query(fn, "name")`; the name plus the arguments is the cache key two readers share.
 - Start reads in the route's `preload` with `void`, and read them through a memo in the page; `props.data` is captured once.
-- Wrap a mutation in `formAction` and submit it with `<form method="post" action={...}>`, so it works before JavaScript loads.
-- Put everything the mutation needs in the form or bind it with `.with()`.
-- Show progress with `form[aria-busy]`, failures with `useSubmissions`, and optimistic state with `.onSubmit` on an optimistic store.
-- Throw `markSafeError` or throw `respond()` for messages the user should see.
-- Call a server function directly when there is no form; the router still applies its revalidation and redirect.
+- Write through a server function called from an `action`; the mounted router applies its revalidation and redirect, and an optimistic store written before the `yield` shows the result at once.
+- Throw `markSafeError` or throw `respond()` for messages the user should see, and catch the rejected `yield` in the action.
+- Add `formAction` when the mutation needs a `<form method="post" action={...}>` that works before JavaScript loads; put everything it needs in the form or bind it with `.with()`.
+- On a form, show progress with `form[aria-busy]`, failures with `useSubmissions`, and optimistic state with `.onSubmit`.
 - Narrow revalidation with `reload`, `respond`, or `redirect` options; without keys, every query revalidates after any `POST` server function, and `revalidate: ""` opts out.
 
 ## Next steps

@@ -110,9 +110,7 @@ Options for `configureServerFunctionsClient`.
 interface ServerFunctionsClientConfig {
 	endpoint?: string;
 	codec?: JSONCodecOptions;
-	fetch?:
-		| ((address: string, init: RequestInit) => Response | Promise<Response>)
-		| null;
+	fetch?: ServerFunctionsSend | null;
 	prepareRequest?: PrepareRequestHook;
 	responseHandler?: {
 		capture?(info: { id: string; meta: unknown }): unknown;
@@ -124,6 +122,7 @@ interface ServerFunctionsClientConfig {
 				args: unknown[];
 				context: unknown;
 				retry(): Promise<unknown>;
+				startedAt?: number;
 			}
 		): unknown;
 		intercept?(info: {
@@ -172,16 +171,19 @@ cookie, and `csrf.allowCredentials` on the server.
 
 Codec options (extra plugins etc.) for encoding arguments and decoding
 results — must match the server's. Stored in the shared layer, so
-`decodeResponse` sees them too.
+`decodeResponse` sees them too. Arguments never carry `Response` or
+`Request` values, whatever plugins are configured: the server refuses
+them, and the rich-args encoder rejects the call before sending.
 
 #### `fetch`
 
-- **Type:** `((address: string, init: RequestInit) => Response | Promise<Response>) | null`
+- **Type:** `ServerFunctionsSend | null`
 
 Sends every server-function request — retries, telemetry, a test
-double, or an app's own route. Always called as `(address, init)`, the
+double, or an app's own route. Called as `(address, init)`, the
 address relative to the document as the global one receives it, so
-`parseServerFunctionActionUrl` reads the id back out for telemetry. `null`
+`parseServerFunctionActionUrl` reads the id back out for telemetry (a
+trailing third argument is the transport's own; ignore it). `null`
 restores the global.
 
 ```ts
@@ -231,7 +233,7 @@ makes every hydrated read fetch again from the browser.
 
 #### `responseHandler`
 
-- **Type:** `{ capture?(info: { id: string; meta: unknown }): unknown; handle( response: Response, ctx: { id: string; meta: unknown; args: unknown[]; context: unknown; retry(): Promise<unknown>; } ): unknown; intercept?(info: { id: string; meta: unknown; args: unknown[]; retry(): Promise<unknown>; }): unknown; resume?(info: { id: string; meta: unknown; args: unknown[]; }): { position?: string; headers?: Record<string, string> } | undefined; onLive?(): void; }`
+- **Type:** `{ capture?(info: { id: string; meta: unknown }): unknown; handle( response: Response, ctx: { id: string; meta: unknown; args: unknown[]; context: unknown; retry(): Promise<unknown>; startedAt?: number; } ): unknown; intercept?(info: { id: string; meta: unknown; args: unknown[]; retry(): Promise<unknown>; }): unknown; resume?(info: { id: string; meta: unknown; args: unknown[]; }): { position?: string; headers?: Record<string, string> } | undefined; onLive?(): void; }`
 
 Response-side integration seam — the client mirror of the handler's
 `transformResult`. `handle(response, ctx)` sees every response before
@@ -250,3 +252,14 @@ Encoder for argument lists JSON can't carry faithfully. JSON-safe args
 always go as plain JSON (no codec in the bundle); anything else throws
 unless this is set. Installed by `enableRichArguments()` from the
 rich-args entry — set directly only for custom wire encodings.
+
+### `ServerFunctionsSend`
+
+How the transport sends a request: `fetch`'s shape, as the runtime calls it.
+
+```ts
+type ServerFunctionsSend = (
+	address: string,
+	init: RequestInit
+) => Response | Promise<Response>;
+```

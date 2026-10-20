@@ -58,9 +58,9 @@ Adoption also works for reads that happen after hydration finishes, so a lazy ch
 
 Submit a form backed by a `formAction`, or call a server function from a click handler, on a page that also reads a `query`.
 Without the server-side collector, the browser makes two requests: the mutation, then the revalidation fetch when the router reloads the affected queries.
-With it, the browser makes one: the mutation response carries the fresh query values, and the router seeds its cache from them before the action's caller even receives the return value.
+With it, the browser makes one: the mutation response carries the fresh query values, and the router seeds its cache from them before the caller even receives the return value.
 
-![Two sequences between browser and server. Without the collector: the action request, its result, then a second request that reloads the affected queries. With the collector: one action request whose response carries the fresh query values; the router seeds its cache, then resolves the call.](/images/diagrams/single-flight-mutation.svg)
+![Two sequences between browser and server. Without the collector: the mutation request, its result, then a second request that reloads the affected queries. With the collector: one mutation request whose response carries the fresh query values; the router seeds its cache, then resolves the call.](/images/diagrams/single-flight-mutation.svg)
 
 The `fullstack` template enables this in two files.
 The first registers the router as the collector:
@@ -100,22 +100,22 @@ To turn the protocol off, set `singleFlight: false` in `createRouter`.
 Without a client consumer the transport does not send the single-flight header and the server does not run collection.
 An app with its own server-function handler passes `collectFlightData` to `handleServerFunctionRequest` per request instead of using the `configure` module.
 
-If the default server-function endpoint `/_server` is changed in the Vite plugin, set the router's `actionBase` to match so action URLs still reach it.
+If the default server-function endpoint `/_server` is changed in the Vite plugin, set the router's `actionBase` to match so form action URLs still reach it.
 
 ## Forms without JavaScript
 
-Disable JavaScript and submit the cart form from the [Data](/routing/solid-router/data#mutate-with-actions) page.
+Disable JavaScript and submit the cart form from the [Data](/routing/solid-router/data#add-a-form-with-formaction) page.
 It still works.
 
-The action's URL points at the server-function handler.
+The form action's URL points at the server-function handler.
 The handler sees a plain form `POST` with no client runtime behind it, runs the server function, and instead of returning a payload the browser could not use, redirects back to the page with the outcome stored in a one-shot flash cookie.
 When the router renders that page on the server, it clears and decodes the cookie into the same submission records that `useSubmissions` exposes, so a validation error from a no-JavaScript submit shows up in the same `<p role="alert">` as a scripted one.
 
-The router also covers the gap between the page loading and the action's module arriving.
-If a form is submitted before the code that defines its action has been loaded, the router recognizes the server-action URL, loads the submit path on demand, and sends the form through the server-function transport as usual.
+The router also covers the gap between the page loading and the form action's module arriving.
+If a form is submitted before the code that defines its form action has been loaded, the router recognizes the server-function URL, loads the submit path on demand, and sends the form through the server-function transport as usual.
 
-:::note[Only server-backed actions have a no-JavaScript path]
-A client-only action has no URL the server can run, so it needs its module loaded before the form is submitted.
+:::note[Only server-backed form actions have a no-JavaScript path]
+A client-only form action has no URL the server can run, so it needs its module loaded before the form is submitted.
 [Progressive enhancement](/building-apps/server-functions/progressive-enhancement) describes what the core runtime owns in this exchange and what the router adds.
 :::
 

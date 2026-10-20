@@ -10,17 +10,17 @@ It is the wrong one for a summary of a forty-message order dispute: the shopper 
 
 The difference is who owns the generation.
 In the streaming guide the request owns it, and the reactive graph cancels it.
-On this page a job on the server owns it: an action starts the job and returns, the job writes the reply into storage as the model produces it, and every page that shows the reply reads what is stored through a live source.
+On this page a job on the server owns it: a server function starts the job and returns, the job writes the reply into storage as the model produces it, and every page that shows the reply reads what is stored through a live source.
 Pick the request-scoped shape when the reader is the only consumer and an abandoned answer has no value; pick this shape when the reply must finish without its reader, be found again on reload, or be read from more than one tab.
 
 Two deliveries are shown.
 The client-owned one sends the reply as data through [`live()`](/reference/solid-web/server-functions/live) and renders it in the browser.
 The server-owned one renders the whole thread on the server as a live server component, which is the shape of the `chat` example in the Solid repository; server components are an experimental preview, and that section says so.
-The job, the storage, and the actions are the same in both.
+The job, the storage, and the server functions are the same in both.
 
 ## The job
 
-Three modules carry the shape: a store the job writes into, a registry of running jobs that no request owns, and the actions that start and stop one.
+Three modules carry the shape: a store the job writes into, a registry of running jobs that no request owns, and the server functions that start and stop one.
 
 The store keeps each reply and tells watchers when it changes:
 
@@ -115,7 +115,7 @@ The signal it receives is the job's own, not a request's: Stop aborts it, and no
 A reply that fails keeps the text that had arrived, with the reason beside it; a reply that was stopped keeps its text and says so.
 Write at most every few tens of milliseconds when the model is fast, as the example does, since every write wakes every watcher.
 
-The actions start and stop a job and return at once:
+The server functions start and stop a job and return at once:
 
 ```ts
 // src/data/replies.ts
@@ -143,7 +143,7 @@ export const stopReply = formAction(async (replyId: string) => {
 `sendMessage` stores the shopper's message and an empty reply with status `generating`, starts the job, and returns.
 The response closes while the job is still writing; the server-function runtime does not dispose work a function started, so the job runs to its end whether or not anyone is watching.
 `threads.append` is the thread half of the store, which keeps the message list and the history the model reads; the `chat` example's `db.send` is one.
-`stopReply` is a Solid Router [form action](/routing/solid-router/data#mutate-with-actions), so the Stop button works as a form before JavaScript has loaded.
+`stopReply` is a Solid Router [form action](/routing/solid-router/data#add-a-form-with-formaction), so the Stop button works as a form before JavaScript has loaded.
 `sendMessage` is a plain server function the composer calls from code; the mounted router applies its response, revalidation included, the same way it does for a form.
 
 :::caution[An orphan is a fact, not a hang]
@@ -398,7 +398,7 @@ Give the job an `AbortController` the registry owns, and pass `request.signal` o
 
 ### Stop does nothing
 
-The Stop action aborted a controller the job was not reading, or the job was started by a server that has since restarted.
+The Stop button aborted a controller the job was not reading, or the job was started by a server that has since restarted.
 Check that `generations.start` passes `abort.signal` to the model call, and that the store marks orphaned replies `failed` on load.
 
 ### Two tabs show different replies

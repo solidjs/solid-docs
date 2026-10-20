@@ -95,13 +95,20 @@ interface ServerErrorContext extends Omit<ServerErrorSite, "event"> {
 ### `ServerErrorHook`
 
 The server error hook (see `configureServerErrors`): every failure the
-server runtime handles or fails on, once per error object, with where it
-was met. Return the value the client should receive in place of the error
-— rendered into the fallback, serialized for hydration, sent as the RPC
-error — or nothing for the default policy (a generic `Error` outside the
-dev build, the error itself in it; `markSafeError` still passes through).
+server runtime handles or fails on, once per error object per `kind` per
+request (per render when no request is in scope — never once per
+process: an error object one request met and another meets again is
+heard by both), with where it was met. A direct server-function call that
+throws during SSR and the `<Errored>` that contains it are heard as both:
+`server-function` (the call failed), then `render` (the render fell back),
+so `kind: "render"` alone answers whether a render failed. Return the value the client should receive in
+place of the error — rendered into the fallback, serialized for
+hydration, sent as the RPC error — or nothing for the default policy (a
+generic `Error` outside the dev build, the error itself in it;
+`markSafeError` still passes through).
 A returned value is taken as intended client-facing content and is not
-sanitized again. Ignored for `handling: "failed"`, which has no wire.
+sanitized again. Ignored for `handling: "failed"`, which has no wire, and
+once an earlier kind's sight gave one: every road carries the first.
 
 One road a mapping does not reach: a rejected async source's serialized
 rejection is encoded the moment the source rejects, ahead of the boundary

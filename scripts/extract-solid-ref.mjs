@@ -102,6 +102,7 @@ const ADVANCED_ROUTE_ORDER = {
 
 const CANONICAL_ROUTES = {
 	createEffect: ["reactivity/create-effect.mdx", "Reactivity"],
+	createDeferred: ["reactivity/create-deferred.mdx", "Reactivity"],
 	createMemo: ["reactivity/create-memo.mdx", "Reactivity"],
 	createOptimistic: ["reactivity/create-optimistic.mdx", "Reactivity"],
 	createSignal: ["reactivity/create-signal.mdx", "Reactivity"],
@@ -613,6 +614,7 @@ const FOLD_INTO = {
 	ServerFunctionsClientConfig: "configureServerFunctionsClient",
 	PrepareRequestContext: "configureServerFunctionsClient",
 	PrepareRequestHook: "configureServerFunctionsClient",
+	ServerFunctionsSend: "configureServerFunctionsClient",
 	ServerFunctionsServerConfig: "configureServerFunctionsServer",
 	ServerFunctionEvent: "configureServerFunctionsServer",
 	HandleServerFunctionOptions: "handleServerFunctionRequest",

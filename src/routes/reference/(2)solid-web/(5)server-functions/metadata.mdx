@@ -151,6 +151,11 @@ over earlier ones.
 interface ServerFunctionMetadata {
 	readonly method?: "GET" | "POST";
 	readonly name?: string;
+	readonly fetch?: (
+		address: string,
+		init: RequestInit,
+		next: (address: string, init: RequestInit) => Response | Promise<Response>
+	) => Response | Promise<Response>;
 	readonly [key: string]: unknown;
 }
 ```
@@ -170,3 +175,24 @@ from the compiled function's source name (dev tooling — inspectors,
 logs). Dev-only: production builds emit no name. Not unique and not an
 identity key — use `id` for identity. Seeded as a default: an explicit
 `withMeta` write wins.
+
+#### `fetch`
+
+- **Type:** `( address: string, init: RequestInit, next: (address: string, init: RequestInit) => Response | Promise<Response> ) => Response | Promise<Response>`
+
+This function's own send, client side: the transport calls it instead
+of the configured `fetch` for every request the function makes, with
+the configured send (the app's `fetch`, or the global) as `next`. For
+an integration that answers a declared function's calls itself — a
+prerendered build's static artifacts, a cache — while the app's
+transport `fetch` stays the app's: pass on what you don't answer
+through `next`. The contract is `fetch`'s (see
+`ServerFunctionsClientConfig.fetch`); hydration adopts a
+server-rendered read only if the send reaches the global `fetch` in the
+same tick.
+
+```ts
+withMeta(getPosts, {
+	fetch: (address, init, next) => cached(address) ?? next(address, init),
+});
+```

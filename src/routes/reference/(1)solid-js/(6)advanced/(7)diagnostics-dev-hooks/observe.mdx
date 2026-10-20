@@ -56,6 +56,8 @@ interface AttributionSlot {
 	withInteraction<T>(ref: InteractionRef, fn: () => T): T;
 	withOrigin<T>(ref: NavigationRef, fn: () => T): T;
 	currentOrigin(): ChangeOrigin | undefined;
+	markFlight(flight: object, startedAt?: number): void;
+	flightOrigin(flight: object): number | undefined;
 }
 ```
 
@@ -101,6 +103,27 @@ nothing is in effect (external). For a runtime recording a fact of its
 own beside the engine's records: `@solidjs/web` stamps its `"call"`
 record with this, so a server-function call joins the interaction or
 navigation it ran for by the identity of the object, not by time.
+
+#### `markFlight`
+
+- **Type:** `void`
+
+Stamps a flight (a promise or async iterable a computation will await)
+with when its work really started, before anything reads it. A route
+preloader, query cache or `lazy()` calls this on what it hands out (on
+the wrapper it mints, with the original kickoff time), so a reader that
+meets it later is judged against the real start: work already running
+when the previous wait landed is parallel, not a waterfall link. The
+client engine's `ASYNC_WATERFALL` and the server's
+`SSR_BOUNDARY_WATERFALL` both read these stamps. Earliest wins. Works
+with no engine installed. `startedAt` is on the `performance.now()`
+clock and defaults to now.
+
+#### `flightOrigin`
+
+- **Type:** `number | undefined`
+
+The earliest start `markFlight` declared for `flight`, if any.
 
 ### `BoundaryEvent`
 
@@ -604,7 +627,6 @@ type DiagnosticCode =
 	| "UNRECOGNIZED_INSERT_VALUE"
 	| "UNSCOPED_HOLE_ALLOCATED_IDS"
 	| "LOWERCASE_EVENT_ATTRIBUTE"
-	| "BINDING_SLOT_POSITION"
 	| "FRAME_MARKER_CORRUPTED"
 	| "DYNAMIC_ASYNC_COMPONENT";
 ```
@@ -675,11 +697,11 @@ is usually the finding itself).
 - **Type:** `string`
 
 Source location of the innermost located node enclosing the subject
-(`file:line:col`, relative to the project root — the compiler's
-`sourceNames` `locations` kind): the subject's own `loc`, else the
-nearest owner's up the chain (a component root carries its JSX site).
-Absent when nothing on the chain was compiled with locations. A host
-event that sets it keeps it.
+(`file:line:col`, root-relative — the compiler's `sourceNames`
+`locations` kind): the subject's own `loc`, else the nearest owner's up
+the chain (a component root carries its JSX site). Absent when nothing
+on the chain was compiled with locations. A host event that sets it
+keeps it.
 
 #### `data`
 
@@ -748,7 +770,7 @@ Records an event on the channel from outside the reactive core — a host
 runtime reporting its own findings (hydration mismatches, server render
 faults) so consumers see one stream. `subject` locates it like the
 internal sites do; a host whose owners are not signals' owners passes
-`ownerPath` (and `loc`) on the event instead and they are used as-is.
+`ownerPath` on the event instead and it is used as-is.
 
 ### `DiagnosticSeverity`
 

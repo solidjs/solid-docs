@@ -174,7 +174,7 @@ cover every hop belongs on `configureServerFunctionsServer`'s
 This request's server error hook, ahead of `configureServerErrors`' (see
 `ServerErrorHook` in `@solidjs/web`): the function's throw
 (`handling: "thrown"`) and a failure escaping through its result graph
-(`"channel"`), once per error, before the wire policy applies. Entry-only
+(`"channel"`), once per error per request, before the wire policy applies. Entry-only
 like `wrapInvocation`: a direct call the body makes during a render
 reports through the ambient hook.
 
@@ -501,7 +501,11 @@ for a cross-origin client, answered with CORS (see
 
 Codec options (extra plugins etc.) for decoding arguments and encoding
 results — must match the client's. Stored in the shared layer, so
-`decodeResponse` sees them too. When `serializeErrorStacks` is omitted,
+`decodeResponse` sees them too. One asymmetry is fixed: arguments are
+client input and never decode `Response` or `Request` values, whatever
+plugins are configured — a call carrying one is refused with `400`.
+Results keep the full set. Every plugin added here is a type a client
+can make the server construct. When `serializeErrorStacks` is omitted,
 the server-function boundary defaults it from this module's compiled
 development variant.
 

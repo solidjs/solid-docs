@@ -42,9 +42,19 @@ Expression to probe. Read the values in question inside it.
 
 ## Return value
 
-`true` while a read inside `fn` depends on a change that has not committed yet.
+`true` while a read inside `fn` depends on a change that has not committed yet
 
 ## Examples
+
+```ts
+const [query, setQuery] = createSignal("");
+const results = createMemo(() => searchProducts(query()));
+const stale = createMemo(() => isPending(results));
+
+setQuery("shoes");
+// stale() is true until the new results land, while results() keeps
+// serving the previous list — dim it instead of showing a spinner.
+```
 
 ### Dim stale results while a new answer loads
 

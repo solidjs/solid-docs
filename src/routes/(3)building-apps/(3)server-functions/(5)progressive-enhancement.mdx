@@ -12,12 +12,12 @@ A server function has a URL, so the second version is available to every mutatio
 The server-function runtime recognizes a browser form post at that URL, decodes the body as one `FormData` argument, and answers in a way the browser can follow with no script.
 
 Application code reaches this through a router.
-Solid Router's `action()` wraps the server function in a value that serializes to that URL, so the same `<form action={...}>` works before hydration and is taken over by the router after it.
+Solid Router's `formAction()` wraps the server function in a value that serializes to that URL, so the same `<form action={...}>` works before hydration and is taken over by the router after it.
 Most applications need only the [router action](#post-a-form-through-a-router-action) section; the rest of the page is the transport underneath, for forms outside the router and for integrations that build their own form helpers.
 
 ## Post a form through a router action
 
-Declare a server function that takes one `FormData` argument, and wrap it with `action` from `@solidjs/router`:
+Declare a server function that takes one `FormData` argument, and wrap it with `formAction` from `@solidjs/router`:
 
 ```ts
 // src/data/cart.ts
@@ -39,10 +39,10 @@ export async function addToCart(form: FormData) {
 
 ```tsx
 // src/pages/Product.tsx
-import { action } from "@solidjs/router";
+import { formAction } from "@solidjs/router";
 import { addToCart } from "../data/cart";
 
-const addToCartAction = action(addToCart);
+const addToCartAction = formAction(addToCart);
 
 <form method="post" action={addToCartAction}>
 	<input type="hidden" name="productId" value={props.id} />
@@ -118,14 +118,14 @@ Whether TypeScript knows about `url` depends on how the function was declared:
 - A bare `"use server"` function keeps its declared function type.
   `url` is present at runtime and absent from the type, so `addToCart.url` is a type error.
 
-For a form post, use a router action rather than the URL.
+For a form post, use a router form action rather than the URL.
 An integration that must read the address from a bare declaration narrows it to `ServerFunction` from `@solidjs/web/server-functions` after checking `isServerFunction(fn)`.
 
 ## Bind leading arguments
 
 The function id lives in the URL path.
 An integration can add JSON-safe bound arguments in the reserved `args` query parameter, while the submitted form remains the final `FormData` argument.
-Solid Router's `action.with(...)` does this for application code; with a `removeFromCart(productId: string, form: FormData)` action, the product id is bound and the form supplies the rest:
+Solid Router's `formAction(...).with(...)` does this for application code; with a `removeFromCart(productId: string, form: FormData)` form action, the product id is bound and the form supplies the rest:
 
 ```tsx
 <form method="post" action={removeFromCart.with(line.productId)}>
@@ -167,7 +167,7 @@ A host can configure `createNoJSHandler()` with a base path or supply another `h
 ### `Property 'url' does not exist` on a server function
 
 The function is a bare `"use server"` declaration, whose type is the function's own.
-Pass it through the router's `action()` for a form, or, in integration code, narrow it to `ServerFunction` after `isServerFunction(fn)`.
+Pass it through the router's `formAction()` for a form, or, in integration code, narrow it to `ServerFunction` after `isServerFunction(fn)`.
 
 ### `Bound arguments in an action url must be JSON-safe`
 
@@ -188,7 +188,7 @@ Solid Router reads the cookie on the next server render and records the submissi
 ## Recap
 
 - Put every mutation behind `<form method="post" action={...}>` so the browser can submit it before the client bundle runs.
-- Wrap the server function with the router's `action()`; it serializes to the function's plain-HTTP URL and takes over after hydration.
+- Wrap the server function with the router's `formAction()`; it serializes to the function's plain-HTTP URL and takes over after hydration.
 - Pending state, `useSubmissions`, and `.onSubmit` optimistic writes are layers the hydrated page adds; the HTML and the server function stay the same.
 - A browser form post follows a returned redirect; any other outcome is answered with a 303 back to the page and a flash cookie, which the router turns into a submission on the next render.
 - Use `method="get"` and `fn.url` only for a `GET()` read; the function receives the fields as `URLSearchParams`.
@@ -199,5 +199,5 @@ Solid Router reads the cookie on the next server render and records the submissi
 ## Next steps
 
 - [Forms](/guides/forms): the checkout address form, working before hydration and adding inline messages and an optimistic address list after it.
-- [Data loading and mutations](/routing/solid-router/data): what `action()` adds on top of this transport, including `.with()`, submissions, and revalidation.
+- [Data loading and mutations](/routing/solid-router/data): what `formAction()` adds on top of this transport, including `.with()`, submissions, and revalidation.
 - [Sessions and auth](/building-apps/sessions-and-auth): the sign-in form, the most common no-JavaScript submission in a storefront.

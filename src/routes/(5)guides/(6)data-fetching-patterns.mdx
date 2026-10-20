@@ -249,7 +249,7 @@ Passing an accessor through context keeps the read lazy: nothing waits on the ca
 
 :::note[Sharing across routes]
 For requests shared across routes, or for deduplication and caching by argument, use [`query`](/routing/solid-router/data#cache-reads-with-query) from Solid Router.
-It returns the same in-flight promise to every caller with the same arguments, keeps a result for a few minutes after the last reader leaves, and refetches when an action [revalidates](/routing/solid-router/data#revalidate) its key.
+It returns the same in-flight promise to every caller with the same arguments, keeps a result for a few minutes after the last reader leaves, and refetches when a mutation [revalidates](/routing/solid-router/data#revalidate) its key.
 :::
 
 ## Keep data fresh
@@ -297,7 +297,7 @@ const addReview = action(function* (productId: string, text: string) {
 The reviews list does not flicker: the refetch runs inside the action, and the list updates once when the fresh data lands.
 To show the new review before the server confirms it, hold the list in a `createOptimisticStore` and write to it before the `yield`; [Mutations](/concepts/mutations) walks through that version.
 
-With Solid Router, `action` from `@solidjs/router` adds submissions and automatic revalidation of `query` reads; the [Forms guide](/guides/forms) uses it.
+With Solid Router mounted, a server function's response revalidates `query` reads automatically, and `formAction` from `@solidjs/router` adds form submissions on top; the [Forms guide](/guides/forms) uses it.
 
 ## Handle failures
 
@@ -366,6 +366,6 @@ Read the input directly so both requests start together; with attribution enable
 
 - [Async reactivity](/concepts/async-reactivity): the model these patterns rest on, including held updates and optimistic writes.
 - [Server functions](/building-apps/server-functions): `GET` reads, `live` sources, and what a `"use server"` function does on the wire.
-- [Data loading and mutations](/routing/solid-router/data): `query`, `preload`, and router actions.
+- [Data loading and mutations](/routing/solid-router/data): `query`, `preload`, and form actions.
 - [Performance](/guides/performance#waterfalls): measuring a page whose first paint waits on sequential requests.
 - [Data fetching from Solid 1](/migration/data-fetching-from-solid-1): the same patterns from the other direction, for code that already exists.

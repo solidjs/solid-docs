@@ -131,7 +131,7 @@ export const requireUser = query(async (next: string) => {
 
 Open `/account/orders` signed out from a bookmark and the browser lands on `/sign-in?next=%2Faccount%2Forders`.
 Click **Account** in the header signed out and the URL becomes the same sign-in address without the account page painting first: the memo in `RequireUser` is pending, so the navigation is held, and the redirect replaces its target before anything commits.
-Sign in, and the next visit to the account area runs the check again and finds the user, because a router action's completion invalidates every cached query.
+Sign in, and the next visit to the account area runs the check again and finds the user, because a mutation that declares no `revalidate` keys, such as the sign-in form action, invalidates every cached query when it completes.
 
 The preload is what starts the check as soon as the route matches, and when a [link preload strategy](/routing/solid-router/data#preloading-from-links) warms the link, before `RequireUser` exists; the memo is what holds the navigation until the check answers.
 Both call the same function.
@@ -150,14 +150,14 @@ Any `X-Revalidate` keys on the redirect are invalidated before the navigation so
 
 ## Send them back
 
-The sign-in page reads `next` from the URL and hands it to the sign-in action through a hidden field:
+The sign-in page reads `next` from the URL and hands it to the sign-in form action through a hidden field:
 
 ```tsx
 // src/pages/SignIn.tsx
-import { action, useSearchParams } from "@solidjs/router";
+import { formAction, useSearchParams } from "@solidjs/router";
 import { safeNext, signIn } from "../data/account";
 
-const signInAction = action(signIn);
+const signInAction = formAction(signIn);
 
 export default function SignIn() {
 	const [search] = useSearchParams();
@@ -309,7 +309,7 @@ export function Header() {
 ```
 
 Load the product page signed out and the header shows **Sign in** linking to `/sign-in?next=%2Fproducts%2Fmug`; the server rendered that link, and the browser adopted the serialized `current-user` result during hydration instead of fetching it again, so there is no request and no change of state on load.
-Sign in and the name appears; sign out through a router `action` that throws `redirect(paths())` and every cached query is invalidated when the action completes, so `getCurrentUser` runs again and the header shows **Sign in** without a full page load.
+Sign in and the name appears; sign out through a router `formAction`, or a sign-out server function called straight from a button, that throws `redirect(paths())` and every cached query is invalidated when the mutation completes, so `getCurrentUser` runs again and the header shows **Sign in** without a full page load.
 
 [State on the server](/guides/state-management#state-on-the-server) explains why the header holds a view of the user rather than a copy.
 `Header` renders inside the router's function child, so `useLocation()` and the `query` read both have a router to bind to.

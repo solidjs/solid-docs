@@ -108,8 +108,8 @@ Each named source receives only its own slice of the payload, so the two do not 
 :::deep-dive[How the two supported routers use these hooks]
 Solid Router supplies `createFlightDataCollector` from `@solidjs/router/server`.
 It consumes the router's route tree, base, and root preload, then collects matched `query` results for the target URL.
-On the client, it registers the mounted router when `singleFlight` is on, which is the default, and installs its flight consumer when the first router action is created.
-The two sides use a rendezvous so either can load first: an action module in a lazily loaded route still attaches to the already mounted router, and a router-only app that never creates an action never subscribes, so the server is never asked to collect.
+On the client, the router subscribes its flight consumer when it mounts, unless `singleFlight` is `false`; it is on by default.
+Because the subscription belongs to the router rather than to a form action, every non-`GET` server-function call made while it is mounted carries the single-flight header, including a call made straight from an event handler.
 The consumer applies the response's redirect and revalidation metadata and seeds Solid Router's `query` cache from the payload.
 
 TanStack Router's integration registers a named source instead.

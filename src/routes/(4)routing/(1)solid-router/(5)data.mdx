@@ -194,7 +194,7 @@ revalidate(); // everything
 Keys match by prefix, so the broad key reaches every argument combination.
 Calling this by hand is rare; the usual trigger is a mutation finishing, covered below.
 
-## Mutate with actions
+## Mutate with form actions
 
 A `formAction` wraps a mutation so it can be submitted as a form, tracked while it runs, and followed by revalidation.
 Start with the server function:
@@ -273,9 +273,9 @@ export const removeFromCart = formAction(
 ```
 
 `.with(...)` returns a form action whose remaining parameters start after the bound ones.
-The bound values travel in the action URL, so the no-JavaScript path receives them too.
+The bound values travel in the form action's URL, so the no-JavaScript path receives them too.
 
-### Client-side actions
+### Client-side form actions
 
 A form action does not have to call a server function.
 A plain async function works, for a client-only mutation or a call to a third-party API:
@@ -286,7 +286,7 @@ const savePreference = formAction(async (form: FormData) => {
 }, "save-preference");
 ```
 
-:::caution[Name a client action that renders on the server]
+:::caution[Name a client form action that renders on the server]
 A client form action rendered on the server needs the explicit name so both sides agree on the form's URL; without it the server render throws `Client Actions need explicit names if server rendered`.
 A server function already has a stable URL and does not need one.
 :::
@@ -297,7 +297,7 @@ A mutation has three moments the UI may want to reflect: while it runs, when it 
 
 ### While it runs
 
-The router sets `aria-busy="true"` on the submitting form until the action's result is on screen, including any revalidation or redirect it triggers.
+The router sets `aria-busy="true"` on the submitting form until the form action's result is on screen, including any revalidation or redirect it triggers.
 Style it in CSS and no component code is needed:
 
 ```css
@@ -309,7 +309,7 @@ form[aria-busy] button {
 
 ### When it fails
 
-`useSubmissions(action)` returns a reactive list of the action's completed submissions that produced a result or an error:
+`useSubmissions(addToCart)` returns a reactive list of the form action's completed submissions that produced a result or an error:
 
 ```tsx
 import { Show } from "solid-js";
@@ -342,7 +342,7 @@ A plain `throw new Error(...)` arrives in production as `Internal Server Error`,
 ### Before the server confirms
 
 `.onSubmit` runs a callback with the action's arguments before the mutation is sent, inside the same transaction as the mutation.
-Pair it with an optimistic store and the write reverts on its own when the action settles and the revalidated data lands:
+Pair it with an optimistic store and the write reverts on its own when the form action settles and the revalidated data lands:
 
 ```tsx
 import { For, createOptimisticStore } from "solid-js";
@@ -379,15 +379,15 @@ function CartPanel() {
 ```
 
 The new line appears at once with the `pending` class.
-When the action finishes, the `reload` revalidates `getCart`, the store reconciles the server's cart, and the optimistic line is replaced by the real one, or disappears if the server rejected it.
+When the form action finishes, the `reload` revalidates `getCart`, the store reconciles the server's cart, and the optimistic line is replaced by the real one, or disappears if the server rejected it.
 Registering `.onSubmit` inside a component ties the hook to that component's lifetime.
 
 The form did not change to get this.
-Before hydration it is the same `POST` as in [Mutate with actions](#mutate-with-actions): the browser submits, the server runs `addToCart`, and the server renders the page again with the cart from the database.
+Before hydration it is the same `POST` as in [Mutate with form actions](#mutate-with-form-actions): the browser submits, the server runs `addToCart`, and the server renders the page again with the cart from the database.
 After hydration the router intercepts the submit, runs the `.onSubmit` hooks as the first step of the action's transaction, sends the call, and reconciles the revalidated data over the prediction.
 The optimistic layer is something the hydrated page adds on top of a form that already works; the server function and the HTML are the same in both cases.
 
-[Mutations](/concepts/mutations) explains the optimistic model in depth; this is the same model with the router providing the action.
+[Mutations](/concepts/mutations) explains the optimistic model in depth; this is the same model with the router's form action in place of a core `action`.
 
 ## Call a mutation from code
 

@@ -242,7 +242,7 @@ export default function AddressPage() {
 Submit the form with an empty name and the message appears under the name field, with JavaScript on or off.
 The `<form>` element and its inputs are the same as in pass 1; only the message elements were added.
 
-`useSubmissions(submitAddress)` returns a reactive array of this action's settled submissions, each with the `input` that was sent and either a `result` or an `error`.
+`useSubmissions(submitAddress)` returns a reactive array of this form action's settled submissions, each with the `input` that was sent and either a `result` or an `error`.
 When `saveAddress` throws the `respond()` envelope, the carried value becomes `submission.error`, which is where `issues()` reads the field messages.
 A submission that returned a redirect does not stay in the list.
 `issues()` is a plain derived function read from JSX, following the rule from the [Reactivity](/concepts/reactivity) page.
@@ -300,9 +300,9 @@ export async function addAddress(form: FormData) {
 ```
 
 `toIssues` is the loop from pass 2 moved into a helper, and `currentCustomerId()` stands for the session read from [Sessions and auth](/building-apps/sessions-and-auth).
-`reload({ revalidate: getAddresses.key })` tells the router which query to refetch when the action completes.
+`reload({ revalidate: getAddresses.key })` tells the router which query to refetch when the form action completes.
 
-The page reads the list through an optimistic store and pushes the submitted fields into it from the action's `.onSubmit` hook:
+The page reads the list through an optimistic store and pushes the submitted fields into it from the form action's `.onSubmit` hook:
 
 ```tsx
 // src/routes/checkout/address.tsx
@@ -356,7 +356,7 @@ export default function AddressPage() {
 
 Click **Save address** and the new line appears at the bottom of the list with the `pending` class before any request has finished.
 When `addAddress` returns, the router revalidates `getAddresses`, the store reconciles the server's list, and the unsaved line is replaced by the saved one with its real `id`.
-Post a bad postal code and the line disappears when the `400` arrives, because an optimistic write is an overlay that Solid discards when the action settles, on success and on failure alike; the inline message from pass 3 explains why.
+Post a bad postal code and the line disappears when the `400` arrives, because an optimistic write is an overlay that Solid discards when the form action settles, on success and on failure alike; the inline message from pass 3 explains why.
 
 `.onSubmit` receives the action's arguments, here the `FormData`, and runs as the first step of the action's transaction, so the write is held with the mutation instead of committing on its own.
 [Before the server confirms](/routing/solid-router/data#before-the-server-confirms) covers the hook, and [Mutations](/concepts/mutations) explains why the overlay needs no rollback code.
@@ -467,9 +467,9 @@ Use `throw respond(value, { status })` for structured failures.
 - Leave inputs uncontrolled unless a field needs feedback while typing; the browser assembles the `FormData` on submit.
 - Validate on the server with a schema; browser attributes are a convenience anyone can bypass with `curl`.
 - Throw `respond(value, { status: 400 })` for a validation failure; a plain `Error` reaches production clients as `Internal Server Error`.
-- Read failures from `useSubmissions(action)`, where the envelope's value is `submission.error`.
+- Read failures from `useSubmissions(submitAddress)`, where the envelope's value is `submission.error`.
 - Style the pending state from `form[aria-busy]`; the router sets and clears the attribute.
-- Push the submitted fields into a `createOptimisticStore` from the action's `.onSubmit` hook to show the result at once; the overlay is discarded when the action settles and the revalidated list replaces it.
+- Push the submitted fields into a `createOptimisticStore` from the form action's `.onSubmit` hook to show the result at once; the overlay is discarded when the form action settles and the revalidated list replaces it.
 - Every layer after pass 1 exists only on the hydrated page; the same form still posts, and the server renders the page again, without JavaScript.
 
 ## Next steps

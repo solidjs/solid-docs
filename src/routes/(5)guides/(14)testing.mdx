@@ -146,15 +146,10 @@ The configuration above sets `globals: false`, so the explicit `afterEach(cleanu
 Choose browser mode when jsdom cannot provide the behavior that the test needs.
 The maintained browser-mode template uses the Playwright provider with headless Chromium.
 
-:::note[Browser mode still needs jsdom installed]
-When `test.environment` is unset, `@solidjs/vite-plugin` supplies a jsdom environment and Vitest resolves that dependency before it starts the browser pool.
-Without jsdom, the Chromium test can pass while the Vitest command exits with a missing-dependency error.
-:::
-
 For a new test setup, install the complete dependency set:
 
 ```sh
-pnpm add -D vitest jsdom @solidjs/testing-library @testing-library/jest-dom @vitest/browser-playwright playwright
+pnpm add -D vitest @solidjs/testing-library @testing-library/jest-dom @vitest/browser-playwright playwright
 pnpm exec playwright install chromium
 ```
 
@@ -380,11 +375,11 @@ The write is staged and the batch has not landed when the next line runs.
 Call `flush()` after the event and before the assertion.
 For an async source, `flush()` does not help; await `resolve(() => value())` or use an asynchronous query.
 
-### The Chromium test passes but Vitest exits with a missing-dependency error
+### A component test fails with `document is not defined`
 
-jsdom is not installed.
-`@solidjs/vite-plugin` supplies a jsdom environment when `test.environment` is unset, and Vitest resolves that dependency before starting the browser pool.
-Keep `jsdom` in the development dependencies alongside the browser provider.
+The `test` block does not set `environment`, so Vitest runs the file in Node.
+`@solidjs/vite-plugin` does not choose a test environment.
+Set `environment: "jsdom"` (or `"happy-dom"`) for component tests, or enable browser mode.
 
 ### A server test runs under jsdom
 

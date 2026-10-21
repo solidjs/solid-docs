@@ -70,7 +70,6 @@ const STANDALONE_REWRITES = [
 // error, so the map tracks the skill.
 const FIX_STARTS = {
 	ACTION_CALLED_IN_OWNED_SCOPE: "Actions are imperative entry points",
-	BINDING_SLOT_POSITION: "The rule: a slot property is a JSX attribute value",
 	CLEANUP_IN_FORBIDDEN_SCOPE: "return a cleanup function from the callback",
 	EFFECT_WRITES_OWN_SOURCE:
 		"The written value is a function of what the effect reads",
@@ -79,7 +78,7 @@ const FIX_STARTS = {
 	LAZY_ASSET_UNMAPPED: "This is bundler-plugin configuration",
 	PENDING_ASYNC_UNTRACKED_READ: "Async values must be read where tracking",
 	RUN_WITH_DISPOSED_OWNER: "This usually means a stale owner",
-	SSR_BOUNDARY_WATERFALL: "the same repairs apply, in the same order",
+	SSR_BOUNDARY_WATERFALL: "The same repairs apply, in the same order",
 	SSR_RENDER_ERROR_CONTAINED: "In every case the repair is",
 	SSR_STREAM_ABANDONED: "At volume it is the cost",
 	UNRECOGNIZED_INSERT_VALUE: "Usually a component function inserted",

@@ -57,15 +57,15 @@ The `Avoid` version places any order for any caller; `requiresAuth` is a value o
 
 Later `withMeta()` calls shallow-merge over earlier metadata.
 `GET()` uses the same channel for its HTTP method, and the two compose in either order.
-`live()` wraps the call behavior, so it goes outside both:
+`live()` wraps the call behavior and declares `GET` itself, so it goes outside `withMeta()` and needs no `GET()`:
 
 ```ts
 export const stockLevels = live(
 	withMeta(
-		GET(async function* () {
+		async function* () {
 			"use server";
 			yield* inventory.levels();
-		}),
+		},
 		{ channel: "inventory" }
 	)
 );
@@ -224,7 +224,7 @@ Check the condition in the hook against the metadata on the reference, and move 
 
 - The defaults are a `POST` to `/_server/data/<id>` with the argument array as the body and `Cache-Control: no-store` on the response; change them only for a reason on this page.
 - Attach static facts to a declaration with `withMeta()`; the server does not read them, so enforce policy in the body.
-- Compose `withMeta()` and `GET()` in either order, and put `live()` outside both.
+- Compose `withMeta()` and `GET()` in either order, and put `live()`, which implies `GET()`, outside `withMeta()`.
 - Add session-dependent headers in one `prepareRequest` hook, configured once in the client entry before the first call.
 - Move the endpoint with the plugin's `serverFunctions.endpoint` option so client and server stay matched.
 - Pass `signal`, `keepalive`, or `priority` to one call through `invoke()`; anything longer-lived is refused with a pointer to its home.

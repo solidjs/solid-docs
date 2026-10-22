@@ -125,22 +125,18 @@ The stock level for a product is one such question.
 
 ```ts
 // src/data/inventory.ts
-import { GET, live } from "@solidjs/web/server-functions";
+import { live } from "@solidjs/web/server-functions";
 
-export const stockLevel = live(
-	GET(async function* (productId: string) {
-		"use server";
-		yield await inventory.count(productId);
-		for await (const change of inventory.subscribe(productId)) {
-			yield change.count;
-		}
-	})
-);
+export const stockLevel = live(async function* (productId: string) {
+	"use server";
+	yield await inventory.count(productId);
+	for await (const change of inventory.subscribe(productId)) {
+		yield change.count;
+	}
+});
 ```
 
-Place `live()` outside `GET()`.
-`GET()` chooses the read transport, and `live()` wraps the call behavior around it, so it must be the outermost declaration.
-`live()` does not imply `GET()`; a live source without it streams over `POST`, which is fine when a cacheable URL is of no use.
+A live source is a read, so `live()` declares it `GET` itself; the connection uses the read transport without a separate `GET()`.
 
 The source yields the current count first, every time it is invoked.
 That is the contract a reconnect depends on: when the connection drops and the client calls again, the first yield replaces the stale answer, and no client-side cache is needed to fill the gap.
@@ -267,7 +263,7 @@ Check the server log for the status: the client retries only transient failures 
 - A `GET()` read puts its arguments in the URL; keep secrets out of them and read identity from the request event.
 - Responses leave with `Cache-Control: no-store`; return `respond(value, { headers })` to opt a read into caching.
 - Return an async iterable to stream events over one connection; ending the iteration in the browser ends the server producer.
-- Declare a value that changes over time with `live(GET(fn))`, `live()` outermost, and yield the current value first on every invocation.
+- Declare a value that changes over time with `live(fn)`, which declares it `GET` as well, and yield the current value first on every invocation.
 - Read a live source through one memo and pass the value down; each call site that invokes the source opens its own connection.
 - Use `onstatus` to show a reconnect; put data freshness in the yielded value.
 

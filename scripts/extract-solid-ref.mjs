@@ -312,6 +312,7 @@ const ADVANCED_ROUTES = {
 		"Advanced / Interop & Async",
 	],
 	flatten: ["advanced/interop-async/flatten.mdx", "Advanced / Interop & Async"],
+	from: ["advanced/interop-async/from.mdx", "Advanced / Interop & Async"],
 	NotReadyError: [
 		"advanced/interop-async/not-ready-error.mdx",
 		"Advanced / Interop & Async",
@@ -563,6 +564,7 @@ const FOLD_INTO = {
 	EffectFunction: "createEffect",
 	EffectOptions: "createEffect",
 	ExternalSource: "enableExternalSource",
+	FromSource: "from",
 	ExternalSourceConfig: "enableExternalSource",
 	ExternalSourceFactory: "enableExternalSource",
 	HydrationProjectionOptions: "createProjection",
@@ -632,6 +634,10 @@ const FOLD_INTO = {
 };
 
 const HIDDEN_EXPORTS = new Set([
+	// `@experimental`: the shared render behind it is the frames server half,
+	// which the reference excludes with the rest of frames. On the client it
+	// is exactly `live(fn)`.
+	"broadcast",
 	// Compiler slot protocol; not part of the application-facing reference.
 	"SLOT_VALUE",
 	"SLOT_MARKER",
@@ -725,6 +731,9 @@ const HIDDEN_EXPORTS = new Set([
 	"setAttribute",
 	"setAttributeNS",
 	"setProperty",
+	// Dev-compiled output's stateful property write (`@internal` in client.ts;
+	// the server entry re-exports a stub under the same name without JSDoc).
+	"setStatefulProperty",
 	"setStyleProperty",
 	"style",
 	"unregisterDelegatedContainer",
@@ -1078,6 +1087,9 @@ const PREFERRED_SOURCE_PATHS = {
 	ServerErrorContext: "packages/web/src/server.ts",
 	ServerErrorHook: "packages/web/src/server.ts",
 	ServerErrorsConfig: "packages/web/src/server.ts",
+	// The engine's JSDoc carries the contract; solid-js only adds the
+	// hydration brand, which the caveats state.
+	from: "packages/signals/src/from.ts",
 };
 
 const ENTRY_EXAMPLES = {
@@ -1443,6 +1455,10 @@ async function exportReport() {
 // Shape: { symbol: { paramName: "text" | { type?, text? } } }. An object
 // can pin the displayed type when the overload union is noisy.
 const PARAM_DOCS = {
+	from: {
+		source:
+			"A subscribe function `(next, error, complete) => unsubscribe`, an object with `subscribe(observer)` such as an Observable, or an `AsyncIterable`. See `FromSource` below.",
+	},
 	createSignal: {
 		value:
 			"Initial value. Pass a function through the `fn` form instead; a function here is rejected by the types.",
@@ -1795,6 +1811,9 @@ const ENTRY_CAVEATS = {
 	latest: [
 		"Use it on controls, not on content. Data read through `latest` can show a new answer before the rest of the update agrees with it.",
 		"Before any value exists, the read still suspends like a normal read.",
+	],
+	from: [
+		"During hydration, a subscription read on the server reconnects on the client once its section has hydrated, instead of staying at the server's value.",
 	],
 	untrack: [
 		"Untracking a read does not stop the computation from re-running for its other tracked reads.",

@@ -135,6 +135,41 @@ The error is the current status of that part of the graph, the same way "not rea
 `reset` covers the case where nothing upstream will change on its own, such as a network outage.
 It re-runs the failed sources, so a retry that hits the same error shows the same fallback, and a retry that succeeds shows the content.
 
+While the retry is in flight, the error fallback stays on screen.
+In the product panel above, clicking **Retry** leaves the error message and the button in place until the request settles; the `Loading` inside `Errored` does not show "Loading product…", because the error remains the region's answer until a new value replaces it.
+When a retry should show the placeholder, move `Loading` outside `Errored` and give it an `on` value that the retry changes:
+
+```tsx
+const [productId, setProductId] = createSignal("mug");
+const [attempt, setAttempt] = createSignal(0);
+const product = createMemo(() => fetchProduct(productId()));
+
+<Loading on={[productId(), attempt()]} fallback={<p>Loading product…</p>}>
+	<Errored
+		fallback={(error, reset) => (
+			<section>
+				<p>{String(error())}</p>
+				<button
+					onClick={() => {
+						setAttempt((n) => n + 1);
+						reset();
+					}}
+				>
+					Retry
+				</button>
+			</section>
+		)}
+	>
+		<h2>{product().name}</h2>
+		<p>{product().description}</p>
+	</Errored>
+</Loading>;
+```
+
+Click **Retry** and "Loading product…" replaces the error message until the request settles; then the product or a new error message appears.
+Picking another product shows the loading text as before.
+The `attempt` write re-arms the boundary (see [Show a placeholder again](/concepts/async-reactivity#show-a-placeholder-again-loading-on)); without `on`, the outer `Loading` keeps the error message on screen too, because the region already has content.
+
 :::caution[An error in the fallback is outside the boundary]
 An error thrown while rendering an `Errored` fallback is not caught by that boundary.
 A parent `Errored` can catch it.
@@ -266,6 +301,11 @@ Give the sibling its own `on`, or drop `on` and show the wait with `isPending`.
 `reset` re-runs the failed sources with the same inputs.
 If the cause has not changed, the same error comes back.
 When the fix is a different input, change the input; the boundary recovers on its own.
+
+### Retry keeps showing the error instead of a loading state
+
+An `Errored` boundary keeps its fallback while a `reset` retry is pending, so a `Loading` inside it cannot show its fallback for the retry.
+Put `Loading` outside `Errored` and add a value that the **Retry** button changes to its `on`, as in [Recovery](#recovery).
 
 ### A region inside `Reveal` does not appear when its data is ready
 

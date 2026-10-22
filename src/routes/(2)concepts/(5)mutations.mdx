@@ -321,7 +321,8 @@ The projection reads the durable items and folds in the `errors` map.
 The map is not reactive by itself; `refresh(items)` re-runs the projection after each mutation and makes its current entries visible.
 
 The action catches the expected failure because the row can recover locally.
-An error the action does not catch, or an error thrown by the projection or the render, still reaches `Errored`.
+An error thrown by the projection or the render still reaches `Errored`.
+An error the action does not catch rejects the promise that `setGiftWrap` returns, and the `void` in the handler discards that promise, so no boundary sees the failure; see [A failed action does not show the Errored fallback](#a-failed-action-does-not-show-the-errored-fallback).
 
 ## Common problems
 
@@ -340,6 +341,31 @@ Make the tentative write inside the `action` that sends the request, and suspend
 
 The store is a plain `createStore`, whose writes are durable even inside an action.
 Use `createOptimisticStore` for state that should revert when the request settles.
+
+### A failed action does not show the `Errored` fallback
+
+An action call returns a promise, and an event handler does not wait for it.
+When the action throws, the promise rejects outside the reactive graph: the optimistic overlay is dropped, the browser reports an unhandled rejection, and no `Errored` boundary shows its fallback.
+`Errored` catches errors from reads and rendering, not from promises that a handler starts.
+
+Handle the failure where the action is called.
+Catch it inside the generator when the action can recover, as `setGiftWrap` does above, or attach `.catch()` to the call and write the error to a signal the UI reads:
+
+```tsx
+const [saveError, setSaveError] = createSignal<string>();
+
+<button
+	onClick={() => {
+		setSaveError(undefined);
+		save().catch((error) => setSaveError(String(error)));
+	}}
+>
+	Save
+</button>;
+<Show when={saveError()}>{(message) => <p role="alert">{message()}</p>}</Show>;
+```
+
+Click **Save** while the request fails and the message appears under the button; clicking again clears it before the next attempt.
 
 ### `flush()` inside an action throws `[FLUSH_IN_ACTION]`
 
@@ -362,6 +388,6 @@ Remove the call and assert after the action's promise resolves.
 
 - [Forms](/guides/forms): the same actions behind a `<form>`, with progressive enhancement, validation, and errors returned from the server.
 - [Mutations and responses](/building-apps/server-functions/mutations-and-responses): writing `api.add` as a `"use server"` function and returning redirects, statuses, and safe errors.
-- [Boundaries](/concepts/boundaries): where `Errored` catches the errors an action does not, and how an errored region recovers.
+- [Boundaries](/concepts/boundaries): where `Errored` catches errors from reads and rendering, and how an errored region recovers.
 - [Data loading and mutations](/routing/solid-router/data): with Solid Router mounted, the same actions call server functions and the router applies their revalidation and redirects; `query` adds caching and `formAction` adds forms.
 - [State management](/guides/state-management): where the cart, the user, and the filter live, and why `createCart()` runs inside a provider.

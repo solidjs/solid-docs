@@ -158,16 +158,14 @@ The live source yields the reply so far, whole, on every write:
 ```ts
 // src/data/replies.ts
 import { getRequestEvent } from "@solidjs/web";
-import { GET, live } from "@solidjs/web/server-functions";
+import { live } from "@solidjs/web/server-functions";
 import * as replies from "../server/replies";
 
-export const watchReply = live(
-	GET(async function* (replyId: string) {
-		"use server";
-		const signal = getRequestEvent()?.request.signal;
-		for await (const reply of replies.watch(replyId, signal)) yield reply;
-	})
-);
+export const watchReply = live(async function* (replyId: string) {
+	"use server";
+	const signal = getRequestEvent()?.request.signal;
+	for await (const reply of replies.watch(replyId, signal)) yield reply;
+});
 ```
 
 The request's signal ends the watcher when the reader leaves; the job does not see it.
@@ -221,7 +219,7 @@ A projection rather than a memo keeps readers of `reply.status` out of every tex
 `refresh(reply)` re-runs the projection, which opens a new connection; it does not touch the job.
 
 Every call site that iterates a live source holds its own connection.
-When the thread list and the thread both need the same reply, hoist the read, or declare it with Solid Router's [`liveQuery`](/reference/solid-router/data#livequery), which keeps one connection per key for every consumer; the spelling is `liveQuery(watchReply, "reply")`, and a function already declared with `live(GET())` passes through unchanged.
+When the thread list and the thread both need the same reply, hoist the read, or declare it with Solid Router's [`liveQuery`](/reference/solid-router/data#livequery), which keeps one connection per key for every consumer; the spelling is `liveQuery(watchReply, "reply")`. `liveQuery` declares a server function `live()` itself, and one already declared `live()` passes through unchanged.
 
 ## Hold the bubble until the stream confirms
 
@@ -288,13 +286,12 @@ The `chat` example in the Solid repository is this section's reference implement
 :::
 
 When the markdown renderer, the highlighter, and the model client should stay on the server, the thread can be server markup that keeps changing.
-The server function returns a component instead of data, and `live()` holds the response open while it re-renders:
+The server function returns a component instead of data, and `liveQuery`, which declares it `live()`, holds the response open while it re-renders:
 
 ```tsx
 // src/routes/thread.tsx
 import { createMemo, onCleanup } from "solid-js";
 import { getRequestEvent } from "@solidjs/web";
-import { GET, live } from "@solidjs/web/server-functions";
 import type { Slot } from "@solidjs/web/frames";
 import { liveQuery } from "@solidjs/router";
 import { stopReply } from "../data/replies";
@@ -302,41 +299,36 @@ import * as threads from "../server/threads";
 
 type ComposerSlot = Slot<{ threadId: string; seen: string[] }>;
 
-export const getThread = liveQuery(
-	live(
-		GET(async (id: string) => {
-			"use server";
-			return (props: { composer: ComposerSlot }) => {
-				const gone = new AbortController();
-				onCleanup(() => gone.abort());
-				getRequestEvent()?.request.signal.addEventListener("abort", () =>
-					gone.abort()
-				);
-				const view = createMemo(() => threads.watch(id, gone.signal));
-				return (
-					<article>
-						{view().messages.map((message) => (
-							<section data-id={message.id}>
-								<div innerHTML={renderMarkdown(message.text)} />
-								{message.status === "generating" && (
-									<form action={stopReply.with(message.id)} method="post">
-										<button type="submit">Stop</button>
-									</form>
-								)}
-							</section>
-						))}
-						<props.composer
-							$key={id}
-							threadId={id}
-							seen={view().messages.map((m) => m.id)}
-						/>
-					</article>
-				);
-			};
-		})
-	),
-	"thread"
-);
+export const getThread = liveQuery(async (id: string) => {
+	"use server";
+	return (props: { composer: ComposerSlot }) => {
+		const gone = new AbortController();
+		onCleanup(() => gone.abort());
+		getRequestEvent()?.request.signal.addEventListener("abort", () =>
+			gone.abort()
+		);
+		const view = createMemo(() => threads.watch(id, gone.signal));
+		return (
+			<article>
+				{view().messages.map((message) => (
+					<section data-id={message.id}>
+						<div innerHTML={renderMarkdown(message.text)} />
+						{message.status === "generating" && (
+							<form action={stopReply.with(message.id)} method="post">
+								<button type="submit">Stop</button>
+							</form>
+						)}
+					</section>
+				))}
+				<props.composer
+					$key={id}
+					threadId={id}
+					seen={view().messages.map((m) => m.id)}
+				/>
+			</article>
+		);
+	};
+}, "thread");
 ```
 
 `threads.watch` is the thread-level watcher: it yields the thread and its messages after every write to any of them.
@@ -420,8 +412,8 @@ Await it from an action body or another imperative scope.
 
 - Start the generation from a server function that returns at once; the job belongs to a module-level registry and writes the reply into a store as it arrives.
 - Pass the job its own abort signal; the request's signal ends only the watcher.
-- Deliver the reply through `live(GET(async function*))`, yielding the whole reply so far and the current reply first on every connection.
-- Render it in the browser with `createProjection`, or on the server as a live server component mounted with `dynamicComponent` through `liveQuery(live(GET(fn)), key)`.
+- Deliver the reply through `live(async function*)`, yielding the whole reply so far and the current reply first on every connection.
+- Render it in the browser with `createProjection`, or on the server as a live server component mounted with `dynamicComponent` through `liveQuery(fn, key)`.
 - Hold an optimistic row with `createOptimisticStore` inside an `action`, confirm it with `until` over the live thread's ids, and filter the row by the same ids.
 - A reconnect sends `Last-Event-ID`; an unchanged first value is skipped, and partial replay needs a log the source reads the header against.
 

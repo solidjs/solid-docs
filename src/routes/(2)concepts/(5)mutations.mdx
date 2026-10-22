@@ -341,6 +341,14 @@ Make the tentative write inside the `action` that sends the request, and suspend
 The store is a plain `createStore`, whose writes are durable even inside an action.
 Use `createOptimisticStore` for state that should revert when the request settles.
 
+### The save keeps running after the user leaves the page
+
+An action is not tied to the component that created it, so navigating away does not cancel it and the save still lands, like a form submit.
+That is the safe default: the action is often what navigates (save, then redirect), and cancelling it there would undo the write the user asked for.
+Its late writes are harmless, because nothing that was removed still reads them.
+Guard the steps after a `yield` that only make sense on the old page, for example by comparing against the current record id, and pass an `AbortSignal` to the request when it should really stop.
+Do not retire the action from a component's `onCleanup`; see [Stop the work a run started](/concepts/async-reactivity#stop-the-work-a-run-started).
+
 ### `flush()` inside an action throws `[FLUSH_IN_ACTION]`
 
 An action's writes are held in its transaction until the action settles, so there is nothing for `flush()` to show.

@@ -496,6 +496,37 @@ Development builds turn that read into an error so it reaches `Errored` instead 
 Read every reactive input at the top of the function, before the first `await`.
 :::
 
+## Stop the work a run started
+
+Solid drops a superseded run's result on its own, but the work the run started, such as a request, a timer, or a subscription, keeps going unless the run stops it.
+When a run's cleanups happen depends on whether the user has seen it:
+
+- **A run that never committed** was never on screen, so it is cleaned up as soon as a newer run supersedes it.
+  An `onCleanup` registered before the first `await` therefore cancels an unfinished request:
+
+```ts
+const results = createMemo(async () => {
+	const q = query();
+	const controller = new AbortController();
+	onCleanup(() => controller.abort()); // before the first await
+	const response = await fetch(`/search?q=${q}`, { signal: controller.signal });
+	return response.json();
+});
+```
+
+- **The run on screen** stays fully live until its replacement lands.
+  Its children keep reacting and its subscriptions and timers keep running, because it is still what the user sees.
+  Its cleanups run when the replacement commits.
+
+An iterable that the computation returns is different: it is closed as soon as the run is superseded, because nothing can show what it yields any more.
+To stop work when one input changes, tie that work to the input in a child computation rather than to the outer one, so it re-runs with the input instead of waiting for the whole update.
+
+:::pitfall[Do not wait on a cleanup from inside the update that replaces it]
+The on-screen run's cleanups run only when the held update commits.
+Anything inside that update that waits for one of those cleanups can wait forever: an action that races a promise resolved from a memo's `onCleanup`, or a new run that awaits a lock the old run releases in `onCleanup`.
+Signal from the input instead: compare against the changed value, or hand the lock over when the new run acquires it.
+:::
+
 ## Recap
 
 - Return a promise from a memo and read the result as a plain value; the type is `Product`, not `Promise<Product>` or `Product | undefined`.
@@ -506,6 +537,7 @@ Read every reactive input at the top of the function, before the first `await`.
 - Acknowledge a held update with `isPending` on the content and `latest` on the control the user touched.
 - Put `on={key()}` on a `Loading` boundary whose subject changed and should show a placeholder instead of the old content; `on` is tracked, and the fallback never appears when the same data is also read outside the boundary.
 - Read every reactive input before the first `await`.
+- Cancel a request with `onCleanup` and an `AbortController` registered before the first `await`; a run that never committed is cleaned up when it is superseded, and the run on screen when its replacement lands.
 
 ## Next steps
 

@@ -312,6 +312,7 @@ const ADVANCED_ROUTES = {
 		"Advanced / Interop & Async",
 	],
 	flatten: ["advanced/interop-async/flatten.mdx", "Advanced / Interop & Async"],
+	from: ["advanced/interop-async/from.mdx", "Advanced / Interop & Async"],
 	NotReadyError: [
 		"advanced/interop-async/not-ready-error.mdx",
 		"Advanced / Interop & Async",
@@ -563,6 +564,7 @@ const FOLD_INTO = {
 	EffectFunction: "createEffect",
 	EffectOptions: "createEffect",
 	ExternalSource: "enableExternalSource",
+	FromSource: "from",
 	ExternalSourceConfig: "enableExternalSource",
 	ExternalSourceFactory: "enableExternalSource",
 	HydrationProjectionOptions: "createProjection",
@@ -632,6 +634,10 @@ const FOLD_INTO = {
 };
 
 const HIDDEN_EXPORTS = new Set([
+	// `@experimental`: the shared render behind it is the frames server half,
+	// which the reference excludes with the rest of frames. On the client it
+	// is exactly `live(fn)`.
+	"broadcast",
 	// Compiler slot protocol; not part of the application-facing reference.
 	"SLOT_VALUE",
 	"SLOT_MARKER",
@@ -725,6 +731,9 @@ const HIDDEN_EXPORTS = new Set([
 	"setAttribute",
 	"setAttributeNS",
 	"setProperty",
+	// Dev-compiled output's stateful property write (`@internal` in client.ts;
+	// the server entry re-exports a stub under the same name without JSDoc).
+	"setStatefulProperty",
 	"setStyleProperty",
 	"style",
 	"unregisterDelegatedContainer",
@@ -1078,6 +1087,9 @@ const PREFERRED_SOURCE_PATHS = {
 	ServerErrorContext: "packages/web/src/server.ts",
 	ServerErrorHook: "packages/web/src/server.ts",
 	ServerErrorsConfig: "packages/web/src/server.ts",
+	// The engine's JSDoc carries the contract; solid-js only adds the
+	// hydration brand, which the caveats state.
+	from: "packages/signals/src/from.ts",
 };
 
 const ENTRY_EXAMPLES = {
@@ -1443,6 +1455,10 @@ async function exportReport() {
 // Shape: { symbol: { paramName: "text" | { type?, text? } } }. An object
 // can pin the displayed type when the overload union is noisy.
 const PARAM_DOCS = {
+	from: {
+		source:
+			"A subscribe function `(next, error, complete) => unsubscribe`, an object with `subscribe(observer)` such as an Observable, or an `AsyncIterable`. See `FromSource` below.",
+	},
 	createSignal: {
 		value:
 			"Initial value. Pass a function through the `fn` form instead; a function here is rejected by the types.",
@@ -1790,10 +1806,14 @@ const ENTRY_CAVEATS = {
 	isPending: [
 		"Reports on updates to a value that exists. Before a first value, the read inside `fn` follows the surrounding `Loading` path.",
 		"A bare `refresh()` does not flip `isPending`; pair it with `affects()` to make the re-ask visible.",
+		"An errored expression is not pending: `isPending` returns `false` and does not rethrow the error. Read the value itself inside an `Errored` boundary to show the failure.",
 	],
 	latest: [
 		"Use it on controls, not on content. Data read through `latest` can show a new answer before the rest of the update agrees with it.",
 		"Before any value exists, the read still suspends like a normal read.",
+	],
+	from: [
+		"During hydration, a subscription read on the server reconnects on the client once its section has hydrated, instead of staying at the server's value.",
 	],
 	untrack: [
 		"Untracking a read does not stop the computation from re-running for its other tracked reads.",
@@ -1833,6 +1853,7 @@ const ENTRY_CAVEATS = {
 		"A plain `await` leaves the transaction. Put a bare `yield` before any writes that follow an `await`, or use `yield` in place of `await`.",
 		"Do not call `flush()` inside the generator; it drains the transaction mid-step.",
 		"Navigation-shaped updates (write an input, read the async result) do not need an action. A plain setter call is held automatically.",
+		"A failure rejects the returned promise and does not reach an `Errored` boundary. Catch it inside the generator, or with `.catch()` where the action is called.",
 	],
 	affects: [
 		"Marking does not change the value or trigger a refetch; it only reports pending. Pair with `refresh()` to re-ask.",
@@ -1891,6 +1912,7 @@ const ENTRY_CAVEATS = {
 	Errored: [
 		"The boundary catches errors thrown while rendering its subtree and errors that travel through the reactive graph, including rejected async reads. Handle errors in event handlers where they happen.",
 		"`reset()` recomputes the failing sources. If the cause persists, the boundary errors again.",
+		"While a `reset()` retry is pending, the fallback stays on screen, so a `Loading` inside the boundary does not show. To show a placeholder during the retry, put `Loading` outside `Errored` with an `on` value that the retry changes.",
 		"Errors thrown from the fallback itself go to the parent `Errored`.",
 	],
 	Loading: [
@@ -1995,6 +2017,16 @@ const REACTIVITY_PROBLEMS = {
 		"/guides/debugging-reactivity#every-update-stopped-after-an-error",
 	],
 };
+const BOUNDARY_PROBLEMS = {
+	retryKeepsError: [
+		"Retry keeps showing the error instead of a loading state",
+		"/concepts/boundaries#retry-keeps-showing-the-error-instead-of-a-loading-state",
+	],
+	actionNotCaught: [
+		"A failed action does not show the `Errored` fallback",
+		"/concepts/mutations#a-failed-action-does-not-show-the-errored-fallback",
+	],
+};
 const COMPONENT_PROBLEMS = {
 	childNotUpdating: [
 		"A child does not update when the parent's signal changes",
@@ -2083,7 +2115,11 @@ const ENTRY_PROBLEMS = {
 	reconcile: [LIST_PROBLEMS.loseFocus, LIST_PROBLEMS.wholeList],
 	merge: [COMPONENT_PROBLEMS.childNotUpdating],
 	omit: [COMPONENT_PROBLEMS.childNotUpdating],
-	action: [REACTIVITY_PROBLEMS.deadClick, FORM_PROBLEMS.errorsVanish],
+	action: [
+		REACTIVITY_PROBLEMS.deadClick,
+		FORM_PROBLEMS.errorsVanish,
+		BOUNDARY_PROBLEMS.actionNotCaught,
+	],
 	affects: [REACTIVITY_PROBLEMS.deadClick],
 	refresh: [REACTIVITY_PROBLEMS.deadClick],
 	children: [COMPONENT_PROBLEMS.childNotUpdating],
@@ -2095,7 +2131,11 @@ const ENTRY_PROBLEMS = {
 		LIST_PROBLEMS.wholeList,
 	],
 	Repeat: [LIST_PROBLEMS.wrongIndex],
-	Errored: [REACTIVITY_PROBLEMS.stoppedAfterError],
+	Errored: [
+		REACTIVITY_PROBLEMS.stoppedAfterError,
+		BOUNDARY_PROBLEMS.retryKeepsError,
+		BOUNDARY_PROBLEMS.actionNotCaught,
+	],
 	Loading: [REACTIVITY_PROBLEMS.deadClick],
 	Portal: [COMPONENT_PROBLEMS.refCallback],
 	respond: [FORM_PROBLEMS.respondInternalError, FORM_PROBLEMS.errorsVanish],

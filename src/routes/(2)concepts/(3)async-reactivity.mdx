@@ -313,6 +313,27 @@ With attribution enabled, development builds report that case as `SILENT_HOLD` a
 
 If the expression has no settled answer yet, the read inside `isPending` still follows the surrounding `Loading` path; `isPending` reports on updates to a value that exists, not on the first load.
 
+An error is not pending either.
+When the request rejects, `isPending(results)` returns `false` and does not rethrow the error, so a region that reads `results` only through `isPending` never reports the failure:
+
+```tsx
+// Avoid: the only read of results is the probe
+<Errored fallback={<p>Search failed.</p>}>
+	<p class={{ stale: isPending(results) }}>Showing results for {query()}</p>
+</Errored>
+
+// Prefer: the region also reads the value, so a rejection reaches Errored
+<Errored fallback={<p>Search failed.</p>}>
+	<ul class={{ stale: isPending(results) }}>
+		<For each={results()}>{(product) => <li>{product.name}</li>}</For>
+	</ul>
+</Errored>
+```
+
+In the `Avoid` version a failed search drops the `stale` class, and the paragraph stays on screen as if the search had succeeded.
+In the `Prefer` version the `results()` read inside `<For>` throws the error, and the boundary shows "Search failed." in place of the list.
+Keep a plain read of the value next to each `isPending` probe, inside the [`Errored` boundary](#work-rejects-errored) that should report it.
+
 ## Show the input now: `latest`
 
 A held update keeps the input's old value visible along with the old content.
@@ -464,7 +485,8 @@ A loading boundary does not consume errors, and an error boundary does not repla
 An error is a status of that part of the graph, not a terminal state.
 When the data underneath changes, because an input signal changed or a `refresh` landed, the boundary retries and the content returns.
 `reset` retries the failed sources rather than showing the same error again.
-[Boundaries](/concepts/boundaries) covers placement and recovery in detail.
+While the retry is in flight, the error fallback stays on screen; the `Loading` inside the boundary does not replace it.
+[Boundaries](/concepts/boundaries#recovery) covers placement and recovery in detail, including how to show a placeholder during a retry.
 
 ## Read every input before the first `await`
 

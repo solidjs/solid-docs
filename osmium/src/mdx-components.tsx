@@ -26,6 +26,7 @@ export { Callout } from "./ui/callout";
 export { DeepDive } from "./ui/deep-dive";
 export { QuickLinks } from "./ui/quick-links";
 export { ImageLink } from "./ui/image-link";
+export { Playground } from "./ui/playground";
 
 const EraserLinkImpl = clientOnly(() => import("./ui/eraser-link"));
 

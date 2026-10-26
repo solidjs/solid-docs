@@ -18,6 +18,7 @@ export default tseslint.config(
 			".netlify/",
 			"public/",
 			"scripts/",
+			"src/playgrounds/",
 		],
 	},
 	{

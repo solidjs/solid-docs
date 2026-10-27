@@ -1,4 +1,4 @@
-import { ErrorBoundary } from "solid-js";
+import { Errored } from "solid-js";
 
 import { Layout } from "./ui/layout";
 import { NotFound } from "./ui/not-found";
@@ -16,9 +16,9 @@ export default function (props: ParentProps) {
 	return (
 		<OsmiumThemeStateProvider>
 			<SidebarProvider config={config().themeConfig?.sidebar}>
-				<ErrorBoundary fallback={() => <NotFound />}>
+				<Errored fallback={() => <NotFound />}>
 					<Layout>{props.children}</Layout>
-				</ErrorBoundary>
+				</Errored>
 			</SidebarProvider>
 		</OsmiumThemeStateProvider>
 	);

@@ -1,6 +1,6 @@
 import { Component, createMemo } from "solid-js";
-import { Icon } from "solid-heroicons";
-import { exclamationTriangle } from "solid-heroicons/outline";
+import { Icon } from "./icon";
+import exclamationTriangle from "~icons/heroicons/exclamation-triangle";
 import { useLocation } from "@solidjs/router";
 import { useCurrentPageData } from "@kobalte/solidbase/client";
 import { useRouteConfig } from "../utils";

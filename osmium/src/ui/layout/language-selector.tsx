@@ -1,6 +1,6 @@
 import { Component, Show } from "solid-js";
-import { Icon } from "solid-heroicons";
-import { language } from "solid-heroicons/solid";
+import { Icon } from "../icon";
+import language from "~icons/heroicons/language-solid";
 import { ResolvedLocale, useLocale } from "@kobalte/solidbase/client";
 import { Select } from "@kobalte/core/select";
 import { OsmiumThemeConfig } from "../..";

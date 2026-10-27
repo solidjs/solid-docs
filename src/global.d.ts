@@ -1,1 +1,2 @@
-// <reference types="solid-start/env" />
+/// <reference types="vite/client" />
+/// <reference types="@kobalte/solidbase/types" />

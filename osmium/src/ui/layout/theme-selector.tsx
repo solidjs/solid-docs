@@ -2,23 +2,24 @@ import {
 	Component,
 	ComponentProps,
 	createSignal,
-	JSX,
-	onMount,
+	onSettled,
 	Show,
 } from "solid-js";
-import { computerDesktop, moon, sun } from "solid-heroicons/solid";
+import computerDesktop from "~icons/heroicons/computer-desktop-solid";
+import moon from "~icons/heroicons/moon-solid";
+import sun from "~icons/heroicons/sun-solid";
 import { Select } from "@kobalte/core/select";
 import {
 	getThemeVariant,
 	setTheme,
 	ThemeType,
 } from "@kobalte/solidbase/client";
-import { Icon } from "solid-heroicons";
+import { Icon, type IconComponent } from "../icon";
 
 interface ThemeOption {
 	value: ThemeType | "system";
 	label: string;
-	icon: { path: JSX.Element; outline: boolean; mini: boolean };
+	icon: IconComponent;
 }
 
 const THEME_OPTIONS: ThemeOption[] = [
@@ -100,7 +101,7 @@ export const ThemeSelector: Component = () => {
 function RefreshOnMount(props: ComponentProps<"div">) {
 	// incorrect value on server with no runtime, refresh on mount to update possibly incorrect label
 	const [refresh, setRefresh] = createSignal(false);
-	onMount(() => {
+	onSettled(() => {
 		setRefresh(true);
 	});
 

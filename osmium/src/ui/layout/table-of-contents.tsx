@@ -1,17 +1,10 @@
-import {
-	Index,
-	type JSX,
-	Show,
-	createEffect,
-	createSignal,
-	on,
-} from "solid-js";
+import { For, type JSX, Show, createEffect, createSignal } from "solid-js";
 import {
 	useCurrentPageData,
 	TableOfContentsItemData,
 } from "@kobalte/solidbase/client";
 import { createEventListener } from "@solid-primitives/event-listener";
-import { isServer } from "solid-js/web";
+import { isServer } from "@solidjs/web";
 
 export const TableOfContents = () => {
 	const data = useCurrentPageData();
@@ -23,10 +16,9 @@ export const TableOfContents = () => {
 		Array<{ href: string; el?: HTMLElement }>
 	>([]);
 
-	createEffect(
-		on(toc, (toc) => {
-			if (!toc) return [];
-			setHeadingElements(
+	createEffect(toc, (toc) => {
+		if (!toc) return;
+		setHeadingElements(
 				toc
 					.map(flattenData)
 					.flat()
@@ -35,9 +27,8 @@ export const TableOfContents = () => {
 
 						return { href, el };
 					})
-			);
-		})
-	);
+		);
+	});
 
 	if (!isServer)
 		createEventListener(window, "scroll", () => {
@@ -67,7 +58,7 @@ export const TableOfContents = () => {
 						Overview
 					</TocLink>
 				</li>
-				<Index each={toc()}>
+				<For keyed={false} each={toc()}>
 					{(section) => (
 						<li class="not-prose mt-0 pt-0 pl-0">
 							<TocLink
@@ -78,7 +69,7 @@ export const TableOfContents = () => {
 							</TocLink>
 							<Show when={section().children.length !== 0}>
 								<ol role="list" class="list-none p-0">
-									<Index each={section().children}>
+									<For keyed={false} each={section().children}>
 										{(subSection) => (
 											<li class="not-prose mt-0 pl-0">
 												<TocLink
@@ -90,12 +81,12 @@ export const TableOfContents = () => {
 												</TocLink>
 											</li>
 										)}
-									</Index>
+									</For>
 								</ol>
 							</Show>
 						</li>
 					)}
-				</Index>
+				</For>
 			</ol>
 		</aside>
 	);
@@ -111,15 +102,17 @@ const TocLink = (props: {
 	<a
 		href={props.href}
 		aria-current={props.active ? "location" : undefined}
-		classList={{
-			"pl-6": props.nested,
-			"pl-3": !props.nested,
-			"border-blue-600 dark:border-blue-300 text-blue-800 dark:text-blue-200 font-semibold":
-				props.active,
-			"border-transparent text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:border-slate-400 dark:hover:border-slate-500":
-				!props.active,
-		}}
-		class="not-prose -ml-px block border-l-2 py-1 leading-snug no-underline transition-colors"
+		class={[
+			"not-prose -ml-px block border-l-2 py-1 leading-snug no-underline transition-colors",
+			{
+				"pl-6": props.nested,
+				"pl-3": !props.nested,
+				"border-blue-600 dark:border-blue-300 text-blue-800 dark:text-blue-200 font-semibold":
+					props.active,
+				"border-transparent text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:border-slate-400 dark:hover:border-slate-500":
+					!props.active,
+			},
+		]}
 	>
 		{props.children}
 	</a>

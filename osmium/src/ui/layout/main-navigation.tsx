@@ -1,7 +1,7 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
 import { useBeforeLeave, useLocation } from "@solidjs/router";
-import { Icon } from "solid-heroicons";
-import { chevronDown } from "solid-heroicons/solid";
+import { Icon } from "../icon";
+import chevronDown from "~icons/heroicons/chevron-down-solid";
 import { setIsOpen } from "./mobile-navigation";
 import {
 	SidebarItem,

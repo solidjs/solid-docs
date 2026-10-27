@@ -5,8 +5,9 @@ import {
 	useSolidBaseRouteFallbackOptions,
 } from "@kobalte/solidbase/client";
 import type { SolidBaseRouteOption } from "@kobalte/solidbase/config/route";
-import { Icon } from "solid-heroicons";
-import { chevronUpDown, tag } from "solid-heroicons/solid";
+import { Icon } from "../icon";
+import chevronUpDown from "~icons/heroicons/chevron-up-down-solid";
+import tag from "~icons/heroicons/tag-solid";
 
 export default function VersionSelector() {
 	const [open, setOpen] = createSignal(false);

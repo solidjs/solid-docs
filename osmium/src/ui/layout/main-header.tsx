@@ -3,17 +3,15 @@ import {
 	For,
 	Show,
 	createSignal,
-	onCleanup,
-	onMount,
+	onSettled,
 } from "solid-js";
-import { isServer } from "solid-js/web";
+import { clientOnly } from "@solidjs/web";
 
 import { ProjectLogo, GitHubIcon, DiscordIcon } from "../logo";
 import { ThemeSelector } from "./theme-selector";
 import { MobileNavigation } from "./mobile-navigation";
 import { LanguageSelector } from "./language-selector";
 
-import { clientOnly } from "@solidjs/start";
 import { useProject, useRouteConfig } from "../../utils";
 import { useOsmiumThemeState } from "../../context";
 
@@ -28,11 +26,13 @@ interface NavLinkProps extends ComponentProps<"a"> {
 function NavLink(props: NavLinkProps) {
 	return (
 		<a
-			class="relative overflow-hidden border-b-2 px-2 text-slate-900 drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] transition-all duration-250 dark:text-slate-200"
-			classList={{
-				"border-b-blue-500 dark:bottom-b-blue-500": props.active,
-				"border-transparent": !props.active,
-			}}
+			class={[
+				"relative overflow-hidden border-b-2 px-2 text-slate-900 drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] transition-all duration-250 dark:text-slate-200",
+				{
+					"border-b-blue-500 dark:bottom-b-blue-500": props.active,
+					"border-transparent": !props.active,
+				},
+			]}
 			{...props}
 		>
 			{props.children}
@@ -51,29 +51,25 @@ export function MainHeader(_props: MainHeaderProps) {
 
 	const { setNavOpen } = useOsmiumThemeState();
 
-	if (!isServer) {
+	onSettled(() => {
 		const onScroll = () => {
 			setIsScrolled(window.scrollY > 0);
 		};
-
-		onMount(() => {
-			onScroll();
-			window.addEventListener("scroll", onScroll, { passive: true });
-		});
-
-		onCleanup(() => {
-			window.removeEventListener("scroll", onScroll);
-		});
-	}
+		onScroll();
+		window.addEventListener("scroll", onScroll, { passive: true });
+		return () => window.removeEventListener("scroll", onScroll);
+	});
 
 	return (
 		<header
-			class="sticky top-0 z-50 flex items-center justify-between bg-blue-50/80 shadow-md shadow-slate-900/5 backdrop-blur transition duration-500 dark:shadow-none"
-			classList={{
-				"dark:bg-slate-900/95 dark:[@supports(backdrop-filter:blur(0))]:bg-slate-900/75":
-					isScrolled(),
-				"dark:bg-transparent bg-transparent": !isScrolled(),
-			}}
+			class={[
+				"sticky top-0 z-50 flex items-center justify-between bg-blue-50/80 shadow-md shadow-slate-900/5 backdrop-blur transition duration-500 dark:shadow-none",
+				{
+					"dark:bg-slate-900/95 dark:[@supports(backdrop-filter:blur(0))]:bg-slate-900/75":
+						isScrolled(),
+					"dark:bg-transparent bg-transparent": !isScrolled(),
+				},
+			]}
 		>
 			<div class="max-w-8xl mx-auto grid w-full grid-cols-2 items-center px-4 py-2 lg:grid-cols-[1fr_2fr_1fr]">
 				<div class="flex items-center justify-start gap-2">

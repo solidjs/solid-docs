@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
-import { nitro } from "nitro/vite";
-import { solidStart } from "@solidjs/start/config";
+import solid from "@solidjs/vite-plugin";
+import { writeFileSync } from "node:fs";
 import tailwindcss from "@tailwindcss/vite";
 
 import { createSolidBase } from "@kobalte/solidbase/config";
@@ -170,23 +170,21 @@ export default defineConfig({
 					: [{ userAgent: "*", allow: ["/"] }],
 			},
 		}),
-		solidStart(
-			solidBase.startConfig({ middleware: "./src/middleware/index.ts" })
-		),
-		nitro({
-			preset: "netlify",
-			// The Netlify preset writes route-rule headers to `_headers`, so the
-			// header also covers prerendered pages served from the CDN.
-			routeRules: isProductionSite
-				? {}
-				: { "/**": { headers: { "X-Robots-Tag": "noindex" } } },
-			prerender: {
-				crawlLinks: true,
-				autoSubfolderIndex: false,
-				failOnError: true,
-				// eslint-disable-next-line no-useless-escape
-				ignore: [/\{\getPath}/, /.*?emojiSvg\(.*/],
+		// @solidjs/vite-plugin start mode (SSR + prerender) replaces SolidStart + Nitro.
+		solid(solidBase.startConfig()),
+		{
+			// A preview or release-candidate host is kept out of search results
+			// with `X-Robots-Tag: noindex`, not a crawl block, so AI fetchers and
+			// link previews still reach the content.
+			name: "solid-docs:noindex-headers",
+			apply: "build",
+			writeBundle(options) {
+				if (isProductionSite || !options.dir?.endsWith("client")) return;
+				writeFileSync(
+					`${options.dir}/_headers`,
+					"/*\n  X-Robots-Tag: noindex\n"
+				);
 			},
-		}),
+		},
 	],
 });

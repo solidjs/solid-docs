@@ -1,4 +1,4 @@
-import { Show, Suspense } from "solid-js";
+import { Loading, Show } from "solid-js";
 import { usePrevNext } from "@kobalte/solidbase/client";
 import { RelativePageConfig, useOsmiumThemeFrontmatter } from "../frontmatter";
 
@@ -22,7 +22,7 @@ export function Pagination(_props: Pagination) {
 		typeof r === "object" ? r.link : undefined;
 
 	return (
-		<Suspense>
+		<Loading>
 			<nav class="mt-10 flex justify-between border-t border-slate-200 pt-6 dark:border-slate-800">
 				<div>
 					<Show when={hasPrev()}>
@@ -51,6 +51,6 @@ export function Pagination(_props: Pagination) {
 					</div>
 				</Show>
 			</nav>
-		</Suspense>
+		</Loading>
 	);
 }

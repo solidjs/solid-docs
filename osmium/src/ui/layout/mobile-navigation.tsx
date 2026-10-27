@@ -1,6 +1,7 @@
 import { Dialog } from "@kobalte/core";
-import { Icon } from "solid-heroicons";
-import { bars_3, xMark } from "solid-heroicons/solid";
+import { Icon } from "../icon";
+import bars_3 from "~icons/heroicons/bars-3-solid";
+import xMark from "~icons/heroicons/x-mark-solid";
 import { MainNavigation } from "./main-navigation";
 import { createSignal } from "solid-js";
 

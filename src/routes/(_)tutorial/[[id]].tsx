@@ -6,12 +6,13 @@ import {
 	For,
 	Loading,
 	Show,
+	untrack,
 } from "solid-js";
 import { clientOnly, dynamic } from "@solidjs/web";
 import { useLocation, useNavigate, useParams } from "@solidjs/router";
 import { Title } from "@solidjs/meta";
 import { getTheme } from "@kobalte/solidbase/client";
-import type { Tab } from "solid-repl";
+import type { ReplStorage, Tab } from "solid-repl";
 
 import {
 	canonicalTutorialId,
@@ -40,6 +41,68 @@ function toTabs(fileset: LessonFiles): Tab[] {
 		name: `${file.name}.${file.type ?? "jsx"}`,
 		source: file.content,
 	}));
+}
+
+// The REPL only opens the entry file on its own; open every lesson file as a tab,
+// with the entry file active and the preview below.
+function lessonLayout(tabs: Tab[]): ReplStorage {
+	const files = tabs.map((tab) => `name:${tab.name}`);
+	const entry = files.find((id) => id === "name:main.jsx") ?? files[0];
+	return {
+		getLayout: () => ({
+			grid: {
+				root: {
+					type: "branch",
+					data: [
+						{
+							type: "leaf",
+							data: { views: files, activeView: entry, id: "1" },
+							size: 400,
+						},
+						{
+							type: "leaf",
+							data: {
+								views: ["Preview", "Output"],
+								activeView: "Preview",
+								id: "2",
+							},
+							size: 250,
+						},
+					],
+					size: 480,
+				},
+				width: 1600,
+				height: 480,
+				// Dockview's Orientation.VERTICAL; dockview is not a direct dependency.
+				orientation: "VERTICAL" as never,
+			},
+			activeGroup: "1",
+			panels: {
+				Preview: {
+					id: "Preview",
+					contentComponent: "preview",
+					tabComponent: "default",
+					renderer: "always",
+				},
+				Output: {
+					id: "Output",
+					contentComponent: "output",
+					tabComponent: "default",
+				},
+				...Object.fromEntries(
+					tabs.map((tab) => [
+						`name:${tab.name}`,
+						{
+							id: `name:${tab.name}`,
+							title: tab.name,
+							tabComponent: "file",
+							contentComponent: "editor",
+						},
+					])
+				),
+			},
+		}),
+	};
 }
 
 export default function Tutorial() {
@@ -158,17 +221,25 @@ export default function Tutorial() {
 						}
 					>
 						<Loading>
-							<Repl
-								id="tutorial"
-								vertical
-								dark={dark()}
-								tabs={tabs()}
-								setTabs={setTabs}
-								reset={() =>
-									setTabs(toTabs(solved() ? lesson().solved : lesson().lesson))
-								}
-								fallback={<p class="p-6 text-slate-500">Loading editor…</p>}
-							/>
+							{/* Remount per lesson and on Solve/Reset so the open tabs follow the files. */}
+							<Show when={`${id()}${solved() ? "?solved" : ""}`} keyed>
+								{(_key) => (
+									<Repl
+										id="tutorial"
+										vertical
+										dark={dark()}
+										tabs={tabs()}
+										setTabs={setTabs}
+										storage={lessonLayout(untrack(tabs))}
+										reset={() =>
+											setTabs(
+												toTabs(solved() ? lesson().solved : lesson().lesson)
+											)
+										}
+										fallback={<p class="p-6 text-slate-500">Loading editor…</p>}
+									/>
+								)}
+							</Show>
 						</Loading>
 					</Errored>
 				</section>

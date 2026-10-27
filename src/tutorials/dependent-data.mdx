@@ -1,0 +1,16 @@
+# Dependent data
+
+Writable derived state works with async values too. Here the list of states loads first, the cities load for the selected state, and the selected city defaults to the first city in that list:
+
+```js
+const states = createMemo(getStates);
+const [selectedState, setState] = createSignal(() => states()[0]);
+const cities = createMemo(() => getCities(selectedState()));
+const [selectedCity, setCity] = createSignal(() => cities()[0]);
+```
+
+Each step reads the one before it, so the chain stays correct without any effects. Picking a state refetches its cities. The selected city follows the new list, but the user can still pick a different city by hand.
+
+While the new cities load, the old selection stays on screen. Solid holds the whole update until `cities` has its answer, so the selection line never shows a city from one state next to the name of another. `isPending(cities)` disables the city select in the meantime, and `Loading` only shows its fallback for the first load.
+
+**Try it:** pick **Dallas** from Texas, then switch the state to Utah. The selection reads "Dallas, Utah". Make `selectedCity` derive from `cities()[0]`, and try again.

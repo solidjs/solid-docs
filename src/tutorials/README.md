@@ -2,14 +2,14 @@
 
 This course teaches Solid 2 to newcomers, one idea per lesson. Each lesson has an editable starter, a solved version, and a task explained in its MDX source. All previews run the site's pinned Solid 2 release.
 
-| Section             | Lessons | Learning goal                                                                         |
-| ------------------- | ------- | ------------------------------------------------------------------------------------- |
-| Introduction        | 1–6     | JSX and components first, then signals, derived values, memos, writable derived state |
-| Components          | 7–17    | Props, events, classes, control flow, lists, children, context, dynamic, portals      |
-| Stores              | 18–19   | Nested state with drafts; projections                                                 |
-| Async               | 20–26   | Async memos, `Loading`, pending updates, errors, streams, `Reveal`, `lazy`            |
-| Mutations           | 27–30   | Actions, optimistic values and stores, `until`                                        |
-| Effects and the DOM | 31–34   | Effects, lifetime and cleanup, ref factories, batching and `flush()`                  |
+| Section             | Lessons | Learning goal                                                                              |
+| ------------------- | ------- | ------------------------------------------------------------------------------------------ |
+| Introduction        | 1–6     | JSX and components first, then signals, derived values, memos, writable derived state      |
+| Components          | 7–17    | Props, events, classes, control flow, lists, children, context, dynamic, portals           |
+| Stores              | 18–19   | Nested state with drafts; projections                                                      |
+| Async               | 20–27   | Async memos, `Loading`, pending updates, dependent data, errors, streams, `Reveal`, `lazy` |
+| Mutations           | 28–31   | Actions, optimistic values and stores, `until`                                             |
+| Effects and the DOM | 32–35   | Effects, lifetime and cleanup, ref factories, batching and `flush()`                       |
 
 ## Design
 

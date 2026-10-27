@@ -179,7 +179,7 @@ export default defineConfig({
 			name: "solid-docs:noindex-headers",
 			apply: "build",
 			writeBundle(options) {
-				if (isProductionSite || !options.dir?.endsWith("client")) return;
+				if (isProductionSite || this.environment.name !== "client") return;
 				writeFileSync(
 					`${options.dir}/_headers`,
 					"/*\n  X-Robots-Tag: noindex\n"

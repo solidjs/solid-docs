@@ -1,5 +1,6 @@
 import { Icon } from "./icon";
-import { JSXElement, ParentComponent, Show } from "solid-js";
+import { ParentComponent, Show } from "solid-js";
+import type { JSX } from "@solidjs/web";
 
 import academicCap from "~icons/heroicons/academic-cap-solid";
 import codeBracketSquare from "~icons/heroicons/code-bracket-square-solid";
@@ -10,7 +11,7 @@ export type QuickLinksProps = {
 	icon: string;
 	title: string;
 	href: string;
-	children: JSXElement;
+	children: JSX.Element;
 };
 
 const icons = {

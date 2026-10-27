@@ -1,4 +1,5 @@
-import { For, type JSX, Show, createEffect, createSignal } from "solid-js";
+import { For, Show, createEffect, createSignal } from "solid-js";
+import type { JSX } from "@solidjs/web";
 import {
 	useCurrentPageData,
 	TableOfContentsItemData,
@@ -30,8 +31,8 @@ export const TableOfContents = () => {
 		);
 	});
 
-	if (!isServer)
-		createEventListener(window, "scroll", () => {
+	// Called on the server too (it no-ops there) so hydration ids line up.
+	createEventListener(isServer ? [] : window, "scroll", () => {
 			let current;
 
 			for (const heading of headingElements()) {

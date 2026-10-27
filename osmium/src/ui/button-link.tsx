@@ -1,4 +1,5 @@
-import { ComponentProps, omit } from "solid-js";
+import { omit } from "solid-js";
+import type { ComponentProps } from "@solidjs/web";
 
 type ButtonLinkProps = ComponentProps<"a"> & {
 	variant: "primary" | "secondary";

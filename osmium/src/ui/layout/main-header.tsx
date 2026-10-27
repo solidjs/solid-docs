@@ -1,10 +1,5 @@
-import {
-	ComponentProps,
-	For,
-	Show,
-	createSignal,
-	onSettled,
-} from "solid-js";
+import { For, Show, createSignal, onSettled } from "solid-js";
+import type { ComponentProps } from "@solidjs/web";
 import { clientOnly } from "@solidjs/web";
 
 import { ProjectLogo, GitHubIcon, DiscordIcon } from "../logo";

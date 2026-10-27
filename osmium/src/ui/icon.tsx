@@ -1,4 +1,5 @@
-import { type Component, type ComponentProps, omit } from "solid-js";
+import { type Component, omit } from "solid-js";
+import type { ComponentProps } from "@solidjs/web";
 import { dynamic } from "@solidjs/web";
 
 export type IconComponent = Component<ComponentProps<"svg">>;

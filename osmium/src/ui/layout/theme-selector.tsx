@@ -1,10 +1,5 @@
-import {
-	Component,
-	ComponentProps,
-	createSignal,
-	onSettled,
-	Show,
-} from "solid-js";
+import { Component, createSignal, onSettled, Show } from "solid-js";
+import type { ComponentProps } from "@solidjs/web";
 import computerDesktop from "~icons/heroicons/computer-desktop-solid";
 import moon from "~icons/heroicons/moon-solid";
 import sun from "~icons/heroicons/sun-solid";

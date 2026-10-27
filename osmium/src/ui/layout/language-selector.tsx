@@ -6,19 +6,19 @@ import { Select } from "@kobalte/core/select";
 import { OsmiumThemeConfig } from "../..";
 
 export const LanguageSelector: Component = () => {
-	const { locales, currentLocale, setLocale } = useLocale();
+	const locale = useLocale();
 
 	return (
-		<Show when={locales.length > 1}>
+		<Show when={locale.locales.length > 1}>
 			{(_) => {
 				return (
 					<Select<ResolvedLocale<OsmiumThemeConfig>>
-						value={currentLocale()}
-						options={locales}
+						value={locale.currentLocale()}
+						options={locale.locales}
 						optionValue="code"
 						optionTextValue={(v) => v.config.label}
 						allowDuplicateSelectionEvents
-						onChange={(option) => option && setLocale(option)}
+						onChange={(option) => option && locale.setLocale(option)}
 						gutter={8}
 						sameWidth={false}
 						placement="bottom"

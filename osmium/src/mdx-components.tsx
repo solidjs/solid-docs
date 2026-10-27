@@ -1,16 +1,5 @@
-import {
-	For,
-	type JSX,
-	Match,
-	type ParentProps,
-	type Signal,
-	Switch,
-	children,
-	createMemo,
-	createSignal,
-	omit,
-	onCleanup,
-} from "solid-js";
+import { For, Match, type ParentProps, type Signal, Switch, children, createMemo, createSignal, omit, onCleanup, untrack } from "solid-js";
+import type { JSX } from "@solidjs/web";
 import { clientOnly, isServer } from "@solidjs/web";
 import {
 	cookieStorage,
@@ -105,7 +94,7 @@ const TabGroup = (props: {
 	const channel = isServer ? undefined : new BroadcastChannel("tab-group");
 	onCleanup(() => channel?.close());
 	const [openTab, setOpenTab] = makePersisted<string, Signal<string>>(
-		createSignal(props.tabNames[0]),
+		createSignal(untrack(() => props.tabNames[0])),
 		{
 			name: `tab-group:${props.syncKey}`,
 			sync: channel && messageSync(channel),
@@ -130,8 +119,8 @@ export const EraserLink = (
 	} else {
 		return (
 			<a
-				aria-hidden={true}
-				tabIndex="-1"
+				aria-hidden="true"
+				tabindex="-1"
 				href={props.href}
 				class="font-semibold text-blue-700 no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,var(--color-blue-400))] hover:[--tw-prose-underline-size:4px] dark:text-blue-400 dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,var(--color-blue-800))] dark:[--tw-prose-background:var(--color-slate-900)] dark:hover:[--tw-prose-underline-size:6px]"
 				rel="noopener noreferrer"

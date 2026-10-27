@@ -1,4 +1,5 @@
-import { Show, JSX, createMemo } from "solid-js";
+import { Show, createMemo } from "solid-js";
+import type { JSX } from "@solidjs/web";
 import { Pagination } from "./pagination";
 import { EditPageLink } from "./edit-page-link";
 import { PageIssueLink } from "./page-issue-link";

@@ -7,6 +7,7 @@ import {
 	For,
 	Loading,
 	createMemo,
+	untrack,
 } from "solid-js";
 import { Dialog } from "@kobalte/core/dialog";
 import { useNavigate, usePreloadRoute } from "@solidjs/router";
@@ -119,7 +120,9 @@ export function Search() {
 			if (!next) return;
 			next.ref?.scrollIntoView({ block: "nearest" });
 			if (next.path)
-				preload(new URL(next.path, next.siteUrl), { preloadData: true });
+				untrack(() =>
+					preload(new URL(next.path, next.siteUrl), { preloadData: true })
+				);
 		}
 	);
 
@@ -174,7 +177,7 @@ export function Search() {
 				<Dialog.Overlay class="fixed inset-0 z-50 bg-black/50" />
 				<Dialog.Content class="fixed inset-0 z-50 flex w-full flex-col overflow-hidden border border-black/5 bg-white pt-4 lg:top-14 lg:bottom-auto lg:left-1/2 lg:max-h-[calc(100%-56px-56px)] lg:max-w-173.5 lg:-translate-x-1/2 lg:rounded-2xl dark:border-white/60 dark:bg-slate-800">
 					<div class="mr-4 flex items-center lg:mx-4">
-						<Dialog.CloseButton tabIndex={-1} class="px-4 py-3 lg:hidden">
+						<Dialog.CloseButton tabindex={-1} class="px-4 py-3 lg:hidden">
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
 								fill="currentColor"
@@ -267,9 +270,10 @@ export function Search() {
 										<ul role="listbox">
 											<For each={hits}>
 												{(hit) => {
-													const itemIndex = Object.values(result())
-														.flatMap((items) => items)
-														.findIndex((i) => i === hit);
+													// A new result set re-creates these rows, so the index is fixed.
+													const itemIndex = untrack(() =>
+														resultArray().indexOf(hit)
+													);
 
 													return (
 														<li

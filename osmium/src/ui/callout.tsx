@@ -1,5 +1,6 @@
 import { Icon } from "./icon";
-import { merge, type JSX, Show, untrack } from "solid-js";
+import { merge, Show, untrack } from "solid-js";
+import type { JSX } from "@solidjs/web";
 import lightBulb from "~icons/heroicons/light-bulb-solid";
 import exclamationTriangle from "~icons/heroicons/exclamation-triangle-solid";
 import xCircle from "~icons/heroicons/x-circle-solid";

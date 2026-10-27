@@ -1,3 +1,4 @@
+import { createEffect } from "solid-js";
 import UpstreamRepl, {
 	DEFAULT_SOLID_VERSION,
 	IMPORT_MAP_FILE,
@@ -50,6 +51,15 @@ const devImportMap: Tab = {
 export default function Repl(
 	props: Omit<ReplProps, "compiler" | "formatter" | "linter">
 ) {
+	// The REPL's dark styles key off a `.dark` ancestor; SolidBase only sets data-theme.
+	createEffect(
+		() => props.dark,
+		(dark) => {
+			document.documentElement.classList.toggle("dark", dark);
+			return () => document.documentElement.classList.remove("dark");
+		}
+	);
+
 	return (
 		<UpstreamRepl
 			{...props}

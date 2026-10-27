@@ -1,0 +1,38 @@
+{
+	"lesson": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport {\n  createSignal,\n  createStore,\n  createOptimisticStore,\n  action,\n  refresh,\n  For,\n  Loading,\n} from 'solid-js';\nimport { api, newId } from './api';\nimport './styles.css';\n\nfunction Todos() {\n  const [error, setError] = createSignal('');\n  const [todos, setTodos] = createStore([\n    { id: 1, text: 'Learn actions', done: true },\n    { id: 2, text: 'Learn optimistic stores', done: false },\n  ]);\n\n  const toggle = action(function* (id) {\n    setTodos((draft) => {\n      const todo = draft.find((todo) => todo.id === id);\n      todo.done = !todo.done;\n    });\n    yield api.toggle(id);\n  });\n\n  const add = action(function* (text) {\n    const todo = { id: newId(), text, done: false };\n    setTodos((draft) => {\n      draft.push(todo);\n    });\n    yield api.add(todo);\n  });\n\n  return (\n    <Loading fallback={<p>Loading todos...</p>}>\n      <form\n        onSubmit={(event) => {\n          event.preventDefault();\n          const input = event.currentTarget.elements.text;\n          if (input.value.trim()) add(input.value);\n          input.value = '';\n        }}\n      >\n        <input name=\"text\" placeholder=\"New todo\" /> <button>Add</button>\n      </form>\n      <For each={todos}>\n        {(todo) => (\n          <label class={{ todo: true, pending: !!todo.pending }}>\n            <input\n              type=\"checkbox\"\n              checked={todo.done}\n              onChange={() => toggle(todo.id).catch((err) => setError(err.message))}\n            />{' '}\n            {todo.text}\n          </label>\n        )}\n      </For>\n      <p>\n        <label>\n          <input\n            type=\"checkbox\"\n            onChange={(event) => (api.failNext = event.currentTarget.checked)}\n          />{' '}\n          Fail the next toggle\n        </label>\n      </p>\n      <p role=\"alert\">{error()}</p>\n    </Loading>\n  );\n}\n\nrender(() => <Todos />, document.getElementById('app'));\n"
+			},
+			{
+				"name": "api",
+				"content": "const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));\n\n// A pretend server holding the todo list. Saves take 800ms.\nlet serverTodos = [\n  { id: 1, text: 'Learn actions', done: true },\n  { id: 2, text: 'Learn optimistic stores', done: false },\n];\nlet nextId = 3;\nexport const api = {\n  failNext: false,\n  async list() {\n    await sleep(100);\n    return structuredClone(serverTodos);\n  },\n  async toggle(id) {\n    await sleep(800);\n    if (api.failNext) {\n      api.failNext = false;\n      throw new Error('The server rejected that change.');\n    }\n    serverTodos = serverTodos.map((t) => (t.id === id ? { ...t, done: !t.done } : t));\n  },\n  async add(todo) {\n    await sleep(800);\n    serverTodos = [...serverTodos, todo];\n  },\n};\n\nexport const newId = () => nextId++;\n",
+				"type": "js"
+			},
+			{
+				"name": "styles",
+				"content": ".todo {\n  display: block;\n  margin: 0.25rem 0;\n  font-family: sans-serif;\n}\n\n.todo.pending {\n  opacity: 0.5;\n}\n",
+				"type": "css"
+			}
+		]
+	},
+	"solved": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport {\n  createSignal,\n  createStore,\n  createOptimisticStore,\n  action,\n  refresh,\n  For,\n  Loading,\n} from 'solid-js';\nimport { api, newId } from './api';\nimport './styles.css';\n\nfunction Todos() {\n  const [error, setError] = createSignal('');\n  const [todos, setTodos] = createOptimisticStore(() => api.list(), []);\n\n  const toggle = action(function* (id) {\n    setTodos((draft) => {\n      const todo = draft.find((todo) => todo.id === id);\n      todo.done = !todo.done;\n      todo.pending = true;\n    });\n    yield api.toggle(id);\n    refresh(todos);\n  });\n\n  const add = action(function* (text) {\n    const todo = { id: newId(), text, done: false };\n    setTodos((draft) => {\n      draft.push({ ...todo, pending: true });\n    });\n    yield api.add(todo);\n    refresh(todos);\n  });\n\n  return (\n    <Loading fallback={<p>Loading todos...</p>}>\n      <form\n        onSubmit={(event) => {\n          event.preventDefault();\n          const input = event.currentTarget.elements.text;\n          if (input.value.trim()) add(input.value);\n          input.value = '';\n        }}\n      >\n        <input name=\"text\" placeholder=\"New todo\" /> <button>Add</button>\n      </form>\n      <For each={todos}>\n        {(todo) => (\n          <label class={{ todo: true, pending: !!todo.pending }}>\n            <input\n              type=\"checkbox\"\n              checked={todo.done}\n              onChange={() => toggle(todo.id).catch((err) => setError(err.message))}\n            />{' '}\n            {todo.text}\n          </label>\n        )}\n      </For>\n      <p>\n        <label>\n          <input\n            type=\"checkbox\"\n            onChange={(event) => (api.failNext = event.currentTarget.checked)}\n          />{' '}\n          Fail the next toggle\n        </label>\n      </p>\n      <p role=\"alert\">{error()}</p>\n    </Loading>\n  );\n}\n\nrender(() => <Todos />, document.getElementById('app'));\n"
+			},
+			{
+				"name": "api",
+				"content": "const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));\n\n// A pretend server holding the todo list. Saves take 800ms.\nlet serverTodos = [\n  { id: 1, text: 'Learn actions', done: true },\n  { id: 2, text: 'Learn optimistic stores', done: false },\n];\nlet nextId = 3;\nexport const api = {\n  failNext: false,\n  async list() {\n    await sleep(100);\n    return structuredClone(serverTodos);\n  },\n  async toggle(id) {\n    await sleep(800);\n    if (api.failNext) {\n      api.failNext = false;\n      throw new Error('The server rejected that change.');\n    }\n    serverTodos = serverTodos.map((t) => (t.id === id ? { ...t, done: !t.done } : t));\n  },\n  async add(todo) {\n    await sleep(800);\n    serverTodos = [...serverTodos, todo];\n  },\n};\n\nexport const newId = () => nextId++;\n",
+				"type": "js"
+			},
+			{
+				"name": "styles",
+				"content": ".todo {\n  display: block;\n  margin: 0.25rem 0;\n  font-family: sans-serif;\n}\n\n.todo.pending {\n  opacity: 0.5;\n}\n",
+				"type": "css"
+			}
+		]
+	}
+}

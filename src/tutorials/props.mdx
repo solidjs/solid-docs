@@ -1,15 +1,20 @@
-# Reactive props and defaults
+# Reactive props
 
-Props carry reactive reads into a component. Read `props.name` in JSX or in a derivation to keep it connected. Copying it into a plain local variable during setup freezes that read.
-
-Use a nullish fallback when a missing or `undefined` value should receive a default:
+When a parent passes `name={name()}`, the child doesn't receive a copy of the value. `props.name` is a getter that reads the parent's signal each time it is accessed. Read it where the value is used, in JSX or a derived function, and it stays live:
 
 ```jsx
-<h3>
-	{props.greeting ?? "Hi"} {props.name ?? "John"}
-</h3>
+function Avatar(props) {
+	const initials = () =>
+		props.name
+			.split(" ")
+			.map((word) => word[0])
+			.join("");
+	return <div class="avatar">{initials()}</div>;
+}
 ```
 
-`merge(defaults, props)` creates a reactive combined view, but `undefined` is a real override in Solid 2. A prop explicitly set to `undefined` will not automatically pick the earlier value. The solved code uses `??` for the optional name and `merge` for the greeting.
+Destructuring, as in `function Avatar({ name })`, reads every prop once while the component is set up. The result never changes again.
 
-**Try it:** add defaults in `greeting.jsx`. The first two greetings should use missing defaults; the third should change when **Set Name** is clicked.
+For a default value, use `??` where the prop is read: `props.size ?? 48`.
+
+**Try it:** type in the box. The avatars don't change, because `avatar.jsx` destructures its props; the console's `STRICT_READ_UNTRACKED` warning points at the line. Read `props.name` and `props.size` instead, give `size` a default of 48, and the initials will follow your typing.

@@ -1,17 +1,18 @@
 # Forwarding props
 
-A wrapper often consumes a few props and forwards everything else to a DOM element. `omit` creates a reactive view that excludes the consumed keys:
-
-```js
-const others = omit(props, "greeting", "name");
-```
+A wrapper component usually handles a few props itself and passes the rest to the element it wraps. `omit` creates a props object without the keys you name, and spreading it forwards everything else:
 
 ```jsx
-<h3 {...others}>
-	{props.greeting} {props.name}
-</h3>
+function Button(props) {
+	const others = omit(props, "variant", "children");
+	return (
+		<button {...others} class={["btn", props.variant]}>
+			{props.children}
+		</button>
+	);
+}
 ```
 
-This preserves reactive getters without copying or destructuring them during setup. Spreading the remainder also avoids forwarding component-only props as native attributes.
+The forwarded props stay live, like `props` itself: when the parent's `disabled` changes, the button follows. Avoid copying props into a new object yourself, since that reads each one once.
 
-**Try it:** use `omit` to forward the style prop to the heading. Keep `greeting` and `name` as direct reactive reads. Clicking **Set Name** should update the heading while retaining its color.
+**Try it:** the buttons look right but do nothing, because `Button` only uses `variant` and `children`. Forward the remaining props with `omit` and a spread. **Save** should count up, and **Reset** should be disabled at zero.

@@ -1,0 +1,17 @@
+# Lifetime and cleanup
+
+Every component, `Show` branch, and list row owns what it creates, and is removed with it. Solid cleans up its own work. Timers, listeners and other things you start yourself need a cleanup.
+
+`onSettled` runs once the component is on the page. Return a function from it, and that function runs when the component is removed:
+
+```js
+onSettled(() => {
+	input.focus();
+	const timer = setInterval(() => setTicks((n) => n + 1), 1000);
+	return () => clearInterval(timer);
+});
+```
+
+`ref` gives you the element itself, for DOM work like `focus()`. Assign it to a variable, `<input ref={input} />`, and read it in `onSettled`, when the element is on the page. A component can pass `ref={props.ref}` to its own element, so a parent gets that element.
+
+**Try it:** toggle the timer off and on a few times. The ticks speed up, because each old interval keeps running. Start the interval in `onSettled` and return its cleanup. Also focus the label input with a ref when the timer appears.

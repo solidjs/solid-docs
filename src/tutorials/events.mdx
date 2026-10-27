@@ -1,11 +1,15 @@
-# Events and writes
+# Events and inputs
 
-Event handlers are a natural place to write sources. Use `event.currentTarget` to refer to the element whose handler is running, and read any needed values before an asynchronous pause.
+Event handlers are props that start with `on`: `onClick`, `onInput`, `onSubmit`. A handler is the natural place to write a signal.
+
+For a form field, keep its value in a signal. Write it from `onInput`, using `event.currentTarget`, the element the handler is attached to:
 
 ```jsx
-<input onInput={(event) => setName(event.currentTarget.value)} />
+<input value={name()} onInput={(event) => setName(event.currentTarget.value)} />
 ```
 
-DOM event props use names such as `onInput`, `onChange`, and `onMouseMove`. Many common events are delegated by the renderer. State writes are batched automatically, so related setters in one event form one update.
+Checkboxes report `checked` instead of `value`. A form's `onSubmit` should call `event.preventDefault()` so the browser doesn't reload the page.
 
-**Try it:** attach `onMouseMove={handleMouseMove}` to the container. The provided handler records the pointer's `clientX` and `clientY` in the source object. Read the coordinates from the event; keep the changing position read in JSX.
+Derive everything else from those signals. Whether the button is enabled is a derived value, not a third signal.
+
+**Try it:** wire the name field and the checkbox to their signals. Enable **Sign up** only when a name is entered and the box is checked. On submit, show "Welcome, name!".

@@ -1,19 +1,19 @@
-# Initial readiness
+# Loading
 
-A read of an unresolved async memo or lazy component needs a place to wait. `Loading` renders a fallback while that branch first becomes ready.
+A read of async data that hasn't arrived yet has to wait somewhere. `Loading` marks that place: until everything inside it is ready, it shows its `fallback` instead.
 
 ```jsx
-<Loading fallback={<p>Loading...</p>}>
-	<Greeting name="Jake" />
+<Loading fallback={<p>Loading forecast...</p>}>
+	<Forecast city={city()} />
 </Loading>
 ```
 
-Place the boundary around the smallest useful region. Surrounding content can render immediately. Once a boundary has revealed, later pending updates normally retain useful settled content. To show the fallback again when a particular input changes, track that input in `on`:
+Content outside the boundary doesn't wait. Wrap the smallest region that needs the data, and the rest of the page appears immediately.
+
+After the first load, a boundary keeps its content on screen during updates. For a forecast that's wrong: the old city's weather shouldn't sit there while another city loads. The `on` prop shows the fallback again whenever the values it reads change:
 
 ```jsx
-<Loading on={selectedId()} fallback={<p>Loading selection...</p>}>
-	<Details />
-</Loading>
+<Loading on={city()} fallback={<p>Loading forecast...</p>}>
 ```
 
-**Try it:** wrap the delayed greeting in `Loading`. The heading should remain visible while the greeting's component code loads. The pending lesson compares retaining content with resetting a boundary.
+**Try it:** with no boundary, the whole app waits a second and a half, heading included, and the console warns `ASYNC_OUTSIDE_LOADING_BOUNDARY`. Wrap `Forecast` in `Loading` with a fallback, then reset the preview: the heading and select should appear at once. Then add `on={city()}` so a new city shows the fallback too.

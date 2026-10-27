@@ -1,17 +1,19 @@
-# Optimistic UI and rollback
+# Optimistic UI
 
-An optimistic source shows a tentative answer while an action runs. Derive its normal value from the authoritative query, then write an override inside the action.
+Waiting 600ms for a like to register feels slow. An optimistic value shows the expected result right away and drops it when the action ends:
 
 ```js
-const [displayed, setDisplayed] = createOptimistic(() => count());
-const increment = action(function* () {
-	setDisplayed((value) => value + 1);
-	affects(count);
-	yield api.increment();
-	yield refresh(count);
+const [shown, setShown] = createOptimistic(() => likes());
+
+const like = action(function* (fail) {
+	setShown((n) => n + 1);
+	yield api.like(fail);
+	refresh(likes);
 });
 ```
 
-On success, the refreshed authoritative answer becomes the durable result. On failure, the action ends and the optimistic override rolls back. The error message belongs in the UI; a failed mutation should not look successful indefinitely.
+`shown` follows `likes`, like a writable derived signal. A write made inside an action is temporary. When the action finishes, the temporary value is dropped and `shown` follows `likes` again. If the save worked, the refreshed count matches what was already on screen. If it failed, the count drops back by itself. There's no rollback code to write.
 
-**Try it:** add the optimistic write before yielding the API call. The count should rise immediately. Enable **Fail next save**, then increment again. After the rejection, the displayed count should return to the authoritative answer and show the error. This completes the course's dataflow: source, derivation, pending work, mutation, and reconciliation.
+An action returns a promise, so the caller can catch a failed save and show the error.
+
+**Try it:** make the like show immediately by writing `shown` inside the action. Then tick **Fail next save** and like again: the count rises, then falls back and the error appears.

@@ -1,15 +1,23 @@
 # Reusable DOM behavior
 
-A ref directive factory separates owned setup from element capture. Call the factory in the owning component body, create its lifecycle work there, and return a ref callback that captures the element.
+Behavior that several elements need, such as closing when you click outside, fits in a function that sets up the work and returns a `ref` callback:
 
 ```js
-const outside = clickOutside(() => setShow(false));
+function clickOutside(close) {
+	let element;
+	onSettled(() => {
+		const onPointerDown = (event) => {
+			if (!element.contains(event.target)) close();
+		};
+		document.addEventListener("pointerdown", onPointerDown);
+		return () => document.removeEventListener("pointerdown", onPointerDown);
+	});
+	return (el) => (element = el);
+}
 ```
 
-```jsx
-<div ref={outside}>Some Modal</div>
-```
+Call it in a component body, `const outside = clickOutside(close)`, and attach the result with `ref={outside}`. The listener then lives exactly as long as that component.
 
-Here the factory is called inside `Modal`, the component created and disposed by `Show`. Its listener therefore has the modal's lifetime. `clickOutside` registers a document pointer listener in `onSettled`. Its returned ref only stores the element. Return cleanup from `onSettled` so removing the owner removes the listener. Do not create reactive primitives inside the returned ref.
+Keep the setup in the function body, not in the returned callback. A `ref` callback only receives the element; it isn't a place to create effects or register cleanup.
 
-**Try it:** finish the listener cleanup in `click-outside.jsx`. Open the modal, click inside it, then click outside. Repeat after resetting the preview; listeners should not accumulate.
+**Try it:** the modal opens but never closes. Finish `clickOutside`: add the document listener in `onSettled`, and return its cleanup.

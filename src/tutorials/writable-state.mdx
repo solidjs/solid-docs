@@ -1,11 +1,13 @@
 # Writable derived state
 
-Some state has a default that depends on another source, while the user must also be able to edit it. A function-form signal expresses both requirements:
+Some values start from another value but can still be edited. A name badge defaults to the selected person's name, and the user may shorten it. When the person changes, the badge should reset to the new default.
+
+Pass `createSignal` a function instead of a value, and the signal derives its value from that function:
 
 ```js
-const [draft, setDraft] = createSignal(() => names[person()]);
+const [badge, setBadge] = createSignal(() => names[person()]);
 ```
 
-Changing the person recomputes the draft's default. Typing updates the writable draft until its source changes again. This is a derivation with an override, so no effect is needed to copy values between signals.
+Writing with `setBadge` overrides the value. When `person` changes, the function runs again and the override is replaced. No effect is needed to copy one signal into another.
 
-**Try it:** change the draft's literal initializer to a function that reads the selected person's name. Type a custom name, then choose another person. The draft should reset to that person's default. **Solve** shows the complete relationship.
+**Try it:** the badge starts as "Ada Lovelace" and never follows the select. Make it derive from `person()`. Edit the badge, then pick another person: it should reset to that person's name.

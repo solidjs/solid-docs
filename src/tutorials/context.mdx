@@ -1,11 +1,24 @@
-# Providing state with context
+# Context
 
-Context gives descendants access to a value without passing it through each intermediate component. Create the context once, then create a fresh state instance inside its provider component.
+State that many components need is easiest to keep in a factory: a function that creates the signals and returns them with the functions that change them.
 
-```jsx
-<CounterContext value={counter}>{props.children}</CounterContext>
+```js
+function createCart() {
+	const [count, setCount] = createSignal(0);
+	return { count, add: () => setCount((n) => n + 1) };
+}
 ```
 
-The context itself is the provider in Solid 2. `useContext(CounterContext)` retrieves the nearest value. A context created without a default throws if a consumer has no provider, which catches wiring mistakes early.
+Passing that object down as a prop works until it has to travel through components that don't use it. Context skips those levels. Create a context, provide a value with the context itself as a component, and read the nearest value with `useContext`:
 
-**Try it:** wrap the app in `CounterProvider` and read its value in the nested counter. The plus and minus buttons should update the shared count. The provider uses a function-form signal to derive its initial value from its reactive `count` prop.
+```jsx
+const CartContext = createContext();
+
+<CartContext value={createCart()}>{props.children}</CartContext>;
+
+const cart = useContext(CartContext);
+```
+
+Exporting a small hook such as `useCart()` keeps the context object private to its module.
+
+**Try it:** the cart is passed through `Shop`, which never uses it. Provide it with `CartContext` in `cart.jsx`, then call `useCart()` in `Header` and `Product` and remove the `cart` props.

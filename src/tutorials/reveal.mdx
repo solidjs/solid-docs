@@ -1,9 +1,11 @@
-# Coordinating reveal order
+# Reveal order
 
-Several independent async regions can load together while revealing in a deliberate order. Give each region a `Loading` boundary, then group them with `Reveal`.
+A page with several `Loading` boundaries shows each region as soon as its data arrives. Data that loads in a random order makes the page jump around.
+
+`Reveal` coordinates a group of boundaries without delaying any request:
 
 ```jsx
-<Reveal order="sequential" collapsed>
+<Reveal order="sequential">
 	<Loading fallback={<p>Loading profile...</p>}>
 		<Profile />
 	</Loading>
@@ -13,6 +15,6 @@ Several independent async regions can load together while revealing in a deliber
 </Reveal>
 ```
 
-`sequential` reveals siblings in order. `together` waits for the group. `natural` lets each region reveal as it becomes ready. `collapsed` is a sequential-only option that limits later fallback displays.
+With `order="sequential"`, a region appears only after the ones above it. With `order="together"`, the group appears at once when every region is ready. Add `collapsed` to a sequential group to show only the next fallback in line, instead of a stack of them.
 
-**Try it:** wrap the profile sections in `Reveal order="sequential" collapsed`. Keep all three sections behind their own `Loading` boundaries. Compare sequential behavior with `order="together"`; the requests remain independent even when the UI waits to reveal them together.
+**Try it:** the fun facts load first and appear above an empty profile. Wrap the three sections in `Reveal order="sequential"`, then try `collapsed` and `order="together"`.

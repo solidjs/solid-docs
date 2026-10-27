@@ -1,15 +1,17 @@
-# Actions and authoritative data
+# Actions
 
-Queries derive data. Mutations change its source of truth. Wrap asynchronous mutation work in `action` so Solid can coordinate its lifetime with affected reads.
+Reads are derived: change an input and an async memo asks again. A write is different. It changes the data on the server, so something has to ask the server again afterwards.
+
+Wrap a write in `action`. Its body is a generator: `yield` each promise, and the action resumes when it settles.
 
 ```js
-const save = action(function* () {
-	affects(count);
-	yield api.increment();
-	yield refresh(count);
+const like = action(function* () {
+	affects(likes);
+	yield api.like();
+	refresh(likes);
 });
 ```
 
-`affects(count)` declares that this work will change the reader. `refresh(count)` then asks it for the authoritative answer after the server write. Generator actions preserve action context across each `yield`. Report rejected writes at the event boundary.
+`refresh(likes)` re-runs the memo so it reads the server's new count. `affects(likes)` marks `likes` as about to change while the action runs, so `isPending(likes)` can show that a save is in progress.
 
-**Try it:** add the affected-reader declaration and refresh around the provided local API call. The count should update after the save completes, and its button should show pending feedback while the action runs. The fake API behaves like a delayed server but needs no network connection.
+**Try it:** clicking **Like** saves to the server, but the count never changes. Turn `like` into an action that marks `likes` as affected, yields the API call, and then refreshes `likes`. The button should read "Saving..." while the action runs.

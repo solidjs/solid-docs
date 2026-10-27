@@ -3,7 +3,12 @@
 		"files": [
 			{
 				"name": "main",
-				"content": "import { render } from '@solidjs/web';\nimport { createSignal, createEffect } from 'solid-js';\n\nfunction App() {\n  const [count, setCount] = createSignal(0);\n  // Add a split effect that logs count.\n  return (\n    <button onClick={() => setCount((value) => value + 1)}>\n      Count: {count()}\n    </button>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+				"content": "import { render } from '@solidjs/web';\nimport { createSignal, createEffect } from 'solid-js';\nimport './styles.css';\n\nfunction ThemePicker() {\n  const [theme, setTheme] = createSignal('light');\n  const [label, setLabel] = createSignal('');\n\n  // A derived value in disguise: replace this with a function.\n  createEffect(theme, (value) => {\n    setLabel(`Using the ${value} theme`);\n  });\n\n  return (\n    <>\n      <select onChange={(event) => setTheme(event.currentTarget.value)}>\n        <option value=\"light\">Light</option>\n        <option value=\"dark\">Dark</option>\n        <option value=\"sepia\">Sepia</option>\n      </select>\n      <p>{label()}</p>\n    </>\n  );\n}\n\nrender(() => <ThemePicker />, document.getElementById('app'));\n"
+			},
+			{
+				"name": "styles",
+				"content": "body {\n  font-family: sans-serif;\n  transition: background 0.3s, color 0.3s;\n}\n\nbody.dark {\n  background: #1e1e2e;\n  color: #eee;\n}\n\nbody.sepia {\n  background: #f4ecd8;\n  color: #5b4636;\n}\n",
+				"type": "css"
 			}
 		]
 	},
@@ -11,7 +16,12 @@
 		"files": [
 			{
 				"name": "main",
-				"content": "import { render } from '@solidjs/web';\nimport { createSignal, createEffect } from 'solid-js';\n\nfunction App() {\n  const [count, setCount] = createSignal(0);\n  createEffect(count, (value) => console.log('The count is now', value));\n  return (\n    <button onClick={() => setCount((value) => value + 1)}>\n      Count: {count()}\n    </button>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+				"content": "import { render } from '@solidjs/web';\nimport { createSignal, createEffect } from 'solid-js';\nimport './styles.css';\n\nfunction ThemePicker() {\n  const [theme, setTheme] = createSignal('light');\n  const label = () => `Using the ${theme()} theme`;\n\n  createEffect(theme, (value) => {\n    document.body.classList.add(value);\n    return () => document.body.classList.remove(value);\n  });\n\n  return (\n    <>\n      <select onChange={(event) => setTheme(event.currentTarget.value)}>\n        <option value=\"light\">Light</option>\n        <option value=\"dark\">Dark</option>\n        <option value=\"sepia\">Sepia</option>\n      </select>\n      <p>{label()}</p>\n    </>\n  );\n}\n\nrender(() => <ThemePicker />, document.getElementById('app'));\n"
+			},
+			{
+				"name": "styles",
+				"content": "body {\n  font-family: sans-serif;\n  transition: background 0.3s, color 0.3s;\n}\n\nbody.dark {\n  background: #1e1e2e;\n  color: #eee;\n}\n\nbody.sepia {\n  background: #f4ecd8;\n  color: #5b4636;\n}\n",
+				"type": "css"
 			}
 		]
 	}

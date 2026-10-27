@@ -1,0 +1,19 @@
+# Projections
+
+A projection is a store derived from other state, the way a memo derives a value. Its function receives a draft and updates it whenever the state it reads changes.
+
+Highlighting the selected row is the classic case. If every row compares itself with `selected()`, then every click re-checks all 1,000 rows. A projection can keep a store of selected ids instead, and change only the two entries that differ:
+
+```js
+let previous;
+const selection = createProjection((draft) => {
+	const id = selected();
+	if (previous !== undefined) delete draft[previous];
+	draft[id] = true;
+	previous = id;
+}, {});
+```
+
+Each row reads `selection[row.id]`. Because a store tracks each property, only the row that lost the selection and the row that gained it update.
+
+**Try it:** click a row and count the "check" logs in the console: 1,000 per click. Replace `isSelected` with the projection, read `selection[row.id]` in each row, and click again.

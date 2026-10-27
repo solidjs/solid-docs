@@ -1,0 +1,18 @@
+{
+	"lesson": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport { createSignal, onSettled, Show } from 'solid-js';\n\nconst [ticks, setTicks] = createSignal(0);\n\nfunction Timer() {\n  let input;\n  setInterval(() => setTicks((n) => n + 1), 1000);\n\n  return (\n    <p>\n      Lap label: <input />\n    </p>\n  );\n}\n\nfunction App() {\n  const [running, setRunning] = createSignal(true);\n\n  return (\n    <>\n      <label>\n        <input\n          type=\"checkbox\"\n          checked={running()}\n          onChange={(event) => setRunning(event.currentTarget.checked)}\n        />{' '}\n        Show the timer\n      </label>\n      <p>Total ticks: {ticks()}</p>\n      <Show when={running()}>\n        <Timer />\n      </Show>\n    </>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+			}
+		]
+	},
+	"solved": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport { createSignal, onSettled, Show } from 'solid-js';\n\nconst [ticks, setTicks] = createSignal(0);\n\nfunction Timer() {\n  let input;\n\n  onSettled(() => {\n    input.focus();\n    const timer = setInterval(() => setTicks((n) => n + 1), 1000);\n    return () => clearInterval(timer);\n  });\n\n  return (\n    <p>\n      Lap label: <input ref={input} />\n    </p>\n  );\n}\n\nfunction App() {\n  const [running, setRunning] = createSignal(true);\n\n  return (\n    <>\n      <label>\n        <input\n          type=\"checkbox\"\n          checked={running()}\n          onChange={(event) => setRunning(event.currentTarget.checked)}\n        />{' '}\n        Show the timer\n      </label>\n      <p>Total ticks: {ticks()}</p>\n      <Show when={running()}>\n        <Timer />\n      </Show>\n    </>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+			}
+		]
+	}
+}

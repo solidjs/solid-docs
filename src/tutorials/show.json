@@ -3,7 +3,7 @@
 		"files": [
 			{
 				"name": "main",
-				"content": "import { render } from '@solidjs/web';\nimport { createSignal, Show } from 'solid-js';\n\nfunction App() {\n  const [loggedIn, setLoggedIn] = createSignal(false);\n  const toggle = () => setLoggedIn(!loggedIn());\n\n  return (\n    <>\n      <button onClick={toggle}>Log out</button>\n      <button onClick={toggle}>Log in</button>\n    </>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+				"content": "import { render } from '@solidjs/web';\nimport { createSignal, Show, Switch, Match } from 'solid-js';\n\nfunction Weather() {\n  const [temp, setTemp] = createSignal(12);\n\n  return (\n    <>\n      <input\n        type=\"range\"\n        min=\"-10\"\n        max=\"40\"\n        value={temp()}\n        onInput={(event) => setTemp(Number(event.currentTarget.value))}\n      />{' '}\n      {temp()}\u00b0C\n      {temp() < 0 ? <p>Frost warning!</p> : <p>No frost tonight.</p>}\n      {temp() > 25 ? <p>Hot</p> : temp() > 10 ? <p>Mild</p> : <p>Cold</p>}\n    </>\n  );\n}\n\nrender(() => <Weather />, document.getElementById('app'));\n"
 			}
 		]
 	},
@@ -11,7 +11,7 @@
 		"files": [
 			{
 				"name": "main",
-				"content": "import { render } from '@solidjs/web';\nimport { createSignal, Show } from 'solid-js';\n\nfunction App() {\n  const [loggedIn, setLoggedIn] = createSignal(false);\n  const toggle = () => setLoggedIn(!loggedIn());\n\n  return (\n    <Show when={loggedIn()} fallback={<button onClick={toggle}>Log in</button>}>\n      <button onClick={toggle}>Log out</button>\n    </Show>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+				"content": "import { render } from '@solidjs/web';\nimport { createSignal, Show, Switch, Match } from 'solid-js';\n\nfunction Weather() {\n  const [temp, setTemp] = createSignal(12);\n\n  return (\n    <>\n      <input\n        type=\"range\"\n        min=\"-10\"\n        max=\"40\"\n        value={temp()}\n        onInput={(event) => setTemp(Number(event.currentTarget.value))}\n      />{' '}\n      {temp()}\u00b0C\n      <Show when={temp() < 0} fallback={<p>No frost tonight.</p>}>\n        <p>Frost warning!</p>\n      </Show>\n      <Switch fallback={<p>Cold</p>}>\n        <Match when={temp() > 25}>\n          <p>Hot</p>\n        </Match>\n        <Match when={temp() > 10}>\n          <p>Mild</p>\n        </Match>\n      </Switch>\n    </>\n  );\n}\n\nrender(() => <Weather />, document.getElementById('app'));\n"
 			}
 		]
 	}

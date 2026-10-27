@@ -1,11 +1,15 @@
 # Dynamic components
 
-When a reactive value selects a component, use the `dynamic` factory from `@solidjs/web`:
+When the component to render is chosen at runtime, `dynamic` from `@solidjs/web` turns a function that returns a component into a component you can render:
 
-```js
-const Selected = dynamic(() => options[selected()]);
+```jsx
+const View = dynamic(() => views[view()]);
+
+<For each={products}>{(product) => <View product={product} />}</For>;
 ```
 
-Create the factory once in the component body, then render `<Selected />` like any other component. Its source tracks which component to instantiate. Props and children follow the normal JSX path.
+When `view()` changes, every `View` swaps to the new component and receives the same props. Create it once in the component body, not inside JSX, so it isn't recreated on each render.
 
-**Try it:** replace the fixed `<RedThing />` with a dynamic component selected by the dropdown. Choosing green or blue should change the component. Keep the factory outside JSX so its identity remains stable.
+A `Switch` with one `Match` per option would also work, but it repeats the props once per case. `dynamic` keeps one call site however many options there are.
+
+**Try it:** the layout select does nothing; every product renders as a `Card`. Use `dynamic` to render whichever view the select picks.

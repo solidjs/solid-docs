@@ -1,13 +1,15 @@
-# Promises are derived state
+# Async memos
 
-An async answer is a derivation of its inputs. The same memo model used for Fibonacci can derive a user from an ID:
+Data from a server is derived from its inputs too: the user to show depends on the selected id. So it is written the same way, as a memo, except the memo returns a promise:
 
 ```js
 const user = createMemo(() => fetchUser(userId()));
 ```
 
-Read inputs before an `await` so dependency tracking observes them. The memo manages which answer belongs to the current inputs; a superseded request must not replace the latest answer. A read before readiness suspends its consumer rather than returning a manually managed loading record.
+Readers call `user()` as usual and get the user, not a promise. Until the first answer arrives there is nothing to show, so the nearest `Loading` boundary shows its fallback; the next lesson covers boundaries.
 
-**Try it:** replace the starter's synchronous record with `fetchUser(userId())`. The provided `Loading` boundary renders an initial fallback. Change the ID to load another record. Enter `404` to try the error boundary, or use **Reload** to call `refresh(user)` with the same inputs.
+When `userId` changes, the memo asks again. The old user stays on screen until the new one arrives, and an answer for an id you've already moved past is never shown. The starter's `isPending(user)` marks that wait; a later lesson covers it.
 
-A bare `refresh` re-asks quietly. It does not by itself mark data pending; input changes and actions that declare affected data provide pending feedback.
+Read every signal before the first `await` in an async function. Reads after it aren't tracked.
+
+**Try it:** the memo returns a placeholder object. Return `fetchUser(userId())` instead, then change the id.

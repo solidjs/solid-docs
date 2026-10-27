@@ -1,11 +1,20 @@
-# Resolving children
+# Children
 
-Reading `props.children` can create child nodes. If you need to inspect and render those children, resolve them once through `children` so both operations share the same result.
+Whatever you put between a component's tags arrives as `props.children`. Most components place it somewhere: `<div class="card">{props.children}</div>`.
 
-```js
-const resolved = children(() => props.children);
+Sometimes a component needs to work with each child, for example to wrap every child in its own `<li>`. The `children` helper resolves `props.children` once and gives you the result, with `toArray()` for iterating:
+
+```jsx
+function Steps(props) {
+	const steps = children(() => props.children);
+	return (
+		<ol class="steps">
+			<For each={steps.toArray()}>{(step) => <li>{step}</li>}</For>
+		</ol>
+	);
+}
 ```
 
-For imperative DOM work, compute the child elements and color in the tracking half of an effect. Apply the color in the second half. The solved code accepts either one resolved child or an array.
+Resolve children once with the helper, rather than reading `props.children` in several places. Each read of `props.children` can create the child elements again.
 
-**Try it:** resolve the colored list's children and add a split effect that applies `props.color` to each element. Render the same resolved children afterward. **Set Color** should update all three items without creating a second set of DOM nodes.
+**Try it:** `Steps` puts all three paragraphs in one `<div>`. Use `children` to wrap each one in its own `<li>`, numbered as "Step 1", "Step 2" and "Step 3".

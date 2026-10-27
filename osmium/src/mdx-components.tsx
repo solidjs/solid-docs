@@ -1,4 +1,16 @@
-import { For, Match, type ParentProps, type Signal, Switch, children, createMemo, createSignal, omit, onCleanup, untrack } from "solid-js";
+import {
+	For,
+	Match,
+	type ParentProps,
+	type Signal,
+	Switch,
+	children,
+	createMemo,
+	createSignal,
+	omit,
+	onCleanup,
+	untrack,
+} from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { clientOnly, isServer } from "@solidjs/web";
 import {
@@ -196,7 +208,7 @@ export const h6 = (props: ParentProps) => (
 // the underline style. `:has()` decides, so SSR and hydration agree.
 export const a = (props: ParentProps & { href: string }) => (
 	<a
-		class="[&>code]:shadow-[0_0_0_1.5px_#2563eb] hover:[&>code]:shadow-[0_0_0_2px_#1e3a8a] dark:[&>code]:shadow-[0_0_0_1.5px_#38bdf8] dark:hover:[&>code]:shadow-[0_0_0_2px_#7dd3fc] not-has-[>code]:font-semibold not-has-[>code]:text-blue-800 not-has-[>code]:no-underline not-has-[>code]:shadow-[inset_0_calc(-1*(var(--tw-prose-underline-size,0.5px)+2px))_0_0_var(--tw-prose-underline,var(--color-blue-400))] not-has-[>code]:[--tw-prose-background:var(--color-slate-50)] not-has-[>code]:hover:[--tw-prose-underline-size:4px] not-has-[>code]:dark:text-blue-300 not-has-[>code]:dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,var(--color-blue-500))] not-has-[>code]:dark:[--tw-prose-background:var(--color-slate-900)] not-has-[>code]:dark:hover:[--tw-prose-underline-size:6px]"
+		class="not-has-[>code]:font-semibold not-has-[>code]:text-blue-800 not-has-[>code]:no-underline not-has-[>code]:shadow-[inset_0_calc(-1*(var(--tw-prose-underline-size,0.5px)+2px))_0_0_var(--tw-prose-underline,var(--color-blue-400))] not-has-[>code]:[--tw-prose-background:var(--color-slate-50)] not-has-[>code]:hover:[--tw-prose-underline-size:4px] not-has-[>code]:dark:text-blue-300 not-has-[>code]:dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,var(--color-blue-500))] not-has-[>code]:dark:[--tw-prose-background:var(--color-slate-900)] not-has-[>code]:dark:hover:[--tw-prose-underline-size:6px] [&>code]:shadow-[0_0_0_1.5px_#2563eb] hover:[&>code]:shadow-[0_0_0_2px_#1e3a8a] dark:[&>code]:shadow-[0_0_0_1.5px_#38bdf8] dark:hover:[&>code]:shadow-[0_0_0_2px_#7dd3fc]"
 		{...props}
 	/>
 );

@@ -294,7 +294,7 @@ export function Search() {
 																as="a"
 																href={hit.document.path}
 																class={[
-																	"pl-4 rounded-md block p-2 text-sm",
+																	"block rounded-md p-2 pl-4 text-sm",
 																	{
 																		"bg-blue-100 dark:bg-slate-700":
 																			itemIndex === active(),
@@ -853,7 +853,7 @@ function KeyboardShortcut(props: { key: string; class?: string }) {
 	return (
 		<kbd
 			class={[
-				"min-w-6 rounded border border-black/10 bg-slate-100 dark:bg-slate-700 dark:border-slate-700 px-1 pb-px pt-1 text-center font-mono text-xs",
+				"min-w-6 rounded border border-black/10 bg-slate-100 px-1 pt-1 pb-px text-center font-mono text-xs dark:border-slate-700 dark:bg-slate-700",
 				props.class,
 			]}
 		>

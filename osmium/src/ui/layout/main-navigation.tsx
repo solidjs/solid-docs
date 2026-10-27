@@ -109,7 +109,6 @@ export function MainNavigation(_props: MainNavigationProps) {
 		});
 	});
 
-
 	return (
 		<nav class="custom-scrollbar h-full scrollbar-gutter-stable overflow-y-auto pr-4 pb-20 md:h-[calc(100vh-7rem)]">
 			<VersionSelector />

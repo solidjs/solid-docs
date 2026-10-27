@@ -24,7 +24,7 @@ function NavLink(props: NavLinkProps) {
 			class={[
 				"relative overflow-hidden border-b-2 px-2 text-slate-900 drop-shadow-[0_35px_35px_rgba(1,1,1,1.75)] transition-all duration-250 dark:text-slate-200",
 				{
-					"border-b-blue-500 dark:bottom-b-blue-500": props.active,
+					"dark:bottom-b-blue-500 border-b-blue-500": props.active,
 					"border-transparent": !props.active,
 				},
 			]}
@@ -62,7 +62,7 @@ export function MainHeader(_props: MainHeaderProps) {
 				{
 					"dark:bg-slate-900/95 dark:[@supports(backdrop-filter:blur(0))]:bg-slate-900/75":
 						isScrolled(),
-					"dark:bg-transparent bg-transparent": !isScrolled(),
+					"bg-transparent dark:bg-transparent": !isScrolled(),
 				},
 			]}
 		>

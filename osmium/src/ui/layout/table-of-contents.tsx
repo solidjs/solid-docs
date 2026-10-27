@@ -20,30 +20,30 @@ export const TableOfContents = () => {
 	createEffect(toc, (toc) => {
 		if (!toc) return;
 		setHeadingElements(
-				toc
-					.map(flattenData)
-					.flat()
-					.map((href) => {
-						const el = document.getElementById(href.slice(1)) ?? undefined;
+			toc
+				.map(flattenData)
+				.flat()
+				.map((href) => {
+					const el = document.getElementById(href.slice(1)) ?? undefined;
 
-						return { href, el };
-					})
+					return { href, el };
+				})
 		);
 	});
 
 	// Called on the server too (it no-ops there) so hydration ids line up.
 	createEventListener(isServer ? [] : window, "scroll", () => {
-			let current;
+		let current;
 
-			for (const heading of headingElements()) {
-				if (!heading.el) continue;
-				if (heading.el.getBoundingClientRect().top < 300) {
-					current = heading.href;
-				}
+		for (const heading of headingElements()) {
+			if (!heading.el) continue;
+			if (heading.el.getBoundingClientRect().top < 300) {
+				current = heading.href;
 			}
+		}
 
-			setCurrentSection(current);
-		});
+		setCurrentSection(current);
+	});
 
 	return (
 		<aside aria-label="table of contents" class="w-full pt-5">
@@ -108,9 +108,9 @@ const TocLink = (props: {
 			{
 				"pl-6": props.nested,
 				"pl-3": !props.nested,
-				"border-blue-600 dark:border-blue-300 text-blue-800 dark:text-blue-200 font-semibold":
+				"border-blue-600 font-semibold text-blue-800 dark:border-blue-300 dark:text-blue-200":
 					props.active,
-				"border-transparent text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:border-slate-400 dark:hover:border-slate-500":
+				"border-transparent text-slate-600 hover:border-slate-400 hover:text-slate-900 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-white":
 					!props.active,
 			},
 		]}

@@ -106,6 +106,12 @@ export function MainHeader(_props: MainHeaderProps) {
 				</Show>
 
 				<div class="flex items-center justify-end gap-4 lg:col-start-3">
+					<a
+						href="/tutorial"
+						class="text-sm font-semibold text-slate-700 hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-300"
+					>
+						Tutorial
+					</a>
 					<ClientSearch />
 					<a
 						href={`${config().themeConfig?.github}/${project().projects[project().current].path || "solid"}`}

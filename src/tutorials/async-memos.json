@@ -1,0 +1,18 @@
+{
+  "lesson": {
+    "files": [
+      {
+        "name": "main",
+        "content": "import { render } from '@solidjs/web';\nimport {\n  createSignal,\n  createMemo,\n  Loading,\n  Errored,\n  isPending,\n  refresh,\n} from 'solid-js';\n\nasync function fetchUser(id) {\n  await new Promise((resolve) => setTimeout(resolve, 500));\n  if (id === '404') throw new Error('User not found');\n  return { id, name: `Explorer ${id}` };\n}\nfunction App() {\n  const [userId, setUserId] = createSignal('1');\n  const user = createMemo(() => ({\n    id: userId(),\n    name: 'Replace this with fetchUser(userId())',\n  }));\n  return (\n    <>\n      <input\n        aria-label=\"User ID\"\n        value={userId()}\n        onInput={(event) => setUserId(event.currentTarget.value)}\n      />\n      <button\n        onClick={() => {\n          void refresh(user);\n        }}\n      >\n        Reload\n      </button>\n      <Errored\n        fallback={(error, retry) => (\n          <button\n            onClick={() => {\n              void refresh(user).then(retry, () => {});\n            }}\n          >\n            {error().message} — retry\n          </button>\n        )}\n      >\n        <Loading fallback={<p>Loading user...</p>}>\n          <span>{isPending(user) && 'Updating...'}</span>\n          <pre>{JSON.stringify(user(), null, 2)}</pre>\n        </Loading>\n      </Errored>\n    </>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+      }
+    ]
+  },
+  "solved": {
+    "files": [
+      {
+        "name": "main",
+        "content": "import { render } from '@solidjs/web';\nimport {\n  createSignal,\n  createMemo,\n  Loading,\n  Errored,\n  isPending,\n  refresh,\n} from 'solid-js';\n\nasync function fetchUser(id) {\n  await new Promise((resolve) => setTimeout(resolve, 500));\n  if (id === '404') throw new Error('User not found');\n  return { id, name: `Explorer ${id}` };\n}\nfunction App() {\n  const [userId, setUserId] = createSignal('1');\n  const user = createMemo(() => fetchUser(userId()));\n  return (\n    <>\n      <input\n        aria-label=\"User ID\"\n        value={userId()}\n        onInput={(event) => setUserId(event.currentTarget.value)}\n      />\n      <button\n        onClick={() => {\n          void refresh(user);\n        }}\n      >\n        Reload\n      </button>\n      <Errored\n        fallback={(error, retry) => (\n          <button\n            onClick={() => {\n              void refresh(user).then(retry, () => {});\n            }}\n          >\n            {error().message} — retry\n          </button>\n        )}\n      >\n        <Loading fallback={<p>Loading user...</p>}>\n          <span>{isPending(user) && 'Updating...'}</span>\n          <pre>{JSON.stringify(user(), null, 2)}</pre>\n        </Loading>\n      </Errored>\n    </>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+# Optimistic UI and rollback
+
+An optimistic source shows a tentative answer while an action runs. Derive its normal value from the authoritative query, then write an override inside the action.
+
+```js
+const [displayed, setDisplayed] = createOptimistic(() => count());
+const increment = action(function* () {
+  setDisplayed((value) => value + 1);
+  affects(count);
+  yield api.increment();
+  yield refresh(count);
+});
+```
+
+On success, the refreshed authoritative answer becomes the durable result. On failure, the action ends and the optimistic override rolls back. The error message belongs in the UI; a failed mutation should not look successful indefinitely.
+
+**Try it:** add the optimistic write before yielding the API call. The count should rise immediately. Enable **Fail next save**, then increment again. After the rejection, the displayed count should return to the authoritative answer and show the error. This completes the course's dataflow: source, derivation, pending work, mutation, and reconciliation.

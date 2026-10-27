@@ -1,0 +1,42 @@
+{
+  "lesson": {
+    "files": [
+      {
+        "name": "main",
+        "content": "// @ts-nocheck\nimport { render } from '@solidjs/web';\nimport { For, Loading } from 'solid-js';\n\nimport useRedux from './useRedux';\nimport reduxStore from './store';\nimport actions from './actions';\n\nconst App = () => {\n  const [store, { addTodo, toggleTodo }] = useRedux(reduxStore, actions);\n  let input;\n  return (\n    <>\n      <div>\n        <input ref={input} />\n        <button\n          onClick={(e) => {\n            if (!input.value.trim()) return;\n            addTodo(input.value);\n            input.value = '';\n          }}\n        >\n          Add Todo\n        </button>\n      </div>\n      <Loading fallback={<p>Loading todos...</p>}>\n        <For each={store.todos}>\n          {(todo) => {\n            console.log('Create todo');\n            return (\n              <div>\n                <input\n                  type=\"checkbox\"\n                  checked={todo.completed}\n                  onChange={() => toggleTodo(todo.id)}\n                />\n                <span\n                  style={{\n                    'text-decoration': todo.completed ? 'line-through' : 'none',\n                  }}\n                >\n                  {todo.text}\n                </span>\n              </div>\n            );\n          }}\n        </For>\n      </Loading>\n    </>\n  );\n};\n\nrender(App, document.getElementById('app'));\n"
+      },
+      {
+        "name": "useRedux",
+        "content": "import { createStore, from } from 'solid-js';\n\nexport default function useRedux(store, actions) {\n  const [state] = createStore(() => store.getState(), { todos: [] });\n  const mapped = {};\n  for (const key in actions)\n    mapped[key] = (...args) => store.dispatch(actions[key](...args));\n  return [state, mapped];\n}\n"
+      },
+      {
+        "name": "actions",
+        "content": "let nextTodoId = 0;\nexport default {\n  addTodo: (text) => ({ type: 'ADD_TODO', id: ++nextTodoId, text }),\n  toggleTodo: (id) => ({ type: 'TOGGLE_TODO', id }),\n};\n"
+      },
+      {
+        "name": "store",
+        "content": "// @ts-nocheck\nfunction createStore(reducer) {\n  let state = reducer(undefined, { type: 'INIT' });\n  const listeners = new Set();\n  return {\n    getState: () => state,\n    dispatch(action) {\n      state = reducer(state, action);\n      listeners.forEach((listener) => listener());\n    },\n    subscribe(listener) {\n      listeners.add(listener);\n      return () => listeners.delete(listener);\n    },\n  };\n}\n\n// todos reducer\nconst todos = (state = { todos: [] }, action) => {\n  switch (action.type) {\n    case 'ADD_TODO':\n      return {\n        todos: [\n          ...state.todos,\n          {\n            id: action.id,\n            text: action.text,\n            completed: false,\n          },\n        ],\n      };\n    case 'TOGGLE_TODO':\n      return {\n        todos: state.todos.map((todo) =>\n          todo.id === action.id\n            ? { ...todo, completed: !todo.completed }\n            : todo,\n        ),\n      };\n    default:\n      return state;\n  }\n};\n\nexport default createStore(todos);\n"
+      }
+    ]
+  },
+  "solved": {
+    "files": [
+      {
+        "name": "main",
+        "content": "// @ts-nocheck\nimport { render } from '@solidjs/web';\nimport { For, Loading } from 'solid-js';\n\nimport useRedux from './useRedux';\nimport reduxStore from './store';\nimport actions from './actions';\n\nconst App = () => {\n  const [store, { addTodo, toggleTodo }] = useRedux(reduxStore, actions);\n  let input;\n  return (\n    <>\n      <div>\n        <input ref={input} />\n        <button\n          onClick={(e) => {\n            if (!input.value.trim()) return;\n            addTodo(input.value);\n            input.value = '';\n          }}\n        >\n          Add Todo\n        </button>\n      </div>\n      <Loading fallback={<p>Loading todos...</p>}>\n        <For each={store.todos}>\n          {(todo) => {\n            console.log('Create todo');\n            return (\n              <div>\n                <input\n                  type=\"checkbox\"\n                  checked={todo.completed}\n                  onChange={() => toggleTodo(todo.id)}\n                />\n                <span\n                  style={{\n                    'text-decoration': todo.completed ? 'line-through' : 'none',\n                  }}\n                >\n                  {todo.text}\n                </span>\n              </div>\n            );\n          }}\n        </For>\n      </Loading>\n    </>\n  );\n};\n\nrender(App, document.getElementById('app'));\n"
+      },
+      {
+        "name": "useRedux",
+        "content": "import { createStore, from } from 'solid-js';\n\nexport default function useRedux(store, actions) {\n  const [state] = createStore(\n    () =>\n      from((update) => {\n        update(store.getState());\n        return store.subscribe(() => update(store.getState()));\n      }),\n    { todos: [] },\n  );\n  const mapped = {};\n  for (const key in actions)\n    mapped[key] = (...args) => store.dispatch(actions[key](...args));\n  return [state, mapped];\n}\n"
+      },
+      {
+        "name": "actions",
+        "content": "let nextTodoId = 0;\nexport default {\n  addTodo: (text) => ({ type: 'ADD_TODO', id: ++nextTodoId, text }),\n  toggleTodo: (id) => ({ type: 'TOGGLE_TODO', id }),\n};\n"
+      },
+      {
+        "name": "store",
+        "content": "// @ts-nocheck\nfunction createStore(reducer) {\n  let state = reducer(undefined, { type: 'INIT' });\n  const listeners = new Set();\n  return {\n    getState: () => state,\n    dispatch(action) {\n      state = reducer(state, action);\n      listeners.forEach((listener) => listener());\n    },\n    subscribe(listener) {\n      listeners.add(listener);\n      return () => listeners.delete(listener);\n    },\n  };\n}\n\n// todos reducer\nconst todos = (state = { todos: [] }, action) => {\n  switch (action.type) {\n    case 'ADD_TODO':\n      return {\n        todos: [\n          ...state.todos,\n          {\n            id: action.id,\n            text: action.text,\n            completed: false,\n          },\n        ],\n      };\n    case 'TOGGLE_TODO':\n      return {\n        todos: state.todos.map((todo) =>\n          todo.id === action.id\n            ? { ...todo, completed: !todo.completed }\n            : todo,\n        ),\n      };\n    default:\n      return state;\n  }\n};\n\nexport default createStore(todos);\n"
+      }
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+# Errors and retries
+
+`Errored` catches failures from the branch it owns, including rejected async derivations read by that branch. Its fallback receives an error getter and a retry function.
+
+```jsx
+<Errored fallback={(error, retry) => <button onClick={retry}>{error().message} — retry</button>}>
+  <Result />
+</Errored>
+```
+
+`Loading` handles readiness; `Errored` handles failure. They solve different parts of the same flow. In this exercise the report memo is created inside `Result`, so retrying the boundary recreates that reader and starts a fresh request. A memo created outside the boundary instead needs its data explicitly refreshed or its inputs changed.
+
+**Try it:** add the error boundary around `Result`. The local service deliberately rejects the first request. Click **Retry report** and confirm the second request succeeds. The starter uses a temporary fallback so you can build the failure UI without an uncaught preview error.

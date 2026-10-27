@@ -1,0 +1,15 @@
+# Actions and authoritative data
+
+Queries derive data. Mutations change its source of truth. Wrap asynchronous mutation work in `action` so Solid can coordinate its lifetime with affected reads.
+
+```js
+const save = action(function* () {
+  affects(count);
+  yield api.increment();
+  yield refresh(count);
+});
+```
+
+`affects(count)` declares that this work will change the reader. `refresh(count)` then asks it for the authoritative answer after the server write. Generator actions preserve action context across each `yield`. Report rejected writes at the event boundary.
+
+**Try it:** add the affected-reader declaration and refresh around the provided local API call. The count should update after the save completes, and its button should show pending feedback while the action runs. The fake API behaves like a delayed server but needs no network connection.

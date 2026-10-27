@@ -1,0 +1,11 @@
+# Choosing effect dependencies
+
+The compute function declares exactly what an effect tracks. If it reads only `a`, changing `b` alone does not trigger the effect:
+
+```js
+createEffect(a, (value) => console.log(value, b()), { defer: true });
+```
+
+Here `b()` is an untracked snapshot taken during apply. `{ defer: true }` skips the first apply and waits for a dependency change. Put side effects in apply, not in the dependency computation.
+
+**Try it:** change the starter to track only `a` and defer the initial apply. **Increment B** should update its button without logging; **Increment A** should log the new A value and the current B snapshot.

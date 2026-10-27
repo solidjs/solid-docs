@@ -1,0 +1,26 @@
+{
+  "lesson": {
+    "files": [
+      {
+        "name": "main",
+        "content": "import { render } from '@solidjs/web';\nimport { createSignal, For } from 'solid-js';\n\nimport ColoredList from './colored-list';\n\nfunction App() {\n  const [color, setColor] = createSignal('purple');\n\n  return (\n    <>\n      <ColoredList color={color()}>\n        <For each={['Most', 'Interesting', 'Thing']}>\n          {(item) => <div>{item}</div>}\n        </For>\n      </ColoredList>\n      <button onClick={() => setColor('teal')}>Set Color</button>\n    </>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+      },
+      {
+        "name": "colored-list",
+        "content": "export default function ColoredList(props) {\n  return <>{props.children}</>;\n}\n"
+      }
+    ]
+  },
+  "solved": {
+    "files": [
+      {
+        "name": "main",
+        "content": "import { render } from '@solidjs/web';\nimport { createSignal, For } from 'solid-js';\n\nimport ColoredList from './colored-list';\n\nfunction App() {\n  const [color, setColor] = createSignal('purple');\n\n  return (\n    <>\n      <ColoredList color={color()}>\n        <For each={['Most', 'Interesting', 'Thing']}>\n          {(item) => <div>{item}</div>}\n        </For>\n      </ColoredList>\n      <button onClick={() => setColor('teal')}>Set Color</button>\n    </>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+      },
+      {
+        "name": "colored-list",
+        "content": "import { createEffect, children } from 'solid-js';\n\nexport default function ColoredList(props) {\n  const resolved = children(() => props.children);\n  createEffect(\n    () => ({ items: resolved(), color: props.color }),\n    ({ items, color }) => {\n      for (const item of Array.isArray(items) ? items : [items]) {\n        if (item instanceof HTMLElement) item.style.color = color;\n      }\n    },\n  );\n  return <>{resolved()}</>;\n}\n"
+      }
+    ]
+  }
+}

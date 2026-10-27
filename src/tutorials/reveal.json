@@ -1,0 +1,34 @@
+{
+  "lesson": {
+    "files": [
+      {
+        "name": "main",
+        "content": "import { render } from '@solidjs/web';\nimport { Loading } from 'solid-js';\n\nimport fetchProfileData from './mock-api';\nimport ProfilePage from './profile';\n\nconst App = () => {\n  const { user, posts, trivia } = fetchProfileData();\n  return (\n    <Loading fallback={<h1>Loading...</h1>}>\n      <ProfilePage user={user()} posts={posts()} trivia={trivia()} />\n    </Loading>\n  );\n};\n\nrender(App, document.getElementById('app'));\n"
+      },
+      {
+        "name": "profile",
+        "content": "import { For, Loading, Reveal } from 'solid-js';\n\nconst ProfileDetails = (props) => <h1>{props.user?.name}</h1>;\n\nconst ProfileTimeline = (props) => (\n  <ul>\n    <For each={props.posts}>{(post) => <li>{post.text}</li>}</For>\n  </ul>\n);\n\nconst ProfileTrivia = (props) => (\n  <>\n    <h2>Fun Facts</h2>\n    <ul>\n      <For each={props.trivia}>{(fact) => <li>{fact.text}</li>}</For>\n    </ul>\n  </>\n);\n\nconst ProfilePage = (props) => (\n  <>\n    <Loading fallback={<h1>Loading profile...</h1>}>\n      <ProfileDetails user={props.user} />\n    </Loading>\n    <Loading fallback={<h2>Loading posts...</h2>}>\n      <ProfileTimeline posts={props.posts} />\n    </Loading>\n    <Loading fallback={<h2>Loading fun facts...</h2>}>\n      <ProfileTrivia trivia={props.trivia} />\n    </Loading>\n  </>\n);\n\nexport default ProfilePage;\n"
+      },
+      {
+        "name": "mock-api",
+        "content": "import { createMemo } from 'solid-js';\n\nexport default function fetchProfileData() {\n  const user = createMemo(fetchUser);\n  const posts = createMemo(fetchPosts);\n  const trivia = createMemo(fetchTrivia);\n  return { user, posts, trivia };\n}\n\nfunction fetchUser() {\n  return new Promise((resolve) => {\n    setTimeout(() => {\n      resolve({\n        name: 'Ringo Starr',\n      });\n    }, 500);\n  });\n}\n\nlet ringoPosts = [\n  {\n    id: 0,\n    text: 'I get by with a little help from my friends',\n  },\n  {\n    id: 1,\n    text: \"I'd like to be under the sea in an octupus's garden\",\n  },\n  {\n    id: 2,\n    text: 'You got that sand all over your feet',\n  },\n];\n\nfunction fetchPosts() {\n  let ringoPostsAtTheTime = ringoPosts;\n\n  return new Promise((resolve) => {\n    setTimeout(() => {\n      resolve(ringoPostsAtTheTime);\n    }, 800);\n  });\n}\n\nfunction fetchTrivia() {\n  return new Promise((resolve) => {\n    setTimeout(() => {\n      resolve([\n        {\n          id: 1,\n          text: 'The nickname \"Ringo\" came from his habit of wearing numerous rings.',\n        },\n        {\n          id: 2,\n          text: 'Plays the drums left-handed with a right-handed drum set.',\n        },\n        {\n          id: 3,\n          text: 'Nominated for one Daytime Emmy Award, but did not win',\n        },\n      ]);\n    }, 200);\n  });\n}\n"
+      }
+    ]
+  },
+  "solved": {
+    "files": [
+      {
+        "name": "main",
+        "content": "import { render } from '@solidjs/web';\nimport { Loading } from 'solid-js';\n\nimport fetchProfileData from './mock-api';\nimport ProfilePage from './profile';\n\nconst App = () => {\n  const { user, posts, trivia } = fetchProfileData();\n  return (\n    <Loading fallback={<h1>Loading...</h1>}>\n      <ProfilePage user={user()} posts={posts()} trivia={trivia()} />\n    </Loading>\n  );\n};\n\nrender(App, document.getElementById('app'));\n"
+      },
+      {
+        "name": "profile",
+        "content": "import { For, Loading, Reveal } from 'solid-js';\n\nconst ProfileDetails = (props) => <h1>{props.user?.name}</h1>;\n\nconst ProfileTimeline = (props) => (\n  <ul>\n    <For each={props.posts}>{(post) => <li>{post.text}</li>}</For>\n  </ul>\n);\n\nconst ProfileTrivia = (props) => (\n  <>\n    <h2>Fun Facts</h2>\n    <ul>\n      <For each={props.trivia}>{(fact) => <li>{fact.text}</li>}</For>\n    </ul>\n  </>\n);\n\nconst ProfilePage = (props) => (\n  <Reveal order=\"sequential\" collapsed>\n    <Loading fallback={<h1>Loading profile...</h1>}>\n      <ProfileDetails user={props.user} />\n    </Loading>\n    <Loading fallback={<h2>Loading posts...</h2>}>\n      <ProfileTimeline posts={props.posts} />\n    </Loading>\n    <Loading fallback={<h2>Loading fun facts...</h2>}>\n      <ProfileTrivia trivia={props.trivia} />\n    </Loading>\n  </Reveal>\n);\n\nexport default ProfilePage;\n"
+      },
+      {
+        "name": "mock-api",
+        "content": "import { createMemo } from 'solid-js';\n\nexport default function fetchProfileData() {\n  const user = createMemo(fetchUser);\n  const posts = createMemo(fetchPosts);\n  const trivia = createMemo(fetchTrivia);\n  return { user, posts, trivia };\n}\n\nfunction fetchUser() {\n  return new Promise((resolve) => {\n    setTimeout(() => {\n      resolve({\n        name: 'Ringo Starr',\n      });\n    }, 500);\n  });\n}\n\nlet ringoPosts = [\n  {\n    id: 0,\n    text: 'I get by with a little help from my friends',\n  },\n  {\n    id: 1,\n    text: \"I'd like to be under the sea in an octupus's garden\",\n  },\n  {\n    id: 2,\n    text: 'You got that sand all over your feet',\n  },\n];\n\nfunction fetchPosts() {\n  let ringoPostsAtTheTime = ringoPosts;\n\n  return new Promise((resolve) => {\n    setTimeout(() => {\n      resolve(ringoPostsAtTheTime);\n    }, 800);\n  });\n}\n\nfunction fetchTrivia() {\n  return new Promise((resolve) => {\n    setTimeout(() => {\n      resolve([\n        {\n          id: 1,\n          text: 'The nickname \"Ringo\" came from his habit of wearing numerous rings.',\n        },\n        {\n          id: 2,\n          text: 'Plays the drums left-handed with a right-handed drum set.',\n        },\n        {\n          id: 3,\n          text: 'Nominated for one Daytime Emmy Award, but did not win',\n        },\n      ]);\n    }, 200);\n  });\n}\n"
+      }
+    ]
+  }
+}

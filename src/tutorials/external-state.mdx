@@ -1,0 +1,18 @@
+# Adapting an external store
+
+External state libraries often expose a current snapshot and a subscription. Solid 2's `from` turns that subscription into an async iterable that a derived store can consume.
+
+```js
+const [state] = createStore(
+  () =>
+    from((update) => {
+      update(store.getState());
+      return store.subscribe(() => update(store.getState()));
+    }),
+  { todos: [] },
+);
+```
+
+The bridge emits the initial snapshot and later updates. Returning the unsubscribe function binds the external subscription to the derived reader's lifetime. The seed describes the store's shape before its first answer arrives; a pending read still belongs behind a `Loading` boundary.
+
+**Try it:** replace the fixed snapshot in `useRedux.jsx` with the subscription bridge. Add and toggle todos in the external immutable store. The adapter keeps its Redux-style dispatch contract; the small local store makes this lesson independent of an external package CDN.

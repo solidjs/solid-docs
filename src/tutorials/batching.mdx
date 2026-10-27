@@ -1,0 +1,14 @@
+# Batched updates and reads
+
+Solid 2 batches writes automatically. Two setters in the same event stage their changes together; dependent work observes the committed combination.
+
+```js
+setFirstName((name) => name + 'n');
+setLastName((name) => name + '!');
+```
+
+An imperative getter call immediately after those writes still sees the previously committed answer. Most app code should let the event finish and read state reactively in JSX.
+
+When imperative integration truly requires the new answer immediately, `flush()` commits pending synchronous work before the next read. It does not wait for asynchronous data to arrive.
+
+**Try it:** inspect the before/after console messages. Add `flush()` between them to observe the new full name in the second message. The interface itself updates without an explicit flush. Avoid putting `flush()` in ordinary UI handlers just to imitate synchronous setters.

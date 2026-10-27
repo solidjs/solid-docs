@@ -1,0 +1,15 @@
+# Sharing a state factory
+
+A state factory packages related sources, derivations, and actions. Call it once in an owning component and pass its result to every child that should share that instance.
+
+```js
+function createCounter() {
+  const [count, setCount] = createSignal(0);
+  const doubleCount = createMemo(() => count() * 2);
+  return { count, doubleCount, increment: () => setCount((n) => n + 1) };
+}
+```
+
+Calling the factory twice creates independent state. Calling it once and sharing the result connects both views to the same sources. Keeping the factory under the app's owner also disposes its derived work with the app.
+
+**Try it:** create one counter in `App` and pass it to both `Counter` components. Increment either button; both views should update. The next lesson provides state without threading a prop through every level.

@@ -1,0 +1,14 @@
+# Keeping useful content while pending
+
+Initial readiness and an update in flight are different states. After content has revealed, Solid can keep the last settled answer visible while a new input's async derivation resolves.
+
+```js
+const content = createMemo(() => fetchPage(tab()));
+const pending = () => isPending(content);
+```
+
+An `isPending` reader observes the pending work relevant to that expression. Use it for an updating indicator, a subdued style, or `aria-busy`; keep the initial answer under `Loading`.
+
+**Try it:** replace the fixed pending flags with `isPending(content)`. Click **Dos**, then **Tres** before the delay finishes. The displayed answer should settle on Tres. You do not wrap the signal setter in a separate transition-start API: async reads participate in Solid 2's update model directly.
+
+If this region should show a fresh fallback on every tab change, add `on={tab()}` to its `Loading` boundary. Choose based on whether the old answer remains useful during the wait.

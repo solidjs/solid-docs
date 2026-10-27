@@ -1,0 +1,15 @@
+# Reusable DOM behavior
+
+A ref directive factory separates owned setup from element capture. Call the factory in the owning component body, create its lifecycle work there, and return a ref callback that captures the element.
+
+```js
+const outside = clickOutside(() => setShow(false));
+```
+
+```jsx
+<div ref={outside}>Some Modal</div>
+```
+
+Here the factory is called inside `Modal`, the component created and disposed by `Show`. Its listener therefore has the modal's lifetime. `clickOutside` registers a document pointer listener in `onSettled`. Its returned ref only stores the element. Return cleanup from `onSettled` so removing the owner removes the listener. Do not create reactive primitives inside the returned ref.
+
+**Try it:** finish the listener cleanup in `click-outside.jsx`. Open the modal, click inside it, then click outside. Repeat after resetting the preview; listeners should not accumulate.

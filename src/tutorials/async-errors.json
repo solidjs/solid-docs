@@ -1,0 +1,18 @@
+{
+  "lesson": {
+    "files": [
+      {
+        "name": "main",
+        "content": "import { render } from '@solidjs/web';\nimport { createMemo, Errored, Loading } from 'solid-js';\n\nlet attempts = 0;\nasync function fetchReport() {\n  await new Promise((resolve) => setTimeout(resolve, 300));\n  if (++attempts === 1)\n    throw new Error('The report service is temporarily unavailable');\n  return 'Report ready';\n}\nfunction Result() {\n  const report = createMemo(fetchReport);\n  return (\n    <Loading fallback={<p>Loading report...</p>}>\n      <p>{report()}</p>\n    </Loading>\n  );\n}\nfunction App() {\n  return (\n    <>\n      <h1>Async errors</h1>\n      <Errored\n        fallback={(error, retry) => (\n          <div role=\"alert\">\n            <p>Add a message and retry button here.</p>\n          </div>\n        )}\n      >\n        <Result />\n      </Errored>\n    </>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+      }
+    ]
+  },
+  "solved": {
+    "files": [
+      {
+        "name": "main",
+        "content": "import { render } from '@solidjs/web';\nimport { createMemo, Errored, Loading } from 'solid-js';\n\nlet attempts = 0;\nasync function fetchReport() {\n  await new Promise((resolve) => setTimeout(resolve, 300));\n  if (++attempts === 1)\n    throw new Error('The report service is temporarily unavailable');\n  return 'Report ready';\n}\nfunction Result() {\n  const report = createMemo(fetchReport);\n  return (\n    <Loading fallback={<p>Loading report...</p>}>\n      <p>{report()}</p>\n    </Loading>\n  );\n}\nfunction App() {\n  return (\n    <>\n      <h1>Async errors</h1>\n      <Errored\n        fallback={(error, retry) => (\n          <div role=\"alert\">\n            <p>{error().message}</p>\n            <button onClick={retry}>Retry report</button>\n          </div>\n        )}\n      >\n        <Result />\n      </Errored>\n    </>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+      }
+    ]
+  }
+}

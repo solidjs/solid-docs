@@ -1,0 +1,36 @@
+{
+  "lesson": {
+    "files": [
+      {
+        "name": "main",
+        "content": "import { render } from '@solidjs/web';\nimport { createSignal, Show } from 'solid-js';\nimport clickOutside from './click-outside';\nimport './style.css';\nfunction Modal(props) {\n  const outside = clickOutside(() => props.close());\n  return (\n    <div class=\"modal\" ref={outside}>\n      Some Modal\n    </div>\n  );\n}\nfunction App() {\n  const [show, setShow] = createSignal(false);\n  return (\n    <>\n      <button onClick={() => setShow(true)}>Open Modal</button>\n      <Show when={show()}>\n        <Modal close={() => setShow(false)} />\n      </Show>\n    </>\n  );\n}\nrender(() => <App />, document.getElementById('app'));\n"
+      },
+      {
+        "name": "click-outside",
+        "content": "import { onSettled } from 'solid-js';\n\nexport default function clickOutside(close) {\n  let element;\n  onSettled(() => {\n    const onPointerDown = (event) => {\n      if (element && !element.contains(event.target)) close();\n    };\n    document.addEventListener('pointerdown', onPointerDown);\n    // Return cleanup to remove the listener when the modal closes.\n  });\n  return (next) => {\n    element = next;\n  };\n}\n"
+      },
+      {
+        "name": "style",
+        "type": "css",
+        "content": ".modal {\n  padding: 16px;\n  border: 1px solid #444;\n  box-shadow: 4px 4px #88888866;\n}\n"
+      }
+    ]
+  },
+  "solved": {
+    "files": [
+      {
+        "name": "main",
+        "content": "import { render } from '@solidjs/web';\nimport { createSignal, Show } from 'solid-js';\nimport clickOutside from './click-outside';\nimport './style.css';\nfunction Modal(props) {\n  const outside = clickOutside(() => props.close());\n  return (\n    <div class=\"modal\" ref={outside}>\n      Some Modal\n    </div>\n  );\n}\nfunction App() {\n  const [show, setShow] = createSignal(false);\n  return (\n    <>\n      <button onClick={() => setShow(true)}>Open Modal</button>\n      <Show when={show()}>\n        <Modal close={() => setShow(false)} />\n      </Show>\n    </>\n  );\n}\nrender(() => <App />, document.getElementById('app'));\n"
+      },
+      {
+        "name": "click-outside",
+        "content": "import { onSettled } from 'solid-js';\n\nexport default function clickOutside(close) {\n  let element;\n  onSettled(() => {\n    const onPointerDown = (event) => {\n      if (element && !element.contains(event.target)) close();\n    };\n    document.addEventListener('pointerdown', onPointerDown);\n    return () => document.removeEventListener('pointerdown', onPointerDown);\n  });\n  return (next) => {\n    element = next;\n  };\n}\n"
+      },
+      {
+        "name": "style",
+        "type": "css",
+        "content": ".modal {\n  padding: 16px;\n  border: 1px solid #444;\n  box-shadow: 4px 4px #88888866;\n}\n"
+      }
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "lesson": {
+    "files": [
+      {
+        "name": "main",
+        "content": "import { render } from '@solidjs/web';\nimport { onSettled } from 'solid-js';\n\nimport './style.css';\n\nfunction App() {\n  let canvas;\n  onSettled(() => {\n    if (!canvas) return;\n    const ctx = canvas.getContext('2d', { willReadFrequently: true });\n    let frame = requestAnimationFrame(loop);\n\n    function loop(t) {\n      frame = requestAnimationFrame(loop);\n\n      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);\n\n      for (let p = 0; p < imageData.data.length; p += 4) {\n        const i = p / 4;\n        const x = i % canvas.width;\n        const y = (i / canvas.width) >>> 0;\n\n        const r = 64 + (128 * x) / canvas.width + 64 * Math.sin(t / 1000);\n        const g = 64 + (128 * y) / canvas.height + 64 * Math.cos(t / 1000);\n        const b = 128;\n\n        imageData.data[p + 0] = r;\n        imageData.data[p + 1] = g;\n        imageData.data[p + 2] = b;\n        imageData.data[p + 3] = 255;\n      }\n\n      ctx.putImageData(imageData, 0, 0);\n    }\n\n    return () => cancelAnimationFrame(frame);\n  });\n\n  return <canvas width=\"256\" height=\"256\" />;\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+      },
+      {
+        "name": "style",
+        "type": "css",
+        "content": "canvas {\n  background-color: #666;\n  border-radius: 24px;\n}\n"
+      }
+    ]
+  },
+  "solved": {
+    "files": [
+      {
+        "name": "main",
+        "content": "import { render } from '@solidjs/web';\nimport { onSettled } from 'solid-js';\n\nimport './style.css';\n\nfunction App() {\n  let canvas;\n  onSettled(() => {\n    if (!canvas) return;\n    const ctx = canvas.getContext('2d', { willReadFrequently: true });\n    let frame = requestAnimationFrame(loop);\n\n    function loop(t) {\n      frame = requestAnimationFrame(loop);\n\n      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);\n\n      for (let p = 0; p < imageData.data.length; p += 4) {\n        const i = p / 4;\n        const x = i % canvas.width;\n        const y = (i / canvas.width) >>> 0;\n\n        const r = 64 + (128 * x) / canvas.width + 64 * Math.sin(t / 1000);\n        const g = 64 + (128 * y) / canvas.height + 64 * Math.cos(t / 1000);\n        const b = 128;\n\n        imageData.data[p + 0] = r;\n        imageData.data[p + 1] = g;\n        imageData.data[p + 2] = b;\n        imageData.data[p + 3] = 255;\n      }\n\n      ctx.putImageData(imageData, 0, 0);\n    }\n\n    return () => cancelAnimationFrame(frame);\n  });\n\n  return <canvas ref={canvas} width=\"256\" height=\"256\" />;\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+      },
+      {
+        "name": "style",
+        "type": "css",
+        "content": "canvas {\n  background-color: #666;\n  border-radius: 24px;\n}\n"
+      }
+    ]
+  }
+}

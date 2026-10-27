@@ -1,0 +1,14 @@
+# Cleaning up external work
+
+Timers, event listeners, and third-party instances need a lifetime. Return a cleanup function from `onSettled` or an effect's apply callback:
+
+```js
+onSettled(() => {
+  const timer = setInterval(() => setCount((n) => n + 1), 1000);
+  return () => clearInterval(timer);
+});
+```
+
+Cleanup runs when the owning scope is disposed. An effect's cleanup also runs before that effect applies a replacement. `onCleanup` remains available for cleanup registered directly in an owned setup scope.
+
+**Try it:** return cleanup for the interval. Reset the editor several times and confirm the count still advances once per second. Avoid registering `onCleanup` inside a plain ref callback: ref callbacks are unowned in Solid 2.

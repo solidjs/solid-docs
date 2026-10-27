@@ -1,0 +1,14 @@
+# Intentional snapshots
+
+`untrack` reads a value without subscribing the current computation to it. It is useful when a value contributes a snapshot but should not trigger recomputation by itself.
+
+```js
+createEffect(
+  () => [a(), untrack(b)],
+  (values) => console.log(...values),
+);
+```
+
+Only `a()` becomes a dependency. When A changes, the computation takes a fresh snapshot of B. Use this narrowly: a read that should keep updating belongs in a reactive expression, not behind `untrack`.
+
+**Try it:** wrap the B read in `untrack`. Compare the two increment buttons and watch which changes trigger logging. The previous lesson showed another way to keep B untracked: read it only in apply.

@@ -1,0 +1,28 @@
+{
+  "lesson": {
+    "files": [
+      {
+        "name": "main",
+        "content": "import { render } from '@solidjs/web';\nimport { createSignal, createMemo, Loading, isPending, For } from 'solid-js';\nimport './styles.css';\n\nconst pages = ['Uno', 'Dos', 'Tres'];\nasync function fetchPage(page) {\n  await new Promise((resolve) => setTimeout(resolve, 600));\n  return `This content is for page \"${page}\".`;\n}\nfunction App() {\n  const [tab, setTab] = createSignal('Uno');\n  const content = createMemo(() => fetchPage(tab()));\n  return (\n    <>\n      <ul class=\"inline\">\n        <For each={pages}>\n          {(page) => (\n            <li>\n              <button\n                class={{ selected: tab() === page }}\n                onClick={() => setTab(page)}\n              >\n                {page}\n              </button>\n            </li>\n          )}\n        </For>\n      </ul>\n      <Loading fallback={<p>Loading page...</p>}>\n        <div class={['tab', { pending: false }]} aria-busy=\"false\">\n          <p>{content()}</p>\n        </div>\n      </Loading>\n    </>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+      },
+      {
+        "name": "styles",
+        "type": "css",
+        "content": "body {\n  background-color: #eee;\n}\n\n#app {\n  border-radius: 3px;\n  border: 1px solid #e5e5e5;\n  margin: 15px;\n  background-color: white;\n}\n\n.tab {\n  padding: 25px;\n  font-family: sans-serif;\n  color: #444;\n  min-height: 400px;\n}\n\n.pending {\n  transition: color 0.3s;\n  transition-delay: 0.1s;\n  transition-timing-function: ease-in;\n  color: #aaa;\n}\n\nul.inline {\n  list-style: none;\n  padding: 0;\n  margin-bottom: 0;\n  -webkit-margin-before: 0;\n  -webkit-margin-after: 0;\n  -webkit-margin-start: 0px;\n  -webkit-margin-end: 0px;\n  -webkit-padding-start: 0px;\n}\n\nul.inline li {\n  display: inline-block;\n  margin-left: 0;\n  padding: 10px;\n  border-bottom: 2px solid #eee;\n  transition: all 0.5s;\n  font-family: sans-serif;\n  font-weight: 300;\n  cursor: pointer;\n  color: #aaa;\n}\n\nul.inline li.selected {\n  border-bottom: 2px solid #337ab7;\n  color: #444;\n}\n\n.loader {\n  color: #aaa;\n  font-size: 16px;\n  font-weight: 600;\n  width: 80px;\n}\n"
+      }
+    ]
+  },
+  "solved": {
+    "files": [
+      {
+        "name": "main",
+        "content": "import { render } from '@solidjs/web';\nimport { createSignal, createMemo, Loading, isPending, For } from 'solid-js';\nimport './styles.css';\n\nconst pages = ['Uno', 'Dos', 'Tres'];\nasync function fetchPage(page) {\n  await new Promise((resolve) => setTimeout(resolve, 600));\n  return `This content is for page \"${page}\".`;\n}\nfunction App() {\n  const [tab, setTab] = createSignal('Uno');\n  const content = createMemo(() => fetchPage(tab()));\n  return (\n    <>\n      <ul class=\"inline\">\n        <For each={pages}>\n          {(page) => (\n            <li>\n              <button\n                class={{ selected: tab() === page }}\n                onClick={() => setTab(page)}\n              >\n                {page}\n              </button>\n            </li>\n          )}\n        </For>\n      </ul>\n      <Loading fallback={<p>Loading page...</p>}>\n        <div\n          class={['tab', { pending: isPending(content) }]}\n          aria-busy={isPending(content) ? 'true' : 'false'}\n        >\n          <p>{content()}</p>\n        </div>\n      </Loading>\n    </>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+      },
+      {
+        "name": "styles",
+        "type": "css",
+        "content": "body {\n  background-color: #eee;\n}\n\n#app {\n  border-radius: 3px;\n  border: 1px solid #e5e5e5;\n  margin: 15px;\n  background-color: white;\n}\n\n.tab {\n  padding: 25px;\n  font-family: sans-serif;\n  color: #444;\n  min-height: 400px;\n}\n\n.pending {\n  transition: color 0.3s;\n  transition-delay: 0.1s;\n  transition-timing-function: ease-in;\n  color: #aaa;\n}\n\nul.inline {\n  list-style: none;\n  padding: 0;\n  margin-bottom: 0;\n  -webkit-margin-before: 0;\n  -webkit-margin-after: 0;\n  -webkit-margin-start: 0px;\n  -webkit-margin-end: 0px;\n  -webkit-padding-start: 0px;\n}\n\nul.inline li {\n  display: inline-block;\n  margin-left: 0;\n  padding: 10px;\n  border-bottom: 2px solid #eee;\n  transition: all 0.5s;\n  font-family: sans-serif;\n  font-weight: 300;\n  cursor: pointer;\n  color: #aaa;\n}\n\nul.inline li.selected {\n  border-bottom: 2px solid #337ab7;\n  color: #444;\n}\n\n.loader {\n  color: #aaa;\n  font-size: 16px;\n  font-weight: 600;\n  width: 80px;\n}\n"
+      }
+    ]
+  }
+}

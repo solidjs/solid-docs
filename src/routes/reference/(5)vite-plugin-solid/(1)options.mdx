@@ -34,6 +34,8 @@ interface Options {
 	diagnostics?: boolean;
 	ssr?: boolean;
 	start?: boolean | StartOptions;
+	env?: boolean | string;
+	css?: { filter?: { include?: FilterPattern; exclude?: FilterPattern } };
 	compiler?: "babel" | "native";
 	hot?: boolean;
 	extensions?: (string | [string, ExtensionOptions])[];
@@ -46,6 +48,7 @@ interface Options {
 				ssr: boolean
 		  ) => Promise<babel.TransformOptions>);
 	solid?: SolidOptions;
+	frontends?: Record<string, Frontend>;
 	serverFunctions?: boolean | ServerFunctionsOptions;
 	refresh?: RefreshOptions;
 }
@@ -112,6 +115,58 @@ The plugin rejects an object value at configuration time.
 Enables start mode.
 `true` and `{}` are equivalent.
 See [`StartOptions`](/reference/vite-plugin-solid/start).
+
+### `env`
+
+- **Type:** `boolean | string`
+- **Default:** With `start`, probe `env.ts`, then `env.js`, and turn the feature off when neither exists; without `start`, off
+
+Configures Standard Schema environment validation.
+`true` requires a conventional schema file, a string selects a schema file, and `false` disables probing.
+An explicit value works in any setup, such as a manual `ssr: true` server; left unset, only start mode probes for the conventional files.
+
+The schema must default-export only `server` and `client` maps.
+Every value must implement Standard Schema's `~standard.validate`.
+Client keys must start with Vite's `envPrefix`, which defaults to `VITE_`, and a key cannot appear in both maps.
+
+```ts
+export default {
+	server: {
+		DATABASE_URL: z.url(),
+	},
+	client: {
+		VITE_APP_NAME: z.string(),
+	},
+};
+```
+
+The plugin writes `solid-env.d.ts` next to the schema.
+`virtual:env/client` contains validated client values baked into the client bundle.
+`virtual:env/server` contains server and client values and reads server values from `process.env` at server startup.
+The plugin rejects `virtual:env/server` imports from client module graphs.
+
+Client validation errors fail development and builds.
+Server validation errors fail development, warn during builds, and fail when the built server module starts.
+
+### `css`
+
+- **Type:** `{ filter?: { include?: FilterPattern; exclude?: FilterPattern } }`
+- **Default:** `undefined`
+
+`css.filter` selects the module graphs the development server crawls when it collects the CSS it inlines into `<head>`, in start mode and in `ssr: true` setups that read `virtual:solid-manifest`.
+By default the crawl covers the application's own sources and skips `node_modules`.
+`exclude` prunes matching graphs and replaces the default `node_modules` exclusion; `include` adds matching files on top of it, which is how a dependency's CSS is inlined in development:
+
+```ts
+solidPlugin({
+	start: true,
+	ssr: true,
+	css: { filter: { include: /node_modules\/some-ui-lib/ } },
+});
+```
+
+CSS files and virtual modules always pass; the filter decides which graphs are traversed, not which stylesheets are kept.
+Development only: production CSS always comes from the built assets.
 
 ### `compiler`
 
@@ -227,6 +282,38 @@ A `@solidjs/compiler` without that pass leaves primitives unnamed and warns once
 Under `dev` it is on like the others.
 
 The plugin always passes the resolved value to the compiler, so `sourceNames: false` disables names during `serve` rather than falling through to the compiler's own development default.
+
+### `frontends`
+
+- **Type:** `Record<string, Frontend>`
+- **Default:** `{}`, plus the built-in `.rx` front end
+
+Front ends for languages that lower to Solid themselves, keyed by file extension.
+Unlike `extensions`, whose files are parsed as JSX, a front end's module is handed to its `compile` function, which returns the module's code, source map, and stylesheet:
+
+```ts
+interface Frontend {
+	compile(
+		source: string,
+		context: {
+			id: string; // the module's file path
+			moduleId: string; // its full id, query included
+			ssr: boolean; // compiled for a server environment
+			root: string; // Vite's resolved root
+			solid: SolidOptions; // what the plugin would pass @solidjs/compiler for a JSX module here
+			addWatchFile(file: string): void; // recompile this module when `file` changes
+		}
+	): { code: string; map?: string | object | null; css?: string } | null;
+}
+```
+
+A front end usually ends in `@solidjs/compiler` with `context.solid`, so its output matches the environment's `generate`, `hydratable`, and `moduleName`.
+From there the module goes through the lazy and refresh passes and server-function compilation, and `css` is imported as a CSS module.
+Solid's own extensions such as `.jsx`, `.tsx`, and `.tsrx` cannot be claimed.
+Return `null` to leave a module to the rest of the pipeline.
+
+`.rx` ([ReactiveScript](https://github.com/ryansolid/reactivescript)) is built in: install `@reactivescript/compiler` and `.rx` modules compile with no option.
+The plugin loads it the first time it meets an `.rx` module; a `.rx` entry in `frontends` replaces it.
 
 ### `serverFunctions`
 

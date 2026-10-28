@@ -22,19 +22,19 @@ import solidPlugin, { type StartOptions } from "@solidjs/vite-plugin";
 ```ts
 interface StartOptions {
 	app?: string;
-	entryServer?: string;
-	entryClient?: string;
+	entries?: { server?: string; client?: string };
 	document?: string;
 	middleware?: string;
 	setup?: string;
-	env?: boolean | string;
-	external?: boolean;
+	productionErrorBoundary?: boolean;
+	externalServer?: boolean;
 	node?: boolean;
 }
 ```
 
 All paths resolve relative to the Vite root and must exist.
-The `app`, entry, document, middleware, setup, and environment schema paths must remain inside that root.
+The `app`, entry, document, middleware, and setup paths must remain inside that root.
+The removed keys `entryServer`, `entryClient`, `errorBoundary`, `external`, `env`, and `css` fail at configuration time with a message naming the replacement.
 
 ## Options
 
@@ -46,7 +46,7 @@ The `app`, entry, document, middleware, setup, and environment schema paths must
 Specifies the default-exporting root component used by generated entries.
 The plugin requires `app` when it cannot use an authored client entry in client mode or an authored entry pair in SSR mode.
 
-### `entryServer`
+### `entries.server`
 
 - **Type:** `string`
 - **Default:** First existing `src/entry-server.{tsx,jsx,ts,js,mjs}`, otherwise generated
@@ -61,9 +61,9 @@ function render(
 ): RenderToStreamResult | string | Response | Promise<string | Response>;
 ```
 
-The plugin ignores `entryServer` and the conventional server entry in client start mode.
+The plugin ignores `entries.server` and the conventional server entry in client start mode.
 
-### `entryClient`
+### `entries.client`
 
 - **Type:** `string`
 - **Default:** First existing `src/entry-client.{tsx,jsx,ts,js,mjs}`, otherwise generated
@@ -123,45 +123,24 @@ Return nothing to keep `App`.
 The plugin ignores `setup` in client mode and rejects it when SSR uses authored entries.
 The setup function does not run for server-function endpoint dispatch.
 
-### `env`
+### `productionErrorBoundary`
 
-- **Type:** `boolean | string`
-- **Default:** Probe `env.ts`, then `env.js`; disable the feature when neither exists
+- **Type:** `boolean`
+- **Default:** `true`
 
-Configures Standard Schema environment validation.
-`true` requires a conventional schema file, a string selects a schema file, and `false` disables probing.
+In a production build, generated entries wrap the application in a default error boundary.
+A render error streams a generic `500 | Internal Server Error` fallback with no stack or error details, the error itself goes to `console.error`, and an error caught before the shell flushes commits a real `500` status.
+Development is unaffected, and so are authored entries.
+Set `false` when application middleware owns error handling: an error middleware only sees the throw when no boundary catches it first.
 
-The schema must default-export only `server` and `client` maps.
-Every value must implement Standard Schema's `~standard.validate`.
-Client keys must start with Vite's `envPrefix`, which defaults to `VITE_`, and a key cannot appear in both maps.
-
-```ts
-export default {
-	server: {
-		DATABASE_URL: z.url(),
-	},
-	client: {
-		VITE_APP_NAME: z.string(),
-	},
-};
-```
-
-The plugin writes `solid-env.d.ts` next to the schema.
-`virtual:env/client` contains validated client values baked into the client bundle.
-`virtual:env/server` contains server and client values and reads server values from `process.env` at server startup.
-The plugin rejects `virtual:env/server` imports from client module graphs.
-
-Client validation errors fail development and builds.
-Server validation errors fail development, warn during builds, and fail when the built server module starts.
-
-### `external`
+### `externalServer`
 
 - **Type:** `boolean`
 - **Default:** `false`
 
 Hands SSR start-mode build wiring and HTTP serving to a host integration.
 The plugin keeps generated entries, the client manifest, and `virtual:solid-ssr-handler`, but does not configure `dist/server` or its development middlewares.
-The plugin ignores `external` in client mode.
+The plugin ignores `externalServer` in client mode.
 
 A host-owned, non-runnable `ssr` development environment is detected without this option.
 Use `serverFunctions.devMiddleware: false` to hand over only development endpoint dispatch.
@@ -206,7 +185,7 @@ export declare function serve(
 `event` returns fields merged over `{ nativeEvent: req }`.
 
 The build emits `node.js` only in the `ssr` environment and only when that build contains `server.js`.
-The plugin warns and emits nothing with `external`, and in client mode without `serverFunctions`.
+The plugin warns and emits nothing with `externalServer`, and in client mode without `serverFunctions`.
 
 ## Valid mode combinations
 

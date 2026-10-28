@@ -141,7 +141,7 @@ The generated entries cover every project shape, including the routers in the of
 Author your own entries when the server render must return something the generated one cannot, such as a custom `Response` per request or a document assembled by another host.
 :::
 
-An entry pair is selected in this order: explicit `start.entryServer` and `start.entryClient` paths, then the conventional `src/entry-server.*` and `src/entry-client.*` files (probed as `.tsx`, `.jsx`, `.ts`, `.js`, then `.mjs`), then the generated pair built from `App` and `Document`.
+An entry pair is selected in this order: explicit `start.entries.server` and `start.entries.client` paths, then the conventional `src/entry-server.*` and `src/entry-client.*` files (probed as `.tsx`, `.jsx`, `.ts`, `.js`, then `.mjs`), then the generated pair built from `App` and `Document`.
 
 Under `ssr: true`, authored entries come in pairs, because both sides must render the same document tree for hydration to match.
 The server entry exports `render(request, context)`, which may return a `renderToStream` result, an HTML string, or a `Response`.
@@ -149,7 +149,7 @@ The client entry owns hydration, and the server document owns its own client `<s
 Authored entries bypass the `App` and `Document` conventions; those two modules belong to the generated entries.
 
 Without `ssr`, the server entry is always generated, because it renders the shell for dev serving and the build-time prerender.
-An authored client entry can stand alone in that mode and owns the browser mount; `start.entryServer` and any `src/entry-server.*` file are ignored, and the selected `Document` still supplies the shell.
+An authored client entry can stand alone in that mode and owns the browser mount; `start.entries.server` and any `src/entry-server.*` file are ignored, and the selected `Document` still supplies the shell.
 
 Providing one authored entry without the other under `ssr: true` is a configuration error, and the message names the missing file.
 
@@ -202,11 +202,11 @@ The app is passed in as children; a body that hardcodes its content never render
 
 Production builds wrap the generated entries in a default error boundary that logs the error with `console.error` on the server and renders `500 | Internal Server Error` with a 500 status; development builds have no such boundary.
 Read the server log for the real error.
-Set `start.errorBoundary: false` when middleware owns error handling; [Middleware and API routes](/building-apps/middleware-and-api-routes#catching-errors) shows that middleware.
+Set `start.productionErrorBoundary: false` when middleware owns error handling; [Middleware and API routes](/building-apps/middleware-and-api-routes#catching-errors) shows that middleware.
 
 ### `start.setup only applies to generated entries`
 
-The project has an authored `src/entry-server.*` (or `start.entryServer`) and `start.setup` at the same time.
+The project has an authored `src/entry-server.*` (or `start.entries.server`) and `start.setup` at the same time.
 Call the setup step from your own `render()` and remove `start.setup`, or remove the authored entry.
 
 ## Loading instrumentation first

@@ -34,9 +34,11 @@ const devImportMap: Tab = {
 				`solid-js@${DEFAULT_SOLID_VERSION}`,
 				"solid-js/internal,@solidjs/web"
 			),
+			// internal imports "solid-js" itself, so it must stay external here or
+			// the page gets a second copy of the runtime.
 			"solid-js/internal": esm(
 				`solid-js@${DEFAULT_SOLID_VERSION}/internal`,
-				"@solidjs/web"
+				"solid-js,@solidjs/web"
 			),
 			"@solidjs/web": esm(
 				`@solidjs/web@${DEFAULT_SOLID_VERSION}`,

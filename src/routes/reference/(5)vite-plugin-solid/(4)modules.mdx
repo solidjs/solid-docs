@@ -51,14 +51,15 @@ The types-only subpath declares the following modules:
 ### `virtual:solid-manifest`
 
 ```ts
-import type { ViteManifest } from "@solidjs/vite-plugin";
+import type { DevAssetResolver, ViteManifest } from "@solidjs/vite-plugin";
 
-const manifest: ViteManifest;
+const manifest: ViteManifest | DevAssetResolver;
 export default manifest;
 ```
 
-Development output provides a resolver-backed manifest for module JavaScript and CSS.
-Build output contains `dist/client/.vite/manifest.json` with the configured Vite base.
+In development the module exports the live `DevAssetResolver` for module JavaScript and CSS; in an SSR build it exports the contents of `dist/client/.vite/manifest.json` with the configured Vite base.
+Either one can be passed to `renderToStream`'s `manifest` option as is.
+Code that reads it narrows with `if (manifest.resolve)`.
 
 ### `virtual:solid-server-function-manifest`
 

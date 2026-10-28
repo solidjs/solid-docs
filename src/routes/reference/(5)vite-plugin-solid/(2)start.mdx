@@ -27,14 +27,14 @@ interface StartOptions {
 	middleware?: string;
 	setup?: string;
 	productionErrorBoundary?: boolean;
-	external?: boolean;
+	externalServer?: boolean;
 	node?: boolean;
 }
 ```
 
 All paths resolve relative to the Vite root and must exist.
 The `app`, entry, document, middleware, and setup paths must remain inside that root.
-The removed keys `entryServer`, `entryClient`, `errorBoundary`, `env`, and `css` fail at configuration time with a message naming the replacement.
+The removed keys `entryServer`, `entryClient`, `errorBoundary`, `external`, `env`, and `css` fail at configuration time with a message naming the replacement.
 
 ## Options
 
@@ -133,14 +133,14 @@ A render error streams a generic `500 | Internal Server Error` fallback with no 
 Development is unaffected, and so are authored entries.
 Set `false` when application middleware owns error handling: an error middleware only sees the throw when no boundary catches it first.
 
-### `external`
+### `externalServer`
 
 - **Type:** `boolean`
 - **Default:** `false`
 
 Hands SSR start-mode build wiring and HTTP serving to a host integration.
 The plugin keeps generated entries, the client manifest, and `virtual:solid-ssr-handler`, but does not configure `dist/server` or its development middlewares.
-The plugin ignores `external` in client mode.
+The plugin ignores `externalServer` in client mode.
 
 A host-owned, non-runnable `ssr` development environment is detected without this option.
 Use `serverFunctions.devMiddleware: false` to hand over only development endpoint dispatch.
@@ -185,7 +185,7 @@ export declare function serve(
 `event` returns fields merged over `{ nativeEvent: req }`.
 
 The build emits `node.js` only in the `ssr` environment and only when that build contains `server.js`.
-The plugin warns and emits nothing with `external`, and in client mode without `serverFunctions`.
+The plugin warns and emits nothing with `externalServer`, and in client mode without `serverFunctions`.
 
 ## Valid mode combinations
 

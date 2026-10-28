@@ -37,7 +37,6 @@ interface Options {
 	env?: boolean | string;
 	css?: { filter?: { include?: FilterPattern; exclude?: FilterPattern } };
 	compiler?: "babel" | "native";
-	hot?: boolean;
 	extensions?: (string | [string, ExtensionOptions])[];
 	babel?:
 		| babel.TransformOptions
@@ -50,7 +49,7 @@ interface Options {
 	solid?: SolidOptions;
 	frontends?: Record<string, Frontend>;
 	serverFunctions?: boolean | ServerFunctionsOptions;
-	refresh?: RefreshOptions;
+	refresh?: boolean | { granular?: boolean };
 }
 ```
 
@@ -73,10 +72,11 @@ Relative patterns resolve against the Vite root.
 ### `dev`
 
 - **Type:** `boolean`
-- **Default:** Enabled for Vite's `serve` command
+- **Default:** `undefined`: development builds under `vite dev` and Vitest, production builds otherwise
 
 Selects the development exports of `solid-js` and `@solidjs/web`.
-Set `true` to select them outside `serve`, or `false` to disable that selection during `serve`.
+Set `true` to force them in `vite build` too, for example to debug a production bundle with the development warnings on.
+`false` serves the production builds under `vite dev` as well; HMR then falls back to full reloads.
 The same flag is passed to the compilers as `dev` and decides the default for [`solid.sourceNames`](#sourcenames).
 
 ### `observe`
@@ -178,26 +178,16 @@ Both values use `@dom-expressions/compiler` for the `lazy()` module URL, refresh
 `"babel"` uses `babel-preset-solid` for the JSX pass.
 The native compiler loader uses its WebAssembly fallback when the platform has no native binary.
 
-### `hot`
-
-- **Type:** `boolean`
-- **Default:** `true` during development
-- **Deprecated:** Use `refresh.disabled`
-
-Set `false` to disable the refresh transform and runtime.
-Production output is unaffected.
-
 ### `refresh`
 
-```ts
-interface RefreshOptions {
-	disabled?: boolean;
-	granular?: boolean;
-}
-```
+- **Type:** `boolean | { granular?: boolean }`
+- **Default:** `true`
 
-`disabled` disables the development refresh transform.
-`granular` controls component signature and dependency metadata and defaults to `true`.
+Component hot replacement under `vite dev` through the refresh transform.
+`false` turns it off, so edits fall back to a full reload.
+It has no effect on `vite build`, and it is off with `dev: false`, since the production refresh runtime is an inert stub.
+`granular`, which defaults to `true`, emits per-component signature and dependency metadata, so an edit remounts only the components whose code changed.
+The removed spellings `hot` and `refresh: { disabled: true }` fail at configuration time with a message naming the replacement.
 
 ### `extensions`
 

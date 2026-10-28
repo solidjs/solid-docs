@@ -32,18 +32,25 @@ const devImportMap: Tab = {
 		imports: {
 			"solid-js": esm(
 				`solid-js@${DEFAULT_SOLID_VERSION}`,
-				"solid-js/internal,@solidjs/web"
+				"solid-js/internal,@solidjs/web,@solidjs/signals"
 			),
 			"solid-js/internal": esm(
 				`solid-js@${DEFAULT_SOLID_VERSION}/internal`,
-				"@solidjs/web"
+				"solid-js,@solidjs/web,@solidjs/signals"
 			),
 			"@solidjs/web": esm(
 				`@solidjs/web@${DEFAULT_SOLID_VERSION}`,
-				"solid-js,solid-js/internal"
+				"solid-js,solid-js/internal,@solidjs/signals"
 			),
+			// Left to esm.sh, solid-js's `^` range resolves to a newer signals build.
+			"@solidjs/signals": `https://esm.sh/@solidjs/signals@${DEFAULT_SOLID_VERSION}?dev`,
 		},
-		pinned: ["solid-js", "solid-js/internal", "@solidjs/web"],
+		pinned: [
+			"solid-js",
+			"solid-js/internal",
+			"@solidjs/web",
+			"@solidjs/signals",
+		],
 	}),
 };
 

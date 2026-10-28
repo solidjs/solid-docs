@@ -138,7 +138,9 @@ interface ServerFunctionsClientConfig {
 		}): { position?: string; headers?: Record<string, string> } | undefined;
 		onLive?(): void;
 	};
-	serializeArgs?(args: unknown[]): string | Promise<string>;
+	serializeArgs?(
+		args: unknown[]
+	): string | FormData | Promise<string | FormData>;
 }
 ```
 
@@ -246,12 +248,14 @@ canonical implementation.
 
 #### `serializeArgs`
 
-- **Type:** `string | Promise<string>`
+- **Type:** `string | FormData | Promise<string | FormData>`
 
 Encoder for argument lists JSON can't carry faithfully. JSON-safe args
 always go as plain JSON (no codec in the bundle); anything else throws
 unless this is set. Installed by `enableRichArguments()` from the
-rich-args entry — set directly only for custom wire encodings.
+rich-args entry — set directly only for custom wire encodings. A
+`FormData` answer is sent as an upload: the codec output in its `args`
+field and each file in a `file<index>` part.
 
 ### `ServerFunctionsSend`
 

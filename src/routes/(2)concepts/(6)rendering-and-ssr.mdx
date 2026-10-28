@@ -158,6 +158,41 @@ const accountHtml = renderToString(() => <Account />, { renderId: "account" });
 hydrate(() => <Account />, accountRoot, { renderId: "account" });
 ```
 
+## Async data during hydration
+
+Async values the server rendered travel to the client with the HTML.
+A hydrating memo adopts the server's answer, a value or an error, and does not ask for it again, even when the client joins a stream partway through.
+It computes again only when one of its inputs changes on the client or it is refreshed.
+
+The memo still has to learn what it depends on, so the client runs its compute function once and discards the result.
+For that synchronous run, the global `Promise` and `fetch` are replaced by stand-ins whose promises never settle, so no request goes out.
+That makes the run harmless as long as the compute keeps nothing it creates.
+A cache that outlives the run is the case that breaks:
+
+```ts
+// Avoid: the promise stored while hydrating is a stand-in and never settles
+const loads = new Map<string, Promise<Catalog>>();
+
+function loadCatalog(key: string) {
+	let load = loads.get(key);
+	if (!load)
+		loads.set(key, (load = import("./catalog").then((m) => m.load(key))));
+	return load;
+}
+
+const catalog = createMemo(() => loadCatalog(props.key));
+```
+
+The memo itself hydrates with the server's value, so the page looks right.
+The next component that calls `loadCatalog` with the same key gets the stored stand-in and waits forever, and no request for the module is ever made.
+A bundler's `import()` wrapper goes through the global `Promise` too, so a cached `import()` has the same problem.
+
+Keep caches out of the compute when you can: cache the resolved value instead of the promise, start the load outside the compute (in an event handler, for example), or use [`lazy`](/reference/solid-js/components-context/lazy) for components.
+A data library that must cache promises skips caching while [`isHydrating()`](/reference/solid-js/advanced/manual-hydration/is-hydrating) is `true` and seeds its cache from [`takeHydrationValue`](/reference/solid-web/rendering-ssr/take-hydration-value) instead.
+
+An [`Errored`](/reference/solid-js/components-jsx/errored) boundary that the server rendered in its error state hydrates showing the server's fallback.
+Its content runs to track its inputs, but nothing is fetched again: the fallback stays until one of those inputs changes or the fallback calls `reset()`.
+
 ## Synchronous string rendering
 
 [`renderToString`](/reference/solid-web/rendering-ssr/render-to-string) runs a component tree synchronously and returns an HTML string.
@@ -320,12 +355,18 @@ Include it once, before the application markup.
 An async read outside any `Loading` boundary blocks the stream's shell.
 Put a boundary around the region that depends on the read, so the shell carries a fallback and the content streams later.
 
+### A promise cached while the page hydrated never resolves
+
+A compute function stored a promise in a cache that outlives it, and the store happened during hydration's tracking run, where promises are stand-ins.
+Cache resolved values, or start the load outside the compute; see [Async data during hydration](#async-data-during-hydration).
+
 ## Recap
 
 - One component source runs in the browser and on the server; code that needs `window` runs in an effect, an `onSettled` callback, behind `isServer`, or inside `clientOnly`.
 - Create state inside components or providers, never at module scope, so requests do not share it.
 - Render the same initial structure on both sides; fill in browser-only values after hydration.
 - Include `HydrationScript` once when the application owns the document.
+- Hydration adopts the server's async answers without asking again; a compute function must not cache promises it creates.
 - `renderToString` returns the shell with fallbacks; `renderToStream` sends the shell and streams each boundary's content as it settles.
 - A `Loading` boundary decides what is in the shell and what streams later, so its placement is a server decision too.
 - Reach for `NoHydration`, `Hydration`, and `renderId` only when the server and client intentionally own different parts of the page.

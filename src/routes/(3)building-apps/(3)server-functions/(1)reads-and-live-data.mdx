@@ -202,6 +202,40 @@ function Product(props: { productId: string }) {
 
 The `Avoid` version holds two open streams for one product, and each reconnects on its own when the network blips.
 
+## Share one live answer across viewers
+
+`live()` runs one producer per connection, which is right when the answer can depend on who is asking.
+When every viewer of the same arguments sees the same answer, such as a shared board or a match score, [`broadcast()`](/reference/solid-web/server-functions/broadcast) runs one producer per set of arguments and writes the same bytes to every connection:
+
+```ts
+// src/data/board.ts
+import { broadcast } from "@solidjs/web/server-functions";
+
+async function* watchBoard(roomId: string) {
+	yield await boards.read(roomId);
+	for await (const board of boards.watch(roomId)) {
+		yield board;
+	}
+}
+
+export const roomBoard = broadcast(async (roomId: string) => {
+	"use server";
+	await requireMember(roomId); // runs for every caller
+	return watchBoard(roomId); // one producer per room, shared by every caller
+});
+```
+
+On the client, `broadcast(fn)` is exactly `live(fn)`, so it is read the same way, through one memo.
+On the server:
+
+- The function body runs for every caller, so gates, redirects, and `respond()` work as on any call, and a caller the body rejects never joins.
+- The answer it returns is shared by every caller with the same arguments, compared as they were encoded on the wire. The first caller's producer runs; a later caller's answer is closed unread.
+- The returned answer may read the function's parameters and module scope, never the body's other locals. `const user = await getUser(); return watchInbox(user.id)` is a compile error, because every later caller would get the first caller's inbox. A data load derived from the arguments in the body is rejected for the same reason; do that read inside the producer.
+- The shared producer runs under its own request event, so `getRequestEvent()` inside it finds no request and development warns.
+- The producer stops when its last viewer disconnects, and the next caller starts a fresh one. Sharing is per server process.
+
+Choose `broadcast()` deliberately: whether an answer depends on the caller cannot be detected, and sharing also changes how many times the producer's cleanup runs.
+
 ## Observe connection status
 
 The returned iterable has an optional `onstatus` callback for the facts the reconnect loop removes from the value stream:
@@ -265,6 +299,7 @@ Check the server log for the status: the client retries only transient failures 
 - Return an async iterable to stream events over one connection; ending the iteration in the browser ends the server producer.
 - Declare a value that changes over time with `live(fn)`, which declares it `GET` as well, and yield the current value first on every invocation.
 - Read a live source through one memo and pass the value down; each call site that invokes the source opens its own connection.
+- Use `broadcast(fn)` when every caller with the same arguments gets the same answer; the body runs per caller and the returned producer is shared.
 - Use `onstatus` to show a reconnect; put data freshness in the yielded value.
 
 ## Next steps

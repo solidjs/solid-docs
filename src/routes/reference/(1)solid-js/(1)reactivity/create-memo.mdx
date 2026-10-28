@@ -98,6 +98,7 @@ and takes that path on its own.
 - Reads inside `compute` are tracked; reads in the code that calls the accessor are tracked there, not in the memo.
 - When `compute` returns a promise, reading the accessor before it resolves suspends to the nearest `Loading` boundary. Later updates hold the previous value instead.
 - A memo is for values. Put side effects in `createEffect`, not in `compute`.
+- While hydrating, a memo that adopts the server's answer runs `compute` once only to track its reads, with the global `Promise` and `fetch` replaced by stand-ins that never settle. Do not store a promise created in `compute` in a cache that outlives the run; see [Async data during hydration](/concepts/rendering-and-ssr#async-data-during-hydration).
 
 ## Common problems
 

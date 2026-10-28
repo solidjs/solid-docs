@@ -46,7 +46,7 @@ function toTabs(fileset: LessonFiles): Tab[] {
 // The REPL only opens the entry file on its own; open every lesson file as a tab,
 // with the entry file active and the preview below.
 function lessonLayout(tabs: Tab[]): ReplStorage {
-	// Lesson tabs only; the REPL wrapper adds its own import_map.json.
+	// Lesson tabs only; the REPL adds its own import_map.json.
 	tabs = tabs.filter((tab) => tab.name !== "import_map.json");
 	const files = tabs.map((tab) => `name:${tab.name}`);
 	const entry = files.find((id) => id === "name:main.jsx") ?? files[0];

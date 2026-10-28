@@ -81,6 +81,7 @@ const fresh = await refresh(user);
 - Refreshing a plain signal accessor is a no-op that resolves immediately.
 - The re-ask is quiet: `isPending` does not flip. Call `affects()` first when the UI should show a pending state.
 - Inside an action, the resolved value is the staged truth, never the caller's own optimistic override.
+- Inside an action, call `refresh(x)` in the generator, not after an `await` in an async helper the action yields. That code runs outside the transaction, and awaiting the refresh there hangs whenever `x` re-ran during the action.
 
 ## Common problems
 

@@ -132,6 +132,7 @@ const add = action(function* (item: CartItem) {
 In the `Avoid` version the write runs with no transaction to belong to, so the optimistic overlay is discarded at the end of that update: the row flashes in and vanishes, or never appears.
 Use `yield promise` as the suspension point.
 If you must `await`, place a bare `yield` before the next write so the transaction is restored.
+The same applies inside an async helper the action yields: everything after the helper's first `await` is outside the transaction, so call `refresh(items)` in the generator once the helper returns, not inside it.
 :::
 
 ## Show that a row is saving

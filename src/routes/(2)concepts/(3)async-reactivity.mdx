@@ -258,6 +258,38 @@ The third row is for content that should not stay on screen when its subject cha
 The hold applies only to updates.
 Each panel's first load still reaches the nearest `Loading` boundary, and nested boundaries let panels appear as their own first data arrives.
 
+### Keep a write out of another update's hold: `onFlush`
+
+Writes made in the same synchronous frame are applied together, so when one of them starts async work, the others wait with it.
+That is usually what you want, but not when a component writes its own state and then calls code it does not control:
+
+```tsx
+function Menu(props: { onSelect?: (id: string) => void }) {
+	const [open, setOpen] = createSignal(false);
+
+	const select = (id: string) => {
+		setOpen(false); // held if onSelect starts a navigation: the menu stays open
+		props.onSelect?.(id);
+	};
+	// ...
+}
+```
+
+If `onSelect` changes the route, the write to `open` is held with the navigation, and the menu stays open until the next page is ready.
+[`onFlush`](/reference/solid-js/lifecycle-actions/on-flush) runs its callback once, right after the pending flush and before the browser paints, so the write becomes its own update:
+
+```tsx
+const select = (id: string) => {
+	onFlush(() => setOpen(false)); // closes now, whatever onSelect does
+	props.onSelect?.(id);
+};
+```
+
+The write still follows the normal rules: it commits on its own unless something it changes also derives from the held work, in which case it joins that hold like any later write.
+Call `onFlush` from event handlers and effect callbacks.
+In a component body or a computation it warns in development with [`ON_FLUSH_IN_OWNED_SCOPE`](/reference/solid-js/diagnostics/on-flush-in-owned-scope); setup after the first stable render belongs in `onSettled`.
+`queueMicrotask` is not a substitute: called before the frame's first write, its callback runs before that flush and the write joins it.
+
 ## Another answer is coming: `isPending`
 
 Because the old answer stays visible, the UI needs a way to say that a new one is on the way.

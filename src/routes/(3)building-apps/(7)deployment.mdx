@@ -354,6 +354,40 @@ When a runtime accepts a default Fetchable module, point it at `dist/server/serv
 Bun and `deno serve`, for example, start modules that default-export an object with a `fetch` method.
 The runtime still needs the server bundle's production dependencies and environment variables.
 
+## Deploy while tabs are open
+
+A tab loaded before a deploy keeps calling the server functions it was built with.
+Server function ids come from the function's name and file, so adding, editing, or reordering functions does not move an id an open tab holds.
+Renaming or removing a function does: the new server answers that call with a 404, and the client rejects it with an error whose `unknownFunction` property is `true`.
+Treat that as "this page is from an old build" and reload onto the current one:
+
+```tsx
+function isFromOldBuild(err: unknown) {
+	return (
+		(err as { unknownFunction?: boolean } | null)?.unknownFunction === true
+	);
+}
+
+<Errored
+	fallback={(err) =>
+		isFromOldBuild(err()) ? (
+			<p>
+				A new version is available.{" "}
+				<button onClick={() => location.reload()}>Reload</button>
+			</p>
+		) : (
+			<p>Something went wrong.</p>
+		)
+	}
+>
+	<Checkout />
+</Errored>;
+```
+
+A function whose id survives a deploy can still take other arguments or return another shape.
+To catch that too, give the server a [`buildId`](/reference/solid-web/server-functions/host-configuration#buildid) per deploy, such as the commit hash, and send the same id from the client in the `X-Server-Function-Build` header through `prepareRequest`.
+A call from another build is answered `409` without running the function, and rejects with the same `unknownFunction: true`.
+
 ## Common problems
 
 ### A `public/` file 404s in production

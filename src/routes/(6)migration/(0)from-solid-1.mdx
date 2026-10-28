@@ -331,14 +331,15 @@ Apply these direct UI migrations:
 - Replace direct `createDynamic(source, props)` calls with `dynamic(source)`.
 - Use [`dynamicComponent`](/reference/solid-web/components/dynamic) from `solid-js` instead when the source only ever answers with a component, never a tag name; it does not keep the element runtime in the bundle.
 
-Update removed JSX forms:
+Update removed JSX forms.
+On native elements, `classList`, `use:`, `on:`, `oncapture:`, `attr:`, and `bool:` are compile errors that name the replacement:
 
 - Replace `classList` with the object or array form of `class`.
 - Replace `use:directive` with a `ref` callback or directive factory, and use a `ref` array to compose callbacks.
 - Replace `on:` and `oncapture:` with camel-case Solid event props.
   Use a `ref` callback and `addEventListener` when native listener options are required.
 - Rename lowercase handlers such as `onclick={fn}` to `onClick`.
-  Only `on` followed by an uppercase letter is an event handler; a lowercase `onclick` or a leftover `on:click` compiles to a plain attribute without an error, and development warns `[LOWERCASE_EVENT_ATTRIBUTE]` when it receives a function.
+  Only `on` followed by an uppercase letter is an event handler; a lowercase `onclick` compiles to a plain attribute without an error, and development warns `[LOWERCASE_EVENT_ATTRIBUTE]` when it receives a function.
 - Replace `attr:` and `bool:` with standard attributes and boolean presence.
 - Remove `/*@once*/`.
   Keep values reactive, use DOM default properties such as `defaultValue` for initial state, or take a narrow JavaScript snapshot with `untrack`.
@@ -383,9 +384,11 @@ Choose replacements by behavior:
 - `createMutable` and `modifyMutable`: use `createStore` and draft setters.
 - `produce`: pass its draft callback directly to the store setter.
 - `createSelector`: use `createProjection` or function-form `createStore`.
-- `from` and `observable`: use async iterables for inbound streams or a split effect for outbound notifications.
-  A standard Observable adapter has no direct core replacement.
-- `createDeferred`: move the scheduling policy outside Solid.
+- `from`: same name, and it now returns an async iterable for a computation to consume: `createMemo(() => from(source))`.
+  It accepts a subscribe function, an Observable such as an RxJS one, or an async iterable; see [`from`](/reference/solid-js/reactivity/from).
+  The subscribe function's `next` stores the value it is given, so a 1.x producer that called `set(prev => ...)` computes the value itself.
+- `observable`: push signal changes to the external subscriber from a split `createEffect`.
+- `createDeferred`: same name, new meaning. It is now an async memo that keeps its last answer while a refetch is in flight; 1.x's idle-time deferral and `timeoutMs` are gone, so move that scheduling policy outside Solid.
 - `indexArray`: use `mapArray` with `{ keyed: false }`.
 - `resetErrorBoundaries`: remove it; error boundaries recover through their current graph state or explicit reset callback.
 - `enableScheduling` and `writeSignal`: remove internal or obsolete usage.

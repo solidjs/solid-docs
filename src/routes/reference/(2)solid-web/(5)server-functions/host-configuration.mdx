@@ -399,6 +399,7 @@ interface ServerFunctionsServerConfig {
 	maxArguments?: number;
 	secret?: string;
 	chaosReconnectEvery?: number;
+	buildId?: string;
 }
 ```
 
@@ -576,6 +577,20 @@ digest-equal skip, `onstatus` — so the reconnect path is exercised
 continuously without a network to break. Applies to every event-stream
 response the live address answers, data and frames alike. Ignored
 outside the dev build; `0`/`undefined` is off.
+
+#### `buildId`
+
+- **Type:** `string`
+
+Id of the build this server was bundled with. A call whose
+`X-Server-Function-Build` header names another build is answered `409`
+and the function does not run: the page was loaded from a build whose
+functions may take other arguments or return another shape. The answer
+carries the unknown-function label, so the client rejects with
+`unknownFunction: true`, the same as for an id this build does not
+have. The client runtime does not send the header itself: the build
+integration adds it through `prepareRequest`. Calls without the header
+are not checked. Leave unset to check nothing.
 
 ### `WrapInvocationHook`
 

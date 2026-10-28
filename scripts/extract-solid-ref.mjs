@@ -107,6 +107,7 @@ const CANONICAL_ROUTES = {
 	createOptimistic: ["reactivity/create-optimistic.mdx", "Reactivity"],
 	createSignal: ["reactivity/create-signal.mdx", "Reactivity"],
 	flush: ["reactivity/flush.mdx", "Reactivity"],
+	from: ["reactivity/from.mdx", "Reactivity"],
 	isPending: ["reactivity/is-pending.mdx", "Reactivity"],
 	latest: ["reactivity/latest.mdx", "Reactivity"],
 	untrack: ["reactivity/untrack.mdx", "Reactivity"],
@@ -120,6 +121,7 @@ const CANONICAL_ROUTES = {
 
 	action: ["lifecycle-actions/action.mdx", "Lifecycle & Actions"],
 	affects: ["lifecycle-actions/affects.mdx", "Lifecycle & Actions"],
+	onFlush: ["lifecycle-actions/on-flush.mdx", "Lifecycle & Actions"],
 	onSettled: ["lifecycle-actions/on-settled.mdx", "Lifecycle & Actions"],
 	refresh: ["lifecycle-actions/refresh.mdx", "Lifecycle & Actions"],
 	until: ["lifecycle-actions/until.mdx", "Lifecycle & Actions"],
@@ -169,6 +171,7 @@ const CANONICAL_ROUTES = {
 
 	GET: ["server-functions/get.mdx", "Server functions"],
 	live: ["server-functions/live.mdx", "Server functions"],
+	broadcast: ["server-functions/broadcast.mdx", "Server functions"],
 	invoke: ["server-functions/invoke.mdx", "Server functions"],
 	withMeta: ["server-functions/metadata.mdx", "Server functions"],
 	getServerFunctionMetadata: [
@@ -608,6 +611,7 @@ const FOLD_INTO = {
 	ServerFunctionMetadata: "withMeta",
 	LiveSource: "live",
 	LiveServerFunction: "live",
+	FromSource: "from",
 	LiveSourceStatus: "live",
 	InvokeOptions: "invoke",
 	ServerFunctionInvoker: "invoke",
@@ -632,6 +636,9 @@ const FOLD_INTO = {
 };
 
 const HIDDEN_EXPORTS = new Set([
+	// Hydration-internal flush counter and the dev-only compiled input setter.
+	"clock",
+	"setStatefulProperty",
 	// Compiler slot protocol; not part of the application-facing reference.
 	"SLOT_VALUE",
 	"SLOT_MARKER",
@@ -849,6 +856,8 @@ const ENTRY_CALLOUTS = {
 		"> `Repeat` is positional list rendering over a store. It creates rows from numeric indexes without diffing array items or identities, so store reads remain fine-grained. Combine `from` and `count` for a sliding window; rows in the overlapping range are preserved.",
 	GET: "> See [Reads, streams, and live data](/building-apps/server-functions/reads-and-live-data) for caching, URL limits, and HEAD behavior.",
 	live: "> See [Reads, streams, and live data](/building-apps/server-functions/reads-and-live-data#declare-a-live-source) for the source contract, reconnect behavior, and reactive consumption.",
+	broadcast:
+		"> See [Share one live answer across viewers](/building-apps/server-functions/reads-and-live-data#share-one-live-answer-across-viewers) for what is shared, what runs per caller, and the compile-time capture rule.",
 	invoke:
 		"> See [Metadata and transport](/building-apps/server-functions/metadata-and-transport#configure-one-call) for invocation-scoped options.",
 	createNoJSHandler:
@@ -866,6 +875,7 @@ const ENTRY_SUMMARY_OVERRIDES = {
 		"Registers the ambient server error hook: called once per error object for every failure the server runtime handles or fails on, with the site that met it; the return value, when given, replaces what the client receives.",
 	SourceAccessor:
 		"The getter `createSignal` and `createMemo` return: an `Accessor<T>` carrying the `Refreshable` brand, which is what lets [`refresh()`](/reference/solid-js/lifecycle-actions/refresh) accept it. A plain `Accessor<T>` parameter accepts a `SourceAccessor<T>`; the reverse does not hold.",
+	from: "Adapts a callback subscription, an Observable, or an async iterable into an async iterable that a computation returns: `createMemo(() => from(source))`. During hydration, a subscription renders the server's first value and subscribes again once its section has hydrated.",
 	until:
 		"Awaits a reactive predicate and resolves the first time it becomes truthy, with the narrowed value. A falsy result or a pending async read means not yet, so the subscription stays live and re-evaluates as sources change. A thrown error, a rejected async source, a timeout, or an abort rejects the promise.",
 	affects:
@@ -1772,6 +1782,7 @@ const ENTRY_CAVEATS = {
 		"Reads inside `compute` are tracked; reads in the code that calls the accessor are tracked there, not in the memo.",
 		"When `compute` returns a promise, reading the accessor before it resolves suspends to the nearest `Loading` boundary. Later updates hold the previous value instead.",
 		"A memo is for values. Put side effects in `createEffect`, not in `compute`.",
+		"While hydrating, a memo that adopts the server's answer runs `compute` once only to track its reads, with the global `Promise` and `fetch` replaced by stand-ins that never settle. Do not store a promise created in `compute` in a cache that outlives the run; see [Async data during hydration](/concepts/rendering-and-ssr#async-data-during-hydration).",
 	],
 	createEffect: [
 		"Only the `compute` phase tracks. Reads in `effectFn` do not subscribe, so an effect that reads a signal only in `effectFn` runs once.",
@@ -1785,6 +1796,7 @@ const ENTRY_CAVEATS = {
 	],
 	flush: [
 		"Do not call `flush()` inside an `action` body or an `onSettled` callback; the queue is already draining there. Defer it with `queueMicrotask` if needed.",
+		"To make one write its own update instead of joining another update's hold, use [`onFlush`](/reference/solid-js/lifecycle-actions/on-flush) rather than flushing early.",
 		"Flushing does not resolve async work. A memo waiting on a promise stays pending after `flush()`.",
 	],
 	isPending: [
@@ -1846,10 +1858,12 @@ const ENTRY_CAVEATS = {
 		"Refreshing a plain signal accessor is a no-op that resolves immediately.",
 		"The re-ask is quiet: `isPending` does not flip. Call `affects()` first when the UI should show a pending state.",
 		"Inside an action, the resolved value is the staged truth, never the caller's own optimistic override.",
+		"Inside an action, call `refresh(x)` in the generator, not after an `await` in an async helper the action yields. That code runs outside the transaction, and awaiting the refresh there hangs whenever `x` re-ran during the action.",
 	],
 	until: [
 		"A falsy result keeps waiting. A thrown error, a rejected async source, a timeout, or an abort rejects the promise.",
 		"Reads inside the predicate see authoritative state, so an optimistic write cannot satisfy it.",
+		"Inside an action, `yield until(...)` from the generator. An `await until(...)` after an `await` in an async helper the action yields waits for the action's own commit, which waits for the helper.",
 	],
 	children: [
 		"Call it once in the component body and read the result. Calling `props.children` in several places creates the children several times.",
@@ -1857,7 +1871,7 @@ const ENTRY_CAVEATS = {
 	],
 	createContext: [
 		"Without a default, reading outside a provider throws `ContextNotFoundError`. That is intentional; add a default only for primitive fallbacks.",
-		"For app-wide state, a module-scope signal or store is already global; context is for scoping a value to a subtree.",
+		"For app-wide state, create it in a Provider rather than at module scope: module state is shared by every request a server renders.",
 	],
 	useContext: [
 		"Call it in the component body or another owned scope. Calling it inside an event handler or after an `await` has no owner to read from.",
@@ -1892,6 +1906,7 @@ const ENTRY_CAVEATS = {
 		"The boundary catches errors thrown while rendering its subtree and errors that travel through the reactive graph, including rejected async reads. Handle errors in event handlers where they happen.",
 		"`reset()` recomputes the failing sources. If the cause persists, the boundary errors again.",
 		"Errors thrown from the fallback itself go to the parent `Errored`.",
+		"A boundary the server rendered in its error state hydrates showing the server's fallback and fetches nothing again. It recovers when an input of its content changes or `reset()` is called.",
 	],
 	Loading: [
 		"The boundary shows its fallback only when a read inside has no settled value yet. Later updates hold the previous content; use `on` for content that should show a placeholder again.",
@@ -2324,6 +2339,24 @@ const ENTRY_LEARN = {
 		[
 			"Mutate, then refetch",
 			"/guides/data-fetching-patterns#mutate-then-refetch",
+		],
+	],
+	onFlush: [
+		[
+			"Keep a write out of another update's hold",
+			"/concepts/async-reactivity#keep-a-write-out-of-another-updates-hold-onflush",
+		],
+	],
+	from: [
+		[
+			"Feed an outside source into the graph",
+			"/guides/integrate-non-solid-code#feed-an-outside-source-into-the-graph",
+		],
+	],
+	broadcast: [
+		[
+			"Share one live answer across viewers",
+			"/building-apps/server-functions/reads-and-live-data#share-one-live-answer-across-viewers",
 		],
 	],
 	until: [

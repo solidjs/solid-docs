@@ -81,6 +81,16 @@ enableRichArguments();
 Rich arguments use the server-function codec.
 Results already use the codec when a return value needs it, so the opt-in affects arguments only.
 
+With rich arguments on, files and blobs can sit anywhere in the arguments, not only as the single argument: next to other arguments, or inside arrays, objects, maps, sets, and `FormData` entries.
+
+```ts
+await createListing({ title, photos: [front, back] }, { draft: true });
+```
+
+Such a call is sent as multipart form data, and each file travels as itself rather than inside the encoded arguments.
+A file passed twice is sent once and arrives as one value, and a `Blob` arrives as a `File` named `blob`.
+The server's `bodySizeLimit` bounds the whole body, files included.
+
 :::deep-dive[Custom codec plugins]
 The codec accepts plugins for types it does not know, built with `createPlugin` from `@solidjs/web/serialization`.
 The client and server must be configured with matching plugins, or one side produces frames the other cannot read.

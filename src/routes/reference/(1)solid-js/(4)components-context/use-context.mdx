@@ -83,12 +83,15 @@ function TodoList() {
 
 ```ts
 class ContextNotFoundError extends Error {
+	/**
+	 * In dev, a read site passes the context (and whether a provider above set
+	 * it to `undefined`) so the message can name it and say why it has no
+	 * value (#4181). Read through `arguments` so production — where the message
+	 * is empty — keeps the zero-parameter constructor byte for byte.
+	 */
+	constructor(context?: { id: symbol }, providedUndefined?: boolean);
 	constructor() {
-		super(
-			__DEV__
-				? "Context must either be created with a default value or a value must be provided before accessing it."
-				: ""
-		);
+		super(__DEV__ ? contextNotFoundMessage(arguments[0], arguments[1]) : "");
 	}
 }
 ```

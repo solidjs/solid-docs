@@ -39,6 +39,11 @@ Two forms:
   static fallback (theme, locale, frozen config). Outside any Provider,
   `useContext` returns `defaultValue`.
 
+`undefined` means "not provided": `createContext(undefined)` is still the
+default-less form, and a Provider passing `value={undefined}` counts as no
+Provider. For an optional context use `null` as the empty value:
+`createContext<T | null>(null)`.
+
 Context is for state that belongs to a subtree, which includes app-wide
 state in an app that renders on the server: a value created inside a
 component is created once per request, and the Provider owns and disposes
@@ -115,7 +120,7 @@ function Button() {
 ## Caveats
 
 - Without a default, reading outside a provider throws `ContextNotFoundError`. That is intentional; add a default only for primitive fallbacks.
-- For app-wide state, a module-scope signal or store is already global; context is for scoping a value to a subtree.
+- For app-wide state, create it in a Provider rather than at module scope: module state is shared by every request a server renders.
 
 ## Learn more
 

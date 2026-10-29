@@ -168,7 +168,7 @@ For forms that must work without JavaScript, the `fullstack` shape's Solid Route
 
 ## What the server does per request
 
-The plugin's `start.setup` hook is the seam that lets a router Solid does not own drive streaming SSR.
+The plugin's `start.serverRenderSetup` hook is the seam that lets a router Solid does not own drive streaming SSR.
 `src/setup.tsx` runs for each SSR request:
 
 ```tsx
@@ -278,7 +278,7 @@ The one adjustment is where API routes live: `src/routes` belongs to TanStack Ro
 
 ## Limits to know
 
-- `start.setup` runs only with the plugin's generated server entry and only when `ssr` is on.
+- `start.serverRenderSetup` runs only with the plugin's generated server entry and only when `ssr` is on.
   An authored server entry has to prepare the router and render it itself.
 - TanStack's own SSR protocol (`RouterServer`, `RouterClient`, and the `$_TSR` stream handlers) expects to own the HTML stream, and under start mode the plugin owns it.
   The template does not use that protocol; the hydration-registry transfer above is the native channel for this setup.
@@ -293,12 +293,12 @@ The one adjustment is where API routes live: `src/routes` belongs to TanStack Ro
 - Read `query.data` directly and use `isPending` for refetch state; skip the `isLoading` guards.
 - Call mutations through `useMutation` with an arrow around the server function, and return `reload({ revalidate })` to scope what single-flight collects.
 - Keep `staleTime` above zero so hydrated and single-flight data count as fresh.
-- Build a fresh router and `QueryClient` per request in `start.setup`, and copy a redirect or status from `router._serverResult` onto the response.
+- Build a fresh router and `QueryClient` per request in `start.serverRenderSetup`, and copy a redirect or status from `router._serverResult` onto the response.
 - Leave `disableGlobalCatchBoundary: true` in place so errors and redirects reach the app's own boundaries during SSR.
 
 ## Next steps
 
 - [Server functions](/building-apps/server-functions): the reads and mutations wrapped in `queryOptions` and `useMutation`, including why `GET` matters.
-- [Integrate a router](/routing/integrate-a-router): the `start.setup` and flight-data hooks this template is built on, for adapting the pattern to another router.
+- [Integrate a router](/routing/integrate-a-router): the `start.serverRenderSetup` and flight-data hooks this template is built on, for adapting the pattern to another router.
 - [Choose a rendering mode](/guides/choose-a-rendering-mode): the `ssr: false` posture, a static shell plus API server, works for this shape too.
 - [Middleware and API routes](/building-apps/middleware-and-api-routes): the `src/api` handlers, and why they live outside `src/routes` in this shape.

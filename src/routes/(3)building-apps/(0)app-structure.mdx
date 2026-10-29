@@ -12,7 +12,7 @@ Those two components are the whole application surface.
 The plugin's start mode generates the rest: the server entry that renders `<Document><App /></Document>`, the client entry that mounts or hydrates it, and the request handler that serves both.
 
 Most apps need only `App.tsx` and `Document.tsx`, and the first two sections below are about those files.
-The sections on generated entries and `start.setup` are for projects that need to change the defaults, such as an authored server entry or a router that must load before the render starts.
+The sections on generated entries and `start.serverRenderSetup` are for projects that need to change the defaults, such as an authored server entry or a router that must load before the render starts.
 
 ## Three rendering modes, one layout
 
@@ -159,13 +159,13 @@ Start mode does not select a router.
 Mount the router or its provider inside `App`, the way both router variants of the templates do, and route modules and route-table generation stay with the router you chose.
 
 Some routers need an instance bound to the current request so they can load the matched routes before the server render begins.
-`start.setup` names a server-only module for that:
+`start.serverRenderSetup` names a server-only module for that:
 
 ```ts
 // vite.config.ts
 solid({
 	start: {
-		setup: "./src/setup.tsx",
+		serverRenderSetup: "./src/setup.tsx",
 	},
 	ssr: true,
 });
@@ -176,7 +176,7 @@ The generated server entry calls it after the middleware chain has dispatched to
 It may return a component, nothing, or a promise of either: a returned component renders in `App`'s place inside `Document`, and no return keeps `<App />`.
 The browser-side `App` must produce the same router tree, or hydration will not match.
 
-`start.setup` runs only for page renders made by a generated server entry under `ssr: true`.
+`start.serverRenderSetup` runs only for page renders made by a generated server entry under `ssr: true`.
 It is ignored without `ssr`, and combining it with an authored server entry is an error.
 
 [Integrate a router](/routing/integrate-a-router) shows how the two supported routers use this hook and when a project needs it at all.
@@ -204,22 +204,22 @@ Production builds wrap the generated entries in a default error boundary that lo
 Read the server log for the real error.
 Set `start.productionErrorBoundary: false` when middleware owns error handling; [Middleware and API routes](/building-apps/middleware-and-api-routes#catching-errors) shows that middleware.
 
-### `start.setup only applies to generated entries`
+### `start.serverRenderSetup only applies to generated entries`
 
-The project has an authored `src/entry-server.*` (or `start.entries.server`) and `start.setup` at the same time.
-Call the setup step from your own `render()` and remove `start.setup`, or remove the authored entry.
+The project has an authored `src/entry-server.*` (or `start.entries.server`) and `start.serverRenderSetup` at the same time.
+Call the setup step from your own `render()` and remove `start.serverRenderSetup`, or remove the authored entry.
 
 ## Loading instrumentation first
 
 An error monitor or a tracing SDK on the server patches `node:http` and the other modules it observes, so it has to run before those modules are imported.
 Writing `import "./instrument"` at the top of an entry does not achieve that in ESM: static imports are hoisted and evaluated in dependency order, so the entry's own dependencies load first.
-`start.instrument` names a server-only module the plugin awaits before anything else in the server graph:
+`start.serverSetup` names a server-only module the plugin awaits before anything else in the server graph:
 
 ```ts
 // vite.config.ts
 solid({
 	start: {
-		instrument: "./src/instrument.ts",
+		serverSetup: "./src/instrument.ts",
 	},
 	ssr: true,
 });
@@ -245,8 +245,8 @@ Keep code splitting on in the server build (the default); inlining dynamic impor
 - Render `{props.children}` in the document body, or the app never appears on the server.
 - The static `<title>` in `Document` is the fallback; per-page titles come from head metadata.
 - Author `entry-server` and `entry-client` together, and only when the generated pair cannot produce the response you need.
-- Use `start.setup` when a router must load against the request before the server render; it applies only to generated entries under `ssr: true`.
-- Use `start.instrument` for a module that must run before the server graph loads, such as a monitoring SDK's `init()`; a static import at the top of an entry does not run first.
+- Use `start.serverRenderSetup` when a router must load against the request before the server render; it applies only to generated entries under `ssr: true`.
+- Use `start.serverSetup` for a module that must run before the server graph loads, such as a monitoring SDK's `init()`; a static import at the top of an entry does not run first.
 
 ## Next steps
 

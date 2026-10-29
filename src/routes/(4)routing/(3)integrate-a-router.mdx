@@ -20,13 +20,13 @@ A router that does the same needs nothing else from the platform for a synchrono
 
 ### Prepare an instance per request
 
-A router that must do asynchronous work before rendering, such as creating a request-bound instance and awaiting its route loaders, uses the `start.setup` option:
+A router that must do asynchronous work before rendering, such as creating a request-bound instance and awaiting its route loaders, uses the `start.serverRenderSetup` option:
 
 ```ts
 // vite.config.ts
 solid({
 	start: {
-		setup: "./src/setup.tsx",
+		serverRenderSetup: "./src/setup.tsx",
 	},
 	ssr: true,
 });
@@ -52,14 +52,14 @@ The browser-side `App` must produce the matching router tree so hydration lines 
 The [TanStack Router](/routing/tanstack#what-the-server-does-per-request) page shows a complete `setup.tsx`, including how it copies a redirect or a `404` from the router onto the response.
 
 :::caution[Where the hook runs and where it does not]
-`start.setup` runs only when a generated server entry renders an SSR request.
+`start.serverRenderSetup` runs only when a generated server entry renders an SSR request.
 It is ignored when `ssr` is off, and configuring it together with an authored `entry-server` is a build error, because an authored entry already owns its render function and must perform the same preparation itself.
 :::
 
 ### Middleware shares the event
 
 The separate `start.middleware` option installs a fetch-style chain in front of page renders, server-function calls, API routes, and no-JavaScript form posts.
-The chain and `start.setup` receive the same request event, so a value a middleware stores in `event.locals`, such as a session, is visible to the router instance the setup hook builds.
+The chain and `start.serverRenderSetup` receive the same request event, so a value a middleware stores in `event.locals`, such as a session, is visible to the router instance the setup hook builds.
 [Middleware and API routes](/building-apps/middleware-and-api-routes) covers the chain itself.
 
 ## Integrate single-flight mutations
@@ -119,14 +119,14 @@ Its `QueryClientProvider` subscribes as `"sq"` while mounted, the server hook bu
 
 ## Common problems
 
-### The build fails with `start.setup only applies to generated entries`
+### The build fails with `start.serverRenderSetup only applies to generated entries`
 
-The project has an authored `entry-server` and a `start.setup` option at the same time.
-Remove one: either delete the authored entry so the generated one runs the hook, or move the preparation into the authored entry's own render function and drop `start.setup`.
+The project has an authored `entry-server` and a `start.serverRenderSetup` option at the same time.
+Remove one: either delete the authored entry so the generated one runs the hook, or move the preparation into the authored entry's own render function and drop `start.serverRenderSetup`.
 
 ### The setup module never runs
 
-`start.setup` is server-mode only.
+`start.serverRenderSetup` is server-mode only.
 With `ssr: false` there is no per-request app render to prepare, so the option is accepted and ignored.
 Check the `ssr` flag in `vite.config.ts` before looking at the module.
 
@@ -143,8 +143,8 @@ The unnamed server hook pairs with the one-argument `subscribeFlightData(consume
 ## Recap
 
 - Read the request URL from the request event during SSR; the handler runs the render inside that event's scope.
-- Use `start.setup` for a router that needs a per-request instance or asynchronous loading before render, and return the component to render in `App`'s place.
-- `start.setup` applies only to generated server entries with `ssr` on; an authored entry does the same work itself.
+- Use `start.serverRenderSetup` for a router that needs a per-request instance or asynchronous loading before render, and return the component to render in `App`'s place.
+- `start.serverRenderSetup` applies only to generated server entries with `ssr` on; an authored entry does the same work itself.
 - Values a middleware stores in `event.locals` are visible in the setup hook, because both receive the same request event.
 - Opt in to single-flight on the client with `subscribeFlightData`; the header is sent on non-`GET` calls while a consumer is registered.
 - Register the server-side `collectFlightData` hook from the `serverFunctions.configure` module so it loads before the first dispatch.

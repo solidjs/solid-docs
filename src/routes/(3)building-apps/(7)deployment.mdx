@@ -385,7 +385,10 @@ function isFromOldBuild(err: unknown) {
 ```
 
 A function whose id survives a deploy can still take other arguments or return another shape.
-To catch that too, give the server a [`buildId`](/reference/solid-web/server-functions/host-configuration#buildid) per deploy, such as the commit hash, and send the same id from the client in the `X-Server-Function-Build` header through `prepareRequest`.
+To catch that too, the server checks a [`buildId`](/reference/solid-web/server-functions/host-configuration#buildid) against the `X-Server-Function-Build` header the client sends.
+`@solidjs/vite-plugin` wires both sides in production builds: the client build stamps every non-GET call with a fresh id per build, and the server build is configured with the same id, so a new deploy refuses calls from tabs still running the previous one.
+An app's own `prepareRequest` hook still runs, after the plugin's.
+Without the plugin, give the server a `buildId` per deploy, such as the commit hash, and send the same id from the client in that header through `prepareRequest`.
 A call from another build is answered `409` without running the function, and rejects with the same `unknownFunction: true`.
 
 ## Common problems

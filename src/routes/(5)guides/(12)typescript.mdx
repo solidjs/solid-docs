@@ -279,6 +279,43 @@ The `!` says the variable is assigned before it is read, which holds when every 
 A component that exposes its element takes a `Ref<T>` prop, `T | ((val: T) => void) | undefined | Ref<T>[]` from `solid-js`, and passes it straight through to `ref`.
 The [`ref` reference](/reference/solid-web/jsx-properties/ref) lists what the attribute accepts.
 
+## Custom elements
+
+The checkout form renders a `<date-picker>` custom element, and the checker reports `Property 'date-picker' does not exist on type 'JSX.IntrinsicElements'` until the tag is declared.
+Declare it once by augmenting the `JSX` namespace of `@solidjs/web`, the package `jsxImportSource` points at:
+
+```ts
+// src/types/custom-elements.d.ts
+export {};
+
+declare module "@solidjs/web" {
+	namespace JSX {
+		interface IntrinsicElements {
+			"date-picker": HTMLAttributes<HTMLElement> & {
+				value?: string;
+				"prop:disabledDates"?: string[];
+				onDatechange?: (event: CustomEvent<{ value: string }>) => void;
+			};
+		}
+	}
+}
+```
+
+With the file in place, `<date-picker value={date()} prop:disabledDates={holidays()} />` type-checks, `event.detail.value` in `onDatechange` is a `string`, and `prop:disabledDates={1}` reports `Type 'number' is not assignable to type 'string[]'`.
+Inside the augmented namespace, `HTMLAttributes` is the namespace's own interface, which supplies the global attributes, `ref`, and the standard event handlers.
+
+Two details decide whether the declaration applies:
+
+- The file must be a module.
+  The `export {}` line, or any `import` or `export`, makes `declare module` an augmentation that merges into the package's types.
+  Without it the file is a global script, and the same block declares a new `@solidjs/web` module that replaces the package's types: imports such as `render` report `Module '"@solidjs/web"' has no exported member 'render'`, and the tag is still unknown.
+- No `.ts` file next to it may share its name.
+  TypeScript treats `date-picker.d.ts` beside `date-picker.ts` as that file's compiled output and leaves it out of the program, so the declaration never applies and nothing reports why.
+
+Augment `@solidjs/web`, not `solid-js`.
+`solid-js` has no `JSX` namespace, so a `declare module "solid-js"` block does not change what the checker accepts in JSX.
+[Web components](/guides/integrate-non-solid-code#web-components) covers how attributes, `prop:` properties, and events reach the element at runtime.
+
 ## Server functions and the router
 
 A `"use server"` function is typed like any async function, and the caller sees its declared return:
@@ -377,6 +414,11 @@ A function is not a valid child, so the checker reports it; add the parentheses.
 
 The `ref` variable is typed `HTMLInputElement | undefined` and read in the component body, before the element exists.
 Move the read into an event handler or `onSettled`, and declare the variable with `!` once every read happens after creation.
+
+### `Module '"@solidjs/web"' has no exported member` after adding a declaration file
+
+The `.d.ts` file that declares a custom element has no `import` or `export`, so its `declare module "@solidjs/web"` block replaces the package's types instead of adding to them.
+Add `export {};` at the top of the file; see [Custom elements](#custom-elements).
 
 ## Recap
 

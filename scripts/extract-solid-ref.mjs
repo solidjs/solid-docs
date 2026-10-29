@@ -1802,7 +1802,7 @@ const ENTRY_CAVEATS = {
 	isPending: [
 		"Reports on updates to a value that exists. Before a first value, the read inside `fn` follows the surrounding `Loading` path.",
 		"A bare `refresh()` does not flip `isPending`; pair it with `affects()` to make the re-ask visible.",
-		"An errored expression is not pending: `isPending` returns `false` and does not rethrow the error. Read the value itself inside an `Errored` boundary to show the failure.",
+		"An errored expression is not pending: once the error shows, `isPending` returns `false` and does not rethrow it. An error that lands while a held update waits stays pending until that update reveals. Read the value itself inside an `Errored` boundary to show the failure.",
 	],
 	latest: [
 		"Use it on controls, not on content. Data read through `latest` can show a new answer before the rest of the update agrees with it.",

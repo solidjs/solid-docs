@@ -104,15 +104,25 @@ type Middleware = (
 Middleware runs in array order inside the request-event scope.
 The middleware fronts every request dispatched by the generated handler, including pages and the server-function endpoint.
 
-### `setup`
+### `serverSetup`
 
 - **Type:** `string`
 - **Default:** `undefined`
 
-Specifies a server-only module whose default export prepares the application before generated SSR begins.
+Specifies a server-only module the plugin runs to completion once, before anything else in the server graph loads: the app, the middleware, `@solidjs/web`, and every dependency.
+It is the place for a monitoring SDK's `init()`, which has to run before the modules it patches load.
+The module needs no exports and may use top-level `await`.
+It is the server counterpart of `clientSetup`.
+
+### `serverRenderSetup`
+
+- **Type:** `string`
+- **Default:** `undefined`
+
+Specifies a server-only module whose default export runs before every generated server render.
 
 ```ts
-type Setup = (
+type ServerRenderSetup = (
 	event: RequestEvent,
 	App: Component
 ) => Component | void | Promise<Component | void>;
@@ -120,8 +130,8 @@ type Setup = (
 
 Return a component to replace `App` for that request.
 Return nothing to keep `App`.
-The plugin ignores `setup` in client mode and rejects it when SSR uses authored entries.
-The setup function does not run for server-function endpoint dispatch.
+The plugin ignores `serverRenderSetup` in client mode and rejects it when SSR uses authored entries.
+The function does not run for server-function endpoint dispatch.
 
 ### `productionErrorBoundary`
 

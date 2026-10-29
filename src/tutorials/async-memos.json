@@ -1,0 +1,18 @@
+{
+	"lesson": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport { createSignal, createMemo, Loading, isPending } from 'solid-js';\n\nasync function fetchUser(id) {\n  await new Promise((resolve) => setTimeout(resolve, 500));\n  return { id, name: `Explorer ${id}`, joined: 2020 + (Number(id) % 6) };\n}\n\nfunction Profile() {\n  const [userId, setUserId] = createSignal('1');\n  const user = createMemo(() => ({ id: userId(), name: 'Placeholder', joined: 0 }));\n\n  return (\n    <>\n      <label>\n        User ID{' '}\n        <input\n          type=\"number\"\n          min=\"1\"\n          value={userId()}\n          onInput={(event) => setUserId(event.currentTarget.value)}\n        />\n      </label>\n      <Loading fallback={<p>Loading user...</p>}>\n        <h2>\n          {user().name} {isPending(user) ? '(updating...)' : ''}\n        </h2>\n        <p>Joined in {user().joined}</p>\n      </Loading>\n    </>\n  );\n}\n\nrender(() => <Profile />, document.getElementById('app'));\n"
+			}
+		]
+	},
+	"solved": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport { createSignal, createMemo, Loading, isPending } from 'solid-js';\n\nasync function fetchUser(id) {\n  await new Promise((resolve) => setTimeout(resolve, 500));\n  return { id, name: `Explorer ${id}`, joined: 2020 + (Number(id) % 6) };\n}\n\nfunction Profile() {\n  const [userId, setUserId] = createSignal('1');\n  const user = createMemo(() => fetchUser(userId()));\n\n  return (\n    <>\n      <label>\n        User ID{' '}\n        <input\n          type=\"number\"\n          min=\"1\"\n          value={userId()}\n          onInput={(event) => setUserId(event.currentTarget.value)}\n        />\n      </label>\n      <Loading fallback={<p>Loading user...</p>}>\n        <h2>\n          {user().name} {isPending(user) ? '(updating...)' : ''}\n        </h2>\n        <p>Joined in {user().joined}</p>\n      </Loading>\n    </>\n  );\n}\n\nrender(() => <Profile />, document.getElementById('app'));\n"
+			}
+		]
+	}
+}

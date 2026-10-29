@@ -1,18 +1,17 @@
-import { Icon } from "solid-heroicons";
-import { JSXElement, ParentComponent, Show } from "solid-js";
+import { Icon } from "./icon";
+import { ParentComponent, Show } from "solid-js";
+import type { JSX } from "@solidjs/web";
 
-import {
-	academicCap,
-	codeBracketSquare,
-	pencilSquare,
-	userGroup,
-} from "solid-heroicons/solid";
+import academicCap from "~icons/heroicons/academic-cap-solid";
+import codeBracketSquare from "~icons/heroicons/code-bracket-square-solid";
+import pencilSquare from "~icons/heroicons/pencil-square-solid";
+import userGroup from "~icons/heroicons/user-group-solid";
 
 export type QuickLinksProps = {
 	icon: string;
 	title: string;
 	href: string;
-	children: JSXElement;
+	children: JSX.Element;
 };
 
 const icons = {

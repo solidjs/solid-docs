@@ -1,0 +1,24 @@
+# Stores and drafts
+
+A signal holds one value. A store holds an object or array and tracks each property separately, so a change to one todo's `done` updates only the parts of the page that read it.
+
+Read a store like a plain object, with no getter call. Write it through its setter, which hands you a draft to change:
+
+```js
+const [todos, setTodos] = createStore([]);
+
+setTodos((draft) => {
+	const todo = draft.find((todo) => todo.id === id);
+	if (todo) todo.done = !todo.done;
+});
+```
+
+The setter can also return a new value instead, which Solid merges into the store by each item's `id`:
+
+```js
+setTodos((list) => list.filter((todo) => !todo.done));
+```
+
+Outside the setter, treat the store as read-only.
+
+**Try it:** adding already works. Make the checkboxes toggle `done` through a draft, and make **Clear done** remove finished todos by returning a filtered list.

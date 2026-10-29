@@ -1,0 +1,17 @@
+# Actions
+
+Reads are derived: change an input and an async memo asks again. A write is different. It changes the data on the server, so something has to ask the server again afterwards.
+
+Wrap a write in `action`. Its body is a generator: `yield` each promise, and the action resumes when it settles.
+
+```js
+const like = action(function* () {
+	affects(likes);
+	yield api.like();
+	refresh(likes);
+});
+```
+
+`refresh(likes)` re-runs the memo so it reads the server's new count. `affects(likes)` marks `likes` as about to change while the action runs, so `isPending(likes)` can show that a save is in progress.
+
+**Try it:** clicking **Like** saves to the server, but the count never changes. Turn `like` into an action that marks `likes` as affected, yields the API call, and then refreshes `likes`. The button should read "Saving..." while the action runs.

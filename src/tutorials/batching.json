@@ -1,0 +1,28 @@
+{
+	"lesson": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport { createSignal, flush, For } from 'solid-js';\nimport './styles.css';\n\nfunction Log() {\n  let list;\n  const [entries, setEntries] = createSignal([]);\n  const [summary, setSummary] = createSignal('No entries yet');\n\n  const add = () => {\n    setEntries((all) => [...all, `Entry ${all.length + 1}`]);\n    setSummary(`${entries().length} entries`);\n    list.lastElementChild?.scrollIntoView();\n  };\n\n  return (\n    <>\n      <button onClick={add}>Add entry</button> <span>{summary()}</span>\n      <ul ref={list}>\n        <For each={entries()}>{(entry) => <li>{entry}</li>}</For>\n      </ul>\n    </>\n  );\n}\n\nrender(() => <Log />, document.getElementById('app'));\n"
+			},
+			{
+				"name": "styles",
+				"content": "ul {\n  height: 120px;\n  overflow: auto;\n  border: 1px solid #ccc;\n  font-family: sans-serif;\n}\n",
+				"type": "css"
+			}
+		]
+	},
+	"solved": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport { createSignal, flush, For } from 'solid-js';\nimport './styles.css';\n\nfunction Log() {\n  let list;\n  const [entries, setEntries] = createSignal([]);\n  const summary = () =>\n    entries().length ? `${entries().length} entries` : 'No entries yet';\n\n  const add = () => {\n    setEntries((all) => [...all, `Entry ${all.length + 1}`]);\n    flush();\n    list.lastElementChild.scrollIntoView();\n  };\n\n  return (\n    <>\n      <button onClick={add}>Add entry</button> <span>{summary()}</span>\n      <ul ref={list}>\n        <For each={entries()}>{(entry) => <li>{entry}</li>}</For>\n      </ul>\n    </>\n  );\n}\n\nrender(() => <Log />, document.getElementById('app'));\n"
+			},
+			{
+				"name": "styles",
+				"content": "ul {\n  height: 120px;\n  overflow: auto;\n  border: 1px solid #ccc;\n  font-family: sans-serif;\n}\n",
+				"type": "css"
+			}
+		]
+	}
+}

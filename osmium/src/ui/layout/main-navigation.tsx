@@ -1,7 +1,7 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
-import { useBeforeLeave, useLocation } from "@solidjs/router";
-import { Icon } from "solid-heroicons";
-import { chevronDown } from "solid-heroicons/solid";
+import { useLocation } from "@solidjs/router";
+import { Icon } from "../icon";
+import chevronDown from "~icons/heroicons/chevron-down-solid";
 import { setIsOpen } from "./mobile-navigation";
 import {
 	SidebarItem,
@@ -95,9 +95,10 @@ function isReferencePath(pathname: string) {
 export function MainNavigation(_props: MainNavigationProps) {
 	const location = useLocation();
 	const isReference = () => isReferencePath(location.pathname);
-	const initialTab = () => (isReference() ? "reference" : "learn");
-
-	const [selectedTab, setSelectedTab] = createSignal(initialTab());
+	// Follows the route, and a tab click overrides it until the next navigation.
+	const [selectedTab, setSelectedTab] = createSignal(() =>
+		isReference() ? "reference" : "learn"
+	);
 
 	const sidebar = useSidebar();
 
@@ -106,19 +107,6 @@ export function MainNavigation(_props: MainNavigationProps) {
 			// @ts-expect-error: shorthand
 			return !!a.items - !!b.items;
 		});
-	});
-
-	/**
-	 * Re-syncs the selected tab with the chosen route.
-	 */
-	useBeforeLeave(({ to }) => {
-		if (typeof to === "number") return;
-
-		if (isReferencePath(to)) {
-			setSelectedTab("reference");
-		} else {
-			setSelectedTab("learn");
-		}
 	});
 
 	return (

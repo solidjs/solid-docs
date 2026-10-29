@@ -1,0 +1,20 @@
+# Children
+
+Whatever you put between a component's tags arrives as `props.children`. Most components place it somewhere: `<div class="card">{props.children}</div>`.
+
+Sometimes a component needs to work with each child, for example to wrap every child in its own `<li>`. The `children` helper resolves `props.children` once and gives you the result, with `toArray()` for iterating:
+
+```jsx
+function Steps(props) {
+	const steps = children(() => props.children);
+	return (
+		<ol class="steps">
+			<For each={steps.toArray()}>{(step) => <li>{step}</li>}</For>
+		</ol>
+	);
+}
+```
+
+Resolve children once with the helper, rather than reading `props.children` in several places. Each read of `props.children` can create the child elements again.
+
+**Try it:** `Steps` puts all three paragraphs in one `<div>`. Use `children` to wrap each one in its own `<li>`, numbered as "Step 1", "Step 2" and "Step 3".

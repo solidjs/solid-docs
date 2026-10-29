@@ -1,0 +1,23 @@
+# Reusable DOM behavior
+
+Behavior that several elements need, such as closing when you click outside, fits in a function that sets up the work and returns a `ref` callback:
+
+```js
+function clickOutside(close) {
+	let element;
+	onSettled(() => {
+		const onPointerDown = (event) => {
+			if (!element.contains(event.target)) close();
+		};
+		document.addEventListener("pointerdown", onPointerDown);
+		return () => document.removeEventListener("pointerdown", onPointerDown);
+	});
+	return (el) => (element = el);
+}
+```
+
+Call it in a component body, `const outside = clickOutside(close)`, and attach the result with `ref={outside}`. The listener then lives exactly as long as that component.
+
+Keep the setup in the function body, not in the returned callback. A `ref` callback only receives the element; it isn't a place to create effects or register cleanup.
+
+**Try it:** the modal opens but never closes. Finish `clickOutside`: add the document listener in `onSettled`, and return its cleanup.

@@ -1,0 +1,18 @@
+{
+	"lesson": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render, dynamic } from '@solidjs/web';\nimport { createSignal, For } from 'solid-js';\n\nconst products = [\n  { id: 1, name: 'Mug', price: 12 },\n  { id: 2, name: 'Notebook', price: 8 },\n  { id: 3, name: 'Pen', price: 3 },\n];\n\nfunction Card(props) {\n  return (\n    <article style={{ border: '1px solid #ccc', padding: '0.5rem', margin: '0.5rem 0' }}>\n      <h3>{props.product.name}</h3>\n      <p>${props.product.price}</p>\n    </article>\n  );\n}\n\nfunction Row(props) {\n  return (\n    <p>\n      {props.product.name} \u00b7 ${props.product.price}\n    </p>\n  );\n}\n\nfunction Tag(props) {\n  return <strong style={{ 'margin-right': '1rem' }}>{props.product.name}</strong>;\n}\n\nconst views = { card: Card, row: Row, tag: Tag };\n\nfunction App() {\n  const [view, setView] = createSignal('card');\n\n  return (\n    <>\n      <select onChange={(event) => setView(event.currentTarget.value)}>\n        <option value=\"card\">Cards</option>\n        <option value=\"row\">Rows</option>\n        <option value=\"tag\">Tags</option>\n      </select>\n      <For each={products}>{(product) => <Card product={product} />}</For>\n    </>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+			}
+		]
+	},
+	"solved": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render, dynamic } from '@solidjs/web';\nimport { createSignal, For } from 'solid-js';\n\nconst products = [\n  { id: 1, name: 'Mug', price: 12 },\n  { id: 2, name: 'Notebook', price: 8 },\n  { id: 3, name: 'Pen', price: 3 },\n];\n\nfunction Card(props) {\n  return (\n    <article style={{ border: '1px solid #ccc', padding: '0.5rem', margin: '0.5rem 0' }}>\n      <h3>{props.product.name}</h3>\n      <p>${props.product.price}</p>\n    </article>\n  );\n}\n\nfunction Row(props) {\n  return (\n    <p>\n      {props.product.name} \u00b7 ${props.product.price}\n    </p>\n  );\n}\n\nfunction Tag(props) {\n  return <strong style={{ 'margin-right': '1rem' }}>{props.product.name}</strong>;\n}\n\nconst views = { card: Card, row: Row, tag: Tag };\n\nfunction App() {\n  const [view, setView] = createSignal('card');\n  const View = dynamic(() => views[view()]);\n\n  return (\n    <>\n      <select onChange={(event) => setView(event.currentTarget.value)}>\n        <option value=\"card\">Cards</option>\n        <option value=\"row\">Rows</option>\n        <option value=\"tag\">Tags</option>\n      </select>\n      <For each={products}>{(product) => <View product={product} />}</For>\n    </>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+			}
+		]
+	}
+}

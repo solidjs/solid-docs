@@ -1,0 +1,26 @@
+{
+	"lesson": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport { createCart } from './cart';\n\nfunction Header(props) {\n  return <h1>Shop \u00b7 {props.cart.count()} in cart</h1>;\n}\n\nfunction Product(props) {\n  return (\n    <p>\n      {props.name} <button onClick={props.cart.add}>Add to cart</button>\n    </p>\n  );\n}\n\nfunction Shop(props) {\n  return (\n    <>\n      <Product name=\"Mug\" cart={props.cart} />\n      <Product name=\"Notebook\" cart={props.cart} />\n    </>\n  );\n}\n\nfunction App() {\n  const cart = createCart();\n  return (\n    <>\n      <Header cart={cart} />\n      <Shop cart={cart} />\n    </>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+			},
+			{
+				"name": "cart",
+				"content": "import { createContext, createSignal, useContext } from 'solid-js';\n\nexport function createCart() {\n  const [count, setCount] = createSignal(0);\n  return { count, add: () => setCount((n) => n + 1) };\n}\n"
+			}
+		]
+	},
+	"solved": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport { CartProvider, useCart } from './cart';\n\nfunction Header() {\n  const cart = useCart();\n  return <h1>Shop \u00b7 {cart.count()} in cart</h1>;\n}\n\nfunction Product(props) {\n  const cart = useCart();\n  return (\n    <p>\n      {props.name} <button onClick={cart.add}>Add to cart</button>\n    </p>\n  );\n}\n\nfunction Shop() {\n  return (\n    <>\n      <Product name=\"Mug\" />\n      <Product name=\"Notebook\" />\n    </>\n  );\n}\n\nfunction App() {\n  return (\n    <CartProvider>\n      <Header />\n      <Shop />\n    </CartProvider>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+			},
+			{
+				"name": "cart",
+				"content": "import { createContext, createSignal, useContext } from 'solid-js';\n\nexport function createCart() {\n  const [count, setCount] = createSignal(0);\n  return { count, add: () => setCount((n) => n + 1) };\n}\n\nconst CartContext = createContext();\n\nexport function CartProvider(props) {\n  return <CartContext value={createCart()}>{props.children}</CartContext>;\n}\n\nexport function useCart() {\n  return useContext(CartContext);\n}\n"
+			}
+		]
+	}
+}

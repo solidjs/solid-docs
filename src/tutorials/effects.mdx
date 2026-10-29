@@ -1,0 +1,18 @@
+# Effects
+
+Everything so far has been derived: values computed from other values, shown with JSX. An effect is for the other direction, pushing state out to something Solid doesn't render. The page's `<body>`, a canvas, or a non-Solid widget are examples.
+
+`createEffect` takes two functions. The first reads what the effect depends on. The second does the work and can return a cleanup, which runs before the next change:
+
+```js
+createEffect(theme, (value) => {
+	document.body.classList.add(value);
+	return () => document.body.classList.remove(value);
+});
+```
+
+Only the first function is tracked. Reads in the second never re-run the effect.
+
+An effect that writes a signal from another signal is a derived value in disguise. It runs a step late and adds a second source of truth. Derive the value instead.
+
+**Try it:** replace the `label` signal and the effect that copies into it with a derived function. Then add an effect that puts the theme's class on `document.body`, removing the old one, so the page changes color.

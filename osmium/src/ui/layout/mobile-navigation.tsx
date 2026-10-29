@@ -1,6 +1,7 @@
-import { Dialog } from "@kobalte/core";
-import { Icon } from "solid-heroicons";
-import { bars_3, xMark } from "solid-heroicons/solid";
+import { Dialog } from "@kobalte/core/dialog";
+import { Icon } from "../icon";
+import bars_3 from "~icons/heroicons/bars-3-solid";
+import xMark from "~icons/heroicons/x-mark-solid";
 import { MainNavigation } from "./main-navigation";
 import { createSignal } from "solid-js";
 
@@ -10,7 +11,7 @@ export const [isOpen, setIsOpen] = createSignal(false);
 
 export const MobileNavigation = (_props: MobileNavigationProps) => {
 	return (
-		<Dialog.Root open={isOpen()} onOpenChange={setIsOpen}>
+		<Dialog open={isOpen()} onOpenChange={setIsOpen}>
 			<Dialog.Trigger
 				aria-label="Open navigation menu"
 				title="Open navigation menu"
@@ -30,6 +31,6 @@ export const MobileNavigation = (_props: MobileNavigationProps) => {
 					</Dialog.Content>
 				</div>
 			</Dialog.Portal>
-		</Dialog.Root>
+		</Dialog>
 	);
 };

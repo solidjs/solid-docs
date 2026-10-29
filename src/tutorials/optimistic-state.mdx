@@ -1,0 +1,19 @@
+# Optimistic UI
+
+Waiting 600ms for a like to register feels slow. An optimistic value shows the expected result right away and drops it when the action ends:
+
+```js
+const [shown, setShown] = createOptimistic(() => likes());
+
+const like = action(function* (fail) {
+	setShown((n) => n + 1);
+	yield api.like(fail);
+	refresh(likes);
+});
+```
+
+`shown` follows `likes`, like a writable derived signal. A write made inside an action is temporary. When the action finishes, the temporary value is dropped and `shown` follows `likes` again. If the save worked, the refreshed count matches what was already on screen. If it failed, the count drops back by itself. There's no rollback code to write.
+
+An action returns a promise, so the caller can catch a failed save and show the error.
+
+**Try it:** make the like show immediately by writing `shown` inside the action. Then tick **Fail next save** and like again: the count rises, then falls back and the error appears.

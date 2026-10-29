@@ -1,0 +1,36 @@
+{
+	"lesson": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport { createOptimisticStore, action, until, For, Loading } from 'solid-js';\nimport { server } from './server';\nimport './styles.css';\n\nlet nextId = 1;\n\nfunction Chat() {\n  const [messages, setMessages] = createOptimisticStore(() => server.watch(), []);\n\n  const send = action(function* (text) {\n    const id = `m${nextId++}`;\n    setMessages((draft) => {\n      draft.push({ id, text, pending: true });\n    });\n    yield server.send({ id, text });\n  });\n\n  return (\n    <Loading fallback={<p>Connecting...</p>}>\n      <For each={messages}>\n        {(message) => <p class={{ pending: !!message.pending }}>{message.text}</p>}\n      </For>\n      <form\n        onSubmit={(event) => {\n          event.preventDefault();\n          const input = event.currentTarget.elements.text;\n          if (input.value.trim()) send(input.value);\n          input.value = '';\n        }}\n      >\n        <input name=\"text\" placeholder=\"Say something\" /> <button>Send</button>\n      </form>\n    </Loading>\n  );\n}\n\nrender(() => <Chat />, document.getElementById('app'));\n"
+			},
+			{
+				"name": "server",
+				"content": "const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));\n\n// A pretend chat server. Sending returns quickly, but the message only\n// shows up in the live feed a second later, once the server has stored it.\nlet messages = [{ id: 'welcome', text: 'Welcome to the chat!' }];\nconst listeners = new Set();\n\nexport const server = {\n  async send(message) {\n    await sleep(150);\n    setTimeout(() => {\n      messages = [...messages, message];\n      for (const listener of listeners) listener(messages);\n    }, 1000);\n  },\n  // The live feed: yields the full list now, then again after every change.\n  async *watch() {\n    yield messages;\n    while (true) {\n      yield await new Promise((resolve) => {\n        const listener = (list) => {\n          listeners.delete(listener);\n          resolve(list);\n        };\n        listeners.add(listener);\n      });\n    }\n  },\n};\n"
+			},
+			{
+				"name": "styles",
+				"content": "p {\n  font-family: sans-serif;\n}\n\n.pending {\n  opacity: 0.5;\n}\n",
+				"type": "css"
+			}
+		]
+	},
+	"solved": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport { createOptimisticStore, action, until, For, Loading } from 'solid-js';\nimport { server } from './server';\nimport './styles.css';\n\nlet nextId = 1;\n\nfunction Chat() {\n  const [messages, setMessages] = createOptimisticStore(() => server.watch(), []);\n\n  const send = action(function* (text) {\n    const id = `m${nextId++}`;\n    setMessages((draft) => {\n      draft.push({ id, text, pending: true });\n    });\n    yield server.send({ id, text });\n    yield until(() => messages.some((message) => message.id === id));\n  });\n\n  return (\n    <Loading fallback={<p>Connecting...</p>}>\n      <For each={messages}>\n        {(message) => <p class={{ pending: !!message.pending }}>{message.text}</p>}\n      </For>\n      <form\n        onSubmit={(event) => {\n          event.preventDefault();\n          const input = event.currentTarget.elements.text;\n          if (input.value.trim()) send(input.value);\n          input.value = '';\n        }}\n      >\n        <input name=\"text\" placeholder=\"Say something\" /> <button>Send</button>\n      </form>\n    </Loading>\n  );\n}\n\nrender(() => <Chat />, document.getElementById('app'));\n"
+			},
+			{
+				"name": "server",
+				"content": "const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));\n\n// A pretend chat server. Sending returns quickly, but the message only\n// shows up in the live feed a second later, once the server has stored it.\nlet messages = [{ id: 'welcome', text: 'Welcome to the chat!' }];\nconst listeners = new Set();\n\nexport const server = {\n  async send(message) {\n    await sleep(150);\n    setTimeout(() => {\n      messages = [...messages, message];\n      for (const listener of listeners) listener(messages);\n    }, 1000);\n  },\n  // The live feed: yields the full list now, then again after every change.\n  async *watch() {\n    yield messages;\n    while (true) {\n      yield await new Promise((resolve) => {\n        const listener = (list) => {\n          listeners.delete(listener);\n          resolve(list);\n        };\n        listeners.add(listener);\n      });\n    }\n  },\n};\n"
+			},
+			{
+				"name": "styles",
+				"content": "p {\n  font-family: sans-serif;\n}\n\n.pending {\n  opacity: 0.5;\n}\n",
+				"type": "css"
+			}
+		]
+	}
+}

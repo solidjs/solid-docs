@@ -1,0 +1,28 @@
+{
+	"lesson": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport { createSignal, createMemo, For, Loading, isPending, latest } from 'solid-js';\nimport './styles.css';\n\nconst tabs = ['Profile', 'Posts', 'Settings'];\n\nasync function fetchTab(tab) {\n  await new Promise((resolve) => setTimeout(resolve, 800));\n  return `This is the ${tab} page.`;\n}\n\nfunction App() {\n  const [tab, setTab] = createSignal('Profile');\n  const content = createMemo(() => fetchTab(tab()));\n\n  return (\n    <>\n      <div class=\"tabs\">\n        <For each={tabs}>\n          {(name) => (\n            <button class={{ selected: tab() === name }} onClick={() => setTab(name)}>\n              {name}\n            </button>\n          )}\n        </For>\n      </div>\n      <Loading fallback={<p>Loading...</p>}>\n        <div class=\"content\">{content()}</div>\n      </Loading>\n    </>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+			},
+			{
+				"name": "styles",
+				"content": "body {\n  font-family: sans-serif;\n}\n\n.tabs button {\n  margin-right: 0.25rem;\n  padding: 0.4rem 1rem;\n  border: 1px solid #ccc;\n  background: white;\n}\n\n.tabs button.selected {\n  border-color: #446b9e;\n  background: #446b9e;\n  color: white;\n}\n\n.content {\n  padding: 1rem 0;\n  transition: opacity 0.2s;\n}\n\n.content.pending {\n  opacity: 0.4;\n}\n",
+				"type": "css"
+			}
+		]
+	},
+	"solved": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport { createSignal, createMemo, For, Loading, isPending, latest } from 'solid-js';\nimport './styles.css';\n\nconst tabs = ['Profile', 'Posts', 'Settings'];\n\nasync function fetchTab(tab) {\n  await new Promise((resolve) => setTimeout(resolve, 800));\n  return `This is the ${tab} page.`;\n}\n\nfunction App() {\n  const [tab, setTab] = createSignal('Profile');\n  const content = createMemo(() => fetchTab(tab()));\n\n  return (\n    <>\n      <div class=\"tabs\">\n        <For each={tabs}>\n          {(name) => (\n            <button\n              class={{ selected: latest(tab) === name }}\n              onClick={() => setTab(name)}\n            >\n              {name}\n            </button>\n          )}\n        </For>\n      </div>\n      <Loading fallback={<p>Loading...</p>}>\n        <div class={{ content: true, pending: isPending(content) }}>{content()}</div>\n      </Loading>\n    </>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+			},
+			{
+				"name": "styles",
+				"content": "body {\n  font-family: sans-serif;\n}\n\n.tabs button {\n  margin-right: 0.25rem;\n  padding: 0.4rem 1rem;\n  border: 1px solid #ccc;\n  background: white;\n}\n\n.tabs button.selected {\n  border-color: #446b9e;\n  background: #446b9e;\n  color: white;\n}\n\n.content {\n  padding: 1rem 0;\n  transition: opacity 0.2s;\n}\n\n.content.pending {\n  opacity: 0.4;\n}\n",
+				"type": "css"
+			}
+		]
+	}
+}

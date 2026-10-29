@@ -1,10 +1,8 @@
-import { Icon } from "solid-heroicons";
-import {
-	chevronRight,
-	lightBulb,
-	magnifyingGlassCircle,
-} from "solid-heroicons/solid";
-import type { JSX } from "solid-js";
+import { Icon } from "./icon";
+import chevronRight from "~icons/heroicons/chevron-right-solid";
+import lightBulb from "~icons/heroicons/light-bulb-solid";
+import magnifyingGlassCircle from "~icons/heroicons/magnifying-glass-circle-solid";
+import type { JSX } from "@solidjs/web";
 
 export type DeepDiveProps = {
 	title?: string;

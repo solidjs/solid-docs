@@ -1,16 +1,16 @@
 import { OramaCloud, type SearchResult } from "@orama/core";
 import {
+	type Accessor,
 	createEffect,
 	createSignal,
 	Show,
 	For,
-	Suspense,
-	startTransition,
+	Loading,
 	createMemo,
+	untrack,
 } from "solid-js";
 import { Dialog } from "@kobalte/core/dialog";
-import { A, createAsync, useNavigate, usePreloadRoute } from "@solidjs/router";
-import { createList } from "solid-list";
+import { useNavigate, usePreloadRoute } from "@solidjs/router";
 import { createMarker, makeSearchRegex } from "@solid-primitives/marker";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { isAppleDevice } from "@solid-primitives/platform";
@@ -51,7 +51,7 @@ export function Search() {
 	const [searchTerm, setSearchTerm] = createSignal("");
 	const [resultRefs, setResultRefs] = createSignal<HTMLElement[]>([]);
 
-	const result = createAsync(
+	const result = createMemo(
 		async () => {
 			const _searchTerm = searchTerm();
 			if (!_searchTerm) return {};
@@ -85,11 +85,9 @@ export function Search() {
 				},
 				{} as Record<string, SearchResult<OramaDocument>["hits"]>
 			);
-			setActive(0);
-			setResultRefs([]);
 			return groupedHits;
 		},
-		{ initialValue: {} }
+		{ loadingValue: {} as Record<string, SearchResult<OramaDocument>["hits"]> }
 	);
 
 	const resultArray = () => Object.values(result()).flatMap((hits) => hits);
@@ -102,15 +100,31 @@ export function Search() {
 		handleTab: false,
 	});
 
-	createEffect(() => {
-		const _active = active();
-		if (_active === null) return;
-		const ref = resultRefs()[_active];
-		if (ref) ref.scrollIntoView({ block: "nearest" });
-		const path = resultArray()[_active]?.document.path;
-		if (!path) return;
-		preload(new URL(path, config().siteUrl), { preloadData: true });
+	// A new result set starts again from its first hit.
+	createEffect(result, () => {
+		setActive(0);
+		setResultRefs([]);
 	});
+
+	createEffect(
+		() => {
+			const _active = active();
+			if (_active === null) return;
+			return {
+				ref: resultRefs()[_active],
+				path: resultArray()[_active]?.document.path,
+				siteUrl: config().siteUrl,
+			};
+		},
+		(next) => {
+			if (!next) return;
+			next.ref?.scrollIntoView({ block: "nearest" });
+			if (next.path)
+				untrack(() =>
+					preload(new URL(next.path, next.siteUrl), { preloadData: true })
+				);
+		}
+	);
 
 	createEventListener(window, "keydown", (e: KeyboardEvent) => {
 		if ((e.ctrlKey || e.metaKey) && e.key === "k") {
@@ -163,7 +177,7 @@ export function Search() {
 				<Dialog.Overlay class="fixed inset-0 z-50 bg-black/50" />
 				<Dialog.Content class="fixed inset-0 z-50 flex w-full flex-col overflow-hidden border border-black/5 bg-white pt-4 lg:top-14 lg:bottom-auto lg:left-1/2 lg:max-h-[calc(100%-56px-56px)] lg:max-w-173.5 lg:-translate-x-1/2 lg:rounded-2xl dark:border-white/60 dark:bg-slate-800">
 					<div class="mr-4 flex items-center lg:mx-4">
-						<Dialog.CloseButton tabIndex={-1} class="px-4 py-3 lg:hidden">
+						<Dialog.CloseButton tabindex={-1} class="px-4 py-3 lg:hidden">
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
 								fill="currentColor"
@@ -191,9 +205,7 @@ export function Search() {
 								value={searchTerm()}
 								class="w-full rounded border border-blue-100 bg-white px-9 py-2 ring-2 ring-blue-400 focus:outline-none focus-visible:border focus-visible:border-blue-400 focus-visible:ring-2 dark:bg-slate-800"
 								onInput={(e) =>
-									startTransition(() =>
-										setSearchTerm((e.target as HTMLInputElement).value)
-									)
+									setSearchTerm((e.target as HTMLInputElement).value)
 								}
 								onFocus={() => setActive(0)}
 								onBlur={() => setActive(null)}
@@ -225,14 +237,14 @@ export function Search() {
 						</div>
 					</div>
 					<div class="mt-1 scrollbar-thin space-y-2 overflow-y-auto px-4 py-2 lg:grow">
-						<Suspense>
+						<Loading>
 							<Show when={searchTerm() && Object.keys(result()).length === 0}>
 								<p class="mt-2 text-center text-sm">
 									No results for "<span class="font-bold">{searchTerm()}</span>"
 								</p>
 								<p class="mt-4! mb-3! text-center text-sm">
 									Believe this query should return results?{" "}
-									<A
+									<a
 										href={
 											config().themeConfig?.missingPagePath?.replace(
 												":path",
@@ -243,7 +255,7 @@ export function Search() {
 										class="font-bold text-blue-400"
 									>
 										Let us know
-									</A>
+									</a>
 									.
 								</p>
 							</Show>
@@ -258,9 +270,10 @@ export function Search() {
 										<ul role="listbox">
 											<For each={hits}>
 												{(hit) => {
-													const itemIndex = Object.values(result())
-														.flatMap((items) => items)
-														.findIndex((i) => i === hit);
+													// A new result set re-creates these rows, so the index is fixed.
+													const itemIndex = untrack(() =>
+														resultArray().indexOf(hit)
+													);
 
 													return (
 														<li
@@ -278,13 +291,15 @@ export function Search() {
 															class="scroll-my-1.5"
 														>
 															<Dialog.CloseButton
-																as={A}
+																as="a"
 																href={hit.document.path}
-																classList={{
-																	"pl-4 rounded-md block p-2 text-sm": true,
-																	"bg-blue-100 dark:bg-slate-700":
-																		itemIndex === active(),
-																}}
+																class={[
+																	"block rounded-md p-2 pl-4 text-sm",
+																	{
+																		"bg-blue-100 dark:bg-slate-700":
+																			itemIndex === active(),
+																	},
+																]}
 																onMouseMove={() => setActive(itemIndex)}
 															>
 																<span class="block">
@@ -305,7 +320,7 @@ export function Search() {
 									</section>
 								)}
 							</For>
-						</Suspense>
+						</Loading>
 					</div>
 					<div class="flex items-center justify-center border-t border-black/10 px-4 pt-2 pb-3 text-sm lg:justify-between dark:border-slate-700">
 						<div class="hidden lg:block">
@@ -317,7 +332,7 @@ export function Search() {
 							<span class="ml-1">to close</span>
 						</div>
 						<div>
-							<A
+							<a
 								href="https://askorama.ai/?utm_source=docs.solidjs.com"
 								target="_blank"
 								class="inline-flex items-center space-x-1"
@@ -825,7 +840,7 @@ export function Search() {
 										</clipPath>
 									</defs>
 								</svg>
-							</A>
+							</a>
 						</div>
 					</div>
 				</Dialog.Content>
@@ -837,10 +852,10 @@ export function Search() {
 function KeyboardShortcut(props: { key: string; class?: string }) {
 	return (
 		<kbd
-			classList={{
-				"min-w-6 rounded border border-black/10 bg-slate-100 dark:bg-slate-700 dark:border-slate-700 px-1 pb-px pt-1 text-center font-mono text-xs": true,
-				[props.class ?? ""]: true,
-			}}
+			class={[
+				"min-w-6 rounded border border-black/10 bg-slate-100 px-1 pt-1 pb-px text-center font-mono text-xs dark:border-slate-700 dark:bg-slate-700",
+				props.class,
+			]}
 		>
 			{props.key}
 		</kbd>
@@ -856,4 +871,38 @@ function trimText(text: string, term: string, wordPadding: number) {
 	const trimmedResult =
 		wordsBeforeTerm.slice(startWordIndex).join(" ") + text.substring(termIndex);
 	return (startWordIndex > 0 ? "..." : "") + trimmedResult;
+}
+
+/** Arrow/Home/End navigation over a list of item indices, looping at the ends. */
+function createList(props: {
+	items: Accessor<number[]>;
+	initialActive: number | null;
+	handleTab?: boolean;
+}) {
+	const [active, setActive] = createSignal<number | null>(props.initialActive);
+	const onKeyDown = (event: KeyboardEvent) => {
+		const items = props.items();
+		if (items.length === 0) return;
+		const current = active();
+		const index = current === null ? -1 : items.indexOf(current);
+		let next: number | undefined;
+		switch (event.key) {
+			case "ArrowDown":
+				next = items[(index + 1) % items.length];
+				break;
+			case "ArrowUp":
+				next = items[index <= 0 ? items.length - 1 : index - 1];
+				break;
+			case "Home":
+				next = items[0];
+				break;
+			case "End":
+				next = items[items.length - 1];
+				break;
+		}
+		if (next === undefined) return;
+		event.preventDefault();
+		setActive(next);
+	};
+	return { active, setActive, onKeyDown };
 }

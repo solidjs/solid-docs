@@ -1,0 +1,20 @@
+# Errors and retry
+
+When async work fails, the error travels up to the nearest `Errored` boundary, which shows its `fallback` instead of its children. The fallback receives the error and a `reset` function:
+
+```jsx
+<Errored
+	fallback={(error, reset) => (
+		<>
+			<p>{error().message}</p>
+			<button onClick={reset}>Try again</button>
+		</>
+	)}
+>
+	<Report />
+</Errored>
+```
+
+`Loading` and `Errored` do separate jobs, so they often sit together: one for waiting, the other for failing. `reset` asks the failed work again rather than showing the same error.
+
+**Try it:** the report service fails its first request. Replace the temporary fallback with one that shows the message and a **Retry report** button calling `reset`. The second attempt succeeds.

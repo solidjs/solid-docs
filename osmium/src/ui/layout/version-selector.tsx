@@ -5,8 +5,9 @@ import {
 	useSolidBaseRouteFallbackOptions,
 } from "@kobalte/solidbase/client";
 import type { SolidBaseRouteOption } from "@kobalte/solidbase/config/route";
-import { Icon } from "solid-heroicons";
-import { chevronUpDown, tag } from "solid-heroicons/solid";
+import { Icon } from "../icon";
+import chevronUpDown from "~icons/heroicons/chevron-up-down-solid";
+import tag from "~icons/heroicons/tag-solid";
 
 export default function VersionSelector() {
 	const [open, setOpen] = createSignal(false);
@@ -64,7 +65,9 @@ export default function VersionSelector() {
 											class="group flex cursor-pointer items-center rounded-[0.625rem] p-1 select-none hover:bg-slate-200 focus-visible:bg-slate-200 focus-visible:font-medium focus-visible:outline-hidden aria-[current]:bg-blue-50 hover:dark:bg-slate-600 focus-visible:dark:bg-slate-700 dark:aria-[current]:bg-blue-900/30"
 											target={outbound() ? "_blank" : undefined}
 											rel={outbound() ? "noopener noreferrer" : undefined}
-											aria-current={option === currentOption() || undefined}
+											aria-current={
+												option === currentOption() ? "true" : undefined
+											}
 											href={option.href ?? option.path}
 											onMouseEnter={(e) => e.currentTarget.focus()}
 											onClick={() => setOpen(false)}

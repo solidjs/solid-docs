@@ -1,0 +1,18 @@
+{
+	"lesson": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport { createSignal, createStore, For } from 'solid-js';\n\nlet nextId = 3;\n\nfunction Todos() {\n  const [text, setText] = createSignal('');\n  const [todos, setTodos] = createStore([\n    { id: 1, text: 'Learn signals', done: true },\n    { id: 2, text: 'Learn stores', done: false },\n  ]);\n\n  const addTodo = (text) =>\n    setTodos((draft) => {\n      draft.push({ id: nextId++, text, done: false });\n    });\n\n  const toggleTodo = (id) =>\n    setTodos((draft) => {\n      // Find the todo and flip its done flag.\n    });\n\n  const clearDone = () =>\n    setTodos((list) => list); // Return the todos that aren't done.\n\n  return (\n    <>\n      <form\n        onSubmit={(event) => {\n          event.preventDefault();\n          if (!text().trim()) return;\n          addTodo(text());\n          setText('');\n        }}\n      >\n        <input\n          placeholder=\"What needs doing?\"\n          value={text()}\n          onInput={(event) => setText(event.currentTarget.value)}\n        />\n        <button>Add</button>\n      </form>\n      <For each={todos}>\n        {(todo) => (\n          <label style={{ display: 'block' }}>\n            <input\n              type=\"checkbox\"\n              checked={todo.done}\n              onChange={() => toggleTodo(todo.id)}\n            />{' '}\n            <span style={{ 'text-decoration': todo.done ? 'line-through' : 'none' }}>\n              {todo.text}\n            </span>\n          </label>\n        )}\n      </For>\n      <button onClick={clearDone}>Clear done</button>\n    </>\n  );\n}\n\nrender(() => <Todos />, document.getElementById('app'));\n"
+			}
+		]
+	},
+	"solved": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport { createSignal, createStore, For } from 'solid-js';\n\nlet nextId = 3;\n\nfunction Todos() {\n  const [text, setText] = createSignal('');\n  const [todos, setTodos] = createStore([\n    { id: 1, text: 'Learn signals', done: true },\n    { id: 2, text: 'Learn stores', done: false },\n  ]);\n\n  const addTodo = (text) =>\n    setTodos((draft) => {\n      draft.push({ id: nextId++, text, done: false });\n    });\n\n  const toggleTodo = (id) =>\n    setTodos((draft) => {\n      const todo = draft.find((todo) => todo.id === id);\n      if (todo) todo.done = !todo.done;\n    });\n\n  const clearDone = () => setTodos((list) => list.filter((todo) => !todo.done));\n\n  return (\n    <>\n      <form\n        onSubmit={(event) => {\n          event.preventDefault();\n          if (!text().trim()) return;\n          addTodo(text());\n          setText('');\n        }}\n      >\n        <input\n          placeholder=\"What needs doing?\"\n          value={text()}\n          onInput={(event) => setText(event.currentTarget.value)}\n        />\n        <button>Add</button>\n      </form>\n      <For each={todos}>\n        {(todo) => (\n          <label style={{ display: 'block' }}>\n            <input\n              type=\"checkbox\"\n              checked={todo.done}\n              onChange={() => toggleTodo(todo.id)}\n            />{' '}\n            <span style={{ 'text-decoration': todo.done ? 'line-through' : 'none' }}>\n              {todo.text}\n            </span>\n          </label>\n        )}\n      </For>\n      <button onClick={clearDone}>Clear done</button>\n    </>\n  );\n}\n\nrender(() => <Todos />, document.getElementById('app'));\n"
+			}
+		]
+	}
+}

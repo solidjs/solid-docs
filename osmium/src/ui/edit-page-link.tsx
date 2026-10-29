@@ -1,6 +1,6 @@
 import { Component, Show } from "solid-js";
-import { Icon } from "solid-heroicons";
-import { pencilSquare } from "solid-heroicons/outline";
+import { Icon } from "./icon";
+import pencilSquare from "~icons/heroicons/pencil-square";
 import { useCurrentPageData } from "@kobalte/solidbase/client";
 
 export const EditPageLink: Component = () => {

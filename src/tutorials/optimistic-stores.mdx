@@ -1,0 +1,21 @@
+# Optimistic stores
+
+Most apps end up here: a list loaded from the server, edited in place, every edit saved in the background. `createOptimisticStore` is the store version of `createOptimistic`. It derives its contents from the server, and draft writes made inside an action are temporary:
+
+```js
+const [todos, setTodos] = createOptimisticStore(() => api.list(), []);
+
+const toggle = action(function* (id) {
+	setTodos((draft) => {
+		const todo = draft.find((todo) => todo.id === id);
+		todo.done = !todo.done;
+		todo.pending = true;
+	});
+	yield api.toggle(id);
+	refresh(todos);
+});
+```
+
+Each action's writes are temporary on their own. If one toggle fails, only that row goes back; other rows saving at the same time keep their changes. The `pending` flag exists only in the temporary write, so a row looks faded until the server confirms it.
+
+**Try it:** the list is a plain store. A toggle inside the action doesn't show until the save finishes, and a failed save leaves a wrong checkmark behind. Switch to `createOptimisticStore` loading from `api.list()`, mark rows `pending`, and refresh after each save. Then tick **Fail the next toggle** and toggle a row.

@@ -1,6 +1,5 @@
 import {
 	For,
-	type JSX,
 	Match,
 	type ParentProps,
 	type Signal,
@@ -8,16 +7,18 @@ import {
 	children,
 	createMemo,
 	createSignal,
-	splitProps,
+	omit,
+	onCleanup,
+	untrack,
 } from "solid-js";
-import { isServer } from "solid-js/web";
+import type { JSX } from "@solidjs/web";
+import { clientOnly, isServer } from "@solidjs/web";
 import {
 	cookieStorage,
 	makePersisted,
 	messageSync,
 } from "@solid-primitives/storage";
 
-import { clientOnly } from "@solidjs/start";
 import { Callout } from "./ui/callout";
 import { DeepDive } from "./ui/deep-dive";
 import { Tabs, TabList, TabPanel, Tab } from "./ui/tabs";
@@ -40,7 +41,7 @@ export const DirectiveContainer = (
 		tabNames?: string;
 	} & ParentProps
 ) => {
-	const _children = children(() => props.children).toArray();
+	const resolved = children(() => props.children);
 	const tabNames = createMemo(() => props.tabNames?.split("\0") ?? []);
 
 	return (
@@ -49,23 +50,23 @@ export const DirectiveContainer = (
 				<Callout
 					type={props.type as CalloutType}
 					title={props.title}
-					children={_children}
+					children={resolved()}
 				/>
 			}
 		>
-			<Match when={props.type === "tab"}>{_children}</Match>
+			<Match when={props.type === "tab"}>{resolved()}</Match>
 			<Match when={props.type === "deep-dive" || props.type === "solution"}>
 				<DeepDive
 					kind={props.type as "deep-dive" | "solution"}
 					title={props.title}
-					children={_children}
+					children={resolved()}
 				/>
 			</Match>
 			<Match when={props.type === "tab-group"}>
 				<TabGroup
 					syncKey={props.title}
 					tabNames={tabNames()}
-					panels={_children}
+					panels={resolved.toArray()}
 				/>
 			</Match>
 		</Switch>
@@ -101,11 +102,14 @@ const TabGroup = (props: {
 
 	// Groups sharing a sync key select together across the page and tabs,
 	// and the choice persists between visits.
+	// The channel is client-only.
+	const channel = isServer ? undefined : new BroadcastChannel("tab-group");
+	onCleanup(() => channel?.close());
 	const [openTab, setOpenTab] = makePersisted<string, Signal<string>>(
-		createSignal(props.tabNames[0]),
+		createSignal(untrack(() => props.tabNames[0])),
 		{
 			name: `tab-group:${props.syncKey}`,
-			sync: messageSync(new BroadcastChannel("tab-group")),
+			sync: channel && messageSync(channel),
 			storage: cookieStorage.withOptions({
 				expires: new Date(Date.now() + 3e10),
 			}),
@@ -120,15 +124,15 @@ export const strong = (props: ParentProps) => (
 export const EraserLink = (
 	props: ParentProps<{ href: string; preview: string }>
 ) => {
-	const [, rest] = splitProps(props, ["children"]);
+	const rest = omit(props, "children");
 
 	if (!isServer) {
 		return <EraserLinkImpl {...rest} />;
 	} else {
 		return (
 			<a
-				aria-hidden={true}
-				tabIndex="-1"
+				aria-hidden="true"
+				tabindex="-1"
 				href={props.href}
 				class="font-semibold text-blue-700 no-underline shadow-[inset_0_-2px_0_0_var(--tw-prose-background,#38bdf8),inset_0_calc(-1*(var(--tw-prose-underline-size,2px)+2px))_0_0_var(--tw-prose-underline,var(--color-blue-400))] hover:[--tw-prose-underline-size:4px] dark:text-blue-400 dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,var(--color-blue-800))] dark:[--tw-prose-background:var(--color-slate-900)] dark:hover:[--tw-prose-underline-size:6px]"
 				rel="noopener noreferrer"
@@ -200,44 +204,14 @@ export const h6 = (props: ParentProps) => (
 		{props.children}
 	</h6>
 );
-export const a = (props: ParentProps & { href: string }) => {
-	const [, rest] = splitProps(props, ["children"]);
-	const resolved = children(() => props.children);
-	const resolvedArray = resolved.toArray();
-
-	// Check if the link is a code block
-	if (
-		// Server side
-		(isServer &&
-			resolvedArray[0] &&
-			typeof resolvedArray[0] === "object" &&
-			"t" in resolvedArray[0] &&
-			typeof resolvedArray[0].t === "string" &&
-			resolvedArray[0].t.substring(0, 5) === "<code") ||
-		// Client side
-		(!isServer &&
-			resolvedArray[0] instanceof Element &&
-			resolvedArray[0].nodeName === "CODE")
-	) {
-		return (
-			<a
-				class="[&>code]:shadow-[0_0_0_1.5px_#2563eb] hover:[&>code]:shadow-[0_0_0_2px_#1e3a8a] dark:[&>code]:shadow-[0_0_0_1.5px_#38bdf8] dark:hover:[&>code]:shadow-[0_0_0_2px_#7dd3fc]"
-				{...rest}
-			>
-				{resolved()}
-			</a>
-		);
-	} else {
-		return (
-			<a
-				class="font-semibold text-blue-800 no-underline shadow-[inset_0_calc(-1*(var(--tw-prose-underline-size,0.5px)+2px))_0_0_var(--tw-prose-underline,var(--color-blue-400))] [--tw-prose-background:var(--color-slate-50)] hover:[--tw-prose-underline-size:4px] dark:text-blue-300 dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,var(--color-blue-500))] dark:[--tw-prose-background:var(--color-slate-900)] dark:hover:[--tw-prose-underline-size:6px]"
-				{...rest}
-			>
-				{resolved()}
-			</a>
-		);
-	}
-};
+// A link wrapping inline code is outlined around the code; any other link gets
+// the underline style. `:has()` decides, so SSR and hydration agree.
+export const a = (props: ParentProps & { href: string }) => (
+	<a
+		class="not-has-[>code]:font-semibold not-has-[>code]:text-blue-800 not-has-[>code]:no-underline not-has-[>code]:shadow-[inset_0_calc(-1*(var(--tw-prose-underline-size,0.5px)+2px))_0_0_var(--tw-prose-underline,var(--color-blue-400))] not-has-[>code]:[--tw-prose-background:var(--color-slate-50)] not-has-[>code]:hover:[--tw-prose-underline-size:4px] not-has-[>code]:dark:text-blue-300 not-has-[>code]:dark:shadow-[inset_0_calc(-1*var(--tw-prose-underline-size,2px))_0_0_var(--tw-prose-underline,var(--color-blue-500))] not-has-[>code]:dark:[--tw-prose-background:var(--color-slate-900)] not-has-[>code]:dark:hover:[--tw-prose-underline-size:6px] [&>code]:shadow-[0_0_0_1.5px_#2563eb] hover:[&>code]:shadow-[0_0_0_2px_#1e3a8a] dark:[&>code]:shadow-[0_0_0_1.5px_#38bdf8] dark:hover:[&>code]:shadow-[0_0_0_2px_#7dd3fc]"
+		{...props}
+	/>
+);
 export const p = (props: ParentProps) => (
 	<p {...props} class="my-4">
 		{props.children}

@@ -1,0 +1,20 @@
+# Wait for the echo
+
+Sometimes the request that saves data doesn't return it. A chat server accepts a message right away, and the message arrives later on the live feed everyone reads. If the action ends when the request returns, its temporary message disappears, and then reappears a second later when the feed catches up.
+
+`until` keeps the action open until a condition on the real data is true:
+
+```js
+const send = action(function* (text) {
+	const id = `m${nextId++}`;
+	setMessages((draft) => {
+		draft.push({ id, text, pending: true });
+	});
+	yield server.send({ id, text });
+	yield until(() => messages.some((message) => message.id === id));
+});
+```
+
+The condition reads the feed's data, not the temporary write, so only the real message can satisfy it. Then the action ends and the faded copy is swapped for the confirmed one without a flicker.
+
+**Try it:** send a message and watch it vanish, then come back. Add the `until` step so it stays on screen, faded, until the feed confirms it.

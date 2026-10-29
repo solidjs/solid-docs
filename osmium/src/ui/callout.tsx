@@ -1,13 +1,12 @@
-import { Icon } from "solid-heroicons";
-import { mergeProps, type JSX, Show, untrack } from "solid-js";
-import {
-	lightBulb,
-	exclamationTriangle,
-	xCircle,
-	puzzlePiece,
-	bookOpen,
-	noSymbol,
-} from "solid-heroicons/solid";
+import { Icon } from "./icon";
+import { merge, Show, untrack } from "solid-js";
+import type { JSX } from "@solidjs/web";
+import lightBulb from "~icons/heroicons/light-bulb-solid";
+import exclamationTriangle from "~icons/heroicons/exclamation-triangle-solid";
+import xCircle from "~icons/heroicons/x-circle-solid";
+import puzzlePiece from "~icons/heroicons/puzzle-piece-solid";
+import bookOpen from "~icons/heroicons/book-open-solid";
+import noSymbol from "~icons/heroicons/no-symbol-solid";
 
 const styles = {
 	note: {
@@ -98,7 +97,7 @@ export type CalloutProps = {
 };
 
 export function Callout(props: CalloutProps) {
-	const mergedProps = mergeProps({ type: "note" as CalloutType }, props);
+	const mergedProps = merge({ type: "note" as CalloutType }, props);
 
 	const iconType = untrack(() => mergedProps.type);
 

@@ -1,0 +1,18 @@
+{
+	"lesson": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport { createSignal, createMemo, createOptimistic, action, refresh, Loading } from 'solid-js';\n\nconst sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));\n\n// A pretend server: it keeps the like count and takes 600ms to save.\nconst api = {\n  likes: 41,\n  async read() {\n    await sleep(100);\n    return api.likes;\n  },\n  async like(fail) {\n    await sleep(600);\n    if (fail) throw new Error('Could not save your like.');\n    api.likes += 1;\n  },\n};\n\nfunction LikeButton() {\n  const likes = createMemo(() => api.read());\n  const [shown, setShown] = createOptimistic(() => likes());\n  const [failNext, setFailNext] = createSignal(false);\n  const [error, setError] = createSignal('');\n\n  const like = action(function* (fail) {\n    yield api.like(fail);\n    refresh(likes);\n  });\n\n  const save = () => {\n    setError('');\n    like(failNext()).catch((err) => setError(err.message));\n  };\n\n  return (\n    <Loading fallback={<p>Loading...</p>}>\n      <button onClick={save}>Like ({shown()})</button>{' '}\n      <label>\n        <input\n          type=\"checkbox\"\n          checked={failNext()}\n          onChange={(event) => setFailNext(event.currentTarget.checked)}\n        />{' '}\n        Fail next save\n      </label>\n      <p role=\"alert\">{error()}</p>\n    </Loading>\n  );\n}\n\nrender(() => <LikeButton />, document.getElementById('app'));\n"
+			}
+		]
+	},
+	"solved": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport { createSignal, createMemo, createOptimistic, action, refresh, Loading } from 'solid-js';\n\nconst sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));\n\n// A pretend server: it keeps the like count and takes 600ms to save.\nconst api = {\n  likes: 41,\n  async read() {\n    await sleep(100);\n    return api.likes;\n  },\n  async like(fail) {\n    await sleep(600);\n    if (fail) throw new Error('Could not save your like.');\n    api.likes += 1;\n  },\n};\n\nfunction LikeButton() {\n  const likes = createMemo(() => api.read());\n  const [shown, setShown] = createOptimistic(() => likes());\n  const [failNext, setFailNext] = createSignal(false);\n  const [error, setError] = createSignal('');\n\n  const like = action(function* (fail) {\n    setShown((n) => n + 1);\n    yield api.like(fail);\n    refresh(likes);\n  });\n\n  const save = () => {\n    setError('');\n    like(failNext()).catch((err) => setError(err.message));\n  };\n\n  return (\n    <Loading fallback={<p>Loading...</p>}>\n      <button onClick={save}>Like ({shown()})</button>{' '}\n      <label>\n        <input\n          type=\"checkbox\"\n          checked={failNext()}\n          onChange={(event) => setFailNext(event.currentTarget.checked)}\n        />{' '}\n        Fail next save\n      </label>\n      <p role=\"alert\">{error()}</p>\n    </Loading>\n  );\n}\n\nrender(() => <LikeButton />, document.getElementById('app'));\n"
+			}
+		]
+	}
+}

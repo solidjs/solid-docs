@@ -1,0 +1,17 @@
+# Streams
+
+Some answers arrive in pieces: a chat model's reply, search results, progress from a long job. A memo can be an async generator, and every `yield` becomes its next value:
+
+```js
+const reply = createMemo(async function* () {
+	const current = topic(); // read inputs before the first await
+	let text = "";
+	for await (const word of fakeModel(current)) yield (text += word);
+});
+```
+
+Readers show each value as it is yielded. When `topic` changes, Solid stops reading the old stream and starts the new one. There's no subscription to tear down by hand.
+
+This is the same model as an async memo, with many answers instead of one. Server functions use it to stream live data and AI responses.
+
+**Try it:** the memo collects the whole reply before returning it, so nothing shows for several seconds. Turn it into an async generator that yields the text so far after each word. Switch topics in the middle of a reply.

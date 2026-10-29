@@ -1,0 +1,22 @@
+# When updates land
+
+Solid collects the writes made in one event and applies them together when your code finishes. That keeps the page from showing half an update, but it means a read right after a write still sees the old value:
+
+```js
+setItems((list) => [...list, item]);
+items().length; // still the old length
+```
+
+Usually the fix is to stop reading there at all: a summary computed from `items` is a derived value, always correct.
+
+When imperative code really needs the update applied, for example to scroll to a row that was just added, call `flush()`. It applies pending writes and updates the DOM before the next line runs:
+
+```js
+setItems((list) => [...list, item]);
+flush();
+list.lastElementChild.scrollIntoView();
+```
+
+Keep `flush()` for cases like that and for tests. Most handlers never need it.
+
+**Try it:** add a few entries. The summary is always one behind, and the list never scrolls to the new entry. Make the summary a derived value, then flush before scrolling.

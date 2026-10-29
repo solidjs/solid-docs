@@ -1,6 +1,6 @@
 import { Title } from "@solidjs/meta";
 import { Layout } from "./layout";
-import { HttpStatusCode } from "@solidjs/start";
+import { HttpStatusCode } from "@kobalte/solidbase/client";
 import { useProject } from "../utils";
 
 export function NotFound() {

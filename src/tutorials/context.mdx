@@ -1,0 +1,24 @@
+# Context
+
+State that many components need is easiest to keep in a factory: a function that creates the signals and returns them with the functions that change them.
+
+```js
+function createCart() {
+	const [count, setCount] = createSignal(0);
+	return { count, add: () => setCount((n) => n + 1) };
+}
+```
+
+Passing that object down as a prop works until it has to travel through components that don't use it. Context skips those levels. Create a context, provide a value with the context itself as a component, and read the nearest value with `useContext`:
+
+```jsx
+const CartContext = createContext();
+
+<CartContext value={createCart()}>{props.children}</CartContext>;
+
+const cart = useContext(CartContext);
+```
+
+Exporting a small hook such as `useCart()` keeps the context object private to its module.
+
+**Try it:** the cart is passed through `Shop`, which never uses it. Provide it with `CartContext` in `cart.jsx`, then call `useCart()` in `Header` and `Product` and remove the `cart` props.

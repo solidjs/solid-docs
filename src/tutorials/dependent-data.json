@@ -1,0 +1,18 @@
+{
+	"lesson": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport { createSignal, createMemo, isPending, For, Loading } from 'solid-js';\n\nconst stateCities = {\n  California: ['Los Angeles', 'San Francisco', 'San Diego'],\n  Florida: ['Miami', 'Orlando', 'Tampa'],\n  'New York': ['New York City', 'Buffalo', 'Rochester'],\n  Texas: ['Houston', 'Dallas', 'Austin'],\n  Utah: ['Salt Lake City', 'Provo', 'West Valley City'],\n};\n\nasync function getStates() {\n  await new Promise((resolve) => setTimeout(resolve, 500));\n  return Object.keys(stateCities);\n}\n\nasync function getCities(state) {\n  await new Promise((resolve) => setTimeout(resolve, 500));\n  return stateCities[state] ?? [];\n}\n\nfunction App() {\n  const states = createMemo(getStates);\n  const [selectedState, setState] = createSignal(() => states()[0]);\n  const cities = createMemo(() => getCities(selectedState()));\n  const [selectedCity, setCity] = createSignal('Los Angeles');\n\n  return (\n    <Loading fallback={<p>Loading...</p>}>\n      <select onChange={(e) => setState(e.currentTarget.value)}>\n        <For each={states()}>{(state) => <option>{state}</option>}</For>\n      </select>{' '}\n      <select disabled={isPending(cities)} onChange={(e) => setCity(e.currentTarget.value)}>\n        <For each={cities()}>{(city) => <option>{city}</option>}</For>\n      </select>\n      <p>\n        Selection: {selectedCity()}, {selectedState()}\n      </p>\n    </Loading>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+			}
+		]
+	},
+	"solved": {
+		"files": [
+			{
+				"name": "main",
+				"content": "import { render } from '@solidjs/web';\nimport { createSignal, createMemo, isPending, For, Loading } from 'solid-js';\n\nconst stateCities = {\n  California: ['Los Angeles', 'San Francisco', 'San Diego'],\n  Florida: ['Miami', 'Orlando', 'Tampa'],\n  'New York': ['New York City', 'Buffalo', 'Rochester'],\n  Texas: ['Houston', 'Dallas', 'Austin'],\n  Utah: ['Salt Lake City', 'Provo', 'West Valley City'],\n};\n\nasync function getStates() {\n  await new Promise((resolve) => setTimeout(resolve, 500));\n  return Object.keys(stateCities);\n}\n\nasync function getCities(state) {\n  await new Promise((resolve) => setTimeout(resolve, 500));\n  return stateCities[state] ?? [];\n}\n\nfunction App() {\n  const states = createMemo(getStates);\n  const [selectedState, setState] = createSignal(() => states()[0]);\n  const cities = createMemo(() => getCities(selectedState()));\n  const [selectedCity, setCity] = createSignal(() => cities()[0]);\n\n  return (\n    <Loading fallback={<p>Loading...</p>}>\n      <select onChange={(e) => setState(e.currentTarget.value)}>\n        <For each={states()}>{(state) => <option>{state}</option>}</For>\n      </select>{' '}\n      <select disabled={isPending(cities)} onChange={(e) => setCity(e.currentTarget.value)}>\n        <For each={cities()}>{(city) => <option>{city}</option>}</For>\n      </select>\n      <p>\n        Selection: {selectedCity()}, {selectedState()}\n      </p>\n    </Loading>\n  );\n}\n\nrender(() => <App />, document.getElementById('app'));\n"
+			}
+		]
+	}
+}

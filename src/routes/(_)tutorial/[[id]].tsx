@@ -214,7 +214,7 @@ export default function Tutorial() {
 						</div>
 					</nav>
 				</section>
-				<section class="min-h-0 min-w-0" aria-label="Editor and preview">
+				<section class="min-h-0 min-w-0 p-2" aria-label="Editor and preview">
 					<Errored
 						fallback={
 							<p class="p-6 text-slate-700 dark:text-slate-300">

@@ -76,6 +76,7 @@ const FIX_STARTS = {
 	HEAD_TAG_INVALID: "`non-head-tag`/`invalid-attribute`: only head elements",
 	HOT_SCOPE_RERUNS: "The message names the latest cause",
 	LAZY_ASSET_UNMAPPED: "This is bundler-plugin configuration",
+	LOADING_ON_ACCESSOR: "`on` takes the dependency's value",
 	PENDING_ASYNC_UNTRACKED_READ: "Async values must be read where tracking",
 	RUN_WITH_DISPOSED_OWNER: "This usually means a stale owner",
 	SSR_BOUNDARY_WATERFALL: "The same repairs apply, in the same order",

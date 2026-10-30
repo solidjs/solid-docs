@@ -5,6 +5,7 @@ import {
 	Errored,
 	For,
 	Loading,
+	onSettled,
 	Show,
 	untrack,
 } from "solid-js";
@@ -115,6 +116,12 @@ export default function Tutorial() {
 	// Old solidjs.com lesson ids render their new lesson; the host redirects them.
 	const id = () => canonicalTutorialId(params.id || firstTutorialId);
 	const solved = () => new URLSearchParams(location.search).has("solved");
+	// The page is prerendered without the query, so the button follows it only after hydration.
+	const [hydrated, setHydrated] = createSignal(false);
+	onSettled(() => {
+		setHydrated(true);
+	});
+	const showSolved = () => hydrated() && solved();
 	const index = () =>
 		tutorialDirectory.findIndex((entry) => entry.internalName === id());
 	const entryAt = (i: number) => {
@@ -186,9 +193,9 @@ export default function Tutorial() {
 					>
 						<a
 							class="rounded-lg bg-blue-600 px-3 py-1.5 font-semibold text-white hover:bg-blue-700"
-							href={`/tutorial/${id()}${solved() ? "" : "?solved"}`}
+							href={`/tutorial/${id()}${showSolved() ? "" : "?solved"}`}
 						>
-							{solved() ? "Reset" : "Solve"}
+							{showSolved() ? "Reset" : "Solve"}
 						</a>
 						<div class="flex gap-4">
 							<Show when={previous()}>

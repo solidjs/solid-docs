@@ -4,12 +4,11 @@ version: "2.0"
 description: "Write a component test that clicks a button and asserts the label, run it in jsdom or a real browser, and test fullstack server code in a separate Node project."
 ---
 
-The first test most people write for a Solid component clicks the counter from the Quick start and asserts the label.
-The click fires, the assertion runs on the next line, and the DOM still says `Clicks: 0`.
-Nothing is broken: Solid applies writes in a batch after the current code finishes, and the test asserted before the batch landed.
-One call fixes it, and it is the one Solid-specific thing in a component test.
+Testing a Solid component is mostly like testing any other DOM code.
+The one difference is that Solid batches writes and applies them after the current code finishes, so if a test clicks a button and checks the DOM on the next line, it will still see the old value.
+Call `flush()` before you assert.
 
-Beyond that call, testing a Solid app is a question of picking the smallest environment that exercises the behavior under test:
+Beyond that, pick the smallest environment that covers what you are testing:
 
 1. Start component tests in jsdom.
    The `basic` template uses this configuration for component DOM tests.

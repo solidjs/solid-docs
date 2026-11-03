@@ -4,17 +4,15 @@ version: "2.0"
 description: "Require a signed-in customer for the account area at the data, route, and request layers, redirect a signed-out visitor to sign-in on the server and in the browser, and send them back where they were going."
 ---
 
-The account area from [Nested routes and layouts](/routing/solid-router/nested-routes) has three pages: `/account`, `/account/orders`, and `/account/addresses`.
-A signed-out visitor reaches them three ways: a bookmark or a shared link, which is a full page request; the **Account** link in the header, which is a client-side navigation; and a script that calls `getOrders` directly, which never renders anything.
-All three should end at `/sign-in`, and after signing in the visitor should land on the page they asked for, not on the account home.
+A signed-out visitor can reach a protected page three ways: by loading the URL, by clicking a link in the app, or by calling its server functions directly without loading a page at all.
+All three should end at `/sign-in`, and after signing in the visitor should land on the page they asked for.
 
-[Sessions and auth](/building-apps/sessions-and-auth) built the cookie, `getSession()`, and the middleware that sets `event.locals.userId`.
-This guide assembles those pieces into a guard that holds at every layer and uses the account area as the running example.
+This guide protects the account area from [Nested routes and layouts](/routing/solid-router/nested-routes) (`/account`, `/account/orders` and `/account/addresses`), using the cookie, `getSession()` and middleware from [Sessions and auth](/building-apps/sessions-and-auth).
 
-## Three layers, one decision
+## Where the check goes
 
-The decision is always the same: is there a `userId` on the request event.
-Where the decision runs determines what it protects.
+The check is always the same: is there a `userId` on the request event?
+What it protects depends on where it runs.
 
 - A check inside each server function protects the data.
   It runs for a page render, a router navigation, a form post without JavaScript, and a `curl` command alike, because every one of those reaches the function through the same request event.
@@ -23,7 +21,7 @@ Where the decision runs determines what it protects.
 - A check in middleware protects the request.
   It answers a full page request for `/account/*` with a redirect before any rendering starts.
 
-Each alone is not enough.
+You need all three.
 A route guard alone leaves `getOrders` callable by anyone who knows its URL, because a route guard decides what to render and never sees a direct call.
 The server function check alone stops the data and nothing else: in the browser the read receives a response object instead of a navigation, and the page is left without its data.
 Middleware alone never sees a client-side navigation, because a navigation inside the router makes no page request.

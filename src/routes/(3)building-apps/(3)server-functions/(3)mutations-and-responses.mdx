@@ -4,13 +4,8 @@ version: "2.0"
 description: "Return a value, a redirect, a reload, or a 400 from a cart or account mutation, and control what a thrown error reveals in production."
 ---
 
-The Add to cart form on the product page posts to `addToCart`.
-When the write succeeds, the browser should land on the cart with the new line in it.
-When the quantity is not a whole number, the caller should get a 400 and a message it can show next to the field.
-When the database is down, the caller should get an error, and that error must not contain the failing query.
-
-A return value can carry the cart line.
-It cannot carry a status, a `Location`, or the instruction to refresh the cart, so those go through the response helpers in `@solidjs/web`.
+A server function that writes usually needs to say more than its return value can: redirect to the cart after adding to it, answer a bad quantity with a 400 and a message, or fail without leaking the database query.
+A status, a `Location` header, or an instruction to refresh the cart goes through the response helpers in `@solidjs/web`.
 Most applications need [`redirect()`](#redirect-the-caller), [`reload()`](#request-revalidation), and `throw respond(...)` from [Handle thrown errors](#handle-thrown-errors); the envelope internals are for integrators.
 
 Mutations stay on the default `POST` transport, which is origin-checked.

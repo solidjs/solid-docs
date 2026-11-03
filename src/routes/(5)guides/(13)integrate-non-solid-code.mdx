@@ -4,14 +4,10 @@ version: "2.0"
 description: "Drive a charting library, a map, a web component, or an analytics script from Solid state: get the DOM node at the right time, create the instance once, update it in an effect, and keep browser-only imports off the server."
 ---
 
-The account area needs a chart of order totals, and the charting library wants a `<canvas>` and a `chart.update(data)` call.
-The store locator needs a map from a library that reads `window` the moment it is imported.
-The checkout form uses a `<date-picker>` custom element that takes an array of disabled dates, and the analytics script wants to know the current URL on every navigation.
-
-None of these know about signals.
-Each one needs the same four things from Solid: a DOM node once it exists, a place to create the instance once, an effect that pushes settled values into it, and a cleanup that tears it down with the component.
-This guide goes through those four things and the two directions state can flow, from Solid into the library and from the library back into Solid.
-The [Custom primitives](/guides/custom-primitives) guide shows how to package the result once it works.
+Charting libraries, maps, custom elements and analytics scripts do not know about signals.
+To use one in Solid you need a DOM node once it exists, somewhere to create the library's instance once, an effect that pushes new values into it, and a cleanup that tears it down with the component.
+This guide covers each of those, using a chart, a map, a `<date-picker>` custom element and an analytics script as examples, and shows how to get state back out of the library into Solid.
+Once it works, [Custom primitives](/guides/custom-primitives) shows how to package it.
 
 ## Get a DOM node
 
@@ -32,7 +28,9 @@ Run the `Avoid` version and the library throws on `undefined`, because the compo
 The element exists after the JSX has been evaluated; a `ref` callback runs at that moment, while the surrounding render is still being built.
 
 The [`ref` reference](/reference/solid-web/jsx-properties/ref) lists the accepted forms, and [Refs and directives](/concepts/components-and-jsx#refs-and-directives) shows how a directive factory owns setup for an element.
-Two facts from those pages matter for every integration on this page: a `ref` callback runs untracked and without an owner, so it is not a place to create effects or register cleanup; and setup that needs the element in the document belongs in `onSettled`, which runs after the first render has settled.
+Two things matter for every integration on this page.
+A `ref` callback runs untracked and without an owner, so do not create effects or register cleanup in it.
+And setup that needs the element to be in the document belongs in `onSettled`, which runs after the first render has settled.
 
 ## Create the instance once, update it in an effect
 

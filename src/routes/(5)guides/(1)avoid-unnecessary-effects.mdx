@@ -4,17 +4,16 @@ version: "2.0"
 description: "Recognize the effect that copies one reactive value into another, replace it with a direct, memoized, async, or writable derivation, and keep createEffect for the imperative boundary."
 ---
 
-The cart on the [Stores](/concepts/stores) page shows a subtotal under the line items.
-The first version many people write keeps the subtotal in its own signal and adds an effect that recalculates it whenever an item changes.
-It works, and it is wrong in a way that is hard to see: change a quantity and the row updates in one flush while the subtotal updates in the next, so for one frame the page shows the new quantity next to the old total.
-With attribution on, development names the pattern `[EFFECT_RELAY_TEAR]`.
+A common mistake is keeping a derived value, like a cart subtotal, in its own signal and updating it from an effect.
+It looks like it works, but the row updates in one flush and the subtotal in the next, so for one frame the page shows the new quantity next to the old total.
+With attribution on, development reports this as `[EFFECT_RELAY_TEAR]`.
 
 Signals, stores, props, memos, and async computations already form a graph of derived values.
 An effect belongs at the end of that graph, where a settled result has to leave Solid and drive something Solid does not own:
 
 ![Reactive inputs flow through derived values to declarative consumers and terminal effects. User interactions and external observations use setters to become new inputs.](/images/diagrams/derived-state-effects-sequence.svg)
 
-This guide goes through the places an effect gets written where a derivation belongs, shows what each one does when it runs, and ends with the two cases where `createEffect` is the right tool.
+This guide covers the common places people write an effect where a derivation belongs, and ends with the two cases where `createEffect` is the right tool.
 The [Reactivity](/concepts/reactivity) page explains tracking, memos, effect phases, scheduling, and ownership.
 
 ## Calculate values when they are read

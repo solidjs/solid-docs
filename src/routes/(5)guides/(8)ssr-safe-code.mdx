@@ -4,12 +4,10 @@ version: "2.0"
 description: "Keep browser APIs, per-run values, and client-only data out of the server render, and read each hydration warning to find the line that made the server and the browser disagree."
 ---
 
-The storefront passed `vite build`, and the first request to the dev server with `ssr: true` printed `ReferenceError: window is not defined` from the cart drawer.
-Moving that line fixed the crash, and the browser console then filled with `Hydration structure mismatch` warnings from the sale banner, which the server rendered and the browser decided not to.
-
-Both problems have the same shape: one component source runs on the server and in the browser, and a line that gives a different answer in each place breaks one of them.
-[Rendering and SSR](/concepts/rendering-and-ssr) explains the model.
-This guide is the checklist for the code: where each line runs, which lines cannot run on the server, which values must not differ, and how to read the warnings when they do.
+With server rendering on, the same component code runs on the server and in the browser.
+Most SSR bugs come from a line that only works in one of them (`window is not defined`) or gives a different answer in each (`Hydration structure mismatch`).
+This guide covers where each line runs, what cannot run on the server, what must not differ between the two, and how to read the warnings when something does.
+[Rendering and SSR](/concepts/rendering-and-ssr) explains the model behind it.
 
 ## Where each line runs
 

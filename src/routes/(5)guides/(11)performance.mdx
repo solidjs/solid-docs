@@ -4,21 +4,21 @@ version: "2.0"
 description: "Measure a slow catalog page with the browser profiler and Solid's attribution tables, then fix the cause each measurement points at: hot derivations, wide writes, rebuilt rows, waterfalls, unsplit code, and a blocked streaming shell."
 ---
 
-The catalog page renders 2,000 products.
-Typing in its search box lags a beat behind each keystroke, and the first paint of the page waits until the product list, the cart badge, and the account menu have all answered.
-Someone suggests memoizing everything; someone else suggests a virtual list.
-
-Both may be right, and neither is worth doing before a measurement says which part is slow.
-This guide is about taking that measurement and reading which knob it points at.
-It does not make speed claims; it describes what Solid does and does not do when a value changes, so the profile can be read against it.
+Measure before you optimize.
+Components in Solid do not re-render, so a slow page is rarely a component running too often.
+It is usually one derivation doing too much work, one write reaching thousands of readers, a list rebuilding rows it could keep, or requests that wait on each other.
+This guide shows how to find which one with the browser profiler and Solid's attribution tools, and what to change for each.
+The running example is a catalog page with 2,000 products and a search box.
 
 ## Measure before changing
 
 Start in the browser's Performance panel: record, type one character in the search box, stop.
-A long task after the keystroke shows the call stack that spent the time, and `performance.mark()` calls around suspect code give the flame chart named spans to look for.
-That tells you where the milliseconds went; the next tool tells you why that code ran.
+A long task after the keystroke shows the call stack that spent the time.
+Wrap suspect code in `performance.mark()` calls to get named spans in the flame chart.
 
-Attribution is Solid's development-build recorder of every scope that re-ran, what changed to cause it, and how long it took:
+The profiler tells you where the time went.
+Attribution tells you why that code ran.
+It is a development-build recorder that logs every scope that re-ran, what caused it, and how long it took:
 
 ```ts
 import { attribution, costs, feedback } from "solid-js/attribution";
@@ -30,15 +30,24 @@ console.table(costs().scopes);
 console.table(feedback().flights);
 ```
 
-`costs().scopes` ranks scopes by `selfMs`, with `wastedMs` for the time spent on runs whose result did not change, and `costs().writes` ranks root writes by the downstream re-run time each one caused.
-`feedback().flights` counts, per async source, how many requests started and how many were `abandoned` before landing; a high abandon count is the request-per-keystroke signature.
-`feedback().fallbacks` counts how often each `Loading` boundary showed its fallback and how many of those were `flashes` under 150ms.
+- `costs().scopes` ranks scopes by `selfMs`. `wastedMs` is the time spent on runs whose result did not change.
+- `costs().writes` ranks writes by how much re-running each one caused downstream.
+- `feedback().flights` counts, per async source, how many requests started and how many were `abandoned` before they landed. A high abandon count usually means a request per keystroke.
+- `feedback().fallbacks` counts how often each `Loading` boundary showed its fallback, and how many of those were `flashes` under 150ms.
 
-Name the scopes first: `createMemo(fn, { name: "visible" })`, `createStore(value, { name: "catalog" })`.
-Every table and every `why(visible)` chain refers to nodes by that name, and an unnamed memo prints as `computed`.
+Name your scopes before you measure: `createMemo(fn, { name: "visible" })`, `createStore(value, { name: "catalog" })`.
+The tables and `why()` chains use those names, and an unnamed memo prints as `computed`.
 
-While attribution is enabled, Solid also warns on its own when a scope re-runs 120 or more times in one second (`HOT_SCOPE_RERUNS`), spends 8ms or more of compute in one second (`HOT_SCOPE_TIME`), tracks 200 or more sources (`WIDE_SCOPE_DEPS`), or when one write reaches 250 or more subscribers (`HUGE_FAN_OUT` at the engine's `fanOut` threshold, with `data.write` naming the write).
-Two warnings are always on in development: `HUGE_FAN_OUT` from 2,000 subscribers and `HUGE_FAN_IN` from 2,000 sources.
+While attribution is on, Solid also warns when a scope is hot or wide:
+
+| Code               | Fires when                                                 |
+| ------------------ | ---------------------------------------------------------- |
+| `HOT_SCOPE_RERUNS` | a scope re-runs 120+ times in one second                   |
+| `HOT_SCOPE_TIME`   | a scope spends 8ms+ of compute in one second               |
+| `WIDE_SCOPE_DEPS`  | a scope tracks 200+ sources                                |
+| `HUGE_FAN_OUT`     | one write reaches 250+ subscribers (`data.write` names it) |
+
+Two warnings are on in development even without attribution: `HUGE_FAN_OUT` at 2,000 subscribers and `HUGE_FAN_IN` at 2,000 sources.
 [Debugging reactivity](/guides/debugging-reactivity#something-updates-too-often) explains how to read each report.
 
 :::note[Development and observe builds only]
@@ -59,31 +68,27 @@ const release = enablePerformanceTracks();
 release();
 ```
 
-Record a profile, type one character, and the group shows a wave on **Propagation** labelled by the write and what it reached, `query "m" → "mu" — input on input#search · 2,003 runs, 2,000 unchanged`, with every run inside it beneath, labelled by what made it run.
-**Effects** and **Memos** carry one span per re-run, colored by self time and marked as a warning when the run changed nothing; **Async** shows each request from kickoff to landing, with abandoned ones as warnings, and each `Loading` fallback from shown to hidden; **Holds** shows each wait labelled by its blockers; **Interactions** shows the keystroke from input delay through the handler to settle; **Navigations** shows each route change; **Server** shows the page's server-function calls and, beneath each, the server's own time for it.
-Every finding while the tracks are on is also a marker on the panel's Timings track, `HOT_SCOPE_RERUNS — <Catalog>`, and a warning or worse is annotated for the Insights sidebar with a link to the code's repair guide.
-The cost findings, such as `HOT_SCOPE_RERUNS`, appear only while some hold runs the cost checks: the console session above does, and the tracks' own hold does not unless asked.
+Record a profile and type one character.
+The **Propagation** track shows the write and everything it reached, labelled like `query "m" → "mu" — input on input#search · 2,003 runs, 2,000 unchanged`.
+**Effects** and **Memos** show one span per re-run, flagged when the run changed nothing.
+**Async** shows each request from start to landing (abandoned ones are flagged) and each `Loading` fallback from shown to hidden.
+**Interactions**, **Navigations**, **Holds** and **Server** fill in the rest: the keystroke from input delay to settle, route changes, what each held update waited on, and server time for each server-function call.
+Diagnostics also show up as markers on the panel's Timings track.
 
-A label starts at the nearest component you wrote, `<Catalog> › visible` rather than the full path from the document root, because the panel elides the middle of a label that does not fit.
-Solid's own flow components (`Show`, `For`, `Loading`, and the rest) never anchor a label, so a node under one reads `<Card> › <Show> › effect`; the unshortened path is the span's `Owner path` property, `Node` its runtime name, and in dev the span's tooltip is the same `[why-run]` chain the console prints.
-Give scopes names before you record here for the same reason as above: an unnamed memo is `computed` on the track as well.
+Labels start at the nearest component you wrote, like `<Catalog> › visible`, and an unnamed memo shows up as `computed` here too, so name your scopes first.
 
-The **Server** track reads the response's `Server-Timing` header, which a dev server writes for every request and an observe server writes while something on the server subscribes to the matching record: `solid-invocation` from an `"invocation"` record on a server-function response, and on a document `solid-shell` from the `"render"` record plus one `solid-boundary` per `Loading` boundary the shell waited on.
-The document's own metrics appear as `shell · server` and `boundary <App> › <Loading> · server` when the tracks enable, and a call's appear beneath its span once the browser's resource timing places it.
-
-`enablePerformanceTracks()` takes its own records-only hold on the engine, with `log: false` and `checks: false`, so it coexists with the console session above or with an adapter, and the console stays quiet only while nothing else asks for the log.
-Pass `enablePerformanceTracks({ attribution: { checks: true } })` to run the cost checks (`hotRuns`, `hotTime`, `wideDeps`, `unstableMemos`, `fanOut`, `wastedRecompute`) under the tracks' own hold.
-It accepts other `attribution` options for that hold, `minMs` to floor the spans it paints (`0` in dev, `0.05` in the observe build), and `rich` to switch between `performance.measure` entries with tooltips and properties and plain `console.timeStamp` entries.
-An observe build's tracks inherit the engine's `values: "none"`, so no value previews and no element text reach the panel; pass `attribution: { values: "labels" }` for the control labels, or in dev `"none"` for a timeline without user data.
+The tracks do not run the cost checks (`HOT_SCOPE_RERUNS` and friends) unless you ask for them with `enablePerformanceTracks({ attribution: { checks: true } })`.
+They coexist with the console session above and with any observability adapter.
 The [`enablePerformanceTracks` reference](/reference/solid-web/performance-tracks/enable-performance-tracks) lists the options.
 
 ## What does not re-run
 
 A component function runs once.
 The JSX it returns compiles to expressions that each track what they read, so a signal write re-runs the expressions that read that signal and nothing else.
-A component that runs too often is therefore not a failure mode to look for, and a profile that shows a component function high in the stack is showing its first and only run.
+So do not go looking for a component that runs too often.
+If a component function shows up in a profile, you are looking at its first and only run.
 
-The failure modes that do exist are narrower, and each has a name in the console:
+The real problems are narrower, and each one has a name in the console:
 
 | What the profile shows                                  | Code                                                  | Fix                                                            |
 | ------------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------- |
@@ -147,7 +152,7 @@ When a memo must return an object or array that is often equal in content, pass 
 
 ## Lists
 
-A list is where one mistake is paid once per row.
+In a list, every mistake is multiplied by the number of rows.
 `For` keeps a row when the same object comes back and rebuilds it when a new object appears, so the expensive version of a list is the one that hands `For` new objects for the same records:
 
 ```tsx
@@ -273,7 +278,7 @@ For a record map whose rows are replaced wholesale rather than edited, `createSt
 
 ### Typing in the search box lags
 
-Three causes, and attribution separates them.
+Attribution tells you which of three causes it is.
 If `costs().scopes` puts a filter or sort at the top, it runs in every reader; make it a memo and put an equality boundary on the normalized query, as in [Expensive derivations](#expensive-derivations).
 If `feedback().flights` shows most requests abandoned, a request starts per keystroke; debounce in the input handler, as [Search as you type](/guides/data-fetching-patterns#search-as-you-type) shows.
 If the input itself shows the previous character, it is bound to `query()` while a held update waits on results; bind `latest(query)` instead.

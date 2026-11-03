@@ -5,8 +5,8 @@ description: "Measure a slow catalog page with the browser profiler and Solid's 
 ---
 
 Measure before you optimize.
-Components in Solid don't re-render, so a slow page is rarely a component running too often.
-It's usually one derivation doing too much work, one write reaching thousands of readers, a list rebuilding rows it could keep, or requests that wait on each other.
+Components in Solid do not re-render, so a slow page is rarely a component running too often.
+It is usually one derivation doing too much work, one write reaching thousands of readers, a list rebuilding rows it could keep, or requests that wait on each other.
 This guide shows how to find which one with the browser profiler and Solid's attribution tools, and what to change for each.
 The running example is a catalog page with 2,000 products and a search box.
 
@@ -18,7 +18,7 @@ Wrap suspect code in `performance.mark()` calls to get named spans in the flame 
 
 The profiler tells you where the time went.
 Attribution tells you why that code ran.
-It's a development-build recorder that logs every scope that re-ran, what caused it, and how long it took:
+It is a development-build recorder that logs every scope that re-ran, what caused it, and how long it took:
 
 ```ts
 import { attribution, costs, feedback } from "solid-js/attribution";
@@ -30,7 +30,7 @@ console.table(costs().scopes);
 console.table(feedback().flights);
 ```
 
-- `costs().scopes` ranks scopes by `selfMs`. `wastedMs` is the time spent on runs whose result didn't change.
+- `costs().scopes` ranks scopes by `selfMs`. `wastedMs` is the time spent on runs whose result did not change.
 - `costs().writes` ranks writes by how much re-running each one caused downstream.
 - `feedback().flights` counts, per async source, how many requests started and how many were `abandoned` before they landed. A high abandon count usually means a request per keystroke.
 - `feedback().fallbacks` counts how often each `Loading` boundary showed its fallback, and how many of those were `flashes` under 150ms.
@@ -77,7 +77,7 @@ Diagnostics also show up as markers on the panel's Timings track.
 
 Labels start at the nearest component you wrote, like `<Catalog> › visible`, and an unnamed memo shows up as `computed` here too, so name your scopes first.
 
-The tracks don't run the cost checks (`HOT_SCOPE_RERUNS` and friends) unless you ask for them with `enablePerformanceTracks({ attribution: { checks: true } })`.
+The tracks do not run the cost checks (`HOT_SCOPE_RERUNS` and friends) unless you ask for them with `enablePerformanceTracks({ attribution: { checks: true } })`.
 They coexist with the console session above and with any observability adapter.
 The [`enablePerformanceTracks` reference](/reference/solid-web/performance-tracks/enable-performance-tracks) lists the options.
 
@@ -85,8 +85,8 @@ The [`enablePerformanceTracks` reference](/reference/solid-web/performance-track
 
 A component function runs once.
 The JSX it returns compiles to expressions that each track what they read, so a signal write re-runs the expressions that read that signal and nothing else.
-So don't go looking for a component that runs too often.
-If a component function shows up in a profile, you're looking at its first and only run.
+So do not go looking for a component that runs too often.
+If a component function shows up in a profile, you are looking at its first and only run.
 
 The real problems are narrower, and each one has a name in the console:
 
@@ -125,12 +125,12 @@ const visible = createMemo(
 ```
 
 Run the `Avoid` version and type one character: the filter runs twice, once for the count and once for the list, because a plain function is re-evaluated by each tracking scope that calls it.
-In `costs()`, `visible` doesn't appear at all, since a plain function isn't a scope; its time is charged to the scopes that called it.
+In `costs()`, `visible` does not appear at all, since a plain function is not a scope; its time is charged to the scopes that called it.
 In the `Prefer` version the memo runs once, both readers receive the stored array, and `costs()` shows one `visible` row.
 
 A memo costs a node in the graph and a comparison on each run; for a cheap expression with one reader, the function is smaller.
 Reach for the memo when several readers share the result, when the computation is expensive, or when the result is often unchanged.
-That last case is the equality gate: a memo compares its new value to the previous one and doesn't notify readers when the two are equal, so nothing downstream runs.
+That last case is the equality gate: a memo compares its new value to the previous one and does not notify readers when the two are equal, so nothing downstream runs.
 
 The gate compares by reference, which a filter defeats: every run produces a new array.
 Move the equality boundary to where the value is a primitive:
@@ -147,7 +147,7 @@ const visible = createMemo(
 );
 ```
 
-Type a trailing space and `needle` recomputes, produces the same string, and stops there; `visible` and the 2,000-row list don't run.
+Type a trailing space and `needle` recomputes, produces the same string, and stops there; `visible` and the 2,000-row list do not run.
 When a memo must return an object or array that is often equal in content, pass an `equals` option that compares by content; without one, attribution reports `[UNSTABLE_MEMO_OUTPUT]` after four consecutive new-but-equivalent results, because every subscriber re-ran for nothing.
 
 ## Lists
@@ -175,12 +175,12 @@ In a list, every mistake is multiplied by the number of rows.
 Run the `Avoid` version and add one item to the cart: all 2,000 rows are disposed and recreated, and attribution reports `[UNSTABLE_LIST_IDENTITY]`.
 In the `Prefer` version `inCart` is a store keyed by product id, built in [Stores at scale](#stores-at-scale), so adding an item updates the one row whose key flipped.
 
-The [Lists](/guides/lists) guide owns the rest: [keeping identity across a refetch](/guides/lists#keep-row-identity-across-updates), [selection without touching every row](/guides/lists#select-a-row), and [rendering a window](/guides/lists#render-a-window-over-a-large-list) with `Repeat` when 2,000 rows shouldn't all be in the DOM.
+The [Lists](/guides/lists) guide owns the rest: [keeping identity across a refetch](/guides/lists#keep-row-identity-across-updates), [selection without touching every row](/guides/lists#select-a-row), and [rendering a window](/guides/lists#render-a-window-over-a-large-list) with `Repeat` when 2,000 rows should not all be in the DOM.
 
 ## Waterfalls
 
 The first paint waits on three requests because each one starts when the one before it lands: the product needs nothing, the brand read waits for the product, and the brand's catalog waits for the brand.
-Derive each request from the input you already have, so the ones that don't depend on each other start together, and join the ones that do on the server.
+Derive each request from the input you already have, so the ones that do not depend on each other start together, and join the ones that do on the server.
 With attribution on, three or more sequential flights of 50ms or more print `[ASYNC_WATERFALL]` with the serialized time; a two-flight chain is recorded at `info` only.
 [Dependent requests](/guides/data-fetching-patterns#dependent-requests) shows the `Avoid` and `Prefer` versions, and a route [`preload`](/routing/solid-router/data#start-work-before-the-component-runs) starts the reads before the component runs at all.
 
@@ -201,7 +201,7 @@ const Account = lazy(() => import("./account/Account"));
 
 Render `<Account />` for the first time and the dynamic import starts; while it is in flight the component suspends through the nearest `Loading` boundary, which shows the skeleton.
 Call `Account.preload()` to start the import early, for example from a link's `onMouseEnter`.
-For a module that isn't a component, such as a route table or a formatting library, [`lazyModule`](/reference/solid-js/components-context/lazy) is the same cached import with `.preload()`, and the server can preload it before hydration.
+For a module that is not a component, such as a route table or a formatting library, [`lazyModule`](/reference/solid-js/components-context/lazy) is the same cached import with `.preload()`, and the server can preload it before hydration.
 
 With Solid Router the split usually happens at the route.
 A route whose `component` is a `lazy` component has its chunk loaded on first navigation, and a `children: () => import("./account/routes")` thunk defers a whole route table the same way.
@@ -210,7 +210,7 @@ Link preloading is opt-in: create the router with `createRouter({ routes, preloa
 
 :::caution[A chunk is a round trip]
 Splitting a component that the first page needs adds a request before that page can paint.
-Split at the boundary between what the first page shows and what it doesn't, and leave the header, the product grid, and the cart badge in the main bundle.
+Split at the boundary between what the first page shows and what it does not, and leave the header, the product grid, and the cart badge in the main bundle.
 :::
 
 ## Server rendering and streaming
@@ -242,7 +242,7 @@ When one read must be in the first HTML, for a crawler or a link preview, pass `
 
 ## Stores at scale
 
-A store holding 2,000 products doesn't create 2,000 sets of tracking nodes.
+A store holding 2,000 products does not create 2,000 sets of tracking nodes.
 The proxy creates a node for a property the first time a tracking scope reads it, so the rows on screen cost nodes and the rest cost nothing until they scroll into view.
 Two store features keep that cheap as the data changes:
 
@@ -265,7 +265,7 @@ const inCart = createProjection<Record<string, boolean>>(
 );
 ```
 
-Refetch the catalog after a price change and one text node updates; the other 1,999 rows read properties whose values didn't change and aren't notified.
+Refetch the catalog after a price change and one text node updates; the other 1,999 rows read properties whose values did not change and are not notified.
 Add an item to the cart and `inCart` gains one key, so one row's `inCart` read runs.
 
 The alternative, every row reading `cart.items.some((item) => item.id === product.id)`, subscribes 2,000 scopes to `cart.items`, and adding an item re-runs all of them.
@@ -311,7 +311,7 @@ Measure timings on a production build; use the development build to find out whi
 - Hand `For` the store's objects; a `map` that produces new objects rebuilds every row.
 - Derive independent requests from inputs you already have, so they start together.
 - Split code with `lazy` at the boundary between the first page and the rest, and turn on `preloadLinks: intentPreload()` so the router preloads chunks on hover.
-- Wrap each streamed region in a `Loading` boundary so the shell doesn't wait for its data.
+- Wrap each streamed region in a `Loading` boundary so the shell does not wait for its data.
 - Keep per-row flags in a store or projection keyed by id, so a change touches the rows whose key flipped.
 
 ## Next steps

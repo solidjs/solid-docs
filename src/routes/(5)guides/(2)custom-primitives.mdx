@@ -4,14 +4,15 @@ version: "2.0"
 description: "Move repeated reactive setup into a createX function that runs inside an owner, accepts accessors, returns accessors, cleans up what it starts, and stays correct during server rendering."
 ---
 
-A custom primitive is a function that creates signals, memos and effects and returns what a component needs to read, like a debounced value, a media query, or a draft saved to `localStorage`.
-There's nothing special about writing one, but it has to follow the same rules as the built-in primitives, and this guide covers them.
+The same few lines for a debounced query, a viewport check, or a cart draft saved to `localStorage` tend to end up copied across components.
+A custom primitive is a function that packages them: it creates signals, memos and effects, and returns what the component needs to read.
+Writing one follows the same rules as the built-in primitives, and this guide covers those rules.
 The [Reactivity](/concepts/reactivity) page explains tracking, effects, and ownership; this page assumes them.
 
 ## A primitive is a function that runs inside an owner
 
 Start with the debounce.
-The search box shouldn't call the server on every keystroke, so the query signal should change only after typing pauses:
+The search box should not call the server on every keystroke, so the query signal should change only after typing pauses:
 
 ```ts
 import { createSignal, onCleanup } from "solid-js";
@@ -124,14 +125,14 @@ Resize the window across 60rem and the page switches between the table and the c
 Leave the page and the `change` listener is removed.
 
 [`onSettled`](/reference/solid-js/lifecycle-actions/on-settled) runs its callback once, after the component's first render has settled, and the cleanup the callback returns runs when the owner is disposed.
-It is the home for setup that touches the browser, because the callback doesn't run during server rendering.
+It is the home for setup that touches the browser, because the callback does not run during server rendering.
 `matches` starts as `false` on both sides, so the server renders the cards and the browser switches to the table after hydration if the query matches.
 The [SSR-safe code](/guides/ssr-safe-code) guide covers what to do when that first frame matters.
 
 Use [`onCleanup`](/reference/solid-js/advanced/specialized-reactivity/on-cleanup) when there is nothing to set up after render and only something to release, as the debounce did with its timer.
 It registers a callback on the current owner and nothing else.
 
-:::caution[Return the cleanup from onSettled; don't register one inside it]
+:::caution[Return the cleanup from onSettled; do not register one inside it]
 Inside an `onSettled` callback, `onCleanup` throws `[CLEANUP_IN_FORBIDDEN_SCOPE] Cannot use onCleanup inside createTrackedEffect or onSettled; return a cleanup function instead`.
 The same callback may not create signals, memos, or effects; development throws `[PRIMITIVE_IN_FORBIDDEN_SCOPE]`.
 Create primitives in the body of the `createX` function, and use the callback for the imperative setup and its returned teardown.
@@ -187,7 +188,7 @@ Change `breakpoint` in the parent and the old listener is removed, a new `MediaQ
 
 The setup moved from `onSettled` into [`createEffect`](/reference/solid-js/reactivity/create-effect) because the input can now change.
 The compute function reads the input, the effect function does the browser work and returns its cleanup, and Solid runs that cleanup before the next effect run and on disposal.
-Like `onSettled`, the effect function doesn't run during server rendering.
+Like `onSettled`, the effect function does not run during server rendering.
 [`Accessor<T>`](/reference/solid-js/types/reactive-types) is the type of a signal getter and of any `() => T`, so a caller can pass a signal, a memo, or an arrow function over props.
 
 Take a plain `T` only for a value the primitive reads once by design, such as `initial` in `createDebouncedSignal`.
@@ -344,7 +345,7 @@ dispose();
 ```
 
 Use it in a test of the primitive itself, or in an integration that hosts Solid reactivity in code that has no `render` call.
-Application code shouldn't need it; state that several components share belongs in [context](/concepts/components-and-jsx#context), not in a root at module scope.
+Application code should not need it; state that several components share belongs in [context](/concepts/components-and-jsx#context), not in a root at module scope.
 
 ## Common problems
 
@@ -378,12 +379,12 @@ The [SSR-safe code](/guides/ssr-safe-code) guide has the full checklist.
 - Accept `MaybeAccessor<T>` and unwrap it inside a tracking scope; a plain parameter is a one-time read.
 - Return accessors, tuples of accessors, or a store; never the result of calling one.
 - Return an async memo as you would a sync one; the caller's `Loading` boundary handles the wait.
-- Read browser state in `onSettled`, write it in an effect function, and use `defer: true` when the first run shouldn't write.
+- Read browser state in `onSettled`, write it in an effect function, and use `defer: true` when the first run should not write.
 - Capture the owner with `getOwner` and re-enter it with `runWithOwner` when a primitive must create something after an `await`.
 
 ## Next steps
 
-- [Avoid unnecessary effects](/guides/avoid-unnecessary-effects): which of the values a primitive returns should be memos, and when its effect is one that shouldn't exist.
+- [Avoid unnecessary effects](/guides/avoid-unnecessary-effects): which of the values a primitive returns should be memos, and when its effect is one that should not exist.
 - [Integrate non-Solid code](/guides/integrate-non-solid-code): the same owner and cleanup rules applied to charting libraries, maps, and web components.
 - [SSR-safe code](/guides/ssr-safe-code): the checklist for primitives whose first frame differs between server and browser.
 - [TypeScript](/guides/typescript): typing `Accessor`, `Setter`, and `MaybeAccessor` parameters and return values.

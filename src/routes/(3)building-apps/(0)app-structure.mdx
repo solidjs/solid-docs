@@ -40,7 +40,7 @@ The three modes the [Choose a rendering mode](/guides/choose-a-rendering-mode) g
   It is a plugin, not a start-mode setting, and it renders the same two files.
 
 Flipping `ssr` changes what the build produces and what the host runs.
-It doesn't change `App.tsx`, `Document.tsx`, or the routes, which is why the [project shapes](/getting-started/project-shapes) are the same layout with different options.
+It does not change `App.tsx`, `Document.tsx`, or the routes, which is why the [project shapes](/getting-started/project-shapes) are the same layout with different options.
 
 :::note[Server functions keep the server handler]
 With `serverFunctions` on and `ssr` off, pages are still static files, but the `/_server` endpoint that answers server-function calls lives in `dist/server`, so the build keeps that directory and the host has to run it.
@@ -106,7 +106,7 @@ export default function Document(props: ParentProps) {
 ```
 
 View the page source and this is the markup around the app.
-The plugin injects the client entry `<script>` into the head; you don't write that tag.
+The plugin injects the client entry `<script>` into the head; you do not write that tag.
 
 Two lines in this file carry rules:
 
@@ -127,7 +127,7 @@ With the `Avoid` version, clicks and input that happen between the HTML arriving
 Keep `<HydrationScript />` in the document even in a static-shell project: the handler strips its output from the prerendered shell, so it costs nothing until you turn `ssr` on.
 
 The other rule is `{props.children}`.
-The generated server entry renders `<Document><App /></Document>`, so a body that doesn't render its children never renders the app.
+The generated server entry renders `<Document><App /></Document>`, so a body that does not render its children never renders the app.
 
 The plugin looks for `src/Document.tsx`, then `src/Document.jsx`; `start.document` names another module and takes precedence.
 Delete the file and the generated entries use a built-in shell with a charset, a viewport tag, and the hydration script.
@@ -137,7 +137,7 @@ The static `<title>Solid App</title>` is the fallback when no page has mounted a
 
 :::advanced[When to read this section]
 The generated entries cover every project shape, including the routers in the official templates.
-Author your own entries when the server render must return something the generated one can't, such as a custom `Response` per request or a document assembled by another host.
+Author your own entries when the server render must return something the generated one cannot, such as a custom `Response` per request or a document assembled by another host.
 :::
 
 An entry pair is selected in this order: explicit `start.entries.server` and `start.entries.client` paths, then the conventional `src/entry-server.*` and `src/entry-client.*` files (probed as `.tsx`, `.jsx`, `.ts`, `.js`, then `.mjs`), then the generated pair built from `App` and `Document`.
@@ -154,7 +154,7 @@ Providing one authored entry without the other under `ssr: true` is a configurat
 
 ## Mounting a router
 
-Start mode doesn't select a router.
+Start mode does not select a router.
 Mount the router or its provider inside `App`, the way both router variants of the templates do, and route modules and route-table generation stay with the router you chose.
 
 Some routers need an instance bound to the current request so they can load the matched routes before the server render begins.
@@ -173,7 +173,7 @@ solid({
 The module default-exports a function that receives the request event and the `App` component.
 The generated server entry calls it after the middleware chain has dispatched to the page render and before `renderToStream()` starts.
 It may return a component, nothing, or a promise of either: a returned component renders in `App`'s place inside `Document`, and no return keeps `<App />`.
-The browser-side `App` must produce the same router tree, or hydration won't match.
+The browser-side `App` must produce the same router tree, or hydration will not match.
 
 `start.serverRenderSetup` runs only for page renders made by a generated server entry under `ssr: true`.
 It is ignored without `ssr`, and combining it with an authored server entry is an error.
@@ -184,7 +184,7 @@ It is ignored without `ssr`, and combining it with an authored server entry is a
 
 ### `the start option needs an app root`
 
-There is no `src/App.tsx` (or `.jsx`, `.ts`, `.js`, or a lowercase `app` variant) and `start.app` isn't set.
+There is no `src/App.tsx` (or `.jsx`, `.ts`, `.js`, or a lowercase `app` variant) and `start.app` is not set.
 Add the file or set `start.app`; under `ssr: true`, an authored `src/entry-server.*` and `src/entry-client.*` pair is the other way to satisfy it.
 
 ### `found entry-server but no entry-client; entry files come in pairs`
@@ -194,7 +194,7 @@ Add the matching entry, or remove the one you have to go back to the generated p
 
 ### The body is empty on a server-rendered page
 
-`Document` doesn't render `props.children`.
+`Document` does not render `props.children`.
 The app is passed in as children; a body that hardcodes its content never renders it.
 
 ### Production shows a 500 page where development showed the error
@@ -211,7 +211,7 @@ Call the setup step from your own `render()` and remove `start.serverRenderSetup
 ## Loading instrumentation first
 
 An error monitor or a tracing SDK on the server patches `node:http` and the other modules it observes, so it has to run before those modules are imported.
-Writing `import "./instrument"` at the top of an entry doesn't achieve that in ESM: static imports are hoisted and evaluated in dependency order, so the entry's own dependencies load first.
+Writing `import "./instrument"` at the top of an entry does not achieve that in ESM: static imports are hoisted and evaluated in dependency order, so the entry's own dependencies load first.
 `start.serverSetup` names a server-only module the plugin awaits before anything else in the server graph:
 
 ```ts
@@ -243,9 +243,9 @@ Keep code splitting on in the server build (the default); inlining dynamic impor
 - Keep `<HydrationScript />` in `Document`; without it, input before hydration is lost, and the static shell strips it for free.
 - Render `{props.children}` in the document body, or the app never appears on the server.
 - The static `<title>` in `Document` is the fallback; per-page titles come from head metadata.
-- Author `entry-server` and `entry-client` together, and only when the generated pair can't produce the response you need.
+- Author `entry-server` and `entry-client` together, and only when the generated pair cannot produce the response you need.
 - Use `start.serverRenderSetup` when a router must load against the request before the server render; it applies only to generated entries under `ssr: true`.
-- Use `start.serverSetup` for a module that must run before the server graph loads, such as a monitoring SDK's `init()`; a static import at the top of an entry doesn't run first.
+- Use `start.serverSetup` for a module that must run before the server graph loads, such as a monitoring SDK's `init()`; a static import at the top of an entry does not run first.
 
 ## Next steps
 

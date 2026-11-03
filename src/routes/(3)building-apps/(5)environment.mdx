@@ -10,7 +10,7 @@ Vite's `import.meta.env` handles the second kind.
 Start mode adds a layer that handles both, with one schema, two import paths, and a build that fails if server values leak into client code.
 
 This page uses the two variables the `fullstack` project shape declares.
-The layer belongs to start mode and isn't enabled by `ssr: true` alone.
+The layer belongs to start mode and is not enabled by `ssr: true` alone.
 
 Most apps need the first section and the failure list after it.
 The table, the `.env` rules, and the schema location are for checking a detail; the module markers at the end apply the same boundary to your own files.
@@ -79,9 +79,9 @@ import { env } from "virtual:env/client";
 <Title>{env.VITE_APP_NAME}</Title>; // string, "Solid Store" when unset
 ```
 
-Hover `env.SESSION_SECRET` in the editor and its type is `string`, inferred from the validator's output; a key that isn't in the schema is a type error.
+Hover `env.SESSION_SECRET` in the editor and its type is `string`, inferred from the validator's output; a key that is not in the schema is a type error.
 The plugin writes `solid-env.d.ts` next to the schema when dev or a build starts.
-Keep that file in the TypeScript project and don't edit it.
+Keep that file in the TypeScript project and do not edit it.
 
 The place a read happens decides which module it may import:
 
@@ -99,7 +99,7 @@ import { env } from "virtual:env/server";
 export const secrets = env.SESSION_SECRET.split(",");
 ```
 
-The `Avoid` version, in `src/components/Footer.tsx`, doesn't build.
+The `Avoid` version, in `src/components/Footer.tsx`, does not build.
 The error is `virtual:env/server is server-only and was imported from the client module graph (by src/components/Footer.tsx)`, because a component module is part of the browser bundle even when it also renders on the server.
 The `Prefer` version lives in `src/server/session.ts`, and a `"use server"` function in a module the browser also loads may import it, as the template's data layer does: the compiler keeps the function body and its imports out of the browser bundle.
 
@@ -132,7 +132,7 @@ Server values are read from `process.env` when the server starts, not baked in a
 
 The build fails.
 Client values are validated at build time because that is when they are serialized into the bundle.
-The validator library doesn't ship to the browser; only the validated values do.
+The validator library does not ship to the browser; only the validated values do.
 
 ### A server string shows up in the client bundle
 
@@ -150,7 +150,7 @@ This is a backstop for a copy-paste mistake, not a security boundary; the module
 | Key prefix             | any                                                      | `VITE_` (or `envPrefix`) |
 | Rotate without rebuild | yes                                                      | no                       |
 
-`virtual:env/server` also exposes the client values, so server code doesn't need two imports.
+`virtual:env/server` also exposes the client values, so server code does not need two imports.
 
 ## `.env` files
 
@@ -206,10 +206,10 @@ export function readPreference() {
 `client-only` is the mirror: the build fails if the module enters a server graph.
 
 The markers assert where a module may be bundled.
-They don't split a module in two, add a runtime check, or un-leak a value already copied into client code.
+They do not split a module in two, add a runtime check, or un-leak a value already copied into client code.
 Put the marker in the module that holds the sensitive code, not in the module that imports it.
 
-If TypeScript doesn't already know these module names, add the plugin's declarations:
+If TypeScript does not already know these module names, add the plugin's declarations:
 
 ```ts
 /// <reference types="@solidjs/vite-plugin/boundary-modules" />
@@ -219,7 +219,7 @@ If TypeScript doesn't already know these module names, add the plugin's declarat
 
 ### `env.SESSION_SECRET` is typed `unknown` or the key is missing
 
-`solid-env.d.ts` hasn't been regenerated; start dev or a build once.
+`solid-env.d.ts` has not been regenerated; start dev or a build once.
 If it is regenerated and still wrong, the type is the validator's output type, so check the schema.
 
 ### The dev server reports a validation error for a server variable

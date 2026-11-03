@@ -4,7 +4,7 @@ version: "2.0"
 description: "Drive a charting library, a map, a web component, or an analytics script from Solid state: get the DOM node at the right time, create the instance once, update it in an effect, and keep browser-only imports off the server."
 ---
 
-Charting libraries, maps, custom elements and analytics scripts don't know about signals.
+Charting libraries, maps, custom elements and analytics scripts do not know about signals.
 To use one in Solid you need a DOM node once it exists, somewhere to create the library's instance once, an effect that pushes new values into it, and a cleanup that tears it down with the component.
 This guide covers each of those, using a chart, a map, a `<date-picker>` custom element and an analytics script as examples, and shows how to get state back out of the library into Solid.
 Once it works, [Custom primitives](/guides/custom-primitives) shows how to package it.
@@ -29,7 +29,7 @@ The element exists after the JSX has been evaluated; a `ref` callback runs at th
 
 The [`ref` reference](/reference/solid-web/jsx-properties/ref) lists the accepted forms, and [Refs and directives](/concepts/components-and-jsx#refs-and-directives) shows how a directive factory owns setup for an element.
 Two things matter for every integration on this page.
-A `ref` callback runs untracked and without an owner, so don't create effects or register cleanup in it.
+A `ref` callback runs untracked and without an owner, so do not create effects or register cleanup in it.
 And setup that needs the element to be in the document belongs in `onSettled`, which runs after the first render has settled.
 
 ## Create the instance once, update it in an effect
@@ -65,11 +65,11 @@ function OrderTotalsChart(props: { totals: number[] }) {
 }
 ```
 
-Run the `Avoid` version and the chart draws the first totals and never changes, because `onSettled` runs its callback once and doesn't track the reads inside it.
+Run the `Avoid` version and the chart draws the first totals and never changes, because `onSettled` runs its callback once and does not track the reads inside it.
 In the `Prefer` version a new `totals` array re-runs the compute function, and the effect function hands the value to the library after the update has landed.
 
 The split follows the rest of the documentation: [`onSettled`](/reference/solid-js/lifecycle-actions/on-settled) for one-time setup that returns its teardown, and the effect function of [`createEffect`](/reference/solid-js/reactivity/create-effect) for each settled value that has to leave Solid.
-Neither runs during server rendering, so the component is safe to render on the server as long as `chart-lib` can be imported there; if it can't, see [Keep it off the server](#keep-it-off-the-server).
+Neither runs during server rendering, so the component is safe to render on the server as long as `chart-lib` can be imported there; if it cannot, see [Keep it off the server](#keep-it-off-the-server).
 [Use an effect at an imperative boundary](/guides/avoid-unnecessary-effects#use-an-effect-at-an-imperative-boundary) explains why every input belongs in the compute function.
 
 The analytics script is the same shape without a DOM node:
@@ -121,10 +121,10 @@ The `prop:` namespace assigns a property instead, which is what a custom element
 The server emits attributes into the HTML and skips `prop:` bindings; the property is assigned when the browser renders or hydrates the element.
 
 `onDatechange` lowercases the name and adds a listener for `datechange` with `addEventListener`.
-An event name that contains uppercase letters or a hyphen can't be written that way; use a directive that calls `addEventListener` with the exact name, following the `listen` factory in [Refs and directives](/concepts/components-and-jsx#refs-and-directives).
+An event name that contains uppercase letters or a hyphen cannot be written that way; use a directive that calls `addEventListener` with the exact name, following the `listen` factory in [Refs and directives](/concepts/components-and-jsx#refs-and-directives).
 The events Solid delegates, such as `onInput` and `onClick`, are handled by a listener on the render root, so a custom element that dispatches one of those names must dispatch it with `bubbles: true` for the handler to run.
 
-TypeScript doesn't know `<date-picker>`.
+TypeScript does not know `<date-picker>`.
 Declare it once, with the attribute, property, and event names the element supports:
 
 ```ts
@@ -149,7 +149,7 @@ The `export {}` line keeps the file a module, so the block adds to the types of 
 
 ## Render Solid into a foreign container
 
-Two situations move Solid content into a DOM node Solid didn't create.
+Two situations move Solid content into a DOM node Solid did not create.
 
 The first is a subtree that must escape its ancestor, such as a confirmation dialog inside the map library's container, which clips overflow.
 [`Portal`](/reference/solid-web/components/portal) renders its children into another element, `document.body` by default, while they stay in the component's reactive scope:
@@ -240,7 +240,7 @@ function StoreLocator() {
 }
 ```
 
-The server renders the fallback and doesn't run the import.
+The server renders the fallback and does not run the import.
 The browser hydrates the fallback, waits for the module and for hydration to settle, and swaps in `StoreMap` with the props it was given.
 By default the import starts as soon as `clientOnly` is called; pass `{ lazy: true }` to start it at the component's first render.
 

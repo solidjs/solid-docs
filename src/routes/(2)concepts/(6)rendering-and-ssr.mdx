@@ -44,7 +44,7 @@ onSettled(() => {
 
 The `Avoid` version crashes the server render with `ReferenceError: localStorage is not defined`.
 In the `Prefer` version the server renders an empty cart, the browser hydrates it, and the `onSettled` callback fills it in from storage.
-The effect function of `createEffect` and the callback of `onSettled` don't run during server rendering; their compute functions may.
+The effect function of `createEffect` and the callback of `onSettled` do not run during server rendering; their compute functions may.
 
 For a check inside shared code, [`isServer`](/reference/solid-web/rendering-ssr/is-server) is a build-time constant: the browser build exports `false` and the server build exports `true`, so a bundler can remove the unreachable side.
 
@@ -56,8 +56,8 @@ if (!isServer) {
 }
 ```
 
-For a whole component that can't run on the server, such as a map or a rich text editor, use [`clientOnly`](/reference/solid-web/rendering-ssr/client-only).
-The server renders its fallback and doesn't start the import; the browser hydrates the fallback, waits for the module and for hydration to settle, and then swaps in the component:
+For a whole component that cannot run on the server, such as a map or a rich text editor, use [`clientOnly`](/reference/solid-web/rendering-ssr/client-only).
+The server renders its fallback and does not start the import; the browser hydrates the fallback, waits for the module and for hydration to settle, and then swaps in the component:
 
 ```tsx
 import { clientOnly } from "@solidjs/web";
@@ -120,7 +120,7 @@ hydrate(() => <App />, root);
 ```
 
 The server and client must render the same initial structure in each hydrated region.
-Solid assigns hydration keys during SSR so the client build can claim the matching nodes; when the structures differ, the client can't find the node it expects.
+Solid assigns hydration keys during SSR so the client build can claim the matching nodes; when the structures differ, the client cannot find the node it expects.
 
 ```tsx
 // Avoid: a different element on each side
@@ -147,7 +147,7 @@ A value that differs only in its text, such as `<p>{Date.now()}</p>`, produces n
 [SSR-safe code](/guides/ssr-safe-code#values-that-differ-on-every-run) goes through these cases and how to read each warning.
 
 When the application owns the full document, include `HydrationScript` once before the application markup.
-It initializes hydration support and records delegated events that fire before the client bundle has hydrated, so a click during the load isn't lost.
+It initializes hydration support and records delegated events that fire before the client bundle has hydrated, so a click during the load is not lost.
 For several roots on one page, give each server render a distinct `renderId` and pass the same value to its `hydrate` call:
 
 ```tsx
@@ -161,7 +161,7 @@ hydrate(() => <Account />, accountRoot, { renderId: "account" });
 ## Async data during hydration
 
 Async values the server rendered travel to the client with the HTML.
-A hydrating memo adopts the server's answer, a value or an error, and doesn't ask for it again, even when the client joins a stream partway through.
+A hydrating memo adopts the server's answer, a value or an error, and does not ask for it again, even when the client joins a stream partway through.
 It computes again only when one of its inputs changes on the client or it is refreshed.
 
 The memo still has to learn what it depends on, so the client runs its compute function once and discards the result.
@@ -329,7 +329,7 @@ Two functions answer questions about the hydration in progress.
 [`isHydratable()`](/reference/solid-js/advanced/manual-hydration/is-hydratable) is `true` when the calling owner sits where hydration applies, so `false` under `NoHydration` and `true` again inside a nested `Hydration`.
 
 Those two, with [`getHydrationWriter`](/reference/solid-web/rendering-ssr/get-hydration-writer) and [`takeHydrationValue`](/reference/solid-web/rendering-ssr/take-hydration-value) from `@solidjs/web`, are the surface a data library uses to carry its own values from the server render to the hydrating client: the server side writes a value under a namespaced key when `isHydratable()` allows it, and the client side takes it back by key, as a resolved value, a rejection, or a promise still streaming in.
-Application code doesn't need them; Solid moves its own state this way already.
+Application code does not need them; Solid moves its own state this way already.
 
 ## Common problems
 
@@ -363,7 +363,7 @@ Cache resolved values, or start the load outside the compute; see [Async data du
 ## Recap
 
 - One component source runs in the browser and on the server; code that needs `window` runs in an effect, an `onSettled` callback, behind `isServer`, or inside `clientOnly`.
-- Create state inside components or providers, never at module scope, so requests don't share it.
+- Create state inside components or providers, never at module scope, so requests do not share it.
 - Render the same initial structure on both sides; fill in browser-only values after hydration.
 - Include `HydrationScript` once when the application owns the document.
 - Hydration adopts the server's async answers without asking again; a compute function must not cache promises it creates.

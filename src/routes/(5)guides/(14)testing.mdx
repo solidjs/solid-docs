@@ -5,10 +5,10 @@ description: "Write a component test that clicks a button and asserts the label,
 ---
 
 Testing a Solid component is mostly like testing any other DOM code.
-The one difference is that Solid batches writes and applies them after the current code finishes, so if a test clicks a button and checks the DOM on the next line, it'll still see the old value.
+The one difference is that Solid batches writes and applies them after the current code finishes, so if a test clicks a button and checks the DOM on the next line, it will still see the old value.
 Call `flush()` before you assert.
 
-Beyond that, pick the smallest environment that covers what you're testing:
+Beyond that, pick the smallest environment that covers what you are testing:
 
 1. Start component tests in jsdom.
    The `basic` template uses this configuration for component DOM tests.
@@ -19,7 +19,7 @@ Beyond that, pick the smallest environment that covers what you're testing:
 
 :::tip[Assert what the user sees]
 Query by an accessible role and assert visible text or state.
-Don't inspect signal values, effect counts, or compiled output when the public behavior gives the same evidence.
+Do not inspect signal values, effect counts, or compiled output when the public behavior gives the same evidence.
 This follows the [Testing Library guiding principles](https://testing-library.com/docs/guiding-principles/).
 :::
 
@@ -134,7 +134,7 @@ expect(button).toHaveTextContent("Clicks: 1");
 
 The click event stages the signal update, and ordinary reads continue to return the last committed value until the batch lands.
 [`flush()`](/reference/solid-js/reactivity/flush) commits the staged value and drains queued work so the DOM is current when the assertion runs.
-It doesn't wait for async work: for behavior that is asynchronous by contract, such as an async memo, use the asynchronous queries or [`resolve(fn)`](/reference/solid-js/advanced/interop-async/resolve) rather than `flush()`.
+It does not wait for async work: for behavior that is asynchronous by contract, such as an async memo, use the asynchronous queries or [`resolve(fn)`](/reference/solid-js/advanced/interop-async/resolve) rather than `flush()`.
 
 Solid Testing Library tracks mounted containers and exports `cleanup`.
 It can register cleanup automatically when the test runner exposes a global `afterEach`.
@@ -142,7 +142,7 @@ The configuration above sets `globals: false`, so the explicit `afterEach(cleanu
 
 ## Test components in a real browser
 
-Choose browser mode when jsdom can't provide the behavior that the test needs.
+Choose browser mode when jsdom cannot provide the behavior that the test needs.
 The maintained browser-mode template uses the Playwright provider with headless Chromium.
 
 For a new test setup, install the complete dependency set:
@@ -273,7 +273,7 @@ export default defineConfig({
 
 The Node project compiles server code and resolves the server runtime.
 The fullstack template also inlines and aliases its `@solidjs/web` entries so the request helper and request-event storage use the same server-build instance.
-Keep the server include pattern separate from the client pattern so a server test doesn't run under jsdom.
+Keep the server include pattern separate from the client pattern so a server test does not run under jsdom.
 
 ### Stub the server environment module
 
@@ -299,7 +299,7 @@ export const env: Record<string, unknown> = new Proxy(
 The proxy reads `process.env` when code accesses a property and reproduces the schema's parsed output for the signing-key list.
 This behavior lets a test set `process.env.SESSION_SECRET` before it imports the session module.
 The stub only supplies the module contract needed by the template test.
-It doesn't validate key length or run the start mode server boot process, so use a realistic test key that satisfies the production schema.
+It does not validate key length or run the start mode server boot process, so use a realistic test key that satisfies the production schema.
 
 ### Exercise a session across requests
 
@@ -370,14 +370,14 @@ Restore fake timers and mocks, delete changed environment variables, and dispose
 
 ### The assertion after `fireEvent` sees the old DOM
 
-The write is staged and the batch hasn't landed when the next line runs.
+The write is staged and the batch has not landed when the next line runs.
 Call `flush()` after the event and before the assertion.
-For an async source, `flush()` doesn't help; await `resolve(() => value())` or use an asynchronous query.
+For an async source, `flush()` does not help; await `resolve(() => value())` or use an asynchronous query.
 
 ### A component test fails with `document is not defined`
 
-The `test` block doesn't set `environment`, so Vitest runs the file in Node.
-`@solidjs/vite-plugin` doesn't choose a test environment.
+The `test` block does not set `environment`, so Vitest runs the file in Node.
+`@solidjs/vite-plugin` does not choose a test environment.
 Set `environment: "jsdom"` (or `"happy-dom"`) for component tests, or enable browser mode.
 
 ### A server test runs under jsdom
@@ -399,7 +399,7 @@ Remove the setting, or reset the module-level state in `afterEach`.
 
 - Test in the smallest environment that exercises the behavior: jsdom for component DOM, browser mode for layout and browser APIs, a Node project for server code.
 - Pass a function to `render` so the component has a reactive owner, and query by role.
-- Call `flush()` after `fireEvent` and before the assertion; it lands the staged write and doesn't wait for async work.
+- Call `flush()` after `fireEvent` and before the assertion; it lands the staged write and does not wait for async work.
 - Register `afterEach(cleanup)` when `globals` is off.
 - Keep jsdom installed in browser mode; the plugin resolves it before the browser pool starts.
 - Give client and server tests separate `include` patterns in separate Vitest projects.
@@ -407,6 +407,6 @@ Remove the setting, or reset the module-level state in `afterEach`.
 
 ## Next steps
 
-- [Debugging reactivity](/guides/debugging-reactivity#the-test-sees-the-old-dom): `flush()` in full, `resolve` for async values, and the one place `flush()` isn't allowed.
+- [Debugging reactivity](/guides/debugging-reactivity#the-test-sees-the-old-dom): `flush()` in full, `resolve` for async values, and the one place `flush()` is not allowed.
 - [Sessions and auth](/building-apps/sessions-and-auth): the session module the server test above exercises.
 - [Environment](/building-apps/environment): why server code that reads `virtual:env/server` needs the module reset the last section describes.

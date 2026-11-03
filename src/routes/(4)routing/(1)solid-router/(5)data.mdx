@@ -7,7 +7,7 @@ description: "Start route data early with preloads, cache and share reads with q
 The product page from the [introduction](/routing/solid-router) fetches its product inside a memo.
 That works, but it leaves three gaps, and the router's data APIs fill one each:
 
-- The request doesn't start until the page component runs. `preload` starts it before the component exists.
+- The request does not start until the page component runs. `preload` starts it before the component exists.
 - A `ProductCard` in a list and the `Product` page fetch the same product twice. `query` gives both readers one request.
 - The **Add to cart** form has no way to tell the cart it changed. A server function called from an `action` writes, and the router revalidates the cache from its response. `formAction` puts the same mutation behind a form that works without JavaScript.
 
@@ -103,11 +103,11 @@ preload: ({ params }) => void getProduct(params.id),
 
 With the `Avoid` version, a page that renders `props.data.name` shows the mug after navigating from `/products/mug` to `/products/bowl`, because `props.data` is whatever `preload` returned when the route first matched.
 The `Prefer` version reads the query in a memo that tracks `props.params.id`, so the bowl appears.
-Return a value from `preload` only for something that shouldn't change while the route stays matched.
+Return a value from `preload` only for something that should not change while the route stays matched.
 
 ### Preloading from links
 
-Links don't preload until you give the router a strategy with `preloadLinks`.
+Links do not preload until you give the router a strategy with `preloadLinks`.
 `intentPreload()` preloads when a user rests the pointer on a link, focuses it, or touches it:
 
 ```ts
@@ -307,7 +307,7 @@ const add = action(function* (productId: string, quantity: number) {
 
 Ask for a quantity of `0` and `failure()` holds "Quantity must be a whole number".
 The message reaches the browser because `addToCart` threw it through `markSafeError`.
-A plain `throw new Error(...)` arrives in production as `Internal Server Error`, so database and infrastructure details don't leak; [Mutations and responses](/building-apps/server-functions/mutations-and-responses) covers `markSafeError` and the alternative of throwing validation issues with `respond()`.
+A plain `throw new Error(...)` arrives in production as `Internal Server Error`, so database and infrastructure details do not leak; [Mutations and responses](/building-apps/server-functions/mutations-and-responses) covers `markSafeError` and the alternative of throwing validation issues with `respond()`.
 
 ## Add a form with `formAction`
 
@@ -413,7 +413,7 @@ function AddToCartForm(props: { productId: string }) {
 
 Submit a quantity of `0` and "Quantity must be a whole number" appears under the button.
 Each submission carries the `input` that was sent, the `result` or `error`, and `retry()` and `clear()`.
-A submission that redirected or returned nothing doesn't stay in the list; use `.onSettled` when you need to observe those too.
+A submission that redirected or returned nothing does not stay in the list; use `.onSettled` when you need to observe those too.
 
 ### Optimistic writes from a form
 
@@ -434,13 +434,13 @@ addToCartForm.onSubmit((form) => {
 With `setCart` from the optimistic store in [Before the server confirms](#before-the-server-confirms), the form shows the same pending line and the same release as the action did.
 Registering `.onSubmit` inside a component ties the hook to that component's lifetime.
 
-The form didn't change to get this.
+The form did not change to get this.
 Before hydration it is the same `POST` as before: the browser submits, the server runs the form action, and the server renders the page again with the cart from the database.
 After hydration the router intercepts the submit, runs the `.onSubmit` hooks as the first step of the transaction, sends the call, and reconciles the revalidated data over the prediction.
 
 ### Client-side form actions
 
-A form action doesn't have to call a server function.
+A form action does not have to call a server function.
 A plain async function works, for a client-only mutation or a call to a third-party API:
 
 ```ts
@@ -451,7 +451,7 @@ const savePreference = formAction(async (form: FormData) => {
 
 :::caution[Name a client form action that renders on the server]
 A client form action rendered on the server needs the explicit name so both sides agree on the form's URL; without it the server render throws `Client Actions need explicit names if server rendered`.
-A server function already has a stable URL and doesn't need one.
+A server function already has a stable URL and does not need one.
 :::
 
 ## What revalidates after a mutation
@@ -469,7 +469,7 @@ return respond(cart, { revalidate: [getCart.key, getTotals.key] }); // a value p
 return redirect(paths.cart, { revalidate: getCart.key }); // navigate, then revalidate
 ```
 
-A `POST` that doesn't change anything, such as a log call or a search sent on each keystroke, declares an empty `revalidate` so it touches nothing:
+A `POST` that does not change anything, such as a log call or a search sent on each keystroke, declares an empty `revalidate` so it touches nothing:
 
 ```ts
 return respond(results, { revalidate: "" }); // revalidate nothing
@@ -489,8 +489,8 @@ In a `fullstack` project with the router's single-flight collector installed, th
 
 ### The list still shows the old data after a mutation
 
-The response narrowed `revalidate` to keys that don't include that list's query; add the key or return `reload()` without keys to revalidate everything.
-If nothing revalidated at all, the mutation didn't go through the router: a plain `fetch` to an API route, a call made where no router is mounted, or a server function called directly with `singleFlight: false` set on the router.
+The response narrowed `revalidate` to keys that do not include that list's query; add the key or return `reload()` without keys to revalidate everything.
+If nothing revalidated at all, the mutation did not go through the router: a plain `fetch` to an API route, a call made where no router is mounted, or a server function called directly with `singleFlight: false` set on the router.
 Call a server function, submit a form action, or call `revalidate` yourself after the write.
 
 ### `'use' router primitives can be only used inside a Route` when a query runs

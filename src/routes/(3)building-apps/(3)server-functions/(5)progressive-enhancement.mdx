@@ -69,14 +69,14 @@ Before hydration, the `Avoid` version has no handler attached, so the click does
 
 Everything the hydrated page does with a submission is a layer over that post.
 Once the router is running it intercepts the submit, calls the same function over the server-function transport, sets `aria-busy` on the form while the call runs, records the result in `useSubmissions`, and runs any `.onSubmit` hook before the call is sent, which is where an [optimistic write](/routing/solid-router/data#before-the-server-confirms) goes.
-None of that changes the HTML or the server function, so a shopper whose bundle hasn't arrived gets the post and a fresh page, and a shopper whose bundle has arrived gets the same result painted before the server answers.
+None of that changes the HTML or the server function, so a shopper whose bundle has not arrived gets the post and a fresh page, and a shopper whose bundle has arrived gets the same result painted before the server answers.
 
 The [Forms guide](/guides/forms) builds the checkout address form on this shape, with validation messages, pending state, and an address list that updates before the server confirms.
 
 ## Submit a GET form
 
 A GET form replaces the action URL's query string with the form's fields.
-When that query isn't an encoded argument list, the handler passes it to the function as one `URLSearchParams` argument.
+When that query is not an encoded argument list, the handler passes it to the function as one `URLSearchParams` argument.
 
 `GET()` returns a typed `ServerFunction` reference, so its `url` is available in TypeScript:
 
@@ -100,7 +100,7 @@ export const searchProducts = GET(async (params: URLSearchParams) => {
 Type "mug" and submit: the browser navigates to `/_server/<id>?q=mug`, and the function receives `params.get("q") === "mug"`.
 
 :::caution[A GET form describes a URL, not a mutation]
-A `GET()` function must be safe and idempotent, because a `GET` request isn't origin-checked and is replayed by caches, prefetchers, and link checkers.
+A `GET()` function must be safe and idempotent, because a `GET` request is not origin-checked and is replayed by caches, prefetchers, and link checkers.
 Post mutations with `method="post"`.
 :::
 
@@ -145,7 +145,7 @@ A `Date` or `Map` in `boundArgs` throws `Bound arguments in an action url must b
 ## Keep the checks in the function
 
 A no-JavaScript submission reaches the same implementation as a scripted one, with the same `FormData`.
-Validation and authorization inside the function cover both; a check in the component covers neither, because the component didn't run.
+Validation and authorization inside the function cover both; a check in the component covers neither, because the component did not run.
 
 :::deep-dive[What core owns and what the router owns]
 Core owns the transport.
@@ -169,12 +169,12 @@ Pass it through the router's `formAction()` for a form, or, in integration code,
 
 ### `Bound arguments in an action url must be JSON-safe`
 
-A value bound with `.with()` or passed to `serverFunctionUrl()` was a `Date`, `Map`, `Set`, or another value JSON can't carry.
+A value bound with `.with()` or passed to `serverFunctionUrl()` was a `Date`, `Map`, `Set`, or another value JSON cannot carry.
 Bind a string or number and convert inside the function, or pass the value through the form body.
 
 ### The form submits but the page reloads instead of staying put
 
-The router isn't mounted around the form, so nothing intercepts the submit and the browser follows the `action` URL as a full-page navigation.
+The router is not mounted around the form, so nothing intercepts the submit and the browser follows the `action` URL as a full-page navigation.
 The result is still correct, because the function ran and the redirect was followed; mount the form inside the `Router` to get the scripted path.
 
 ### The 400 shows nothing after a no-JavaScript submit

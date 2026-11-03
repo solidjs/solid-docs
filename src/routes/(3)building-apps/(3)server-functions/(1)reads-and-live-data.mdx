@@ -27,13 +27,13 @@ export const getProduct = GET(async (id: string) => {
 ```
 
 Load the product page and look at the network tab: the call is a `GET` to `/_server/data/<id>?args=%5B%22mug%22%5D`, with the arguments in the URL instead of a request body.
-When the encoded URL would exceed the transport's length limit, the client sends the same call as a `POST` instead; the call succeeds, and the answer isn't a cache entry.
+When the encoded URL would exceed the transport's length limit, the client sends the same call as a `POST` instead; the call succeeds, and the answer is not a cache entry.
 
 A `GET()` declaration grants `GET` and `HEAD` dispatch and keeps the default `POST` path.
 A function that never declared `GET()` answers a `GET` request with status 405.
 
 Solid Router's `query()` makes the declaration for you: a plain `"use server"` function passed to `query()` is wrapped in `GET()` at that point, and a function you already declared passes through unchanged.
-Write `GET()` yourself when you call the read outside `query()`, or when a router other than Solid Router doesn't declare it.
+Write `GET()` yourself when you call the read outside `query()`, or when a router other than Solid Router does not declare it.
 
 The wrapper needs a server function, not a plain async function:
 
@@ -231,7 +231,7 @@ On the server:
 - The shared producer runs under its own request event, so `getRequestEvent()` inside it finds no request and development warns.
 - The producer stops when its last viewer disconnects, and the next caller starts a fresh one. Sharing is per server process.
 
-Choose `broadcast()` deliberately: whether an answer depends on the caller can't be detected, and sharing also changes how many times the producer's cleanup runs.
+Choose `broadcast()` deliberately: whether an answer depends on the caller cannot be detected, and sharing also changes how many times the producer's cleanup runs.
 
 ## Observe connection status
 
@@ -257,10 +257,10 @@ The callback receives:
 Show "reconnecting" next to the count when the user should know the number may be behind.
 Put data freshness in the yielded value itself, such as a timestamp, when the UI needs to say how old the number is; the connection status is a transport fact and says nothing about the data.
 
-:::deep-dive[What retries and what doesn't]
+:::deep-dive[What retries and what does not]
 A failure before the first connection rejects like a normal server-function call, so a wrong id or a missing session surfaces where the call was made.
 After a connection has succeeded, a failure retries with exponential backoff, and a healthy value resets the backoff.
-A 4xx response is a definite rejection: the server understood the request and refused it, so retrying wouldn't help, and the source fires `"closed"` with the error and rejects the consumer.
+A 4xx response is a definite rejection: the server understood the request and refused it, so retrying would not help, and the source fires `"closed"` with the error and rejects the consumer.
 The exceptions are the statuses that ask for a retry, 408, 425, and 429, and any response carrying `Retry-After`; those reconnect like a 5xx after the named wait.
 A live source updates through its open stream, so it takes no part in router revalidation or single-flight mutation data.
 :::
@@ -269,9 +269,9 @@ A live source updates through its open stream, so it takes no part in router rev
 
 ### `Method not allowed for server function` in the server log, status 405
 
-Something sent a `GET` or `HEAD` request to a function that wasn't declared with `GET()`.
+Something sent a `GET` or `HEAD` request to a function that was not declared with `GET()`.
 Link checkers and prefetchers do this to any URL they find.
-Declare the function with `GET()` when it is a safe read; leave the 405 in place when it isn't.
+Declare the function with `GET()` when it is a safe read; leave the 405 in place when it is not.
 
 ### The read is never served from the cache
 
@@ -302,6 +302,6 @@ Check the server log for the status: the client retries only transient failures 
 ## Next steps
 
 - [Arguments and security](/building-apps/server-functions/arguments-and-security): what a caller can put in a read's arguments, and why the read must validate them.
-- [Async reactivity](/concepts/async-reactivity): what the product page shows while a `GET()` read or a live source hasn't answered yet.
+- [Async reactivity](/concepts/async-reactivity): what the product page shows while a `GET()` read or a live source has not answered yet.
 - [Data fetching patterns](/guides/data-fetching-patterns): search as you type, pagination, and keeping data fresh, with these reads underneath.
 - [Data loading and mutations](/routing/solid-router/data): wrapping reads in `query()` for caching and route preloading with Solid Router.

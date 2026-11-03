@@ -8,7 +8,7 @@ Open the network tab and click Add to cart.
 The request is a `POST` to `/_server/data/<id>`, it carries `X-Server-Function-Instance` and `X-Server-Function-Format` headers the client runtime added, its body is the argument array, and the response leaves with `Cache-Control: no-store`.
 Those are the transport's defaults, and most applications never change them.
 
-This page is for the three cases where the defaults aren't enough: every request needs a header that changes during the session, such as a bearer token; the endpoint has to live somewhere other than `/_server`; or one call needs to be cancelled while it is in flight.
+This page is for the three cases where the defaults are not enough: every request needs a header that changes during the session, such as a bearer token; the endpoint has to live somewhere other than `/_server`; or one call needs to be cancelled while it is in flight.
 Most applications need [Prepare every client request](#prepare-every-client-request) and [Configure one call](#configure-one-call).
 Declaration metadata and invocation identity are for integrators and data layers.
 
@@ -93,14 +93,14 @@ configureServerFunctionsClient({
 });
 ```
 
-Click Add to cart again and the request to `placeOrder` carries an `authorization` header; a call to `getProduct`, which has no `requiresAuth` metadata, doesn't.
+Click Add to cart again and the request to `placeOrder` carries an `authorization` header; a call to `getProduct`, which has no `requiresAuth` metadata, does not.
 The hook receives the final `RequestInit` the transport is about to send, the function id, and the declaration metadata.
 
 Use `prepareRequest` for policy that changes during a browser session: an OAuth token, a tracing header, a tenant id.
 The configuration accepts one hook, so compose several policies inside one function.
 
 :::caution[Call it before the first server function runs]
-`configureServerFunctionsClient()` configures the transport for calls that haven't started yet.
+`configureServerFunctionsClient()` configures the transport for calls that have not started yet.
 Call it once in the client entry, next to `hydrate()`, before any component that calls a server function renders.
 :::
 
@@ -168,7 +168,7 @@ configureServerFunctionsClient({
 invoke(saveAddress, { signal }, address);
 ```
 
-The `Avoid` version throws `` `headers` isn't an invocation option `` with a pointer to where the option belongs.
+The `Avoid` version throws `` `headers` is not an invocation option `` with a pointer to where the option belongs.
 Set headers in `prepareRequest`, declare reads with `GET()`, attach static values with `withMeta()`, and implement retries or deduplication in the data layer that owns the call.
 
 :::note[Abort during server rendering]
@@ -212,7 +212,7 @@ Move headers to `prepareRequest`, the method to `GET()`, and static values to `w
 
 ### `invoke()` throws that the wrapper does not forward the invocation channel
 
-The reference passed to `invoke()` is a wrapper, such as a cache or a channel, that shares calls between callers and didn't opt in.
+The reference passed to `invoke()` is a wrapper, such as a cache or a channel, that shares calls between callers and did not opt in.
 Invoke the underlying reference directly, or use the wrapper's own per-call options.
 
 ### The `authorization` header is missing on some calls
@@ -223,12 +223,12 @@ Check the condition in the hook against the metadata on the reference, and move 
 ## Recap
 
 - The defaults are a `POST` to `/_server/data/<id>` with the argument array as the body and `Cache-Control: no-store` on the response; change them only for a reason on this page.
-- Attach static facts to a declaration with `withMeta()`; the server doesn't read them, so enforce policy in the body.
+- Attach static facts to a declaration with `withMeta()`; the server does not read them, so enforce policy in the body.
 - Compose `withMeta()` and `GET()` in either order, and put `live()`, which implies `GET()`, outside `withMeta()`.
 - Add session-dependent headers in one `prepareRequest` hook, configured once in the client entry before the first call.
 - Move the endpoint with the plugin's `serverFunctions.endpoint` option so client and server stay matched.
 - Pass `signal`, `keepalive`, or `priority` to one call through `invoke()`; anything longer-lived is refused with a pointer to its home.
-- On the server, an abort rejects the caller and doesn't stop the work.
+- On the server, an abort rejects the caller and does not stop the work.
 
 ## Next steps
 

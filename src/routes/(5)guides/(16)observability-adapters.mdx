@@ -27,12 +27,12 @@ This page is for whoever writes the tool.
 | Your own UI kept out of the data                                             | `OBSERVE.exclude(owner)`                                                                               | observe |
 
 Import from `solid-js` and `@solidjs/web` only.
-Both packages resolve to the build the app chose, so your adapter sees the same `OBSERVE` the app does; `@solidjs/signals`, the engine underneath, isn't a public surface.
+Both packages resolve to the build the app chose, so your adapter sees the same `OBSERVE` the app does; `@solidjs/signals`, the engine underneath, is not a public surface.
 
 ## Errors: once per object, from the hook alone
 
 Both hooks are called once per error object, the first time the runtime meets it.
-The client hook fires when an error boundary renders its fallback; an uncaught error halts the reactive system and reaches `reportError`, which your global handler already covers, so the hook doesn't repeat it.
+The client hook fires when an error boundary renders its fallback; an uncaught error halts the reactive system and reaches `reportError`, which your global handler already covers, so the hook does not repeat it.
 The server hook fires for every failure the server runtime handles or fails on; `kind` and `handling` on the context say which, and [Observability](/guides/observability#hear-every-failure-the-server-handles) tabulates them.
 
 Both contexts carry `ownerPath`, where the error was thrown, and `boundaryPath`, where it was met, as root-first label arrays.
@@ -43,7 +43,7 @@ The records below carry the same error object beside a failed invocation or call
 Set a status on the span from the record; capture from the hook.
 
 On the server, a returned value replaces what the client receives.
-If your adapter returns a reference the user can quote, it's responsible for making sure nothing from the original error crosses the wire. If it doesn't offer that, return nothing.
+If your adapter returns a reference the user can quote, it is responsible for making sure nothing from the original error crosses the wire. If it does not offer that, return nothing.
 
 ## Records: settled, serializable, delivered inside the runtime
 
@@ -56,11 +56,11 @@ The contract that shapes a span builder:
   Anything live (the request, the response, the arguments, the result, the error as thrown) is in the second argument, `live`, and stays in the process.
 - The listener runs synchronously inside the runtime.
   It must not write signals; defer span creation to a microtask so the SDK's own bookkeeping never runs inside a Solid flush.
-  A listener that throws is reported to the console and doesn't stop the others.
+  A listener that throws is reported to the console and does not stop the others.
 - Server records are delivered during the request, so a Node SDK whose active span is the request's parents them without anything passing a parent around.
 - A client `"call"` and the server `"invocation"` it caused share `id`.
   An invocation made during a boundary's render pass carries `boundary`, the `id` of that boundary's record.
-- A `"request"` record leaves at the send, before the transport's `fetch`, for a call the `"call"` record can't show yet: one still in flight, or one that never settles.
+- A `"request"` record leaves at the send, before the transport's `fetch`, for a call the `"call"` record cannot show yet: one still in flight, or one that never settles.
   The two share one `live` object by identity.
 - Bodies cost the call a copy, so they are taken only under `subscribe(type, fn, { bodies: true })`; without it `live.request` is absent and `live.response` is the transport's own, already consumed.
 
@@ -178,8 +178,8 @@ The signals and stores created under it stay excluded wherever their writes come
 ## Test against the observe build
 
 Unit tests resolve `solid-js` and `@solidjs/web` the way any bundler does.
-A test runner that applies the `development` condition by default gives you the dev build, which is a superset of observe, so a green test there doesn't prove the adapter runs on observe.
-Point the tests at the observe artifacts explicitly, and keep both packages inside one module loader: a copy of `@solidjs/signals` your runner loads natively beside a copy it transforms is two `OBSERVE` objects, and the one your adapter subscribed to isn't the one the app writes to.
+A test runner that applies the `development` condition by default gives you the dev build, which is a superset of observe, so a green test there does not prove the adapter runs on observe.
+Point the tests at the observe artifacts explicitly, and keep both packages inside one module loader: a copy of `@solidjs/signals` your runner loads natively beside a copy it transforms is two `OBSERVE` objects, and the one your adapter subscribed to is not the one the app writes to.
 
 ## Recap
 

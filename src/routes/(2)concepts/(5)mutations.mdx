@@ -4,7 +4,7 @@ version: "2.0"
 description: "Move the cart's add, remove, and set-quantity writes to a server without changing the UI: actions, optimistic stores, refresh, and how a failed request undoes itself."
 ---
 
-Reads don't need any wrapper to talk to a server: change an input and the memo asks again, as [Async reactivity](/concepts/async-reactivity) showed.
+Reads do not need any wrapper to talk to a server: change an input and the memo asks again, as [Async reactivity](/concepts/async-reactivity) showed.
 Writes are harder, because the write happens before the round trip and has to be reconciled after it.
 When the user clicks **Add to cart**, the cart should show the new line right away, agree with the server when the response arrives, and drop the line if the server refuses.
 This page takes the cart from [Stores](/concepts/stores) and moves its writes to a server one step at a time.
@@ -88,8 +88,8 @@ When `api.add` resolves, the cart is re-read from the server and the row is repl
 If `api.add` rejects, the row disappears.
 
 Compare the two versions.
-The components that render the cart didn't change.
-The `setItems` calls didn't change: the synchronous write already described the expected result, so it becomes the optimistic prediction.
+The components that render the cart did not change.
+The `setItems` calls did not change: the synchronous write already described the expected result, so it becomes the optimistic prediction.
 Three things were added:
 
 - [`createOptimisticStore(fn, seed)`](/reference/solid-js/stores/create-optimistic-store) derives its durable value from `fn` and accepts writes that show immediately but are tentative.
@@ -102,7 +102,7 @@ Solid discards the overlay when the action settles, whether the action succeeded
 If `api.add` throws, the overlay is dropped and the list is back where it started; there is no rollback code to write.
 If the server agrees with the prediction, reconciliation finds no differences and nothing updates.
 
-Because actions ride the same hold as reads, the list never shows half a mutation, and quick repeated clicks don't interleave into a corrupted list.
+Because actions ride the same hold as reads, the list never shows half a mutation, and quick repeated clicks do not interleave into a corrupted list.
 
 :::pitfall[An await inside an action leaves the transaction]
 JavaScript has no way to keep the action's context across a plain `await`, which is why the body is a generator.
@@ -134,7 +134,7 @@ The same applies inside an async helper the action yields: everything after the 
 
 ## Show that a row is saving
 
-Immediate updates are the right default for a cart, but a user may want to know which rows the server hasn't confirmed yet.
+Immediate updates are the right default for a cart, but a user may want to know which rows the server has not confirmed yet.
 Put the affordance in the data:
 
 ```ts
@@ -181,7 +181,7 @@ Pair `affects(source)` with `refresh(source)` when the reload itself should show
 
 ## Wait for the server to echo the write: `until`
 
-Some transports don't return the result: the request is fire-and-forget and the confirmation arrives later on a live source.
+Some transports do not return the result: the request is fire-and-forget and the confirmation arrives later on a live source.
 [`until(fn)`](/reference/solid-js/lifecycle-actions/until) holds the action open until a predicate over the confirmed data becomes true:
 
 ```ts
@@ -197,7 +197,7 @@ const send = action(function* (text: string) {
 });
 ```
 
-The predicate reads authoritative state, so the optimistic row pushed above can't satisfy it; only the echo from the live source can.
+The predicate reads authoritative state, so the optimistic row pushed above cannot satisfy it; only the echo from the live source can.
 A timeout or an abort rejects, which settles the action and drops the overlay.
 
 ## Layer state by lifetime
@@ -316,11 +316,11 @@ If the request fails, the checkbox returns to the server's value and a **Retry**
 
 `createCart()` creates all three layers under the component owner and returns one composed store with its actions, which keeps reactive state out of module scope and out of shared server memory.
 The projection reads the durable items and folds in the `errors` map.
-The map isn't reactive by itself; `refresh(items)` re-runs the projection after each mutation and makes its current entries visible.
+The map is not reactive by itself; `refresh(items)` re-runs the projection after each mutation and makes its current entries visible.
 
 The action catches the expected failure because the row can recover locally.
 An error thrown by the projection or the render still reaches `Errored`.
-An error the action doesn't catch rejects the promise that `setGiftWrap` returns, and the `void` in the handler discards that promise, so no boundary sees the failure; see [A failed action doesn't show the Errored fallback](#a-failed-action-does-not-show-the-errored-fallback).
+An error the action does not catch rejects the promise that `setGiftWrap` returns, and the `void` in the handler discards that promise, so no boundary sees the failure; see [A failed action does not show the Errored fallback](#a-failed-action-does-not-show-the-errored-fallback).
 
 ## Common problems
 
@@ -342,15 +342,15 @@ Use `createOptimisticStore` for state that should revert when the request settle
 
 ### The save keeps running after the user leaves the page
 
-An action isn't tied to the component that created it, so navigating away doesn't cancel it and the save still lands, like a form submit.
+An action is not tied to the component that created it, so navigating away does not cancel it and the save still lands, like a form submit.
 That is the safe default: the action is often what navigates (save, then redirect), and cancelling it there would undo the write the user asked for.
 Its late writes are harmless, because nothing that was removed still reads them.
 Guard the steps after a `yield` that only make sense on the old page, for example by comparing against the current record id, and pass an `AbortSignal` to the request when it should really stop.
-Don't retire the action from a component's `onCleanup`; see [Stop the work a run started](/concepts/async-reactivity#stop-the-work-a-run-started).
+Do not retire the action from a component's `onCleanup`; see [Stop the work a run started](/concepts/async-reactivity#stop-the-work-a-run-started).
 
 ### A failed action does not show the `Errored` fallback
 
-An action call returns a promise, and an event handler doesn't wait for it.
+An action call returns a promise, and an event handler does not wait for it.
 When the action throws, the promise rejects outside the reactive graph: the optimistic overlay is dropped, the browser reports an unhandled rejection, and no `Errored` boundary shows its fallback.
 `Errored` catches errors from reads and rendering, not from promises that a handler starts.
 

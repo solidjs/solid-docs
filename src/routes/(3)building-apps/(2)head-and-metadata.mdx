@@ -4,7 +4,7 @@ version: "2.0"
 description: "Give each page its own title and meta tags from the component that owns them, let a layout's defaults return when the page unmounts, and read a title from data that is still loading."
 ---
 
-A page title or a link-preview image usually depends on data that only a component deep in `<body>` knows, like the product name, but those tags live in `<head>`, where a component can't render.
+A page title or a link-preview image usually depends on data that only a component deep in `<body>` knows, like the product name, but those tags live in `<head>`, where a component cannot render.
 Solid ships a head registry in `@solidjs/web` for this.
 A component declares a title or a meta tag from wherever it lives, and the registry puts the tag in the document head, replaces it when a later component declares the same tag, and restores the earlier one when that component unmounts.
 `@solidjs/meta` wraps the registry in components.
@@ -65,7 +65,7 @@ Each component's reference page documents its identity rule; [`Title`](/referenc
 
 :::caution[Leave the tags the registry manages out of Document]
 The static `<title>Solid App</title>` in `Document.tsx` is the fallback for a render with no `<Title>` mounted at all, and the registry replaces it as soon as one mounts.
-Other tags don't get that treatment.
+Other tags do not get that treatment.
 
 ```tsx
 // Avoid: a hardcoded description next to a rendered one
@@ -79,7 +79,7 @@ Other tags don't get that treatment.
 <Meta name="description" content={product().summary} />
 ```
 
-The `Avoid` version puts two `<meta name="description">` tags in the document, because the registry leaves head tags it didn't register alone.
+The `Avoid` version puts two `<meta name="description">` tags in the document, because the registry leaves head tags it did not register alone.
 The `Prefer` version has one, and the product page's wins.
 :::
 
@@ -211,7 +211,7 @@ On the wire:
 
 The new page's `<Title>` reads pending data, so the update is held with the rest of the page and the previous winner stays.
 That is the same [held update](/concepts/async-reactivity#settled-view-and-in-flight-work) the content gets.
-If the title doesn't need the data, render `<Title>` from a part of the page that doesn't read it.
+If the title does not need the data, render `<Title>` from a part of the page that does not read it.
 
 ### Two `og:image` tags appear when only one was expected
 
@@ -221,7 +221,7 @@ Use `property` for Open Graph, or give both the same `key`.
 ### `Multiple <title> tags in one head group; the last one wins` in the console
 
 Two `<Title>` components rendered inside the same `<Head>` group.
-`<title>` has one identity that `key` can't fork, so only the last one is in the document.
+`<title>` has one identity that `key` cannot fork, so only the last one is in the document.
 Keep one `<Title>` per group.
 
 ### A page's meta tags stay after navigating away
@@ -239,7 +239,7 @@ Render the defaults as bare components if the page should override them one at a
 - Render `<Title>` and `<Meta>` from the component that knows the value; there is no provider.
 - The most recently mounted tag with an identity wins, and unmounting it restores the previous one.
 - Read signals and async values in a tag as in any component; a pending value holds the title with the rest of the page.
-- Keep `Document.tsx` to the static `<title>` fallback, the charset, and tags the registry doesn't manage.
+- Keep `Document.tsx` to the static `<title>` fallback, the charset, and tags the registry does not manage.
 - Use `key` to make distinct tags share an identity or to split one that would collide.
 - Wrap tags in `<Head>` when they must be replaced and restored as a set; render them bare when a page should override them one at a time.
 - Under streaming SSR, settled tags ship in the shell and late tags patch in with their boundary.

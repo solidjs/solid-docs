@@ -4,10 +4,10 @@ version: "2.0"
 description: "Hold a cart, a form, or any nested object in a store: update one property through a draft, derive filtered views with a projection, and load server data into the same proxy."
 ---
 
-A store tracks each property of an object or array on its own, so changing one nested value updates only what reads it.
-The cart on the [Components and JSX](/concepts/components-and-jsx) page kept its items in a signal, so changing one quantity meant building a new array with a new object in it.
-`For` saw a new object where the old row was and rebuilt the row, and the input the user was typing in was replaced.
-With a store, changing `items[1].quantity` updates the one text node that reads it, and the row and its input stay put.
+The cart on the [Components and JSX](/concepts/components-and-jsx) page keeps its items in a signal, so changing one quantity means building a new array with a new object in it.
+`For` sees a new object where the old row was and rebuilds the row, and the input the user was typing in is replaced.
+A store tracks each property on its own instead.
+Change `items[1].quantity` and the one text node that reads it updates, and the row and its input stay put.
 
 Use a signal when a value is read and replaced as one unit: a count, a selected id, a string.
 Use a store when readers need separate parts of an object or array, which describes most application state.
@@ -77,7 +77,7 @@ Read `cart.coupon`, not `cart.coupon()`.
 The same rule as for signals applies to where you read: inside JSX, a memo, or an effect's compute function when the reader should update, and a read in the component body is a one-time snapshot.
 
 :::deep-dive[How a store tracks one property at a time]
-The proxy doesn't create a signal for every property up front.
+The proxy does not create a signal for every property up front.
 It creates a tracking node the first time a tracked consumer reads a property, and only for the properties that were read.
 Nested objects and arrays are wrapped in their own proxies when they are first reached, so a store with a thousand rows costs nothing for the rows nothing has read.
 This is why reading `cart.items[0].quantity` and reading `cart.items.length` produce two independent subscriptions: they are two different nodes.
@@ -100,7 +100,7 @@ setCart((draft) => {
 ```
 
 Three properties changed, and three subscriptions are notified: the coupon reader, the Mug quantity input, and the `length` reader.
-The T-shirt row isn't touched.
+The T-shirt row is not touched.
 
 The habit from immutable state is to rebuild the collection.
 That habit undoes what the store gives you:
@@ -125,7 +125,7 @@ The `Prefer` version updates the one `value` binding.
 
 :::pitfall[Writing to the store outside the setter does nothing]
 The store proxy is read-only.
-An assignment such as `cart.items[0].quantity = 2` outside a setter is ignored: it doesn't throw, it doesn't warn, and the value doesn't change.
+An assignment such as `cart.items[0].quantity = 2` outside a setter is ignored: it does not throw, it does not warn, and the value does not change.
 If a write seems to vanish, look for a write that skipped `setCart`.
 Every change goes through the setter's draft, including changes from event handlers and from inside actions.
 :::
@@ -192,7 +192,7 @@ function Cart() {
 ```
 
 Check the box and the saved items appear.
-The rows that were already visible are the same DOM nodes as before: the projection matched them by `id`, so `For` kept their proxies and didn't rebuild them.
+The rows that were already visible are the same DOM nodes as before: the projection matched them by `id`, so `For` kept their proxies and did not rebuild them.
 
 Pass a key name when the data uses a different identity field, or `null` to match by position.
 The seed is the backing object the results reconcile into, so the root proxy keeps its identity across recomputations too.
@@ -216,7 +216,7 @@ const [cart, setCart] = createStore(async () => api.cart());
 ```
 
 The request starts when the store is created, and again whenever a reactive value the function read changes.
-Each response reconciles into the same proxy by `id`, so items the server didn't change keep their identity and their DOM.
+Each response reconciles into the same proxy by `id`, so items the server did not change keep their identity and their DOM.
 A [`Loading`](/concepts/boundaries) boundary shows a fallback before the first response, [`isPending(() => cart.items)`](/reference/solid-js/reactivity/is-pending) reports a refetch, and [`refresh(cart)`](/reference/solid-js/lifecycle-actions/refresh) asks the server again.
 
 This form takes no seed: the function reads no draft, and each response is a complete cart.

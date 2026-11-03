@@ -64,7 +64,7 @@ export async function* watch(id: string, signal?: AbortSignal) {
 }
 ```
 
-`watch` checks the version after every yield before it waits, so a write that lands while the consumer holds the previous value isn't missed.
+`watch` checks the version after every yield before it waits, so a write that lands while the consumer holds the previous value is not missed.
 The `chat` example keeps the same shape in `src/server/db.ts`, written through to disk so a reply survives a restart.
 
 The job reads from the model and writes into the store.
@@ -139,7 +139,7 @@ export const stopReply = formAction(async (replyId: string) => {
 ```
 
 `sendMessage` stores the shopper's message and an empty reply with status `generating`, starts the job, and returns.
-The response closes while the job is still writing; the server-function runtime doesn't dispose work a function started, so the job runs to its end whether or not anyone is watching.
+The response closes while the job is still writing; the server-function runtime does not dispose work a function started, so the job runs to its end whether or not anyone is watching.
 `threads.append` is the thread half of the store, which keeps the message list and the history the model reads; the `chat` example's `db.send` is one.
 `stopReply` is a Solid Router [form action](/routing/solid-router/data#add-a-form-with-formaction), so the Stop button works as a form before JavaScript has loaded.
 `sendMessage` is a plain server function the composer calls from code; the mounted router applies its response, revalidation included, the same way it does for a form.
@@ -166,7 +166,7 @@ export const watchReply = live(async function* (replyId: string) {
 });
 ```
 
-The request's signal ends the watcher when the reader leaves; the job doesn't see it.
+The request's signal ends the watcher when the reader leaves; the job does not see it.
 The first yield on every connection is the current reply, which is the contract `live()` reconnects on, as [Declare a live source](/building-apps/server-functions/reads-and-live-data#declare-a-live-source) describes.
 
 In the browser, [`createProjection`](/reference/solid-js/stores/create-projection) with an async generator turns the stream into a store:
@@ -214,7 +214,7 @@ Open the page in two tabs and both show the same reply; press Stop in one and th
 
 The projection reads `props.replyId` before its first `await`, so a different reply re-runs it, which ends the previous iteration and its connection.
 A projection rather than a memo keeps readers of `reply.status` out of every text update, and gives the Markdown block split from [Render Markdown without re-rendering the answer](/building-apps/server-functions/streaming-ai-responses#render-markdown-without-re-rendering-the-answer) a draft to write into.
-`refresh(reply)` re-runs the projection, which opens a new connection; it doesn't touch the job.
+`refresh(reply)` re-runs the projection, which opens a new connection; it does not touch the job.
 
 Every call site that iterates a live source holds its own connection.
 When the thread list and the thread both need the same reply, hoist the read, or declare it with Solid Router's [`liveQuery`](/reference/solid-router/data#livequery), which keeps one connection per key for every consumer; the spelling is `liveQuery(watchReply, "reply")`. `liveQuery` declares a server function `live()` itself, and one already declared `live()` passes through unchanged.
@@ -266,7 +266,7 @@ function Composer(props: { threadId: string; seen: string[] }) {
 
 `seen` is the list of message ids the live thread shows; the parent reads it from the thread's live source and passes it down.
 The push onto `outbox` is an optimistic write: it shows at once and is held by the action's transaction.
-`until` reads the authoritative `seen`, so the optimistic row can't satisfy it; only the stream can.
+`until` reads the authoritative `seen`, so the optimistic row cannot satisfy it; only the stream can.
 When the row arrives, `until` resolves, the action settles, and the overlay drops.
 A timeout or a server error rejects the action, which drops the overlay the same way and leaves the shopper's text to send again.
 
@@ -373,10 +373,10 @@ When that id equals the digest of the source's first yield, the server drops tha
 For a live server component the reconnect also names the pieces of markup the page shows, and the server sends only the pieces whose digest differs.
 After hydration, the first connection names the value the page was served with, so a server that still holds that value sends nothing.
 
-What this doesn't do is replay the part of a reply between the last event and now.
+What this does not do is replay the part of a reply between the last event and now.
 The source yields the whole reply, so a reconnect gets the reply so far in one value, and a long reply costs its length each time.
 Partial replay is a join with the job's log: keep an append-only log of chunks per reply, read the header in the source with `getRequestEvent()?.request.headers.get("last-event-id")`, and yield the chunks after that position.
-A source that reads the header itself is a cursor source; the runtime's digest skip doesn't apply to it.
+A source that reads the header itself is a cursor source; the runtime's digest skip does not apply to it.
 `@tanstack/ai-durable-stream` and Electric's Durable Streams are off-the-shelf logs of that kind, for a team that wants one rather than a table.
 
 ## Common problems
@@ -388,7 +388,7 @@ Give the job an `AbortController` the registry owns, and pass `request.signal` o
 
 ### Stop does nothing
 
-The Stop button aborted a controller the job wasn't reading, or the job was started by a server that has since restarted.
+The Stop button aborted a controller the job was not reading, or the job was started by a server that has since restarted.
 Check that `generations.start` passes `abort.signal` to the model call, and that the store marks orphaned replies `failed` on load.
 
 ### Two tabs show different replies

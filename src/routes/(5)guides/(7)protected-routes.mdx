@@ -52,7 +52,7 @@ export const getOrders = query(async () => {
 ```
 
 Call `getOrders` from an HTTP client at the function's URL without the session cookie and the answer is a redirect with no order data in it.
-`locals.userId` was set by the `attachCustomer` middleware in [Authenticate once in middleware](/building-apps/sessions-and-auth#authenticate-once-in-middleware), and the caller can't supply it, which is why the identity comes from the event rather than from an argument.
+`locals.userId` was set by the `attachCustomer` middleware in [Authenticate once in middleware](/building-apps/sessions-and-auth#authenticate-once-in-middleware), and the caller cannot supply it, which is why the identity comes from the event rather than from an argument.
 [Authorize on the server](/building-apps/sessions-and-auth#authorize-on-the-server) covers the check itself; this page adds nothing to it except the rule that it goes in every function the account pages read or write.
 
 `getCurrentUser` returns `null` rather than throwing, because a signed-out visitor is a normal state for the header to show.
@@ -105,7 +105,7 @@ export default function RequireUser(props: RouteSectionProps) {
 }
 ```
 
-Visit `/account/orders` and the match is the pathless route, then `/account`, then `/orders`; the URLs don't change.
+Visit `/account/orders` and the match is the pathless route, then `/account`, then `/orders`; the URLs do not change.
 `RequireUser` renders no frame of its own, only the matched page once the check has a user.
 `/sign-in` is a sibling of the group rather than a child of it; a sign-in page inside the guard would redirect to itself.
 
@@ -135,7 +135,7 @@ The preload is what starts the check as soon as the route matches, and when a [l
 Both call the same function.
 Its body runs on the server either way: in-process during server rendering, where it shares the request's `getCurrentUser` result with the header, and through the server-function endpoint during a navigation, where the thrown redirect travels back to the router as the response.
 
-With `preloadLinks: intentPreload()` on the router, hovering the **Account** link runs the preload with the `"preload"` intent, which starts the request and doesn't act on its outcome, so a hover never redirects; the click that follows does, whether it reuses that answer or fetches a new one.
+With `preloadLinks: intentPreload()` on the router, hovering the **Account** link runs the preload with the `"preload"` intent, which starts the request and does not act on its outcome, so a hover never redirects; the click that follows does, whether it reuses that answer or fetches a new one.
 
 :::deep-dive[What the router does with a thrown redirect]
 `query` treats a value thrown by the wrapped function the same way as a returned one.
@@ -216,7 +216,7 @@ Everything else falls back to the account home.
 :::danger[Validate next on the server, not only in the form]
 The hidden input is caller-controlled: anyone can post `next=//attacker.example` to `signIn`, whether or not the sign-in page put it there.
 The server-function transport resolves a redirect target against the request URL, so `//attacker.example` and `/\attacker.example` both resolve to another origin, and the router leaves the app for a target on another origin by setting `window.location.href`.
-The runtime refuses targets whose scheme isn't `http` or `https`, and it doesn't refuse a different `http` origin.
+The runtime refuses targets whose scheme is not `http` or `https`, and it does not refuse a different `http` origin.
 Run `safeNext` inside `signIn`, where the value is about to become a `Location` header, and treat the copy in the form as a convenience.
 :::
 
@@ -262,12 +262,12 @@ Request `/account/orders` with no cookie and the server answers `302` with `Loca
 
 Use this layer in addition to the route guard, not instead of it.
 What it adds is a real redirect status on full page requests: the route guard's redirect, when it lands after the shell has flushed, reaches the browser as a script at the end of the stream, after the fallback has already painted.
-What it can't do is see a client-side navigation, which makes no page request, or a server-function call, which is a request to `/_server` rather than to `/account/*`.
+What it cannot do is see a client-side navigation, which makes no page request, or a server-function call, which is a request to `/_server` rather than to `/account/*`.
 
-:::caution[A path prefix isn't a permission]
+:::caution[A path prefix is not a permission]
 The middleware matches URLs, so it protects exactly the paths that start with `/account` and nothing else.
 The server functions the account pages call are reachable at their own URLs, and the check inside each function is what protects them.
-Adding a prefix to the middleware doesn't remove a check from a function.
+Adding a prefix to the middleware does not remove a check from a function.
 :::
 
 ## Show the right navigation
@@ -318,7 +318,7 @@ Sign in and the name appears; sign out through a router `formAction`, or a sign-
 
 The sign-in route is a child of the pathless guard route, so the guard redirects to a page it guards.
 Move `/sign-in` beside the group.
-If the routes are right, the session cookie isn't coming back on the next request; [Sessions and auth](/building-apps/sessions-and-auth#common-problems) lists the cookie attributes to compare.
+If the routes are right, the session cookie is not coming back on the next request; [Sessions and auth](/building-apps/sessions-and-auth#common-problems) lists the cookie attributes to compare.
 Chained client-side redirects stop after 100 with `Too many redirects` from the router.
 
 ### The account page paints, then the sign-in page replaces it
@@ -339,12 +339,12 @@ Accept only paths that start with a single `/` and reject `//` and `/\`; run tha
 
 ## Recap
 
-- Decide once, on `locals.userId`, and run the decision in every server function, in the route guard, and in middleware; each layer covers a way in that the others don't see.
+- Decide once, on `locals.userId`, and run the decision in every server function, in the route guard, and in middleware; each layer covers a way in that the others do not see.
 - Put the account pages under a pathless route whose `preload` starts the check and whose component renders `props.children` behind it, and keep `/sign-in` beside the group.
 - Make the guard a server function wrapped in `query` that throws `redirect()` when the session has no user; the router navigates on it during server rendering and on client-side navigations alike.
 - Build the sign-in target with `paths["sign-in"]({ next })`; the search object encodes the path.
 - Validate `next` inside the server function: a single leading `/`, no `//`, no `/\`, and not the sign-in page itself.
-- Return a redirect from middleware for full page requests under `/account`, and keep the function checks, because middleware doesn't see `/_server` or client-side navigations.
+- Return a redirect from middleware for full page requests under `/account`, and keep the function checks, because middleware does not see `/_server` or client-side navigations.
 - Read `getCurrentUser()` through `query` in the header so the server result hydrates and a sign-out form action refreshes it.
 
 ## Next steps

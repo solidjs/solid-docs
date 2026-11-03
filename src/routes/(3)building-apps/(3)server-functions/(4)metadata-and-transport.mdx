@@ -8,7 +8,7 @@ Open the network tab and click Add to cart.
 The request is a `POST` to `/_server/data/<id>`, it carries `X-Server-Function-Instance` and `X-Server-Function-Format` headers the client runtime added, its body is the argument array, and the response leaves with `Cache-Control: no-store`.
 Those are the transport's defaults, and most applications never change them.
 
-This page is for the three cases where the defaults are not enough: every request needs a header that changes during the session, such as a bearer token; the endpoint has to live somewhere other than `/_server`; or one call needs to be cancelled while it is in flight.
+Change them when every request needs a header that changes during the session, such as a bearer token; when the endpoint has to live somewhere other than `/_server`; or when one call needs to be cancelled while it is in flight.
 Most applications need [Prepare every client request](#prepare-every-client-request) and [Configure one call](#configure-one-call).
 Declaration metadata and invocation identity are for integrators and data layers.
 
@@ -227,7 +227,7 @@ Check the condition in the hook against the metadata on the reference, and move 
 - Compose `withMeta()` and `GET()` in either order, and put `live()`, which implies `GET()`, outside `withMeta()`.
 - Add session-dependent headers in one `prepareRequest` hook, configured once in the client entry before the first call.
 - Move the endpoint with the plugin's `serverFunctions.endpoint` option so client and server stay matched.
-- Pass `signal`, `keepalive`, or `priority` to one call through `invoke()`; anything longer-lived is refused with a pointer to its home.
+- Pass `signal`, `keepalive`, or `priority` to one call through `invoke()`; anything longer-lived is refused with a pointer to where it belongs.
 - On the server, an abort rejects the caller and does not stop the work.
 
 ## Next steps

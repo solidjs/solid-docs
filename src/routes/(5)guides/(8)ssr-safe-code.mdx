@@ -6,8 +6,7 @@ description: "Keep browser APIs, per-run values, and client-only data out of the
 
 With server rendering on, the same component code runs on the server and in the browser.
 Most SSR bugs come from a line that only works in one of them (`window is not defined`) or gives a different answer in each (`Hydration structure mismatch`).
-This guide covers where each line runs, what cannot run on the server, what must not differ between the two, and how to read the warnings when something does.
-[Rendering and SSR](/concepts/rendering-and-ssr) explains the model behind it.
+[Rendering and SSR](/concepts/rendering-and-ssr) explains the model behind server rendering.
 
 ## Where each line runs
 
@@ -73,7 +72,6 @@ A `"use server"` function is the reverse case.
 Its body runs on the server on both paths; in the browser the call becomes an HTTP request, and during a server render it runs in the same process under the request event.
 [What the call becomes](/building-apps/server-functions#what-the-call-becomes) describes both paths.
 
-Module scope is the case that surprises people.
 A `const` at the top of a file is evaluated once when the server entry loads and then shared by every request, so a signal or store there is one object for every visitor.
 [Module-level state and the server](/guides/state-management#module-level-state-and-the-server) shows what that does to the cart and where to create the store instead.
 
@@ -314,7 +312,7 @@ Look for a branch that runs only in the browser, such as `Show when={!isServer}`
 ### `Hydration completed with N unclaimed server-rendered node(s):`
 
 Hydration finished and the server-rendered elements listed under the message were never claimed by the client.
-The server rendered something the browser did not: the mirror image of a key miss.
+The server rendered something the browser did not, which is the reverse of a key miss.
 
 ### `Hydration Mismatch. Unable to find DOM nodes for hydration key`
 

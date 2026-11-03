@@ -11,7 +11,7 @@ Across an application it changes when the screen updates, and the change is sile
 
 This page is for teams whose Solid 1 app already fetches data in a way that works.
 It names the common patterns, shows how to keep each one working unchanged in Solid 2, shows what changes when you convert it, and gives you the choice per fetch.
-It is a path, not a destination: the coordinated behavior is the better default for new code, and the [Async reactivity](/concepts/async-reactivity) page explains why.
+Keeping the Solid 1 patterns is a migration step; the coordinated behavior is the better default for new code, and the [Async reactivity](/concepts/async-reactivity) page explains why.
 The [general migration guide](/migration/from-solid-1) covers everything that is not fetching.
 
 ## What changes
@@ -22,7 +22,7 @@ Solid did not know that the request and the value were related, so a write to an
 
 In Solid 2 an async computation is a value in the graph.
 Solid knows which inputs it depends on and knows when it does not have an answer yet.
-The consequence is the one to internalize: **a write to an input of an async computation is held until that computation has its next answer, and everything else in the same update waits with it.**
+So **a write to an input of an async computation is held until that computation has its next answer, and everything else in the same update waits with it.**
 
 A dashboard shows the difference.
 A period selector feeds three panels whose requests take 200 milliseconds, one second, and ten seconds:
@@ -48,7 +48,6 @@ Neither is right for every screen.
 Totals that must add up, a detail page, and a form should change together.
 Independent widgets should not have to.
 Solid 2 gives you the tools for both, but the default moved, and a migrated app inherits the new default everywhere at once.
-The rest of this page is about making that choice deliberately, one fetch at a time.
 
 ## Migrate in this order
 
@@ -139,13 +138,11 @@ function TabPanel() {
 
 This works and produces no diagnostics.
 Writing to a signal or store from the effect phase is what the effect phase is for, and the [`createEffect`](/reference/solid-js/reactivity/create-effect) reference uses a fetch with an abort cleanup as its own example.
-The graph does not know that `tabData` comes from a request, so nothing is held: the period write commits at once, the panel shows its indicator, and the rows replace themselves when the response lands.
-That is Solid 1 behavior, on Solid 2.
+The graph does not know that `tabData` comes from a request, so nothing is held: the period write commits at once, the panel shows its indicator, and the rows replace themselves when the response lands, as they did in Solid 1.
 
-It is a step, not a place to stop.
+Treat this as an intermediate step.
 The graph cannot see this fetch, so [`isPending`](/reference/solid-js/reactivity/is-pending), [`refresh`](/reference/solid-js/lifecycle-actions/refresh), [`Errored`](/reference/solid-js/components-jsx/errored), and server streaming do not apply to it, and you keep owning the loading flag, the cancellation, and the stale-response guard.
-The [Avoid unnecessary effects](/guides/avoid-unnecessary-effects) guide argues against this shape for new code, and the argument stands.
-For an app that already has fifty of them, it is the safe first commit.
+The [Avoid unnecessary effects](/guides/avoid-unnecessary-effects) guide argues against this shape for new code; for an app that already has fifty of them, it is the safe first commit.
 
 ### Step 2: convert it, and choose the refetch behavior
 
@@ -332,7 +329,7 @@ Ask the question your designer can answer: **while this data is being refetched,
 The first two rows describe the same screen: the tab highlights at once, the content dims, the content swaps when ready.
 [Async reactivity](/concepts/async-reactivity#what-the-hold-means-for-a-shared-input) shows each piece.
 
-A useful test for a widget: if it showed last period's numbers for five seconds with a spinner on it, is that fine or wrong?
+To test a widget, ask whether showing last period's numbers for five seconds with a spinner on it would be fine or wrong.
 Fine means the widget is independent, and `on` or a dimmed hold are both acceptable.
 Wrong means the widget is part of a coherent view, and the default hold is doing its job.
 

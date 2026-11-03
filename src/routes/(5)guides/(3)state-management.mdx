@@ -6,7 +6,7 @@ description: "Decide where each piece of storefront state lives: a component, a 
 
 Where a piece of state lives decides how long it lasts and who can read it.
 Put it in the wrong place and you get a cart count that resets when the page changes, a filter that clears on refresh, a dialog that stays open after navigating away, or one visitor's cart showing up for another.
-This guide picks up the search page from [Thinking in Solid](/guides/thinking-in-solid), whose cart count now needs to move to the header, and goes through each place state can live.
+This guide picks up the search page from [Thinking in Solid](/guides/thinking-in-solid), whose cart count now needs to move to the header.
 
 ## Five kinds of state
 
@@ -141,7 +141,7 @@ Navigate from the search page to the checkout page and the badge keeps its numbe
 
 The context object returned by [`createContext`](/reference/solid-js/components-context/create-context) is also the provider component, and it creates a scoped owner for its children.
 `useCart()` returns the same object from anywhere below the provider without a prop on any component in between.
-[Share state between components](/concepts/reactivity#share-state-between-components) introduced this shape; the rest of this section is about what to put in `value`.
+[Share state between components](/concepts/reactivity#share-state-between-components) introduced this shape.
 
 ### Pass a store or accessors, not a snapshot
 
@@ -163,7 +163,7 @@ The rule is the same one that applies to props: pass the reactive value and read
 ### Default value or thrown error
 
 `createContext<T>()` with no default makes the provider mandatory: `useContext` outside one throws `ContextNotFoundError`, and its return type is `T` with no `undefined` to narrow.
-That is the right form for anything that carries reactive state, because a cart that silently reads as `undefined` is a bug found later than one that throws at the first read.
+That is the right form for anything that holds reactive state, because a cart that silently reads as `undefined` is a bug found later than one that throws at the first read.
 
 `createContext<T>(defaultValue)` returns the default outside a provider.
 Reserve it for a primitive with a meaningful fallback, such as a theme name or a locale, where a component rendered on its own in a test or a story should still work.
@@ -210,7 +210,7 @@ Inside `createCart()` the same line runs during a request, under the request eve
 
 :::note[Projects without server rendering]
 In a project built without `ssr: true`, the module is evaluated once per browser tab and a module-scope store is one store per tab, which is what app-wide state means there.
-The cost is portability: the day `ssr: true` is added, the same file also loads once on the server, and the store becomes the shared object described above.
+The cost is portability: once `ssr: true` is added, the same file also loads once on the server, and the store becomes the shared object described above.
 Creating it in a provider from the start removes that step.
 :::
 
@@ -316,9 +316,9 @@ Load the page signed out and the header shows **Sign in**.
 Sign in, and the next request carries the session cookie: middleware sets `event.locals.userId` from `getSession()`, `getCurrentUser()` finds the customer, and the header renders the name.
 No component ever saw the cookie.
 
-`user` is a memo of a promise, not a copy of the user.
+`user` is a memo of the promise that `getCurrentUser()` returns.
 When something on the server changes what `getCurrentUser()` would return, the view is stale until it is re-read: a `refresh(user)` after a rename action, or a full navigation after sign-out.
-[Sessions and auth](/building-apps/sessions-and-auth) owns the cookie, the middleware, and the sign-in and sign-out functions; [Mutations](/concepts/mutations) shows how an optimistic layer sits on top of a view like this one without becoming a second source of truth.
+[Sessions and auth](/building-apps/sessions-and-auth) covers the cookie, the middleware, and the sign-in and sign-out functions; [Mutations](/concepts/mutations) shows how an optimistic layer sits on top of a view like this one without becoming a second source of truth.
 
 Put the memo where its readers are.
 `App` renders the header once, so a memo inside `Header` is created once per app; a product page that also needs the user should read it through a provider next to the cart rather than call the server function a second time.

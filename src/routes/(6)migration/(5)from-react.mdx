@@ -5,11 +5,11 @@ description: "Map familiar React concepts to their closest Solid concepts, with 
 ---
 
 React and Solid share many application concepts, but they update interfaces differently.
-This guide maps familiar React patterns to their closest Solid concepts and highlights where a direct translation would miss part of Solid's model.
+This guide maps familiar React patterns to their closest Solid concepts and shows where a direct translation would miss part of Solid's model.
 
 Your knowledge of components, props, JSX, events, context, refs, and composition still applies.
 The main shift is how state changes reach the DOM.
-[Thinking in Solid](/guides/thinking-in-solid) shows that shift inside one feature built end to end; this page maps the concepts one by one.
+[Thinking in Solid](/guides/thinking-in-solid) shows that shift inside one feature built end to end.
 
 ## Start with the execution model
 
@@ -348,7 +348,7 @@ Not every React effect becomes a Solid effect:
 - Put asynchronous derived data in an async memo or store projection.
 - Use an effect when a settled reactive result must update an imperative system outside Solid.
 
-This distinction is often more useful than translating a dependency array mechanically.
+Sorting effects this way often helps more than translating each dependency array mechanically.
 
 :::pitfall[An equal result still re-runs the effect]
 React compares each dependency with the previous render and skips the effect when none changed.
@@ -407,7 +407,7 @@ Both `onSettled` and an effect function run after Solid has written the DOM for 
 ## Keep props reactive
 
 React props are values from the current component render, so destructuring them is common.
-Potentially changing Solid props may be backed by getters.
+Solid props that can change may be backed by getters.
 The child reads the current value when a tracking scope accesses that prop.
 
 Keep the props object intact when its values can change:
@@ -687,7 +687,7 @@ function createOnlineStatus() {
 `subscribe` is the same function in both versions: it registers a callback and returns a function that unsubscribes.
 Turn the network off in the browser's developer tools and `online()` becomes `false`; every expression that reads it updates.
 
-`onSettled` does three jobs here:
+Here `onSettled` does the following:
 
 - It does not run during server rendering, so the server never touches `navigator`; it only reserves the hydration ID the client will use, so the two trees stay aligned.
 - The signal starts at `true`, the value the server rendered, so the first client render matches the server HTML; `update()` then writes the real value once the component has settled.
@@ -1030,7 +1030,7 @@ Solid keeps the current committed view visible, then reveals the participating w
 That retained-UI behavior is the closest analogue to a React transition.
 
 Use [`isPending`](/reference/solid-js/reactivity/is-pending) when the held view needs an updating indicator.
-This behavior is automatic rather than an explicit `startTransition` call.
+The hold is automatic; there is no `startTransition` call to make.
 
 Solid [`action`](/reference/solid-js/lifecycle-actions/action) coordinates generator-based mutations, optimistic state, and refresh behavior.
 The shared term “action” does not imply that action APIs in different ecosystems have identical contracts.
@@ -1237,5 +1237,3 @@ Before considering a migrated component complete, check:
 - Reactive lists use a `For` keying mode or `Repeat` range that matches how the collection changes.
 - Async reads have an appropriate loading and error boundary.
 - Renderer-specific React components do not cross directly into the Solid component tree.
-
-A successful migration preserves application behavior while expressing its data flow through Solid's execution model.

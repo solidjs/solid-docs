@@ -102,7 +102,7 @@ Solid discards the overlay when the action settles, whether the action succeeded
 If `api.add` throws, the overlay is dropped and the list is back where it started; there is no rollback code to write.
 If the server agrees with the prediction, reconciliation finds no differences and nothing updates.
 
-Because actions ride the same hold as reads, the list never shows half a mutation, and quick repeated clicks do not interleave into a corrupted list.
+Because actions use the same hold as reads, the list never shows half a mutation, and quick repeated clicks do not interleave into a corrupted list.
 
 :::pitfall[An await inside an action leaves the transaction]
 JavaScript has no way to keep the action's context across a plain `await`, which is why the body is a generator.
@@ -345,7 +345,7 @@ Use `createOptimisticStore` for state that should revert when the request settle
 An action is not tied to the component that created it, so navigating away does not cancel it and the save still lands, like a form submit.
 That is the safe default: the action is often what navigates (save, then redirect), and cancelling it there would undo the write the user asked for.
 Its late writes are harmless, because nothing that was removed still reads them.
-Guard the steps after a `yield` that only make sense on the old page, for example by comparing against the current record id, and pass an `AbortSignal` to the request when it should really stop.
+Guard the steps after a `yield` that only make sense on the old page, for example by comparing against the current record id, and pass an `AbortSignal` to the request when it should stop.
 Do not retire the action from a component's `onCleanup`; see [Stop the work a run started](/concepts/async-reactivity#stop-the-work-a-run-started).
 
 ### A failed action does not show the `Errored` fallback

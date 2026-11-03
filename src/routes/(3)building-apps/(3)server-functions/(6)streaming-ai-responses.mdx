@@ -6,7 +6,6 @@ description: "Forward a model's token stream through a server function into a st
 
 This guide builds a support assistant whose answer appears word by word, and that the shopper can stop, retry, or interrupt with a new question.
 The model call is a server function that returns an async generator, the browser side is a projection that writes one store update per chunk, and cancelling is what the reactive graph already does with a computation it no longer needs.
-The guide ends with who is allowed to stop a generation, because that is the one part you have to decide yourself.
 
 ## Stream from the server
 
@@ -122,7 +121,6 @@ function Assistant() {
 Submit a question and the paragraph fills in chunk by chunk while "Writing…" shows; when the generator finishes, `done` flips and the indicator goes away.
 Submit a second question while the first is still streaming and the text clears and starts again with the new answer; nothing from the first answer arrives afterwards.
 
-What happens on that second submit is the whole cancellation story on the client side.
 The projection's function read `question()`, so the new value re-runs it.
 A re-run supersedes the previous flight: the runtime calls `return()` on the previous generator, which exits its `for await` loop, which in turn closes the server function's iterable and aborts the request.
 Draft writes the old generator makes after that point are ignored, which is why a late chunk from the first answer cannot land in the second.
@@ -136,7 +134,7 @@ That is the shape to prefer: there is no controller to keep, and anything that r
 
 The Stop button is the explicit form.
 [`invoke()`](/reference/solid-web/server-functions/invoke) calls a server function reference with options that belong to one call, and `signal` is one of them: aborting it rejects the call and cancels the request.
-The `catch` turns that rejection into a normal end when the abort was ours, so the text so far stays on screen and `done` flips; any other failure is rethrown.
+The `catch` turns that rejection into a normal end when the abort came from the component's own controller, so the text so far stays on screen and `done` flips; any other failure is rethrown.
 Without the `catch`, Stop would be an error the boundary shows, which is not what the shopper asked for.
 
 The controller lives in a plain variable rather than a signal on purpose: assigning it is not a reactive write, so the projection's function may do it, and nothing renders from it.
@@ -214,13 +212,13 @@ State the contract in the server function's comment, because a reader of either 
 3. The generator forwarded that signal to the model call, so the provider stops generating.
 
 Step 3 is the one the author decides.
-A generator that does not pass the signal on still ends, but only at its next `yield`, after the model has produced one more chunk for nobody; a model call that runs to completion for a reader who left is the cost of forgetting it.
+A generator that does not pass the signal on still ends, but only at its next `yield`, after the model has produced one more chunk for nobody; forgetting it leaves the model call running to completion for a reader who left.
 
 Forwarding is right for a chat answer, where the shopper is the only consumer and an abandoned answer has no value.
 It is wrong for a durable job: a report the shopper asked to be generated into their account should finish whether or not they stay on the page, and reloading the page should show its progress rather than start it again.
 Do not forward the signal to such a job.
 Start it with an action, store its output on the server as it is produced, expose progress as a [live source](/building-apps/server-functions/reads-and-live-data#declare-a-live-source) the page reads, and expose Stop as a second action that the job checks between steps.
-In that shape the request's abort means only "this reader left", which is the correct meaning; the job's own lifetime belongs to the server.
+In that shape the request's abort means only "this reader left"; the job's own lifetime belongs to the server.
 
 :::note[What a superseded read cannot do]
 Cancellation from the reactive graph stops the stream the component was reading.

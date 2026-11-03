@@ -13,7 +13,6 @@ An effect belongs at the end of that graph, where a settled result has to leave 
 
 ![Reactive inputs flow through derived values to declarative consumers and terminal effects. User interactions and external observations use setters to become new inputs.](/images/diagrams/derived-state-effects-sequence.svg)
 
-This guide covers the common places people write an effect where a derivation belongs, and ends with the two cases where `createEffect` is the right tool.
 The [Reactivity](/concepts/reactivity) page explains tracking, memos, effect phases, scheduling, and ownership.
 
 ## Calculate values when they are read
@@ -170,7 +169,7 @@ The input shows the new value one flush after the rest of the page, and attribut
 
 In the `Prefer` version the derivation supplies `props.value`.
 Calling `setDraft` places a local override over that result, and the override stays until a dependency of the derivation changes and the derivation produces a new value.
-There is no second flush and no effect to delete later.
+The input updates in the same flush as the rest of the page, and there is no effect to delete later.
 
 The same shape works for a nested form.
 Pass a function and a seed to `createStore` to get a writable derived store:
@@ -269,7 +268,7 @@ The two-phase [`createEffect`](/reference/solid-js/reactivity/create-effect) kee
 The first function tracks and returns a value; the second receives that value, does the imperative work, and may return a cleanup.
 [Integrate non-Solid code](/guides/integrate-non-solid-code#create-the-instance-once-update-it-in-an-effect) applies this shape to a charting library.
 
-The rule to respect is that only the first function is tracked:
+Only the first function is tracked:
 
 ```ts
 import { createEffect } from "solid-js";

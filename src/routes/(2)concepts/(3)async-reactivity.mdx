@@ -12,7 +12,6 @@ Once a memo is async, a write to any input it depends on is held until the memo 
 The page never shows a mix of old and new data.
 If you come from Solid 1 or from a pattern where every panel fetched and showed its own spinner on its own schedule, this is the part that will surprise you; the [in-flight work](#settled-view-and-in-flight-work) section shows it and the choices it gives you.
 
-This page explains what async computations buy you and what you still have to decide.
 The examples continue the shopping cart from the [Reactivity](/concepts/reactivity) page.
 
 ## A memo that returns a promise
@@ -42,8 +41,7 @@ function ProductDetail(props: { id: string }) {
 }
 ```
 
-`product()` has type `Product`, not `Product | undefined` and not `Promise<Product>`.
-There is no loading flag to check and no optional chaining.
+`product()` has type `Product`, not `Product | undefined` or `Promise<Product>`, so the JSX needs no loading flag and no optional chaining.
 If the expression is running, the value is there.
 
 Until the first result arrives, a read of `product()` reports that the value is not ready, and the nearest [`Loading`](/reference/solid-js/components-jsx/loading) boundary renders its fallback in place of the content.
@@ -79,8 +77,7 @@ function ProductLayout(props: { product: Product }) {
 }
 ```
 
-`product={product()}` looks like it calls the accessor before the data exists.
-It does not; the expression is evaluated when `ProductDetail` reads `props.product.name`.
+`product={product()}` looks like it calls the accessor before the data exists, but the expression is evaluated when `ProductDetail` reads `props.product.name`.
 So `ProductLayout` renders immediately, `CategoryNav` renders immediately, and only the detail pane waits.
 
 Derived values behave the same way:
@@ -103,7 +100,7 @@ No `await` and no promise type appear anywhere between the fetch and the JSX.
 
 ## Fetch high, block low
 
-Because passing a value costs nothing, the two decisions that usually fight each other come apart:
+Because passing a value costs nothing, where to fetch and where to block become separate decisions:
 
 - Where to create the async value is a performance decision.
   Higher in the tree means the request starts earlier and can run in parallel with other work.
@@ -178,7 +175,7 @@ const brand = createMemo(() => fetchBrand(product().brandId));
 ```
 
 `brand` cannot start until `product` resolves, because the id comes from the response.
-That is sequential because the data is sequential, and the dependency is visible in the code.
+That dependency is visible in the code.
 Development builds can flag long chains like this with the `ASYNC_WATERFALL` diagnostic when attribution is enabled; see [Debugging reactivity](/guides/debugging-reactivity).
 
 ## Settled view and in-flight work
@@ -197,9 +194,6 @@ It does not need a `Loading` boundary and it has no API to opt in; if you have w
 The boundary controls what renders when no settled answer exists; it does not create the hold.
 
 ### What the hold means for a shared input
-
-The hold is simple to reason about for one memo and one view.
-It is worth seeing for several.
 
 A dashboard has a period selector and three panels.
 Each panel fetches its own data from the selected period, and the fetches take 200 milliseconds, one second, and ten seconds:
@@ -231,13 +225,12 @@ For those ten seconds the page shows the new period's summary beside the old per
 
 In Solid the write to `period` is held.
 The selector keeps showing the old period, every panel keeps its old content, and at ten seconds the selector and all three panels change together.
-Nothing on the page ever disagrees about which period it is showing.
 The cost is that the fast panel waits for the slow one, and if nothing on the page reacts to the click, the page looks dead for ten seconds.
 
 Neither behavior is right for every screen.
 A detail page, a form, or a set of totals that must add up should change together.
 A set of independent widgets should not have to.
-The question to ask is about the update, not about any one request, and it is one your designer can answer:
+The question covers the whole update, and a designer can answer it:
 
 **While this update is in flight, what should the user see?**
 
@@ -248,7 +241,7 @@ The question to ask is about the update, not about any one request, and it is on
 | A placeholder in place of the content for the changed subject          | [`<Loading on={key}>`](#show-a-placeholder-again-loading-on) around that content.             |
 
 The first two rows are the same screen: the tab highlight moves at once, the content stays and dims, the content swaps when it is ready.
-That is the standard interaction for a held update, and the rest of this section shows the pieces.
+That is the standard interaction for a held update.
 The third row is for content that should not stay on screen when its subject changes, such as a panel for a different account.
 
 The hold applies only to updates.
@@ -311,8 +304,7 @@ function Search() {
 
 Typing changes `query`, `results` starts a new request, and the previous results stay on screen with the `stale` class until the new ones land.
 
-`isPending` is a question, not a piece of state.
-It can be asked about the async source, about a memo derived from it, about a prop several components down, or about the signal whose write started the update:
+`isPending` can be asked about the async source, about a memo derived from it, about a prop several components down, or about the signal whose write started the update:
 
 ```tsx
 function App() {
@@ -332,7 +324,7 @@ function App() {
 Here the fetch lives inside `ProductPage`.
 `App` knows nothing about it, but `isPending(selectedId)` is `true` from the moment the write happens until everything downstream has settled, because the write is what is being held.
 
-Notice that the list highlight does not move on click either.
+The list highlight does not move on click either.
 `selectedId()` holds its old value like everything else, so the highlighted row always matches the content on screen.
 When the design wants the highlight to move immediately, read the input with [`latest`](#show-the-input-now-latest), covered next.
 
@@ -383,7 +375,6 @@ Before any value exists, the read still follows the normal `Loading` path.
 
 Read the two sides together: `latest` on the control, the plain read on the content, `isPending` between them to dim the content.
 The highlight moves at once, the old product stays visible and dims, and the new product replaces it when its data is ready.
-This is the everyday shape of a held update, not a special case.
 
 `latest` belongs on inputs.
 Reading data through `latest` shows a result before the rest of the update has agreed on it, so a panel can show the new period's numbers while the selector still shows the old period.
@@ -403,9 +394,9 @@ The `on` prop is a dependency list: the boundary tracks the expression, and a ch
 </Loading>
 ```
 
-A `Loading` boundary is the update's chance to finish without waiting for that content: the region shows its fallback and waits on its own.
-Normally the update takes that chance only on the region's first load.
-`on` extends the offer to later updates: when `accountId()` changes and the new account is not ready, the boundary gives up its old content and takes the wait back from the update.
+A `Loading` boundary lets an update finish without waiting for the content inside it: the region shows its fallback and waits on its own.
+Without `on`, that happens only on the region's first load.
+With `on`, it also happens on later updates: when `accountId()` changes and the new account is not ready, the boundary drops its old content, and the update stops waiting on that region.
 If the panel was the only thing waiting, the update finishes at once.
 Controls outside the boundary see the new id, the panel shows its skeleton, and the content arrives when the account does.
 Pending work caused by anything `on` does not read, such as a refresh of the same account, leaves the content in place as usual.
@@ -432,12 +423,12 @@ When the very same data is also read outside the boundary, the frame waits on th
 ```
 
 In the `Avoid` version, picking another account looks like nothing happened until the account loads, then the heading and the details change together; the `on` had no visible effect because the heading kept the frame waiting on the data the boundary was about to show a skeleton for.
-Development reports this as `LOADING_ON_OUTSIDE_HOLD`, naming the source, and the fix is structural: move the outside read under the boundary so one hold owns the data.
+Development reports this as `LOADING_ON_OUTSIDE_HOLD`, naming the source, and the fix is to move the outside read under the boundary so one hold owns the data.
 The `Prefer` version is that fix.
 
 So the rule for `on` is that the boundary encloses every reader of the data it waits on.
 Other content waiting on the same input through its own data is fine; the skeleton arrives with the frame that content lands in.
-That leaves a design choice rather than a rule about where boundaries go:
+That leaves a design choice about where boundaries go:
 
 - One boundary with `on` around every reader of the subject.
   The whole subject shows one skeleton and appears together.

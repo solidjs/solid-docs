@@ -7,7 +7,6 @@ description: "Render Solid Router on the server: read the URL from the request, 
 With server rendering, a product page loads in one request with its data already in the HTML, a form submission is one `POST` that also refreshes the cart, and forms keep working with JavaScript off.
 None of that needs changes to the earlier pages.
 The same `Router` from `src/router.ts` renders on both sides; there is no server variant to import.
-This page explains what the server side does to make those three things true, and where the switches are when you need to change them.
 
 The `fullstack` project shape wires all of this up.
 If you started there, read this page to understand what it does; if you are adding server rendering to a project by hand, it tells you what to add.
@@ -49,13 +48,11 @@ Two things follow:
 - Adoption has no age limit for a read outside a navigation, so a lazy route module that first reads a query well after load still adopts the server value.
   During a navigation the serialized value is accepted only while a preload of the same age would be, five seconds, or three minutes for back and forward; anything older runs fresh rather than presenting an old server value as new.
 
-Adoption also works for reads that happen after hydration finishes, so a lazy chunk that loads later still finds its server data.
-
 ## One round trip for a mutation
 
 Submit a form backed by a `formAction`, or call a server function from a click handler, on a page that also reads a `query`.
 Without the server-side collector, the browser makes two requests: the mutation, then the revalidation fetch when the router reloads the affected queries.
-With it, the browser makes one: the mutation response carries the fresh query values, and the router seeds its cache from them before the caller even receives the return value.
+With it, the browser makes one: the mutation response carries the fresh query values, and the router seeds its cache from them before the caller receives the return value.
 
 ![Two sequences between browser and server. Without the collector: the mutation request, its result, then a second request that reloads the affected queries. With the collector: one mutation request whose response carries the fresh query values; the router seeds its cache, then resolves the call.](/images/diagrams/single-flight-mutation.svg)
 

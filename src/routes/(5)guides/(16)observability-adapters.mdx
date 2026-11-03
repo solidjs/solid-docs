@@ -39,7 +39,7 @@ Both contexts carry `ownerPath`, where the error was thrown, and `boundaryPath`,
 Join them for grouping; keep them apart for display.
 
 The error hook is the one place an adapter captures an exception.
-The records below carry the same error object beside a failed invocation or call, and a runtime that hands one object to two listeners invites a double report: whichever listener runs first wins any once-per-object guard your SDK keeps, and that order is the runtime's, not yours.
+The records below carry the same error object beside a failed invocation or call, so capturing in both listeners risks a double report: whichever listener runs first wins any once-per-object guard your SDK keeps, and the runtime decides that order.
 Set a status on the span from the record; capture from the hook.
 
 On the server, a returned value replaces what the client receives.
@@ -112,7 +112,7 @@ A `"rerun"` record is built only while a listener, an imported fold, or the cons
 
 Other tools share the engine.
 The Performance panel tracks, a diagnostics capture, and your adapter each take a hold, and options combine by the most demanding request per key, except `values`, where the least permissive level wins: pass `values: "none"` and your records carry no value previews and no element text whatever another holder asked for.
-Release your hold on re-init; `attribution.disable()` drops everyone's, which is a test harness's reset and not an adapter's.
+Release your hold on re-init; `attribution.disable()` drops everyone's, so leave it to a test harness that needs a reset.
 
 Records join by identity, not by time.
 The `origin` object on an interaction is the same object the runtime stamps on a client `"call"` record made under that interaction's handler, and on the holds and navigations it caused.
@@ -147,11 +147,11 @@ OBSERVE?.server.trace.provide((request) => {
 
 The fields you return replace the runtime's derivation; `entries` merge by name over the runtime's `traceparent`; `undefined` leaves the derivation alone.
 The runtime emits every entry on a `Server-Timing` header on every response and as `<meta name content>` tags in an HTML shell's head, so your browser SDK's pageload continues the server's trace from the document it already parses, and a frame stream or a server-function response with no `<head>` is joined through the header.
-Set `parentId` when your SDK continues from a different header than the runtime does; the browser may send two, and the provider is where your view wins.
+Set `parentId` when your SDK continues from a different header than the runtime does; the browser may send two, and the provider's answer takes precedence.
 
 ## Diagnostics: issues, not spans
 
-`OBSERVE.diagnostics.subscribe(listener)` delivers the runtime's findings: a hold nothing acknowledged (`SILENT_HOLD`), a scope re-running hot (`HOT_SCOPE_RERUNS`), a waterfall of dependent requests in the browser (`ASYNC_WATERFALL`) or of sequential waits inside one server boundary (`SSR_BOUNDARY_WATERFALL`), a render error the server contained (`SSR_RENDER_ERROR_CONTAINED`), an error replaced by a generic one on the wire (`SERVER_ERROR_SANITIZED`, with `data.source` naming the road: `"ssr"` or `"server-function"`).
+`OBSERVE.diagnostics.subscribe(listener)` delivers the runtime's findings: a hold nothing acknowledged (`SILENT_HOLD`), a scope re-running hot (`HOT_SCOPE_RERUNS`), a waterfall of dependent requests in the browser (`ASYNC_WATERFALL`) or of sequential waits inside one server boundary (`SSR_BOUNDARY_WATERFALL`), a render error the server contained (`SSR_RENDER_ERROR_CONTAINED`), an error replaced by a generic one on the wire (`SERVER_ERROR_SANITIZED`, with `data.source` set to `"ssr"` or `"server-function"`).
 A finding has a stable identity and recurs, so it is an issue: fingerprint by `code` and `ownerPath`, and let the count grow.
 The listener's second argument is the live node the finding is about, when the runtime located one; like `live` on a record, it stays in the process, and `OBSERVE.ownerPath(subject)` reads the same labels the event carries.
 Severity is set by the runtime (`info`, `warn` or `error`), and `info` findings never reach the console in any build, so an adapter decides whether to forward them.

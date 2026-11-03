@@ -91,12 +91,11 @@ Both paths run the same function with the same `FormData`.
 
 [Add router submissions](/building-apps/server-functions/mutations-and-responses#add-router-submissions) covers the inline shape and when to use it.
 
-Two details are doing the work here.
 The inputs are uncontrolled: Solid does not read their values while the user types, and the browser assembles the `FormData` on submit.
 `required` and `pattern` are the browser's own validation; the browser does not submit until they pass.
 
 This is a complete, deployable form.
-What it lacks is validation the user cannot bypass and any feedback other than a redirect.
+It has no validation the user cannot bypass, and its only feedback is a redirect.
 
 ## Pass 2: validate on the server
 
@@ -143,7 +142,7 @@ export async function saveAddress(form: FormData) {
 `Object.fromEntries(form)` turns the `FormData` into a plain object for the schema.
 Post a bad postal code with `curl` and the response is a `400` whose body carries the field messages; the database is not touched.
 
-The failure leaves the function as a thrown `respond()` envelope, and the choice of `respond()` over a plain error is what makes the messages reach the client:
+The failure leaves the function as a thrown `respond()` envelope, and throwing `respond()` instead of a plain error makes the messages reach the client:
 
 ```ts
 // Avoid: a plain Error, which production replaces with a generic message
@@ -360,7 +359,7 @@ Post a bad postal code and the line disappears when the `400` arrives, because a
 Disable JavaScript and submit the same form.
 The browser posts, `addAddress` runs, the `reload` sends the browser back to the page, and the server renders the list with the new address in it.
 The `createOptimisticStore` and the `.onSubmit` hook did nothing on that path, and nothing had to be written to make the form fall back to it.
-Each pass in this guide added a layer to the same `<form method="post" action={submitAddress}>`: pass 1 made it work, pass 2 made it safe, pass 3 made it explain itself, and pass 4 made it feel immediate; the shopper whose bundle has not arrived yet still gets pass 1.
+Each pass added to the same `<form method="post" action={submitAddress}>`, so a shopper whose bundle has not arrived yet still gets the form from pass 1.
 
 ## Live validation while typing
 

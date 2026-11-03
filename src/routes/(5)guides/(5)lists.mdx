@@ -6,8 +6,7 @@ description: "Render, edit, filter, sort, select in, and window lists without re
 
 When a list row is rebuilt instead of updated, it loses its DOM, its focus, its scroll position and any running animation.
 The usual symptom is an input that loses focus after one keystroke.
-This guide shows how to keep rows stable, organized by what you are doing with the list.
-The [Components and JSX](/concepts/components-and-jsx#rendering-lists) page introduces `For` and `Repeat`; this page is about using them well.
+The [Components and JSX](/concepts/components-and-jsx#rendering-lists) page introduces `For` and `Repeat`.
 The examples use the cart's line items:
 
 ```ts
@@ -50,7 +49,6 @@ The callback runs once per item that `For` has not seen before, and its JSX is c
 "Seen before" means object identity.
 If the array on the next update contains the same object, the row is kept and moved if needed; if it contains a new object, the row is disposed and a new one is created.
 A kept row that holds focus stays focused when it moves, in browsers that support `Element.moveBefore()`; in other browsers, moving the focused row blurs it.
-Everything else on this page follows from that rule.
 
 :::deep-dive[What a rebuilt row loses]
 A row is a set of DOM nodes plus the reactive scopes that fill them.
@@ -60,7 +58,7 @@ The list itself does not know a row was rebuilt for the same record; `[UNSTABLE_
 
 ## Keep row identity across updates
 
-The identity rule bites when data comes from a server.
+The identity rule causes rebuilds when data comes from a server.
 A refetch returns new objects for the same records, so a list keyed by identity rebuilds every row:
 
 ```tsx
@@ -71,7 +69,7 @@ const items = createMemo(() => api.cartItems()); // new objects on every refetch
 
 Refetch after a quantity change and every row is rebuilt, including the one the user is typing in.
 Development builds report this as `[UNSTABLE_LIST_IDENTITY]` when attribution is enabled: rows were disposed and recreated for items equal field-for-field to the ones they replaced.
-Two fixes, and the second is usually the better one.
+There are two fixes, and the second is usually the better one.
 
 Key by a field.
 Pass a key function, and `For` matches items by the key instead of by identity:
@@ -126,7 +124,7 @@ function saveForLater(id: string) {
 
 Run the `Avoid` version while the cursor is in that row's quantity input and the input loses focus, because the row was torn down and a new one created; every reader of the old item object runs as well.
 Development builds flag it as `[IMMUTABLE_UPDATE_IN_STORE]` when a path is replaced by a container whose leaves are mostly unchanged.
-In the `Prefer` version only the readers of that item's `savedForLater` property run; the row is not recreated, the list is not diffed, and the other rows are untouched.
+In the `Prefer` version only the readers of that item's `savedForLater` property run; `For` does not diff the list or recreate any row.
 
 Adding and removing follow the same rule:
 
@@ -182,7 +180,7 @@ When the derived list is large and read by several consumers, [`createProjection
 
 ## Select a row
 
-Highlighting the selected row in an order history table is the classic performance trap: the direct version re-runs every row when the selection changes.
+Highlighting the selected row in an order history table is a common performance mistake: the direct version re-runs every row when the selection changes.
 
 ```tsx
 const [selectedId, setSelectedId] = createSignal<string>();
@@ -303,7 +301,7 @@ Write through `setItems((draft) => { draft.push(item); })`.
 
 ## Recap
 
-- `For` keeps a row when the same object comes back and rebuilds it when a new object appears; every other rule follows from that.
+- `For` keeps a row when the same object comes back and rebuilds it when a new object appears.
 - Load server lists into a store with `createStore(async () => ..., [])`, or pass `keyed={(item) => item.id}`, so a refetch does not rebuild rows.
 - Edit one property on the setter's draft; a `map` with a spread creates a new object and a new row.
 - Derive filtered and sorted views with a memo; a new array of the same proxies is a diff, not a rebuild.

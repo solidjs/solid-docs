@@ -8,7 +8,6 @@ With one boundary around a whole product page, a slow recommendations query keep
 With no boundary at all, an unhandled error halts the reactive system and nothing on the page updates again.
 Boundaries decide how much of the page a pending or failed read affects.
 [`Loading`](/reference/solid-js/components-jsx/loading) renders a fallback while async reads in its subtree have no value, [`Errored`](/reference/solid-js/components-jsx/errored) renders a fallback when its subtree throws, and [`Reveal`](/reference/solid-js/components-jsx/reveal) decides the order in which sibling regions appear.
-Where you put each one is the design decision this page is about.
 
 ```tsx
 import { Errored, Loading, createMemo, createSignal } from "solid-js";
@@ -50,7 +49,7 @@ On first render the panel shows "Loading product…" and the picker is usable.
 When the request resolves the product appears; when it rejects, the error message and a **Retry** button appear in the same place.
 Pick another product and the panel shows the loading text again while the picker keeps working.
 
-Three rules explain that behavior.
+That behavior follows from these rules.
 A boundary handles status produced by reads in its own subtree, and the nearest matching boundary handles it.
 Loading and error status are separate, so `Loading` does not hide an error and `Errored` does not replace loading UI; both can protect the same region.
 Controls outside the boundary are outside its fallback, so the picker stays on screen in every state.
@@ -92,7 +91,7 @@ Pending work caused by anything `on` does not read, such as a refresh of the sam
 The fallback appears with the same frame as the change that caused it.
 When nothing else is waiting on that change, that is at once.
 When other content outside the boundary is waiting on the same change, the page swaps when that content is ready, and the boundary shows its skeleton from that swap if its own content is still loading.
-When the very same data is also read outside the boundary, the frame waits on it and the fallback can never appear; development warns `LOADING_ON_OUTSIDE_HOLD`, and the fix is structural: move the outside read under the boundary so one hold owns the data.
+When the very same data is also read outside the boundary, the frame waits on it and the fallback can never appear; development warns `LOADING_ON_OUTSIDE_HOLD`, and the fix is to move the outside read under the boundary so one hold owns the data.
 The [Async reactivity](/concepts/async-reactivity#show-a-placeholder-again-loading-on) page shows each case.
 
 :::pitfall[Passing the accessor to on instead of reading it]

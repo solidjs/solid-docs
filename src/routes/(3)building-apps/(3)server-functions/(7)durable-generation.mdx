@@ -6,19 +6,18 @@ description: "Run an AI reply as a job that outlives the request that started it
 
 The assistant from [Streaming AI responses](/building-apps/server-functions/streaming-ai-responses) stops when the shopper leaves, which is right for a quick question.
 For a long summary that should finish even if the tab closes, and still be there on reload, the generation has to outlive the request.
-The difference is who owns the generation.
-In the streaming guide the request owns it, and the reactive graph cancels it.
+In the streaming guide the request owns the generation, and the reactive graph cancels it.
 On this page a job on the server owns it: a server function starts the job and returns, the job writes the reply into storage as the model produces it, and every page that shows the reply reads what is stored through a live source.
 Pick the request-scoped shape when the reader is the only consumer and an abandoned answer has no value; pick this shape when the reply must finish without its reader, be found again on reload, or be read from more than one tab.
 
-Two deliveries are shown.
+The reply can reach the page in two ways.
 The client-owned one sends the reply as data through [`live()`](/reference/solid-web/server-functions/live) and renders it in the browser.
-The server-owned one renders the whole thread on the server as a live server component, which is the shape of the `chat` example in the Solid repository; server components are an experimental preview, and that section says so.
+The server-owned one renders the whole thread on the server as a live server component, which is the shape of the `chat` example in the Solid repository; server components are an experimental preview.
 The job, the storage, and the server functions are the same in both.
 
 ## The job
 
-Three modules carry the shape: a store the job writes into, a registry of running jobs that no request owns, and the server functions that start and stop one.
+The job needs three modules: a store the job writes into, a registry of running jobs that no request owns, and the server functions that start and stop one.
 
 The store keeps each reply and tells watchers when it changes:
 
@@ -109,7 +108,7 @@ export function stop(replyId: string) {
 ```
 
 `model.stream` is a stand-in for the provider SDK, as in the streaming guide.
-The signal it receives is the job's own, not a request's: Stop aborts it, and nothing else does.
+The signal it receives belongs to the job: Stop aborts it, and nothing else does.
 A reply that fails keeps the text that had arrived, with the reason beside it; a reply that was stopped keeps its text and says so.
 Write at most every few tens of milliseconds when the model is fast, as the example does, since every write wakes every watcher.
 
@@ -360,7 +359,7 @@ What this shape adds over the client-owned one:
 - The browser bundle has no Markdown parser, no highlighter, and no model client.
 - Every mutation is a form the server rendered, which works before JavaScript loads; a form that has been submitted stays marked busy while the markup around it changes.
 
-What it costs: the server holds one render per open thread per tab, and the thread and the sidebar are two connections per tab, which is why the example serves HTTP/2 in development.
+In exchange, the server holds one render per open thread per tab, and the thread and the sidebar are two connections per tab, which is why the example serves HTTP/2 in development.
 
 The example reads the thread through one watcher at the top of the render and cuts the markup into the finished messages and the reply being written, so a token re-sends the reply and nothing else.
 A watcher created per message inside the list never settles, because each retry of the render makes a new one.
@@ -373,9 +372,9 @@ When that id equals the digest of the source's first yield, the server drops tha
 For a live server component the reconnect also names the pieces of markup the page shows, and the server sends only the pieces whose digest differs.
 After hydration, the first connection names the value the page was served with, so a server that still holds that value sends nothing.
 
-What this does not do is replay the part of a reply between the last event and now.
+A reconnect does not replay the part of a reply between the last event and now.
 The source yields the whole reply, so a reconnect gets the reply so far in one value, and a long reply costs its length each time.
-Partial replay is a join with the job's log: keep an append-only log of chunks per reply, read the header in the source with `getRequestEvent()?.request.headers.get("last-event-id")`, and yield the chunks after that position.
+Partial replay needs the job's log: keep an append-only log of chunks per reply, read the header in the source with `getRequestEvent()?.request.headers.get("last-event-id")`, and yield the chunks after that position.
 A source that reads the header itself is a cursor source; the runtime's digest skip does not apply to it.
 `@tanstack/ai-durable-stream` and Electric's Durable Streams are off-the-shelf logs of that kind, for a team that wants one rather than a table.
 

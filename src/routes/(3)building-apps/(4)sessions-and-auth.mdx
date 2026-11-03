@@ -9,8 +9,7 @@ Solid supplies the HTTP exchange those answers are built on: the incoming reques
 It does not supply a session store or an authentication framework.
 The `fullstack` template composes a signed cookie from `@remix-run/cookie` with that event, and this page builds the account area on the same shape.
 
-Most apps need the two middle sections: the signed cookie session and the authorization check in every server function.
-The two short sections before them say what is Solid's and what is the library's, for when you choose a different library.
+Most apps need a signed cookie session and an authorization check in every server function.
 
 This page assumes a `fullstack` project with [server functions](/building-apps/server-functions) enabled, because a session is read on the server and most reads happen inside a server function or [middleware](/building-apps/middleware-and-api-routes).
 
@@ -146,7 +145,7 @@ export async function signOut() {
 ```
 
 Submit the sign-in form and the response is a redirect to `/account` with the session cookie attached.
-The cookie write and the thrown `redirect()` ride the same response; start mode folds `Set-Cookie` values from the event onto page responses, middleware responses, API responses, and server-function responses alike.
+The cookie write and the thrown `redirect()` go out on the same response; start mode folds `Set-Cookie` values from the event onto page responses, middleware responses, API responses, and server-function responses alike.
 The failed-credentials error is wrapped in `markSafeError` so its message reaches the form; a plain thrown `Error` is replaced with `Internal Server Error` in production.
 [Mutations and responses](/building-apps/server-functions/mutations-and-responses) covers `redirect()`, `reload()`, and which thrown errors reach the browser.
 
@@ -226,7 +225,7 @@ export async function renameAccount(form: FormData) {
 
 ::::
 
-Hiding the rename form from signed-out visitors does not protect `renameAccount`; the check inside the function is the gate.
+Hiding the rename form from signed-out visitors does not protect `renameAccount`; only the check inside the function does.
 Repeat it at every protected server entry point: server functions, API route handlers, and the page render.
 
 ### Authenticate once in middleware

@@ -15,9 +15,8 @@ The component was fine in the browser, but it now also runs in Node, where there
 
 Solid uses one component source for client rendering and server-side rendering (SSR).
 The JSX build target selects DOM operations for the browser or HTML-producing operations for the server.
-This page covers what that asks of your code and which rendering function fits which situation.
 
-Most applications need two things from this page: the [server and client boundaries](#server-and-client-boundaries) rules for browser-only code, and the rule in [streaming rendering](#streaming-rendering) about where `Loading` boundaries go.
+Most applications need the [server and client boundaries](#server-and-client-boundaries) rules for browser-only code and the rule in [streaming rendering](#streaming-rendering) about where `Loading` boundaries go.
 In a project made by the CLI, the generated entries already call `render`, `hydrate`, and `renderToStream`; the sections on those functions are for code that calls the renderer directly.
 
 ## Server and client boundaries
@@ -167,7 +166,7 @@ It computes again only when one of its inputs changes on the client or it is ref
 The memo still has to learn what it depends on, so the client runs its compute function once and discards the result.
 For that synchronous run, the global `Promise` and `fetch` are replaced by stand-ins whose promises never settle, so no request goes out.
 That makes the run harmless as long as the compute keeps nothing it creates.
-A cache that outlives the run is the case that breaks:
+A cache that outlives the run stores one of those stand-in promises:
 
 ```ts
 // Avoid: the promise stored while hydrating is a stand-in and never settles

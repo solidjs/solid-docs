@@ -6,9 +6,9 @@ description: "Components as functions that run once: props, children, control fl
 
 A Solid component is a function that runs once.
 It sets up state, returns JSX, and is not called again for the life of the component.
-Every rule below about props, children and control flow follows from that: the function body will not run a second time.
+Every rule below about props, children and control flow follows from that.
 [Reactivity](/concepts/reactivity) explains how the JSX keeps updating after the function has returned.
-This page covers props, events, refs, lists and conditions, and composition, continuing the shopping cart from that page.
+The examples continue the shopping cart from that page.
 
 ## How JSX executes
 
@@ -71,15 +71,13 @@ function Cart() {
 }
 ```
 
-`quantity={quantity()}` looks like it reads the signal once, when `Cart` runs.
-It does not.
-The compiler turns a dynamic attribute into a getter on the props object, so the read of `quantity()` happens when `LineItem` reads `props.quantity`, inside its JSX, in a tracking scope.
+`quantity={quantity()}` looks like it reads the signal once, when `Cart` runs, but the compiler turns a dynamic attribute into a getter on the props object, so the read of `quantity()` happens when `LineItem` reads `props.quantity`, inside its JSX, in a tracking scope.
 That is why `props.quantity` in the child updates when the parent's signal changes, even though neither function runs again.
 
 This works only as long as the read stays on the props object.
 
 :::pitfall[Destructuring props reads them once]
-The shortcut that works on a plain object is the one that breaks here:
+Destructuring works on a plain object but not on props:
 
 ```tsx
 // Avoid: both read props.quantity in the component body, once

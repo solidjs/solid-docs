@@ -7,13 +7,13 @@ description: "Wire a router that Solid does not ship into start mode: give it th
 This page is for someone bringing a router other than Solid Router or TanStack Router into start mode, or writing a Solid adapter for one.
 An application developer using either supported router does not need it; the [Routing overview](/routing/overview) and the router's own pages cover everything they touch.
 
-The situation it addresses: the router renders fine in the browser, and the first server-rendered request either matches the wrong URL, has no request-scoped instance to load its routes into, or leaves a mutation making two round trips where Solid Router makes one.
+Use it when the router renders fine in the browser but the first server-rendered request either matches the wrong URL, has no request-scoped instance to load its routes into, or leaves a mutation making two round trips where Solid Router makes one.
 Two parts of the platform are involved, the request pipeline and the server-function transport, and each exposes a small, router-neutral surface.
 
 ## Connect routing to requests
 
 During server-side rendering (SSR), a router needs the request URL and any request-scoped data its loaders read.
-The start mode request handler creates a `RequestEvent` for each web `Request` and runs the render inside that event's scope, so `getRequestEvent()` answers anywhere in the render.
+The start mode request handler creates a `RequestEvent` for each web `Request` and runs the render inside that event's scope, so `getRequestEvent()` returns that event anywhere in the render.
 
 Solid Router reads the request URL from that event when it creates its server integration, and falls back to its `url` prop when there is no event.
 A router that does the same needs nothing else from the platform for a synchronous route tree.

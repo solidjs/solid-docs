@@ -8,9 +8,7 @@ In the [Quick start](/getting-started/quick-start) you saw two versions of the s
 One read `count()` inside the JSX and updated on every click.
 The other read `count()` in the component body, and the button froze at zero while the console warned that the read "will not update".
 
-This page explains why.
-Solid does not re-run components.
-It runs each component once, records which reactive values each expression reads, and re-runs only those expressions when the values they read change.
+The reason is that Solid runs each component once, records which reactive values each expression reads, and re-runs only those expressions when the values they read change.
 The place where you read a value decides whether Solid can see the read.
 
 The examples use a small shopping cart: a line item with a price and a quantity, a subtotal, and a shipping estimate.
@@ -53,7 +51,7 @@ A read inside a tracking scope subscribes that scope to the signal.
 A read anywhere else returns the current value and subscribes nothing.
 
 The component body is not a tracking scope.
-That is deliberate: the body runs once to set up the component, and Solid must not re-run it, because that would recreate every signal and child inside it.
+The body runs once to set up the component, and Solid must not re-run it, because that would recreate every signal and child inside it.
 So this version reads the quantity once and never again:
 
 ```tsx
@@ -70,8 +68,7 @@ In development Solid warns:
 Move it into a tracking scope (JSX, a memo, or an effect's compute function).
 ```
 
-The fix is to move the read, not the value.
-Wrap the calculation in a function and call the function from the JSX:
+To fix it, wrap the calculation in a function and call the function from the JSX:
 
 ```tsx
 const subtotal = () => quantity() * price;
@@ -122,7 +119,7 @@ function createSignal<T>(value: T) {
 ```
 
 `read` can only record a subscriber if a tracking scope is running at the moment it is called.
-A read in the component body runs when `currentScope` is empty, so it returns the value and records nothing; that is the whole reason the place you read matters.
+A read in the component body runs when `currentScope` is empty, so it returns the value and records nothing.
 :::
 
 ## Derived values
@@ -150,7 +147,7 @@ const total = createMemo(() => subtotal() * (1 - discount()));
 When `quantity` changes, `subtotal` recomputes.
 `total` recomputes because it read `subtotal()`.
 When the user types `SAVE1` on the way to `SAVE10`, `discount` recomputes and produces `0` again; because the result is equal to the last one, `total` is not notified.
-That equality check is what makes a memo a useful boundary in a chain of derivations.
+That equality check lets a memo stop an update partway through a chain of derivations.
 
 A memo's function must not write to signals or stores.
 It runs during an update, and a write inside it throws `[REACTIVE_WRITE_IN_OWNED_SCOPE]` in development.
@@ -245,7 +242,7 @@ The guide [Avoid unnecessary effects](/guides/avoid-unnecessary-effects) works t
 Every memo, effect, and cleanup belongs to an owner.
 A component is an owner.
 When Solid removes a component from the page, it disposes everything the component created: subscriptions are dropped, cleanups run, and the memos and effects stop.
-This is why a component can create an effect and never think about tearing it down.
+This is why a component can create an effect without tearing it down by hand.
 
 The owner is whatever is running when the primitive is created.
 

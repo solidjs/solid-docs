@@ -8,7 +8,7 @@ You already build on TanStack Query, or you share route conventions with a TanSt
 The `fullstack-tanstack` project shape is that combination: the `fullstack` shape with the client half swapped out.
 
 [TanStack Router](https://tanstack.com/router) owns routing and [TanStack Query](https://tanstack.com/query) owns the data cache, while Solid's server functions, streaming SSR, single-flight mutations, sessions, and API routes work unchanged.
-Nothing on the server asks which router is rendering.
+The server code does not depend on which router is rendering.
 
 This page explains how the three fit together in that template.
 For the router's own API, route files, `<Link>`, loaders, search params, and so on, use the [TanStack Router documentation](https://tanstack.com/router/latest/docs/framework/solid/overview); nothing there changes under Solid.
@@ -76,7 +76,7 @@ function UserPage() {
 Open `/users/1`, type a new name, and click **Rename**: the heading updates, the section dims briefly while the refetch is in flight, and the users list in the parent layout shows the new name too.
 Three things in this file are deliberate departures from a TanStack default.
 
-The loader is a hint rather than a gate.
+The loader starts the fetch without waiting for it.
 `prefetch` is `void queryClient.prefetchQuery(...)`.
 The navigation commits at once and the component picks the data up at `user.data`, which suspends to the nearest `Loading` boundary until the query settles.
 On the server that is what lets each boundary stream as its own query finishes instead of holding the whole response for the slowest one.
@@ -168,7 +168,7 @@ For forms that must work without JavaScript, the `fullstack` shape's Solid Route
 
 ## What the server does per request
 
-The plugin's `start.serverRenderSetup` hook is the seam that lets a router Solid does not own drive streaming SSR.
+The plugin's `start.serverRenderSetup` hook lets a router Solid does not own drive streaming SSR.
 `src/setup.tsx` runs for each SSR request:
 
 ```tsx
@@ -214,7 +214,8 @@ Read it top to bottom:
 
 The handoff to the client is provider-owned.
 `QueryClientProvider` streams each query's dehydrated entry into Solid's hydration registry as it settles, and the client provider primes its cache from those entries as they arrive.
-`RouterProvider` does the same for match state, so the client's `createRouter` commits the server's matches before hydrating: no boot `router.load()`, no loader re-runs, and each route's lazy chunk resolves under the boundary the server rendered.
+`RouterProvider` does the same for match state, so the client's `createRouter` commits the server's matches before hydrating.
+The client does not call `router.load()` at boot or re-run loaders, and each route's lazy chunk resolves under the boundary the server rendered.
 There is no inline `window.__QUERY_STATE__` or `window.$_TSR` script.
 
 The client entry mirrors the tree with one session-long `QueryClient`:
@@ -268,7 +269,7 @@ registerFlightDataSource(FLIGHT_DATA_SOURCE, (event, outcome) => {
 The payload is a dehydrated `QueryClient`, so consuming it is TanStack's own `hydrate`.
 
 The template goes one step further in `src/lib/flight.ts`: mutation requests carry an inventory of what the client already caches, and the collector skips recomputing anything the mutation's `revalidate` keys did not name.
-That is userland composition over the same seams, and the template's comments walk through it.
+That is userland composition over the same extension points, and the template's comments walk through it.
 Remove it and the base protocol still works.
 
 ## What stays the same

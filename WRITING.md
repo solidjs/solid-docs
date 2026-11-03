@@ -279,7 +279,9 @@ Every Learn page must do the following.
 
 ### Open with something the reader has, wants, or sees
 
-The first paragraph names a concrete situation: a value that does not update, a form that must work before JavaScript loads, a page that flashes a spinner on every navigation.
+The first paragraph says what the page is for in terms of a concrete situation: a value that does not update, a form that must work before JavaScript loads, a page that flashes a spinner on every navigation.
+Get there in one or two sentences.
+Do not stage a scene ("The checkout form throws in production. The fallback renders, the shopper reloads...") before saying what the page covers, and do not follow it with a signpost ("This guide goes through X, shows Y, and ends with Z").
 Do not open with a definition ("A signal is a reactive primitive that...").
 Definitions belong after the reader knows why they need one.
 
@@ -472,7 +474,9 @@ In cases where jargon is necessary, be sure the document contains at least one b
 For example, if you want to use an acronym, spell it out first with the acronym in parentheses after.
 From then on, you can use the acronym in that document.
 
-Plain and simple English also means avoiding contractions, as these are not always easily understood by those for whom English is not the first language.
+Common contractions ("don't", "isn't", "can't", "it's") are fine and keep the prose from sounding stiff.
+Avoid rarer ones ("it'd", "should've", "y'all") that a reader whose first language is not English may not recognize.
+Headings are the exception: write them without contractions, since their anchors are linked from other pages.
 We should also avoid using expressions or figures of speech wherever possible; remember, not everyone will understand what they mean.
 
 Secondly, inclusive language means remaining as gender-neutral as possible.
@@ -578,6 +582,10 @@ Avoid the sentence shapes that mark text as machine-written:
 - Three-item lists used as rhythm rather than content.
 - A bold lead-in phrase on every list item when the items do not need labels.
 - Restating the heading as the first sentence under the heading.
+- Announcing a count before a list ("Three things this code does not do:", "Two facts matter here:"). Say the things.
+- A short dramatic setup line before the explanation ("Nothing is broken:", "None of these know about signals.", "Each alone is not enough.").
+- Packing every case, option, and default into one sentence joined by semicolons. Split it, make it a list or table, or leave the option catalog to the reference page.
+- Project internals the reader cannot use: size-suite caps, release mechanics, notes addressed to an assistant.
 
 ## Solid Terms
 

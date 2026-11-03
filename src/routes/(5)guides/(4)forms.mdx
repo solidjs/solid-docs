@@ -4,16 +4,12 @@ version: "2.0"
 description: "Build a form with a server function and a Solid Router form action: it works before JavaScript loads, validates on the server, and after hydration shows pending state, inline errors, and the saved result before the server confirms."
 ---
 
-The checkout needs a shipping address.
-The form has to save the address when the user clicks **Continue**, reject a postal code that is not five digits even when someone posts to it with `curl`, and show the user which field was wrong.
-On a slow connection it has to do the first of those before the JavaScript has loaded.
+This guide builds a checkout shipping-address form in four steps, and each step is a working form you can stop at:
 
-This guide builds that form in four passes.
-The first is a form that posts to a server function through a Solid Router form action, with no JavaScript in the browser at all.
-The second adds validation the user cannot bypass.
-The third shows the validation messages inline and marks the form as pending, without changing the HTML.
-The fourth turns the form into an address book entry that appears in the list before the server has confirmed it.
-Each pass is a working form on its own; stop at the one that matches what the app needs.
+1. A form that posts to a server function through a Solid Router form action, and works with no JavaScript.
+2. Server-side validation the user can't bypass, even by posting with `curl`.
+3. Inline validation messages and a pending state, without changing the HTML.
+4. An address book where the new entry shows up before the server confirms it.
 
 The guide assumes a `fullstack` project with [server functions](/building-apps/server-functions) enabled and [Solid Router](/routing/solid-router) mounted.
 
@@ -22,7 +18,7 @@ This guide uses `formAction` from `@solidjs/router`.
 It wraps a function so a form can submit to it and the router can track the submission.
 
 `solid-js` exports its own [`action`](/reference/solid-js/lifecycle-actions/action); that one runs a generator as a reactive transaction and is covered in [Mutations](/concepts/mutations).
-`<form action={coreAction}>` fails at the type level because the core `action` does not produce a URL.
+`<form action={coreAction}>` fails at the type level because the core `action` doesn't produce a URL.
 The router's `formAction` uses the core one internally.
 :::
 
@@ -83,7 +79,7 @@ Fill in the three fields and click **Continue to shipping**: the browser posts t
 
 :::note[Where the server function file lives]
 The server function is in `src/data/`, not next to the page.
-With method discovery on, a file under `src/routes` becomes an [API route](/building-apps/middleware-and-api-routes#api-routes) as soon as it exports an uppercase HTTP method; keeping server functions in `src/data` means a later export cannot turn one into a route by accident.
+With method discovery on, a file under `src/routes` becomes an [API route](/building-apps/middleware-and-api-routes#api-routes) as soon as it exports an uppercase HTTP method; keeping server functions in `src/data` means a later export can't turn one into a route by accident.
 :::
 
 `formAction(saveAddress)` returns a value that serializes to the server function's URL, so `action={submitAddress}` renders as an ordinary `action="..."` attribute in the HTML.
@@ -96,11 +92,11 @@ Both paths run the same function with the same `FormData`.
 [Add router submissions](/building-apps/server-functions/mutations-and-responses#add-router-submissions) covers the inline shape and when to use it.
 
 Two details are doing the work here.
-The inputs are uncontrolled: Solid does not read their values while the user types, and the browser assembles the `FormData` on submit.
-`required` and `pattern` are the browser's own validation; the browser does not submit until they pass.
+The inputs are uncontrolled: Solid doesn't read their values while the user types, and the browser assembles the `FormData` on submit.
+`required` and `pattern` are the browser's own validation; the browser doesn't submit until they pass.
 
 This is a complete, deployable form.
-What it lacks is validation the user cannot bypass and any feedback other than a redirect.
+What it lacks is validation the user can't bypass and any feedback other than a redirect.
 
 ## Pass 2: validate on the server
 
@@ -145,7 +141,7 @@ export async function saveAddress(form: FormData) {
 ```
 
 `Object.fromEntries(form)` turns the `FormData` into a plain object for the schema.
-Post a bad postal code with `curl` and the response is a `400` whose body carries the field messages; the database is not touched.
+Post a bad postal code with `curl` and the response is a `400` whose body carries the field messages; the database isn't touched.
 
 The failure leaves the function as a thrown `respond()` envelope, and the choice of `respond()` over a plain error is what makes the messages reach the client:
 
@@ -161,14 +157,14 @@ if (!parsed.success) {
 }
 ```
 
-Run the `Avoid` version in a production build and the client receives `Internal Server Error` with no field messages, because the runtime replaces an unmarked thrown `Error` with a generic message so a stack trace or a database error cannot leak.
+Run the `Avoid` version in a production build and the client receives `Internal Server Error` with no field messages, because the runtime replaces an unmarked thrown `Error` with a generic message so a stack trace or a database error can't leak.
 Throwing an envelope is intentional control flow: the runtime keeps the `400` and the value in development and production alike.
 [Handle thrown errors](/building-apps/server-functions/mutations-and-responses#handle-thrown-errors) covers `markSafeError` for the cases where the thrown value is an `Error` on purpose.
 
-The schema and `valibot` are used only inside the `"use server"` body, so they do not enter the client bundle.
+The schema and `valibot` are used only inside the `"use server"` body, so they don't enter the client bundle.
 The `AddressIssues` type is exported for the client to use in the next pass.
 
-The component from pass 1 does not change.
+The component from pass 1 doesn't change.
 With JavaScript on, a failed submission is recorded by the router but nothing displays it yet.
 Without JavaScript, the runtime redirects back to the form and the router records the same submission on the next server render.
 On its own, pass 2 protects the database; the user sees a form that appears to have done nothing.
@@ -244,11 +240,11 @@ The `<form>` element and its inputs are the same as in pass 1; only the message 
 
 `useSubmissions(submitAddress)` returns a reactive array of this form action's settled submissions, each with the `input` that was sent and either a `result` or an `error`.
 When `saveAddress` throws the `respond()` envelope, the carried value becomes `submission.error`, which is where `issues()` reads the field messages.
-A submission that returned a redirect does not stay in the list.
+A submission that returned a redirect doesn't stay in the list.
 `issues()` is a plain derived function read from JSX, following the rule from the [Reactivity](/concepts/reactivity) page.
 
 :::deep-dive[How the error reaches the page without JavaScript]
-When the form posts without the client, the server-function runtime cannot hand the `400` to a script.
+When the form posts without the client, the server-function runtime can't hand the `400` to a script.
 It stores the thrown value in a one-shot cookie and redirects back to the form's URL.
 The router reads that cookie during the next server render and records the same submission it would have recorded from a scripted call, and the cookie is cleared once it has been read.
 `useSubmissions` sees one entry either way, so the inline errors render on that page load.
@@ -364,7 +360,7 @@ Post a bad postal code and the line disappears when the `400` arrives, because a
 Disable JavaScript and submit the same form.
 The browser posts, `addAddress` runs, the `reload` sends the browser back to the page, and the server renders the list with the new address in it.
 The `createOptimisticStore` and the `.onSubmit` hook did nothing on that path, and nothing had to be written to make the form fall back to it.
-Each pass in this guide added a layer to the same `<form method="post" action={submitAddress}>`: pass 1 made it work, pass 2 made it safe, pass 3 made it explain itself, and pass 4 made it feel immediate; the shopper whose bundle has not arrived yet still gets pass 1.
+Each pass in this guide added a layer to the same `<form method="post" action={submitAddress}>`: pass 1 made it work, pass 2 made it safe, pass 3 made it explain itself, and pass 4 made it feel immediate; the shopper whose bundle hasn't arrived yet still gets pass 1.
 
 ## Live validation while typing
 
@@ -439,7 +435,7 @@ Every field that should reach the server needs a `name`, and mutations must post
 
 ### The form submits, but the page reloads instead of staying put
 
-The router is not mounted around the form, so nothing intercepts the submit and the browser follows the `action` URL as a full-page navigation.
+The router isn't mounted around the form, so nothing intercepts the submit and the browser follows the `action` URL as a full-page navigation.
 Check that the page is rendered inside the `Router`.
 
 ### `action` is not a function, or the form attribute renders as source code

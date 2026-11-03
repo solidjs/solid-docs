@@ -4,17 +4,15 @@ version: "2.0"
 description: "Require a signed-in customer for the account area at the data, route, and request layers, redirect a signed-out visitor to sign-in on the server and in the browser, and send them back where they were going."
 ---
 
-The account area from [Nested routes and layouts](/routing/solid-router/nested-routes) has three pages: `/account`, `/account/orders`, and `/account/addresses`.
-A signed-out visitor reaches them three ways: a bookmark or a shared link, which is a full page request; the **Account** link in the header, which is a client-side navigation; and a script that calls `getOrders` directly, which never renders anything.
-All three should end at `/sign-in`, and after signing in the visitor should land on the page they asked for, not on the account home.
+A signed-out visitor can reach a protected page three ways: by loading the URL, by clicking a link in the app, or by calling its server functions directly without loading a page at all.
+All three should end at `/sign-in`, and after signing in the visitor should land on the page they asked for.
 
-[Sessions and auth](/building-apps/sessions-and-auth) built the cookie, `getSession()`, and the middleware that sets `event.locals.userId`.
-This guide assembles those pieces into a guard that holds at every layer and uses the account area as the running example.
+This guide protects the account area from [Nested routes and layouts](/routing/solid-router/nested-routes) (`/account`, `/account/orders` and `/account/addresses`), using the cookie, `getSession()` and middleware from [Sessions and auth](/building-apps/sessions-and-auth).
 
-## Three layers, one decision
+## Where the check goes
 
-The decision is always the same: is there a `userId` on the request event.
-Where the decision runs determines what it protects.
+The check is always the same: is there a `userId` on the request event?
+What it protects depends on where it runs.
 
 - A check inside each server function protects the data.
   It runs for a page render, a router navigation, a form post without JavaScript, and a `curl` command alike, because every one of those reaches the function through the same request event.
@@ -23,7 +21,7 @@ Where the decision runs determines what it protects.
 - A check in middleware protects the request.
   It answers a full page request for `/account/*` with a redirect before any rendering starts.
 
-Each alone is not enough.
+You need all three.
 A route guard alone leaves `getOrders` callable by anyone who knows its URL, because a route guard decides what to render and never sees a direct call.
 The server function check alone stops the data and nothing else: in the browser the read receives a response object instead of a navigation, and the page is left without its data.
 Middleware alone never sees a client-side navigation, because a navigation inside the router makes no page request.
@@ -54,7 +52,7 @@ export const getOrders = query(async () => {
 ```
 
 Call `getOrders` from an HTTP client at the function's URL without the session cookie and the answer is a redirect with no order data in it.
-`locals.userId` was set by the `attachCustomer` middleware in [Authenticate once in middleware](/building-apps/sessions-and-auth#authenticate-once-in-middleware), and the caller cannot supply it, which is why the identity comes from the event rather than from an argument.
+`locals.userId` was set by the `attachCustomer` middleware in [Authenticate once in middleware](/building-apps/sessions-and-auth#authenticate-once-in-middleware), and the caller can't supply it, which is why the identity comes from the event rather than from an argument.
 [Authorize on the server](/building-apps/sessions-and-auth#authorize-on-the-server) covers the check itself; this page adds nothing to it except the rule that it goes in every function the account pages read or write.
 
 `getCurrentUser` returns `null` rather than throwing, because a signed-out visitor is a normal state for the header to show.
@@ -107,7 +105,7 @@ export default function RequireUser(props: RouteSectionProps) {
 }
 ```
 
-Visit `/account/orders` and the match is the pathless route, then `/account`, then `/orders`; the URLs do not change.
+Visit `/account/orders` and the match is the pathless route, then `/account`, then `/orders`; the URLs don't change.
 `RequireUser` renders no frame of its own, only the matched page once the check has a user.
 `/sign-in` is a sibling of the group rather than a child of it; a sign-in page inside the guard would redirect to itself.
 
@@ -137,7 +135,7 @@ The preload is what starts the check as soon as the route matches, and when a [l
 Both call the same function.
 Its body runs on the server either way: in-process during server rendering, where it shares the request's `getCurrentUser` result with the header, and through the server-function endpoint during a navigation, where the thrown redirect travels back to the router as the response.
 
-With `preloadLinks: intentPreload()` on the router, hovering the **Account** link runs the preload with the `"preload"` intent, which starts the request and does not act on its outcome, so a hover never redirects; the click that follows does, whether it reuses that answer or fetches a new one.
+With `preloadLinks: intentPreload()` on the router, hovering the **Account** link runs the preload with the `"preload"` intent, which starts the request and doesn't act on its outcome, so a hover never redirects; the click that follows does, whether it reuses that answer or fetches a new one.
 
 :::deep-dive[What the router does with a thrown redirect]
 `query` treats a value thrown by the wrapped function the same way as a returned one.
@@ -218,7 +216,7 @@ Everything else falls back to the account home.
 :::danger[Validate next on the server, not only in the form]
 The hidden input is caller-controlled: anyone can post `next=//attacker.example` to `signIn`, whether or not the sign-in page put it there.
 The server-function transport resolves a redirect target against the request URL, so `//attacker.example` and `/\attacker.example` both resolve to another origin, and the router leaves the app for a target on another origin by setting `window.location.href`.
-The runtime refuses targets whose scheme is not `http` or `https`, and it does not refuse a different `http` origin.
+The runtime refuses targets whose scheme isn't `http` or `https`, and it doesn't refuse a different `http` origin.
 Run `safeNext` inside `signIn`, where the value is about to become a `Location` header, and treat the copy in the form as a convenience.
 :::
 
@@ -264,12 +262,12 @@ Request `/account/orders` with no cookie and the server answers `302` with `Loca
 
 Use this layer in addition to the route guard, not instead of it.
 What it adds is a real redirect status on full page requests: the route guard's redirect, when it lands after the shell has flushed, reaches the browser as a script at the end of the stream, after the fallback has already painted.
-What it cannot do is see a client-side navigation, which makes no page request, or a server-function call, which is a request to `/_server` rather than to `/account/*`.
+What it can't do is see a client-side navigation, which makes no page request, or a server-function call, which is a request to `/_server` rather than to `/account/*`.
 
-:::caution[A path prefix is not a permission]
+:::caution[A path prefix isn't a permission]
 The middleware matches URLs, so it protects exactly the paths that start with `/account` and nothing else.
 The server functions the account pages call are reachable at their own URLs, and the check inside each function is what protects them.
-Adding a prefix to the middleware does not remove a check from a function.
+Adding a prefix to the middleware doesn't remove a check from a function.
 :::
 
 ## Show the right navigation
@@ -320,7 +318,7 @@ Sign in and the name appears; sign out through a router `formAction`, or a sign-
 
 The sign-in route is a child of the pathless guard route, so the guard redirects to a page it guards.
 Move `/sign-in` beside the group.
-If the routes are right, the session cookie is not coming back on the next request; [Sessions and auth](/building-apps/sessions-and-auth#common-problems) lists the cookie attributes to compare.
+If the routes are right, the session cookie isn't coming back on the next request; [Sessions and auth](/building-apps/sessions-and-auth#common-problems) lists the cookie attributes to compare.
 Chained client-side redirects stop after 100 with `Too many redirects` from the router.
 
 ### The account page paints, then the sign-in page replaces it
@@ -341,12 +339,12 @@ Accept only paths that start with a single `/` and reject `//` and `/\`; run tha
 
 ## Recap
 
-- Decide once, on `locals.userId`, and run the decision in every server function, in the route guard, and in middleware; each layer covers a way in that the others do not see.
+- Decide once, on `locals.userId`, and run the decision in every server function, in the route guard, and in middleware; each layer covers a way in that the others don't see.
 - Put the account pages under a pathless route whose `preload` starts the check and whose component renders `props.children` behind it, and keep `/sign-in` beside the group.
 - Make the guard a server function wrapped in `query` that throws `redirect()` when the session has no user; the router navigates on it during server rendering and on client-side navigations alike.
 - Build the sign-in target with `paths["sign-in"]({ next })`; the search object encodes the path.
 - Validate `next` inside the server function: a single leading `/`, no `//`, no `/\`, and not the sign-in page itself.
-- Return a redirect from middleware for full page requests under `/account`, and keep the function checks, because middleware does not see `/_server` or client-side navigations.
+- Return a redirect from middleware for full page requests under `/account`, and keep the function checks, because middleware doesn't see `/_server` or client-side navigations.
 - Read `getCurrentUser()` through `query` in the header so the server result hydrates and a sign-out form action refreshes it.
 
 ## Next steps

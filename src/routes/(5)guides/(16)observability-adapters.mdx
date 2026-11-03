@@ -4,10 +4,10 @@ version: "2.0"
 description: "Connect an error monitor or a tracing SDK to a Solid app through the runtime's hooks and channels, with nothing wrapped, patched, or rewritten."
 ---
 
-You maintain an error monitor or a tracing SDK, and a team running Solid asks for an integration.
-For most frameworks that means a component wrapper for error boundaries, a router integration for navigation spans, a middleware to inject trace headers into the HTML, and a per-host preload for the server.
-Solid's runtime exposes each of those as a hook or a channel, so an adapter is one `init()` on each platform that subscribes.
-This guide is the contract behind those hooks: what fires, when, with what, and what your listener may do.
+This page is for people writing an error monitor or tracing integration for Solid.
+With most frameworks that means a component wrapper for error boundaries, a router integration for navigation spans, middleware to inject trace headers, and a preload for the server.
+In Solid, each of those is a hook or a channel the runtime already exposes, so an adapter is one `init()` per platform that subscribes to them.
+What follows is the contract for those hooks: what fires, when, with what, and what your listener is allowed to do.
 
 :::advanced[For tool authors]
 An app author enabling an existing tool wants [Observability](/guides/observability).
@@ -27,12 +27,12 @@ This page is for whoever writes the tool.
 | Your own UI kept out of the data                                             | `OBSERVE.exclude(owner)`                                                                               | observe |
 
 Import from `solid-js` and `@solidjs/web` only.
-Both packages resolve to the build the app chose, so your adapter sees the same `OBSERVE` the app does; `@solidjs/signals`, the engine underneath, is not a public surface.
+Both packages resolve to the build the app chose, so your adapter sees the same `OBSERVE` the app does; `@solidjs/signals`, the engine underneath, isn't a public surface.
 
 ## Errors: once per object, from the hook alone
 
 Both hooks are called once per error object, the first time the runtime meets it.
-The client hook fires when an error boundary renders its fallback; an uncaught error halts the reactive system and reaches `reportError`, which your global handler already covers, so the hook does not repeat it.
+The client hook fires when an error boundary renders its fallback; an uncaught error halts the reactive system and reaches `reportError`, which your global handler already covers, so the hook doesn't repeat it.
 The server hook fires for every failure the server runtime handles or fails on; `kind` and `handling` on the context say which, and [Observability](/guides/observability#hear-every-failure-the-server-handles) tabulates them.
 
 Both contexts carry `ownerPath`, where the error was thrown, and `boundaryPath`, where it was met, as root-first label arrays.
@@ -43,7 +43,7 @@ The records below carry the same error object beside a failed invocation or call
 Set a status on the span from the record; capture from the hook.
 
 On the server, a returned value replaces what the client receives.
-An adapter that offers this — a reference the user can quote — owns the promise that nothing from the original error crosses the wire; an adapter that does not returns nothing.
+If your adapter returns a reference the user can quote, it's responsible for making sure nothing from the original error crosses the wire. If it doesn't offer that, return nothing.
 
 ## Records: settled, serializable, delivered inside the runtime
 
@@ -53,14 +53,14 @@ The contract that shapes a span builder:
 - A record is complete when you receive it, with `at` on the `performance.now()` clock and durations in milliseconds.
   Build the span after the fact with an explicit start and end: `epochSeconds = (performance.timeOrigin + at) / 1000`.
 - A record is plain data.
-  Anything live — the request, the response, the arguments, the result, the error as thrown — is the second argument, `live`, and stays in the process.
+  Anything live (the request, the response, the arguments, the result, the error as thrown) is in the second argument, `live`, and stays in the process.
 - The listener runs synchronously inside the runtime.
   It must not write signals; defer span creation to a microtask so the SDK's own bookkeeping never runs inside a Solid flush.
-  A listener that throws is reported to the console and does not stop the others.
+  A listener that throws is reported to the console and doesn't stop the others.
 - Server records are delivered during the request, so a Node SDK whose active span is the request's parents them without anything passing a parent around.
 - A client `"call"` and the server `"invocation"` it caused share `id`.
   An invocation made during a boundary's render pass carries `boundary`, the `id` of that boundary's record.
-- A `"request"` record leaves at the send, before the transport's `fetch`, for a call the `"call"` record cannot show yet: one still in flight, or one that never settles.
+- A `"request"` record leaves at the send, before the transport's `fetch`, for a call the `"call"` record can't show yet: one still in flight, or one that never settles.
   The two share one `live` object by identity.
 - Bodies cost the call a copy, so they are taken only under `subscribe(type, fn, { bodies: true })`; without it `live.request` is absent and `live.response` is the transport's own, already consumed.
 
@@ -154,7 +154,7 @@ Set `parentId` when your SDK continues from a different header than the runtime 
 `OBSERVE.diagnostics.subscribe(listener)` delivers the runtime's findings: a hold nothing acknowledged (`SILENT_HOLD`), a scope re-running hot (`HOT_SCOPE_RERUNS`), a waterfall of dependent requests in the browser (`ASYNC_WATERFALL`) or of sequential waits inside one server boundary (`SSR_BOUNDARY_WATERFALL`), a render error the server contained (`SSR_RENDER_ERROR_CONTAINED`), an error replaced by a generic one on the wire (`SERVER_ERROR_SANITIZED`, with `data.source` naming the road: `"ssr"` or `"server-function"`).
 A finding has a stable identity and recurs, so it is an issue: fingerprint by `code` and `ownerPath`, and let the count grow.
 The listener's second argument is the live node the finding is about, when the runtime located one; like `live` on a record, it stays in the process, and `OBSERVE.ownerPath(subject)` reads the same labels the event carries.
-Severity is the runtime's — `info`, `warn`, `error` — and `info` findings never reach the console in any build, so an adapter decides whether to forward them.
+Severity is set by the runtime (`info`, `warn` or `error`), and `info` findings never reach the console in any build, so an adapter decides whether to forward them.
 `data.error` on the server's error findings is the error as thrown; the error hook has captured it already.
 
 ## Keep the adapter out of its own data
@@ -178,8 +178,8 @@ The signals and stores created under it stay excluded wherever their writes come
 ## Test against the observe build
 
 Unit tests resolve `solid-js` and `@solidjs/web` the way any bundler does.
-A test runner that applies the `development` condition by default gives you the dev build, which is a superset of observe, so a green test there does not prove the adapter runs on observe.
-Point the tests at the observe artifacts explicitly, and keep both packages inside one module loader: a copy of `@solidjs/signals` your runner loads natively beside a copy it transforms is two `OBSERVE` objects, and the one your adapter subscribed to is not the one the app writes to.
+A test runner that applies the `development` condition by default gives you the dev build, which is a superset of observe, so a green test there doesn't prove the adapter runs on observe.
+Point the tests at the observe artifacts explicitly, and keep both packages inside one module loader: a copy of `@solidjs/signals` your runner loads natively beside a copy it transforms is two `OBSERVE` objects, and the one your adapter subscribed to isn't the one the app writes to.
 
 ## Recap
 

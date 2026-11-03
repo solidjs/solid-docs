@@ -4,14 +4,9 @@ version: "2.0"
 description: "Render, edit, filter, sort, select in, and window lists without rebuilding rows, and read the diagnostics that tell you when you are."
 ---
 
-The cart on the [Stores](/concepts/stores) page has a quantity input in every row.
-Change one quantity and the row you are typing in has to stay: the input keeps focus, a row animation keeps playing, the scroll position holds.
-The first version of that list many people write rebuilds every row on every change, and the symptom is an input that loses focus after one keystroke.
-
-The same problem shows up in search results, order history tables, and chat threads.
-A list is where a small mistake costs the most, because a row that is rebuilt instead of updated loses its DOM, its focus, its scroll position, and its animation, and does so once per row.
-
-This guide is organized by what you are doing with the list.
+When a list row is rebuilt instead of updated, it loses its DOM, its focus, its scroll position and any running animation.
+The usual symptom is an input that loses focus after one keystroke.
+This guide shows how to keep rows stable, organized by what you're doing with the list.
 The [Components and JSX](/concepts/components-and-jsx#rendering-lists) page introduces `For` and `Repeat`; this page is about using them well.
 The examples use the cart's line items:
 
@@ -48,7 +43,7 @@ function CartLines(props: { items: CartItem[] }) {
 ```
 
 Pass three items and three rows render, numbered 1 to 3; pass an empty array and the fallback row shows.
-The callback runs once per item that `For` has not seen before, and its JSX is created once.
+The callback runs once per item that `For` hasn't seen before, and its JSX is created once.
 `item` is the item itself.
 `index` is an accessor, because the same item can move to another position without being recreated; read `index()` where the position is displayed.
 
@@ -60,7 +55,7 @@ Everything else on this page follows from that rule.
 :::deep-dive[What a rebuilt row loses]
 A row is a set of DOM nodes plus the reactive scopes that fill them.
 Disposing one removes the nodes, so focus, text selection, and an in-progress CSS animation go with them, and it disposes the scopes, so any signal the row component created starts over in the new row.
-The list itself does not know a row was rebuilt for the same record; `[UNSTABLE_LIST_IDENTITY]` exists because attribution compares the disposed and created items field by field and reports when they match.
+The list itself doesn't know a row was rebuilt for the same record; `[UNSTABLE_LIST_IDENTITY]` exists because attribution compares the disposed and created items field by field and reports when they match.
 :::
 
 ## Keep row identity across updates
@@ -131,7 +126,7 @@ function saveForLater(id: string) {
 
 Run the `Avoid` version while the cursor is in that row's quantity input and the input loses focus, because the row was torn down and a new one created; every reader of the old item object runs as well.
 Development builds flag it as `[IMMUTABLE_UPDATE_IN_STORE]` when a path is replaced by a container whose leaves are mostly unchanged.
-In the `Prefer` version only the readers of that item's `savedForLater` property run; the row is not recreated, the list is not diffed, and the other rows are untouched.
+In the `Prefer` version only the readers of that item's `savedForLater` property run; the row isn't recreated, the list isn't diffed, and the other rows are untouched.
 
 Adding and removing follow the same rule:
 
@@ -148,7 +143,7 @@ Use [`reconcile`](/reference/solid-js/stores/reconcile) when the whole list arri
 
 ## Filter and sort
 
-Derive the visible list; do not store it:
+Derive the visible list; don't store it:
 
 ```tsx
 const [filter, setFilter] = createSignal<"all" | "active" | "saved">("all");
@@ -178,12 +173,12 @@ Switch the sort to price and the rows move into their new order; no row is recre
 `visible()` is a new array on every change, and that is fine.
 The items inside it are the same proxies as before, so `For` keeps every row and reorders or hides them.
 
-:::note[A derived array is not a rebuilt list]
+:::note[A derived array isn't a rebuilt list]
 A derived array costs a diff; a new set of objects costs a rebuild.
 Those are different things, and only the second is a problem.
 :::
 
-When the derived list is large and read by several consumers, [`createProjection`](/reference/solid-js/stores/create-projection) produces a store-shaped result instead of an array, so readers of individual rows do not subscribe to the whole list; [Stores](/concepts/stores#derive-a-store-with-a-projection) shows the shape.
+When the derived list is large and read by several consumers, [`createProjection`](/reference/solid-js/stores/create-projection) produces a store-shaped result instead of an array, so readers of individual rows don't subscribe to the whole list; [Stores](/concepts/stores#derive-a-store-with-a-projection) shows the shape.
 
 ## Select a row
 
@@ -260,7 +255,7 @@ When `from` moves, rows whose index is still in range are kept, rows that left a
 
 :::caution[Repeat is positional]
 A `Repeat` row shows whatever is at its index, so it fits logs, tables, and grids over store data.
-It does not fit lists where a row must follow its item as the list reorders; use `For` for those.
+It doesn't fit lists where a row must follow its item as the list reorders; use `For` for those.
 :::
 
 For a full virtualizer with variable heights, use a library; the pattern above is what those libraries build on.
@@ -282,7 +277,7 @@ A `Loading` boundary is the not-yet state:
 ```
 
 The skeleton shows until the first response; the "Your cart is empty" row shows when that response is empty.
-A refetch does not bring the skeleton back; the rows stay, and `isPending(() => items.length)` reports the wait if you want to dim them.
+A refetch doesn't bring the skeleton back; the rows stay, and `isPending(() => items.length)` reports the wait if you want to dim them.
 
 ## Common problems
 
@@ -309,7 +304,7 @@ Write through `setItems((draft) => { draft.push(item); })`.
 ## Recap
 
 - `For` keeps a row when the same object comes back and rebuilds it when a new object appears; every other rule follows from that.
-- Load server lists into a store with `createStore(async () => ..., [])`, or pass `keyed={(item) => item.id}`, so a refetch does not rebuild rows.
+- Load server lists into a store with `createStore(async () => ..., [])`, or pass `keyed={(item) => item.id}`, so a refetch doesn't rebuild rows.
 - Edit one property on the setter's draft; a `map` with a spread creates a new object and a new row.
 - Derive filtered and sorted views with a memo; a new array of the same proxies is a diff, not a rebuild.
 - Keep selection in a store keyed by id so a change touches two rows, not every row.

@@ -4,15 +4,13 @@ version: "2.0"
 description: "Drive the AI SDK's chat class from a Solid store with a short ChatState adapter, so messages, status, and errors update the exact nodes that read them."
 ---
 
-You have an API route that answers `POST /api/chat` with `streamText(...).toUIMessageStreamResponse()` from the `ai` package, and you want the chat screen in Solid.
-The package's own framework adapters hold messages in their framework's state, and `@ai-sdk/solid` is deprecated: its README says so, names AI SDK 5 as the release that removes it, and its last version stops at the `useChat` hook of that era.
+This recipe builds a chat screen in Solid on top of an API route that answers `POST /api/chat` with `streamText(...).toUIMessageStreamResponse()` from the [AI SDK](https://ai-sdk.dev).
+`@ai-sdk/solid` is deprecated, but you don't need it.
+`AbstractChat` in the `ai` package handles the transport, stream parsing, tool calls and status, and reads and writes messages through a small `ChatState` interface.
+Implement that interface on a Solid store and you have a chat adapter in about sixty lines.
+It doesn't need throttling, because a store update only touches the nodes that read the changed value.
 
-Nothing in the chat logic depends on a framework, though.
-`AbstractChat` in `ai` does the transport, the stream parsing, tool calls, and status; it reads and writes its messages through a small `ChatState` interface that the adapter supplies.
-This recipe is that adapter on a Solid store, about sixty lines, with no throttle, because a store update already touches only the nodes that read the changed value.
-
-This recipe targets `ai` 7.x; the interface is quoted from its source.
-Install the package with your package manager, no `@ai-sdk/*` UI package is needed.
+This recipe targets `ai` 7.x, and only needs the `ai` package.
 
 ## The interface to implement
 
@@ -107,8 +105,7 @@ export class Chat<M extends UIMessage = UIMessage> extends AbstractChat<M> {
 }
 ```
 
-Three decisions in that file are worth knowing about.
-
+A few choices in that file are worth explaining.
 `status` and `error` are signals and `messages` is a store, so a component that reads `chat.status` re-runs only when the status changes, and a component that reads one message's text re-runs only when that text changes.
 The stream processor calls `replaceMessage` once per chunk with a message whose last text part has grown.
 Assigning that object into the array slot would replace the row and re-run every reader of it, so the adapter passes the array through [`reconcile`](/reference/solid-js/stores/reconcile) instead: rows match by `id` and keep their proxies, the unchanged rows are skipped by reference, and inside the changed row only the `text` leaf that differs notifies its readers.
@@ -218,8 +215,8 @@ Passing `request.signal` as `abortSignal` is the same cancellation contract as i
 
 ## What you give up
 
-`AbstractChat` reads and writes every message through the adapter, so the adapter is the whole integration, but the chat is not a Solid computation.
-It does not participate in a `Loading` boundary, `isPending` does not report its requests, and a navigation during a stream does not hold the frame; `status` is the only progress signal.
+`AbstractChat` reads and writes every message through the adapter, so the adapter is the whole integration, but the chat isn't a Solid computation.
+It doesn't participate in a `Loading` boundary, `isPending` doesn't report its requests, and a navigation during a stream doesn't hold the frame; `status` is the only progress signal.
 For a chat that must take part in the page's async coordination, read the stream through a projection as the streaming guide does, and use the AI SDK only on the server.
 
 ## Recap

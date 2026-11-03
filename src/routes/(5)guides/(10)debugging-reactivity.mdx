@@ -4,10 +4,8 @@ version: "2.0"
 description: "Find out why a value does not update, why it updates too often, and how to read Solid's development diagnostics."
 ---
 
-A quantity input in the cart changes and the subtotal next to it does not.
-Or the subtotal changes, and so does every row in the list, on every keystroke.
-Those are the two shapes a reactivity bug takes: something does not update when it should, or something updates far more often than it should.
-Solid's development build reports the first kind as it happens and can explain the second kind on request.
+Most reactivity bugs are one of two kinds: something doesn't update when it should, or something updates far more often than it should.
+Solid's development build warns about the first kind as it happens, and can explain the second kind when you ask.
 This guide shows how to read those reports and what to change.
 
 :::note[Development build only]
@@ -26,12 +24,13 @@ Move it into a tracking scope (JSX, a memo, or an effect's compute function).
   at http://localhost:5173/src/components/LineItem.tsx:12:5
 ```
 
-The code is stable across releases; the sentence after it says what the runtime observed and what to change.
-The `in` line is the chain of owners from the root down to the scope that produced the finding: components as `<Name>`, computations by the `name` option you gave them or `effect`/`computed` by default.
-The `at` line is the source position of the nearest node on that chain the compiler recorded, `file:line:col` relative to the project root; in a browser it is printed under the dev server's origin, so clicking it opens the file in the Sources panel.
-When the finding is about a JSX binding (an attribute, class, style, or inserted text), the console entry also carries the DOM element it writes as a second argument, so hovering it in the browser's console highlights the element on the page and clicking it jumps to the Elements panel.
+Codes are stable across releases, and the sentence after the code says what went wrong and what to change.
 
-The first time each code appears, Solid adds a footer: a link to the code's page in the [diagnostics reference](/reference/solid-js/diagnostics), then the repair guide that ships inside the `solid-js` package under `skills/reactivity-diagnostics/SKILL.md` and the same file on GitHub, anchored to that code, for an assistant working in the repository.
+- The `in` line is the chain of owners down to the scope that triggered the finding. Components show as `<Name>`, and computations by their `name` option, or `effect`/`computed` if they don't have one.
+- The `at` line is the source position, `file:line:col`. In the browser, clicking it opens the file in the Sources panel.
+- When the finding is about a JSX binding (an attribute, class, style or inserted text), the entry also includes the DOM element. Hover it in the console to highlight it on the page.
+
+The first time a code appears, Solid also prints a link to its page in the [diagnostics reference](/reference/solid-js/diagnostics) and to its section in the repair guide that ships in `solid-js` at `skills/reactivity-diagnostics/SKILL.md`, which is handy if you're working with an AI assistant.
 
 Codes fall into a few groups:
 
@@ -47,11 +46,13 @@ Codes fall into a few groups:
 Not every bracketed message is a diagnostic.
 `[FLUSH_IN_ACTION]` is an error `flush()` throws in development; it never reaches the diagnostics channel, and [The test sees the old DOM](#the-test-sees-the-old-dom) covers it.
 
-Each finding has one of three severities.
-An error throws and halts execution; the behavior is broken.
-A warning logs to the console; the code runs but is structurally wrong or expensive.
-An `info` finding does not reach the console at all; it is recorded on the structured channel that `OBSERVE.diagnostics.subscribe()` and `@solidjs/diagnostics` read, for cases where the runtime has a lead but not enough proof to interrupt you.
-Do not silence a code you do not understand; each one describes a real defect or a real cost.
+Each finding has a severity:
+
+- An **error** throws and halts execution. The behavior is broken.
+- A **warning** logs to the console. The code runs, but it's structurally wrong or expensive.
+- An **info** finding never reaches the console. It goes to the structured channel that `OBSERVE.diagnostics.subscribe()` and `@solidjs/diagnostics` read, for cases where the runtime suspects something but isn't sure enough to interrupt you.
+
+Don't silence a code you don't understand. Each one points at a real bug or a real cost.
 
 ## Something does not update
 
@@ -71,7 +72,7 @@ Destructured props produce the same warning and the same fix.
 ### Is the signal being called?
 
 A signal is a function.
-`{quantity}` in JSX is a type error, because a function is not a valid DOM child; `"Qty: " + quantity` type-checks but renders the text of the function.
+`{quantity}` in JSX is a type error, because a function isn't a valid DOM child; `"Qty: " + quantity` type-checks but renders the text of the function.
 Search the component for the signal's name without `()` behind it.
 
 ### Did the write reach a reactive value?
@@ -91,7 +92,7 @@ setCart((draft) => {
 });
 ```
 
-Run the `Avoid` version and nothing happens: no error, no warning, and the list does not change.
+Run the `Avoid` version and nothing happens: no error, no warning, and the list doesn't change.
 
 Objects held in a plain signal have the opposite failure.
 `items().push(item)` does mutate the array, but no one is notified because the signal's value is the same array; `setItems((current) => [...current, item])` gives the signal a new value to report.
@@ -100,7 +101,7 @@ The [Stores](/concepts/stores) page covers nested updates.
 ### Is the effect reading in the wrong phase?
 
 `createEffect` tracks its first function only.
-A signal read in the second function does not re-run the effect:
+A signal read in the second function doesn't re-run the effect:
 
 ```ts
 // Avoid: price() is read in the untracked effect function
@@ -132,8 +133,8 @@ See [Boundaries](/concepts/boundaries).
 
 ## Something updates too often
 
-The tool for this is attribution: a recording of every scope that re-ran, what changed to cause it, and how long it took.
-Give the scopes you care about names, enable attribution, reproduce the behavior, then ask why a scope ran:
+Use attribution, which records every scope that re-ran, what caused it, and how long it took.
+Name the scopes you care about, enable attribution, reproduce the problem, then ask why a scope ran:
 
 ```ts
 import { createMemo, createStore } from "solid-js";
@@ -154,18 +155,17 @@ for (const event of why(total)) {
 
 Each entry names the write that started the update, the dependency that changed, and the time the recompute took.
 While attribution is enabled the same chains print to the console as collapsed `[why-run]` groups, one per re-run, with the cause chain and dependency changes inside.
-`costs()` ranks scopes by self time, including time spent on runs whose result did not change, and ranks writes by how much downstream work each one caused.
-`why`, `costs`, `feedback`, and `subscriptions` are separate exports of `solid-js/attribution`, so a build that only records ships none of them; the `attribution` object itself carries `enable()`, which returns a release for the hold it took, `disable()`, `history(type)` for the `"rerun"`, `"hold"`, `"interaction"`, `"navigation"`, and `"waterfall"` ring buffers, and `markFlight()`.
-The records themselves arrive on `OBSERVE.records.subscribe(type, (event, live) => …)`, the same channel the runtime's own records use, with the node that ran as `live`.
-A `"rerun"` record is built only while something wants it — a `"rerun"` listener, an imported fold such as `costs`, or the console log — so `why(total)` answers for the runs after one of those appeared; `subscriptions(total)` reads the live graph and always answers.
-To see the same records on a timeline instead of at the console, [`enablePerformanceTracks()`](/reference/solid-web/performance-tracks/enable-performance-tracks) from `@solidjs/web/performance-tracks` paints them in the Chrome Performance panel; [Performance](/guides/performance#see-the-records-on-the-performance-panel) shows the tracks.
+`costs()` ranks scopes by self time (including runs whose result didn't change) and writes by how much downstream work each one caused.
+`why()` only knows about runs that happened after something started recording them (a `"rerun"` listener, an imported fold like `costs`, or the console log), while `subscriptions(total)` reads the live graph and always answers.
+To see the same records on a timeline, [`enablePerformanceTracks()`](/reference/solid-web/performance-tracks/enable-performance-tracks) paints them in the Chrome Performance panel; see [Performance](/guides/performance#see-the-records-on-the-performance-panel).
+The [attribution reference](/reference/solid-js/advanced/diagnostics-dev-hooks/attribution) lists everything else the module exports.
 
 A chain ends at whatever made the root write, not only at the signal's name.
 Writes made inside a compiled event handler are stamped with the interaction (`click on button#add "Add"`), so `event.interaction` on a re-run names the click it traces back to, however many effects relayed it in between.
 Writes made from an effect or an action are stamped with that effect or action; writes from a timer or module scope read as `external`.
 
 While attribution is enabled, Solid also warns about the patterns below on its own.
-Each warning names the scope and the cause, so you usually do not need to query `why` for them.
+Each warning names the scope and the cause, so you usually don't need to query `why` for them.
 
 :::tip[Name the scopes before you record]
 Every report and every `why` chain refers to nodes by their `name` option, and an unnamed memo prints as `computed`, an unnamed effect as `effect`, and an unnamed signal as `signal`.
@@ -184,9 +184,9 @@ Read the properties the calculation needs, inside the memo, and nothing else.
 
 A plain derived function recomputes for every reader every time an input changes, and passes the recompute downstream even when its result is the same.
 Turn the link into a `createMemo` when its result is often unchanged, when several readers share it, or when the work downstream is expensive.
-The memo compares its result to the previous one and does not notify readers when the two are equal.
+The memo compares its result to the previous one and doesn't notify readers when the two are equal.
 
-Do not memoize everything.
+Don't memoize everything.
 A memo costs a node in the graph and a comparison on every run; for a cheap expression with one reader, a function is smaller and faster.
 
 ### A memo returns a new object that is equal to the last one
@@ -270,11 +270,11 @@ The repair is always to add feedback, never to remove the hold:
 
 [Async reactivity](/concepts/async-reactivity#another-answer-is-coming-ispending) explains each of these.
 
-A `Loading` boundary that has not shown content yet, or whose `on` dependencies changed, is a different situation: the read shows the fallback instead of entering a hold, so there is no `SILENT_HOLD` to report.
+A `Loading` boundary that hasn't shown content yet, or whose `on` dependencies changed, is a different situation: the read shows the fallback instead of entering a hold, so there is no `SILENT_HOLD` to report.
 A boundary that has already revealed holds like everything else.
 A boundary with `on` whose fallback can never appear, because the same data is also read outside it, is reported on its own as `[LOADING_ON_OUTSIDE_HOLD]`, naming the source; move that outside read under the boundary.
 A hold that was acknowledged but still ran long is reported as `[LONG_HOLD]` from 500ms of waiting, a warning from 1000ms, with the suggestion to add a `Loading on={...}` boundary; the thresholds are `attribution.enable({ longHolds: { infoMs, warnMs } })`.
-Acknowledged holds under those thresholds still count in the feedback tables: `feedback().sources` tallies every hold and its wait in `holds` and `heldMs`, ranks the affordances that answered in `acknowledgedBy`, and counts a hold whose only acknowledgment was a `latest()` shadow as `latestOnly`, next to the `silent` and `long` columns, so the cost is visible without blaming code that waited correctly.
+Holds that don't trigger a warning still show up in `feedback().sources`, so you can see their cost without Solid blaming code that waited correctly.
 
 :::deep-dive[Feedback tables, and how a router names its holds]
 `attribution.history("hold")` returns every hold from the session, reported or not, each with `silent` and `long` already judged.
@@ -287,7 +287,7 @@ Acknowledged holds under those thresholds still count in the feedback tables: `f
 
 A router can name the holds its navigations cause by the route pattern that matched, `/products/:id` rather than `/products/mug`, so occurrences fold together in these tables.
 It does so by wrapping its location write in `OBSERVE.attribution.withOrigin({ kind: "navigation", name, to, params }, write)`, which is router-agnostic; nothing else in attribution knows about routing.
-The [attribution reference](/reference/solid-js/advanced/diagnostics-dev-hooks/attribution#navigationref) describes the `NavigationRef` fields, including how a router whose match is not final at write time fills them in later, how it declares the route the document arrived on with `initial`, and how one that awaits before writing hands the click back as `interaction`.
+The [attribution reference](/reference/solid-js/advanced/diagnostics-dev-hooks/attribution#navigationref) describes the `NavigationRef` fields, including how a router whose match isn't final at write time fills them in later, how it declares the route the document arrived on with `initial`, and how one that awaits before writing hands the click back as `interaction`.
 :::
 
 ## The test sees the old DOM
@@ -302,17 +302,17 @@ expect(button).toHaveTextContent("Clicks: 1");
 ```
 
 Import `flush` from `solid-js`.
-Application code does not normally call it; tests and imperative integrations do.
+Application code doesn't normally call it; tests and imperative integrations do.
 The [Testing](/guides/testing) guide covers the rest of the test setup.
 
-`flush()` drains queued writes; it does not wait for async work.
+`flush()` drains queued writes; it doesn't wait for async work.
 To await one reactive expression from outside a tracking scope, such as an async memo in a test, use [`resolve(fn)`](/reference/solid-js/advanced/interop-async/resolve), which resolves with the first settled value or rejects with the expression's error:
 
 ```ts
 const product = await resolve(() => productMemo());
 ```
 
-One place `flush()` does not belong is inside an action body:
+One place `flush()` doesn't belong is inside an action body:
 
 ```text
 [FLUSH_IN_ACTION] flush() inside an action body is not allowed. An action's writes are held in its
@@ -331,8 +331,8 @@ Development throws; production skips the drain and runs the callback, if any, in
 Server render is pure: state changes flow from async sources (promises, async iterables), never setters.
 ```
 
-A server render is one pass from inputs to HTML.
-A setter called during that pass lands as inert data and nothing updates, so the write is a sign the code expects a client-side update loop that does not exist on the server.
+A server render is one pass from inputs to HTML, so a setter called during it does nothing.
+The warning means the code expects a client-side update that never happens on the server.
 The fix depends on what the write was for:
 
 - Bridging a subscription or a promise into a signal: make the source itself the value, `createSignal(() => source)` or `createStore(async () => ..., seed)`, so both server and client read it the same way.
@@ -392,7 +392,7 @@ test("adding an item recomputes the total once", async () => {
 ```
 
 `toHaveNoDiagnostics` fails the test when any coded warning fires during the scenario, which turns an untracked read or a leaked effect into a red test instead of a console line nobody reads.
-`info` findings do not fail it.
+`info` findings don't fail it.
 The re-run budget and waste checks catch the second kind of bug: a change that makes a scope recompute more than it did before.
 `toHaveNoSilentHolds` is the responsiveness gate: it fails when a write was held on async work and nothing on screen acknowledged the wait, and its message names the interaction, the held write, and the source it waited on.
 `toStayWithinHoldBudget(ms)` bounds every hold, acknowledged or not.
@@ -406,11 +406,11 @@ Set [`diagnostics: false`](/reference/vite-plugin-solid/options#diagnostics) in 
 ## Recap
 
 - Read the bracketed code first; it is stable across releases and names the defect, and the `in` line names the scope that produced it.
-- For a value that does not update, check in order: is the read in a tracking scope, is the signal called, did the write go through the setter, is the read in the effect's compute function, is the value pending.
+- For a value that doesn't update, check in order: is the read in a tracking scope, is the signal called, did the write go through the setter, is the read in the effect's compute function, is the value pending.
 - For a value that updates too often, name the scopes, enable attribution, reproduce, and ask `why(scope)`.
 - Change the one property on a store draft; a spread copy or a fresh array re-runs every reader of the path.
 - Replace an effect that copies state with a memo; keep the effect only when the write records something from outside the graph.
-- When a click looks dead, add feedback with `isPending`, `latest`, an optimistic value, or `affects`; do not remove the hold.
+- When a click looks dead, add feedback with `isPending`, `latest`, an optimistic value, or `affects`; don't remove the hold.
 - Call `flush()` in tests after firing an event, never inside an action body.
 - Put an `Errored` boundary around any subtree that can throw; an uncaught error halts every update.
 

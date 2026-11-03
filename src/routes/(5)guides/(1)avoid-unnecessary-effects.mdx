@@ -4,22 +4,21 @@ version: "2.0"
 description: "Recognize the effect that copies one reactive value into another, replace it with a direct, memoized, async, or writable derivation, and keep createEffect for the imperative boundary."
 ---
 
-The cart on the [Stores](/concepts/stores) page shows a subtotal under the line items.
-The first version many people write keeps the subtotal in its own signal and adds an effect that recalculates it whenever an item changes.
-It works, and it is wrong in a way that is hard to see: change a quantity and the row updates in one flush while the subtotal updates in the next, so for one frame the page shows the new quantity next to the old total.
-With attribution on, development names the pattern `[EFFECT_RELAY_TEAR]`.
+A common mistake is keeping a derived value, like a cart subtotal, in its own signal and updating it from an effect.
+It looks like it works, but the row updates in one flush and the subtotal in the next, so for one frame the page shows the new quantity next to the old total.
+With attribution on, development reports this as `[EFFECT_RELAY_TEAR]`.
 
 Signals, stores, props, memos, and async computations already form a graph of derived values.
-An effect belongs at the end of that graph, where a settled result has to leave Solid and drive something Solid does not own:
+An effect belongs at the end of that graph, where a settled result has to leave Solid and drive something Solid doesn't own:
 
 ![Reactive inputs flow through derived values to declarative consumers and terminal effects. User interactions and external observations use setters to become new inputs.](/images/diagrams/derived-state-effects-sequence.svg)
 
-This guide goes through the places an effect gets written where a derivation belongs, shows what each one does when it runs, and ends with the two cases where `createEffect` is the right tool.
+This guide covers the common places people write an effect where a derivation belongs, and ends with the two cases where `createEffect` is the right tool.
 The [Reactivity](/concepts/reactivity) page explains tracking, memos, effect phases, scheduling, and ownership.
 
 ## Calculate values when they are read
 
-A value that can be calculated from existing reactive state does not need a signal of its own:
+A value that can be calculated from existing reactive state doesn't need a signal of its own:
 
 ```tsx
 import { createEffect, createSignal, createStore } from "solid-js";
@@ -50,7 +49,7 @@ The names come from the `name` option; an unnamed signal prints as `signal`.
 [Debugging reactivity](/guides/debugging-reactivity#an-effect-writes-a-signal-that-another-scope-derives-from) covers the report and its variants.
 
 The `Prefer` version is a plain function.
-It runs in the tracking scope that reads it, so it cannot be stale independently of its inputs and it schedules no second write.
+It runs in the tracking scope that reads it, so it can't be stale independently of its inputs and it schedules no second write.
 Keep the call inside JSX or another tracking scope; a component body runs untracked, so `subtotal()` at the top level of a component is a one-time value.
 
 Use [`createMemo`](/reference/solid-js/reactivity/create-memo) when several readers share the result or when the derivation should stop propagation when its result is unchanged.
@@ -60,7 +59,7 @@ Keep memo computations free of side effects.
 :::deep-dive[Why the copy is one flush behind]
 Solid applies writes in a batch.
 Within one batch it runs every tracked compute function that depends on the changed values, and only then runs the effect functions whose inputs changed.
-A write made inside an effect function cannot join the pass that is finishing; it starts a second pass inside the same flush.
+A write made inside an effect function can't join the pass that is finishing; it starts a second pass inside the same flush.
 Readers of the copied signal therefore update one pass after readers of the source, and every effect and DOM write in the first pass saw the stale copy.
 A memo is a compute function, so it lands in the same pass as its inputs and there is no moment in which the two disagree.
 :::
@@ -265,7 +264,7 @@ In the `Prefer` version each click runs the [`action`](/reference/solid-js/lifec
 
 ## Use an effect at an imperative boundary
 
-Use an effect when a settled reactive value must drive a system that Solid does not own: a third-party widget, a subscription, telemetry, or a browser API with no declarative JSX form.
+Use an effect when a settled reactive value must drive a system that Solid doesn't own: a third-party widget, a subscription, telemetry, or a browser API with no declarative JSX form.
 The two-phase [`createEffect`](/reference/solid-js/reactivity/create-effect) keeps that boundary explicit.
 The first function tracks and returns a value; the second receives that value, does the imperative work, and may return a cleanup.
 [Integrate non-Solid code](/guides/integrate-non-solid-code#create-the-instance-once-update-it-in-an-effect) applies this shape to a charting library.
@@ -301,7 +300,7 @@ In the `Prefer` version either change re-runs the compute function, the cleanup 
 Solid runs the tracked compute functions for an update before it runs any effect functions.
 If a compute function reaches pending async work, its effect function waits for that work to settle, so the widget never receives a value from a half-applied update.
 
-:::caution[An effect function is not a place to write reactive state]
+:::caution[An effect function isn't a place to write reactive state]
 The effect function runs after the batch has landed.
 A setter called there starts a second pass, which is the copy pattern this guide opened with.
 If the write is needed, ask whether the value could be a memo instead; if it records something the browser produced, see the next section.
@@ -353,7 +352,7 @@ function ProductGallery() {
 
 Run the `Avoid` version and resize the window.
 The count never changes, because nothing measures again.
-In the `Prefer` version the observer fires on each size change and the write records what the browser reported; it does not copy a reactive value back into the graph.
+In the `Prefer` version the observer fires on each size change and the write records what the browser reported; it doesn't copy a reactive value back into the graph.
 
 `onSettled` runs its callback once, after the surrounding render has settled, and the returned cleanup runs when the owner is disposed, so the observer is disconnected with the component.
 [Refs and directives](/concepts/components-and-jsx#refs-and-directives) covers the owned DOM setup this builds on.

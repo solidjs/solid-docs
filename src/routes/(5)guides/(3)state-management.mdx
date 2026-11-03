@@ -4,12 +4,9 @@ version: "2.0"
 description: "Decide where each piece of storefront state lives: a component, a context provider, the URL, or the server, and keep it out of module scope in code that also runs on the server."
 ---
 
-The search page from [Thinking in Solid](/guides/thinking-in-solid) ended with a cart count created inside the `Search` component.
-The header shows that count on every page, so it has to move.
-The same question comes up for the signed-in customer's name, the search filter that should survive a refresh, the product catalog, and the open flag on the **Remove item?** dialog.
-
-Each of those has one right home, and the wrong home shows up as a symptom: a count that resets when the page changes, a filter that clears on refresh, a dialog that stays open after the user navigates away, or a cart that belongs to a different visitor.
-This guide goes through the homes one at a time and ends with a decision list.
+Where a piece of state lives decides how long it lasts and who can read it.
+Put it in the wrong place and you get a cart count that resets when the page changes, a filter that clears on refresh, a dialog that stays open after navigating away, or one visitor's cart showing up for another.
+This guide picks up the search page from [Thinking in Solid](/guides/thinking-in-solid), whose cart count now needs to move to the header, and goes through each place state can live.
 
 ## Five kinds of state
 
@@ -22,7 +19,7 @@ This guide goes through the homes one at a time and ends with a decision list.
 | On the server       | The catalog, orders, the session              | Server functions; the client holds a view, not a copy |
 
 The first three differ only in where the provider sits.
-The last two are not held in Solid state at all: the URL and the server own them, and components read them through a router primitive or a server function.
+The last two aren't held in Solid state at all: the URL and the server own them, and components read them through a router primitive or a server function.
 
 ## Local state stays local
 
@@ -74,7 +71,7 @@ Props are reactive on their own, so a lifted value costs nothing but the two lin
 
 ## Share with context
 
-The header badge and the checkout page are far apart in the tree, and threading the cart through every layout between them would make each layout know about a cart it does not use.
+The header badge and the checkout page are far apart in the tree, and threading the cart through every layout between them would make each layout know about a cart it doesn't use.
 Create the cart once in a provider and let both read it:
 
 ```tsx
@@ -341,7 +338,7 @@ Ask these in order and stop at the first yes:
 5. Do components far apart, or every page, need it?
    Create it in a provider and read it with `useContext`; place the provider at the root of `App` for app-wide state.
 
-Module scope is not on the list.
+Module scope isn't on the list.
 Use it for constants and for the `createContext` call itself.
 
 ## Common problems
@@ -378,7 +375,7 @@ Pass the store, the accessor, or a function, and read it in the consumer; see [P
 - Share state across distant components with a provider that creates the store and a `useContext` read below it; put the provider at the root of `App` for app-wide state.
 - Pass stores, accessors, and functions through context; the provider reads `value` once.
 - Use `createContext<T>()` with no default for reactive state so a missing provider throws.
-- Do not create signals or stores at module scope in code that runs on the server; the module loads once and one object serves every request.
+- Don't create signals or stores at module scope in code that runs on the server; the module loads once and one object serves every request.
 - Put anything a shared link should reproduce in search parameters with `useSearchParams`.
 - Read server-owned data through a server function into a memo or store; the client holds a view, and `refresh` re-reads it.
 

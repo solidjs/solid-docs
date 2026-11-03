@@ -4,10 +4,9 @@ version: "2.0"
 description: "Build the storefront's product search end to end, and at each step see what a React or Vue developer would reach for and what Solid does instead."
 ---
 
-The storefront needs a search page: a text box, a category filter, a list of matching products from the server, and an **Add to cart** button on each row that updates the cart badge in the header.
-If you have built this in React or Vue, you already have a plan: state for the query, a memoized filter, an effect that fetches, a loading flag, and a state update after the request succeeds.
-
-This guide builds the same page in Solid and stops at each step to say which part of that plan does not carry over.
+This guide builds a product search page: a text box, a category filter, a list of matching products from the server, and an **Add to cart** button on each row that updates the cart badge in the header.
+If you've built this in React or Vue, you already have a plan for it: state for the query, a memoized filter, an effect that fetches, a loading flag, and a state update when the request succeeds.
+At each step, this guide points out which parts of that plan don't carry over to Solid.
 The [Quick start](/getting-started/quick-start) showed the one rule everything here follows: a component runs once, and a read inside JSX, a memo, or an effect's compute function is what updates.
 
 ## Start from the markup
@@ -242,10 +241,10 @@ export default function Search() {
 
 Type `mug`.
 Three requests start, one per keystroke; the list shows the answer to `mug` and nothing else, and while each answer is on its way the previous list stays on screen with the `stale` class.
-The first time the memo returns a promise, the `Loading` boundary shows **Searching…** in place of the list; after that first answer, the fallback does not come back.
+The first time the memo returns a promise, the `Loading` boundary shows **Searching…** in place of the list; after that first answer, the fallback doesn't come back.
 
 The memo returned a promise, and that is the whole change.
-Readers of `results()` see a `Product[]`, not a `Promise` and not `undefined`; an expression that reads a value that is not ready yet waits, and the nearest `Loading` boundary decides what renders in the meantime.
+Readers of `results()` see a `Product[]`, not a `Promise` and not `undefined`; an expression that reads a value that isn't ready yet waits, and the nearest `Loading` boundary decides what renders in the meantime.
 An answer to a superseded run is dropped, so there is no request counter and no `AbortController`.
 [Async reactivity](/concepts/async-reactivity) covers what happens between the keystroke and the answer, including `latest` for a controlled input whose `value` should show the new text while the old list is held.
 
@@ -367,7 +366,7 @@ Keep `props` whole and read `props.product.name` inside the JSX; [Props](/concep
 ### `props.query is not a function`
 
 The parent passed `query={query()}`, so the child receives a string and reads it as `props.query`.
-A dynamic prop compiles to a getter that runs the parent's expression when the child reads it, so the child does not call it.
+A dynamic prop compiles to a getter that runs the parent's expression when the child reads it, so the child doesn't call it.
 Pass the accessor itself, `query={query}`, when the child should receive a function, and then call `props.query()`.
 
 ### The page shows `() => ` or `function` where a value should be

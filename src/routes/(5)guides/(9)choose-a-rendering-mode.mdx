@@ -4,10 +4,8 @@ version: "2.0"
 description: "Decide between a static shell, streaming server rendering, and build-time prerendering for a start-mode project, and what each one costs."
 ---
 
-Someone shares a product page from the storefront in a chat, and the link preview shows the site name and nothing else.
-The page is there when a browser opens it, but the preview scraper read the HTML response, and the HTML response was a document shell with an empty body waiting for a bundle.
-Whether that is a problem depends on who reads the HTML, and that question is what picks a rendering mode.
-
+Which rendering mode you need mostly depends on who reads your HTML.
+A browser can wait for JavaScript to fill in an empty page, but a link preview scraper or a search crawler may not.
 A start-mode project renders in one of three ways: a static shell that the browser fills in, a server that streams HTML for each request, or a build step that renders every page to HTML ahead of time.
 The application code is the same in all three.
 `src/App.tsx`, `src/Document.tsx`, and the routes carry over; what changes is one or two lines of `vite.config.ts`, what `vite build` produces, and what the host has to run.
@@ -89,7 +87,7 @@ It matters much less for the second and later pages in a session, because the bu
 ### Who reads the HTML
 
 Search engines, link-preview scrapers, and screen-reader users on slow devices all read the HTML response.
-Google runs JavaScript, but with a delay and a budget; most other crawlers do not.
+Google runs JavaScript, but with a delay and a budget; most other crawlers don't.
 If the content has to be indexed or previewed, it has to be in the HTML, which means SSR or prerendering.
 An admin dashboard behind a login has no such reader, and the static shell loses nothing.
 
@@ -133,7 +131,7 @@ onSettled(() => {
 
 Run the `Avoid` version with `ssr: true` and the server render fails with `ReferenceError: localStorage is not defined`.
 Move browser-only code into an effect function or `onSettled`, guard it with `isServer`, or load the component with `clientOnly`.
-The initial output must also match between server and client, or hydration cannot claim the server-rendered nodes.
+The initial output must also match between server and client, or hydration can't claim the server-rendered nodes.
 [Server and client boundaries](/concepts/rendering-and-ssr#server-and-client-boundaries) lists the tools, with the full version of this pair.
 
 The templates are written to pass this test in every mode, so a project that starts from `basic` and flips `ssr: true` later usually needs no changes.
@@ -175,7 +173,7 @@ Move the read into an effect function or an `onSettled` callback, guard it with 
 
 ### `Hydration tag mismatch` or `Hydration structure mismatch` in the console
 
-The server and the browser rendered different structures for the same region, so the client could not claim the node it expected and its bindings attached to the wrong nodes.
+The server and the browser rendered different structures for the same region, so the client couldn't claim the node it expected and its bindings attached to the wrong nodes.
 The usual causes are a conditional on `isServer` that picks a different element, which reports a tag mismatch, a `Show` whose condition depends on a random value, or data that differs between the request and the browser.
 Render the same structure on both sides and fill in browser-only values after hydration; [Hydrating server HTML](/concepts/rendering-and-ssr#hydrating-server-html) has the pair, and [SSR-safe code](/guides/ssr-safe-code) goes through the fixes line by line.
 

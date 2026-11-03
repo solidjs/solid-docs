@@ -4,12 +4,10 @@ version: "2.0"
 description: "Keep browser APIs, per-run values, and client-only data out of the server render, and read each hydration warning to find the line that made the server and the browser disagree."
 ---
 
-The storefront passed `vite build`, and the first request to the dev server with `ssr: true` printed `ReferenceError: window is not defined` from the cart drawer.
-Moving that line fixed the crash, and the browser console then filled with `Hydration structure mismatch` warnings from the sale banner, which the server rendered and the browser decided not to.
-
-Both problems have the same shape: one component source runs on the server and in the browser, and a line that gives a different answer in each place breaks one of them.
-[Rendering and SSR](/concepts/rendering-and-ssr) explains the model.
-This guide is the checklist for the code: where each line runs, which lines cannot run on the server, which values must not differ, and how to read the warnings when they do.
+With server rendering on, the same component code runs on the server and in the browser.
+Most SSR bugs come from a line that only works in one of them (`window is not defined`) or gives a different answer in each (`Hydration structure mismatch`).
+This guide covers where each line runs, what can't run on the server, what must not differ between the two, and how to read the warnings when something does.
+[Rendering and SSR](/concepts/rendering-and-ssr) explains the model behind it.
 
 ## Where each line runs
 
@@ -65,7 +63,7 @@ export function CartSummary() {
 ```
 
 Request the page and the server runs the module once, the component body once per request, the store's function and the memo, and the compute function of the effect.
-It does not run the effect function or the `onSettled` callback: on the server `createEffect` runs the compute function once and drops the effect function, and `onSettled` is a no-op that reserves a hydration id.
+It doesn't run the effect function or the `onSettled` callback: on the server `createEffect` runs the compute function once and drops the effect function, and `onSettled` is a no-op that reserves a hydration id.
 The browser runs all of it, and `document.title` changes after hydration.
 
 The rule for browser-only work follows from that list: put it in an effect function or `onSettled`.
@@ -123,7 +121,7 @@ Resizing the window updates it again through the listener, and the returned clea
 [Custom primitives](/guides/custom-primitives#clean-up-what-you-start) turns this into a reusable `createMediaQuery`.
 
 The `false` seed is right while the browser is claiming server HTML, and wrong when the drawer is created later by a client-side navigation: there is no server markup to agree with, and the class still flips one frame after it appears.
-[`isHydrating`](/reference/solid-js/advanced/manual-hydration/is-hydrating) tells the two apart, so the seed can ask the browser whenever the answer will not be checked against the server:
+[`isHydrating`](/reference/solid-js/advanced/manual-hydration/is-hydrating) tells the two apart, so the seed can ask the browser whenever the answer won't be checked against the server:
 
 ```tsx
 import { createSignal, isHydrating, onSettled } from "solid-js";
@@ -136,11 +134,11 @@ const [compact, setCompact] = createSignal(
 );
 ```
 
-`isHydrating()` is `true` during the root pass of `hydrate()` and while a streamed boundary resumes, and `false` on the server, in client-only renders, and after hydration; it is not reactive, so read it where the signal is created.
+`isHydrating()` is `true` during the root pass of `hydrate()` and while a streamed boundary resumes, and `false` on the server, in client-only renders, and after hydration; it isn't reactive, so read it where the signal is created.
 The `onSettled` callback stays: it is still what updates the value after a hydrated first paint.
 
 Some helpers are called from places that have no owner, such as a formatting function shared with server code.
-For those, [`isServer`](/reference/solid-web/rendering-ssr/is-server) from `@solidjs/web` is a build-time constant, `true` in the server build and `false` in the browser build, so the bundler drops the branch that cannot run:
+For those, [`isServer`](/reference/solid-web/rendering-ssr/is-server) from `@solidjs/web` is a build-time constant, `true` in the server build and `false` in the browser build, so the bundler drops the branch that can't run:
 
 ```ts
 import { isServer } from "@solidjs/web";
@@ -151,10 +149,10 @@ export function prefersReducedMotion() {
 }
 ```
 
-`isServer` stops the crash; it does not make the two renders agree.
+`isServer` stops the crash; it doesn't make the two renders agree.
 A helper like this returns `false` on the server and possibly `true` in the browser, so use its result in an effect function or `onSettled`, not in JSX that decides which elements exist.
 
-For a component that cannot be made safe, such as a map or a rich text editor whose library touches `window` at import, [`clientOnly`](/reference/solid-web/rendering-ssr/client-only) renders a fallback on the server and swaps the component in after hydration.
+For a component that can't be made safe, such as a map or a rich text editor whose library touches `window` at import, [`clientOnly`](/reference/solid-web/rendering-ssr/client-only) renders a fallback on the server and swaps the component in after hydration.
 [Keep it off the server](/guides/integrate-non-solid-code#keep-it-off-the-server) covers it, including the `{ lazy: true }` option.
 
 ## Values that differ on every run
@@ -177,14 +175,14 @@ import { Show } from "solid-js";
 ```
 
 Run the `Avoid` version and half of the page loads disagree.
-When the server rendered the banner and the browser did not, development warns after hydration with `Hydration completed with 1 unclaimed server-rendered node(s):` followed by the banner's HTML, and the server's banner stays in the document with nothing attached to it.
-When the browser rendered it and the server did not, development warns `Hydration key miss for "..."`: the browser created the `<aside>` as a detached element, and the banner is not on the page.
+When the server rendered the banner and the browser didn't, development warns after hydration with `Hydration completed with 1 unclaimed server-rendered node(s):` followed by the banner's HTML, and the server's banner stays in the document with nothing attached to it.
+When the browser rendered it and the server didn't, development warns `Hydration key miss for "..."`: the browser created the `<aside>` as a detached element, and the banner isn't on the page.
 
 In the `Prefer` version `getProduct` decides on the server, in the same request that renders the page, and the browser reads the same field from the same data.
 The rule covers `Date.now()`, `Math.random()`, `crypto.randomUUID()`, `navigator.language`, and any other value the two sides compute independently: when the value decides which elements exist, compute it once, on the server, and pass it as data.
 
-:::note[Text is not compared during hydration]
-Hydration claims each template root by its hydration key and the nodes inside it by position, checks element tags in development, and does not compare text.
+:::note[Text isn't compared during hydration]
+Hydration claims each template root by its hydration key and the nodes inside it by position, checks element tags in development, and doesn't compare text.
 `<p>Rendered at {Date.now()}</p>` fires no warning, and the server's text stays on the page.
 The warnings in this guide come from values that change the structure: a `Show`, a list length, or an element that exists on one side only.
 :::
@@ -262,7 +260,7 @@ A draft only the current browser cares about can wait for hydration; a cart that
 
 ## Markup the browser rewrites
 
-The browser's HTML parser does not build every tree it is handed.
+The browser's HTML parser doesn't build every tree it is handed.
 A `<div>` inside a `<p>` closes the paragraph first, a `<tr>` directly inside a `<table>` gets an implied `<tbody>`, and an `<a>` inside an `<a>` ends the outer link.
 The server writes the string as the JSX describes it, the browser builds a different tree from that string, and the client's compiled template expects the tree the JSX described.
 
@@ -286,9 +284,9 @@ A product description written as `<p>` around a `<div>`:
 Compile the `Avoid` version and the build fails at the template with `The HTML provided is malformed and will yield unexpected output when evaluated by a browser.`, followed by the HTML as written and the HTML a browser would build from it.
 The check runs on each template's markup with attributes and text stripped, so the two versions in the message are skeletons; compare the tag order to find the moved node.
 
-The compiler cannot see across components.
+The compiler can't see across components.
 A `Description` component that renders `<p>{props.children}</p>` and a parent that passes `<div>` children each compile to a valid template, and the browser still rebuilds the tree at runtime.
-When a hydration warning points at an element whose parent in the Elements panel is not the parent in the JSX, look for nesting that spans a component boundary and fix the outer element.
+When a hydration warning points at an element whose parent in the Elements panel isn't the parent in the JSX, look for nesting that spans a component boundary and fix the outer element.
 
 ## Reading the hydration warnings
 
@@ -297,7 +295,7 @@ Each one names a different check, and the check says where to look.
 
 ### `Hydration structure mismatch: expected <X> as first child of`
 
-The client is walking inside one template and the node at that position is not the element the template expects.
+The client is walking inside one template and the node at that position isn't the element the template expects.
 The variant `Hydration structure mismatch: expected <X> after` reports the same check for a later sibling.
 The line after the message sketches the parent's children with `← expected X` at the node it found, or `← missing` when the position is empty.
 Look for markup the browser rewrote, or for a template root that was claimed from the wrong place because an earlier element shifted the ids.
@@ -316,7 +314,7 @@ Look for a branch that runs only in the browser, such as `Show when={!isServer}`
 ### `Hydration completed with N unclaimed server-rendered node(s):`
 
 Hydration finished and the server-rendered elements listed under the message were never claimed by the client.
-The server rendered something the browser did not: the mirror image of a key miss.
+The server rendered something the browser didn't: the mirror image of a key miss.
 
 ### `Hydration Mismatch. Unable to find DOM nodes for hydration key`
 
@@ -341,8 +339,8 @@ If the stack points into `node_modules`, the library reads the browser at import
 ### `Hydration structure mismatch` after fixing the crash
 
 The two sides now both render, and they render different structures.
-Find the value that differs: a `Math.random()` or `Date.now()` in a condition, a check on `isServer` inside JSX, or data one side has and the other does not.
-[Values that differ on every run](#values-that-differ-on-every-run) and [Data the server does not have](#data-the-server-does-not-have) cover the fixes.
+Find the value that differs: a `Math.random()` or `Date.now()` in a condition, a check on `isServer` inside JSX, or data one side has and the other doesn't.
+[Values that differ on every run](#values-that-differ-on-every-run) and [Data the server doesn't have](#data-the-server-does-not-have) cover the fixes.
 
 ### The build fails with `The HTML provided is malformed`
 
@@ -352,7 +350,7 @@ Compare the two HTML skeletons in the message and change the outer element; [Mar
 ### The cart shows empty, then fills in
 
 The data lives in the browser, in `localStorage` or in memory, so the server renders the empty seed and the browser replaces it after hydration.
-Either accept the first frame or move the data behind a cookie or a session so the server function can return it; see [Data the server does not have](#data-the-server-does-not-have).
+Either accept the first frame or move the data behind a cookie or a session so the server function can return it; see [Data the server doesn't have](#data-the-server-does-not-have).
 
 ### A `<label>` points at a different id than its `<input>`
 
@@ -362,8 +360,8 @@ Use `createUniqueId`, which derives the id from the owner tree on both sides.
 ## Recap
 
 - The server runs module scope once per process, the component body once per request, and every compute function; it never runs an effect function or an `onSettled` callback.
-- Put browser-only work in an effect function or `onSettled`; use `isServer` for helpers that have no owner, and `clientOnly` for a component that cannot be made safe.
-- `isServer` prevents the crash and does not make the two renders agree; keep it out of JSX that decides which elements exist.
+- Put browser-only work in an effect function or `onSettled`; use `isServer` for helpers that have no owner, and `clientOnly` for a component that can't be made safe.
+- `isServer` prevents the crash and doesn't make the two renders agree; keep it out of JSX that decides which elements exist.
 - Compute `Math.random()`, `Date.now()`, and other per-run values once, on the server, and pass the result as data.
 - Use `createUniqueId` for ids that appear in both a `for` attribute and an `id` attribute.
 - Render the value the server has, then update from the browser after hydration; or move the data to a cookie or session so the server has it.

@@ -4,12 +4,8 @@ version: "2.0"
 description: "Replace the any annotations in a storefront with the types Solid exports for props, children, accessors, store drafts, event handlers, refs, server function results, and typed routes."
 ---
 
-The storefront compiles, and a search for `any` in `src` finds six of them: the props of `LineItem`, the `children` of `Panel`, the `query` passed into `SearchResults`, the draft inside a `setCart` callback, an `onInput` handler, and a `ref`.
-Each one was written to silence an error whose message was not clear at the time.
-
-This guide goes through those six places and shows which exported type belongs in each, and what the type checker reports when the wrong one is used.
-The [type reference pages](/reference/solid-js/types/component-types) list the exports; [Components and JSX](/concepts/components-and-jsx#children-and-composition) introduces `ParentProps`.
-This guide starts from there and shows the types in the cart and product pages those pages built.
+This guide shows which type to use for component props, children, signals and setters, stores, events and refs, custom elements, server functions and generic components, and what the checker says when you get it wrong.
+The [type reference pages](/reference/solid-js/types/component-types) list every exported type.
 
 ## Set up
 
@@ -313,7 +309,7 @@ Two details decide whether the declaration applies:
   TypeScript treats `date-picker.d.ts` beside `date-picker.ts` as that file's compiled output and leaves it out of the program, so the declaration never applies and nothing reports why.
 
 Augment `@solidjs/web`, not `solid-js`.
-`solid-js` has no `JSX` namespace, so a `declare module "solid-js"` block does not change what the checker accepts in JSX.
+`solid-js` has no `JSX` namespace, so a `declare module "solid-js"` block doesn't change what the checker accepts in JSX.
 [Web components](/guides/integrate-non-solid-code#web-components) covers how attributes, `prop:` properties, and events reach the element at runtime.
 
 ## Server functions and the router
@@ -408,7 +404,7 @@ Remove the child, or change the props to `ParentProps` if the component should r
 ### `Type 'SourceAccessor<number>' is not assignable to type 'Element'`
 
 A signal was placed in JSX without calling it: `{quantity}` instead of `{quantity()}`.
-A function is not a valid child, so the checker reports it; add the parentheses.
+A function isn't a valid child, so the checker reports it; add the parentheses.
 
 ### `'input' is possibly 'undefined'`
 

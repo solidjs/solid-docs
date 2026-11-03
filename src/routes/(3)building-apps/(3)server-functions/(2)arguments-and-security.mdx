@@ -4,10 +4,8 @@ version: "2.0"
 description: "Send arguments a server function can decode, and validate and authorize every call as if it came from a terminal, because it can."
 ---
 
-The account page lets a shopper change the name on their account.
-The component calls `updateAccountName(name)`, TypeScript checks that `name` is a string, and the function writes it to the database.
-
-Every server function is an HTTP endpoint, and the component is one caller among many:
+Every server function is an HTTP endpoint, and your component is only one of its callers.
+Say the account page calls `updateAccountName(name)` and TypeScript checks that `name` is a string. Anyone can still send this:
 
 ```bash
 curl -X POST 'https://shop.example/_server/<id>?args=%5B%7B%22admin%22%3Atrue%7D%5D' \
@@ -15,11 +13,11 @@ curl -X POST 'https://shop.example/_server/<id>?args=%5B%7B%22admin%22%3Atrue%7D
 ```
 
 That request runs the same function with `{ admin: true }` where a string was expected.
-TypeScript types do not exist at runtime, the browser's `required` attribute was never involved, and the same-origin check passed because the request said it came from the shop.
+TypeScript types don't exist at runtime, the browser's `required` attribute was never involved, and the same-origin check passed because the request said it came from the shop.
 The function body is the only place that sees every request, so it is where validation and authorization live.
 
 Most applications need the [validation](#validate-caller-controlled-values) and [request context](#read-trusted-request-context) sections.
-The encoding sections matter when an argument is not a string, number, plain object, or `FormData`.
+The encoding sections matter when an argument isn't a string, number, plain object, or `FormData`.
 
 ## Default argument encoding
 
@@ -56,7 +54,7 @@ Submit a form with `<input type="file" name="avatar">` and the function receives
 
 ## Enable rich arguments
 
-JSON cannot carry a `Date`, `Map`, `Set`, typed array, or an object that refers to itself.
+JSON can't carry a `Date`, `Map`, `Set`, typed array, or an object that refers to itself.
 Pass one of those in an argument list and the client throws before any request is made:
 
 ```ts
@@ -92,14 +90,14 @@ A file passed twice is sent once and arrives as one value, and a `Blob` arrives 
 The server's `bodySizeLimit` bounds the whole body, files included.
 
 :::deep-dive[Custom codec plugins]
-The codec accepts plugins for types it does not know, built with `createPlugin` from `@solidjs/web/serialization`.
-The client and server must be configured with matching plugins, or one side produces frames the other cannot read.
-An application that only sends the built-in rich types does not need a plugin.
+The codec accepts plugins for types it doesn't know, built with `createPlugin` from `@solidjs/web/serialization`.
+The client and server must be configured with matching plugins, or one side produces frames the other can't read.
+An application that only sends the built-in rich types doesn't need a plugin.
 :::
 
 ## Validate caller-controlled values
 
-Accept `unknown` where the boundary is not already a concrete web type such as `FormData`, and parse the value before using it:
+Accept `unknown` where the boundary isn't already a concrete web type such as `FormData`, and parse the value before using it:
 
 ::::tab-group[validation-library]
 
@@ -171,7 +169,7 @@ export async function updateAccountName(input: unknown) {
 
 ::::
 
-Send the `curl` request from the top of the page at this function and it answers 400 with the issues as a JSON body; the database is not touched.
+Send the `curl` request from the top of the page at this function and it answers 400 with the issues as a JSON body; the database isn't touched.
 The schema and the validation library are referenced only inside the `"use server"` body, so they are removed from the client build.
 
 Validation belongs in the body, not in a wrapper around the declaration:
@@ -257,7 +255,7 @@ export async function fetchInventory(sku: string) {
 ```
 
 [`getTraceContext()`](/reference/solid-web/request-response/get-trace-context) returns the same object for every read in the request, so call it where you build the outbound request.
-When no `traceparent` came in, the runtime starts a trace of its own, so the header is always well formed; a downstream service that is not tracing ignores it.
+When no `traceparent` came in, the runtime starts a trace of its own, so the header is always well formed; a downstream service that isn't tracing ignores it.
 On the client, and outside any request, the function returns `undefined` and the spread adds nothing.
 
 ## Same-origin protection
@@ -266,7 +264,7 @@ The server-function handler checks where a state-changing request came from befo
 It reads `Sec-Fetch-Site`, then `Origin`, then `Referer`, and accepts the request when those say same-origin; a request with cross-origin metadata is refused with status 403 unless the host has listed that origin, and so is a request with none of the three headers.
 
 That gate stops a page on another site from submitting to your server functions with the visitor's cookies, which is the cross-site request forgery (CSRF) case.
-It does not stop a script that sets its own `Origin` header, which is why the `curl` request at the top of the page went through, and why the gate is no substitute for validation and authorization.
+It doesn't stop a script that sets its own `Origin` header, which is why the `curl` request at the top of the page went through, and why the gate is no substitute for validation and authorization.
 
 A client that legitimately runs on another origin, such as a static build on its own domain or in a WebView, is admitted by listing its origin in `configureServerFunctionsServer({ csrf: { origin: [...] } })`; the server then answers it with the CORS headers the browser needs, and without cookies unless `allowCredentials` is also set.
 [Deployment](/building-apps/deployment#what-the-build-produces) shows the client side of that arrangement.
@@ -284,14 +282,14 @@ Turn the default off only where an equivalent check already runs in front of the
 
 ### The call throws `not JSON-serializable` before any request is made
 
-An argument contains a `Date`, `Map`, `Set`, typed array, or a cyclic object, and rich arguments are not enabled.
+An argument contains a `Date`, `Map`, `Set`, typed array, or a cyclic object, and rich arguments aren't enabled.
 Convert the value to a JSON-safe shape, or call `enableRichArguments()` once in the client entry.
 
 ### A `curl` or script request is answered 403
 
 The request carried no `Sec-Fetch-Site`, `Origin`, or `Referer` header, or carried one naming another origin.
 A legitimate script sends an `Origin` header matching the site.
-A server-to-server integration that cannot do that runs behind a host with its own check and `allowRequestsWithoutOriginCheck` set, per [Host configuration](/reference/solid-web/server-functions/host-configuration).
+A server-to-server integration that can't do that runs behind a host with its own check and `allowRequestsWithoutOriginCheck` set, per [Host configuration](/reference/solid-web/server-functions/host-configuration).
 A browser client served from another origin is a different case: list its origin in `csrf.origin`, as [Same-origin protection](#same-origin-protection) describes.
 
 ### Validation runs in development but a raw request skipped it
@@ -302,7 +300,7 @@ Move the check into the `"use server"` body, or put the wrapper inside a module-
 
 ### `getRequestEvent()` returns `undefined`
 
-The function ran with no request in scope: at module load, from a timer, or in a test that did not provide an event.
+The function ran with no request in scope: at module load, from a timer, or in a test that didn't provide an event.
 A server function called from a render, a middleware, or an HTTP request always has one; provide one in tests with [`provideRequestEvent`](/reference/solid-web/request-response/provide-request-event).
 
 ## Recap
@@ -311,7 +309,7 @@ A server function called from a render, a middleware, or an HTTP request always 
 - A `Date`, `Map`, `Set`, or typed array in the arguments throws until `enableRichArguments()` runs once in the client entry.
 - Type an argument as `unknown` and parse it with a schema inside the `"use server"` body; a wrapper around the declaration is skipped by HTTP dispatch.
 - Read identity and permissions from `getRequestEvent().locals`, never from an argument.
-- The same-origin check refuses cross-site browser requests; it does not refuse a script that sets its own `Origin` header.
+- The same-origin check refuses cross-site browser requests; it doesn't refuse a script that sets its own `Origin` header.
 - Declare `GET()` only for reads that are safe from any origin, because declared reads skip the origin check.
 
 ## Next steps

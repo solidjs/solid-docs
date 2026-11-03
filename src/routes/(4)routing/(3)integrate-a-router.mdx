@@ -5,7 +5,7 @@ description: "Wire a router that Solid does not ship into start mode: give it th
 ---
 
 This page is for someone bringing a router other than Solid Router or TanStack Router into start mode, or writing a Solid adapter for one.
-An application developer using either supported router does not need it; the [Routing overview](/routing/overview) and the router's own pages cover everything they touch.
+An application developer using either supported router doesn't need it; the [Routing overview](/routing/overview) and the router's own pages cover everything they touch.
 
 The situation it addresses: the router renders fine in the browser, and the first server-rendered request either matches the wrong URL, has no request-scoped instance to load its routes into, or leaves a mutation making two round trips where Solid Router makes one.
 Two parts of the platform are involved, the request pipeline and the server-function transport, and each exposes a small, router-neutral surface.
@@ -51,7 +51,7 @@ Return a component and the generated entry renders it in `App`'s place inside `D
 The browser-side `App` must produce the matching router tree so hydration lines up.
 The [TanStack Router](/routing/tanstack#what-the-server-does-per-request) page shows a complete `setup.tsx`, including how it copies a redirect or a `404` from the router onto the response.
 
-:::caution[Where the hook runs and where it does not]
+:::caution[Where the hook runs and where it doesn't]
 `start.serverRenderSetup` runs only when a generated server entry renders an SSR request.
 It is ignored when `ssr` is off, and configuring it together with an authored `entry-server` is a build error, because an authored entry already owns its render function and must perform the same preparation itself.
 :::
@@ -103,7 +103,7 @@ An application with its own server-function handler passes `collectFlightData` t
 
 The unnamed `collectFlightData` slot belongs to the integration that owns data production, a router.
 A second cache, such as a query library refreshing its own entries, registers additively with `registerFlightDataSource(id, hook)` on the server and `subscribeFlightData(id, consumer)` on the client.
-Each named source receives only its own slice of the payload, so the two do not compete for the slot or overwrite each other.
+Each named source receives only its own slice of the payload, so the two don't compete for the slot or overwrite each other.
 
 :::deep-dive[How the two supported routers use these hooks]
 Solid Router supplies `createFlightDataCollector` from `@solidjs/router/server`.
@@ -114,7 +114,7 @@ The consumer applies the response's redirect and revalidation metadata and seeds
 
 TanStack Router's integration registers a named source instead.
 Its `QueryClientProvider` subscribes as `"sq"` while mounted, the server hook builds a router for the target URL and runs its loaders into a fresh `QueryClient`, and the payload is a dehydrated TanStack Query cache that the client hydrates with TanStack's own `hydrate`.
-[Single-flight on a router Solid does not own](/routing/tanstack#single-flight-on-a-router-solid-does-not-own) walks through that code.
+[Single-flight on a router Solid doesn't own](/routing/tanstack#single-flight-on-a-router-solid-does-not-own) walks through that code.
 :::
 
 ## Common problems
@@ -132,12 +132,12 @@ Check the `ssr` flag in `vite.config.ts` before looking at the module.
 
 ### Mutation responses carry no flight data
 
-No consumer is subscribed on the client, so the transport does not send the single-flight header and the server skips collection; responses are byte-identical to a plain call.
-Subscribe the consumer before the mutation is called, and check that the mutation is not declared `GET`, since `GET` calls never carry the header.
+No consumer is subscribed on the client, so the transport doesn't send the single-flight header and the server skips collection; responses are byte-identical to a plain call.
+Subscribe the consumer before the mutation is called, and check that the mutation isn't declared `GET`, since `GET` calls never carry the header.
 
 ### The server hook runs but the payload is not applied
 
-The hook returned a payload under a source id the client did not subscribe to, or the client subscribed under a different id.
+The hook returned a payload under a source id the client didn't subscribe to, or the client subscribed under a different id.
 The unnamed server hook pairs with the one-argument `subscribeFlightData(consumer)`; a named `registerFlightDataSource(id, hook)` pairs with `subscribeFlightData(id, consumer)`, and the ids must match exactly.
 
 ## Recap

@@ -5,12 +5,10 @@ description: "Components as functions that run once: props, children, control fl
 ---
 
 A Solid component is a function that runs once.
-It sets up state, returns JSX, and is not called again for the life of the component.
-If you come from a framework where components re-render, this is the fact to hold on to while reading this page: every rule about props, children, and control flow below exists because the function body will not run a second time.
-
-The [Reactivity](/concepts/reactivity) page explains how the JSX inside a component keeps updating after the function has returned.
-This page covers the rest of what a component does: receiving props, handling events, reaching the DOM, rendering lists and conditions, and composing with other components.
-The examples continue the shopping cart from that page.
+It sets up state, returns JSX, and isn't called again for the life of the component.
+Every rule below about props, children and control flow follows from that: the function body won't run a second time.
+[Reactivity](/concepts/reactivity) explains how the JSX keeps updating after the function has returned.
+This page covers props, events, refs, lists and conditions, and composition, continuing the shopping cart from that page.
 
 ## How JSX executes
 
@@ -23,7 +21,7 @@ In a browser build, those operations create or claim DOM nodes and connect react
 In a server build, the same JSX source compiles to server-rendering operations.
 There is no virtual DOM value that Solid repeatedly rebuilds and compares.
 
-The compiled code calls a component function once, through `createComponent`, and it runs the function untracked so reactive reads in the body do not subscribe the parent.
+The compiled code calls a component function once, through `createComponent`, and it runs the function untracked so reactive reads in the body don't subscribe the parent.
 Each JSX expression the component returns is its own tracking scope with its own dependencies.
 
 ```tsx
@@ -41,7 +39,7 @@ function LineItem() {
 ```
 
 `LineItem` runs once and returns a button.
-The expression `{quantity()}` is tracked, so the text updates on every click; the function around it does not run again.
+The expression `{quantity()}` is tracked, so the text updates on every click; the function around it doesn't run again.
 
 ## Props
 
@@ -74,7 +72,7 @@ function Cart() {
 ```
 
 `quantity={quantity()}` looks like it reads the signal once, when `Cart` runs.
-It does not.
+It doesn't.
 The compiler turns a dynamic attribute into a getter on the props object, so the read of `quantity()` happens when `LineItem` reads `props.quantity`, inside its JSX, in a tracking scope.
 That is why `props.quantity` in the child updates when the parent's signal changes, even though neither function runs again.
 
@@ -185,7 +183,7 @@ A directive is a function you pass to `ref`; there is no separate directive synt
 A directive factory creates owned reactive primitives during component setup and returns the callback that applies the directive to an element.
 
 Ref callbacks run untracked and without an owner.
-Do not create effects or register cleanup inside the returned callback.
+Don't create effects or register cleanup inside the returned callback.
 Create them in the factory, where they belong to the component owner.
 
 ```tsx
@@ -603,7 +601,7 @@ See [Refs and directives](#refs-and-directives).
 
 ## Next steps
 
-- [Stores](/concepts/stores) hold the cart itself: an array of items where each property is tracked on its own, so editing one quantity does not rebuild the row.
+- [Stores](/concepts/stores) hold the cart itself: an array of items where each property is tracked on its own, so editing one quantity doesn't rebuild the row.
 - [Async reactivity](/concepts/async-reactivity) covers components that read data from a promise, why the current view stays on screen while the next one loads, and when `Loading` shows a fallback instead.
 - [Boundaries](/concepts/boundaries) explains `Loading`, `Errored`, and where to place them in the tree.
 - [Avoid unnecessary effects](/guides/avoid-unnecessary-effects) is the guide to read before adding an effect to a component.

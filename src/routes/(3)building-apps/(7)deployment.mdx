@@ -4,17 +4,15 @@ version: "2.0"
 description: "Put a start-mode build on a host: serve dist/client as static files, route everything else to the built request handler, supply the server environment at boot, and pick a Node server or a provider adapter."
 ---
 
-The first deploy of a `fullstack` project usually fails in one of two ways.
-The HTML arrives but every `/assets/*.js` and `.css` request returns 404, so the page is unstyled and never hydrates.
-Or the home page works and refreshing `/account/orders` returns the host's 404 page.
-Both mean the host is serving one half of the build: `dist/client` is a directory of static files, `dist/server/server.js` is a request handler, and the host has to put the first in front of the second.
+A server-rendered build has two halves: `dist/client` is a directory of static files, and `dist/server/server.js` is a request handler.
+The host has to serve the first in front of the second, and most first-deploy failures (unstyled pages, 404s on refresh) come from serving only one of them.
 
 A `bare` or `basic` project builds to `dist/client` alone, and any static host serves it.
 This page is about a project with `ssr: true` or server functions, which builds to static assets plus a server handler.
 [Project shapes](/getting-started/project-shapes) says which shape produces which output; [App structure](/building-apps/app-structure) explains the entries the handler runs.
 
 Most apps need the request handler section and one of the host sections after it: Node with the emitted `dist/server/node.js`, or one provider plugin.
-The rest is for checking a detail or wiring a host that is not listed.
+The rest is for checking a detail or wiring a host that isn't listed.
 
 ## What the build produces
 
@@ -30,7 +28,7 @@ With `start` and `ssr: true`, one build produces:
 - `dist/server/server.js`, containing the server entry and its exported request handler.
 
 When server functions are enabled, the server bundle also dispatches their endpoint, `/_server` by default.
-Pages and server functions are one deployment: a render calls a server function directly, in the same process, with the request event and its `locals` in hand, so the server bundle cannot be split with pages on one host and functions on another.
+Pages and server functions are one deployment: a render calls a server function directly, in the same process, with the request event and its `locals` in hand, so the server bundle can't be split with pages on one host and functions on another.
 
 Without `ssr: true`, start mode writes the empty document shell to `dist/client/index.html` and removes `dist/server` when the application has no server functions.
 If server functions are enabled, deploy `dist/client` for pages and keep `dist/server` running for the function endpoint.
@@ -63,7 +61,7 @@ export default {
 ```
 
 The wrapper accepts only the request on purpose.
-Some hosts call `fetch` with additional environment or execution-context arguments, which are not Solid handler options.
+Some hosts call `fetch` with additional environment or execution-context arguments, which aren't Solid handler options.
 
 The handler creates the request event, runs the configured middleware, dispatches the server-function endpoint when enabled, renders pages, and commits response metadata.
 It also resolves the built client entry and stylesheet URLs through the client build manifest.
@@ -88,7 +86,7 @@ const server = createServer(async (req, res) => {
 With the `Avoid` version, a request for `/assets/app-BpJ2g.js` renders the HTML page, because in production every request that reaches the end of the middleware chain renders; the browser receives a document where it expected a script.
 With `start.node`, the emitted Node entry is the `Prefer` version; the rest of this section is for a bridge you write.
 
-When adapting a host request, preserve the URL, method, headers, and the body of any request that is not `GET` or `HEAD`.
+When adapting a host request, preserve the URL, method, headers, and the body of any request that isn't `GET` or `HEAD`.
 When adapting the result, preserve the status, the headers, each `Set-Cookie` value separately, and the streamed body.
 
 :::caution[Set-Cookie must not be comma-joined]
@@ -115,7 +113,7 @@ export default defineConfig({
 });
 ```
 
-`server.js` does not change: `handleRequest` and the default `{ fetch }` export are the same as without the option, so a provider integration or a Fetch runtime keeps working from that file.
+`server.js` doesn't change: `handleRequest` and the default `{ fetch }` export are the same as without the option, so a provider integration or a Fetch runtime keeps working from that file.
 
 Build, then run the emitted file:
 
@@ -142,7 +140,7 @@ The emitted entry is the `Prefer` version from [the request handler section](#th
 
 - It serves `dist/client` first.
   Hashed files under `assets/` get `Cache-Control: public, max-age=31536000, immutable`; other files get `public, max-age=0, must-revalidate` and a `Last-Modified` header.
-  A path containing `..` cannot leave the directory, and a path with a dot segment such as `.vite/manifest.json` is never served.
+  A path containing `..` can't leave the directory, and a path with a dot segment such as `.vite/manifest.json` is never served.
 - It passes every request that matched no file to `handleRequest(request, { event: { nativeEvent: req } })` through the same Node-to-web bridge that `vite dev` and `vite preview` use.
   The bridge streams the request body for methods other than `GET` and `HEAD`, forwards each `Set-Cookie` header separately, answers `HEAD` without a body, aborts the render when the client disconnects, and waits for the socket to drain before writing more.
 - In client start mode with server functions, it serves `dist/client/index.html` for HTML-accepting `GET` requests that match no file, and routes the server-function endpoint to the handler.
@@ -159,7 +157,7 @@ Behind a proxy, read the forwarding headers off `getRequestEvent().request` inst
 
 Keep a hand-written entry when the app needs compression, a custom `http` server, or a place inside an existing Express or Fastify app.
 `dist/server/node.js` exports three things for that: `listener`, the `(req, res)` function the emitted server runs; `createListener(options)`, which builds a listener with options; and `serve(options)`, which creates and starts an `http.Server` on `PORT` and `HOST` and returns it.
-Importing the file does not start a server; only running it directly does.
+Importing the file doesn't start a server; only running it directly does.
 
 ```js
 // server.js
@@ -199,7 +197,7 @@ app.listen(process.env.PORT || 3000);
 `static: false` skips the file lookup and, in client start mode, the `index.html` history fallback; Express owns both.
 `createListener({ event: (req) => ({ ...fields }) })` merges extra fields next to `nativeEvent` in the request event, and `serve()` accepts `static` and `event` alongside `port` and `host`.
 
-A bridge written against `handleRequest` from `dist/server/server.js` is the last resort, for a server that cannot mount a Node request listener.
+A bridge written against `handleRequest` from `dist/server/server.js` is the last resort, for a server that can't mount a Node request listener.
 It must meet the requirements in [the request handler section](#the-request-handler): stream the request body for methods other than `GET` and `HEAD`, forward multiple `Set-Cookie` headers as separate values, and pass the Node request as `event.nativeEvent`.
 
 ## Preview the production artifact
@@ -212,7 +210,7 @@ pnpm exec vite preview
 ```
 
 The official fullstack templates name the Vite preview script `serve` and reserve `start` for the emitted Node server.
-Preview verifies the built handler and static assets together; it does not replace a test on the target host.
+Preview verifies the built handler and static assets together; it doesn't replace a test on the target host.
 
 ## Provider integrations
 
@@ -357,7 +355,7 @@ The runtime still needs the server bundle's production dependencies and environm
 ## Deploy while tabs are open
 
 A tab loaded before a deploy keeps calling the server functions it was built with.
-Server function ids come from the function's name and file, so adding, editing, or reordering functions does not move an id an open tab holds.
+Server function ids come from the function's name and file, so adding, editing, or reordering functions doesn't move an id an open tab holds.
 Renaming or removing a function does: the new server answers that call with a 404, and the client rejects it with an error whose `unknownFunction` property is `true`.
 Treat that as "this page is from an old build" and reload onto the current one:
 
@@ -395,20 +393,20 @@ A call from another build is answered `409` without running the function, and re
 
 ### A `public/` file 404s in production
 
-The host is not serving `dist/client` for that path.
+The host isn't serving `dist/client` for that path.
 The build copies `public/` into `dist/client`, so whatever serves the hashed assets serves this file too; check that the static directory is `dist/client`, not `dist` or `public`.
 
 ### Every `/assets/*` request 404s or returns HTML
 
-The host is not serving `dist/client` in front of the handler.
+The host isn't serving `dist/client` in front of the handler.
 A 404 means nothing serves the directory; HTML means every request reaches `handleRequest`, which renders a page at any URL that gets that far.
 Serve `dist/client` first and pass only unmatched requests to the handler.
 
 ### Refreshing a client route returns the host's 404 page
 
-Under `ssr: true`, requests for pages are not reaching `handleRequest`; the host is serving only the static directory.
-Route every request that is not a file to the handler.
-For a static-shell project, there is no handler: configure the host to serve `dist/client/index.html` for paths that are not files, as any single-page app needs.
+Under `ssr: true`, requests for pages aren't reaching `handleRequest`; the host is serving only the static directory.
+Route every request that isn't a file to the handler.
+For a static-shell project, there is no handler: configure the host to serve `dist/client/index.html` for paths that aren't files, as any single-page app needs.
 
 ### `Cannot find module 'dist/server/node.js'`
 
@@ -418,7 +416,7 @@ If `dist/server` is missing altogether, see the next problem.
 
 ### `Cannot find module './dist/server/server.js'`
 
-The build did not produce a server directory.
+The build didn't produce a server directory.
 Without `ssr: true` and without server functions, start mode removes `dist/server` after writing the shell; there is nothing to run, so deploy `dist/client` as static files.
 With `start.externalServer`, the provider owns the server build and its output lands where that provider puts it.
 
@@ -441,7 +439,7 @@ Forward them as separate headers, the way the emitted Node entry does with `getS
 - Set `start.node` and run `node dist/server/node.js` on any Node host; `PORT` and `HOST` are its only configuration.
 - Set `server` environment variables on the host, because they are read at boot; `VITE_` values are fixed at build time.
 - A provider plugin adopts the `ssr` environment; reach for `start.externalServer` only when the host names or configures its server environment differently.
-- `vite preview` runs the built handler and assets together, and does not replace a test on the target host.
+- `vite preview` runs the built handler and assets together, and doesn't replace a test on the target host.
 
 ## Next steps
 

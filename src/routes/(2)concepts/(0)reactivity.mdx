@@ -8,8 +8,8 @@ In the [Quick start](/getting-started/quick-start) you saw two versions of the s
 One read `count()` inside the JSX and updated on every click.
 The other read `count()` in the component body, and the button froze at zero while the console warned that the read "will not update".
 
-Everything on this page follows from the difference between those two lines.
-Solid does not re-run components.
+This page explains why.
+Solid doesn't re-run components.
 It runs each component once, records which reactive values each expression reads, and re-runs only those expressions when the values they read change.
 The place where you read a value decides whether Solid can see the read.
 
@@ -44,7 +44,7 @@ export function LineItem() {
 
 Click `+` and two things change on the page: the quantity and the subtotal.
 Nothing else is touched.
-`LineItem` does not run again; the two JSX expressions that read `quantity()` do.
+`LineItem` doesn't run again; the two JSX expressions that read `quantity()` do.
 
 The parts of the code where Solid records reads are called tracking scopes.
 JSX expressions are tracking scopes.
@@ -52,7 +52,7 @@ So are the compute functions of memos and effects, which come later on this page
 A read inside a tracking scope subscribes that scope to the signal.
 A read anywhere else returns the current value and subscribes nothing.
 
-The component body is not a tracking scope.
+The component body isn't a tracking scope.
 That is deliberate: the body runs once to set up the component, and Solid must not re-run it, because that would recreate every signal and child inside it.
 So this version reads the quantity once and never again:
 
@@ -89,7 +89,7 @@ const initialQuantity = untrack(quantity);
 ```
 
 The setter accepts a value or an updater function.
-The updater receives the latest value, including one that was set earlier in the same event and has not landed yet:
+The updater receives the latest value, including one that was set earlier in the same event and hasn't landed yet:
 
 ```tsx
 setQuantity((current) => current + 1);
@@ -149,7 +149,7 @@ const total = createMemo(() => subtotal() * (1 - discount()));
 `createMemo` runs its function in a tracking scope, caches the result, and hands the cached value to readers.
 When `quantity` changes, `subtotal` recomputes.
 `total` recomputes because it read `subtotal()`.
-When the user types `SAVE1` on the way to `SAVE10`, `discount` recomputes and produces `0` again; because the result is equal to the last one, `total` is not notified.
+When the user types `SAVE1` on the way to `SAVE10`, `discount` recomputes and produces `0` again; because the result is equal to the last one, `total` isn't notified.
 That equality check is what makes a memo a useful boundary in a chain of derivations.
 
 A memo's function must not write to signals or stores.
@@ -162,7 +162,7 @@ The [Async reactivity](/concepts/async-reactivity) page covers that in depth.
 
 ## When updates land
 
-Setting a signal does not update readers immediately.
+Setting a signal doesn't update readers immediately.
 The write is staged, and Solid applies all staged writes together in a microtask, after the current code finishes.
 Within one event handler you can set several signals and every reader sees the final state once, not each intermediate state.
 
@@ -194,7 +194,7 @@ The test in the `basic` template calls `flush()` after `fireEvent.click` for thi
 ## Effects
 
 Signals, functions, and memos move data toward the JSX.
-An effect moves data out of Solid, into something Solid does not own: the browser's storage, the document title, a chart library, a WebSocket.
+An effect moves data out of Solid, into something Solid doesn't own: the browser's storage, the document title, a chart library, a WebSocket.
 
 [`createEffect`](/reference/solid-js/reactivity/create-effect) takes two functions.
 The first is the compute function; it runs in a tracking scope and returns a value.
@@ -216,7 +216,7 @@ createEffect(
 ```
 
 Put every read that should re-run the effect in the compute function.
-A signal read in the effect function is not tracked, so changing it does not re-run the effect.
+A signal read in the effect function isn't tracked, so changing it doesn't re-run the effect.
 Splitting the two phases keeps the dependency list visible: the compute function is the list.
 
 The effect function can return a cleanup.
@@ -334,7 +334,7 @@ const dispose = createRoot((dispose) => {
 dispose();
 ```
 
-Application code should not need it; if you are reaching for `createRoot` to share state, use context instead.
+Application code shouldn't need it; if you are reaching for `createRoot` to share state, use context instead.
 
 ## Try it: a shipping estimate
 
@@ -403,7 +403,7 @@ The signal was turned into a string before Solid saw it:
 `quantity` is a function.
 Call it: `quantity()`.
 Always call the accessor in JSX: `{quantity()}`, not `{quantity}`.
-A function is not a valid child of a DOM element, and TypeScript reports the uncalled form as a type error.
+A function isn't a valid child of a DOM element, and TypeScript reports the uncalled form as a type error.
 
 ### A value renders once and never updates
 

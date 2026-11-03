@@ -4,11 +4,9 @@ version: "2.0"
 description: "Build a signed cookie session on the request event, sign customers in and out from server functions, and authorize every server entry point against that session."
 ---
 
-The store's account area has an orders page.
-A request for it arrives with a `Cookie` header, and before the page renders or a server function returns a single order, the server has to answer two questions: who is this, and may they see this record.
-
+Before an account page renders or a server function returns an order, the server has to answer two questions: who is this, and may they see this record?
 Solid supplies the HTTP exchange those answers are built on: the incoming request, a `locals` bag, and the outgoing response headers, all on the request event.
-It does not supply a session store or an authentication framework.
+It doesn't supply a session store or an authentication framework.
 The `fullstack` template composes a signed cookie from `@remix-run/cookie` with that event, and this page builds the account area on the same shape.
 
 Most apps need the two middle sections: the signed cookie session and the authorization check in every server function.
@@ -26,16 +24,16 @@ The event exposes:
 - `response`, whose headers collect outgoing `Set-Cookie` values before the response head commits.
 
 `@solidjs/web` also exports `parseCookieHeader()` and `serializeCookie()` for unsigned cookie encoding.
-Those functions do not sign, encrypt, rotate, persist, or revoke anything.
+Those functions don't sign, encrypt, rotate, persist, or revoke anything.
 
 ## What a session library supplies
 
 A cookie or session library defines the application-level protocol: signing or encryption, secret rotation, expiration and renewal, storage-backed session identifiers, and cookie serialization options.
 
 The `fullstack` template uses `@remix-run/cookie`.
-Its session cookie is signed and tamper-evident, and it is not encrypted, so the payload is readable by the browser.
+Its session cookie is signed and tamper-evident, and it isn't encrypted, so the payload is readable by the browser.
 
-:::danger[A signed cookie is not a secret]
+:::danger[A signed cookie isn't a secret]
 Anything placed in the session payload can be read by the person holding the cookie.
 Store an identifier such as `userId` and look the rest up on the server; never store a password hash, an API key, or another customer's data.
 :::
@@ -110,10 +108,10 @@ The cookie attributes are set explicitly, because the library's defaults may not
 The signing secret comes from `virtual:env/server`, which [Environment](/building-apps/environment) keeps out of the browser bundle; the first secret in the list signs new cookies and every listed secret verifies existing ones, so rotation is prepending a new secret and dropping the old one after `maxAge` has passed.
 The payload carries its own `exp`, because the browser's `Max-Age` is a request to the browser and a client is free to replay an old cookie past it.
 
-:::caution[A write does not change what this request read]
+:::caution[A write doesn't change what this request read]
 `getSession()` reads the `Cookie` header that arrived with the request.
 `setSession()` appends to the outgoing response.
-Calling `setSession()` and then `getSession()` in the same request returns the old session, because the new cookie is on its way to the browser and has not come back yet.
+Calling `setSession()` and then `getSession()` in the same request returns the old session, because the new cookie is on its way to the browser and hasn't come back yet.
 :::
 
 ## Sign in and sign out
@@ -228,7 +226,7 @@ export async function renameAccount(form: FormData) {
 
 ::::
 
-Hiding the rename form from signed-out visitors does not protect `renameAccount`; the check inside the function is the gate.
+Hiding the rename form from signed-out visitors doesn't protect `renameAccount`; the check inside the function is the gate.
 Repeat it at every protected server entry point: server functions, API route handlers, and the page render.
 
 ### Authenticate once in middleware
@@ -286,7 +284,7 @@ Redirect after the write, as `signIn` does, and the next request carries the new
 ### The cookie is set but never comes back
 
 Compare the `Set-Cookie` attributes in the response with the request that follows.
-A `secure` cookie is not sent over plain `http://`, a `path` that does not cover the endpoint is not sent to it, and a `domain` that does not match the host is dropped.
+A `secure` cookie isn't sent over plain `http://`, a `path` that doesn't cover the endpoint isn't sent to it, and a `domain` that doesn't match the host is dropped.
 Set the attributes explicitly rather than relying on library defaults.
 
 ### `/sign-in` and `/account` redirect to each other forever
@@ -302,7 +300,7 @@ Move the write into a server function or middleware, or run it before the first 
 ### `Missing request event`
 
 `getRequestEvent()` returned `undefined`.
-It is defined only on the server, inside a request: not in the browser, not at module scope, and not in a test that did not provide an event.
+It is defined only on the server, inside a request: not in the browser, not at module scope, and not in a test that didn't provide an event.
 Call the session helpers from a server function, middleware, or the page render.
 
 ## Recap
@@ -310,7 +308,7 @@ Call the session helpers from a server function, middleware, or the page render.
 - Read the request and write `Set-Cookie` through `getRequestEvent()`; the session protocol comes from a cookie library.
 - Sign the cookie with a secret from `virtual:env/server`, set `httpOnly`, `secure`, and `sameSite` explicitly, and carry an expiry in the payload.
 - A signed cookie is readable by the browser; store an id, not data.
-- `getSession()` reads the request and `setSession()` writes the response; the two do not meet in one request.
+- `getSession()` reads the request and `setSession()` writes the response; the two don't meet in one request.
 - Take the customer's identity from the session, never from an argument, and check it in every server function and API handler.
 - Read the session once in middleware and put the result on `event.locals` when many entry points need it.
 - Write cookies before the shell flushes or the function returns; a later write is dropped and reported.

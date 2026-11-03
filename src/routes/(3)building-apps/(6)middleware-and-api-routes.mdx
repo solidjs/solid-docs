@@ -4,7 +4,7 @@ version: "2.0"
 description: "Run code in front of every request with fetch-style middleware, share state with pages and server functions through the request event, and answer HTTP requests from route modules."
 ---
 
-Some work belongs in front of the app rather than inside it: reading the session cookie once instead of in every server function, turning an uncaught error into a 500 instead of a blank page, answering `GET /api/products` for a partner's script that is not a browser.
+Some work belongs in front of the app rather than inside it: reading the session cookie once instead of in every server function, turning an uncaught error into a 500 instead of a blank page, answering `GET /api/products` for a partner's script that isn't a browser.
 Start mode runs a chain of fetch-style middleware before its request handler, and the `fullstack` project shape puts an API-route dispatcher in that chain.
 
 Most apps need one or two middleware of the first shape below and, if anything outside the app needs the data, an API route.
@@ -135,10 +135,10 @@ The request travels down the array and the response travels back up it.
 Put the session reader before anything that needs `locals.userId`, and put the API handler after it if API routes need the customer.
 
 Pass a `Request` to `next(request)` to replace the request for the rest of the chain, for example after rewriting a URL.
-Do not call `next()` twice from one invocation.
+Don't call `next()` twice from one invocation.
 
 :::note[In development, unhandled non-page requests fall through to Vite]
-In `vite dev`, a request that is not an HTML-accepting `GET` and that no middleware answered goes to Vite's own pipeline rather than rendering the page at that URL.
+In `vite dev`, a request that isn't an HTML-accepting `GET` and that no middleware answered goes to Vite's own pipeline rather than rendering the page at that URL.
 Production has no Vite pipeline, so every request that reaches the end of the chain renders.
 :::
 
@@ -199,8 +199,8 @@ fileRoutes({ httpMethods: true });
 The rule for what counts as a route module is the same for pages and API routes.
 A `.js`, `.jsx`, `.ts`, or `.tsx` file under `src/routes` is a route when it has a default export (a page) or, with `httpMethods` on, an uppercase method export (an API route); a module with both serves HTML to browsers and JSON to `fetch`.
 A `.md` or `.mdx` file is always a page.
-A file with neither a default export nor a method export is not a route and does not appear in the manifest, so a helper module under `src/routes` is ignored rather than served.
-Keep helpers and server functions in `src/server` or `src/data` anyway, so a default export added later does not turn one into a page by accident.
+A file with neither a default export nor a method export isn't a route and doesn't appear in the manifest, so a helper module under `src/routes` is ignored rather than served.
+Keep helpers and server functions in `src/server` or `src/data` anyway, so a default export added later doesn't turn one into a page by accident.
 
 The handler receives the request event with the matched `params`, so it can read `locals.userId` set by middleware and append cookies to `event.response.headers`.
 Authorization belongs in the handler:
@@ -222,7 +222,7 @@ export const DELETE: APIHandler = async ({ params }) => {
 };
 ```
 
-The `Avoid` version deletes a product for any HTTP client that sends `DELETE /api/products/mug`; a route file is not protected by its location.
+The `Avoid` version deletes a product for any HTTP client that sends `DELETE /api/products/mug`; a route file isn't protected by its location.
 A middleware that is guaranteed to run before the handler is the other place for the check.
 
 ### Return values
@@ -250,7 +250,7 @@ Under the hood, the dispatcher matches the URL against the flat manifest with a 
 
 ### `locals.userId` is `undefined` in a server function
 
-The middleware that sets it runs after the API handler in the array, or is not in the array at all.
+The middleware that sets it runs after the API handler in the array, or isn't in the array at all.
 Middleware order is array order.
 
 ### An API route returns HTML
@@ -281,11 +281,11 @@ Keep one.
 - Catch errors in one middleware that logs the real error and returns a generic body.
 - A file under `src/routes` is a route when it has a default export or, with `httpMethods`, an uppercase method export; anything else there is ignored.
 - Check the caller inside every API handler or in a middleware before it; a folder name protects nothing.
-- Use server functions for the app's own components and API routes for callers that are not the app.
+- Use server functions for the app's own components and API routes for callers that aren't the app.
 
 ## Next steps
 
 - [Sessions and auth](/building-apps/sessions-and-auth): the most common middleware, reading a session cookie into `event.locals`.
 - [Server functions](/building-apps/server-functions): they run under the same request event, so state set here is visible to them.
-- [Protected routes](/guides/protected-routes#middleware-for-whole-sections): a sign-in redirect for a whole section from middleware, and what the middleware does not see.
+- [Protected routes](/guides/protected-routes#middleware-for-whole-sections): a sign-in redirect for a whole section from middleware, and what the middleware doesn't see.
 - [Deployment](/building-apps/deployment): where the request handler this chain fronts runs, and how a host serves `dist/client`.

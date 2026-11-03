@@ -4,10 +4,6 @@ version: "2.0"
 description: "Write the route objects Solid Router matches against: path patterns with required, optional, and wildcard segments, typed parameters, match filters, metadata, lazy subtrees, and the file-system manifest."
 ---
 
-The URL `/products/mug` has a product id in it.
-The product page needs that id as `props.params.id`, the link that points at it needs `paths.products("mug")` to be checked by the type checker, and neither should accept `/products/` with nothing after it.
-All of that comes from one object in the route tree.
-
 A route definition is a plain object: a path pattern, the component to render, and optionally a `preload`, `children`, match filters, and metadata.
 Most apps need only [Match path patterns](#match-path-patterns) and [Type a route at its definition](#type-a-route-at-its-definition); the sections after those cover filters, metadata, lazy subtrees, and the file-system manifest for when a project grows into them.
 
@@ -22,7 +18,7 @@ export const routes = defineRoutes([
 ```
 
 The route array is also where the types come from.
-`paths.products` exists and `paths.prodcuts` does not because TypeScript kept the literal `"/products/:id"`.
+`paths.products` exists and `paths.prodcuts` doesn't because TypeScript kept the literal `"/products/:id"`.
 An inline array passed to `createRouter` keeps its literals on its own; an array assigned to a variable first widens to `string`:
 
 ```tsx
@@ -97,12 +93,12 @@ const routes = defineRoutes([
 ]);
 ```
 
-`/products/mug` matches the first route with `params.id === "mug"`; `/products` does not match it.
+`/products/mug` matches the first route with `params.id === "mug"`; `/products` doesn't match it.
 `/docs` and `/docs/install` both match the second.
 `/files/2024/invoices/march.pdf` matches the third with `params.path === "2024/invoices/march.pdf"`.
 
 :::caution[A wildcard ends the pattern]
-`*name` must be the final segment; everything after the `*` is read as the parameter name, so a pattern such as `/files/*path/preview` does not match what it looks like it matches.
+`*name` must be the final segment; everything after the `*` is read as the parameter name, so a pattern such as `/files/*path/preview` doesn't match what it looks like it matches.
 Put the fixed segments before the wildcard, or use a child route for the variant.
 :::
 
@@ -116,7 +112,7 @@ The same route definition stays mounted when navigation moves between its matchi
 
 ## Filter parameters
 
-`matchFilters` rejects parameter values that do not satisfy the configured filter.
+`matchFilters` rejects parameter values that don't satisfy the configured filter.
 Use an array, regular expression, or predicate as the filter:
 
 ```tsx
@@ -134,7 +130,7 @@ const orderRoute = defineRoute({
 Filters test the decoded parameter value, so `{ tag: ["café"] }` matches `/tags/caf%C3%A9`.
 
 The built-in `int` filter accepts integer strings at runtime.
-It also changes the corresponding `Router.paths` argument to `number`, so `paths.account.orders(42)` type-checks and `paths.account.orders("latest")` does not.
+It also changes the corresponding `Router.paths` argument to `number`, so `paths.account.orders(42)` type-checks and `paths.account.orders("latest")` doesn't.
 
 :::note[Filters change the type of the link, not the param]
 Route components still receive URL parameters as strings.
@@ -194,12 +190,12 @@ export default defineRoutes([
 ]);
 ```
 
-Visit `/` and the admin route table is not downloaded.
+Visit `/` and the admin route table isn't downloaded.
 Visit `/admin/products/mug`, or preload a link to it with a [link preload strategy](/routing/solid-router/data#preloading-from-links), and the thunk runs, the router adds the resolved subtree to the compiled route tree, and the match completes.
 TypeScript infers `paths.admin.products("mug")` through the import's promise type when the imported route array retains literal types.
 
 Use a deterministic thunk such as `() => import("./admin/routes")`.
-The resolved subtree is cached and shared, so it does not switch based on later runtime state.
+The resolved subtree is cached and shared, so it doesn't switch based on later runtime state.
 
 ## Convert a file-system manifest
 
@@ -257,7 +253,7 @@ The manifest path remains the runtime source of truth; if the file moves, update
 When the manifest has generated literal types, route paths, filters, and search schemas continue into `Router.paths`, so `paths.products("mug")` is typed the same way it would be from a hand-written array.
 Code-split manifest components become Solid `lazy` components.
 An eagerly delivered component from a manifest built with `codeSplitting: false` is passed through without a `lazy` wrapper.
-The `route` export is read from the module the manifest points at; a hand-written route tree does not read it, which is why the preload sits on the route object in `src/router.ts` on the [introduction](/routing/solid-router#load-data-for-a-page) page.
+The `route` export is read from the module the manifest points at; a hand-written route tree doesn't read it, which is why the preload sits on the route object in `src/router.ts` on the [introduction](/routing/solid-router#load-data-for-a-page) page.
 :::
 
 ## Recap

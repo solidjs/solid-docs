@@ -4,11 +4,7 @@ version: "2.0"
 description: 'Move a database query or a secret out of the browser by marking a function with "use server", and recognize what that call becomes on the wire.'
 ---
 
-The product page needs the product record.
-The record lives in a database, the database client needs a connection string, and neither the client nor the string can ship to the browser.
-The usual answer is a separate HTTP API: a route module, a fetch call, a type for the response, and two places to keep in step.
-
-A server function is the same call without the second place.
+A server function lets a component call code that has to run on the server, like a database query, without writing a separate HTTP API.
 Add `"use server"` to the function, keep calling it from the component, and the build moves the body to the server and leaves a typed stub in the browser that makes the HTTP request for you.
 
 ```ts
@@ -39,8 +35,8 @@ export function Product(props: { id: string }) {
 ```
 
 Open the network tab and load the page in the browser: the call is a `POST` to `/_server/data/<id>` whose body carries `["mug"]`, and the response carries the product as the function returned it.
-Search the client bundle for `database` and it is not there.
-The component did not change; `getProduct` returns a promise on both sides, so the [Async reactivity](/concepts/async-reactivity) rules apply to it unchanged.
+Search the client bundle for `database` and it isn't there.
+The component didn't change; `getProduct` returns a promise on both sides, so the [Async reactivity](/concepts/async-reactivity) rules apply to it unchanged.
 
 Server functions work without a router.
 Solid Router's `query()` and `formAction()` add caching, submissions, and revalidation on top of them, and [Data loading and mutations](/routing/solid-router/data) covers that layer.
@@ -108,11 +104,11 @@ function AddToCart(props: { productId: string }) {
 }
 ```
 
-The `Avoid` version does not build.
-The compiler reports ``server functions cannot capture non-top-level variables: `productId` is declared in an enclosing function`` with the file and line, because the extracted body would read a variable that does not exist where it runs.
+The `Avoid` version doesn't build.
+The compiler reports ``server functions can't capture non-top-level variables: `productId` is declared in an enclosing function`` with the file and line, because the extracted body would read a variable that doesn't exist where it runs.
 
 :::caution[The directive goes on a function, not a method]
-A `"use server"` string inside a class method, getter, or setter is not extracted, and the compiler rejects it with `a "use server" directive has no effect on a method`.
+A `"use server"` string inside a class method, getter, or setter isn't extracted, and the compiler rejects it with `a "use server" directive has no effect on a method`.
 Assign a function to a property, or declare the function at module level, when a class needs to call one.
 :::
 
@@ -172,7 +168,7 @@ Declaration wrappers such as `GET()`, `live()`, and `withMeta()` wrap a function
 
 In the browser, a call is an HTTP request to the server-function endpoint, `/_server` by default.
 The client runtime posts to `/_server/data/<id>` and reads the response through Solid's codec.
-The bare address, `/_server/<id>`, answers plain HTTP for everything that is not the client runtime: HTML form posts, and anything a person can type into a terminal.
+The bare address, `/_server/<id>`, answers plain HTTP for everything that isn't the client runtime: HTML form posts, and anything a person can type into a terminal.
 
 ```bash
 curl -X POST 'https://shop.example/_server/<id>?args=%5B%22mug%22%5D' \
@@ -182,7 +178,7 @@ curl -X POST 'https://shop.example/_server/<id>?args=%5B%22mug%22%5D' \
 That request runs `getProduct("mug")` and answers with the product as a JSON body.
 Every server function is reachable this way, which is why [Arguments and security](/building-apps/server-functions/arguments-and-security) treats every argument as untrusted.
 
-During server-side rendering, the same `getProduct(props.id)` call does not make an HTTP request.
+During server-side rendering, the same `getProduct(props.id)` call doesn't make an HTTP request.
 The implementation runs in the current server process under a request event derived from the page request, marked `serverOnly: true`, with a per-call copy of `locals`.
 The values middleware placed on `locals`, such as the signed-in user, are visible on both paths.
 
@@ -190,7 +186,7 @@ The values middleware placed on `locals`, such as the signed-in user, are visibl
 A shared cache stores one answer per URL.
 If the scripted and plain answers shared an address, a cached codec-encoded body could be replayed to a form post, or a plain JSON body to the client runtime.
 Putting the caller kind on the URL, `/data/<id>` against `/<id>`, keeps the two answer shapes in two cache entries.
-The `X-Server-Function-Instance` header the client runtime sends identifies the call for logging and the no-JavaScript convention; it does not decide the answer shape.
+The `X-Server-Function-Instance` header the client runtime sends identifies the call for logging and the no-JavaScript convention; it doesn't decide the answer shape.
 :::
 
 ## Common problems
@@ -220,7 +216,7 @@ Check `vite.config.ts` against the [Enable server functions](#enable-server-func
 
 ### `Cannot call server function outside of a request` on the server
 
-Server code called the function with no request event in scope: a module-level call, a scheduled job, or a test that did not provide an event.
+Server code called the function with no request event in scope: a module-level call, a scheduled job, or a test that didn't provide an event.
 The in-process call derives its event from the current request, so it needs one.
 Call the function from a render, a middleware, or another server function, or provide an event with [`provideRequestEvent`](/reference/solid-web/request-response/provide-request-event) in tests.
 

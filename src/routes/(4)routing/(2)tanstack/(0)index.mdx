@@ -10,10 +10,10 @@ The `fullstack-tanstack` project shape is that combination: the `fullstack` shap
 [TanStack Router](https://tanstack.com/router) owns routing and [TanStack Query](https://tanstack.com/query) owns the data cache, while Solid's server functions, streaming SSR, single-flight mutations, sessions, and API routes work unchanged.
 Nothing on the server asks which router is rendering.
 
-This page explains how the three fit together in that template, so you can read its source with the design in mind and change it with confidence.
+This page explains how the three fit together in that template.
 For the router's own API, route files, `<Link>`, loaders, search params, and so on, use the [TanStack Router documentation](https://tanstack.com/router/latest/docs/framework/solid/overview); nothing there changes under Solid.
 
-:::note[If you have not chosen a router yet]
+:::note[If you haven't chosen a router yet]
 [Pick a router](/routing/overview#pick-a-router) weighs this shape against Solid Router.
 The short version: choose this one for TanStack Query or shared TanStack conventions; otherwise Solid Router has the file-system convention the other templates share and forms that work without JavaScript.
 :::
@@ -168,7 +168,7 @@ For forms that must work without JavaScript, the `fullstack` shape's Solid Route
 
 ## What the server does per request
 
-The plugin's `start.serverRenderSetup` hook is the seam that lets a router Solid does not own drive streaming SSR.
+The plugin's `start.serverRenderSetup` hook is the seam that lets a router Solid doesn't own drive streaming SSR.
 `src/setup.tsx` runs for each SSR request:
 
 ```tsx
@@ -207,7 +207,7 @@ Read it top to bottom:
 
 1. A fresh `QueryClient` and router per request, so one user's data never renders into another's page.
 2. `router.load()` matches the URL and starts the loaders' prefetches; rendering begins while they are in flight.
-3. A `redirect()` thrown in `beforeLoad` or a loader does not throw on the server; it lands in `router._serverResult`.
+3. A `redirect()` thrown in `beforeLoad` or a loader doesn't throw on the server; it lands in `router._serverResult`.
    Setup copies its status and `Location` onto the response so the browser gets a real `30x` instead of a `200` with an empty body.
    Not-found and errored loads set `404` and `500` the same way.
 4. The returned component renders in `App`'s place inside `Document`.
@@ -267,7 +267,7 @@ registerFlightDataSource(FLIGHT_DATA_SOURCE, (event, outcome) => {
 `dehydrateSettled` waits for those prefetches and returns the dehydrated cache, which becomes the payload.
 The payload is a dehydrated `QueryClient`, so consuming it is TanStack's own `hydrate`.
 
-The template goes one step further in `src/lib/flight.ts`: mutation requests carry an inventory of what the client already caches, and the collector skips recomputing anything the mutation's `revalidate` keys did not name.
+The template goes one step further in `src/lib/flight.ts`: mutation requests carry an inventory of what the client already caches, and the collector skips recomputing anything the mutation's `revalidate` keys didn't name.
 That is userland composition over the same seams, and the template's comments walk through it.
 Remove it and the base protocol still works.
 
@@ -281,7 +281,7 @@ The one adjustment is where API routes live: `src/routes` belongs to TanStack Ro
 - `start.serverRenderSetup` runs only with the plugin's generated server entry and only when `ssr` is on.
   An authored server entry has to prepare the router and render it itself.
 - TanStack's own SSR protocol (`RouterServer`, `RouterClient`, and the `$_TSR` stream handlers) expects to own the HTML stream, and under start mode the plugin owns it.
-  The template does not use that protocol; the hydration-registry transfer above is the native channel for this setup.
+  The template doesn't use that protocol; the hydration-registry transfer above is the native channel for this setup.
 - `disableGlobalCatchBoundary: true` in `src/router.tsx` is a design choice, not a workaround.
   Errors, including a `redirect()` during SSR, bubble past the router to the app's own [boundaries](/concepts/boundaries) and stream handler instead of stopping at the router's `ErrorComponent`.
   Route-level `errorComponent` and `pendingComponent` still work.

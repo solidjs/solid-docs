@@ -4,12 +4,9 @@ version: "2.0"
 description: "Forward a model's token stream through a server function into a store one chunk at a time, stop it from the browser or by asking a new question, and render the Markdown without re-rendering what has already landed."
 ---
 
-The storefront gets a support assistant: a shopper types a question and the answer appears word by word as the model produces it.
-Halfway through, the shopper asks a different question, or presses Stop, or the model call fails and they want to try again.
-Written by hand, that is a `fetch` with a body reader, a flag for "streaming", an `AbortController` kept somewhere, and a text state that is replaced on every chunk.
-
-In Solid the model call is a server function that returns an async generator, the browser side is a projection that writes one store commit per chunk, and cancellation is what the reactive graph does with a computation it no longer needs.
-This guide builds that assistant and ends with the cancellation contract, because deciding who may stop a generation is the part that does not fall out of the code.
+This guide builds a support assistant whose answer appears word by word, and that the shopper can stop, retry, or interrupt with a new question.
+The model call is a server function that returns an async generator, the browser side is a projection that writes one store update per chunk, and cancelling is what the reactive graph already does with a computation it no longer needs.
+The guide ends with who's allowed to stop a generation, because that's the one part you have to decide yourself.
 
 ## Stream from the server
 
@@ -128,7 +125,7 @@ Submit a second question while the first is still streaming and the text clears 
 What happens on that second submit is the whole cancellation story on the client side.
 The projection's function read `question()`, so the new value re-runs it.
 A re-run supersedes the previous flight: the runtime calls `return()` on the previous generator, which exits its `for await` loop, which in turn closes the server function's iterable and aborts the request.
-Draft writes the old generator makes after that point are ignored, which is why a late chunk from the first answer cannot land in the second.
+Draft writes the old generator makes after that point are ignored, which is why a late chunk from the first answer can't land in the second.
 
 The `seedLoadingValue` option makes the seed, `{ text: "", done: true }`, the store's first committed value, so the first render shows an empty reply and no [`Loading`](/concepts/boundaries) boundary is needed above the paragraph.
 
@@ -140,9 +137,9 @@ That is the shape to prefer: there is no controller to keep, and anything that r
 The Stop button is the explicit form.
 [`invoke()`](/reference/solid-web/server-functions/invoke) calls a server function reference with options that belong to one call, and `signal` is one of them: aborting it rejects the call and cancels the request.
 The `catch` turns that rejection into a normal end when the abort was ours, so the text so far stays on screen and `done` flips; any other failure is rethrown.
-Without the `catch`, Stop would be an error the boundary shows, which is not what the shopper asked for.
+Without the `catch`, Stop would be an error the boundary shows, which isn't what the shopper asked for.
 
-The controller lives in a plain variable rather than a signal on purpose: assigning it is not a reactive write, so the projection's function may do it, and nothing renders from it.
+The controller lives in a plain variable rather than a signal on purpose: assigning it isn't a reactive write, so the projection's function may do it, and nothing renders from it.
 
 ### Errors and retry
 
@@ -210,24 +207,24 @@ Ask a long question and watch the DOM: each completed paragraph is inserted once
 ## The cancellation contract
 
 Three parties can stop a generation, and the code above connects them in one direction.
-State the contract in the server function's comment, because a reader of either side cannot see the other:
+State the contract in the server function's comment, because a reader of either side can't see the other:
 
 1. The browser aborts: a superseding read, a Stop button, or a closed tab ends the iteration or the request.
 2. The server's `request.signal` aborts, and the runtime calls `return()` on the generator, so its `finally` blocks run.
 3. The generator forwarded that signal to the model call, so the provider stops generating.
 
 Step 3 is the one the author decides.
-A generator that does not pass the signal on still ends, but only at its next `yield`, after the model has produced one more chunk for nobody; a model call that runs to completion for a reader who left is the cost of forgetting it.
+A generator that doesn't pass the signal on still ends, but only at its next `yield`, after the model has produced one more chunk for nobody; a model call that runs to completion for a reader who left is the cost of forgetting it.
 
 Forwarding is right for a chat answer, where the shopper is the only consumer and an abandoned answer has no value.
 It is wrong for a durable job: a report the shopper asked to be generated into their account should finish whether or not they stay on the page, and reloading the page should show its progress rather than start it again.
-Do not forward the signal to such a job.
+Don't forward the signal to such a job.
 Start it with an action, store its output on the server as it is produced, expose progress as a [live source](/building-apps/server-functions/reads-and-live-data#declare-a-live-source) the page reads, and expose Stop as a second action that the job checks between steps.
 In that shape the request's abort means only "this reader left", which is the correct meaning; the job's own lifetime belongs to the server.
 
-:::note[What a superseded read cannot do]
+:::note[What a superseded read can't do]
 Cancellation from the reactive graph stops the stream the component was reading.
-It cannot stop work the server function started and did not tie to the signal, such as a job enqueued before the first `yield`.
+It can't stop work the server function started and didn't tie to the signal, such as a job enqueued before the first `yield`.
 If the function has side effects beyond the stream, give them the server-owned shape above.
 :::
 
@@ -250,7 +247,7 @@ Check that the server integration aborts the request on a closed socket, and tha
 
 ### The fallback flashes before the first chunk
 
-The projection was read under a `Loading` boundary without `seedLoadingValue`, so the seed was not observable until the first `yield` landed, and the boundary showed its fallback for that window.
+The projection was read under a `Loading` boundary without `seedLoadingValue`, so the seed wasn't observable until the first `yield` landed, and the boundary showed its fallback for that window.
 Pass `{ seedLoadingValue: true }` when the seed is a valid first render, or keep the boundary and accept the fallback.
 
 ## Recap
@@ -260,7 +257,7 @@ Pass `{ seedLoadingValue: true }` when the seed is a valid first render, or keep
 - Read every reactive input before the first `await` so a change supersedes the flight, which closes the previous generator and aborts its request.
 - Use `invoke(fn, { signal }, ...args)` for an explicit Stop, and catch the abort so the text so far stays on screen.
 - Put completed Markdown blocks in a `For` keyed by `id` and re-render only the trailing block.
-- Forward the signal when the reader is the only consumer; for a durable job, do not forward it, and expose Stop as an action.
+- Forward the signal when the reader is the only consumer; for a durable job, don't forward it, and expose Stop as an action.
 
 ## Next steps
 

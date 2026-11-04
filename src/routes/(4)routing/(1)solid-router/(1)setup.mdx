@@ -120,7 +120,7 @@ The other options exist for a specific situation each:
 
 | Option              | Reach for it when                                                                                                                 |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `base`              | The app is served under a prefix such as `/app`; matching and `paths` both include it.                                            |
+| `base`              | The app is served under a prefix such as `/app`; matching and `paths` include it, and a string starting with `/` is a full path.  |
 | `history`           | The app is not a normal page: an Electron shell or `file://` needs `hashHistory()`, tests need `memoryHistory()`.                 |
 | `preload`           | The root layout needs data of its own; it runs once per mount or server request and reaches the function child as `props.data`.   |
 | `preloadLinks`      | Links should warm route code and data before the click; pass `intentPreload()` or another strategy (off by default).              |
@@ -130,6 +130,16 @@ The other options exist for a specific situation each:
 | `transformUrl`      | Incoming pathnames need rewriting before matching, for example to strip a locale prefix.                                          |
 | `singleFlight`      | The router's server-function data consumer should be off; it is `true` by default.                                                |
 | `actionBase`        | Server functions are served from a prefix other than the default `/_server`.                                                      |
+
+When Vite serves the app under a `base`, pass `import.meta.env.BASE_URL` as the router `base` and link with `paths`.
+A `paths` node includes the base, so links, `navigate`, and `redirect` stay under it:
+
+```tsx
+export const Router = createRouter({
+	routes,
+	base: import.meta.env.BASE_URL,
+});
+```
 
 The router uses browser history by default on the client and the current request URL on the server, so `history` is rarely set in a web app:
 

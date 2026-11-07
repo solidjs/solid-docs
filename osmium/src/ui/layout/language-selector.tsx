@@ -1,9 +1,9 @@
-import { Component, Show } from "solid-js";
+import { type Component, Show } from "solid-js";
 import { Icon } from "../icon";
 import language from "~icons/heroicons/language-solid";
-import { ResolvedLocale, useLocale } from "@kobalte/solidbase/client";
+import { type ResolvedLocale, useLocale } from "@kobalte/solidbase/client";
 import { Select } from "@kobalte/core/select";
-import { OsmiumThemeConfig } from "../..";
+import type { OsmiumThemeConfig } from "../..";
 
 export const LanguageSelector: Component = () => {
 	const locale = useLocale();

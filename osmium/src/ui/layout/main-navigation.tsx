@@ -4,8 +4,8 @@ import { Icon } from "../icon";
 import chevronDown from "~icons/heroicons/chevron-down-solid";
 import { setIsOpen } from "./mobile-navigation";
 import {
-	SidebarItem,
-	SidebarItemLink,
+	type SidebarItem,
+	type SidebarItemLink,
 	useLocale,
 	useSidebar,
 } from "@kobalte/solidbase/client";

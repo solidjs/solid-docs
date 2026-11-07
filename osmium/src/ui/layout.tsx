@@ -1,4 +1,4 @@
-import { ParentComponent, Show } from "solid-js";
+import { type ParentComponent, Show } from "solid-js";
 import { useLocation } from "@solidjs/router";
 
 import { MainNavigation } from "./layout/main-navigation";

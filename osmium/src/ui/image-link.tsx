@@ -1,5 +1,5 @@
 import { useLocale } from "@kobalte/solidbase/client";
-import { ParentComponent, untrack } from "solid-js";
+import { type ParentComponent, untrack } from "solid-js";
 
 /**
  * @todo

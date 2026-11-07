@@ -3,9 +3,9 @@ import {
 	useSolidBaseContext as _useSolidBaseContext,
 	useSolidBaseRoute,
 } from "@kobalte/solidbase/client";
-import { OsmiumThemeConfig } from "./index.jsx";
-import { Accessor, createMemo } from "solid-js";
-import { SolidBaseResolvedConfig } from "@kobalte/solidbase/config";
+import type { OsmiumThemeConfig } from "./index.jsx";
+import { type Accessor, createMemo } from "solid-js";
+import type { SolidBaseResolvedConfig } from "@kobalte/solidbase/config";
 
 export interface SolidBaseContextValue {
 	config: Accessor<SolidBaseResolvedConfig<OsmiumThemeConfig>>;

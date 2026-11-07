@@ -1,4 +1,4 @@
-import { ParentProps, Show, createSignal } from "solid-js";
+import { type ParentProps, Show, createSignal } from "solid-js";
 import "./eraser-link.css";
 
 const ERASER_TRACKING_PARAMS = "";

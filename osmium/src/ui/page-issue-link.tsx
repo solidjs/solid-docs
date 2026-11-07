@@ -1,4 +1,4 @@
-import { Component, createMemo } from "solid-js";
+import { type Component, createMemo } from "solid-js";
 import { Icon } from "./icon";
 import exclamationTriangle from "~icons/heroicons/exclamation-triangle";
 import { useLocation } from "@solidjs/router";

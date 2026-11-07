@@ -2,7 +2,7 @@ import { For, Show, createEffect, createSignal } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import {
 	useCurrentPageData,
-	TableOfContentsItemData,
+	type TableOfContentsItemData,
 } from "@kobalte/solidbase/client";
 import { createEventListener } from "@solid-primitives/event-listener";
 import { isServer } from "@solidjs/web";

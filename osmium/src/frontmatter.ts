@@ -1,4 +1,7 @@
-import { BaseFrontmatter, useFrontmatter } from "@kobalte/solidbase/client";
+import {
+	type BaseFrontmatter,
+	useFrontmatter,
+} from "@kobalte/solidbase/client";
 import { createMemo } from "solid-js";
 
 export function useOsmiumThemeFrontmatter() {

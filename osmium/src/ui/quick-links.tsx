@@ -1,5 +1,5 @@
 import { Icon } from "./icon";
-import { ParentComponent, Show } from "solid-js";
+import { type ParentComponent, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 
 import academicCap from "~icons/heroicons/academic-cap-solid";

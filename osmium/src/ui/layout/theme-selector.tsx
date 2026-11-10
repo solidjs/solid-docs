@@ -1,4 +1,4 @@
-import { Component, createSignal, onSettled, Show } from "solid-js";
+import { type Component, createSignal, onSettled, Show } from "solid-js";
 import type { ComponentProps } from "@solidjs/web";
 import computerDesktop from "~icons/heroicons/computer-desktop-solid";
 import moon from "~icons/heroicons/moon-solid";
@@ -7,7 +7,7 @@ import { Select } from "@kobalte/core/select";
 import {
 	getThemeVariant,
 	setTheme,
-	ThemeType,
+	type ThemeType,
 } from "@kobalte/solidbase/client";
 import { Icon, type IconComponent } from "../icon";
 

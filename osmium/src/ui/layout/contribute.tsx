@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import type { Component } from "solid-js";
 import { EditPageLink } from "../edit-page-link";
 import { PageIssueLink } from "../page-issue-link";
 

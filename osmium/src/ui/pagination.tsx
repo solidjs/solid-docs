@@ -1,6 +1,9 @@
 import { Loading, Show } from "solid-js";
 import { usePrevNext } from "@kobalte/solidbase/client";
-import { RelativePageConfig, useOsmiumThemeFrontmatter } from "../frontmatter";
+import {
+	type RelativePageConfig,
+	useOsmiumThemeFrontmatter,
+} from "../frontmatter";
 
 type Pagination = {};
 export function Pagination(_props: Pagination) {

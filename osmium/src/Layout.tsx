@@ -6,7 +6,7 @@ import { SidebarProvider, useThemeListener } from "@kobalte/solidbase/client";
 import { usePace } from "@kobalte/solidbase/default-theme/pace.js";
 import { useRouteConfig } from "./utils";
 import { OsmiumThemeStateProvider } from "./context";
-import { ParentProps } from "solid-js";
+import type { ParentProps } from "solid-js";
 
 export default function (props: ParentProps) {
 	const config = useRouteConfig();

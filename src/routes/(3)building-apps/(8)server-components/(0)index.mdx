@@ -1,0 +1,233 @@
+---
+title: "Server components"
+version: "2.0"
+description: "Return a component from a server function so the product page's description and reviews arrive as HTML, mount it with dynamicComponent, and know what the browser no longer downloads."
+---
+
+The product page renders a long description from Markdown and a list of reviews.
+None of it changes after it arrives, yet the browser downloads the Markdown renderer, the review template, and the review data as JSON, and then renders HTML the server already rendered once.
+A server component moves that part of the page to the server for good: the server renders it, the browser receives the markup, and the code that drew it never ships.
+
+In Solid a server component is a server function whose answer is a component.
+There is no separate component kind, no module boundary, and no client directive.
+The client calls the function like any other read and mounts what it answers with [`dynamicComponent`](/reference/solid-web/components/dynamic#dynamiccomponent).
+
+:::caution[Server components are an experimental preview]
+Server components ship in `@solidjs/web` with Solid 2.0 and are excluded from its stability guarantees.
+The API and the wire format may change between prereleases, and stabilization will be announced separately.
+The `hackernews`, `notes`, `todos-server`, `chat`, and `server-dbmon` examples in the Solid repository are the reference implementations.
+:::
+
+## Turn on server components
+
+Server components ride the server-function transport, so they start from the setup in [Server functions](/building-apps/server-functions#enable-server-functions).
+Replace `serverFunctions: true` with an object that sets `components`:
+
+```ts
+// vite.config.ts
+import { defineConfig } from "vite";
+import solid from "@solidjs/vite-plugin";
+
+export default defineConfig({
+	plugins: [
+		solid({
+			start: true,
+			ssr: true,
+			serverFunctions: { components: true },
+		}),
+	],
+});
+```
+
+The option installs the server's result transforms and serves component answers through the same development middleware and production handler as every other server function.
+When the plugin generates your entries, it also adds the document-rendering pieces and the client install, so nothing else changes in your project.
+
+A server function that answers with data behaves exactly as before.
+Only a function that answers with a function takes the server-component path.
+
+## Write a server component
+
+Return a component from a `"use server"` function, and wrap the function in `query()` so the router caches and preloads it like any other read:
+
+```tsx
+// src/data/product-view.tsx
+import { query } from "@solidjs/router";
+import type { Slot } from "@solidjs/web/frames";
+import { database } from "./database";
+import { renderMarkdown } from "./markdown";
+
+type ProductViewProps = {
+	buy: Slot<{ productId: string; price: number }>;
+};
+
+export const getProductView = query(async (id: string) => {
+	"use server";
+	const product = await database.products.find(id);
+	const reviews = await database.reviews.forProduct(id);
+
+	return (props: ProductViewProps) => (
+		<article>
+			<h1>{product.name}</h1>
+			<div
+				class="description"
+				innerHTML={renderMarkdown(product.description)}
+			/>
+			<props.buy productId={product.id} price={product.price} />
+			<section>
+				<h2>Reviews</h2>
+				{reviews.map((review) => (
+					<blockquote>
+						<p>{review.text}</p>
+						<footer>{review.author}</footer>
+					</blockquote>
+				))}
+			</section>
+		</article>
+	);
+}, "product-view");
+```
+
+`database` and `renderMarkdown` are stand-ins for your own modules; both are imported only by the server function's body, so the build removes them from the client bundle with it.
+
+The function and the component it returns have different jobs:
+
+- The function's arguments are the server's inputs.
+  `id` decides what to fetch, and it travels to the server on every call.
+- The component's props are positions in the markup that the client fills, called slots.
+  `props.buy` marks where the client places its own component; nothing in `props` travels to the server.
+
+Unless the function is declared live, the component renders once per response.
+`reviews.map` and a ternary are the whole control flow it needs, and `<For>` and `<Show>` work the same way when you prefer them.
+
+## Mount it in the page
+
+Call the function inside the source of `dynamicComponent`, and fill the slot with a client component:
+
+```tsx
+// src/pages/Product.tsx
+import { dynamicComponent, Loading } from "solid-js";
+import { AddToCart } from "../components/AddToCart";
+import { getProductView } from "../data/product-view";
+
+export function Product(props: { id: string }) {
+	const ProductView = dynamicComponent(() => getProductView(props.id));
+
+	return (
+		<Loading fallback={<p>Loading the product…</p>}>
+			<ProductView
+				buy={(p) => <AddToCart productId={p.productId} price={p.price} />}
+			/>
+		</Loading>
+	);
+}
+```
+
+Load the page and view its source.
+The description and every review appear in the HTML once, as markup, and nowhere as data.
+Search the client bundle for the review template or the Markdown renderer and neither is there.
+`AddToCart` is an ordinary client component: it rendered on the server with the rest of the page, it hydrates, and its click handler runs in the browser.
+
+The first call is a pending promise, so the nearest `Loading` boundary shows its fallback until the component's markup starts to arrive, as it does for any async read.
+During the first page load the server renders the component inline, so the page needs no extra request when it boots.
+
+## Change the arguments
+
+The source of `dynamicComponent` is tracked.
+When `props.id` changes, the source calls `getProductView` again with the new id, and the server's new markup is applied in the same place on the page.
+The mounted component is not torn down and rebuilt.
+
+Calling again with the same arguments, as a revalidation does, gives back the same component.
+The server's markup is updated in place, so focus, input values, and the state of client components in slots survive the refresh.
+A call the page has already shown is drawn again at once from what the browser kept, and a fresh request then updates it.
+
+## Use a server component as a route
+
+When a route's whole content is a server component that takes no slots, `serverRouteComponent` from `@solidjs/router` mounts it as the route's component.
+The router calls the function with the route's params, and with its validated search when the route declares a `search` schema:
+
+```tsx
+// src/routes/review.tsx
+import {
+	query,
+	serverRouteComponent,
+	type RouteParams,
+	type ServerRouteArgs,
+} from "@solidjs/router";
+import { database } from "../data/database";
+
+const getReview = query(
+	async ({ params }: ServerRouteArgs<RouteParams<"/reviews/:id">>) => {
+		"use server";
+		const review = await database.reviews.find(params.id);
+		return () => (
+			<article>
+				<h1>{review.title}</h1>
+				<p>{review.text}</p>
+				<a href={`/products/${review.productId}`}>Back to the product</a>
+			</article>
+		);
+	},
+	"review"
+);
+
+export default serverRouteComponent(getReview);
+```
+
+Hover the link to the product and the router makes the next route's call ahead of the click, as it preloads any route.
+Links and forms in server markup are claimed by the router like links it rendered itself, so they navigate in place and show active state.
+
+The only position a server route has is `children`, which the router fills with the nested route's outlet.
+A server component that needs any other slot is mounted by an ordinary route component with `dynamicComponent`, as above.
+
+## What moves to the server, and what it costs
+
+Use a server component for a part of the page whose rendering code is larger than its data, or that needs a library or a secret only the server should hold: an article, a product description, a list of reviews, a comment thread.
+
+What you give up:
+
+- The server renders the component on every call.
+  A page that the browser rendered from cached JSON now asks the server for markup each time its arguments change.
+- The client cannot read the data behind the markup.
+  A value the client needs, such as a price for a quantity picker, has to be passed to a slot as an argument.
+- Markup the server renders has no client code.
+  Behavior goes in a client component placed through a slot, or in a form, as [Client components in server markup](/building-apps/server-components/client-components-in-slots) shows.
+- The page loads the frames runtime that applies server markup.
+  An application that never returns a component does not import it and does not pay for it.
+
+Keep a route fully client-side when it is mostly interaction, such as a drag-and-drop board.
+A page can mix both: one server component for the read-mostly part, client components everywhere else.
+
+## Common problems
+
+### A click handler in a server component does nothing
+
+The component's code runs only on the server, so an `onClick` written in its markup never reaches the browser.
+Move the control into a client component and place it through a slot, or make the action a `<form action={...}>`, which works before JavaScript loads.
+[Behavior on server markup](/building-apps/server-components/client-components-in-slots#behavior-on-server-markup) shows both.
+
+### Part of a server component disappears or lands in the wrong place
+
+The browser restructured invalid HTML in the server's markup, such as a `<div>` inside a `<p>` or a `<tr>` outside a table, and split the range the client was tracking.
+Development reports [`FRAME_MARKER_CORRUPTED`](/reference/solid-js/diagnostics/frame-marker-corrupted).
+Fix the nesting in the component, and serve the page with `Cache-Control: no-transform` so a proxy or minifier does not strip the comments that mark each range.
+
+### The server function answers with data instead of markup
+
+The project still sets `serverFunctions: true`.
+Set `serverFunctions: { components: true }` so the server streams a returned component as markup.
+
+## Recap
+
+- A server component is a server function that returns a component; mount it with `dynamicComponent`.
+- The function's arguments are the server's inputs, and the component's props are slots the client fills.
+- Wrap the function in `query()` so the router caches, preloads, and revalidates it.
+- Calling again with the same arguments updates the markup in place, and client state inside survives.
+- Use `serverRouteComponent` for a route whose only client position is its outlet.
+- Markup the server renders has no client code; put behavior in a client component through a slot, or in a form.
+- Server components are an experimental preview, outside Solid 2.0's stability guarantees.
+
+## Next steps
+
+- [Client components in server markup](/building-apps/server-components/client-components-in-slots): pass client components into slots, give them data, and keep their state through refreshes.
+- [Keep server components fresh](/building-apps/server-components/keeping-fresh): refresh after a mutation, stream changes with `live()`, share one render with `broadcast()`, or bake markup at build time.
+- [Data loading and mutations](/routing/solid-router/data): the `query()` and `formAction()` layer that server components reuse.

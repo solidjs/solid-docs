@@ -241,15 +241,17 @@ The question to ask is about the update, not about any one request, and it is on
 
 **While this update is in flight, what should the user see?**
 
-| The user should see…                                                   | Use                                                                                           |
-| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| Nothing change until everything that depends on the input is ready     | The default. Add [`isPending`](#another-answer-is-coming-ispending) to acknowledge the click. |
-| The control they touched reflect their input now, and the content wait | [`latest`](#show-the-input-now-latest) on the control, `isPending` to dim the content.        |
-| A placeholder in place of the content for the changed subject          | [`<Loading on={key}>`](#show-a-placeholder-again-loading-on) around that content.             |
+| The user should see…                                                                                         | Use                                                                                               |
+| ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| Nothing change until everything that depends on the input is ready                                           | The default. Add [`isPending`](#another-answer-is-coming-ispending) to acknowledge the click.     |
+| The control they touched reflect their input now, and the content wait                                       | [`latest`](#show-the-input-now-latest) on the control, `isPending` to dim the content.            |
+| A placeholder in place of the content for the changed subject                                                | [`<Loading on={key}>`](#show-a-placeholder-again-loading-on) around that content.                 |
+| The input and the rest of the page change now, and one panel keep its old content until its own answer lands | [`createDeferred`](#let-a-panel-lag-createdeferred) for that panel's data, `isPending` to dim it. |
 
 The first two rows are the same screen: the tab highlight moves at once, the content stays and dims, the content swaps when it is ready.
 That is the standard interaction for a held update, and the rest of this section shows the pieces.
 The third row is for content that should not stay on screen when its subject changes, such as a panel for a different account.
+The fourth row is for a panel that may fall behind the rest of the page without making it wrong, such as the ten-second audit log.
 
 The hold applies only to updates.
 Each panel's first load still reaches the nearest `Loading` boundary, and nested boundaries let panels appear as their own first data arrives.
@@ -388,6 +390,46 @@ This is the everyday shape of a held update, not a special case.
 `latest` belongs on inputs.
 Reading data through `latest` shows a result before the rest of the update has agreed on it, so a panel can show the new period's numbers while the selector still shows the old period.
 When you want the control to lead, use `latest` on the control; when you want a panel to show a placeholder, use the next section.
+
+## Let a panel lag: `createDeferred`
+
+`latest` changes what one reader shows.
+The update is still held: every plain reader of the input waits, and the page commits when the slowest answer lands.
+When a panel may keep its previous answer while the next one loads, and the rest of the page should not wait for it, create the panel's data with [`createDeferred`](/reference/solid-js/reactivity/create-deferred) instead of `createMemo`:
+
+```tsx
+function AuditPanel(props: { period: string }) {
+	const entries = createDeferred(() => fetchAudit(props.period));
+
+	return (
+		<ul class={{ stale: isPending(() => entries()) }}>
+			<For each={entries()}>{(entry) => <li>{entry.text}</li>}</For>
+		</ul>
+	);
+}
+```
+
+After its first answer, a refetch of a deferred memo holds nothing.
+When the period changes, the selector and the other two panels change at once.
+The audit panel keeps its old entries, dims through `isPending`, and shows the new entries when its own request lands.
+
+The two APIs look alike but answer different questions:
+
+- `latest` is on the reader. This control shows the input now; the content still waits with the update.
+- `createDeferred` is on the source. No reader waits for this answer, so the update does not wait for it either.
+
+So `createDeferred` is not the same as reading every consumer through `latest`.
+With `latest`, the update is still held for every plain read of the input until the slow answer lands.
+With `createDeferred`, the slow answer is no longer part of the update at all.
+
+Reach for `createDeferred` when the async work can lag without making the page wrong: an independent widget, a feed, or search suggestions.
+Keep `createMemo` for data that must agree with the rest of the page, such as totals that must add up or the details of the selected item.
+
+:::note
+A deferred memo may lag, but it never leads.
+Its first load is a first load like any other: readers suspend to the nearest `Loading` boundary.
+A refetch that reads a value another update is still holding lands with that update, so the panel never shows an answer the rest of the page has not committed to.
+:::
 
 ## Show a placeholder again: `Loading on`
 

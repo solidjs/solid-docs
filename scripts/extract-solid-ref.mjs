@@ -104,6 +104,11 @@ const CANONICAL_ROUTES = {
 	createEffect: ["reactivity/create-effect.mdx", "Reactivity"],
 	createDeferred: ["reactivity/create-deferred.mdx", "Reactivity"],
 	createMemo: ["reactivity/create-memo.mdx", "Reactivity"],
+	createDeferred: [
+		"`createDeferred` is not `latest` on every consumer. `latest` shows a value now while the update stays held for every other reader; a deferred memo is not part of the update, so nothing waits for it. See [Let a panel lag](/concepts/async-reactivity#let-a-panel-lag-createdeferred).",
+		"Use it for data that may fall behind the rest of the page without making it wrong, such as an independent widget or a feed. Data that must agree with the rest of the page belongs in `createMemo`.",
+		"Its first load still suspends to the nearest `Loading` boundary, unless `loadingValue` is set.",
+	],
 	createOptimistic: ["reactivity/create-optimistic.mdx", "Reactivity"],
 	createSignal: ["reactivity/create-signal.mdx", "Reactivity"],
 	flush: ["reactivity/flush.mdx", "Reactivity"],

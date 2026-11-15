@@ -286,12 +286,14 @@ The check runs on each template's markup with attributes and text stripped, so t
 
 The compiler cannot see across components.
 A `Description` component that renders `<p>{props.children}</p>` and a parent that passes `<div>` children each compile to a valid template, and the browser still rebuilds the tree at runtime.
-When a hydration warning points at an element whose parent in the Elements panel is not the parent in the JSX, look for nesting that spans a component boundary and fix the outer element.
+Development reports it at hydration as `INVALID_HTML_NESTING`, once for each parent, naming the parent, the child, and where the parser put the child.
+Fix the outer element, or move the inner one out.
+A `<form>` inside a `<form>` is the exception: the parser drops the inner form, so there is nothing to claim, and the hydration key-miss warning says so.
 
 Table rows are the common case.
 A `<table>` whose rows come from a `<For>` or a row component holds no `<tr>` in its own template, so the build passes, and the parser still moves the server's rows into a `<tbody>` it adds.
 The list then cannot update those rows after hydration: a removed row stays and a new row lands after the `<tbody>`.
-Development warns `TABLE_ROWS_WITHOUT_TBODY` once for each such table.
+The `INVALID_HTML_NESTING` warning names the `<tbody>` as a wrapper the parser added.
 Write the `<tbody>` yourself:
 
 ```tsx

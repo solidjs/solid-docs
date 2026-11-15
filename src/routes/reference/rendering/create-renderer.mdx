@@ -1,0 +1,168 @@
+---
+title: createRenderer
+category: Rendering
+use_cases: >-
+  custom rendering targets, native and canvas renderers, non-DOM rendering,
+  rendering Solid to a platform-specific tree
+tags:
+  - rendering
+  - universal
+  - custom-renderer
+  - platform
+  - jsx
+version: "1.0"
+description: >-
+  Create the runtime methods Solid needs to render JSX into a custom host tree.
+---
+
+`createRenderer` builds a Solid renderer for a host other than the browser DOM. A custom renderer supplies the operations for creating, updating, inserting, and removing its nodes. It can be used for targets such as a native UI, canvas, or terminal.
+
+## Import
+
+```ts
+import { createRenderer } from "solid-js/universal";
+```
+
+The JSX compiler must also generate universal output and import its runtime from the module that exports the renderer. For example, configure `babel-preset-solid` with `generate: "universal"` and set `moduleName` to your renderer package. Without this compiler configuration, JSX is compiled for the DOM runtime instead.
+
+## Type
+
+```ts
+interface RendererOptions<NodeType> {
+	createElement(tag: string): NodeType;
+	createTextNode(value: string): NodeType;
+	replaceText(textNode: NodeType, value: string): void;
+	isTextNode(node: NodeType): boolean;
+	setProperty<T>(node: NodeType, name: string, value: T, prev?: T): void;
+	insertNode(parent: NodeType, node: NodeType, anchor?: NodeType): void;
+	removeNode(parent: NodeType, node: NodeType): void;
+	getParentNode(node: NodeType): NodeType | undefined;
+	getFirstChild(node: NodeType): NodeType | undefined;
+	getNextSibling(node: NodeType): NodeType | undefined;
+}
+
+function createRenderer<NodeType>(
+	options: RendererOptions<NodeType>
+): Renderer<NodeType>;
+```
+
+`Renderer` is the object returned by `createRenderer`. It includes the host operations and the runtime helpers used by code compiled in universal mode: `render`, `effect`, `memo`, `createComponent`, `insert`, `spread`, `setProp`, `mergeProps`, and `use`.
+
+## Parameters
+
+### `options`
+
+An object implementing `RendererOptions<NodeType>`. `NodeType` is the type your host uses for both elements and text nodes.
+
+| Option                                 | Description                                                                              |
+| -------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `createElement(tag)`                   | Create a host element for the supplied tag name.                                         |
+| `createTextNode(value)`                | Create a text node with the supplied value.                                              |
+| `replaceText(node, value)`             | Replace the contents of an existing text node.                                           |
+| `isTextNode(node)`                     | Return whether a host node is a text node.                                               |
+| `setProperty(node, name, value, prev)` | Apply a JSX property to a host node. `prev` is the previous value when one is available. |
+| `insertNode(parent, node, anchor)`     | Insert a node before `anchor`; when `anchor` is omitted, append it.                      |
+| `removeNode(parent, node)`             | Remove a child node from its parent.                                                     |
+| `getParentNode(node)`                  | Return the node's parent, or `undefined` when it has none.                               |
+| `getFirstChild(node)`                  | Return the node's first child, or `undefined` when it has none.                          |
+| `getNextSibling(node)`                 | Return the node's next sibling, or `undefined` when it has none.                         |
+
+The runtime uses these operations to reconcile changing text, arrays, and child nodes. They must describe the same host tree: insertion and removal need to update the relationships returned by the parent, child, and sibling operations.
+
+## Return value
+
+A `Renderer<NodeType>` object containing the configured host operations and the functions needed by compiled universal JSX. Its `render(code, node)` method mounts the result of `code` into `node` and returns a function that disposes the reactive root.
+
+## Examples
+
+### Create a DOM-backed renderer
+
+This example adapts DOM nodes to the universal renderer interface. A non-DOM host supplies equivalent operations for its own node types.
+
+```ts
+import { createRenderer } from "solid-js/universal";
+
+const properties = new Set(["className", "textContent"]);
+
+export const {
+	render,
+	effect,
+	memo,
+	createComponent,
+	createElement,
+	createTextNode,
+	insertNode,
+	insert,
+	spread,
+	setProp,
+	mergeProps,
+	use,
+} = createRenderer<Node>({
+	createElement(tag) {
+		return document.createElement(tag);
+	},
+	createTextNode(value) {
+		return document.createTextNode(value);
+	},
+	replaceText(node, value) {
+		node.nodeValue = value;
+	},
+	isTextNode(node) {
+		return node.nodeType === Node.TEXT_NODE;
+	},
+	setProperty(node, name, value) {
+		if (name === "style" && typeof value === "object" && value !== null) {
+			Object.assign((node as HTMLElement).style, value);
+		} else if (properties.has(name)) {
+			(node as any)[name] = value;
+		} else {
+			(node as Element).setAttribute(name, String(value));
+		}
+	},
+	insertNode(parent, node, anchor) {
+		parent.insertBefore(node, anchor ?? null);
+	},
+	removeNode(parent, node) {
+		parent.removeChild(node);
+	},
+	getParentNode(node) {
+		return node.parentNode ?? undefined;
+	},
+	getFirstChild(node) {
+		return node.firstChild ?? undefined;
+	},
+	getNextSibling(node) {
+		return node.nextSibling ?? undefined;
+	},
+});
+```
+
+The compiler's universal output imports these named runtime exports from the configured module. The `render` returned above can then mount a component into a host node:
+
+```tsx
+import { render } from "solid-custom-dom";
+
+render(() => <App />, mountNode);
+```
+
+### Forward Solid control-flow components
+
+If compiled JSX uses Solid's control-flow components, re-export them from the renderer package so the configured universal runtime can resolve them:
+
+```ts
+export {
+	ErrorBoundary,
+	For,
+	Index,
+	Match,
+	Show,
+	Suspense,
+	SuspenseList,
+	Switch,
+} from "solid-js";
+```
+
+## Related
+
+- [`render`](/reference/rendering/render)
+- [`hydrate`](/reference/rendering/hydrate)

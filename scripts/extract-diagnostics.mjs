@@ -602,7 +602,7 @@ One console entry per finding:
 [STRICT_READ_UNTRACKED] Reactive value "title" read directly in <TodoRow> will not update. Move it into a tracking scope (JSX, a memo, or an effect's compute function).
   in <App> › <TodoList> › <TodoRow>
   at http://localhost:5173/src/components/TodoRow.tsx:18:3
-[STRICT_READ_UNTRACKED] what it means and how to fix it: https://v2.solidjs.com${ROUTE_BASE}/strict-read-untracked
+[STRICT_READ_UNTRACKED] what it means and how to fix it: https://docs.solidjs.com${ROUTE_BASE}/strict-read-untracked
 [STRICT_READ_UNTRACKED] agent repair guide: ${SKILL_INSTALLED}#strict_read_untracked — ${SKILL_URL}#strict_read_untracked
 \`\`\`
 

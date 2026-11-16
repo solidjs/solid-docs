@@ -19,7 +19,7 @@ export default defineConfig({
 			title: "SolidJS Documentation",
 			description:
 				"Documentation for SolidJS, the signals-powered UI framework",
-			siteUrl: "https://docs.solidjs.com",
+			siteUrl: "https://v1.solidjs.com",
 			editPath: "https://github.com/solidjs/solid-docs/edit/main/:path",
 			routes: {
 				path: "/{project}/{version}",

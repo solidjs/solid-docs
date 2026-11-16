@@ -50,7 +50,7 @@ import {
 	type RequestEvent,
 	type ResponseStub,
 } from "@solidjs/web";
-import { env } from "virtual:env/server";
+import { env } from "virtual:solid-env/server";
 
 interface SessionData {
 	userId?: string;
@@ -105,7 +105,7 @@ Call `getSession()` on the next request and it returns `{ userId }`; an absent, 
 
 Three decisions in that file are deliberate.
 The cookie attributes are set explicitly, because the library's defaults may not match the application's requirements.
-The signing secret comes from `virtual:env/server`, which [Environment](/building-apps/environment) keeps out of the browser bundle; the first secret in the list signs new cookies and every listed secret verifies existing ones, so rotation is prepending a new secret and dropping the old one after `maxAge` has passed.
+The signing secret comes from `virtual:solid-env/server`, which [Environment](/building-apps/environment) keeps out of the browser bundle; the first secret in the list signs new cookies and every listed secret verifies existing ones, so rotation is prepending a new secret and dropping the old one after `maxAge` has passed.
 The payload carries its own `exp`, because the browser's `Max-Age` is a request to the browser and a client is free to replay an old cookie past it.
 
 :::caution[A write does not change what this request read]
@@ -306,7 +306,7 @@ Call the session helpers from a server function, middleware, or the page render.
 ## Recap
 
 - Read the request and write `Set-Cookie` through `getRequestEvent()`; the session protocol comes from a cookie library.
-- Sign the cookie with a secret from `virtual:env/server`, set `httpOnly`, `secure`, and `sameSite` explicitly, and carry an expiry in the payload.
+- Sign the cookie with a secret from `virtual:solid-env/server`, set `httpOnly`, `secure`, and `sameSite` explicitly, and carry an expiry in the payload.
 - A signed cookie is readable by the browser; store an id, not data.
 - `getSession()` reads the request and `setSession()` writes the response; the two do not meet in one request.
 - Take the customer's identity from the session, never from an argument, and check it in every server function and API handler.

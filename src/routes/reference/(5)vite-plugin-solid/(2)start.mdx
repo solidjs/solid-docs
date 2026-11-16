@@ -25,10 +25,18 @@ interface StartOptions {
 	entries?: { server?: string; client?: string };
 	document?: string;
 	middleware?: string;
-	setup?: string;
+	serverSetup?: string;
+	serverRenderSetup?: string;
+	clientSetup?: string;
+	renderMode?: "stream" | "async";
+	devtools?: boolean;
 	productionErrorBoundary?: boolean;
 	externalServer?: boolean;
-	node?: boolean;
+	nodeServer?: boolean | NodeServerOptions;
+}
+
+interface NodeServerOptions {
+	precompress?: boolean;
 }
 ```
 
@@ -155,9 +163,9 @@ The plugin ignores `externalServer` in client mode.
 A host-owned, non-runnable `ssr` development environment is detected without this option.
 Use `serverFunctions.devMiddleware: false` to hand over only development endpoint dispatch.
 
-### `node`
+### `nodeServer`
 
-- **Type:** `boolean`
+- **Type:** `boolean | NodeServerOptions`
 - **Default:** `false`
 
 Emits `dist/server/node.js`, a complete Node server, next to `dist/server/server.js` during `vite build`.
@@ -172,6 +180,9 @@ The emitted module:
   A thrown error logs to `console.error` and answers `500`.
 - In client mode with server functions, serves `dist/client/index.html` for HTML `GET` requests that match no file and dispatches the server-function endpoint.
 - Listens on `PORT` (default `3000`) and `HOST` when run directly with `node dist/server/node.js`.
+- Serves precompressed files: the build writes a `.br` and a `.gz` file beside each client text file of 1 KiB or more, and the server sends the best one the request's `Accept-Encoding` allows, with `Vary: Accept-Encoding`.
+  Rendered pages stream uncompressed.
+  Set `nodeServer: { precompress: false }` to skip the compressed files.
 
 ```ts
 // dist/server/node.js
@@ -228,7 +239,7 @@ solidPlugin({ start: true, ssr: true });
 
 - Development streams HTML through the runnable `ssr` environment.
 - `vite build` builds the client first, writes client assets and a Vite manifest to `dist/client`, and writes `dist/server/server.js`.
-- With `node: true`, the build also writes `dist/server/node.js`.
+- With `nodeServer: true`, the build also writes `dist/server/node.js`.
 - The server bundle exports `handleRequest(request, options?)`.
 - `vite preview` serves client assets and sends other requests through the built handler.
 
@@ -236,5 +247,5 @@ solidPlugin({ start: true, ssr: true });
 
 `serverFunctions` composes with either start mode.
 In client mode, pages remain static while `dist/server/server.js` remains available for endpoint requests.
-With `node: true`, `dist/server/node.js` serves the static pages and the endpoint from one process.
+With `nodeServer: true`, `dist/server/node.js` serves the static pages and the endpoint from one process.
 In SSR mode, the same handler dispatches the endpoint before rendering a page.

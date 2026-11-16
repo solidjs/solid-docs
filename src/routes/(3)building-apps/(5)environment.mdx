@@ -67,14 +67,14 @@ Read each side from its own module:
 
 ```ts
 // src/server/session.ts
-import { env } from "virtual:env/server";
+import { env } from "virtual:solid-env/server";
 
 const secret = env.SESSION_SECRET; // string, at least 32 characters
 ```
 
 ```tsx
 // src/App.tsx
-import { env } from "virtual:env/client";
+import { env } from "virtual:solid-env/client";
 
 <Title>{env.VITE_APP_NAME}</Title>; // string, "Solid Store" when unset
 ```
@@ -87,27 +87,27 @@ The place a read happens decides which module it may import:
 
 ```tsx
 // Avoid: a server value read from a component module
-import { env } from "virtual:env/server";
+import { env } from "virtual:solid-env/server";
 
 export function Footer() {
 	return <p>Signed with a {env.SESSION_SECRET.length} character secret</p>;
 }
 
 // Prefer: the read lives in a module only server code reaches
-import { env } from "virtual:env/server";
+import { env } from "virtual:solid-env/server";
 
 export const secrets = env.SESSION_SECRET.split(",");
 ```
 
 The `Avoid` version, in `src/components/Footer.tsx`, does not build.
-The error is `virtual:env/server is server-only and was imported from the client module graph (by src/components/Footer.tsx)`, because a component module is part of the browser bundle even when it also renders on the server.
+The error is `virtual:solid-env/server is server-only and was imported from the client module graph (by src/components/Footer.tsx)`, because a component module is part of the browser bundle even when it also renders on the server.
 The `Prefer` version lives in `src/server/session.ts`, and a `"use server"` function in a module the browser also loads may import it, as the template's data layer does: the compiler keeps the function body and its imports out of the browser bundle.
 
 ## What happens when you get it wrong
 
 The layer is easiest to understand from its failures.
 
-### `virtual:env/server` is imported from a component
+### `virtual:solid-env/server` is imported from a component
 
 The build fails and names the importing file, as above.
 Move the read into a [server function](/building-apps/server-functions), middleware, or a module reached only from those.
@@ -141,16 +141,16 @@ This is a backstop for a copy-paste mistake, not a security boundary; the module
 
 ## Rules in one place
 
-|                        | `server` map                                             | `client` map             |
-| ---------------------- | -------------------------------------------------------- | ------------------------ |
-| Import from            | `virtual:env/server`                                     | `virtual:env/client`     |
-| Allowed in             | server-only modules                                      | anywhere                 |
-| Read from              | `process.env` at server boot                             | build-time environment   |
-| Validated              | at boot (and in dev, since the dev server is the server) | at build                 |
-| Key prefix             | any                                                      | `VITE_` (or `envPrefix`) |
-| Rotate without rebuild | yes                                                      | no                       |
+|                        | `server` map                                             | `client` map               |
+| ---------------------- | -------------------------------------------------------- | -------------------------- |
+| Import from            | `virtual:solid-env/server`                               | `virtual:solid-env/client` |
+| Allowed in             | server-only modules                                      | anywhere                   |
+| Read from              | `process.env` at server boot                             | build-time environment     |
+| Validated              | at boot (and in dev, since the dev server is the server) | at build                   |
+| Key prefix             | any                                                      | `VITE_` (or `envPrefix`)   |
+| Rotate without rebuild | yes                                                      | no                         |
 
-`virtual:env/server` also exposes the client values, so server code does not need two imports.
+`virtual:solid-env/server` also exposes the client values, so server code does not need two imports.
 
 ## `.env` files
 
@@ -240,7 +240,7 @@ Set them on the machine that runs the build, and rebuild; only `server` values a
 ## Recap
 
 - Declare every variable once in `env.ts`, in the `server` map or the `client` map.
-- Import `virtual:env/server` only from modules that server code alone reaches; a component import fails the build and names the file.
+- Import `virtual:solid-env/server` only from modules that server code alone reaches; a component import fails the build and names the file.
 - Treat the `client` map as public: its values are JSON in the browser bundle, and its keys carry the `VITE_` prefix to say so.
 - Server values are read and validated from `process.env` at boot, so secrets rotate without a rebuild; client values are fixed at build time.
 - Put local values in `.env`; a value already in the process wins over the file.

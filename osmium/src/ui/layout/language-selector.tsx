@@ -48,7 +48,7 @@ export const LanguageSelector: Component = () => {
 							</Select.Value>
 						</Select.Trigger>
 						<Select.Portal>
-							<Select.Content class="z-50 w-44 space-y-1 rounded-xl bg-white p-2 text-sm shadow-md ring-1 shadow-black/5 ring-black/5 dark:bg-slate-800 dark:ring-white/5">
+							<Select.Content class="z-50 w-44 space-y-1 rounded-lg bg-white p-2 text-sm shadow-md ring-1 shadow-black/5 ring-black/5 dark:bg-slate-800 dark:ring-white/5">
 								<Select.Listbox />
 							</Select.Content>
 						</Select.Portal>

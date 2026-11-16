@@ -6,6 +6,7 @@ import { MainHeader } from "./layout/main-header";
 import { Hero } from "./layout/hero";
 import { DocsLayout } from "./docs-layout";
 import { SidePanel } from "./layout/side-panel";
+import { Footer } from "./footer";
 import { useOsmiumThemeFrontmatter } from "../frontmatter";
 
 export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
@@ -17,7 +18,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 	return (
 		<div
 			class={[
-				"relative bg-slate-50 dark:bg-slate-900",
+				"relative bg-bg",
 				{ "flex h-dvh flex-col": fullBleed() },
 			]}
 		>
@@ -53,6 +54,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 						</div>
 					</Show>
 				</div>
+				<Footer />
 			</Show>
 		</div>
 	);

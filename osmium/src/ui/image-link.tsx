@@ -37,9 +37,9 @@ export const ImageLink: ParentComponent<ImageLinkProps> = (props) => {
 	const { file, style } = logos[logoImage];
 
 	return (
-		<div class="group relative rounded-xl dark:border-blue-800 dark:bg-transparent">
-			<div class="absolute -inset-px rounded-xl border-2 border-transparent opacity-0 [background:linear-gradient(var(--quick-links-hover-bg,var(--color-sky-200)),var(--quick-links-hover-bg,var(--color-sky-200)))_padding-box,linear-gradient(to_top,var(--color-indigo-400),var(--color-cyan-400),var(--color-sky-500))_border-box] group-hover:opacity-100 dark:[--quick-links-hover-bg:var(--color-slate-800)]" />
-			<div class="relative overflow-hidden rounded-xl p-6">
+		<div class="group relative rounded-md dark:border-blue-800 dark:bg-transparent">
+			<div class="absolute -inset-px rounded-md border-2 border-transparent opacity-0 [background:linear-gradient(var(--quick-links-hover-bg,var(--color-sky-200)),var(--quick-links-hover-bg,var(--color-sky-200)))_padding-box,linear-gradient(to_top,var(--color-indigo-400),var(--color-cyan-400),var(--color-sky-500))_border-box] group-hover:opacity-100 dark:[--quick-links-hover-bg:var(--color-slate-800)]" />
+			<div class="relative overflow-hidden rounded-md p-6">
 				<div class="flex flex-col items-center">
 					<div class="flex h-16 w-16 items-center justify-center rounded-full border border-slate-700 bg-black dark:bg-transparent">
 						<img
@@ -59,7 +59,7 @@ export const ImageLink: ParentComponent<ImageLinkProps> = (props) => {
 							}
 							class="inline-block bg-linear-to-br from-blue-400 to-blue-700 bg-clip-text text-center font-semibold text-transparent no-underline"
 						>
-							<span class="absolute -inset-px rounded-xl" />
+							<span class="absolute -inset-px rounded-md" />
 							{props.title}
 						</a>
 					</div>

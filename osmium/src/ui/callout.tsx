@@ -11,8 +11,8 @@ import noSymbol from "~icons/heroicons/no-symbol-solid";
 const styles = {
 	note: {
 		container:
-			"bg-emerald-500/20 border-emerald-500 dark:border-emerald-400 dark:bg-emerald-800/20 dark:border-emerald-900",
-		title: "text-emerald-900 dark:text-emerald-300",
+			"bg-brand-subtle border-brand",
+		title: "text-brand-text",
 	},
 	tip: {
 		container:
@@ -48,7 +48,7 @@ const icons = {
 		<Icon
 			aria-hidden="true"
 			path={bookOpen}
-			class={`${props.class} fill-emerald-800 dark:fill-emerald-300`}
+			class={`${props.class} fill-brand-text`}
 		/>
 	),
 	tip: (props: { class?: string }) => (
@@ -105,7 +105,7 @@ export function Callout(props: CalloutProps) {
 
 	return (
 		<div
-			class={`my-6 flex w-full rounded-3xl border p-4 ${
+			class={`my-6 flex w-full rounded-md border p-4 ${
 				styles[mergedProps.type].container
 			}`}
 		>

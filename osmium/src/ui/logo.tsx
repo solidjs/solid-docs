@@ -1,25 +1,58 @@
+import { Show } from "solid-js";
 import { useProject } from "../utils";
 
 export function ProjectLogo(props: { class?: string }) {
 	const project = useProject();
 
 	const current = () => project().projects[project().current];
+	const isSolid2 = () => current().label === "Solid2";
 
 	return (
 		<div class="text-primary dark:text-primary-dark inline-flex w-full items-center space-x-1 py-2">
-			<img
-				src={`/images/logos/${current().label.replaceAll(" ", "-").toLowerCase()}.svg`}
-				alt={current().label}
-				class="text-link dark:text-link-dark -mt-1 h-9 w-9"
-				{...props}
-			/>
-			<span class="inactive hidden text-2xl leading-none font-normal md:block dark:text-white">
-				<b>{current().label.split(/(?=[A-Z])/)[0]}</b>
-				{current()
-					.label.split(/(?=[A-Z])/)
-					.slice(1)
-					.join("")}
-			</span>
+			<Show
+				when={isSolid2()}
+				fallback={
+					<>
+						<img
+							src={`/images/logos/${current().label.replaceAll(" ", "-").toLowerCase()}.svg`}
+							alt={current().label}
+							class="text-link dark:text-link-dark -mt-1 h-9 w-9"
+							{...props}
+						/>
+						<span class="inactive hidden text-2xl leading-none font-normal md:block dark:text-white">
+							<b>{current().label.split(/(?=[A-Z])/)[0]}</b>
+							{current()
+								.label.split(/(?=[A-Z])/)
+								.slice(1)
+								.join("")}
+						</span>
+					</>
+				}
+			>
+				{/* Solid 2.0 logo, copied from solid-site: flat icon per colour scheme, "solid" wordmark and the 2.0 tag. */}
+				<img
+					src="/images/logos/solid-icon-flat-light.svg"
+					alt="Solid"
+					width="39"
+					height="36"
+					class="-mt-1 block h-9 w-auto dark:hidden"
+				/>
+				<img
+					src="/images/logos/solid-icon-flat-dark.svg"
+					alt="Solid"
+					width="39"
+					height="36"
+					class="-mt-1 hidden h-9 w-auto dark:block"
+				/>
+				<span class="hidden items-end gap-1.5 md:flex">
+					<span class="text-2xl leading-none font-bold tracking-tight text-text-muted">
+						solid
+					</span>
+					<span class="mb-0.5 rounded bg-accent px-1.5 py-0.5 font-mono text-[0.8125rem] leading-none font-semibold text-graphite [font-feature-settings:'zero']">
+						2.0
+					</span>
+				</span>
+			</Show>
 		</div>
 	);
 }

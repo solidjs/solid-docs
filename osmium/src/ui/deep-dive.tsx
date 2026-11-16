@@ -27,7 +27,7 @@ const LABELS = {
 export function DeepDive(props: DeepDiveProps) {
 	const kind = () => props.kind ?? "deep-dive";
 	return (
-		<details class="group my-6 w-full rounded-3xl border border-slate-400/60 bg-slate-100/60 open:bg-slate-100 dark:border-slate-600 dark:bg-slate-800/40 dark:open:bg-slate-800/60">
+		<details class="group my-6 w-full rounded-md border border-slate-400/60 bg-slate-100/60 open:bg-slate-100 dark:border-slate-600 dark:bg-slate-800/40 dark:open:bg-slate-800/60">
 			<summary class="flex cursor-pointer list-none items-start gap-3 p-4 marker:content-none [&::-webkit-details-marker]:hidden">
 				<Icon
 					aria-hidden="true"

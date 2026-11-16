@@ -182,8 +182,8 @@ function SearchField() {
 A directive is a function you pass to `ref`; there is no separate directive syntax.
 A directive factory creates owned reactive primitives during component setup and returns the callback that applies the directive to an element.
 
-Ref callbacks run untracked and without an owner.
-Do not create effects or register cleanup inside the returned callback.
+A ref callback runs untracked, in the pass that creates the element, and it owns nothing.
+Do not create effects or register cleanup inside the returned callback: in development, creating a memo, effect, or root there throws `PRIMITIVE_IN_EFFECT_CALLBACK`, and `onCleanup` throws `CLEANUP_IN_FORBIDDEN_SCOPE`.
 Create them in the factory, where they belong to the component owner.
 
 ```tsx
@@ -583,9 +583,10 @@ Keep item identity stable, pass a key function that reads an `id`, or use a [sto
 A value of `0` or an empty string is falsy and shows the fallback.
 Compare explicitly, for example `when={count() !== undefined}`, or use `Switch` and `Match` when there are several cases.
 
-### An effect or `onCleanup` inside a `ref` callback never runs
+### An effect or `onCleanup` inside a `ref` callback throws
 
-Ref callbacks run untracked and without an owner, so primitives created there are never disposed.
+A ref callback owns nothing, so nothing could dispose a primitive created there.
+In development, a memo, effect, or root created in a ref throws [`PRIMITIVE_IN_EFFECT_CALLBACK`](/reference/solid-js/diagnostics/primitive-in-effect-callback), and `onCleanup` throws [`CLEANUP_IN_FORBIDDEN_SCOPE`](/reference/solid-js/diagnostics/cleanup-in-forbidden-scope).
 Create the effect in a directive factory during component setup and return the callback that stores the element.
 See [Refs and directives](#refs-and-directives).
 

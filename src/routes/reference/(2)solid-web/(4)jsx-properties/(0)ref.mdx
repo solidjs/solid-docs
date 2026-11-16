@@ -73,9 +73,11 @@ This composes element access, reusable directives, and third-party integrations 
 
 ## Ownership and cleanup
 
-Ref callbacks run untracked and without a reactive owner.
-Their return values are ignored.
+A ref callback runs the way a render effect's callback runs when the element is created: untracked, in the context of the pass that creates the element, so its reads see what that pass is building.
+It owns nothing, and its return value is ignored.
 Do not create owned reactive primitives or return cleanup functions from a ref callback.
+In development, creating a memo, effect, or root inside one throws [`PRIMITIVE_IN_EFFECT_CALLBACK`](/reference/solid-js/diagnostics/primitive-in-effect-callback), and `onCleanup` throws [`CLEANUP_IN_FORBIDDEN_SCOPE`](/reference/solid-js/diagnostics/cleanup-in-forbidden-scope).
+Writes, `refresh`, action calls, and `onFlush` are allowed, as in an effect callback.
 
 When a reusable directive needs setup and cleanup, create those primitives in an owned factory and return only the callback that receives the element.
 See [Refs and directives](/concepts/components-and-jsx#refs-and-directives) for the complete pattern, and [Integrate non-Solid code](/guides/integrate-non-solid-code) for a chart, a map, and a web component driven through refs.

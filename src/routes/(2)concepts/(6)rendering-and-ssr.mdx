@@ -355,6 +355,23 @@ Include it once, before the application markup.
 An async read outside any `Loading` boundary blocks the stream's shell.
 Put a boundary around the region that depends on the read, so the shell carries a fallback and the content streams later.
 
+### `This document requires 'TrustedHTML' assignment` in the console
+
+The page sends a Content Security Policy with `require-trusted-types-for 'script'`, and the browser rejects the plain string a compiled template assigns to `innerHTML`.
+Create a Trusted Types policy in the client entry and pass it to [`setTrustedTypesPolicy`](/reference/solid-web/rendering-ssr/set-trusted-types-policy) before the first `render` or `hydrate`:
+
+```ts
+import { setTrustedTypesPolicy } from "@solidjs/web";
+
+setTrustedTypesPolicy(
+	trustedTypes.createPolicy("my-app", { createHTML: (html) => html })
+);
+```
+
+Solid then assigns the policy's `TrustedHTML` for template markup, for server component HTML, and for the `html` tagged template.
+On the server the call does nothing, so an isomorphic entry can make it.
+Name the policy in the page's `trusted-types` directive.
+
 ### A promise cached while the page hydrated never resolves
 
 A compute function stored a promise in a cache that outlives it, and the store happened during hydration's tracking run, where promises are stand-ins.

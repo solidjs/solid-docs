@@ -55,7 +55,7 @@ export default function VersionSelector() {
 						</Show>
 					</Popover.Trigger>
 					<Popover.Portal>
-						<Popover.Content class="z-50 space-y-1 rounded-xl bg-white p-2 text-sm shadow-md ring-1 shadow-black/5 ring-black/5 dark:bg-slate-800 dark:ring-white/5">
+						<Popover.Content class="z-50 space-y-1 rounded-lg bg-white p-2 text-sm shadow-md ring-1 shadow-black/5 ring-black/5 dark:bg-slate-800 dark:ring-white/5">
 							<For each={options()}>
 								{(option) => {
 									const outbound = () => !!option.href;

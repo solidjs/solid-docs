@@ -58,11 +58,11 @@ export function MainHeader(_props: MainHeaderProps) {
 	return (
 		<header
 			class={[
-				"sticky top-0 z-50 flex items-center justify-between bg-blue-50/80 shadow-md shadow-slate-900/5 backdrop-blur transition duration-500 dark:shadow-none",
+				// The background stays the same at every scroll position; only the shadow appears once the page scrolls.
+				"bg-bg/80 sticky top-0 z-50 flex items-center justify-between backdrop-blur transition-shadow duration-300",
 				{
-					"dark:bg-slate-900/95 dark:[@supports(backdrop-filter:blur(0))]:bg-slate-900/75":
-						isScrolled(),
-					"bg-transparent dark:bg-transparent": !isScrolled(),
+					"shadow-md shadow-slate-900/5 dark:shadow-none": isScrolled(),
+					"shadow-none": !isScrolled(),
 				},
 			]}
 		>

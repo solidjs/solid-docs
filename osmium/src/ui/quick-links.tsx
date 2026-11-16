@@ -23,9 +23,9 @@ const icons = {
 
 export const QuickLinks: ParentComponent<QuickLinksProps> = (props) => {
 	return (
-		<div class="group relative rounded-xl border border-blue-600 dark:border-blue-800 dark:bg-transparent">
-			<div class="absolute -inset-px rounded-xl border-2 border-transparent opacity-0 [background:linear-gradient(var(--quick-links-hover-bg,var(--color-sky-200)),var(--quick-links-hover-bg,var(--color-sky-200)))_padding-box,linear-gradient(to_top,var(--color-indigo-400),var(--color-cyan-400),var(--color-sky-500))_border-box] group-hover:opacity-100 dark:[--quick-links-hover-bg:var(--color-slate-800)]" />
-			<div class="relative overflow-hidden rounded-xl px-5 py-4">
+		<div class="group relative rounded-md border border-blue-600 dark:border-blue-800 dark:bg-transparent">
+			<div class="absolute -inset-px rounded-md border-2 border-transparent opacity-0 [background:linear-gradient(var(--quick-links-hover-bg,var(--color-sky-200)),var(--quick-links-hover-bg,var(--color-sky-200)))_padding-box,linear-gradient(to_top,var(--color-indigo-400),var(--color-cyan-400),var(--color-sky-500))_border-box] group-hover:opacity-100 dark:[--quick-links-hover-bg:var(--color-slate-800)]" />
+			<div class="relative overflow-hidden rounded-md px-5 py-4">
 				<div class="flex items-center">
 					<Icon
 						aria-hidden="true"
@@ -37,7 +37,7 @@ export const QuickLinks: ParentComponent<QuickLinksProps> = (props) => {
 							when={props.href.includes("://")}
 							fallback={
 								<a href={props.href} class="font-semibold no-underline">
-									<span class="absolute -inset-px rounded-xl" />
+									<span class="absolute -inset-px rounded-md" />
 									{props.title}
 								</a>
 							}
@@ -46,7 +46,7 @@ export const QuickLinks: ParentComponent<QuickLinksProps> = (props) => {
 								href={props.href}
 								class="inline-block bg-linear-to-br from-blue-400 to-blue-700 bg-clip-text font-semibold text-transparent no-underline"
 							>
-								<span class="absolute -inset-px rounded-xl" />
+								<span class="absolute -inset-px rounded-md" />
 								{props.title}
 							</a>
 						</Show>

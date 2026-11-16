@@ -6,6 +6,7 @@ import { MainHeader } from "./layout/main-header";
 import { Hero } from "./layout/hero";
 import { DocsLayout } from "./docs-layout";
 import { SidePanel } from "./layout/side-panel";
+import { Footer } from "./footer";
 import { useOsmiumThemeFrontmatter } from "../frontmatter";
 
 export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
@@ -15,12 +16,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 	const fullBleed = () => /^\/tutorial(\/|$)/.test(location.pathname);
 
 	return (
-		<div
-			class={[
-				"relative bg-slate-50 dark:bg-slate-900",
-				{ "flex h-dvh flex-col": fullBleed() },
-			]}
-		>
+		<div class={["bg-bg relative", { "flex h-dvh flex-col": fullBleed() }]}>
 			<MainHeader />
 			<Show when={!fullBleed()} fallback={props.children}>
 				<Show when={frontmatter()?.hero}>
@@ -53,6 +49,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 						</div>
 					</Show>
 				</div>
+				<Footer />
 			</Show>
 		</div>
 	);

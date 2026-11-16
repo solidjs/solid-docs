@@ -115,7 +115,7 @@ You can do this directly on GitHub.com or by creating a copy of the repository l
 
 ### Edit this page via GitHub
 
-Every page on [﻿docs.solidjs.com](https://docs.solidjs.com/)﻿ has an **Edit this page** link at the bottom.
+Every page on [﻿v1.solidjs.com](https://v1.solidjs.com/)﻿ has an **Edit this page** link at the bottom.
 You can click on that button to edit the source code for that page in **GitHub**.
 
 After you make your changes, click **Commit changes**.

@@ -18,7 +18,7 @@ const pagesToIndex = HTMLFiles.flatMap((file) => {
 		"utf8"
 	);
 
-	const productionDocsURL = `https://docs.solidjs.com/${path}`;
+	const productionDocsURL = `https://v1.solidjs.com/${path}`;
 
 	const content = generalPurposeCrawler(productionDocsURL, pageContent, {
 		parseCodeBlocks: false,

@@ -104,11 +104,6 @@ const CANONICAL_ROUTES = {
 	createEffect: ["reactivity/create-effect.mdx", "Reactivity"],
 	createDeferred: ["reactivity/create-deferred.mdx", "Reactivity"],
 	createMemo: ["reactivity/create-memo.mdx", "Reactivity"],
-	createDeferred: [
-		"`createDeferred` is not `latest` on every consumer. `latest` shows a value now while the update stays held for every other reader; a deferred memo is not part of the update, so nothing waits for it. See [Let a panel lag](/concepts/async-reactivity#let-a-panel-lag-createdeferred).",
-		"Use it for data that may fall behind the rest of the page without making it wrong, such as an independent widget or a feed. Data that must agree with the rest of the page belongs in `createMemo`.",
-		"Its first load still suspends to the nearest `Loading` boundary, unless `loadingValue` is set.",
-	],
 	createOptimistic: ["reactivity/create-optimistic.mdx", "Reactivity"],
 	createSignal: ["reactivity/create-signal.mdx", "Reactivity"],
 	flush: ["reactivity/flush.mdx", "Reactivity"],
@@ -169,6 +164,10 @@ const CANONICAL_ROUTES = {
 	render: ["rendering-ssr/render.mdx", "Rendering & SSR"],
 	renderToStream: ["rendering-ssr/render-to-stream.mdx", "Rendering & SSR"],
 	renderToString: ["rendering-ssr/render-to-string.mdx", "Rendering & SSR"],
+	setTrustedTypesPolicy: [
+		"rendering-ssr/set-trusted-types-policy.mdx",
+		"Rendering & SSR",
+	],
 	takeHydrationValue: [
 		"rendering-ssr/take-hydration-value.mdx",
 		"Rendering & SSR",
@@ -529,6 +528,8 @@ const FOLD_INTO = {
 	FlightEvent: "attribution",
 	FlightLink: "attribution",
 	FlushEvent: "attribution",
+	FlushChange: "attribution",
+	FlushLive: "attribution",
 	GraphEvent: "attribution",
 	HeldWrite: "attribution",
 	HoldEvent: "attribution",
@@ -784,6 +785,16 @@ const HIDDEN_EXPORTS = new Set([
 	"SOURCE_PROXY",
 	"SourceKind",
 	"isStatic",
+	// @internal re-exports (`export { … } from`) the scan does not see as
+	// internal: head-registry swap hooks (#4873), the stateful-prop hold read
+	// (#4872), the verdict window read (#4648), and the dev strict window
+	// compiled event handler expressions read through (#4838).
+	"heldRead",
+	"isHidden",
+	"setSwapHook",
+	"verdict",
+	"strictReadTracked",
+	"strictHandler",
 	// The root error hook's storage key; configureClientErrors is the API.
 	"ROOT_ERROR_HOOK",
 	// Engine-side owner labelling; records carry the result as `ownerPath`.
@@ -1778,6 +1789,11 @@ const RETURN_DOCS = {
 
 // Caveats rendered as a bullet list under `## Caveats`.
 const ENTRY_CAVEATS = {
+	createDeferred: [
+		"`createDeferred` is not `latest` on every consumer. `latest` shows a value now while the update stays held for every other reader; a deferred memo is not part of the update, so nothing waits for it. See [Let a panel lag](/concepts/async-reactivity#let-a-panel-lag-createdeferred).",
+		"Use it for data that may fall behind the rest of the page without making it wrong, such as an independent widget or a feed. Data that must agree with the rest of the page belongs in `createMemo`.",
+		"Its first load still suspends to the nearest `Loading` boundary, unless `loadingValue` is set.",
+	],
 	createSignal: [
 		"Passing a function to the setter treats it as an updater. To store a function as the value, wrap it: `setHandler(() => fn)`.",
 		"A read right after a write returns the old value until the queue flushes. Derive the value you need instead of reading it back, or call `flush()` in tests.",
@@ -2042,8 +2058,8 @@ const COMPONENT_PROBLEMS = {
 		"/concepts/components-and-jsx#show-renders-the-fallback-even-though-the-value-is-set",
 	],
 	refCallback: [
-		"An effect or `onCleanup` inside a `ref` callback never runs",
-		"/concepts/components-and-jsx#an-effect-or-oncleanup-inside-a-ref-callback-never-runs",
+		"An effect or `onCleanup` inside a `ref` callback throws",
+		"/concepts/components-and-jsx#an-effect-or-oncleanup-inside-a-ref-callback-throws",
 	],
 };
 const LIST_PROBLEMS = {

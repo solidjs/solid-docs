@@ -52,6 +52,7 @@ interface Dev {
 	getParent: typeof getParent;
 	getSources: typeof getSources;
 	getObservers: typeof getObservers;
+	setSignal: typeof setDevSignal;
 	report(entry: DiagnosticEvent): void;
 	guideUrl(code: DiagnosticCode): string;
 }
@@ -80,6 +81,16 @@ interface Dev {
 #### `getObservers`
 
 - **Type:** `typeof getObservers`
+
+#### `setSignal`
+
+- **Type:** `typeof setDevSignal`
+
+Write a signal or store-slot node from outside the app's setters —
+for example from a devtools state editor that only holds the node from
+`getSignals` / `getSources`. Runs as an unowned write (devtools UI
+events are not owned scopes). Store property slots go through the
+store setter path so `onStoreNodeUpdate` and backing state stay in sync.
 
 #### `report`
 
@@ -169,6 +180,7 @@ type DiagnosticCode =
 	| "REACTIVE_WRITE_IN_OWNED_SCOPE"
 	| "ASYNC_STORE_SETTER"
 	| "STORE_WRITE_OUTSIDE_SETTER"
+	| "STORE_WRITE_THROUGH_LOADING"
 	| "ACTION_CALLED_IN_OWNED_SCOPE"
 	| "RUN_WITH_DISPOSED_OWNER"
 	| "NO_OWNER_CLEANUP"
@@ -183,11 +195,13 @@ type DiagnosticCode =
 	| "NO_OWNER_BOUNDARY"
 	| "ASYNC_OUTSIDE_LOADING_BOUNDARY"
 	| "LOADING_ON_OUTSIDE_HOLD"
+	| "LOADING_ON_ACCESSOR"
 	| "INVALID_REFRESH_TARGET"
 	| "INVALID_AFFECTS_TARGET"
 	| "MISSING_EFFECT_FN"
 	| "SYNC_NODE_RECEIVED_ASYNC"
 	| "UNTRACKED_READ_AFTER_AWAIT"
+	| "CAUGHT_REACTIVE_READ"
 	| "REACTIVITY_HALTED"
 	| "INVARIANT_VIOLATION"
 	| "HUGE_FAN_OUT"
@@ -207,6 +221,8 @@ type DiagnosticCode =
 	| "FALLBACK_FLASH"
 	| "STACKED_HOLDS"
 	| "OPTIMISTIC_REVERTED"
+	| "OPTIMISTIC_WRITE_BEFORE_LOAD"
+	| "OPTIMISTIC_WRITE_WHILE_LOADING"
 	| "EFFECT_WRITES_OWN_SOURCE"
 	| "EFFECT_RELAY_TEAR"
 	| "IMMUTABLE_UPDATE_IN_STORE"
@@ -231,6 +247,7 @@ type DiagnosticCode =
 	| "UNSCOPED_HOLE_ALLOCATED_IDS"
 	| "LOWERCASE_EVENT_ATTRIBUTE"
 	| "UNCOMMITTED_INPUT_OVERWRITTEN"
+	| "INVALID_HTML_NESTING"
 	| "FRAME_MARKER_CORRUPTED"
 	| "DYNAMIC_ASYNC_COMPONENT"
 	| "ASYNC_MEMO_ELEMENT";

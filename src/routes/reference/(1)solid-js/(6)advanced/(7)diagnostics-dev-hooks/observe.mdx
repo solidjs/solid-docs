@@ -568,6 +568,7 @@ type DiagnosticCode =
 	| "REACTIVE_WRITE_IN_OWNED_SCOPE"
 	| "ASYNC_STORE_SETTER"
 	| "STORE_WRITE_OUTSIDE_SETTER"
+	| "STORE_WRITE_THROUGH_LOADING"
 	| "ACTION_CALLED_IN_OWNED_SCOPE"
 	| "RUN_WITH_DISPOSED_OWNER"
 	| "NO_OWNER_CLEANUP"
@@ -582,11 +583,13 @@ type DiagnosticCode =
 	| "NO_OWNER_BOUNDARY"
 	| "ASYNC_OUTSIDE_LOADING_BOUNDARY"
 	| "LOADING_ON_OUTSIDE_HOLD"
+	| "LOADING_ON_ACCESSOR"
 	| "INVALID_REFRESH_TARGET"
 	| "INVALID_AFFECTS_TARGET"
 	| "MISSING_EFFECT_FN"
 	| "SYNC_NODE_RECEIVED_ASYNC"
 	| "UNTRACKED_READ_AFTER_AWAIT"
+	| "CAUGHT_REACTIVE_READ"
 	| "REACTIVITY_HALTED"
 	| "INVARIANT_VIOLATION"
 	| "HUGE_FAN_OUT"
@@ -606,6 +609,8 @@ type DiagnosticCode =
 	| "FALLBACK_FLASH"
 	| "STACKED_HOLDS"
 	| "OPTIMISTIC_REVERTED"
+	| "OPTIMISTIC_WRITE_BEFORE_LOAD"
+	| "OPTIMISTIC_WRITE_WHILE_LOADING"
 	| "EFFECT_WRITES_OWN_SOURCE"
 	| "EFFECT_RELAY_TEAR"
 	| "IMMUTABLE_UPDATE_IN_STORE"
@@ -630,6 +635,7 @@ type DiagnosticCode =
 	| "UNSCOPED_HOLE_ALLOCATED_IDS"
 	| "LOWERCASE_EVENT_ATTRIBUTE"
 	| "UNCOMMITTED_INPUT_OVERWRITTEN"
+	| "INVALID_HTML_NESTING"
 	| "FRAME_MARKER_CORRUPTED"
 	| "DYNAMIC_ASYNC_COMPONENT"
 	| "ASYNC_MEMO_ELEMENT";
@@ -1299,8 +1305,9 @@ until `attribution.enable()`): `live` is the computation the record is
 about where there is one — the node that ran for `rerun`, `create` and
 `effect`, the async node for `flight`, the boundary's subtree for
 `fallback` (when the boundary reported one), the first held root signal
-for `hold` (the subject the SILENT_HOLD finding names) — and `undefined`
-for the records with no single subject (`flush`, `interaction`,
+for `hold` (the subject the SILENT_HOLD finding names), the changed
+nodes for `flush` (`FlushLive`, with their values under `bodies`) — and
+`undefined` for the records with no single subject (`interaction`,
 `navigation`, `graph`). The records are the same objects the engine's
 ring buffers hold (`attribution.history(type)`), delivered synchronously
 the moment each is complete — a re-run at recompute end, a hold, a
@@ -1317,7 +1324,7 @@ interface RecordTypes extends HostRecordTypes {
 	rerun: { event: RerunEvent; live: Computed<any> };
 	create: { event: CreateEvent; live: Computed<any> };
 	effect: { event: EffectRunEvent; live: Computed<any> };
-	flush: { event: FlushEvent; live: undefined };
+	flush: { event: FlushEvent; live: FlushLive };
 	flight: { event: FlightEvent; live: Computed<any> };
 	fallback: { event: FallbackEvent; live: Computed<any> | undefined };
 	interaction: { event: InteractionEvent; live: undefined };
@@ -1341,7 +1348,7 @@ interface RecordTypes extends HostRecordTypes {
 
 #### `flush`
 
-- **Type:** `{ event: FlushEvent; live: undefined }`
+- **Type:** `{ event: FlushEvent; live: FlushLive }`
 
 #### `flight`
 

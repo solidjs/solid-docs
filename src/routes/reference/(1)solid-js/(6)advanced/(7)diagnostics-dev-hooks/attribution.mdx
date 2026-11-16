@@ -350,7 +350,7 @@ interface AttributionCostTables {
 
 - **Type:** `ScopeCost[]`
 
-Ranked by self-time.
+Ranked by self-time. Collected scopes share one row per name and kind.
 
 #### `writes`
 
@@ -1442,6 +1442,43 @@ Summed and worst wall time of landed flights (ms).
 
 - **Type:** `number`
 
+### `FlushChange`
+
+One node whose shown value a drain changed (`FlushEvent.changes`).
+
+```ts
+interface FlushChange {
+	nodeId: number;
+	nodeName: string;
+	key?: string;
+	origin?: ChangeOrigin;
+}
+```
+
+#### `nodeId`
+
+- **Type:** `number`
+
+The node, in the id space of `RerunEvent.nodeId` and `ChangeRecord.nodeId`.
+
+#### `nodeName`
+
+- **Type:** `string`
+
+#### `key`
+
+- **Type:** `string`
+
+A store property's node: the property, as a string.
+
+#### `origin`
+
+- **Type:** `ChangeOrigin`
+
+Who staged the value that is now shown — the action step, effect,
+interaction or navigation — when one was open. A held write keeps the
+origin it was staged under, so a landing's changes name their action.
+
 ### `FlushEvent`
 
 One `flush()` drain: from the scheduler picking up scheduled work until
@@ -1459,6 +1496,7 @@ interface FlushEvent {
 	created: number;
 	held: boolean;
 	interaction?: ChangeOrigin;
+	changes: FlushChange[];
 }
 ```
 
@@ -1499,6 +1537,38 @@ A transition was judged incomplete during the drain — some of its writes staye
 The interaction every recorded run of the drain traced to, when there
 was exactly one; absent when none did, or when runs for several
 interactions shared the drain.
+
+#### `changes`
+
+- **Type:** `FlushChange[]`
+
+What the drain changed on screen: each signal, memo or store property
+whose shown value differs from what it showed before the drain — a
+commit, a held update's landing, an optimistic value appearing or
+lifting. One entry per node, in no promised order. Nodes that got their
+first value, and effects, are not listed.
+
+### `FlushLive`
+
+Beside a `flush` record (`OBSERVE.records.subscribe("flush", (event, live) => …)`):
+the live side of `event.changes`, index for index — the node, and, for a
+listener that subscribed with `{ bodies: true }`, the values before and
+after. The values are live, not copies: a store's objects keep changing
+after the record, so a listener that keeps them copies them on delivery.
+
+```ts
+interface FlushLive {
+	changes: {
+		node: Signal<any> | Computed<any>;
+		prev?: unknown;
+		value?: unknown;
+	}[];
+}
+```
+
+#### `changes`
+
+- **Type:** `{ node: Signal<any> | Computed<any>; prev?: unknown; value?: unknown }[]`
 
 ### `GraphEvent`
 

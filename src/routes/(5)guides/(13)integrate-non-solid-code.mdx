@@ -29,7 +29,7 @@ The element exists after the JSX has been evaluated; a `ref` callback runs at th
 
 The [`ref` reference](/reference/solid-web/jsx-properties/ref) lists the accepted forms, and [Refs and directives](/concepts/components-and-jsx#refs-and-directives) shows how a directive factory owns setup for an element.
 Two things matter for every integration on this page.
-A `ref` callback runs untracked and without an owner, so do not create effects or register cleanup in it.
+A `ref` callback runs untracked and owns nothing, so do not create effects or register cleanup in it.
 And setup that needs the element to be in the document belongs in `onSettled`, which runs after the first render has settled.
 
 ## Create the instance once, update it in an effect
@@ -301,11 +301,11 @@ Use the `prop:` namespace, `prop:disabledDates={holidays()}`, so Solid assigns t
 Add the listener from a `ref` directive with the exact name.
 If the event uses a delegated name such as `input` and the element dispatches it without `bubbles: true`, the root listener never sees it either.
 
-### An effect or cleanup inside a `ref` callback never runs
+### An effect or cleanup inside a `ref` callback throws
 
-Ref callbacks run without an owner.
+A ref callback owns nothing, so in development an effect or `onCleanup` created there throws.
 Move the setup into `onSettled` in the component body, or into a directive factory that returns the callback.
-See [An effect or onCleanup inside a ref callback never runs](/concepts/components-and-jsx#an-effect-or-oncleanup-inside-a-ref-callback-never-runs).
+See [An effect or onCleanup inside a ref callback throws](/concepts/components-and-jsx#an-effect-or-oncleanup-inside-a-ref-callback-throws).
 
 ## Recap
 

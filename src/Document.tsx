@@ -15,7 +15,7 @@ export default function Document(props: ParentProps) {
 				<script src="/scripts/browser-specific.js" type="module" />
 				<HydrationScript />
 			</head>
-			<body class="min-h-screen bg-bg">
+			<body class="bg-bg min-h-screen">
 				<div id="app">{props.children}</div>
 			</body>
 		</html>

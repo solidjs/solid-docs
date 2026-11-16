@@ -16,12 +16,7 @@ export const Layout: ParentComponent<{ isError?: boolean }> = (props) => {
 	const fullBleed = () => /^\/tutorial(\/|$)/.test(location.pathname);
 
 	return (
-		<div
-			class={[
-				"relative bg-bg",
-				{ "flex h-dvh flex-col": fullBleed() },
-			]}
-		>
+		<div class={["bg-bg relative", { "flex h-dvh flex-col": fullBleed() }]}>
 			<MainHeader />
 			<Show when={!fullBleed()} fallback={props.children}>
 				<Show when={frontmatter()?.hero}>

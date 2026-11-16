@@ -10,8 +10,7 @@ import noSymbol from "~icons/heroicons/no-symbol-solid";
 
 const styles = {
 	note: {
-		container:
-			"bg-brand-subtle border-brand",
+		container: "bg-brand-subtle border-brand",
 		title: "text-brand-text",
 	},
 	tip: {

@@ -208,7 +208,7 @@ export const h6 = (props: ParentProps) => (
 // the underline style. `:has()` decides, so SSR and hydration agree.
 export const a = (props: ParentProps & { href: string }) => (
 	<a
-		class="not-has-[>code]:font-medium not-has-[>code]:text-brand-text not-has-[>code]:underline not-has-[>code]:decoration-1 not-has-[>code]:underline-offset-[0.18em] not-has-[>code]:hover:text-brand-strong no-underline [&>code]:border-brand [&>code]:text-brand-text hover:[&>code]:bg-brand-subtle"
+		class="not-has-[>code]:text-brand-text not-has-[>code]:hover:text-brand-strong [&>code]:border-brand [&>code]:text-brand-text hover:[&>code]:bg-brand-subtle no-underline not-has-[>code]:font-medium not-has-[>code]:underline not-has-[>code]:decoration-1 not-has-[>code]:underline-offset-[0.18em]"
 		{...props}
 	/>
 );
@@ -249,7 +249,7 @@ export const pre = (props: ParentProps) => {
 export const code = (props: ParentProps) => {
 	return (
 		<code
-			class="not-prose inline-flex rounded-sm border border-code-border bg-code-bg px-1.5 py-0.5 font-mono! text-[0.85em] leading-snug font-normal text-code-text"
+			class="not-prose border-code-border bg-code-bg text-code-text inline-flex rounded-sm border px-1.5 py-0.5 font-mono! text-[0.85em] leading-snug font-normal"
 			{...props}
 		>
 			{props.children}

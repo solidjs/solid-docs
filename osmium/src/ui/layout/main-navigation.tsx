@@ -113,10 +113,10 @@ export function MainNavigation(_props: MainNavigationProps) {
 		<nav class="custom-scrollbar h-full scrollbar-gutter-stable overflow-y-auto pr-4 pb-20 md:h-[calc(100vh-7rem)]">
 			<VersionSelector />
 			<Tabs value={selectedTab()}>
-				<Tabs.List class="sticky top-0 z-10 grid w-full grid-cols-2 md:bg-bg">
+				<Tabs.List class="md:bg-bg sticky top-0 z-10 grid w-full grid-cols-2">
 					<Tabs.Trigger
 						value="learn"
-						class="inline-block py-3 font-medium outline-none hover:bg-brand/8 focus-visible:bg-brand/12 dark:text-slate-100 dark:hover:bg-brand/15 dark:focus-visible:bg-brand/20"
+						class="hover:bg-brand/8 focus-visible:bg-brand/12 dark:hover:bg-brand/15 dark:focus-visible:bg-brand/20 inline-block py-3 font-medium outline-none dark:text-slate-100"
 						onClick={() => {
 							setSelectedTab("learn");
 						}}
@@ -125,14 +125,14 @@ export function MainNavigation(_props: MainNavigationProps) {
 					</Tabs.Trigger>
 					<Tabs.Trigger
 						value="reference"
-						class="inline-block py-3 font-medium outline-none hover:bg-brand/8 focus-visible:bg-brand/12 dark:text-slate-100 dark:hover:bg-brand/15 dark:focus-visible:bg-brand/20"
+						class="hover:bg-brand/8 focus-visible:bg-brand/12 dark:hover:bg-brand/15 dark:focus-visible:bg-brand/20 inline-block py-3 font-medium outline-none dark:text-slate-100"
 						onClick={() => {
 							setSelectedTab("reference");
 						}}
 					>
 						Reference
 					</Tabs.Trigger>
-					<Tabs.Indicator class="absolute bottom-0 h-0.5 bg-brand transition-all duration-250" />
+					<Tabs.Indicator class="bg-brand absolute bottom-0 h-0.5 transition-all duration-250" />
 				</Tabs.List>
 				<Tabs.Content value="learn" class="relative mt-5 w-full">
 					<Show

@@ -8,7 +8,8 @@ const SITE = "https://www.solidjs.com";
 const GITHUB = "https://github.com/solidjs";
 const DISCORD = "https://discord.com/invite/solidjs";
 
-const TAGLINE = "Simple and performant reactivity for building user interfaces.";
+const TAGLINE =
+	"Simple and performant reactivity for building user interfaces.";
 
 const COLUMNS = [
 	{
@@ -71,7 +72,7 @@ export function Footer() {
 					<For each={COLUMNS} keyed={(c) => c.title}>
 						{(col) => (
 							<nav aria-label={col().title}>
-								<h2 class="mb-3.5 text-sm font-semibold tracking-normal text-text">
+								<h2 class="text-text mb-3.5 text-sm font-semibold tracking-normal">
 									{col().title}
 								</h2>
 								<ul class="m-0 grid list-none gap-2.5 p-0">

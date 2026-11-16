@@ -45,10 +45,10 @@ export function ProjectLogo(props: { class?: string }) {
 					class="-mt-1 hidden h-9 w-auto dark:block"
 				/>
 				<span class="hidden items-end gap-1.5 md:flex">
-					<span class="text-2xl leading-none font-bold tracking-tight text-text-muted">
+					<span class="text-text-muted text-2xl leading-none font-bold tracking-tight">
 						solid
 					</span>
-					<span class="mb-0.5 rounded bg-accent px-1.5 py-0.5 font-mono text-[0.8125rem] leading-none font-semibold text-graphite [font-feature-settings:'zero']">
+					<span class="bg-accent text-graphite mb-0.5 rounded px-1.5 py-0.5 font-mono [font-feature-settings:'zero'] text-[0.8125rem] leading-none font-semibold">
 						2.0
 					</span>
 				</span>

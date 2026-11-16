@@ -1,0 +1,269 @@
+---
+title: "Client components in server markup"
+version: "2.0"
+description: "Place client components inside a server component through slots, give them the values they need, wrap server markup in client behavior, and keep their state through refreshes and reorders."
+---
+
+The product view from [Server components](/building-apps/server-components) left one position for the client: `props.buy`, where the page placed `AddToCart`.
+Most server markup needs a few of these.
+A review needs a "Helpful" toggle, a long review needs to expand and collapse, and the cart button needs the product's price.
+Each of those is a client component, and a slot is where the server says it goes.
+
+The rule for deciding which side an element belongs to: an element lives where the data that creates it lives.
+A review exists because of server data, so its markup is server markup.
+A toggle's pressed state, an expanded panel, or a quantity picker exists because of the shopper, so it is a client component placed through a slot.
+
+## Declare a slot
+
+A slot is a prop of the server component, typed with `Slot` from `@solidjs/web/frames`.
+Its type parameter is the props the server passes to the client component:
+
+```tsx
+import type { JSX } from "@solidjs/web";
+import type { Slot } from "@solidjs/web/frames";
+
+type ProductViewProps = {
+	buy: Slot<{ productId: string; price: number }>;
+	helpful: Slot<{ reviewId: string; count: number }>;
+	children?: JSX.Element;
+};
+```
+
+The server places a slot as an element, once or many times:
+
+```tsx
+return (props: ProductViewProps) => (
+	<article>
+		<h1>{product.name}</h1>
+		<props.buy productId={product.id} price={product.price} />
+		{reviews.map((review) => (
+			<blockquote>
+				<p>{review.text}</p>
+				<props.helpful reviewId={review.id} count={review.helpful} />
+			</blockquote>
+		))}
+		<footer>{props.children}</footer>
+	</article>
+);
+```
+
+Each place a slot is rendered is an occurrence.
+`props.helpful` has one occurrence per review, and each one runs the client's component with that review's props.
+`props.children` is a direct position: the server marks a range, and the client decides what goes in it.
+
+The client fills each slot with a component of the slot's props:
+
+```tsx
+<ProductView
+	buy={(p) => <AddToCart productId={p.productId} price={p.price} />}
+	helpful={(p) => <HelpfulToggle reviewId={p.reviewId} count={p.count} />}
+>
+	<ShareButtons />
+</ProductView>
+```
+
+Click a "Helpful" toggle and its count changes at once; the toggle's own code handles the click.
+The review text around it is server markup, and the client never re-renders it.
+
+When a fill passes its props straight through to one component, type the slot from that component so the two cannot drift apart:
+
+```tsx
+import type { ComponentProps } from "solid-js";
+import type { Slot } from "@solidjs/web/frames";
+import type HelpfulToggle from "../components/HelpfulToggle";
+
+type HelpfulSlot = Slot<ComponentProps<typeof HelpfulToggle>>;
+```
+
+Import the component with `import type` in the server module: the server only needs its props, and the client is the side that renders it.
+
+## A client component in a slot is a full client component
+
+The fill runs in the browser like any component body: once per occurrence, untracked, under that occurrence's owner.
+Signals, memos, effects, `onCleanup`, actions, and optimistic state created in it live as long as the occurrence does.
+
+```tsx
+// src/components/HelpfulToggle.tsx
+import { action, createOptimistic } from "solid-js";
+import { markHelpful } from "../data/reviews";
+
+export default function HelpfulToggle(props: {
+	reviewId: string;
+	count: number;
+}) {
+	const [count, setCount] = createOptimistic(() => props.count);
+	const vote = action(function* () {
+		setCount((c) => c + 1);
+		yield markHelpful(props.reviewId);
+	});
+
+	return <button onClick={() => vote()}>Helpful ({count()})</button>;
+}
+```
+
+`markHelpful` is a server function called with `POST`, so when it settles the router revalidates every query on screen, the product view included.
+The server renders the view again with the new count, the occurrence receives it as `props.count`, and the optimistic value gives way to it when the action settles.
+
+The props are reactive.
+When the server renders the product view again, after a mutation or on a live connection, each occurrence receives its new arguments and `props.count` updates; the component does not remount.
+Read props where they are used, as in any component.
+A read at the top of the fill runs once, and development reports [`STRICT_READ_UNTRACKED`](/reference/solid-js/diagnostics/strict-read-untracked) naming the slot's fill.
+
+On the first page load, client components in slots render on the server along with the server markup, so the page is complete before any JavaScript runs, and they hydrate when it arrives.
+After that, the server never renders them again: later responses carry the server's markup and each occurrence's arguments, and the browser renders the client components.
+
+## Pass server markup into a client component
+
+A slot argument can be JSX.
+The server renders it, and the client component decides where and whether to show it:
+
+```tsx
+// in the server component
+<props.review
+	reviewId={review.id}
+	excerpt={<p>{review.text.slice(0, 140)}…</p>}
+>
+	<div innerHTML={renderMarkdown(review.text)} />
+</props.review>
+```
+
+```tsx
+// src/components/ExpandableReview.tsx
+import { createSignal } from "solid-js";
+import type { JSX } from "@solidjs/web";
+
+export default function ExpandableReview(props: {
+	reviewId: string;
+	excerpt: JSX.Element;
+	children: JSX.Element;
+}) {
+	const [open, setOpen] = createSignal(false);
+
+	return (
+		<div class="review">
+			{open() ? props.children : props.excerpt}
+			<button onClick={() => setOpen((o) => !o)}>
+				{open() ? "Show less" : "Read more"}
+			</button>
+		</div>
+	);
+}
+```
+
+The review body is server markup inside a client wrapper.
+The client moves it, shows it, and hides it, but never rebuilds it, so nested server content stays one copy however deep it goes.
+
+Content the client did not show during the first render, such as the full review while it is collapsed, is not in the page's HTML.
+The server sends it once as data instead, and opening the review mounts it from that data with no request.
+
+## Place slots as elements, not calls
+
+Write `<props.helpful reviewId={review.id} />`, not `props.helpful({ reviewId: review.id })`.
+The compiler wraps each prop of the element form in a getter so the value is read where the slot is placed.
+The call form evaluates its arguments in the server component's body, before the slot exists.
+
+## Keep state with the right review
+
+Occurrences are matched by position by default.
+That is right for a list that does not reorder: refreshes that leave the order alone keep every toggle's state where it was.
+
+When the list can reorder, sorting reviews by most helpful for example, positional matching leaves an expanded panel at position 0 while its review moves to position 3.
+Name each occurrence with `$key` so its client state follows the review:
+
+```tsx
+// Avoid: the expanded state stays at the position when reviews reorder
+{
+	reviews.map((review) => (
+		<props.review reviewId={review.id}>{review.text}</props.review>
+	));
+}
+
+// Prefer: the occurrence is named by the review
+{
+	reviews.map((review) => (
+		<props.review $key={review.id} reviewId={review.id}>
+			{review.text}
+		</props.review>
+	));
+}
+```
+
+`$key` is not passed to the client component; it only names the occurrence.
+Keyed occurrences must be siblings for a reorder to follow the key, so let the client component render the per-item wrapper rather than wrapping each slot in its own server element.
+The same holds when the arguments change: in the `notes` example, changing the search text keeps the expanded state of every note still in the list, because each occurrence is keyed.
+
+`$key` on a server element names the element instead.
+The server's new markup for the same key updates that element in place, so element state the update preserves, such as an open `<details>`, a checked box, or focus, follows the entity through a reorder:
+
+```tsx
+{
+	reviews.map((review) => (
+		<li $key={review.id}>
+			<details>
+				<summary>{review.title}</summary>
+				<p>{review.text}</p>
+			</details>
+		</li>
+	));
+}
+```
+
+Keys on elements are compared among siblings only.
+
+## Pass a value that is still loading
+
+A promise or an async iterable passed as a slot argument stays pending without holding up the server's markup.
+Wrap it in `asyncArg` so the slot's type says what the client reads:
+
+```tsx
+import { asyncArg } from "@solidjs/web/frames";
+
+<props.shipping estimate={asyncArg(shipping.estimate(product.id))} />;
+```
+
+The client's read of `props.estimate` suspends into the nearest `Loading` boundary until the value arrives, and for an async iterable updates on every yield.
+
+## Behavior on server markup
+
+A handler on a server-rendered element cannot come from the server, because a server function never runs in the browser.
+Pick one of three shapes:
+
+- **A form.**
+  A mutation is `<form action={...} method="post">` in the server markup.
+  It works before JavaScript loads, and after hydration the router submits it in place and sets `aria-busy` on the form while it is in flight, so CSS can show the intent.
+- **A client component that owns the element.**
+  Move the control into a slot, as `HelpfulToggle` does, so the client renders the button and its handler.
+- **One delegated listener.**
+  For many identical controls inside server markup, such as a Copy button on every code block, place one slot occurrence whose component adds a single listener to the document in `onSettled` and finds its target from the event with `closest("button.copy")`.
+  The `chat` example's Copy button is this shape.
+
+## Common problems
+
+### Client state jumps to another item after a refresh
+
+The list reordered and its occurrences are positional.
+Add `$key` with the entity's id to the slot element, and render the slots as siblings.
+
+### A slot's prop never updates
+
+The fill read the prop at the top of the component, which runs once.
+Read `props.count` in the JSX or in a memo, and check the console for [`STRICT_READ_UNTRACKED`](/reference/solid-js/diagnostics/strict-read-untracked).
+
+### `document is not defined` while rendering the page
+
+On the first load, client components in slots render on the server.
+Keep browser APIs in effect functions, `onSettled`, or behind `isServer`, as for any component that renders on the server.
+
+## Recap
+
+- An element lives where the data that creates it lives: server data makes server markup, client state makes a client component in a slot.
+- Type a slot with `Slot<Props>`, place it as an element, and fill it with a component on the client.
+- A client component in a slot is a full client component, and its props update when the server renders again.
+- Pass JSX as a slot argument to wrap server markup in client behavior; the client never rebuilds it.
+- Add `$key` to occurrences or elements in a list that reorders, so state follows the entity.
+- Behavior on server markup is a form, a client component in a slot, or one delegated listener.
+
+## Next steps
+
+- [Keep server components fresh](/building-apps/server-components/keeping-fresh): refresh the product view after a mutation, or keep it connected with `live()`.
+- [Mutations](/concepts/mutations): actions and optimistic values, the client side of a toggle like `HelpfulToggle`.

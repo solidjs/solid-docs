@@ -1,0 +1,356 @@
+---
+title: "Keep server components fresh"
+version: "2.0"
+description: "Choose how often a server component's markup is rendered: once at build time, on navigation and after mutations, or continuously over a live connection, one render per viewer or one shared by all."
+---
+
+The product view from [Server components](/building-apps/server-components) is rendered when the page asks for it.
+Different parts of a store go stale at different speeds.
+The product description changes when someone edits the catalog, the review count changes when a shopper votes, and the stock level can change while the page is open.
+
+How fresh a server component is belongs to the server function, not to the page.
+The same component can be rendered at build time, on request, or continuously, and the code that mounts it does not change:
+
+| Freshness        | Declare                         | Rendered                                        |
+| ---------------- | ------------------------------- | ----------------------------------------------- |
+| Per build        | `prerendered(fn)`               | Once per call during `vite build`               |
+| Per request      | `query(fn, key)`                | On navigation, on preload, and after a mutation |
+| Live, per viewer | `liveQuery(fn, key)`            | Continuously, one render per connection         |
+| Live, shared     | `liveQuery(broadcast(fn), key)` | Continuously, one render per set of arguments   |
+
+## Refresh after a mutation
+
+A `query()`-wrapped server component is a cached read, so router revalidation refreshes it like any other query.
+Post a mutation from the server's own markup with a form:
+
+```tsx
+// src/data/product-view.tsx
+import { formAction, query } from "@solidjs/router";
+import { database } from "./database";
+
+export const reportReview = formAction(async (reviewId: string) => {
+	"use server";
+	await database.reviews.report(reviewId);
+});
+
+export const getProductView = query(async (id: string) => {
+	"use server";
+	const reviews = await database.reviews.forProduct(id);
+
+	return () => (
+		<ul>
+			{reviews.map((review) => (
+				<li $key={review.id}>
+					<p>{review.text}</p>
+					{review.reported ? (
+						<small>Reported</small>
+					) : (
+						<form action={reportReview.with(review.id)} method="post">
+							<button>Report</button>
+						</form>
+					)}
+				</li>
+			))}
+		</ul>
+	);
+}, "product-view");
+```
+
+Click **Report** and the review shows "Reported" when the call settles.
+The form is server markup, so it works before JavaScript loads; after hydration the router submits it in place, sets `aria-busy` on the form while the submission is in flight, and then revalidates the queries on screen.
+The product view's new markup is applied over the old one, so a half-typed review in a client component elsewhere in the view keeps its text.
+
+Style the in-flight state from `aria-busy` when the server's answer is the only thing that can decide the outcome:
+
+```css
+form[aria-busy="true"] button {
+	opacity: 0.5;
+}
+```
+
+When the client can predict the outcome, put the control in a client component with an optimistic value, as `HelpfulToggle` does in [Client components in server markup](/building-apps/server-components/client-components-in-slots#a-client-component-in-a-slot-is-a-full-client-component).
+
+### Answer the mutation and the new markup in one response
+
+By default, revalidation is a second round trip: the mutation answers, then the router refetches the product view.
+Register the router's flight collector and the mutation's own response carries the new markup of every server component it invalidated, alongside its value:
+
+```ts
+// vite.config.ts
+solid({
+	start: true,
+	ssr: true,
+	serverFunctions: { components: true, configure: "src/server-config.ts" },
+});
+```
+
+```ts
+// src/server-config.ts
+import { configureServerFunctionsServer } from "@solidjs/web/server-functions/server";
+import { createFlightDataCollector } from "@solidjs/router/server";
+import { Router } from "./router";
+
+configureServerFunctionsServer({
+	collectFlightData: createFlightDataCollector(Router),
+});
+```
+
+`configure` names a module that runs in the server-function handler before any request is dispatched.
+With the collector registered, a mutation that returns `redirect()` reruns the destination route's server calls and preloads, and one that does not reruns the route of the page the form was posted from.
+Open the network tab and click **Report**: there is one `POST`, and no refetch follows it.
+The `notes` and `todos-server` examples use this setup, and [Server integration](/reference/solid-router/server) documents the collector.
+
+## Cache a response over HTTP
+
+A `query()`-wrapped function is a `GET` read, so its response can carry cache headers.
+Return the component through `respond()` to set them:
+
+```tsx
+import { respond } from "@solidjs/web";
+
+export const getCatalogPage = query(async (page: number) => {
+	"use server";
+	const products = await database.products.page(page);
+	return respond(() => <ProductGrid products={products} />, {
+		headers: { "cache-control": "public, max-age=60" },
+	});
+}, "catalog-page");
+```
+
+Hover a link to the next catalog page and the router makes the call ahead of the click; the click then reads the same response from the browser's HTTP cache.
+Cache only answers that are the same for every visitor.
+[Reads, streams, and live data](/building-apps/server-functions/reads-and-live-data#declare-a-get-read) covers `GET` reads and what a cache may store.
+
+## Stream changes with `live()`
+
+A server component declared with `liveQuery` keeps its response open and sends what changed in its markup for as long as the page shows it.
+An order's tracking panel is one: it depends on who is asking, and it changes while the shopper watches.
+
+```tsx
+// src/data/order-status.tsx
+import { createMemo, onCleanup } from "solid-js";
+import { liveQuery } from "@solidjs/router";
+import { orders, requireUser } from "./orders";
+
+export const getOrderStatus = liveQuery(async (orderId: string) => {
+	"use server";
+	const user = await requireUser();
+
+	return () => {
+		const gone = new AbortController();
+		onCleanup(() => gone.abort());
+		const order = createMemo(() => orders.watch(orderId, user.id, gone.signal));
+
+		return (
+			<section>
+				<h2>Order {orderId}</h2>
+				<p>{order().status}</p>
+				<ol>
+					{order().events.map((event) => (
+						<li>{event.label}</li>
+					))}
+				</ol>
+			</section>
+		);
+	};
+}, "order-status");
+```
+
+`orders.watch` is a stand-in for your own source: an async iterable that yields the order as it stands now, then again after every change, and stops when the signal aborts.
+
+Mount it with `dynamicComponent` like any server component:
+
+```tsx
+const OrderStatus = dynamicComponent(() => getOrderStatus(props.orderId));
+
+<Loading fallback={<p>Loading the order…</p>}>
+	<OrderStatus />
+</Loading>;
+```
+
+Open the order page and mark the order shipped from another window.
+The status line and the new event appear without a reload, and only the parts of the markup that changed are sent.
+
+How it works:
+
+- The function body runs once per connection, so `requireUser()` checks the caller each time a connection opens.
+- The component's render stays alive for the life of the response.
+  When a reactive source it reads produces a new value, the parts of the markup that depend on it render again, and the server sends only those parts; a list sends only the rows that changed.
+- On the first page load, the document renders the source's first value into the HTML, and after hydration the browser connects to receive the rest.
+- When the connection drops, the browser reconnects with backoff and tells the server which markup it already shows, so the server sends only what differs.
+- When the shopper leaves the page, the connection closes, the render is disposed, and `onCleanup` aborts the watcher.
+
+Create the source inside the component, before the JSX, and hand it a signal that ends with the render.
+A source created in the outer body has no render to end with, and a source created inside a piece of markup that re-renders starts over on every re-render.
+
+A live server component holds one connection per mount.
+Over HTTP/1.1 a browser opens at most six connections to one origin, so serve live pages over HTTP/2; the Vite development server speaks HTTP/2 when `server.https` is set, and development warns past five live connections without it.
+Mutations do not revalidate live keys, because the stream is already current.
+
+## Share one render with `broadcast()`
+
+`live()` renders once per viewer, which is right when the answer can depend on who is asking.
+The stock panel on a product page shows the same thing to everyone looking at that product, so one render can serve them all.
+Wrap the function in [`broadcast()`](/reference/solid-web/server-functions/broadcast) inside `liveQuery`:
+
+```tsx
+// src/data/stock-panel.tsx
+import { createMemo, onCleanup } from "solid-js";
+import { broadcast } from "@solidjs/web/server-functions";
+import { liveQuery } from "@solidjs/router";
+import { inventory } from "./inventory";
+
+export const getStockPanel = liveQuery(
+	broadcast(async (productId: string) => {
+		"use server";
+		return () => {
+			const gone = new AbortController();
+			onCleanup(() => gone.abort());
+			const stock = createMemo(() => inventory.watch(productId, gone.signal));
+
+			return (
+				<p class="stock">
+					{stock().count > 0 ? `${stock().count} left in stock` : "Sold out"}
+				</p>
+			);
+		};
+	}),
+	"stock-panel"
+);
+```
+
+Open the product in ten windows: the server runs one render for that product, serializes each change once, and writes the same bytes to all ten connections.
+A different product id is a different render.
+
+What runs where:
+
+- The outer body runs for every caller, so an access check, a redirect, or `respond()` works as on any call, and a caller the body rejects never joins.
+- The component it returns is shared by every caller with the same arguments, compared as they were encoded on the wire.
+- The shared render runs under its own request event, so a request read inside it finds no request and development warns.
+  The router's `query` cache inside it starts empty, so a `getUser()` there cannot return the first viewer's user.
+- A viewer who joins late receives the markup as it stands, then the shared changes.
+- The render ends when its last viewer leaves, and the next caller starts a fresh one.
+  Sharing is per server process.
+
+The compiler rejects a shared render that reads the outer body's locals:
+
+```tsx
+// Avoid: the first caller's user would be shown to every viewer
+export const getStockPanel = broadcast(async (productId: string) => {
+	"use server";
+	const user = await getUser();
+	return () => <p>Hello {user.name}</p>; // compile error
+});
+
+// Prefer: check per caller in the body, read shared data inside the render
+export const getStockPanel = broadcast(async (productId: string) => {
+	"use server";
+	await requireShopper();
+	return () => {
+		const gone = new AbortController();
+		onCleanup(() => gone.abort());
+		const stock = createMemo(() => inventory.watch(productId, gone.signal));
+		return <p>{stock().count} left in stock</p>;
+	};
+});
+```
+
+The returned component may read the function's parameters, its own locals, and module scope.
+Data the body loads from the arguments is rejected too, because the compiler cannot tell `await load(productId)` from `await getUser()`; load it inside the component.
+
+Choose `broadcast()` deliberately.
+Whether a render depends on the caller cannot be detected, and sharing changes behavior even when nothing reads the request: effects and cleanups in the render run once per set of arguments, not once per viewer.
+
+## Render at build time with `prerendered()`
+
+A catalog page that changes only when the catalog is edited can be rendered once, during the build.
+Wrap the server function in `prerendered()` from `@solidjs/prerender`, inside `query()`:
+
+```tsx
+// src/data/product-view.tsx
+import { query } from "@solidjs/router";
+import { prerendered } from "@solidjs/prerender";
+
+export const getProductView = query(
+	prerendered(async (id: string) => {
+		"use server";
+		const product = await database.products.find(id);
+		return () => (
+			<article>
+				<h1>{product.name}</h1>
+				<div innerHTML={renderMarkdown(product.description)} />
+			</article>
+		);
+	}),
+	"product-view"
+);
+```
+
+Add the crawler to the plugins, after the Solid plugin:
+
+```ts
+// vite.config.ts
+import { defineConfig } from "vite";
+import solid from "@solidjs/vite-plugin";
+import { serverFunctions } from "@solidjs/prerender/integration";
+import { prerender } from "prerender-crawler/vite";
+
+export default defineConfig({
+	plugins: [
+		solid({ start: true, ssr: true, serverFunctions: { components: true } }),
+		prerender({ mode: "static", integrations: [serverFunctions()] }),
+	],
+});
+```
+
+Run `vite build`.
+The crawler renders each page it can reach from `/`, and every `prerendered()` call it made is written to `dist/client/_static/<build>/` as the response a live server would have given, markup included.
+On the deployed site, the first page's HTML already contains the product view, and navigating to another product fetches that call's file instead of calling a server.
+
+Outside a prerendered build, in development or in a build without the crawler, the function behaves as a `GET` read against a live server.
+Only calls the crawl made have files: in a static build, a call with arguments no page used is rejected, and in a `hybrid` build it falls back to the live server.
+[Choose a rendering mode](/guides/choose-a-rendering-mode#prerendered-at-build-time) covers the modes and the build guard that names any server function the deployed client could call but the crawl never captured.
+
+:::caution[Do not combine prerendered and live]
+A live server component needs a server that holds its connection, which a static deployment does not have.
+Nothing reports the combination yet, so keep `prerendered()` off functions declared with `live()`, `liveQuery`, or `broadcast()`.
+:::
+
+## Common problems
+
+### The page never finishes loading and development warns `SSR_UNDECLARED_LIVE_SOURCE`
+
+A server component rendered into the document reads an async iterable that keeps producing, and the function is not declared live, so the document waits for the source to end.
+Declare it with `liveQuery` or `live()`, so the document takes the first value and the browser connects for the rest, or end the source.
+[`SSR_UNDECLARED_LIVE_SOURCE`](/reference/solid-js/diagnostics/ssr-undeclared-live-source) has the details.
+
+### Part of a live server component stops updating
+
+Development reports [`SSR_LIVE_HOLE_LATCHED`](/reference/solid-js/diagnostics/ssr-live-hole-latched).
+A piece of markup that re-renders created an async source of its own, such as a memo over a fetch, so the runtime closed that piece and the browser keeps the markup it last received.
+Create the source in the component body, before the JSX, and read it in the markup.
+
+### A `broadcast` function fails to compile, naming two lines
+
+The shared render reads a value the outer body computed.
+Move the read inside the returned component; keep only per-caller checks, such as `requireShopper()`, in the body.
+
+### A live page stalls after a few tabs
+
+The server speaks HTTP/1.1, and the browser's connection limit for the origin is used up by open live responses.
+Serve the page over HTTP/2.
+
+## Recap
+
+- Freshness is declared on the server function: `prerendered()`, `query()`, `liveQuery()`, or `liveQuery(broadcast())`.
+- A `query()`-wrapped server component refreshes when the router revalidates, and its markup updates in place.
+- Register `createFlightDataCollector` through `serverFunctions.configure` to answer a mutation and its new markup in one response.
+- In a live server component, create the source inside the component and end it with the render.
+- Use `broadcast()` only when every viewer with the same arguments sees the same markup; the outer body still runs per caller.
+- Use `prerendered()` for markup that changes only when you rebuild, and never on a live function.
+
+## Next steps
+
+- [Client components in server markup](/building-apps/server-components/client-components-in-slots): keep client state through every refresh this page describes.
+- [Reads, streams, and live data](/building-apps/server-functions/reads-and-live-data): the same `live()` and `broadcast()` declarations for data instead of markup.
+- [Durable generation](/building-apps/server-functions/durable-generation#server-owned-the-thread-as-a-live-server-component): a live server component that renders an AI reply as it is written.

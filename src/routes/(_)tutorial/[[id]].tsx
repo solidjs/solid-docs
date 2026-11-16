@@ -152,7 +152,7 @@ export default function Tutorial() {
 	return (
 		<>
 			<Title>{`${entryAt(index())?.name ?? "Tutorial"} | Solid Tutorial`}</Title>
-			<div class="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] md:grid-cols-[minmax(22rem,2fr)_3fr] md:grid-rows-1">
+			<div class="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)_minmax(0,1fr)] md:grid-cols-[minmax(22rem,2fr)_3fr] md:grid-rows-1">
 				<section class="flex min-h-0 flex-col border-slate-200 md:border-r dark:border-slate-800">
 					<div class="border-b border-slate-200 px-6 py-3 dark:border-slate-800">
 						<label class="sr-only" for="tutorial-lesson">

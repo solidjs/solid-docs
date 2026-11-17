@@ -2,14 +2,17 @@
 title: "Boundaries"
 version: "2.0"
 description: "Decide which part of the page shows a spinner, which part shows an error, and in what order regions appear, by placing Loading, Errored, and Reveal around the right subtree."
-review: wanted
 ---
 
 With one boundary around a whole product page, a slow recommendations query keeps the product behind a spinner, and one failed request takes the whole page down.
 With no boundary at all, an unhandled error halts the reactive system and nothing on the page updates again.
-Boundaries decide how much of the page a pending or failed read affects.
-[`Loading`](/reference/solid-js/components-jsx/loading) renders a fallback while async reads in its subtree have no value, [`Errored`](/reference/solid-js/components-jsx/errored) renders a fallback when its subtree throws, and [`Reveal`](/reference/solid-js/components-jsx/reveal) decides the order in which sibling regions appear.
-Where you put each one is the design decision this page is about.
+Boundaries decide how much of the page a loading or failed read affects:
+
+- [`Loading`](/reference/solid-js/components-jsx/loading) shows a fallback while async data in its subtree has not loaded yet.
+- [`Errored`](/reference/solid-js/components-jsx/errored) shows a fallback when its subtree throws.
+- [`Reveal`](/reference/solid-js/components-jsx/reveal) decides the order in which sibling regions appear.
+
+This page is about where to put each one.
 
 ```tsx
 import { Errored, Loading, createMemo, createSignal } from "solid-js";
@@ -51,16 +54,17 @@ On first render the panel shows "Loading product…" and the picker is usable.
 When the request resolves the product appears; when it rejects, the error message and a **Retry** button appear in the same place.
 Pick another product and the panel shows the loading text again while the picker keeps working.
 
-Three rules explain that behavior.
-A boundary handles status produced by reads in its own subtree, and the nearest matching boundary handles it.
-Loading and error status are separate, so `Loading` does not hide an error and `Errored` does not replace loading UI; both can protect the same region.
-Controls outside the boundary are outside its fallback, so the picker stays on screen in every state.
+Three rules explain that behavior:
+
+- The nearest boundary above a read handles it.
+- Loading and errors are separate: `Loading` does not hide an error, and `Errored` does not show loading UI. Both can wrap the same region.
+- Anything outside a boundary stays on screen, so the picker is always usable.
 
 ## Loading boundaries
 
-`Loading` renders its `fallback` while an async value read in its subtree has not produced a first answer.
-Once it has shown content, it keeps that content visible during later updates: as the [Async reactivity](/concepts/async-reactivity#updates-keep-the-current-page) page explains, a change to an input is held, the current screen stays, and the new content replaces it when ready.
-Use `isPending` in the content when the user should see that a refresh is in progress.
+`Loading` shows its `fallback` until the async values read inside it have loaded for the first time.
+After that, it keeps the content on screen during updates and replaces it when the new content is ready, as [Async reactivity](/concepts/async-reactivity#updates-keep-the-current-page) explains.
+Use `isPending` in the content to show that an update is loading.
 
 Place a boundary around the smallest region its fallback should replace, and leave controls the user needs during the load outside it:
 
@@ -82,19 +86,20 @@ Place a boundary around the smallest region its fallback should replace, and lea
 </Loading>
 ```
 
-Run the `Avoid` version and the picker is gone until the slowest of the two requests lands.
+In the `Avoid` version, the picker is gone until the slower of the two requests finishes.
 In the `Prefer` version the picker is always there, the detail pane appears when the product arrives, and the recommendations appear when they do.
 
-The `on` prop is a dependency list: an expression the boundary tracks, whose reads say which changes should bring the fallback back.
-Without it, choosing a new product keeps the old product on screen while the new one loads; with `on={productId()}`, a change to the id makes the boundary stop waiting on its current content and show the skeleton while the new product loads.
-Its value does not matter, only what it reads, so several inputs go in as an array, `on={[productId(), variant()]}`.
-Pending work caused by anything `on` does not read, such as a refresh of the same product, leaves the content in place.
+The `on` prop says which changes should bring the fallback back.
+Without it, choosing a new product keeps the old product on screen while the new one loads.
+With `on={productId()}`, changing the id shows the skeleton while the new product loads.
+Pass several inputs as an array, `on={[productId(), variant()]}`.
+Anything `on` does not read, such as a refresh of the same product, leaves the content in place.
 
-The fallback appears with the same frame as the change that caused it.
-When nothing else is waiting on that change, that is at once.
-When other content outside the boundary is waiting on the same change, the page swaps when that content is ready, and the boundary shows its skeleton from that swap if its own content is still loading.
-When the very same data is also read outside the boundary, the frame waits on it and the fallback can never appear; development warns `LOADING_ON_OUTSIDE_HOLD`, and the fix is structural: move the outside read under the boundary so one hold owns the data.
-The [Async reactivity](/concepts/async-reactivity#show-a-placeholder-again-loading-on) page shows each case.
+The fallback appears together with the rest of the update.
+If other content outside the boundary is waiting on the same change, the skeleton appears when that content is ready.
+If the same data is also read outside the boundary, the fallback never appears, and development warns `LOADING_ON_OUTSIDE_HOLD`.
+Move that read inside the boundary to fix it.
+[Async reactivity](/concepts/async-reactivity#show-a-placeholder-again-loading-on) shows each case.
 
 :::pitfall[Passing the accessor to on instead of reading it]
 `on` is tracked, so the expression has to read the signal; an accessor that is never called reads nothing.
@@ -107,36 +112,36 @@ The [Async reactivity](/concepts/async-reactivity#show-a-placeholder-again-loadi
 <Loading on={productId()} fallback={<DetailSkeleton />}>
 ```
 
-With the uncalled accessor, picking another product keeps the old product on screen for the whole load, which is the behavior `on` was meant to change.
+With the uncalled accessor, picking another product keeps the old product on screen for the whole load, as if `on` were not there.
 :::
 
 ## Error boundaries
 
-`Errored` catches an error thrown by a read or computation in its subtree, including a rejected async source, and renders its fallback in place of the content.
+`Errored` catches an error thrown in its subtree, including a rejected request, and shows its fallback instead of the content.
 Content outside the boundary stays on screen.
 
 Place it around the smallest region that can fail and recover as one unit.
 For the product page, that is the detail pane and the recommendations separately: a failed recommendations query should not take the product with it.
 
 The fallback can be an element or a function.
-The function receives an accessor for the error and a `reset` function; calling `reset` re-runs the sources that failed so the branch can render again.
+The function receives an accessor for the error and a `reset` function that retries what failed.
 
 ### Recovery
 
-An errored region is not stuck until someone resets it.
-The error is the current status of that part of the graph, the same way "not ready" is a status, and it clears when the graph produces a value again:
+An errored region does not need `reset` to recover.
+The error clears as soon as the failed data produces a value again:
 
 - An input of the failed computation changes.
   In the example above, picking another product after a failed request runs the fetch for the new id, and the content returns if that request succeeds.
-- A `refresh(source)` lands with a successful result.
+- A `refresh(source)` succeeds.
 - A `live` server function reconnects and yields a value.
 
-`reset` covers the case where nothing upstream will change on its own, such as a network outage.
-It re-runs the failed sources, so a retry that hits the same error shows the same fallback, and a retry that succeeds shows the content.
+`reset` is for when nothing else will change on its own, such as after a network outage.
+A retry that fails again shows the fallback again, and a retry that succeeds shows the content.
 
-While the retry is in flight, the error fallback stays on screen.
-In the product panel above, clicking **Retry** leaves the error message and the button in place until the request settles; the `Loading` inside `Errored` does not show "Loading product…", because the error remains the region's answer until a new value replaces it.
-When a retry should show the placeholder, move `Loading` outside `Errored` and give it an `on` value that the retry changes:
+While the retry runs, the error fallback stays on screen.
+In the product panel above, clicking **Retry** leaves the error message in place until the request finishes; the `Loading` inside `Errored` does not show "Loading product…".
+To show the placeholder during a retry, move `Loading` outside `Errored` and give it an `on` value that the retry changes:
 
 ```tsx
 const [productId, setProductId] = createSignal("mug");
@@ -165,9 +170,9 @@ const product = createMemo(() => fetchProduct(productId()));
 </Loading>;
 ```
 
-Click **Retry** and "Loading product…" replaces the error message until the request settles; then the product or a new error message appears.
-Picking another product shows the loading text as before.
-The `attempt` write re-arms the boundary (see [Show a placeholder again](/concepts/async-reactivity#show-a-placeholder-again-loading-on)); without `on`, the outer `Loading` keeps the error message on screen too, because the region already has content.
+Click **Retry** and "Loading product…" replaces the error message until the request finishes; then the product or a new error message appears.
+Changing `attempt` is what brings the fallback back (see [Show a placeholder again](/concepts/async-reactivity#show-a-placeholder-again-loading-on)).
+Without `on`, the outer `Loading` also keeps the error message on screen, because the region already has content.
 
 :::caution[An error in the fallback is outside the boundary]
 An error thrown while rendering an `Errored` fallback is not caught by that boundary.
@@ -178,11 +183,11 @@ With no boundary above, an unhandled error halts the reactive system, which deve
 ## Reveal order
 
 Independent loading regions appear in the order their data arrives.
-On a product page with a detail pane, reviews, and recommendations, a fast recommendations query pops in below the detail skeleton and the layout shifts as each region lands.
+On a product page with a detail pane, reviews, and recommendations, fast recommendations can pop in below the detail skeleton, and the layout shifts as each region appears.
 Server rendering has the same problem in the HTML stream, where fragments arrive out of order.
 
-`Reveal` coordinates the `Loading` boundaries created directly within it.
-It does not fetch data, create loading state, or delay the network; content still arrives as soon as it is ready and `Reveal` controls when it is shown:
+`Reveal` controls when the `Loading` boundaries directly inside it show their content.
+It does not fetch data or delay requests; it only decides when ready content appears:
 
 ```tsx
 import { Loading, Reveal } from "solid-js";
@@ -205,10 +210,10 @@ The recommendations can finish first and still wait their turn behind the detail
 
 The three orders:
 
-- `sequential`, the default, reveals slots in registration order; a later slot stays on its fallback until every earlier slot is ready.
-- `together` holds every direct slot until all are ready, then releases them as a group.
-- `natural` lets each slot reveal when its own data resolves.
-  At the top level this is the same as no `Reveal`; its purpose is nesting, where the natural group takes one position in an outer order.
+- `sequential`, the default, shows regions in order; a region stays on its fallback until every region before it is ready.
+- `together` waits until every region is ready, then shows them all at once.
+- `natural` shows each region as soon as its own data loads.
+  On its own this is the same as no `Reveal`; it is useful nested inside another `Reveal`, where the whole group takes one place in the outer order.
 
 ```tsx
 function ProductPage() {
@@ -234,25 +239,26 @@ function ProductPage() {
 ```
 
 The detail pane appears first.
-Then reviews and recommendations appear independently, in whichever order they land.
+Then reviews and recommendations appear independently, in whichever order they load.
 The related products wait until both of those are shown.
 
 :::deep-dive[Which boundaries join a reveal group]
-A `Loading` boundary joins the nearest `Reveal` present when the boundary is created.
-A nested `Loading` or `Errored` starts a separate boundary scope for its subtree, so loading boundaries nested inside another `Loading` are not additional slots in the outer group, and a loading boundary wrapped by `Errored` does not delay an ancestor group.
+A `Loading` boundary joins the nearest `Reveal` above it when it is created.
+A `Loading` nested inside another `Loading` does not join the outer group, and a `Loading` wrapped in `Errored` does not delay the group above it.
 
-A nested `Reveal` is different: it registers itself as one composite slot with the parent group.
-An outer hold propagates through it, keeping its descendant loading boundaries on their fallbacks until the parent releases the slot, and the inner group then follows its own order.
+A nested `Reveal` joins its parent group as one region.
+Its boundaries stay on their fallbacks until the parent group reaches it, and then the nested group follows its own order.
 
-Membership is structural.
-Wrapping a descendant in another loading boundary does not let it escape an outer hold; move the region outside the outer `Reveal` when it must reveal on its own.
+Wrapping a region in another `Loading` does not take it out of an outer `Reveal`.
+Move the region outside the outer `Reveal` when it should appear on its own.
 :::
 
 ## Primitive forms
 
 The components above are built from three primitives, `createLoadingBoundary`, `createErrorBoundary`, and `createRevealOrder`.
-They stay runtime exports of `solid-js`, but their types live in `solid-js/internal`, which carries no semver guarantee: they exist for renderer integrations, not for application code.
-A custom boundary component composes `Loading`, `Errored`, and `Reveal` instead:
+They are exported from `solid-js`, but their types are in `solid-js/internal`, which has no semver guarantee.
+They exist for renderer integrations.
+In application code, build a custom boundary from `Loading`, `Errored`, and `Reveal`:
 
 ```tsx
 import { Errored, Loading } from "solid-js";
@@ -287,12 +293,14 @@ The request can stay where it was; the [Async reactivity](/concepts/async-reacti
 
 ### Choosing a new item keeps the old one on screen
 
-That is the default: after a first answer, the boundary keeps its content and the update is held.
+That is the default: after the first load, the boundary keeps its content during updates.
 Add `on={id()}` to the boundary when a change of subject should show the fallback, and read the signal inside it rather than passing the accessor.
 
-If `on` is already there and the old item still stays, check the console: `LOADING_ON_OUTSIDE_HOLD` means the same data is also read outside the boundary, such as a title showing the item's name, so the frame waits on that read and the fallback can never appear.
-Move the outside read under the boundary.
-Without the warning, the page is held by other content that reads the same input, such as a sibling boundary without `on`; the skeleton appears when that content is ready, or not at all if this item lands first.
+If `on` is already there and the old item still stays, check the console.
+`LOADING_ON_OUTSIDE_HOLD` means the same data is also read outside the boundary, such as a title showing the item's name.
+Move that read inside the boundary.
+Without the warning, other content that reads the same input is holding the update, such as a sibling boundary without `on`.
+The skeleton appears when that content is ready, or not at all if this item loads first.
 Give the sibling its own `on`, or drop `on` and show the wait with `isPending`.
 
 ### Retry shows the same error
@@ -303,24 +311,24 @@ When the fix is a different input, change the input; the boundary recovers on it
 
 ### Retry keeps showing the error instead of a loading state
 
-An `Errored` boundary keeps its fallback while a `reset` retry is pending, so a `Loading` inside it cannot show its fallback for the retry.
+An `Errored` boundary keeps its fallback while a `reset` retry runs, so a `Loading` inside it cannot show its fallback.
 Put `Loading` outside `Errored` and add a value that the **Retry** button changes to its `on`, as in [Recovery](#recovery).
 
 ### A region inside `Reveal` does not appear when its data is ready
 
-The region is a slot in a `sequential` group and an earlier slot is not ready.
+The region is in a `sequential` group and an earlier region is not ready.
 Give the group `order="natural"`, wrap the independent regions in a nested `<Reveal order="natural">`, or move the region outside the group.
 
 ## Recap
 
 - Put `Loading` around the smallest region its fallback should replace, and keep the controls the user needs outside it.
 - Put `Errored` around the smallest region that can fail and recover as a unit; both boundaries can wrap the same region.
-- After a first answer, `Loading` keeps its content during updates; add `on={key()}` when a changed subject should show the fallback again.
-  `on` is tracked, so read the signal inside it; the fallback appears with the frame the change lands in, and never when the same data is also read outside the boundary.
+- After the first load, `Loading` keeps its content during updates; add `on={key()}` when a changed subject should show the fallback again.
+  Call the signal inside `on`, and keep every read of that data inside the boundary.
 - An errored region recovers when an input changes or a refresh succeeds; `reset` is for when nothing upstream will change.
 - An error thrown by a fallback needs a boundary above it.
-- Use `Reveal` to control the order sibling regions appear in; it changes timing, not what each boundary observes.
-- Nest `<Reveal order="natural">` to let a group of regions take one position in an outer sequence.
+- Use `Reveal` to control the order sibling regions appear in.
+- Nest `<Reveal order="natural">` to let a group of regions take one place in an outer order.
 
 ## Next steps
 

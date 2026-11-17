@@ -10,17 +10,17 @@ Error reporting works on every build.
 When an `Errored` boundary catches an error, the browser's global error handler never sees it, so Solid gives you a hook on each platform that reports every failure the runtime handled, along with the component that threw and the boundary that caught it.
 
 Everything else needs the observe build.
-It publishes what the runtime did as plain records (a `Loading` boundary that waited on the server, a server-function call, a click and the writes it held) and carries the request's trace into the browser for you.
+It reports what the runtime did as plain records (a `Loading` boundary that waited on the server, a server-function call, a click and the writes it caused) and carries the request's trace into the browser for you.
 
 ## Three builds
 
 Solid ships three builds of every runtime package, selected by export condition.
 
-| Build   | Condition     | Carries                                                                                                                                   | `OBSERVE` | `DEV`     |
-| ------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------- | --------- |
-| prod    | default       | The runtime and the error hooks.                                                                                                          | undefined | undefined |
-| observe | `observe`     | prod, plus the records channel, the diagnostics channel, the attribution slot, and the server's trace slot. No console output, no checks. | object    | undefined |
-| dev     | `development` | observe, plus the development checks and the console reporter. Unminified.                                                                | object    | object    |
+| Build   | Condition     | Carries                                                                                                                         | `OBSERVE` | `DEV`     |
+| ------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------- | --------- |
+| prod    | default       | The runtime and the error hooks.                                                                                                | undefined | undefined |
+| observe | `observe`     | prod, plus the records channel, the diagnostics channel, attribution support, and server tracing. No console output, no checks. | object    | undefined |
+| dev     | `development` | observe, plus the development checks and the console reporter. Unminified.                                                      | object    | object    |
 
 The builds nest, so anything that works on the observe build also works on the dev build.
 The observe build is a little larger than prod.
@@ -41,7 +41,7 @@ export default defineConfig({
 That keeps names like `<Checkout>`, `span.textContent` and `count` through minification, so the paths below name your components instead of saying `computed`.
 Source locations (the `at` line in a dev console report) stay off unless you set `sourceNames: { locations: true }`.
 
-Under `vite dev` you still get the dev build, which is a superset, so anything you see there holds in production.
+Under `vite dev` you still get the dev build, which includes everything in the observe build, so anything you see there also works in production.
 Without the plugin, set `resolve.conditions` in your bundler (or `node --conditions=observe` for an unbundled server) and pass `sourceNames: true` to the compiler yourself.
 
 :::note[Errors report on every build]
@@ -51,9 +51,9 @@ A production app with no observability tooling at all still gets them; the obser
 
 ## Hear the errors your boundaries catch
 
-In the browser, an uncaught error halts the reactive system and goes to `reportError`, which `window.onerror` and every error monitor already listen to.
-An error a boundary catches does not: the fallback renders, the app keeps running, and no global handler hears about it.
-`configureClientErrors` is how you hear about those:
+In the browser, an uncaught error stops the reactive system and goes to `reportError`, which `window.onerror` and error monitors already listen to.
+An error that a boundary catches does not: the fallback renders, the app keeps running, and no global handler sees it.
+`configureClientErrors` reports those errors:
 
 ```ts title="src/monitor.ts"
 import { configureClientErrors } from "solid-js";
@@ -70,15 +70,15 @@ configureClientErrors({
 
 Click "Place order" with a broken price and the `Errored` fallback appears; the hook fires once, with `ownerPath` reading `<App> › <Checkout> › <OrderSummary> › computed` and `boundaryPath` reading `<App> › <Checkout> › <Errored>`.
 The first path is where the code broke; the second is what the shopper saw instead.
-A boundary's `reset()` recomputing the same failing node collects the same error object again and does not report it again.
-The paths are present where the runtime keeps owner names, which is the observe and dev builds; on the production build the hook still fires and the paths are `undefined`.
+If `reset()` hits the same error object again, it is not reported twice.
+The paths are only filled in on the observe and dev builds; on the production build the hook still fires, and the paths are `undefined`.
 
-A root can carry its own hook ahead of the ambient one: `render(App, el, { onError })` and `hydrate(App, el, { onError })` take the same function, and the nearest root wins.
+A root can have its own hook instead of the global one: `render(App, el, { onError })` and `hydrate(App, el, { onError })` take the same function.
 
 ## Hear every failure the server handles
 
 On the server, a failure can be handled in several ways that no global handler sees: an `Errored` fallback rendered into the stream, a `Loading` fragment that rejected and was handed to the client, a server function that threw, a hydration value that would not serialize, or a failure that fails the whole request.
-`configureServerErrors` hears all of them, once per error object:
+`configureServerErrors` reports all of them, once per error object:
 
 ```ts title="src/instrument.ts"
 import { configureServerErrors } from "@solidjs/web";
@@ -108,15 +108,15 @@ configureServerErrors({
 | `render`          | `failed`    | Nothing contained it; the request fails.                                                  |
 | `render`          | `serialize` | A value written to the hydration stream would not serialize.                              |
 | `server-function` | `thrown`    | The function threw. `direct` is `true` for an in-process call during a render.            |
-| `server-function` | `channel`   | A rejection escaped through a returned stream or iterable after the head committed.       |
+| `server-function` | `channel`   | A returned stream or iterable rejected after the response had started.                    |
 | `request`         | `failed`    | Code outside the runtime, such as middleware, passed a failure to `reportRequestFailure`. |
 
-A request failure the runtime never met, such as a throw a middleware catches before any render starts, reaches the hook only when that code calls `reportRequestFailure(error, event)` from `@solidjs/web`; [Catching errors](/building-apps/middleware-and-api-routes#catching-errors) shows the call.
+A failure the runtime never sees, such as an error a middleware catches before rendering starts, reaches the hook only when that code calls `reportRequestFailure(error, event)` from `@solidjs/web`; [Catching errors](/building-apps/middleware-and-api-routes#catching-errors) shows the call.
 The context then carries the request's `event`, and the hook's return value is ignored, as it is for every `failed` handling.
 
 The hook runs inside the request scope, so `getRequestEvent()` works in it.
-`renderToStream(App, { onError })` and `renderToString(App, { onError })` take a per-request hook that wins over the ambient one for that request.
-A monitoring SDK's `init()` has to run before the modules it patches load; the plugin's [`start.serverSetup`](/building-apps/app-structure#loading-instrumentation-first) option is where a plugin-hosted app puts it, and the module above is the shape it takes.
+`renderToStream(App, { onError })` and `renderToString(App, { onError })` take a per-request hook that replaces the global one for that request.
+A monitoring SDK's `init()` has to run before the modules it patches load; with the Vite plugin, put it in the module named by [`start.serverSetup`](/building-apps/app-structure#loading-instrumentation-first), as above.
 
 :::danger[The return value goes on the wire]
 The hook receives the error as thrown.
@@ -139,7 +139,7 @@ configureServerErrors({
 ## Follow a request into the browser
 
 A request arrives with a W3C `traceparent` header, or without one.
-The server continues the trace it was given or originates one, and every `getTraceContext()` call during the request, in-process server-function calls included, reads the same context.
+The server continues the trace it was given or starts a new one, and every `getTraceContext()` call during the request, including in-process server-function calls, returns the same context.
 Forward it from a server function to the services it calls:
 
 ```ts
@@ -158,7 +158,7 @@ export async function chargeCard(orderId: string) {
 The runtime also tells the browser which trace the page belongs to, through a `Server-Timing` header on the response and `<meta>` tags in the HTML head.
 Frame streams and server-function responses have no `<head>`, so they rely on the header.
 You do not need middleware for any of this.
-The trace only reaches the browser when the incoming `traceparent` was sampled or a provider answered, so a page with no tracing tool sees no change to its responses.
+The trace only reaches the browser when the incoming `traceparent` was sampled or a provider returned one, so a page with no tracing tool sees no change to its responses.
 
 On the observe build, a tracing tool provides the trace instead of the header:
 
@@ -177,18 +177,18 @@ OBSERVE?.server.trace.provide((request) => {
 ```
 
 The provider is called once per request, during the request, at the shell flush or the first `getTraceContext()` read, whichever comes first.
-The fields it returns replace the runtime's derivation; its `entries` merge by name over the runtime's `traceparent`; `undefined` leaves the derivation alone.
+The fields it returns replace the ones the runtime would compute; its `entries` are merged by name with the runtime's `traceparent`; returning `undefined` keeps the runtime's values.
 
 ## See what the runtime did
 
-`OBSERVE.records` delivers a plain record each time the runtime finishes something worth attributing, on both platforms:
+`OBSERVE.records` delivers a plain record each time the runtime finishes one of these, on the server and in the browser:
 
 | Type           | Platform | One record per                                                                                                    |
 | -------------- | -------- | ----------------------------------------------------------------------------------------------------------------- |
 | `"render"`     | server   | A `renderToString` or `renderToStream` render: how long the shell took and how many boundaries it waited on.      |
 | `"boundary"`   | server   | A `Loading` boundary that waited during a render; one that rendered on its first pass emits nothing.              |
 | `"invocation"` | server   | A server-function execution, from HTTP dispatch or an in-process call.                                            |
-| `"request"`    | client   | A server-function request the page sent, delivered at the send, so a call still in flight has a row.              |
+| `"request"`    | client   | A server-function request the page sent, delivered when it is sent, so a call still running has a record.         |
 | `"call"`       | client   | A server-function call the page made, as the caller awaited it.                                                   |
 | `"frame"`      | both     | A frame stream produced (server) or applied (client).                                                             |
 | `"recovery"`   | client   | A `Loading` boundary the server gave up on, re-rendered as fresh DOM on the client; joins its `"boundary"` by id. |
@@ -210,21 +210,22 @@ OBSERVE?.records.subscribe("boundary", (event) => {
 ```
 
 Render `/orders` with a slow database and the line reads `<Loading> at <App> › <Orders> › <Loading> waited 640ms settled`.
-A record is data: ids, names, an outcome, `at` on the `performance.now()` clock, durations, counts.
-Anything live (the request, the response, the arguments, the error as thrown) comes in a second argument to the listener, never on the record, so you can send a record off the device as it is.
-A client `"call"` and the server `"invocation"` it caused share an `id`; the difference between their durations is the wire.
-The `"request"` and `"call"` records of one call share their `live` object by identity, filled in as the call proceeds, so a listener holding it from the send reads the outcome off it at settle.
-Request and response bodies are taken only for a listener that asked, `subscribe("call", fn, { bodies: true })`; a listener that reads ids, statuses, and timings never pays for them.
-An invocation made during a boundary's render pass names that boundary, so a wait can be read as the calls it consisted of.
+A record holds only data: ids, names, an outcome, `at` on the `performance.now()` clock, durations, and counts.
+Live objects (the request, the response, the arguments, the original error) come in a second argument to the listener, never on the record, so you can send a record off the device as it is.
 
-Listeners run synchronously inside the runtime, the moment the record is complete.
-A listener must not write signals; one that throws is reported to the console and the others still run.
-Subscribe from a module that loads before the app; the channel exists once per process, so the subscription reaches records from every copy of the runtime a host bundles.
+- A client `"call"` and the server `"invocation"` it caused share an `id`; the difference between their durations is network time.
+- The `"request"` and `"call"` records of one call share the same `live` object, which is filled in as the call proceeds, so a listener that keeps it from the request can read the outcome later.
+- Request and response bodies are only captured for a listener that asks: `subscribe("call", fn, { bodies: true })`.
+- An invocation made while a boundary renders names that boundary, so you can see which calls a wait was made of.
+
+Listeners run synchronously inside the runtime, as soon as the record is complete.
+A listener must not write signals; if one throws, the error goes to the console and the other listeners still run.
+Subscribe from a module that loads before the app; there is one channel per process, so the subscription receives records from every copy of the runtime in the bundle.
 
 ## What each interaction cost
 
-When a click feels slow, the attribution engine tells you what it waited on.
-It is the same engine [Debugging reactivity](/guides/debugging-reactivity#something-updates-too-often) uses in development, and on the observe build it runs in production when you enable it:
+When a click feels slow, attribution tells you what it waited on.
+It is the same tool [Debugging reactivity](/guides/debugging-reactivity#something-updates-too-often) uses in development, and on the observe build you can enable it in production:
 
 ```ts
 import { OBSERVE } from "solid-js";
@@ -244,19 +245,28 @@ OBSERVE?.records.subscribe("interaction", (event) => {
 ```
 
 Click "Place order" and the line reads `click on button#place-order "Place order" took 840ms to settle: ["placeOrder held 812ms"]`.
-An interaction record carries the handler's own time, the writes it made, the re-runs and creations they caused, when the last effect that traces back to it ran (`settledMs`), and the holds and navigations it performed, each settled before the interaction is.
-A hold names what blocked the write, how long, and whether the screen acknowledged the wait with `isPending`, `latest`, or an optimistic value; `silent` is `true` on a hold nothing acknowledged, which is what the shopper experiences as a dead click, and `long` on one whose wait ran past the point a fallback should have taken over.
-A router that wraps its location write in `OBSERVE.attribution.withOrigin` gives its navigations the matched route pattern as their name, so `/orders/:id` folds together across shoppers; the route the document arrived on is declared the same way, so the first navigation has a name too, and a server `"render"` record carries it as `route`.
+An interaction record includes:
 
-`enable()` takes a hold on the engine and returns its release.
-Every tool on the page (an adapter, the Performance panel tracks, a diagnostics capture) shares one engine.
-Each takes its own hold, options combine by the most demanding request, and the engine stays on until the last hold is released.
-`attribution.disable()` tears everything down regardless.
-Record subscriptions belong to `OBSERVE.records`, not to the engine, so they survive a release and are dropped only by the function `subscribe` returned.
-`attribution.history("interaction")`, `history("hold")`, `history("navigation")`, and `history("rerun")` return the same records from a ring buffer for a console session that did not subscribe ahead of time.
+- the handler's own time and the writes it made;
+- the re-runs and creations those writes caused;
+- when the last effect caused by the interaction ran (`settledMs`);
+- the holds and navigations it caused.
 
-`feedback()`, `costs()`, `why()`, and `subscriptions()` are their own exports of `solid-js/attribution`, so a build that only subscribes to records ships none of them.
-A `"rerun"` record is only built while something wants it (a `"rerun"` listener, an imported fold, or the console log), so `history("rerun")` and `why()` are empty for runs before one appeared; `subscriptions()` reads the live graph and is unaffected.
+A hold record names what the write waited for, for how long, and whether the screen showed the wait with `isPending`, `latest`, or an optimistic value.
+`silent` is `true` when nothing showed the wait, which the shopper experiences as a click that did nothing; `long` is `true` when the wait lasted long enough that a fallback should have shown.
+
+A router that wraps its location write in `OBSERVE.attribution.withOrigin` names its navigations by the matched route pattern, so all `/orders/:id` navigations group together.
+The route the page first loaded on is named the same way, and a server `"render"` record carries it as `route`.
+
+`enable()` turns attribution on and returns a function that turns it off again.
+All tools on the page (an adapter, the Performance panel tracks, a diagnostics capture) share one instance.
+Each tool calls `enable()` separately, the most detailed options win, and attribution stays on until every tool has turned it off.
+`attribution.disable()` turns it off for everyone.
+Record subscriptions belong to `OBSERVE.records`, so turning attribution off does not remove them; only the function `subscribe` returned does.
+`attribution.history("interaction")`, `history("hold")`, `history("navigation")`, and `history("rerun")` return recent records from a buffer, for a console session that did not subscribe ahead of time.
+
+`feedback()`, `costs()`, `why()`, and `subscriptions()` are separate exports of `solid-js/attribution`, so a build that only subscribes to records does not include them.
+`"rerun"` records are only created while something uses them (a `"rerun"` listener, an imported helper such as `costs`, or the console log), so `history("rerun")` and `why()` are empty for runs before that; `subscriptions()` reads the current dependencies and always works.
 
 ## What leaves the process
 
@@ -268,7 +278,7 @@ Beyond names, four fields carry data from the page, and a tool that ships record
 - `to`, `from`, and `params` on a navigation: the concrete URL and the bound parameters.
 - `data.error` on the server's error findings (`SSR_RENDER_ERROR_CONTAINED`, `SERVER_ERROR_SANITIZED`): the error as thrown.
 
-The first two are governed at the source by the engine's `values` option, so a record never carries what the level excludes and nothing downstream has to scrub:
+The `values` option of `enable()` controls the first two when the record is created, so nothing downstream has to remove them:
 
 | `values`   | `prev` / `value` | `target`                               | Default in    |
 | ---------- | ---------------- | -------------------------------------- | ------------- |
@@ -276,9 +286,9 @@ The first two are governed at the source by the engine's `values` option, so a r
 | `"labels"` | absent           | text kept on a `button` or an `a` only |               |
 | `"none"`   | absent           | element only: `button#save`            | observe build |
 
-Across holds the least permissive level wins, so a production adapter that passes `values: "none"` keeps it beside a panel asking for `"full"`.
+When several tools enable attribution, the most restrictive level wins, so a production adapter that passes `values: "none"` keeps it even if a panel asks for `"full"`.
 If your tool exports records, pass the level explicitly instead of relying on the default.
-`to`, `from`, `params`, and `data.error` are outside the level: a tool that exports them treats them as it treats any URL or captured exception.
+`values` does not affect `to`, `from`, `params`, or `data.error`: a tool that exports them should handle them like any URL or captured exception.
 
 A tool that renders inside the app it watches, like a diagnostics panel or devtools, marks its root as its own, so its effects and stores never appear as findings about the app:
 
@@ -291,7 +301,7 @@ createRoot(() => {
 });
 ```
 
-A tool that renders the app inside its own shell, `<DevToolbar><App /></DevToolbar>`, excludes the shell and re-admits the app with `OBSERVE.include(owner)` at the app's root; each owner answers by its nearest marked ancestor.
+A tool that renders the app inside its own shell, `<DevToolbar><App /></DevToolbar>`, excludes the shell and includes the app again with `OBSERVE.include(owner)` at the app's root; each part of the tree follows its nearest marked ancestor.
 
 ## Common problems
 
@@ -308,7 +318,7 @@ Under `vite dev` the labels are present by default.
 
 ### No `Server-Timing` entry and no `<meta>` on the page
 
-Nothing told the runtime the trace was recorded: the incoming `traceparent` had no sampled flag, or there was none and no provider answered.
+The runtime did not know the trace was recorded: the incoming `traceparent` had no sampled flag, or there was none and no provider returned one.
 Install a provider, or send a sampled `traceparent` from the edge.
 
 ### My tool's own effects show up as findings
@@ -318,12 +328,12 @@ Writes into the excluded subtree stay excluded wherever they come from; do not r
 
 ## Recap
 
-- Errors report on every build through `configureClientErrors` and `configureServerErrors`, once per error object, with where the error was thrown (`ownerPath`) and where it was met (`boundaryPath`).
+- Errors are reported on every build through `configureClientErrors` and `configureServerErrors`, once per error object, with where the error was thrown (`ownerPath`) and where it was caught (`boundaryPath`).
 - The server hook's return value is what the client receives; return a reference, not the error.
 - Records, traces, and attribution need the observe build: `solid({ observe: true })`, or the `observe` condition and `sourceNames` by hand.
-- `OBSERVE.records` delivers settled, serializable records, the runtime's and the attribution engine's alike; live handles travel beside them, and a listener must not write signals.
+- `OBSERVE.records` delivers finished, serializable records from the runtime and from attribution; live objects come in a separate argument, and a listener must not write signals.
 - The runtime carries a sampled or provided trace into the browser on `Server-Timing` and `<meta>`; no middleware.
-- `attribution.enable()` then `OBSERVE.records.subscribe("interaction", …)` says what each click waited on; the fold tables are separate exports you pay for only when you import them.
+- `attribution.enable()` then `OBSERVE.records.subscribe("interaction", …)` shows what each click waited on; the summary tables are separate exports you pay for only when you import them.
 - `values` on `enable()` decides whether records carry value previews and element text; an exporter passes it explicitly.
 - Mark a tool's own root with `OBSERVE.exclude` so it never reports on itself.
 

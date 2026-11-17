@@ -2324,8 +2324,8 @@ const ENTRY_LEARN = {
 	],
 	isPending: [
 		[
-			"Another answer is coming: `isPending`",
-			"/concepts/async-reactivity#another-answer-is-coming-ispending",
+			"Show that an update is loading: `isPending`",
+			"/concepts/async-reactivity#show-that-an-update-is-loading-ispending",
 		],
 	],
 	latest: [
@@ -2385,8 +2385,8 @@ const ENTRY_LEARN = {
 	],
 	onFlush: [
 		[
-			"Keep a write out of another update's hold",
-			"/concepts/async-reactivity#keep-a-write-out-of-another-updates-hold-onflush",
+			"Keep a write out of a held update",
+			"/concepts/async-reactivity#keep-a-write-out-of-a-held-update-onflush",
 		],
 	],
 	from: [
@@ -2442,8 +2442,8 @@ const ENTRY_LEARN = {
 	Errored: [
 		["Error boundaries", "/concepts/boundaries#error-boundaries"],
 		[
-			"Work rejects: `Errored`",
-			"/concepts/async-reactivity#work-rejects-errored",
+			"Handle errors: `Errored`",
+			"/concepts/async-reactivity#handle-errors-errored",
 		],
 	],
 	Loading: [

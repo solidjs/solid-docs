@@ -1,18 +1,17 @@
 ---
 title: "Async reactivity"
 version: "2.0"
-description: "Read a promise like a value: how async memos hold updates, when Loading shows a fallback, and how mutations settle."
+description: "Read a promise like a value: how async memos keep the current page during updates, when Loading shows a fallback, and how to show pending work."
 ---
 
-Take a value your UI renders today, such as a product, and load it from the server instead of a constant.
-In Solid that is a one-line change: a computation that returns a promise is still a computation, so the type does not become `Promise<Product>`, and the components between the fetch and the display do not need to know about loading.
+Say a product page shows a hard-coded product, and you want to load it from the server instead.
+Put the fetch in a `createMemo`: the memo still returns a `Product`, not a promise, so the components that show it do not change.
 
-That one line also changes how writes behave.
-Once a memo is async, a write to any input it depends on is held until the memo has its next answer, and everything else in the same update waits with it.
+Async data also changes how updates work.
+When you change an input of an async memo, Solid keeps the current page on screen until the new data is ready, then shows everything at once.
 The page never shows a mix of old and new data.
-If you come from Solid 1 or from a pattern where every panel fetched and showed its own spinner on its own schedule, this is the part that will surprise you; the [in-flight work](#settled-view-and-in-flight-work) section shows it and the choices it gives you.
+If you are used to each panel showing its own spinner, this is the part that will surprise you; [Updates keep the current page](#updates-keep-the-current-page) explains it.
 
-This page explains what async computations buy you and what you still have to decide.
 The examples continue the shopping cart from the [Reactivity](/concepts/reactivity) page.
 
 ## A memo that returns a promise
@@ -42,22 +41,20 @@ function ProductDetail(props: { id: string }) {
 }
 ```
 
-`product()` has type `Product`, not `Product | undefined` and not `Promise<Product>`.
+`product()` has type `Product`, not `Product | undefined` or `Promise<Product>`.
 There is no loading flag to check and no optional chaining.
-If the expression is running, the value is there.
 
-Until the first result arrives, a read of `product()` reports that the value is not ready, and the nearest [`Loading`](/reference/solid-js/components-jsx/loading) boundary renders its fallback in place of the content.
+Until the first result arrives, the nearest [`Loading`](/reference/solid-js/components-jsx/loading) boundary shows its fallback.
 When the promise resolves, the content renders.
 
 When `props.id` changes later, the fallback does not come back.
 The current product stays on screen while the next one loads.
-Initial readiness and a later update are different situations, and Solid treats them differently by default; the [in-flight work](#settled-view-and-in-flight-work) section explains the second one.
+[Updates keep the current page](#updates-keep-the-current-page) explains why.
 
 ## Passing is not reading
 
-Components run once, so there is no component to suspend and re-run.
-Only expressions that read an async value wait for it.
-Passing the value along as a prop does not count as reading it, because a dynamic prop compiles to a getter that evaluates where the child uses it:
+Only the expressions that read an async value wait for it.
+Passing the value as a prop does not read it, because a prop compiles to a getter that runs where the child uses it:
 
 ```tsx
 function ProductPage(props: { id: string }) {
@@ -79,9 +76,9 @@ function ProductLayout(props: { product: Product }) {
 }
 ```
 
-`product={product()}` looks like it calls the accessor before the data exists.
-It does not; the expression is evaluated when `ProductDetail` reads `props.product.name`.
-So `ProductLayout` renders immediately, `CategoryNav` renders immediately, and only the detail pane waits.
+`product={product()}` looks like it reads the value before the data exists.
+It does not: the expression runs when `ProductDetail` reads `props.product.name`.
+`ProductLayout` and `CategoryNav` render immediately, and only the detail pane waits.
 
 Derived values behave the same way:
 
@@ -97,21 +94,21 @@ function ProductDetail(props: { product: Product }) {
 }
 ```
 
-`priceLabel` does not know that `product` was async.
-It reads a not-ready value, so it becomes not-ready itself, and its readers wait in turn.
-No `await` and no promise type appear anywhere between the fetch and the JSX.
+`priceLabel` does not know that `product` is async.
+While `product` is loading, `priceLabel` is loading too, and its readers wait.
+No `await` and no promise type appear between the fetch and the JSX.
 
 ## Fetch high, block low
 
-Because passing a value costs nothing, the two decisions that usually fight each other come apart:
+Because passing a value does not wait for it, you make two separate decisions:
 
-- Where to create the async value is a performance decision.
-  Higher in the tree means the request starts earlier and can run in parallel with other work.
-- Where to block is a design decision.
-  Lower in the tree means a smaller region shows a fallback.
+- Where to create the async value affects performance.
+  Higher in the tree, the request starts earlier.
+- Where to put `Loading` affects design.
+  Lower in the tree, a smaller region shows a fallback.
 
-Neither decision touches the components in between.
-Lift the fetch to the top of the app and push the boundary down to the one pane that should show a skeleton:
+Neither decision changes the components in between.
+Here the fetch is at the top of the app and the boundary is around the one pane that shows a skeleton:
 
 ```tsx
 function App() {
@@ -138,12 +135,11 @@ function ProductPage(props: {
 }
 ```
 
-Do the same refactor with a hard-coded product object and the code is identical.
-The async version costs one `Loading` element placed where the design wants a skeleton.
+With a hard-coded product the code would be the same, minus the `Loading` element.
 
 ## Nesting is not a waterfall
 
-A child component below JSX that reads an async value does not wait for that value unless it reads it too:
+A child component does not wait for its parent's async value unless it reads that value too:
 
 ```tsx
 function ProductDetail(props: { id: string }) {
@@ -166,11 +162,11 @@ function Reviews(props: { productId: string }) {
 }
 ```
 
-`Reviews` sits under `product().name` in the JSX, but the component tree mounts up front and `Reviews` reads `props.productId`, which is available immediately.
+`Reviews` sits under `product().name`, but it only reads `props.productId`, which is available immediately.
 Both requests start at the same time.
-Requests are ordered by data dependency, not by where the components sit.
+The order of requests follows the data, not the component tree.
 
-A waterfall happens when the second request depends on the first response:
+A waterfall happens only when the second request needs the first response:
 
 ```tsx
 const product = createMemo(() => fetchProduct(props.id));
@@ -178,28 +174,24 @@ const brand = createMemo(() => fetchBrand(product().brandId));
 ```
 
 `brand` cannot start until `product` resolves, because the id comes from the response.
-That is sequential because the data is sequential, and the dependency is visible in the code.
-Development builds can flag long chains like this with the `ASYNC_WATERFALL` diagnostic when attribution is enabled; see [Debugging reactivity](/guides/debugging-reactivity).
+With attribution enabled, development builds report long chains like this as `ASYNC_WATERFALL`; see [Debugging reactivity](/guides/debugging-reactivity).
 
-## Settled view and in-flight work
+## Updates keep the current page
 
-Once a value has settled, changing an input does not blank the screen.
-Solid separates the answer the user can see from the work that will produce the next answer:
+Once a value has loaded, changing an input does not blank the screen.
+Solid keeps showing the current value while it loads the next one:
 
 ![A timeline showing a Loading fallback during the first request, Answer A remaining visible during a held update, and Answer B appearing when the next request settles.](/images/diagrams/async-update-timeline.svg)
 
-Before the first answer, there is nothing to show and the `Loading` boundary decides what renders.
-After an answer, Solid holds the committed view while the next one is prepared.
-Other writes in the same update wait with it, and everything commits together when the pending work settles, so the page never shows a mix of old and new.
+Before the first value, there is nothing to show, so the `Loading` boundary shows its fallback.
+After that, Solid holds the update: the page stays as it is until the new value is ready.
+Other writes made at the same time wait too, and everything appears together, so the page never shows a mix of old and new.
 
-This hold is automatic.
-It does not need a `Loading` boundary and it has no API to opt in; if you have wrapped updates in a transition before, this is that behavior as the default.
-The boundary controls what renders when no settled answer exists; it does not create the hold.
+Holding is automatic and does not need a `Loading` boundary.
+If you have wrapped updates in a transition before, this is that behavior by default.
+`Loading` only decides what shows before the first value.
 
-### What the hold means for a shared input
-
-The hold is simple to reason about for one memo and one view.
-It is worth seeing for several.
+### Several panels on one input
 
 A dashboard has a period selector and three panels.
 Each panel fetches its own data from the selected period, and the fetches take 200 milliseconds, one second, and ten seconds:
@@ -226,39 +218,38 @@ function SummaryPanel(props: { period: string }) {
 }
 ```
 
-If each panel managed its own loading flag, changing the period would make the selector flip at once and each panel replace its content when its own request landed: the summary at 200 milliseconds, the audit log ten seconds later.
-For those ten seconds the page shows the new period's summary beside the old period's audit log.
+If each panel managed its own loading flag, the selector would change at once and each panel would update when its own request finished.
+For ten seconds the page would show the new period's summary next to the old period's audit log.
 
-In Solid the write to `period` is held.
-The selector keeps showing the old period, every panel keeps its old content, and at ten seconds the selector and all three panels change together.
-Nothing on the page ever disagrees about which period it is showing.
-The cost is that the fast panel waits for the slow one, and if nothing on the page reacts to the click, the page looks dead for ten seconds.
+In Solid the change to `period` is held.
+The selector and all three panels keep the old period, and after ten seconds they all change together.
+The page never disagrees with itself.
+The cost is that the fast panels wait for the slow one, and if nothing on the page responds to the click, the page looks frozen for ten seconds.
 
 Neither behavior is right for every screen.
-A detail page, a form, or a set of totals that must add up should change together.
-A set of independent widgets should not have to.
-The question to ask is about the update, not about any one request, and it is one your designer can answer:
+A detail page, a form, or totals that must add up should change together.
+Independent widgets do not need to.
+Ask this about the update, not about each request:
 
 **While this update is in flight, what should the user see?**
 
-| The user should see…                                                                                         | Use                                                                                               |
-| ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| Nothing change until everything that depends on the input is ready                                           | The default. Add [`isPending`](#another-answer-is-coming-ispending) to acknowledge the click.     |
-| The control they touched reflect their input now, and the content wait                                       | [`latest`](#show-the-input-now-latest) on the control, `isPending` to dim the content.            |
-| A placeholder in place of the content for the changed subject                                                | [`<Loading on={key}>`](#show-a-placeholder-again-loading-on) around that content.                 |
-| The input and the rest of the page change now, and one panel keep its old content until its own answer lands | [`createDeferred`](#let-a-panel-lag-createdeferred) for that panel's data, `isPending` to dim it. |
+| The user should see…                                                                                       | Use                                                                                                 |
+| ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Nothing change until everything that depends on the input is ready                                         | The default. Add [`isPending`](#show-that-an-update-is-loading-ispending) to acknowledge the click. |
+| The control they touched reflect their input now, and the content wait                                     | [`latest`](#show-the-input-now-latest) on the control, `isPending` to dim the content.              |
+| A placeholder in place of the content for the changed subject                                              | [`<Loading on={key}>`](#show-a-placeholder-again-loading-on) around that content.                   |
+| The input and the rest of the page change now, and one panel keep its old content until its own data loads | [`createDeferred`](#let-a-panel-lag-createdeferred) for that panel's data, `isPending` to dim it.   |
 
-The first two rows are the same screen: the tab highlight moves at once, the content stays and dims, the content swaps when it is ready.
-That is the standard interaction for a held update, and the rest of this section shows the pieces.
+The first two rows usually go together: the tab highlight moves at once, and the content dims until the new content is ready.
 The third row is for content that should not stay on screen when its subject changes, such as a panel for a different account.
-The fourth row is for a panel that may fall behind the rest of the page without making it wrong, such as the ten-second audit log.
+The fourth row is for a panel that can fall behind without making the page wrong, such as the ten-second audit log.
 
-The hold applies only to updates.
-Each panel's first load still reaches the nearest `Loading` boundary, and nested boundaries let panels appear as their own first data arrives.
+Holding applies only to updates.
+Each panel's first load still shows the nearest `Loading` fallback, and nested boundaries let panels appear as their own data arrives.
 
-### Keep a write out of another update's hold: `onFlush`
+### Keep a write out of a held update: `onFlush`
 
-Writes made in the same synchronous frame are applied together, so when one of them starts async work, the others wait with it.
+Writes made in the same synchronous call are applied together, so when one of them starts async work, the others wait with it.
 That is usually what you want, but not when a component writes its own state and then calls code it does not control:
 
 ```tsx
@@ -273,8 +264,8 @@ function Menu(props: { onSelect?: (id: string) => void }) {
 }
 ```
 
-If `onSelect` changes the route, the write to `open` is held with the navigation, and the menu stays open until the next page is ready.
-[`onFlush`](/reference/solid-js/lifecycle-actions/on-flush) runs its callback once, right after the pending flush and before the browser paints, so the write becomes its own update:
+If `onSelect` changes the route, the write to `open` waits for the navigation, and the menu stays open until the next page is ready.
+[`onFlush`](/reference/solid-js/lifecycle-actions/on-flush) runs its callback once, right after the current batch of writes is applied and before the browser paints, so the write becomes its own update:
 
 ```tsx
 const select = (id: string) => {
@@ -283,15 +274,15 @@ const select = (id: string) => {
 };
 ```
 
-The write still follows the normal rules: it commits on its own unless something it changes also derives from the held work, in which case it joins that hold like any later write.
+The write is still held if something it changes also depends on the pending async work.
 Call `onFlush` from event handlers and effect callbacks.
 In a component body or a computation it warns in development with [`ON_FLUSH_IN_OWNED_SCOPE`](/reference/solid-js/diagnostics/on-flush-in-owned-scope); setup after the first stable render belongs in `onSettled`.
 `queueMicrotask` is not a substitute: called before the frame's first write, its callback runs before that flush and the write joins it.
 
-## Another answer is coming: `isPending`
+## Show that an update is loading: `isPending`
 
-Because the old answer stays visible, the UI needs a way to say that a new one is on the way.
-[`isPending(fn)`](/reference/solid-js/reactivity/is-pending) answers that for one expression:
+Because the old value stays visible, the UI needs a way to show that a new one is loading.
+[`isPending(fn)`](/reference/solid-js/reactivity/is-pending) returns `true` while the expression is waiting for new data:
 
 ```tsx
 import { For, createMemo, createSignal, isPending } from "solid-js";
@@ -311,10 +302,9 @@ function Search() {
 }
 ```
 
-Typing changes `query`, `results` starts a new request, and the previous results stay on screen with the `stale` class until the new ones land.
+Typing changes `query`, `results` starts a new request, and the previous results stay on screen with the `stale` class until the new ones arrive.
 
-`isPending` is a question, not a piece of state.
-It can be asked about the async source, about a memo derived from it, about a prop several components down, or about the signal whose write started the update:
+You can call `isPending` on the async source, on a memo derived from it, on a prop several components down, or on the signal whose write started the update:
 
 ```tsx
 function App() {
@@ -331,20 +321,22 @@ function App() {
 }
 ```
 
-Here the fetch lives inside `ProductPage`.
-`App` knows nothing about it, but `isPending(selectedId)` is `true` from the moment the write happens until everything downstream has settled, because the write is what is being held.
+The fetch is inside `ProductPage`, and `App` knows nothing about it.
+`isPending(selectedId)` is still `true` from the click until everything that depends on `selectedId` has loaded, because the write to `selectedId` is what is held.
 
-Notice that the list highlight does not move on click either.
-`selectedId()` holds its old value like everything else, so the highlighted row always matches the content on screen.
-When the design wants the highlight to move immediately, read the input with [`latest`](#show-the-input-now-latest), covered next.
+The list highlight does not move on click either.
+`selectedId()` keeps its old value like everything else, so the highlighted row always matches the content.
+To move the highlight immediately, read the input with [`latest`](#show-the-input-now-latest), covered next.
 
-A held update that nothing acknowledges looks like a dead click for as long as the request takes.
-With attribution enabled, development builds report that case as `SILENT_HOLD` and name the interaction, the write, and the source it waited on; [Debugging reactivity](/guides/debugging-reactivity#the-screen-looks-dead-after-a-click) covers the report and the fixes, which are the primitives on this page.
+A held update with no visible response looks like a click that did nothing.
+With attribution enabled, development builds report it as `SILENT_HOLD`; [Debugging reactivity](/guides/debugging-reactivity#the-screen-looks-dead-after-a-click) covers the report and the fixes.
 
-If the expression has no settled answer yet, the read inside `isPending` still follows the surrounding `Loading` path; `isPending` reports on updates to a value that exists, not on the first load.
+`isPending` reports on updates to a value that has already loaded.
+On the first load, the read still shows the surrounding `Loading` fallback.
 
 An error is not pending either.
-When the request rejects and the error shows, `isPending(results)` returns `false` and does not rethrow the error, so a region that reads `results` only through `isPending` never reports the failure:
+When the request rejects, `isPending(results)` returns `false` and does not rethrow the error.
+A region that reads `results` only through `isPending` never reports the failure:
 
 ```tsx
 // Avoid: the only read of results is the probe
@@ -360,17 +352,16 @@ When the request rejects and the error shows, `isPending(results)` returns `fals
 </Errored>
 ```
 
-In the `Avoid` version a failed search drops the `stale` class, and the paragraph stays on screen as if the search had succeeded.
-In the `Prefer` version the `results()` read inside `<For>` throws the error, and the boundary shows "Search failed." in place of the list.
-Keep a plain read of the value next to each `isPending` probe, inside the [`Errored` boundary](#work-rejects-errored) that should report it.
+In the `Avoid` version, a failed search removes the `stale` class, and the paragraph stays as if the search had succeeded.
+In the `Prefer` version, the `results()` read inside `<For>` throws the error, and the boundary shows "Search failed.".
+Read the value itself next to each `isPending` call, inside the [`Errored` boundary](#handle-errors-errored) that should report it.
 
 ## Show the input now: `latest`
 
-A held update keeps the input's old value visible along with the old content.
-For the content that is the right choice.
-For the control the user has touched, it usually is not: a tab that does not highlight when clicked reads as broken, even when the content below it is correctly waiting.
+A held update keeps the old input value on screen along with the old content.
+That is right for the content, but usually not for the control the user touched: a tab that does not highlight when clicked looks broken.
 
-[`latest(fn)`](/reference/solid-js/reactivity/latest) reads the value an update is moving toward instead of the value it has committed:
+[`latest(fn)`](/reference/solid-js/reactivity/latest) reads the new value before the update is applied:
 
 ```tsx
 <ProductList selectedId={latest(selectedId)} onSelect={setSelectedId} />
@@ -379,23 +370,22 @@ For the control the user has touched, it usually is not: a tab that does not hig
 </main>
 ```
 
-If a new value is in flight, `latest(selectedId)` returns it before the held update commits it.
-Otherwise it returns the committed value.
-Before any value exists, the read still follows the normal `Loading` path.
+If an update is waiting, `latest(selectedId)` returns the new value.
+Otherwise it returns the current value.
+Before any value exists, the read shows the `Loading` fallback as usual.
 
-Read the two sides together: `latest` on the control, the plain read on the content, `isPending` between them to dim the content.
-The highlight moves at once, the old product stays visible and dims, and the new product replaces it when its data is ready.
-This is the everyday shape of a held update, not a special case.
+Use the three together: `latest` on the control, a plain read for the content, and `isPending` to dim the content.
+The highlight moves at once, the old product dims, and the new product replaces it when its data is ready.
+This is the usual pattern for a held update.
 
-`latest` belongs on inputs.
-Reading data through `latest` shows a result before the rest of the update has agreed on it, so a panel can show the new period's numbers while the selector still shows the old period.
-When you want the control to lead, use `latest` on the control; when you want a panel to show a placeholder, use the next section.
+Use `latest` on inputs, not on data.
+Reading data through `latest` can show a new result while the rest of the page still shows the old one.
+To show a placeholder for a panel instead, see [Show a placeholder again](#show-a-placeholder-again-loading-on).
 
 ## Let a panel lag: `createDeferred`
 
-`latest` changes what one reader shows.
-The update is still held: every plain reader of the input waits, and the page commits when the slowest answer lands.
-When a panel may keep its previous answer while the next one loads, and the rest of the page should not wait for it, create the panel's data with [`createDeferred`](/reference/solid-js/reactivity/create-deferred) instead of `createMemo`:
+`latest` changes what one reader shows, but the update is still held until the slowest data loads.
+When a panel can keep its old data while the rest of the page moves on, create the panel's data with [`createDeferred`](/reference/solid-js/reactivity/create-deferred) instead of `createMemo`:
 
 ```tsx
 function AuditPanel(props: { period: string }) {
@@ -409,35 +399,31 @@ function AuditPanel(props: { period: string }) {
 }
 ```
 
-After its first answer, a refetch of a deferred memo holds nothing.
+After its first load, a deferred memo does not hold updates.
 When the period changes, the selector and the other two panels change at once.
-The audit panel keeps its old entries, dims through `isPending`, and shows the new entries when its own request lands.
+The audit panel keeps its old entries, dims through `isPending`, and shows the new entries when its request finishes.
 
-The two APIs look alike but answer different questions:
+The difference between the two:
 
-- `latest` is on the reader. This control shows the input now; the content still waits with the update.
-- `createDeferred` is on the source. No reader waits for this answer, so the update does not wait for it either.
+- `latest` goes on a reader. That control shows the new input now, but the update still waits for the slow data.
+- `createDeferred` goes on the source. The update no longer waits for that data at all.
 
-So `createDeferred` is not the same as reading every consumer through `latest`.
-With `latest`, the update is still held for every plain read of the input until the slow answer lands.
-With `createDeferred`, the slow answer is no longer part of the update at all.
-
-Reach for `createDeferred` when the async work can lag without making the page wrong: an independent widget, a feed, or search suggestions.
-Keep `createMemo` for data that must agree with the rest of the page, such as totals that must add up or the details of the selected item.
+Use `createDeferred` for data that can lag without making the page wrong: an independent widget, a feed, or search suggestions.
+Keep `createMemo` for data that must match the rest of the page, such as totals that must add up or the details of the selected item.
 
 :::note
-A deferred memo may lag, but it never leads.
-Its first load is a first load like any other: readers suspend to the nearest `Loading` boundary.
-A refetch that reads a value another update is still holding lands with that update, so the panel never shows an answer the rest of the page has not committed to.
+A deferred memo can fall behind the page, but never get ahead of it.
+Its first load shows the nearest `Loading` fallback as usual.
+If it reads a value that another update is still holding, its new data appears with that update.
 :::
 
 ## Show a placeholder again: `Loading on`
 
-Once a `Loading` boundary has shown content, a later update does not bring the fallback back; the content stays and the update is held.
-Some content should not stay.
-An account panel showing account 1 while account 2 loads is worse than a skeleton, and the same is true for any content whose subject changed rather than whose data refreshed.
+Once a `Loading` boundary has shown content, later updates do not bring the fallback back.
+Some content should not stay, though.
+An account panel showing account 1 while account 2 loads is worse than a skeleton.
 
-The `on` prop is a dependency list: the boundary tracks the expression, and a change to anything it reads makes the boundary stop waiting on its current content and show the fallback again while the new content loads.
+The `on` prop tells the boundary to show its fallback again when something it reads changes:
 
 ```tsx
 <Loading on={accountId()} fallback={<AccountSkeleton />}>
@@ -445,17 +431,14 @@ The `on` prop is a dependency list: the boundary tracks the expression, and a ch
 </Loading>
 ```
 
-A `Loading` boundary is the update's chance to finish without waiting for that content: the region shows its fallback and waits on its own.
-Normally the update takes that chance only on the region's first load.
-`on` extends the offer to later updates: when `accountId()` changes and the new account is not ready, the boundary gives up its old content and takes the wait back from the update.
-If the panel was the only thing waiting, the update finishes at once.
-Controls outside the boundary see the new id, the panel shows its skeleton, and the content arrives when the account does.
-Pending work caused by anything `on` does not read, such as a refresh of the same account, leaves the content in place as usual.
+When `accountId()` changes and the new account is not ready, the boundary shows its skeleton instead of the old account, and the update no longer waits for this panel.
+If the panel was the only thing waiting, the update applies at once: controls outside the boundary show the new id, and the panel shows its skeleton until the account loads.
+Anything `on` does not read, such as a refresh of the same account, leaves the content in place as usual.
 
-The fallback lands in the same frame as the change that caused it.
-When nothing else is waiting on that change, that frame is immediate.
-When other content is waiting on the same change, say two sibling panels reading the new account's orders and activity, the frame lands when they are ready, and this boundary shows its skeleton from that swap if its own content is still loading; the skeleton never appears beside a page the change has not reached.
-When the very same data is also read outside the boundary, the frame waits on that read, which does not finish before the boundary's own content does, so the fallback can never appear:
+The fallback appears together with the rest of the update.
+If nothing else is waiting, that is immediate.
+If other content outside the boundary is waiting on the same change, the fallback appears when that content is ready, so the skeleton never shows next to a page that has not updated yet.
+If the same data is also read outside the boundary, the update waits for that data, so the fallback never appears:
 
 ```tsx
 // account is createMemo(() => fetchAccount(accountId()))
@@ -473,32 +456,31 @@ When the very same data is also read outside the boundary, the frame waits on th
 </Loading>
 ```
 
-In the `Avoid` version, picking another account looks like nothing happened until the account loads, then the heading and the details change together; the `on` had no visible effect because the heading kept the frame waiting on the data the boundary was about to show a skeleton for.
-Development reports this as `LOADING_ON_OUTSIDE_HOLD`, naming the source, and the fix is structural: move the outside read under the boundary so one hold owns the data.
-The `Prefer` version is that fix.
+In the `Avoid` version, picking another account seems to do nothing until the account loads, and then the heading and details change together.
+The heading outside the boundary keeps the update waiting, so `on` has no visible effect.
+Development reports this as `LOADING_ON_OUTSIDE_HOLD`.
+The fix is the `Prefer` version: move every reader of that data inside the boundary.
 
-So the rule for `on` is that the boundary encloses every reader of the data it waits on.
-Other content waiting on the same input through its own data is fine; the skeleton arrives with the frame that content lands in.
-That leaves a design choice rather than a rule about where boundaries go:
+You then have a design choice:
 
-- One boundary with `on` around every reader of the subject.
-  The whole subject shows one skeleton and appears together.
+- One boundary with `on` around everything that shows the subject.
+  The whole subject shows one skeleton and appears at once.
 - A boundary with `on` around each region.
-  Every region shows its own skeleton as soon as its frame lands, and each appears as its own data arrives.
+  Each region shows its own skeleton and appears when its own data arrives.
 
-When neither fits, because a breadcrumb, a title, or a sibling panel shows the same data and should stay, drop `on` and acknowledge the wait with `isPending` and `latest` instead.
+If neither fits, for example because a title elsewhere shows the same data, drop `on` and use `isPending` and `latest` instead.
 
-`on` is tracked, so the expression has to read the signal: `on={accountId()}`, not `on={accountId}`.
-Its value is irrelevant; several inputs go in as an array, `on={[accountId(), tab()]}`, and a change to any of them re-arms the boundary.
+`on` is tracked, so it must read the signal: `on={accountId()}`, not `on={accountId}`.
+Pass several inputs as an array, `on={[accountId(), tab()]}`.
 
-The same choice decides the dashboard above.
-Give each panel its own boundary with `on={period()}` and the period write commits at once: the selector flips, every panel shows its skeleton, and each panel's content arrives as its own request lands.
-Give `on` to one panel only and the other two, reading the shared input the normal way, still hold the write; the page swaps when both have answered, and the panel with `on` shows its skeleton from that swap until its own request lands, or shows nothing if it landed first.
+The same choice applies to the dashboard above.
+With `on={period()}` on a boundary around each panel, the period change applies at once: the selector changes, every panel shows its skeleton, and each panel fills in as its request finishes.
+With `on` on only one panel, the other two still hold the update, and the panel with `on` shows its skeleton from when they finish until its own data arrives.
 [Boundaries](/concepts/boundaries) covers placement and how `Reveal` orders several boundaries.
 
 :::deep-dive[A skeleton on every refetch: on={data()}]
-`on` reads a subject, so a refetch of the same subject leaves the content in place.
-When a region should show its skeleton for every refetch as well, make the boundary depend on the data itself:
+A refetch of the same subject normally leaves the content in place.
+To show the skeleton on every refetch too, pass the data itself to `on`:
 
 ```tsx
 <Loading on={account()} fallback={<AccountSkeleton />}>
@@ -506,14 +488,14 @@ When a region should show its skeleton for every refetch as well, make the bound
 </Loading>
 ```
 
-A source going pending counts as a change to what `on` reads, so `refresh(account)` or a revalidation after an action brings the skeleton back, even when the same value lands.
-The same-data rule applies: another reader of `account()` outside the boundary holds the frame on the data the boundary waits for, the skeleton never appears, and development warns.
-This is a skeleton on every refresh; for most regions the default, old content with `isPending`, is the kinder treatment.
+Now `refresh(account)` or a revalidation after an action brings the skeleton back, even when the data is unchanged.
+As above, a read of `account()` outside the boundary stops the skeleton from appearing, and development warns.
+For most regions, keeping the old content with `isPending` is a better experience.
 :::
 
 :::deep-dive[A placeholder value instead of a fallback: loadingValue]
-Most first loads should reach a `Loading` boundary.
-When the placeholder renders through the same UI as the real data, such as an empty result list, the `loadingValue` option declares a value that answers for the source until the first result arrives:
+Most first loads should show a `Loading` fallback.
+When the placeholder can use the same UI as the real data, such as an empty result list, the `loadingValue` option gives a value to use until the first result arrives:
 
 ```ts
 const results = createMemo(() => searchProducts(query()), {
@@ -521,16 +503,16 @@ const results = createMemo(() => searchProducts(query()), {
 });
 ```
 
-A source with a `loadingValue` never reaches `Loading` for its first flight, and `isPending` stays `false` until the first computed value lands.
-Later updates follow the normal held behavior.
+A source with a `loadingValue` does not show a `Loading` fallback on its first load, and `isPending` stays `false` until the first result arrives.
+Later updates are held as usual.
 The store form is `seedLoadingValue: true` on `createStore(async () => ..., seed)`, which makes the seed the placeholder.
 The [`createMemo`](/reference/solid-js/reactivity/create-memo) and [`createStore`](/reference/solid-js/stores/create-store) references list the option contracts.
 :::
 
-## Work rejects: `Errored`
+## Handle errors: `Errored`
 
-If async work rejects, the error travels through the reactive graph like a value.
-An [`Errored` boundary](/reference/solid-js/components-jsx/errored) turns an unhandled error into fallback UI:
+If async work rejects, the error passes to everything that reads the value.
+An [`Errored` boundary](/reference/solid-js/components-jsx/errored) shows fallback UI for an error that nothing else handles:
 
 ```tsx
 import { Errored, Loading } from "solid-js";
@@ -550,18 +532,19 @@ import { Errored, Loading } from "solid-js";
 ```
 
 `Loading` and `Errored` handle separate states.
-A loading boundary does not consume errors, and an error boundary does not replace loading UI.
+`Loading` does not catch errors, and `Errored` does not show loading UI.
 
-An error is a status of that part of the graph, not a terminal state.
-When the data underneath changes, because an input signal changed or a `refresh` landed, the boundary retries and the content returns.
-`reset` retries the failed sources rather than showing the same error again.
-While the retry is in flight, the error fallback stays on screen; the `Loading` inside the boundary does not replace it.
+An error is not permanent.
+When the data changes, because an input changed or a `refresh` finished, the boundary tries again and the content returns.
+`reset` retries the failed sources.
+While the retry runs, the error fallback stays on screen; the `Loading` inside the boundary does not replace it.
 [Boundaries](/concepts/boundaries#recovery) covers placement and recovery in detail, including how to show a placeholder during a retry.
 
 ## Read every input before the first `await`
 
-Dependency tracking is synchronous.
-An async computation registers the reactive reads it makes before its first `await`; a read after the `await` happens outside the tracking window, so a later change to that source cannot re-run the computation.
+Solid tracks reads synchronously.
+An async computation tracks the reads it makes before its first `await`.
+A read after the `await` is not tracked, so a later change to that source does not re-run the computation.
 
 ```ts
 // Avoid: permissions() is read after the await and is never tracked
@@ -582,19 +565,19 @@ const profile = createMemo(async () => {
 Run the `Avoid` version and change `permissions`: the memo does not recompute and the page keeps the old `canEdit`.
 
 :::pitfall[A source first read after await cannot notify you]
-The problem is worse when the late read is itself async and not ready yet.
-No dependency edge exists, so the source cannot wake the computation when it settles, and the computation would stay pending with no retry.
+This is worse when the late read is itself async and still loading.
+The source cannot notify the computation when it loads, so the computation would stay pending forever.
 Development builds turn that read into an error so it reaches `Errored` instead of hanging; production builds do not include the check.
 Read every reactive input at the top of the function, before the first `await`.
 :::
 
 ## Stop the work a run started
 
-Solid drops a superseded run's result on its own, but the work the run started, such as a request, a timer, or a subscription, keeps going unless the run stops it.
-When a run's cleanups happen depends on whether the user has seen it:
+When a newer run replaces an older one, Solid ignores the older result, but any request, timer, or subscription the older run started keeps going unless you stop it.
+When cleanup runs depends on whether the run was ever shown:
 
-- **A run that never committed** was never on screen, so it is cleaned up as soon as a newer run supersedes it.
-  An `onCleanup` registered before the first `await` therefore cancels an unfinished request:
+- **A run that was never shown** is cleaned up as soon as a newer run replaces it.
+  An `onCleanup` registered before the first `await` cancels an unfinished request:
 
 ```ts
 const results = createMemo(async () => {
@@ -606,17 +589,17 @@ const results = createMemo(async () => {
 });
 ```
 
-- **The run on screen** stays fully live until its replacement lands.
-  Its children keep reacting and its subscriptions and timers keep running, because it is still what the user sees.
-  Its cleanups run when the replacement commits.
+- **The run on screen** stays active until its replacement is shown.
+  Its subscriptions and timers keep running, because the user still sees it.
+  Its cleanups run when the replacement appears.
 
-An iterable that the computation returns is different: it is closed as soon as the run is superseded, because nothing can show what it yields any more.
-To stop work when one input changes, tie that work to the input in a child computation rather than to the outer one, so it re-runs with the input instead of waiting for the whole update.
+An iterable returned by the computation is closed as soon as the run is replaced, because nothing can show what it yields any more.
+To stop work as soon as one input changes, put that work in a child computation that reads the input, so it re-runs without waiting for the whole update.
 
 :::pitfall[Do not wait on a cleanup from inside the update that replaces it]
-The on-screen run's cleanups run only when the held update commits.
-Anything inside that update that waits for one of those cleanups can wait forever: an action that races a promise resolved from a memo's `onCleanup`, or a new run that awaits a lock the old run releases in `onCleanup`.
-Signal from the input instead: compare against the changed value, or hand the lock over when the new run acquires it.
+The cleanups of the run on screen run only when the held update is applied.
+Anything in that update that waits for one of those cleanups can wait forever, such as a new run that awaits a lock the old run releases in `onCleanup`.
+Use the changed input instead: compare against the changed value, or hand the lock over when the new run takes it.
 :::
 
 ## Recap
@@ -625,11 +608,11 @@ Signal from the input instead: compare against the changed value, or hand the lo
 - Only the expression that reads an async value waits for it; passing it as a prop costs nothing.
 - Create the async value high in the tree so the request starts early, and place `Loading` low so a small region shows the fallback.
 - Requests are ordered by data dependency, not by component nesting; a waterfall exists only when one request needs another's response.
-- After a value has settled, a change to its input is held: the current screen stays visible and everything commits together when the new value lands.
+- After a value has loaded, a change to its input is held: the current page stays visible and everything updates together when the new value is ready.
 - Acknowledge a held update with `isPending` on the content and `latest` on the control the user touched.
 - Put `on={key()}` on a `Loading` boundary whose subject changed and should show a placeholder instead of the old content; `on` is tracked, and the fallback never appears when the same data is also read outside the boundary.
 - Read every reactive input before the first `await`.
-- Cancel a request with `onCleanup` and an `AbortController` registered before the first `await`; a run that never committed is cleaned up when it is superseded, and the run on screen when its replacement lands.
+- Cancel a request with `onCleanup` and an `AbortController` registered before the first `await`.
 
 ## Next steps
 

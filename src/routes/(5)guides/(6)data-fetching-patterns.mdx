@@ -83,10 +83,10 @@ The old request still runs to completion; see [Stop the work a run started](/con
 
 The list does not go blank between keystrokes either.
 The previous results stay up, with the `stale` class, until the new ones arrive.
-And an empty query never shows a spinner, because returning `[]` synchronously is already a settled answer.
+An empty query never shows a spinner, because returning `[]` synchronously does not wait for anything.
 
 The input binds `value={latest(query)}` rather than `value={query()}`.
-The write to `query` is held while results load, and `latest` reads the value the update is moving toward, so a controlled input reflects what the user typed.
+While results load, `query()` still returns the old value, and `latest(query)` returns what the user typed.
 An uncontrolled input, with no `value` binding, needs nothing.
 
 :::tip[Debounce at the event, not in the graph]
@@ -96,7 +96,7 @@ One line in the handler keeps the graph as it is; [Custom primitives](/guides/cu
 onInput={debounce((event) => setQuery(event.currentTarget.value), 150)}
 ```
 
-A debounce written as an effect that copies one signal into another after a delay is the relay pattern [Avoid unnecessary effects](/guides/avoid-unnecessary-effects#calculate-values-when-they-are-read) shows the cost of.
+Avoid writing a debounce as an effect that copies one signal into another after a delay; [Avoid unnecessary effects](/guides/avoid-unnecessary-effects#calculate-values-when-they-are-read) shows why.
 :::
 
 ## Load several things for one page
@@ -126,14 +126,15 @@ function ProductPage(props: { id: string }) {
 }
 ```
 
-Each boundary reveals when its own data is ready, so the header can appear before the reviews.
+Each boundary shows its content when its own data is ready, so the header can appear before the reviews.
 If the page should not reveal out of order, wrap the boundaries in [`Reveal`](/reference/solid-js/components-jsx/reveal): `order="sequential"` shows them top to bottom, `order="together"` waits for all three.
 
-When `props.id` changes, all three requests start again and the update is held until all three have answered; the page then swaps as one.
-That is usually what you want for a detail page, where the header and the reviews must describe the same product.
-If a slow section should not delay the others on a subject change, give it `on={props.id}`: it stops holding the update, so the page swaps as soon as the other two have answered, and the slow section shows its skeleton from that swap until its own data lands.
-Give all three `on` and the page swaps on the click itself, each section on its skeleton until its data arrives.
-The [Async reactivity](/concepts/async-reactivity#show-a-placeholder-again-loading-on) page explains when the skeleton lands, and why it never can when the same data is also read outside the boundary.
+When `props.id` changes, all three requests start again, and the page keeps the old product until all three have loaded; then the whole page changes at once.
+That is usually right for a detail page, where the header and the reviews must describe the same product.
+If a slow section should not delay the others, give its boundary `on={props.id}`.
+The page then changes as soon as the other two have loaded, and the slow section shows its skeleton until its own data arrives.
+Give all three `on` and the page changes on the click, with each section on its skeleton until its data arrives.
+[Async reactivity](/concepts/async-reactivity#show-a-placeholder-again-loading-on) explains when the skeleton appears, and why it never appears when the same data is also read outside the boundary.
 
 ## Dependent requests
 
@@ -145,9 +146,9 @@ const brand = createMemo(() => api.brand(product().brandId));
 ```
 
 `brand` reads `product().brandId`, so it cannot start until `product` resolves.
-The dependency is visible in the code, and that is the right shape when the data is sequential.
+That is correct when the data really is sequential.
 
-The trap is a chain the data does not need.
+The problem is a chain the data does not need.
 A product page that also shows the brand's other products can be written as three steps or as two independent requests:
 
 ```tsx
@@ -162,7 +163,7 @@ const brand = createMemo(() => api.brand(product().brandId));
 const catalog = createMemo(() => api.brandProducts(product().brandId));
 ```
 
-Run the `Avoid` version and the catalog request does not start until the brand has arrived, although `brandId` was known as soon as the product was.
+In the `Avoid` version, the catalog request does not start until the brand has arrived, although `brandId` was known as soon as the product was.
 The page waits for the sum of the three requests instead of the product request plus the longer of the other two.
 With attribution enabled, and the memos named through their `name` option, development reports a chain of three or more sequential requests:
 
@@ -223,7 +224,7 @@ const orders = createMemo(async (previous: Order[] = []) => {
 });
 ```
 
-Each run receives the last committed list and returns the longer one.
+Each run receives the current list and returns a longer one.
 To reset the list when a filter changes, read the filter inside the memo and start over when it differs from the previous run's filter, or keep the accumulated list in a store keyed by filter.
 The simplest version is often a `Show` keyed on the filter around the whole list, so a filter change remounts it with `page` back at 1.
 
@@ -245,7 +246,7 @@ function CartBadge() {
 ```
 
 Render `CartBadge` in the header and a second reader in the cart drawer, and the network tab shows one cart request.
-Passing an accessor through context keeps the read lazy: nothing waits on the cart until a component reads `cart()`, and only that component's boundary is involved.
+Passing an accessor through context means nothing waits for the cart until a component reads `cart()`, and only that component's boundary shows a fallback.
 
 :::note[Sharing across routes]
 For requests shared across routes, or for deduplication and caching by argument, use [`query`](/routing/solid-router/data#cache-reads-with-query) from Solid Router.
@@ -254,8 +255,8 @@ It returns the same in-flight promise to every caller with the same arguments, k
 
 ## Keep data fresh
 
-A memo answers its question once and keeps the answer until an input changes.
-When the world changes without an input changing, ask again:
+A memo keeps its value until an input changes.
+When the data on the server changes without an input changing, load it again:
 
 ```tsx
 import { onSettled, refresh } from "solid-js";
@@ -269,19 +270,19 @@ onSettled(() => {
 ```
 
 Every thirty seconds the numbers update in place; nothing dims and no skeleton shows.
-[`refresh(source)`](/reference/solid-js/lifecycle-actions/refresh) re-runs the computation with the same inputs and returns a promise for the settled result.
-A bare `refresh` is quiet: the current answer still fits the question, so `isPending` stays `false` and the new value replaces the old one without a pending phase.
-When the reload should be visible, declare it: call [`affects(stats)`](/reference/solid-js/lifecycle-actions/affects) inside an action before the `refresh`, and readers report pending until it lands.
+[`refresh(source)`](/reference/solid-js/lifecycle-actions/refresh) re-runs the computation with the same inputs and returns a promise for the result.
+A plain `refresh` is quiet: `isPending` stays `false`, and the new value replaces the old one when it arrives.
+To show the reload as pending, call [`affects(stats)`](/reference/solid-js/lifecycle-actions/affects) inside an action before the `refresh`; readers then report pending until the new value arrives.
 
 :::deep-dive[Why a refresh is quiet and a changed input is not]
-`isPending` answers the question "is a different answer on the way for a changed input?".
-When `page` goes from 1 to 2, the committed value answers a question that is no longer being asked, so readers of the held update report pending.
-A `refresh` asks the same question again; the committed value is still a valid answer to it, so nothing is pending and the new value lands as a plain update.
-`affects(source)` marks the source as pending for as long as the surrounding action is in flight, which is how a refetch inside an action is made visible.
+`isPending` is `true` when an input changed and the value on screen belongs to the old input.
+When `page` goes from 1 to 2, the page 1 rows no longer match the input, so readers report pending.
+After a `refresh`, the inputs are the same and the value on screen still matches them, so nothing is pending.
+`affects(source)` marks the source as pending while the surrounding action runs, which makes a reload inside an action visible.
 :::
 
 Polling is the fallback when the server cannot push.
-When it can, a [`live()` server function](/building-apps/server-functions/reads-and-live-data#declare-a-live-source) returns an async iterable that a memo consumes like any other async source, and each yielded value becomes the next answer.
+When it can, a [`live()` server function](/building-apps/server-functions/reads-and-live-data#declare-a-live-source) returns an async iterable that a memo reads like any other async source, and each value it yields becomes the memo's new value.
 
 ## Mutate, then refetch
 
@@ -294,15 +295,15 @@ const addReview = action(function* (productId: string, text: string) {
 });
 ```
 
-The reviews list does not flicker: the refetch runs inside the action, and the list updates once when the fresh data lands.
+The reviews list does not flicker: the reload runs inside the action, and the list updates once when the new data arrives.
 To show the new review before the server confirms it, hold the list in a `createOptimisticStore` and write to it before the `yield`; [Mutations](/concepts/mutations) walks through that version.
 
 With Solid Router mounted, a server function's response revalidates `query` reads automatically, and `formAction` from `@solidjs/router` adds form submissions on top; the [Forms guide](/guides/forms) uses it.
 
 ## Handle failures
 
-A rejected promise travels through the graph like a value and stops at the nearest [`Errored`](/reference/solid-js/components-jsx/errored) boundary.
-Place boundaries where a failure should be contained:
+A rejected promise reaches the nearest [`Errored`](/reference/solid-js/components-jsx/errored) boundary above the code that reads it.
+Place boundaries around each region that should fail on its own:
 
 ```tsx
 <article>
@@ -320,7 +321,7 @@ Place boundaries where a failure should be contained:
 ```
 
 A failed reviews request shows the retry panel and leaves the header alone.
-`reset` retries the sources the boundary collected, and a boundary also recovers on its own when an input changes or a `refresh` lands.
+`reset` retries the failed requests, and a boundary also recovers on its own when an input changes or a `refresh` succeeds.
 
 Throw from the request when the response is not usable, rather than returning a `{ success: false }` object and checking it at every read.
 On the server, [`markSafeError`](/reference/solid-web/request-response/safe-errors) marks a message that is intended for the client; unmarked errors are replaced with a generic message in production.
@@ -329,12 +330,12 @@ On the server, [`markSafeError`](/reference/solid-web/request-response/safe-erro
 
 ### The search box lags behind what I typed
 
-The input is bound with `value={query()}`, and the write to `query` is held while the results load, so the input shows the previous value until the request lands.
+The input is bound with `value={query()}`, and `query()` keeps its old value while the results load, so the input shows the previous text until the request finishes.
 Bind `value={latest(query)}`, or leave the input uncontrolled.
 
 ### Opening another product keeps showing the old one
 
-That is the default after a first answer: the current product stays on screen while the new one loads.
+That is the default after the first load: the current product stays on screen while the new one loads.
 Add `on={props.id}` to the `Loading` boundary when a changed subject should show the skeleton again, and pass the value rather than the accessor.
 
 ### Two components make the same request
@@ -344,7 +345,7 @@ Create the memo once in a common ancestor and pass the accessor down or through 
 
 ### `refresh` runs but nothing shows as loading
 
-A bare `refresh` re-asks the same question, so `isPending` stays `false` and the new value lands quietly.
+A plain `refresh` keeps the same inputs, so `isPending` stays `false` and the new value replaces the old one quietly.
 Call `affects(source)` inside an action before the `refresh` when the reload should show as pending.
 
 ### One request waits for another that it does not need
@@ -358,13 +359,13 @@ Read the input directly so both requests start together; with attribution enable
 - Create requests that do not depend on each other in the same scope so they run in parallel; derive from inputs you already have rather than from another response.
 - Wrap the smallest region each `Loading` fallback should replace, and set `on` where a changed subject should show the fallback again.
 - Read `latest` in controls whose writes feed a request, and mark waiting content with `isPending`.
-- Leave stale responses, loading flags, and abort controllers to Solid; returning a synchronous value is a settled answer.
+- Leave stale responses and loading flags to Solid; returning a synchronous value never shows a fallback.
 - Reload with `refresh`, and add `affects` inside an action when the reload should show as pending.
 - Throw from a request that fails and cover each region that should fail on its own with `Errored`.
 
 ## Next steps
 
-- [Async reactivity](/concepts/async-reactivity): the model these patterns rest on, including held updates and optimistic writes.
+- [Async reactivity](/concepts/async-reactivity): how async memos work, including how updates keep the current page.
 - [Server functions](/building-apps/server-functions): `GET` reads, `live` sources, and what a `"use server"` function does on the wire.
 - [Data loading and mutations](/routing/solid-router/data): `query`, `preload`, and form actions.
 - [Performance](/guides/performance#waterfalls): measuring a page whose first paint waits on sequential requests.

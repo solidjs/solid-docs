@@ -30,12 +30,12 @@ const DEFAULT_SOURCE = "/tmp/solid-v2-source";
 const DEFAULT_OUT = "src/routes/reference/(1)solid-js/(8)diagnostics";
 const SKILL_PATH = "packages/solid/skills/reactivity-diagnostics/SKILL.md";
 const TABLE_PATH = "packages/solid/diagnostics.json";
-const SOURCE_REF = "next";
+const SOURCE_REF = "main";
 const ROUTE_BASE = "/reference/solid-js/diagnostics";
 const SKILL_INSTALLED =
 	"node_modules/solid-js/skills/reactivity-diagnostics/SKILL.md";
 const SKILL_URL =
-	"https://github.com/solidjs/solid/blob/next/packages/solid/skills/reactivity-diagnostics/SKILL.md";
+	"https://github.com/solidjs/solid/blob/main/packages/solid/skills/reactivity-diagnostics/SKILL.md";
 
 // Distinct from the extract-solid-ref marker on purpose: the tone lint
 // downgrades that marker's pages to warnings because their text is upstream

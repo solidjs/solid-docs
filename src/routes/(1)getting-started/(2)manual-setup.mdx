@@ -1,0 +1,147 @@
+---
+title: Manual setup
+version: "2.0"
+description: "Add Solid to an existing project or an empty Vite project without the CLI: the packages, the Vite and TypeScript configuration, the entry file, and what to use with another bundler."
+---
+
+The CLI in [Quick start](/getting-started/quick-start) writes a whole project for you.
+When you are adding Solid to an existing project, starting from an empty Vite project in StackBlitz, or using a different bundler, set it up by hand instead.
+This page builds the smallest working app: one button that counts clicks.
+
+## Install the packages
+
+```bash
+npm install solid-js @solidjs/web
+npm install -D vite @solidjs/vite-plugin
+```
+
+`solid-js` is the reactive core: signals, stores, components, and control flow.
+`@solidjs/web` is the browser renderer, with `render`, `hydrate`, and the JSX types.
+`@solidjs/vite-plugin` compiles JSX and connects Solid to Vite.
+
+## Configure Vite
+
+Create `vite.config.ts`:
+
+```ts title="vite.config.ts"
+import { defineConfig } from "vite";
+import solid from "@solidjs/vite-plugin";
+
+export default defineConfig({
+	plugins: [solid()],
+});
+```
+
+In an existing Vite project, add `solid()` to the `plugins` array you already have.
+
+## Configure TypeScript
+
+Solid compiles JSX itself, so TypeScript must leave it alone and take the JSX types from `@solidjs/web`:
+
+```json title="tsconfig.json"
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"strict": true,
+		"jsx": "preserve",
+		"jsxImportSource": "@solidjs/web",
+		"types": ["vite/client"],
+		"noEmit": true
+	},
+	"include": ["src"]
+}
+```
+
+`jsx` and `jsxImportSource` are the two lines Solid needs.
+The others are a reasonable default for a Vite project.
+
+## Add the entry files
+
+Vite starts from `index.html`.
+Give it an element to render into and a script tag for your entry file:
+
+```html title="index.html"
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Solid App</title>
+	</head>
+	<body>
+		<div id="root"></div>
+		<script type="module" src="/src/index.tsx"></script>
+	</body>
+</html>
+```
+
+The entry file mounts the app with [`render`](/reference/solid-web/rendering-ssr/render):
+
+```tsx title="src/index.tsx"
+import { render } from "@solidjs/web";
+import App from "./App";
+
+render(() => <App />, document.getElementById("root")!);
+```
+
+```tsx title="src/App.tsx"
+import { createSignal } from "solid-js";
+
+export default function App() {
+	const [count, setCount] = createSignal(0);
+
+	return (
+		<button type="button" onClick={() => setCount((c) => c + 1)}>
+			Clicked {count()} times
+		</button>
+	);
+}
+```
+
+Run `npx vite` and open the URL it prints.
+The button reads "Clicked 0 times", and each click increases the number.
+`npx vite build` writes static files to `dist`.
+
+`render` takes a function, not an element, so that the component is created inside the root that `render` sets up.
+It returns a function that removes the app and cleans it up.
+
+:::note[Start mode]
+The CLI templates use the plugin's start mode (`solid({ start: true })`), which generates `index.html` and the entry file for you and adds routing and server rendering on top.
+[App structure](/building-apps/app-structure) explains it.
+The manual setup on this page is the plain Vite setup, without start mode.
+:::
+
+## Use another bundler
+
+The Vite plugin uses the native compiler.
+Outside Vite, use one of the two compilers directly:
+
+- [`@solidjs/babel-plugin`](https://github.com/solidjs/solid/tree/main/packages/babel-plugin) works with any Babel pipeline, on Babel 7 or 8.
+  Add it to your Babel configuration, after `@babel/preset-typescript` if you use TypeScript:
+
+  ```js title="babel.config.js"
+  export default {
+  	presets: ["@babel/preset-typescript"],
+  	plugins: ["@solidjs/babel-plugin"],
+  };
+  ```
+
+- [`@solidjs/compiler`](https://github.com/solidjs/solid/tree/main/packages/compiler) is the native compiler that the Vite plugin uses.
+  It exposes a `transform()` function for writing your own bundler integration.
+
+Both compile JSX to imports from `@solidjs/web` by default.
+Keep the TypeScript settings above in either case.
+
+## Coming from Solid 1
+
+The packages have changed: `solid-js/web` is now `@solidjs/web`, `solid-js/store` is part of `solid-js`, and `@solidjs/vite-plugin` replaces `vite-plugin-solid`.
+Update the `jsxImportSource` in `tsconfig.json` from `solid-js` to `@solidjs/web`.
+[From Solid 1](/migration/from-solid-1) covers the order to upgrade in and the code changes that follow.
+
+## Next steps
+
+- [Quick start](/getting-started/quick-start): the same app built with the CLI, with routing and tests.
+- [Reactivity](/concepts/reactivity): how the counter above updates.
+- [Project shapes](/getting-started/project-shapes): when to move to start mode for routing and server rendering.

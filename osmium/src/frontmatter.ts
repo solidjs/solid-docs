@@ -45,6 +45,8 @@ interface OsmiumThemeBaseFrontmatter {
 	next?: RelativePageConfig;
 	editLink?: boolean;
 	lastUpdated?: boolean;
+	/** `"wanted"` shows a note asking for an editorial pass. Remove it once a human edit merges. */
+	review?: "wanted";
 }
 
 interface HeroActionConfig {

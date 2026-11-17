@@ -1,184 +1,65 @@
 ---
 title: "From React"
 version: "2.0"
-description: "Map familiar React concepts to their closest Solid concepts, with equivalent examples and the semantic differences that matter during migration."
+description: "Map familiar React concepts to their closest Solid concepts, with equivalent examples and the differences that matter during migration."
 ---
 
-React and Solid share many application concepts, but they update interfaces differently.
-This guide maps familiar React patterns to their closest Solid concepts and highlights where a direct translation would miss part of Solid's model.
+Components, props, JSX, events, context, and refs all carry over from React.
+The main change is how state changes reach the DOM.
+This page maps React patterns to Solid one by one.
+[Thinking in Solid](/guides/thinking-in-solid) shows the same shift inside one feature built end to end.
 
-Your knowledge of components, props, JSX, events, context, refs, and composition still applies.
-The main shift is how state changes reach the DOM.
-[Thinking in Solid](/guides/thinking-in-solid) shows that shift inside one feature built end to end; this page maps the concepts one by one.
+## Components run once
 
-## Start with the execution model
-
-A React component renders from its current props and state.
-When that state changes, React runs the component again to produce its next result.
-
-A Solid component runs when Solid mounts that component.
-Signals and stores then notify only the computations and JSX expressions that read them.
-The component function does not need to run again.
-
-The following counters express the same interface:
-
-### React
+A React component runs again every time its state changes.
+A Solid component runs once, when it mounts.
+After that, a signal updates only the JSX expressions and computations that read it.
 
 ```tsx
-import { useState } from "react";
-
+// React
 function Counter() {
 	const [count, setCount] = useState(0);
-	const doubled = count * 2;
-
-	return (
-		<button onClick={() => setCount((value) => value + 1)}>
-			{count} × 2 = {doubled}
-		</button>
-	);
+	return <button onClick={() => setCount(count + 1)}>{count}</button>;
 }
-```
 
-### Solid
-
-```tsx
-import { createSignal } from "solid-js";
-
+// Solid
 function Counter() {
 	const [count, setCount] = createSignal(0);
-	const doubled = () => count() * 2;
-
-	return (
-		<button onClick={() => setCount((value) => value + 1)}>
-			{count()} × 2 = {doubled()}
-		</button>
-	);
+	return <button onClick={() => setCount(count() + 1)}>{count()}</button>;
 }
 ```
 
-The Solid signal returns an accessor and a setter.
-An accessor is a function that reads a reactive value.
+`count` is an accessor: a function that returns the current value.
 Calling `count()` inside JSX subscribes that expression to the signal.
-Calling `doubled()` inside JSX lets the same tracking scope discover its read of `count()`.
+A read in the component body runs once and never updates, because the body is not tracked.
+[Reactivity](/concepts/reactivity) explains tracking in detail.
 
-A tracking scope records the reactive values read while it runs so Solid can update that work later.
-Keep reactive reads inside JSX or another tracking scope.
-A read at the top level of a Solid component is a one-time read because component bodies run untracked.
+## Hooks map
 
-See [Reactivity](/concepts/reactivity) for tracking, scheduling, ownership, and disposal.
+| React                                   | Solid                                                                                                                                                                           |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `useState`                              | [`createSignal`](/reference/solid-js/reactivity/create-signal)                                                                                                                  |
+| `useState` with an object, `useReducer` | [`createStore`](/reference/solid-js/stores/create-store), see [Objects and reducers](#objects-and-reducers)                                                                     |
+| `useMemo`                               | A plain function, or [`createMemo`](/reference/solid-js/reactivity/create-memo) for expensive or shared work                                                                    |
+| `useEffect`, `useLayoutEffect`          | [`createEffect`](/reference/solid-js/reactivity/create-effect), see [Effects](#effects)                                                                                         |
+| `useEffect(fn, [])`                     | [`onSettled`](/reference/solid-js/lifecycle-actions/on-settled)                                                                                                                 |
+| `useContext`                            | [`createContext`](/reference/solid-js/components-context/create-context) and [`useContext`](/reference/solid-js/components-context/use-context)                                 |
+| `useRef`                                | A `ref` callback, see [Refs](#refs)                                                                                                                                             |
+| `useSyncExternalStore`                  | A signal written from the subscription, see [External stores](#external-stores)                                                                                                 |
+| `useTransition`, `useDeferredValue`     | [`isPending`](/reference/solid-js/reactivity/is-pending), [`latest`](/reference/solid-js/reactivity/latest), [`createDeferred`](/reference/solid-js/reactivity/create-deferred) |
+| `useOptimistic`                         | [`action`](/reference/solid-js/lifecycle-actions/action) with an optimistic store, see [Mutations](#mutations)                                                                  |
+| `useCallback`, `React.memo`             | Not needed, see [What goes away](#what-goes-away)                                                                                                                               |
+| A custom hook                           | A [custom primitive](/guides/custom-primitives), see [Custom hooks](#custom-hooks)                                                                                              |
 
-## Translate hooks by purpose
+Solid primitives are plain function calls.
+There are no hook rules: you can call them conditionally or in a loop, as long as a component or other owner is running.
 
-React calls hooks in a fixed order during renders to access preserved state and schedule behavior.
-Solid creates primitives during component setup.
-Computations and cleanup attach to an owner, which provides the lifetime of the mounted component or reactive scope.
-Solid primitives are regular function calls and do not use hook ordering or naming rules.
+## Objects and reducers
 
-Translate each hook according to the role it serves:
-
-- Local scalar state (`useState`) usually maps to [`createSignal`](/reference/solid-js/reactivity/create-signal).
-- Object or collection state, including state managed by `useReducer`, can map to [`createStore`](/reference/solid-js/stores/create-store); see [Replace a reducer with store functions](#replace-a-reducer-with-store-functions).
-- Cached derived state (`useMemo`) can map to [`createMemo`](/reference/solid-js/reactivity/create-memo).
-  `useCallback` and `React.memo` have no counterpart; see [Remove what has no Solid counterpart](#remove-what-has-no-solid-counterpart).
-- Imperative synchronization (`useEffect`, `useLayoutEffect`) can map to [`createEffect`](/reference/solid-js/reactivity/create-effect), and setup that runs once on mount maps to [`onSettled`](/reference/solid-js/lifecycle-actions/on-settled); see [Run setup once on mount](#run-setup-once-on-mount).
-- Shared subtree state can map to [`createContext`](/reference/solid-js/components-context/create-context) and [`useContext`](/reference/solid-js/components-context/use-context).
-- A store outside the framework, read with `useSyncExternalStore`, maps to a signal written from its subscription; see [Read an external store](#read-an-external-store).
-- Pending UI from `useTransition` and `useDeferredValue` maps to [`isPending`](/reference/solid-js/reactivity/is-pending), [`latest`](/reference/solid-js/reactivity/latest), and [`createDeferred`](/reference/solid-js/reactivity/create-deferred); see [Show pending work](#show-pending-work).
-- Optimistic mutations with `useOptimistic` map to [`action`](/reference/solid-js/lifecycle-actions/action) and the optimistic primitives; see [Write data with actions](#write-data-with-actions).
-- Reusable stateful behavior (a custom hook) can become a custom primitive: a plain function that creates and returns Solid primitives; see [Turn a custom hook into a custom primitive](#turn-a-custom-hook-into-a-custom-primitive).
-
-These mappings describe related responsibilities rather than interchangeable implementations.
-Choose the Solid primitive from the data flow that the code needs.
-
-## Read and write local state
-
-`useState` and `createSignal` both provide a value and a setter.
-The visible syntax differs because a Solid signal uses an accessor.
-The counter above shows the same state update in each library.
-
-Both setters accept updater functions for values derived from the previous state:
+React updates an object by building a new one.
+A Solid store gives you a read-only reactive object and a setter that changes a draft in place:
 
 ```tsx
-setCount((value) => value + 1);
-```
-
-### Scheduling note
-
-Solid stages signal and store writes made outside a synchronous flush scope.
-It commits the reactive queue on a microtask, after the current JavaScript task completes.
-Application event handlers normally need no explicit flush.
-Use [`flush()`](/reference/solid-js/reactivity/flush) when a test or imperative integration must observe the committed state or DOM synchronously.
-
-## Work with object and collection state
-
-React applications often update an object by producing a new object.
-A Solid store provides a read-only reactive view with a setter that mutates a draft.
-
-### React
-
-```tsx
-const [profile, setProfile] = useState({
-	name: "Ada",
-	role: "Engineer",
-});
-
-function rename(name: string) {
-	setProfile((current) => ({ ...current, name }));
-}
-```
-
-### Solid
-
-```tsx
-import { createStore } from "solid-js";
-
-const [profile, setProfile] = createStore({
-	name: "Ada",
-	role: "Engineer",
-});
-
-function rename(name: string) {
-	setProfile((draft) => {
-		draft.name = name;
-	});
-}
-```
-
-Reading `profile.name` inside a tracking scope subscribes to that property.
-Unrelated property updates do not require that reader to run again.
-
-Signals also work for objects when the whole value has one identity and changes as a unit.
-See [Stores](/concepts/stores) for store setters, projections, reconciliation, and optimistic stores.
-
-### Replace a reducer with store functions
-
-A `useReducer` reducer returns a new state object for every action.
-With a store, each action becomes a function that changes the draft in place.
-
-#### React
-
-```tsx
-type Action = { type: "toggle"; id: string };
-
-function reducer(state: { todos: Todo[] }, action: Action) {
-	switch (action.type) {
-		case "toggle":
-			return {
-				todos: state.todos.map((todo) =>
-					todo.id === action.id ? { ...todo, done: !todo.done } : todo
-				),
-			};
-	}
-}
-
-const [state, dispatch] = useReducer(reducer, { todos: [] });
-```
-
-#### Solid
-
-```tsx
-import { createStore } from "solid-js";
-
 const [state, setState] = createStore({ todos: [] as Todo[] });
 
 function toggle(id: string) {
@@ -189,14 +70,14 @@ function toggle(id: string) {
 }
 ```
 
-Toggle one todo and only the JSX that reads that todo's `done` updates; the other rows do not run.
-Named functions such as `toggle` take the place of `dispatch` and action objects, and adding an item is `draft.todos.push(todo)` inside the setter.
+A function such as `toggle` replaces a reducer case and its `dispatch` call.
+Toggling one todo updates only the JSX that reads that todo's `done`.
 
-:::pitfall[Copying the state inside a store setter]
-The reducer habit of building a new array carries over without an error:
+:::pitfall[Copying state inside a store setter]
+The reducer habit of building a new array still compiles:
 
 ```tsx
-// Avoid: a fresh array replaces the one every reader depends on
+// Avoid: a new array replaces the one every reader depends on
 setState((draft) => {
 	draft.todos = draft.todos.map((todo) =>
 		todo.id === id ? { ...todo, done: true } : todo
@@ -204,88 +85,26 @@ setState((draft) => {
 });
 ```
 
-Every reader of `state.todos` runs again, and `For` recreates the toggled row instead of updating it.
-With attribution enabled, development reports [`[IMMUTABLE_UPDATE_IN_STORE]`](/reference/solid-js/diagnostics/immutable-update-in-store).
-Change the item in place, as `toggle` does above.
+Every reader of `state.todos` runs again, and `For` recreates the row instead of updating it.
+Change the item in place, as `toggle` does.
 A write outside the setter, such as `state.todos.push(todo)`, is ignored, and development reports [`[STORE_WRITE_OUTSIDE_SETTER]`](/reference/solid-js/diagnostics/store-write-outside-setter).
 :::
 
-## Derive values from state
+[Stores](/concepts/stores) covers projections, reconciliation, and optimistic stores.
 
-React can calculate a value during render and can use `useMemo` as a performance optimization.
-React may discard that cache, so application behavior cannot depend on its persistence.
+## Derived values
 
-A Solid derived function runs in the tracking scope that calls it.
-`createMemo` creates a reactive computation whose cached result and equality behavior are part of the reactive graph.
-
-Use a function for a small derivation consumed in one place:
+A value calculated from other state stays a function:
 
 ```tsx
 const fullName = () => `${firstName()} ${lastName()}`;
-
-return <p>{fullName()}</p>;
 ```
 
-Use `createMemo` for an expensive derivation, when several consumers need the same result, or when the result should form an equality boundary:
+Use `createMemo` when the work is expensive or several places read the result.
+Do not copy derived values into a second signal with an effect.
 
-```tsx
-import { createMemo } from "solid-js";
-
-const fullName = createMemo(() => `${firstName()} ${lastName()}`);
-
-return (
-	<>
-		<h1>{fullName()}</h1>
-		<label>
-			Display name
-			<input value={fullName()} readonly />
-		</label>
-	</>
-);
-```
-
-The memo tracks `firstName()` and `lastName()`.
-Consumers track the memo rather than its individual inputs.
-
-State that can be calculated from other reactive values usually remains a derivation.
-It does not need a second signal plus an effect that keeps the two values synchronized.
-See [Avoid unnecessary effects](/guides/avoid-unnecessary-effects) for synchronous derivation, async derivation, and temporary writable overrides.
-
-## Keep an editable value derived from props
-
-An editable field may follow a prop until the user changes it locally, then reset when the upstream prop changes.
-Both React and Solid can express this without an effect.
-
-React recommends first checking whether the value can be calculated during render or whether a `key` can reset the component.
-When one piece of local state must adjust to a prop change, React also documents comparing the current prop with information stored from the previous render:
-
-### React
-
-```tsx
-function NameField({ name }: { name: string }) {
-	const [previousName, setPreviousName] = useState(name);
-	const [draft, setDraft] = useState(name);
-
-	if (name !== previousName) {
-		setPreviousName(name);
-		setDraft(name);
-	}
-
-	return (
-		<input
-			value={draft}
-			onChange={(event) => setDraft(event.currentTarget.value)}
-		/>
-	);
-}
-```
-
-The guarded setters ask React to retry the current render with state derived from the new prop.
-This follows React's [adjusting state during render](https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes) guidance and avoids committing a stale value before an effect corrects it.
-
-### Solid
-
-Solid can create a writable derived signal by passing a function to `createSignal`:
+To follow a prop until the user edits it, pass a function to `createSignal`.
+This replaces React's pattern of storing the previous prop and comparing it during render:
 
 ```tsx
 function NameField(props: { name: string }) {
@@ -300,33 +119,22 @@ function NameField(props: { name: string }) {
 }
 ```
 
-The derivation supplies `props.name` until `setDraft` places a local override over it.
-When a dependency of the derivation changes, the source produces the next value and replaces that override.
-No synchronization effect or previous-prop bookkeeping is required.
+`setDraft` sets a local value, and a new `props.name` replaces it.
+[Avoid unnecessary effects](/guides/avoid-unnecessary-effects) covers more cases.
 
-The function form means “writable derivation”; it does not store the function itself as the signal value.
-Use the function form of `createStore` for the same pattern with nested form state.
-See [Avoid unnecessary effects](/guides/avoid-unnecessary-effects#use-a-writable-derivation-for-a-local-override) for the store version and guidance on choosing independent local state instead.
+## Effects
 
-## Translate effects by responsibility
-
-React pairs an imperative effect callback with a declared dependency array.
-Solid uses a tracked compute function to discover dependencies through reactive reads, then passes its result to an untracked effect function.
-
-### React
+A React effect lists its dependencies in an array.
+A Solid effect has two functions: a tracked compute function that reads the dependencies, and an effect function that does the work.
 
 ```tsx
+// React
 useEffect(() => {
 	const connection = connect(roomId);
 	return () => connection.close();
 }, [roomId]);
-```
 
-### Solid
-
-```tsx
-import { createEffect } from "solid-js";
-
+// Solid
 createEffect(
 	() => props.roomId,
 	(roomId) => {
@@ -336,127 +144,47 @@ createEffect(
 );
 ```
 
-The compute function reads every reactive dependency that should trigger the effect.
-Its return value becomes the input to the effect function.
-The effect function performs imperative work and can return cleanup.
-Reads inside the effect function do not become dependencies.
+Reads inside the effect function are not tracked.
+Many React effects do not need an effect in Solid: calculate values with a function or memo, and start work from the event handler that caused it.
 
-Not every React effect becomes a Solid effect:
-
-- Calculate renderable values with a function or memo.
-- Start interaction-specific work in the event handler that observed the interaction.
-- Put asynchronous derived data in an async memo or store projection.
-- Use an effect when a settled reactive result must update an imperative system outside Solid.
-
-This distinction is often more useful than translating a dependency array mechanically.
-
-:::pitfall[An equal result still re-runs the effect]
-React compares each dependency with the previous render and skips the effect when none changed.
-Solid runs the effect function, and the cleanup before it, whenever a value read by the compute function changes, even when the compute function returns an equal result:
+For setup that runs once after mount, use `onSettled`.
+The function it returns runs when the component is removed:
 
 ```tsx
-// Avoid: restarts the timer on every change to count
-createEffect(
-	() => count() > 100,
-	(large) => {
-		const id = setTimeout(() => report(large), 5000);
-		return () => clearTimeout(id);
-	}
-);
-
-// Prefer: the memo stops the update when its result is unchanged
-const large = createMemo(() => count() > 100);
-createEffect(large, (isLarge) => {
-	const id = setTimeout(() => report(isLarge), 5000);
-	return () => clearTimeout(id);
+onSettled(() => {
+	const id = setInterval(() => setNow(Date.now()), 1000);
+	return () => clearInterval(id);
 });
 ```
 
-Change `count` from 1 to 2 and the `Avoid` version clears its timer and starts a new one, so a count that keeps changing never reports.
-The `Prefer` version leaves the timer running, because the memo's value is still `false`.
+Both `onSettled` and effect functions run after the DOM is updated, so there is no separate layout effect.
+
+:::pitfall[An equal result still re-runs the effect]
+React skips an effect when no dependency changed.
+Solid re-runs the effect function whenever a value the compute function read changes, even if the compute function returns the same result.
+To skip equal results, put the comparison in a memo and pass the memo as the compute function:
+
+```tsx
+const large = createMemo(() => count() > 100);
+createEffect(large, (isLarge) => report(isLarge));
+```
+
 :::
 
-### Run setup once on mount
+## Props
 
-A `useEffect` with an empty dependency array, such as one that starts an interval and returns `() => clearInterval(id)`, runs once after mount and cleans up on unmount.
-Solid's [`onSettled`](/reference/solid-js/lifecycle-actions/on-settled) has the same shape:
+Solid props can be getters, so destructuring them reads each value once and loses updates.
+Keep the props object and read `props.name` where you use it:
 
 ```tsx
-import { createSignal, onSettled } from "solid-js";
-
-function Clock() {
-	const [now, setNow] = createSignal(Date.now());
-
-	onSettled(() => {
-		const id = setInterval(() => setNow(Date.now()), 1000);
-		return () => clearInterval(id);
-	});
-
-	return <time>{new Date(now()).toLocaleTimeString()}</time>;
+function Greeting(props: { name: string }) {
+	return <p>Hello, {props.name}</p>;
 }
 ```
 
-The time advances every second, and the interval stops when the component is removed.
-`onSettled` runs its callback once, after the component has mounted and any pending async work beneath it has settled.
-Its reads are not tracked, and the function it returns runs when the component's owner is disposed.
-It does not run during server rendering.
-
-There is no separate `useLayoutEffect` timing.
-Both `onSettled` and an effect function run after Solid has written the DOM for that update, so either one can measure elements.
-
-## Keep props reactive
-
-React props are values from the current component render, so destructuring them is common.
-Potentially changing Solid props may be backed by getters.
-The child reads the current value when a tracking scope accesses that prop.
-
-Keep the props object intact when its values can change:
+For defaults and rest props, use [`merge`](/reference/solid-js/stores/merge) and [`omit`](/reference/solid-js/stores/omit):
 
 ```tsx
-function Greeting(props: { name: string; punctuation?: string }) {
-	return (
-		<p>
-			Hello, {props.name}
-			{props.punctuation ?? "."}
-		</p>
-	);
-}
-```
-
-Destructuring in the parameter list reads those values at component setup time:
-
-```tsx
-function Greeting({ name }: { name: string }) {
-	return <p>Hello, {name}</p>;
-}
-```
-
-Use the destructured form only when a one-time value is intentional.
-Destructuring reads getter-backed props eagerly.
-Solid emits a development warning when a component reads reactive values at the top level.
-
-Create a memo when a local name should retain reactive behavior:
-
-```tsx
-function Greeting(props: { first: string; last: string }) {
-	const name = createMemo(() => `${props.first} ${props.last}`);
-	return <p>Hello, {name()}</p>;
-}
-```
-
-### Default and rest props
-
-React components often take defaults and the remaining props from the parameter pattern, as in `function Button({ variant = "primary", children, ...rest })`.
-Solid uses [`merge`](/reference/solid-js/stores/merge) and [`omit`](/reference/solid-js/stores/omit), which return objects that read through to `props` on every access:
-
-```tsx
-import { merge, omit } from "solid-js";
-import type { JSX } from "@solidjs/web";
-
-type ButtonProps = JSX.ButtonHTMLAttributes<HTMLButtonElement> & {
-	variant?: "primary" | "ghost";
-};
-
 function Button(props: ButtonProps) {
 	const merged = merge({ variant: "primary" } as const, props);
 	const rest = omit(merged, "variant", "children");
@@ -469,208 +197,84 @@ function Button(props: ButtonProps) {
 }
 ```
 
-`<Button variant="ghost" type="submit">Save</Button>` renders a submit button with `data-variant="ghost"`.
-Change `variant` in the parent and the attribute updates on the same button element.
-`merged.children` is `props.children`; resolve it with [`children`](/reference/solid-js/components-context/children) only when the component inspects or reuses the rendered children.
+Unlike a React default parameter, `merge` treats an explicit `undefined` as a value, so `variant={undefined}` does not fall back to `"primary"`.
 
-An explicit `undefined` is a value in `merge`.
-`<Button variant={undefined}>` drops the attribute instead of falling back to `"primary"`, where a React default parameter would have applied.
+## Events, attributes, and styles
 
-## Handle events and form controls
-
-Event props remain camelCase, such as `onClick` and `onInput`.
-Solid handlers receive native DOM events, and `event.currentTarget` is typed as the element that owns the handler.
-
-### React
-
-```tsx
-const [query, setQuery] = useState("");
-
-return (
-	<input
-		value={query}
-		onChange={(event) => setQuery(event.currentTarget.value)}
-	/>
-);
-```
-
-### Solid
-
-```tsx
-const [query, setQuery] = createSignal("");
-
-return (
-	<input
-		value={query()}
-		onInput={(event) => setQuery(event.currentTarget.value)}
-	/>
-);
-```
-
-`onInput` observes each browser input event.
-Use `onChange` when the native change event timing is the intended behavior.
-With `onChange` and a bound `value`, keep the typed text in a draft signal written from `onInput`: if another attribute in the same template changes, the binding re-runs and erases text that was never committed.
-
-Event handlers run outside reactive tracking.
-They can read current signal and store values without subscribing to them.
-
-## Translate DOM properties and styles
-
-Most JSX attributes remain recognizable.
-Some DOM-facing details differ:
-
+- Handlers receive native DOM events.
+  `onInput` fires on each keystroke, and `onChange` uses the native change event.
 - Use `class` instead of `className`.
-- The Solid [`class` prop](/reference/solid-web/jsx-properties/class) accepts strings, conditional objects, and nested arrays.
-- Style objects use CSS names such as `"background-color"` rather than JavaScript names such as `backgroundColor`.
-- Numeric style values do not receive automatic units.
-- Use `textContent` for escaped text-only content and `innerHTML` only for trusted or sanitized markup.
+  [`class`](/reference/solid-web/jsx-properties/class) also accepts objects and arrays.
+- Style objects use CSS property names such as `"background-color"`, and numbers do not get `px` added.
+- Event handlers are not tracked, so they can read signals without subscribing.
+
+## Conditions and lists
+
+Ternaries and `&&` work in JSX and update when their condition changes.
+Use [`Show`](/reference/solid-js/components-jsx/show) when you want a fallback or a narrowed value.
+
+`map` renders, but it recreates every row each time the list changes.
+Use [`For`](/reference/solid-js/components-jsx/for) for lists that change.
+Its `keyed` prop plays the role of React's `key`:
 
 ```tsx
-<button
-	class={["button", { active: selected(), pending: saving() }]}
-	style={{
-		"background-color": props.background,
-		"inline-size": `${props.width}px`,
-	}}
->
-	Save
-</button>
+<For each={todos()} keyed={(todo) => todo.id}>
+	{(todo) => <TodoRow todo={todo()} />}
+</For>
 ```
 
-See the [`style`](/reference/solid-web/jsx-properties/style), [`textContent`](/reference/solid-web/jsx-properties/text-content), and [`innerHTML`](/reference/solid-web/jsx-properties/inner-html) references for their DOM behavior.
+## Context
 
-## Render conditions and lists
-
-JavaScript ternaries and logical expressions work directly in Solid JSX.
-The JSX compiler recognizes this native control-flow syntax and creates a reactive conditional around it.
-
-Array methods such as `map` also return valid JSX.
-They remain ordinary function calls, so the compiler cannot infer row identity or lifecycle from the call itself.
-Solid's list components make those update semantics explicit.
-
-### Conditional content
-
-A React conditional can keep its ternary form.
-The Solid version calls reactive accessors:
+The context object is also its provider component:
 
 ```tsx
-return <>{user() ? <Profile user={user()!} /> : <SignIn />}</>;
-```
-
-The compiler tracks `user()` and updates the active branch when its truthiness changes.
-Use [`Show`](/reference/solid-js/components-jsx/show) when the code benefits from an explicit fallback, a narrowed value, or control over identity:
-
-```tsx
-import { Show } from "solid-js";
-
-return (
-	<Show when={user()} fallback={<SignIn />}>
-		{(currentUser) => <Profile user={currentUser()} />}
-	</Show>
-);
-```
-
-By default, `Show` preserves its child across truthy changes and passes a narrowed accessor to its function child.
-With `keyed`, it passes the raw value and remounts the child when the value's identity changes.
-
-### List content
-
-A React list commonly uses `map` with a `key`:
-
-```tsx
-return todos.map((todo) => <TodoRow key={todo.id} todo={todo} />);
-```
-
-A direct Solid `map` also renders:
-
-```tsx
-return (
-	<>
-		{todos().map((todo) => (
-			<TodoRow todo={todo} />
-		))}
-	</>
-);
-```
-
-Because `map` is an ordinary function call, reevaluating this expression creates the mapped row output again.
-For a reactive list, [`For`](/reference/solid-js/components-jsx/for) preserves rows according to an explicit identity mode:
-
-```tsx
-import { For } from "solid-js";
-
-return (
-	<For each={todos()} keyed={(todo) => todo.id}>
-		{(todo) => <TodoRow todo={todo()} />}
-	</For>
-);
-```
-
-The React `key` and the Solid `keyed` function both express row identity.
-By default, `For` uses item identity.
-It can instead use positional identity with `keyed={false}` or a key function such as the example above.
-
-Use [`Repeat`](/reference/solid-js/components-jsx/repeat) for positional rendering over a store without diffing array items or identities.
-Its `from` and `count` props can represent a sliding window while preserving rows whose absolute indexes remain in the overlapping range.
-
-## Share state with context
-
-Both libraries use context to scope a value to descendants.
-In Solid, the context object is also its provider component.
-
-```tsx
-import {
-	type Accessor,
-	type Element,
-	type Setter,
-	createContext,
-	createSignal,
-	useContext,
-} from "solid-js";
-
-type Theme = "light" | "dark";
-type ThemeContextValue = {
-	theme: Accessor<Theme>;
-	setTheme: Setter<Theme>;
-};
-
 const ThemeContext = createContext<ThemeContextValue>();
 
-function ThemeProvider(props: { children: Element }) {
-	const [theme, setTheme] = createSignal<Theme>("light");
+<ThemeContext value={{ theme, setTheme }}>{props.children}</ThemeContext>;
+```
 
-	return (
-		<ThemeContext value={{ theme, setTheme }}>{props.children}</ThemeContext>
-	);
-}
+Pass signals or stores through context to share reactive state.
+Avoid module-level signals for shared state, because on the server one module is shared by every request.
 
-function ThemeButton() {
-	const { theme, setTheme } = useContext(ThemeContext);
+## Refs
 
-	return (
-		<button
-			onClick={() =>
-				setTheme((value) => (value === "light" ? "dark" : "light"))
-			}
-		>
-			Current theme: {theme()}
-		</button>
-	);
+A `ref` callback receives the element:
+
+```tsx
+let input!: HTMLInputElement;
+
+<input ref={(element) => (input = element)} />;
+```
+
+Components receive a ref as `props.ref`, so there is no `forwardRef`.
+To use the element locally and pass it on, give `ref` an array: `ref={[props.ref, (el) => (input = el)]}`.
+See [Refs and directives](/concepts/components-and-jsx#refs-and-directives).
+
+## Custom hooks
+
+A custom hook becomes a function, usually named `createX`, that takes and returns accessors:
+
+```tsx
+function createDebounced(value: Accessor<string>, ms: number) {
+	const [debounced, setDebounced] = createSignal(untrack(value));
+
+	createEffect(value, (next) => {
+		const id = setTimeout(() => setDebounced(next), ms);
+		return () => clearTimeout(id);
+	});
+
+	return debounced;
 }
 ```
 
-A default-less context throws when code reads it without an enclosing provider.
-Pass signals, stores, or service objects through context when descendants need reactive state, including application-wide state provided at the root of `App`.
-Avoid module-level signals or stores for shared state: they have no owner, and on the server one module instance is shared across requests.
+Return `debounced`, not `debounced()`: a plain value never updates.
+[Custom primitives](/guides/custom-primitives) covers the pattern.
 
-## Read an external store
+## External stores
 
-React reads a store that lives outside the framework with `useSyncExternalStore(subscribe, () => navigator.onLine, () => true)`: a subscribe function, a client snapshot, and a server snapshot.
-In Solid, the subscription callback writes a signal:
+Instead of `useSyncExternalStore`, write a signal from the subscription:
 
 ```tsx
-import { createSignal, onSettled } from "solid-js";
-
 function createOnlineStatus() {
 	const [online, setOnline] = createSignal(true);
 
@@ -684,558 +288,113 @@ function createOnlineStatus() {
 }
 ```
 
-`subscribe` is the same function in both versions: it registers a callback and returns a function that unsubscribes.
-Turn the network off in the browser's developer tools and `online()` becomes `false`; every expression that reads it updates.
+`onSettled` does not run on the server, and the starting value matches what the server rendered.
+When the subscription depends on a prop, subscribe in an effect instead, as [Integrate non-Solid code](/guides/integrate-non-solid-code#feed-an-outside-source-into-the-graph) shows.
 
-`onSettled` does three jobs here:
+## Async data
 
-- It does not run during server rendering, so the server never touches `navigator`; it only reserves the hydration ID the client will use, so the two trees stay aligned.
-- The signal starts at `true`, the value the server rendered, so the first client render matches the server HTML; `update()` then writes the real value once the component has settled.
-  The same write in the component body throws [`[REACTIVE_WRITE_IN_OWNED_SCOPE]`](/reference/solid-js/diagnostics/reactive-write-in-owned-scope).
-- The unsubscribe function it returns runs when the component's owner is disposed.
-
-When the subscription depends on a reactive input, such as an ID prop, subscribe in an effect instead, as [Integrate non-Solid code](/guides/integrate-non-solid-code#feed-an-outside-source-into-the-graph) shows, so it resubscribes when the input changes.
-
-A computation can also return an async iterable, and each value the iterator produces becomes the memo's next value:
+An async memo returns a value, not a promise.
+[`Loading`](/reference/solid-js/components-jsx/loading) plays the role of Suspense, and [`Errored`](/reference/solid-js/components-jsx/errored) plays the role of an error boundary:
 
 ```tsx
-import { createMemo } from "solid-js";
-
-function onlineChanges(): AsyncIterable<boolean> {
-	return {
-		[Symbol.asyncIterator]() {
-			let changed = true; // emit the current value first
-			let wake = () => {};
-			const unsubscribe = subscribe(() => {
-				changed = true;
-				wake();
-			});
-			return {
-				next: () =>
-					new Promise<IteratorResult<boolean>>((resolve) => {
-						wake = () => {
-							changed = false;
-							resolve({ value: navigator.onLine, done: false });
-						};
-						if (changed) wake();
-					}),
-				async return() {
-					unsubscribe();
-					return { value: undefined, done: true };
-				},
-			};
-		},
-	};
-}
-
-const online = createMemo(() => onlineChanges(), { loadingValue: true });
-```
-
-`loadingValue` answers the first read, and waiting for a later value does not make the memo pending: `isPending(() => online())` stays `false` and no `Loading` boundary shows.
-When the memo's owner is disposed, Solid calls the iterator's `return()`, which unsubscribes.
-Prefer the `onSettled` version for a source that exists only in the browser, since `onSettled` never runs on the server.
-
-:::caution[Write the iterator as an object, not an async generator]
-An `async function*` looks shorter, but while the generator waits at an `await` for the next change, a `return()` call is queued behind that `await`.
-The subscription stays open until the next change arrives, or forever if none does.
-Implement `next` and `return` directly, as above.
-:::
-
-## Turn a custom hook into a custom primitive
-
-A custom hook becomes a [custom primitive](/guides/custom-primitives): a function, conventionally named `createX`, that runs once inside a component and returns accessors.
-
-### React
-
-```tsx
-function useDebounced(value: string, ms: number) {
-	const [debounced, setDebounced] = useState(value);
-
-	useEffect(() => {
-		const id = setTimeout(() => setDebounced(value), ms);
-		return () => clearTimeout(id);
-	}, [value, ms]);
-
-	return debounced;
-}
-```
-
-### Solid
-
-```tsx
-import { createEffect, createSignal, untrack, type Accessor } from "solid-js";
-
-function createDebounced(value: Accessor<string>, ms: number) {
-	const [debounced, setDebounced] = createSignal(untrack(value));
-
-	createEffect(value, (next) => {
-		const id = setTimeout(() => setDebounced(next), ms);
-		return () => clearTimeout(id);
-	});
-
-	return debounced;
-}
-```
-
-Call it with the signal itself, `createDebounced(query, 300)`, or wrap a prop in a function, `createDebounced(() => props.query, 300)`.
-Type quickly and `debounced()` changes once, 300 milliseconds after the last keystroke.
-The primitive takes an accessor and returns one, because a plain value is a snapshot taken when the primitive runs.
-`untrack` reads the starting value once without subscribing the component body.
-The effect's cleanup clears the pending timer when the value changes and when the component is removed.
-
-The hook rules do not apply: call a primitive conditionally, in a loop, or from another primitive, as long as an owner such as a component is running it.
-Returning `debounced()` instead of `debounced` hands back a value that never changes, and development warns [`[STRICT_READ_UNTRACKED]`](/reference/solid-js/diagnostics/strict-read-untracked) in the calling component.
-
-## Work with refs and owned setup
-
-Both libraries can expose a DOM element to component code.
-
-### React
-
-```tsx
-function SearchField() {
-	const input = useRef<HTMLInputElement>(null);
-
-	return (
-		<>
-			<input ref={input} type="search" />
-			<button onClick={() => input.current?.select()}>Select query</button>
-		</>
-	);
-}
-```
-
-### Solid
-
-Solid can assign the element to a local variable through a `ref` callback:
-
-```tsx
-function SearchField() {
-	let input!: HTMLInputElement;
-
-	return (
-		<>
-			<input ref={(element) => (input = element)} type="search" />
-			<button onClick={() => input.select()}>Select query</button>
-		</>
-	);
-}
-```
-
-React stores the committed element in the ref object's `current` property.
-The Solid callback receives the element after Solid creates it and assigns it to the local variable.
-Solid also accepts an assignable variable or an array of callbacks through the `ref` prop.
-
-### Pass and compose refs through components
-
-React 19 accepts `ref` as a regular component prop, so new components do not need [`forwardRef`](https://react.dev/reference/react/forwardRef).
-`forwardRef` remains available, but React marks it for deprecation in a future release.
-Code targeting earlier React versions may still use `forwardRef` to receive and pass that ref.
-
-Solid also receives a component ref through `props.ref`.
-Pass it to the element as one entry in a ref array when the component needs the same element locally:
-
-```tsx
-import type { Ref } from "solid-js";
-
-type SearchFieldProps = {
-	ref?: Ref<HTMLInputElement>;
-};
-
-function SearchField(props: SearchFieldProps) {
-	let input!: HTMLInputElement;
-
-	return (
-		<>
-			<input ref={[props.ref, (element) => (input = element)]} type="search" />
-			<button onClick={() => input.select()}>Select query</button>
-		</>
-	);
-}
-```
-
-Solid recursively flattens the array and invokes each ref callback in order.
-The parent receives the element through `props.ref`, while the component can compose local element access and additional directives without a wrapper callback.
-
-Use a ref directive when element behavior needs reusable setup, native event options, owned reactive work, or cleanup.
-See [Refs and directives](/concepts/components-and-jsx#refs-and-directives) and the [`ref` reference](/reference/solid-web/jsx-properties/ref) for that lifecycle and callback composition.
-
-## Map asynchronous UI by state
-
-React applications coordinate asynchronous UI through framework APIs, Suspense boundaries, transitions, and data libraries.
-Solid represents asynchronous reads as part of its reactive graph.
-
-Map each responsibility separately:
-
-- A React Suspense fallback is closest to a Solid `Loading` fallback.
-- A React error boundary is closest to a Solid `Errored` boundary.
-- A `SuspenseList`-style reveal policy is closest to Solid's `Reveal`.
-- Pending transition UI is closest to Solid's automatic held updates with `isPending`.
-- Mutation coordination can use a Solid `action`.
-
-These concepts serve related UI responsibilities, but their runtime contracts are not interchangeable.
-
-An async memo remains an accessor:
-
-```tsx
-import { type Accessor, Errored, Loading, createMemo } from "solid-js";
-
-function UserProfile(props: { user: Accessor<User> }) {
-	return (
-		<Loading fallback={<p>Loading user...</p>}>
-			<article>
-				<h2>{props.user().name}</h2>
-				<p>{props.user().bio}</p>
-			</article>
-		</Loading>
-	);
-}
-
 function Page(props: { id: string }) {
-	const user = createMemo(async () => {
-		const response = await fetch(`/api/users/${props.id}`);
-		if (!response.ok) throw new Error("Could not load user");
-		return response.json() as Promise<User>;
-	});
+	const user = createMemo(() => fetchUser(props.id));
 
 	return (
 		<Errored fallback={(error) => <p>{String(error())}</p>}>
-			<UserProfile user={user} />
+			<Loading fallback={<p>Loading...</p>}>
+				<h2>{user().name}</h2>
+			</Loading>
 		</Errored>
 	);
 }
 ```
 
-[`Loading`](/reference/solid-js/components-jsx/loading) handles a read that has no settled answer.
-[`Errored`](/reference/solid-js/components-jsx/errored) handles an error that travels through the reactive graph.
+Only the expressions that read `user()` wait.
+Nested components still set up and start their own requests, so nesting does not create a request waterfall.
+[`Reveal`](/reference/solid-js/components-jsx/reveal) controls the order in which sibling `Loading` boundaries appear.
 
-The async memo is created in `Page`, but `Loading` sits in `UserProfile` directly above the reads of `props.user()`.
-A loading boundary only needs to be an owner ancestor of the read that can report “not ready.”
-It does not need to wrap the component that created the computation or the parent call site for the component that performs the read.
-The boundary can also sit farther up the owner tree when one fallback should cover a larger coherent region.
+### Pending updates
 
-### Async coordination follows data
-
-Solid waits on reactive data rather than treating a component as the unit of suspension.
-A not-ready read blocks that reactive output, but it does not abort setup of the remaining nested component tree.
+There is no `startTransition`.
+When a write leads to new async work, Solid keeps the current content on screen until the new data is ready.
+Use `isPending` to show that an update is in progress, and `latest` to read the new value early:
 
 ```tsx
-import { render } from "@solidjs/web";
-import { Loading, createMemo } from "solid-js";
-import { fetchTimeIn3Seconds } from "./api.js";
+const [tab, setTab] = createSignal("posts");
+const content = createMemo(() => fetchTab(tab()));
 
-function A() {
-	const a = createMemo(fetchTimeIn3Seconds);
-
-	return (
-		<div class="box">
-			A completed in {a()} seconds.
-			<B />
-		</div>
-	);
-}
-
-function B() {
-	const b = createMemo(fetchTimeIn3Seconds);
-
-	return (
-		<div class="box">
-			B completed in {b()} seconds.
-			<C />
-		</div>
-	);
-}
-
-function C() {
-	const c = createMemo(fetchTimeIn3Seconds);
-
-	return <div class="box">C completed in {c()} seconds.</div>;
-}
-
-render(
-	() => (
-		<Loading fallback="Loading...">
-			<A />
-		</Loading>
-	),
-	document.getElementById("root")!
-);
+<button disabled={latest(tab) === "photos"} onClick={() => setTab("photos")}>
+	Photos
+</button>;
+<Loading fallback={<Spinner />}>
+	<div class={{ dimmed: isPending(() => content()) }}>{content()}</div>
+</Loading>;
 ```
 
-`A` starts its request before `a()` reports that its value is not ready.
-Solid continues setting up the nested JSX, so `B` and then `C` start their own requests in the same pass.
-All three requests overlap even though the components are nested.
+Until the photos arrive, `tab()` still returns `"posts"`.
+For `useDeferredValue`, use [`createDeferred`](/reference/solid-js/reactivity/create-deferred), which lets the result lag without holding the input.
+[Async reactivity](/concepts/async-reactivity) covers both.
 
-The one `Loading` boundary above `A` handles every not-ready read beneath it.
-It detaches the in-progress branch from visible output, retains its reactive ownership offscreen, and shows the fallback.
-Component setup and ownership remain in place while the async expressions continue toward resolution.
-When the values settle, Solid updates the reactive text expressions and reveals the retained branch.
-The component functions do not run again.
+### Mutations
 
-A computation that reads another async result still waits for that dependency.
-Parallel work comes from independent data dependencies rather than the depth of the component tree.
-
-React applications can also achieve parallel requests through framework loading, caching, or preloading.
-This example shows the Solid default: pending status belongs to the data read, so a pending expression does not stop nested components from setting up their own independent work.
-
-### Coordinate several loading regions
-
-React explored coordinating several Suspense boundaries through the experimental `SuspenseList` API.
-React 19 does not include `SuspenseList` in its stable API, though applications may encounter the concept in experimental releases or framework abstractions.
-
-Solid's [`Reveal`](/reference/solid-js/components-jsx/reveal) coordinates the reveal timing of sibling `Loading` boundaries:
+`useOptimistic` becomes an [`action`](/reference/solid-js/lifecycle-actions/action) that writes to an optimistic store:
 
 ```tsx
-import { Loading, Reveal } from "solid-js";
+const [todos, setTodos] = createOptimisticStore(() => api.listTodos(), []);
 
-<Reveal order="sequential">
-	<Loading fallback={<ProfileSkeleton />}>
-		<Profile />
-	</Loading>
-	<Loading fallback={<ActivitySkeleton />}>
-		<Activity />
-	</Loading>
-</Reveal>;
-```
-
-`Reveal` does not start async work or create loading state.
-It controls when its direct loading regions become visible:
-
-- `"sequential"` reveals them in registration order.
-- `"together"` waits until every direct region has its first visible content.
-- `"natural"` lets each region reveal when its own work settles.
-
-Nested `Reveal` groups compose as one slot in their parent group.
-See [Boundaries](/concepts/boundaries#reveal-order) for ordering, collapsed fallbacks, and group membership.
-
-### Updates are coordinated implicitly
-
-React provides `startTransition` to mark selected state updates as non-blocking.
-Solid does not require a wrapper that marks an update.
-All signal and store writes made during one uninterrupted synchronous call stack join the same coordinated update.
-
-```tsx
-function selectUser(id: string) {
-	setSelectedId(id);
-	setPanel("profile");
-}
-```
-
-Both writes above belong to one update.
-This implicit grouping is not a priority or interruptibility API like React's transition APIs.
-
-When its downstream work remains synchronous, Solid commits the update on the normal microtask flush.
-When participating computations wait for async work, the unit becomes a held update.
-Solid keeps the current committed view visible, then reveals the participating writes together when that work settles.
-That retained-UI behavior is the closest analogue to a React transition.
-
-Use [`isPending`](/reference/solid-js/reactivity/is-pending) when the held view needs an updating indicator.
-This behavior is automatic rather than an explicit `startTransition` call.
-
-Solid [`action`](/reference/solid-js/lifecycle-actions/action) coordinates generator-based mutations, optimistic state, and refresh behavior.
-The shared term “action” does not imply that action APIs in different ecosystems have identical contracts.
-
-See [Async reactivity](/concepts/async-reactivity) for readiness, held updates, errors, actions, optimistic state, and durable refresh.
-
-### Show pending work
-
-`useTransition` returns an `isPending` flag for a transition that `startTransition` marks.
-In Solid every write that leads to async work is held, so the indicator reads the data directly.
-
-#### React
-
-```tsx
-const [tab, setTab] = useState("posts");
-const [isPending, startTransition] = useTransition();
-
-<button onClick={() => startTransition(() => setTab("photos"))}>Photos</button>;
-<Suspense fallback={<Spinner />}>
-	<div style={{ opacity: isPending ? 0.5 : 1 }}>
-		<TabContent tab={tab} />
-	</div>
-</Suspense>;
-```
-
-#### Solid
-
-```tsx
-import { createMemo, createSignal, isPending, latest, Loading } from "solid-js";
-
-function Tabs() {
-	const [tab, setTab] = createSignal("posts");
-	const content = createMemo(() => fetchTab(tab()));
-
-	return (
-		<>
-			<button
-				disabled={latest(tab) === "photos"}
-				onClick={() => setTab("photos")}
-			>
-				Photos
-			</button>
-			<Loading fallback={<Spinner />}>
-				<div class={{ dimmed: isPending(() => content()) }}>{content()}</div>
-			</Loading>
-		</>
-	);
-}
-```
-
-Click **Photos** and the button is disabled at once; the posts stay on screen, dimmed, until the photos arrive, and then the content switches.
-While the write is held, `tab()` itself still returns `"posts"`, and so does everything derived from it.
-[`latest(tab)`](/reference/solid-js/reactivity/latest) reads the value in flight, which is what the control the user touched should show, and `isPending` is `true` while a change to `content` is in flight.
-To show the fallback again instead of the dimmed old content, use `<Loading on={tab()}>`; [Show a placeholder again](/concepts/async-reactivity#show-a-placeholder-again-loading-on) explains it.
-
-`useDeferredValue` lets the input update at once while a slow result lags behind it.
-[`createDeferred`](/reference/solid-js/reactivity/create-deferred) gives an async result that lags but does not hold the input:
-
-```tsx
-import { createDeferred, createSignal } from "solid-js";
-
-const [query, setQuery] = createSignal("");
-const results = createDeferred(() => api.search(query()));
-```
-
-Type in the search box and `query()` updates on each keystroke; `results()` keeps the previous list, with `isPending(() => results())` `true`, until the new list arrives.
-
-## Write data with actions
-
-React 19 shows an expected value with `useOptimistic` while a transition or form action runs, and data libraries offer mutation hooks with rollback callbacks.
-Solid runs a mutation as an [`action`](/reference/solid-js/lifecycle-actions/action), and an optimistic store shows the expected result while it runs.
-
-### React
-
-```tsx
-const [optimistic, addOptimistic] = useOptimistic(todos, (list, todo: Todo) => [
-	...list,
-	todo,
-]);
-
-function addTodo(text: string) {
-	startTransition(async () => {
-		addOptimistic({
-			id: crypto.randomUUID(),
-			text,
-			done: false,
-			pending: true,
-		});
-		await api.addTodo(text);
+const addTodo = action(function* (text: string) {
+	setTodos((list) => {
+		list.push({ id: crypto.randomUUID(), text, pending: true });
 	});
-}
+	yield api.addTodo(text);
+	refresh(todos);
+});
 ```
 
-### Solid
+The row appears at once.
+When the action finishes, the optimistic row is replaced by the refreshed list.
+If the request fails, the row is removed without rollback code.
+Use `yield`, not `await`: code after a plain `await` runs outside the action.
+With Solid Router, see [Data loading and mutations](/routing/solid-router/data#mutate-with-a-server-function).
 
-```tsx
-import { For, Loading, action, createOptimisticStore, refresh } from "solid-js";
+## What goes away
 
-function TodoList() {
-	const [todos, setTodos] = createOptimisticStore(
-		() => api.listTodos(),
-		[] as Todo[]
-	);
-
-	const addTodo = action(function* (text: string) {
-		setTodos((list) => {
-			list.push({ id: crypto.randomUUID(), text, done: false, pending: true });
-		});
-		yield api.addTodo(text);
-		refresh(todos);
-	});
-
-	return (
-		<>
-			<button onClick={() => addTodo("Write docs")}>Add</button>
-			<Loading fallback={<Spinner />}>
-				<ul>
-					<For each={todos}>
-						{(todo) => <li class={{ pending: todo.pending }}>{todo.text}</li>}
-					</For>
-				</ul>
-			</Loading>
-		</>
-	);
-}
-```
-
-Click **Add** and the new row appears at once with the `pending` class.
-When `api.addTodo` resolves, `refresh(todos)` reloads the list and the server's copy replaces the row; if the request fails, the row disappears with no rollback code.
-[`createOptimisticStore`](/reference/solid-js/stores/create-optimistic-store) is the list and its optimistic overlay in one, and the action discards the overlay when it settles.
-Each `yield` waits for its promise and resumes the action's transaction; code after a plain `await` runs outside it.
-For a single value, such as a like count, use [`createOptimistic`](/reference/solid-js/reactivity/create-optimistic).
-
-With Solid Router, the action calls a server function, and the router revalidates its cache from the response instead of an explicit `refresh`.
-Wrap the mutation in `formAction` when the form must work before JavaScript loads.
-[Data loading and mutations](/routing/solid-router/data#mutate-with-a-server-function) covers both, and [Mutations](/concepts/mutations) covers pending flags, `affects`, and failures.
-
-## Remove what has no Solid counterpart
-
-Several React APIs exist to limit re-rendering or to work around it.
-A Solid component runs once, so these have nothing to translate to:
-
-- `React.memo`: a parent update does not run the child component again, so there is no render to skip.
-- `useCallback`: a function created in the component body is created once and keeps its identity.
-- `useMemo` around cheap values: a plain function such as `() => count() * 2` is enough; keep `createMemo` for expensive or shared work, as [Derive values from state](#derive-values-from-state) describes.
+- `React.memo`: a parent update does not run the child again.
+- `useCallback`: functions in the component body are created once.
 - Dependency arrays: the compute function tracks what it reads.
-- Workarounds for stale closures, such as a ref that mirrors the latest state: a handler that calls `count()` reads the current value.
-- The hook rules: primitives are plain function calls.
-- Code that guards against Strict Mode running effects twice: Solid does not run component bodies or effects twice in development.
-
-## Plan an incremental migration
-
-React and Solid JSX look similar, but their compiled component values and runtime ownership are not interchangeable.
-Treat a route, page, island, or separate application root as the boundary between the two renderers.
-
-A practical migration sequence is:
-
-1. Create the Solid application shell and choose its routing and rendering setup.
-2. Move framework-independent types, validation, data clients, and utility functions.
-3. Migrate leaf UI components and their local state.
-4. Move shared state and context after the consuming components have clear Solid boundaries.
-5. Translate derived state and effects by responsibility.
-6. Move async reads, loading UI, errors, and mutations into Solid's async model.
-7. Retire the React root or route boundary after its descendants have moved.
-
-Use [Quick start](/getting-started/quick-start) to create a Solid project.
-The [routing overview](/routing/overview) describes the router-independent application boundary and links to supported routers.
+- Stale closures: a handler that calls `count()` reads the current value.
+- Hook rules and Strict Mode double runs.
 
 ## Habits that still compile
 
-Each of these React habits compiles in Solid and then misbehaves.
-Development builds report most of them by code; codes marked "attribution" appear once `attribution.enable()` from `solid-js/attribution` is running, as [Debugging reactivity](/guides/debugging-reactivity) describes.
+These React habits compile in Solid and then misbehave.
+Codes marked "attribution" appear once `attribution.enable()` from `solid-js/attribution` is running, as [Debugging reactivity](/guides/debugging-reactivity) describes.
 
-| React habit                                                                  | What happens in Solid                                                                              | What reports it                                                                                                                                              |
-| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Destructuring props, or reading a prop or signal at the top of the component | The value never updates                                                                            | [`STRICT_READ_UNTRACKED`](/reference/solid-js/diagnostics/strict-read-untracked)                                                                             |
-| An early `return` that depends on props                                      | The component stays on its first branch                                                            | [`STRICT_READ_UNTRACKED`](/reference/solid-js/diagnostics/strict-read-untracked)                                                                             |
-| Calling a translator in the body: `const label = t("save")`                  | The text keeps its first language                                                                  | [`STRICT_READ_UNTRACKED`](/reference/solid-js/diagnostics/strict-read-untracked) if `t` reads a signal; nothing if it reads a plain variable                 |
-| Passing the accessor: `value={count}`                                        | The child receives a function                                                                      | A TypeScript error                                                                                                                                           |
-| Building fresh objects for list items on each update                         | `For` recreates every row, and focus and input state are lost                                      | [`UNSTABLE_LIST_IDENTITY`](/reference/solid-js/diagnostics/unstable-list-identity) (attribution); key by ID with `keyed={(item) => item.id}`                 |
-| Copying a derived value into state from an effect                            | The copy is one update behind                                                                      | [`EFFECT_RELAY_TEAR`](/reference/solid-js/diagnostics/effect-relay-tear) (attribution)                                                                       |
-| Setting state during render                                                  | Throws                                                                                             | [`REACTIVE_WRITE_IN_OWNED_SCOPE`](/reference/solid-js/diagnostics/reactive-write-in-owned-scope)                                                             |
-| Translating `useEffect(fn)` to `createEffect(fn)`                            | Throws                                                                                             | [`MISSING_EFFECT_FN`](/reference/solid-js/diagnostics/missing-effect-fn)                                                                                     |
-| Reading a signal inside the effect function                                  | The effect does not re-run when it changes                                                         | [`STRICT_READ_UNTRACKED`](/reference/solid-js/diagnostics/strict-read-untracked)                                                                             |
-| Reading a signal after `await` in an async memo                              | The memo does not re-run when it changes                                                           | [`UNTRACKED_READ_AFTER_AWAIT`](/reference/solid-js/diagnostics/untracked-read-after-await) (V8 engines)                                                      |
-| Writing a store outside its setter                                           | The write is ignored                                                                               | [`STORE_WRITE_OUTSIDE_SETTER`](/reference/solid-js/diagnostics/store-write-outside-setter)                                                                   |
-| `createContext<T \| undefined>(undefined)` for an optional context           | `useContext` throws without a provider                                                             | `ContextNotFoundError`; use `null` as the default                                                                                                            |
-| `onClick={ready() ? save : wait}`                                            | The first handler stays bound                                                                      | [`STRICT_READ_UNTRACKED`](/reference/solid-js/diagnostics/strict-read-untracked); decide inside one handler                                                  |
-| A lowercase `onclick`                                                        | The handler is never attached                                                                      | [`LOWERCASE_EVENT_ATTRIBUTE`](/reference/solid-js/diagnostics/lowercase-event-attribute)                                                                     |
-| A controlled input whose handler rejects a keystroke                         | The rejected text stays in the field                                                               | Nothing; assign `event.currentTarget.value` in the handler                                                                                                   |
-| `value={props.name} onChange={commit}` with no draft signal                  | When another attribute in the same template changes, the binding re-runs and erases the typed text | [`UNCOMMITTED_INPUT_OVERWRITTEN`](/reference/solid-js/diagnostics/uncommitted-input-overwritten); write a draft signal from `onInput`, or use `defaultValue` |
+| React habit                                                 | What happens in Solid                          | What reports it                                                                                                                                              |
+| ----------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Destructuring props, or reading a signal in the body        | The value never updates                        | [`STRICT_READ_UNTRACKED`](/reference/solid-js/diagnostics/strict-read-untracked)                                                                             |
+| An early `return` that depends on props                     | The component stays on its first branch        | [`STRICT_READ_UNTRACKED`](/reference/solid-js/diagnostics/strict-read-untracked)                                                                             |
+| Passing the accessor: `value={count}`                       | The child receives a function                  | A TypeScript error                                                                                                                                           |
+| Building new objects for list items on each update          | `For` recreates every row and loses focus      | [`UNSTABLE_LIST_IDENTITY`](/reference/solid-js/diagnostics/unstable-list-identity) (attribution)                                                             |
+| Copying a derived value into state from an effect           | The copy is one update behind                  | [`EFFECT_RELAY_TEAR`](/reference/solid-js/diagnostics/effect-relay-tear) (attribution)                                                                       |
+| Setting state during render                                 | Throws                                         | [`REACTIVE_WRITE_IN_OWNED_SCOPE`](/reference/solid-js/diagnostics/reactive-write-in-owned-scope)                                                             |
+| `useEffect(fn)` translated to `createEffect(fn)`            | Throws                                         | [`MISSING_EFFECT_FN`](/reference/solid-js/diagnostics/missing-effect-fn)                                                                                     |
+| Reading a signal inside the effect function                 | The effect does not re-run when it changes     | [`STRICT_READ_UNTRACKED`](/reference/solid-js/diagnostics/strict-read-untracked)                                                                             |
+| Reading a signal after `await` in an async memo             | The memo does not re-run when it changes       | [`UNTRACKED_READ_AFTER_AWAIT`](/reference/solid-js/diagnostics/untracked-read-after-await) (V8 engines)                                                      |
+| `createContext<T \| undefined>(undefined)`                  | `useContext` throws without a provider         | `ContextNotFoundError`; use `null` as the default                                                                                                            |
+| `onClick={ready() ? save : wait}`                           | The first handler stays bound                  | [`STRICT_READ_UNTRACKED`](/reference/solid-js/diagnostics/strict-read-untracked); decide inside one handler                                                  |
+| A lowercase `onclick`                                       | The handler is never attached                  | [`LOWERCASE_EVENT_ATTRIBUTE`](/reference/solid-js/diagnostics/lowercase-event-attribute)                                                                     |
+| `value={props.name} onChange={commit}` with no draft signal | Another attribute change erases the typed text | [`UNCOMMITTED_INPUT_OVERWRITTEN`](/reference/solid-js/diagnostics/uncommitted-input-overwritten); write a draft signal from `onInput`, or use `defaultValue` |
 
-## Review the translation
+## Migrate in steps
 
-Before considering a migrated component complete, check:
+React and Solid components cannot be mixed in one tree.
+Move a route, page, or separate app root at a time:
 
-- Signal values are read by calling their accessors.
-- Reads intended to drive reactive updates occur in JSX, a memo, an async computation, or an effect compute function.
-- Event handlers and intentional one-time snapshots can read values without tracking them.
-- Props that can change remain on the props object or are wrapped in a reactive derivation.
-- Calculated values remain derivations instead of synchronized copies of state.
-- Effects send settled reactive results to imperative systems.
-- Interaction-specific work starts in the event handler or action that observed it.
-- Reactive lists use a `For` keying mode or `Repeat` range that matches how the collection changes.
-- Async reads have an appropriate loading and error boundary.
-- Renderer-specific React components do not cross directly into the Solid component tree.
-
-A successful migration preserves application behavior while expressing its data flow through Solid's execution model.
+1. Create the Solid app shell with the [Quick start](/getting-started/quick-start).
+2. Move framework-independent code: types, validation, data clients, and utilities.
+3. Move leaf components and their local state.
+4. Move shared state and context.
+5. Move async data, loading states, and mutations.
+6. Remove the React root.

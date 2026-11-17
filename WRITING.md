@@ -508,6 +508,10 @@ The rules in this section exist because AI drafts fail in predictable ways, and 
 
 A tone lint (`pnpm lint:tone`) enforces the mechanical parts of this section over `src/routes/**/*.mdx`, skipping code blocks and inline code.
 
+A page that still reads as a draft gets `review: wanted` in its frontmatter.
+The page then opens with a note asking readers for edits.
+Remove the flag in the same pull request as the human edit of the page.
+
 ### Every claim traces to source
 
 Docs describe what the code does, not what it should do.

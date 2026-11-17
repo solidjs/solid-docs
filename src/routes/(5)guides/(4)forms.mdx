@@ -431,6 +431,37 @@ Edits write to `draft`.
 When `props.address` changes, for example after a save and revalidation, the draft resets to the new source.
 [Use a writable derivation for a local override](/guides/avoid-unnecessary-effects#use-a-writable-derivation-for-a-local-override) shows the full pattern with per-field validation, and the effect-based copy it replaces.
 
+## Save in more than one step
+
+A form action's body is a plain async function, so only the server-function call made before its first `await` belongs to the action.
+A second call after that `await` goes out on its own: it does not ride the action's single flight, and the page can be refreshed before it lands.
+
+```ts
+// Avoid: publish() runs after an await, outside the form action
+const savePost = formAction(async (form: FormData) => {
+	await saveDraft(form);
+	await publish(form);
+});
+```
+
+Move the steps into one server function, and the form action makes a single call:
+
+```ts
+"use server";
+
+export async function saveAndPublish(form: FormData) {
+	const draft = await saveDraft(form);
+	await publish(draft.id);
+}
+```
+
+```ts
+const savePost = formAction(saveAndPublish);
+```
+
+This is also the only shape that works before JavaScript loads, because the form posts to one server function's URL.
+When the steps have to run in the browser, for example to show progress between them, write a core [`action`](/concepts/mutations) and `yield` each call instead; a form without JavaScript cannot run those steps anyway.
+
 ## Common problems
 
 ### The server function receives an empty object
@@ -454,6 +485,11 @@ Import `formAction` from `@solidjs/router` for forms.
 Something is clearing the submission.
 `submission.clear()` removes an entry from the list; call it when the user dismisses the error or resubmits, not from an effect that runs on every render.
 
+### The page refreshes before the last step of a save
+
+The form action calls a second server function after an `await`, outside the action.
+Combine the steps into one server function, as in [Save in more than one step](#save-in-more-than-one-step).
+
 ### `respond()` reaches the client as `Internal Server Error`
 
 The value was thrown as a plain object or `Error` instead of through `respond()` or `markSafeError()`.
@@ -471,6 +507,7 @@ Use `throw respond(value, { status })` for structured failures.
 - Read failures from `useSubmissions(submitAddress)`, where the envelope's value is `submission.error`.
 - Style the pending state from `form[aria-busy]`; the router sets and clears the attribute.
 - Push the submitted fields into a `createOptimisticStore` from the form action's `.onSubmit` hook to show the result at once; the overlay is discarded when the form action settles and the revalidated list replaces it.
+- Do a multi-step save in one server function, or in a core `action` with a `yield` between calls; a form action's calls after its first `await` are outside the action.
 - Every layer after pass 1 exists only on the hydrated page; the same form still posts, and the server renders the page again, without JavaScript.
 
 ## Next steps

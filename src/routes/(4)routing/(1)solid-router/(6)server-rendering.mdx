@@ -79,7 +79,7 @@ The second makes sure that module runs before any server function is dispatched:
 // vite.config.ts
 solid({
 	start: true,
-	serverFunctions: { configure: "./src/server-config.ts" },
+	serverFunctions: { serverSetup: "./src/server-config.ts" },
 });
 ```
 
@@ -95,7 +95,7 @@ That is why the [Data](/routing/solid-router/data#what-revalidates-after-a-mutat
 
 To turn the protocol off, set `singleFlight: false` in `createRouter`.
 Without a client consumer the transport does not send the single-flight header and the server does not run collection.
-An app with its own server-function handler passes `collectFlightData` to `handleServerFunctionRequest` per request instead of using the `configure` module.
+An app with its own server-function handler passes `collectFlightData` to `handleServerFunctionRequest` per request instead of using the `serverSetup` module.
 
 If the default server-function endpoint `/_server` is changed in the Vite plugin, set the router's `actionBase` to match so form action URLs still reach it.
 
@@ -137,7 +137,7 @@ Check that the name and arguments are the same on both sides and contain nothing
 
 ### The mutation still makes two requests
 
-The `serverFunctions.configure` module is not set in `vite.config.ts`, so the collector never registered, or `singleFlight: false` is set on the router.
+The `serverFunctions.serverSetup` module is not set in `vite.config.ts`, so the collector never registered, or `singleFlight: false` is set on the router.
 With a custom server-function handler, pass `collectFlightData` to `handleServerFunctionRequest` yourself.
 
 ## Recap
@@ -145,7 +145,7 @@ With a custom server-function handler, pass `collectFlightData` to `handleServer
 - The same `Router` renders on both sides; on the server it reads the request URL from the request event, or from the `url` prop when there is no request.
 - Use `renderToStream` for any route tree with a lazy subtree.
 - Keep `query` names and arguments stable across server and client so the browser adopts the serialized result instead of fetching again.
-- Register `createFlightDataCollector(Router)` from a `serverFunctions.configure` module to fold fresh query results into each mutation response.
+- Register `createFlightDataCollector(Router)` from a `serverFunctions.serverSetup` module to fold fresh query results into each mutation response.
 - Put the reads a page needs in its `preload`; the collector refreshes only what the preloads touch.
 - Set `actionBase` when the server-function endpoint moves off `/_server`.
 - Wrap `props.children` in `Loading` so the shell streams before the queries settle.

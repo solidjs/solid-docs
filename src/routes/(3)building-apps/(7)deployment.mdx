@@ -84,7 +84,7 @@ const server = createServer(async (req, res) => {
 ```
 
 With the `Avoid` version, a request for `/assets/app-BpJ2g.js` renders the HTML page, because in production every request that reaches the end of the middleware chain renders; the browser receives a document where it expected a script.
-With `start.node`, the emitted Node entry is the `Prefer` version; the rest of this section is for a bridge you write.
+With `start.nodeServer`, the emitted Node entry is the `Prefer` version; the rest of this section is for a bridge you write.
 
 When adapting a host request, preserve the URL, method, headers, and the body of any request that is not `GET` or `HEAD`.
 When adapting the result, preserve the status, the headers, each `Set-Cookie` value separately, and the streamed body.
@@ -97,7 +97,7 @@ The emitted Node entry reads them with `headers.getSetCookie()` and passes the a
 ## Node
 
 Node has no server API that accepts a Fetchable module, so the plugin emits the Node server.
-Set `start.node` and the build writes `dist/server/node.js` next to `dist/server/server.js`:
+Set `start.nodeServer` and the build writes `dist/server/node.js` next to `dist/server/server.js`:
 
 ```ts title="vite.config.ts"
 import { defineConfig } from "vite";
@@ -106,7 +106,7 @@ import solid from "@solidjs/vite-plugin";
 export default defineConfig({
 	plugins: [
 		solid({
-			start: { node: true },
+			start: { nodeServer: true },
 			ssr: true,
 		}),
 	],
@@ -410,8 +410,8 @@ For a static-shell project, there is no handler: configure the host to serve `di
 
 ### `Cannot find module 'dist/server/node.js'`
 
-The build writes `dist/server/node.js` only when `start.node` is `true`.
-Set `start: { node: true }` in `vite.config.ts` and run the build again; `server.js` alone is the handler, not a server.
+The build writes `dist/server/node.js` only when `start.nodeServer` is `true`.
+Set `start: { nodeServer: true }` in `vite.config.ts` and run the build again; `server.js` alone is the handler, not a server.
 If `dist/server` is missing altogether, see the next problem.
 
 ### `Cannot find module './dist/server/server.js'`
@@ -436,7 +436,7 @@ Forward them as separate headers, the way the emitted Node entry does with `getS
 - Serve `dist/client` as static files first and pass every other request to `handleRequest`.
 - `handleRequest(request)` and the default `{ fetch }` export are the same handler; the default export ignores host arguments after the request.
 - Preserve the method, headers, and streamed body on the way in, and the status, headers, separate `Set-Cookie` values, and streamed body on the way out.
-- Set `start.node` and run `node dist/server/node.js` on any Node host; `PORT` and `HOST` are its only configuration.
+- Set `start.nodeServer` and run `node dist/server/node.js` on any Node host; `PORT` and `HOST` are its only configuration.
 - Set `server` environment variables on the host, because they are read at boot; `VITE_` values are fixed at build time.
 - A provider plugin adopts the `ssr` environment; reach for `start.externalServer` only when the host names or configures its server environment differently.
 - `vite preview` runs the built handler and assets together, and does not replace a test on the target host.

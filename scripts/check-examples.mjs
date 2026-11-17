@@ -132,7 +132,7 @@ const paths = {
 	"@solidjs/meta": `${meta}/dist/index.d.ts`,
 	"@solidjs/vite-plugin": `${vitePlugin}/dist/types/src/index.d.ts`,
 	"@solidjs/vite-plugin/boundary-modules": `${vitePlugin}/boundary-modules.d.ts`,
-	"@solidjs/vite-plugin/virtual-solid-manifest": `${vitePlugin}/virtual-solid-manifest.d.ts`,
+	"@solidjs/vite-plugin/virtual-modules": `${vitePlugin}/virtual-modules.d.ts`,
 };
 for (const [spec, p] of Object.entries(paths)) {
 	try {

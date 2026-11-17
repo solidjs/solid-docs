@@ -40,12 +40,11 @@ interface ServerFunctionsOptions {
 		server: string;
 		client: string;
 	};
-	manifest?: string;
 	filter?: ServerFunctionsFilter;
 	directive?: string;
 	endpoint?: string;
 	devMiddleware?: boolean;
-	configure?: string;
+	serverSetup?: string;
 	components?: boolean;
 }
 
@@ -64,14 +63,6 @@ Specifies the runtime imports emitted by the compiler.
 The server runtime must export `registerServerReference`, `createServerReference`, `handleServerFunctionRequest`, and `configureServerFunctionsServer`.
 The client runtime must export `registerServerReference` and `createServerReference`.
 The client runtime must also export `configureServerFunctionsClient` when the resolved endpoint differs from the default.
-
-### `manifest`
-
-- **Type:** `string`
-- **Default:** `"virtual:solid-server-function-manifest"`
-
-Specifies the virtual module that side-effect imports every module containing a compiled server function.
-Production handlers import this module so registrations survive tree shaking.
 
 ### `filter`
 
@@ -111,7 +102,7 @@ When dispatch is host-owned, the host loads `virtual:solid-server-function-handl
 The host's server entry should also import the manifest when functions referenced only by client code must register before dispatch.
 The host can configure request scope, origin checks, invocation policy, and result handling through [`configureServerFunctionsServer()`](/reference/solid-web/server-functions/host-configuration).
 
-### `configure`
+### `serverSetup`
 
 - **Type:** `string`
 - **Default:** `undefined`
@@ -122,7 +113,7 @@ The plugin rejects a missing file during configuration.
 
 ```ts
 serverFunctions: {
-  configure: "./src/server-config.ts",
+  serverSetup: "./src/server-config.ts",
 }
 ```
 
@@ -169,7 +160,7 @@ export default {
 		solid({
 			serverFunctions: {
 				endpoint: "/_server",
-				configure: "./src/server-config.ts",
+				serverSetup: "./src/server-config.ts",
 			},
 		}),
 	],

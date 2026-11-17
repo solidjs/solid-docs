@@ -160,6 +160,24 @@ Frame streams and server-function responses have no `<head>`, so they rely on th
 You do not need middleware for any of this.
 The trace only reaches the browser when the incoming `traceparent` was sampled or a provider returned one, so a page with no tracing tool sees no change to its responses.
 
+A response that a shared cache may store never carries the trace, because the cache would replay one request's trace to every viewer.
+That is a `Cache-Control` with `public` or `s-maxage` (and no `no-store` or `private`), or a `CDN-Cache-Control` a CDN may store under.
+A document decides this when its shell head is written, so set the policy before then: with `httpHeader` while the page renders, or from middleware before `next()`.
+
+```ts
+import { httpHeader } from "@solidjs/web";
+
+export default async (event, next) => {
+	if (isCachedRoute(new URL(event.request.url).pathname)) {
+		httpHeader("Cache-Control", "public, max-age=0, s-maxage=600");
+	}
+	return next();
+};
+```
+
+A header set on the returned `Response` after `next()` comes too late: the shell, with its `<meta>` tags, has already been written.
+`getTraceContext()` keeps working either way, so forwarding the trace to downstream services is unaffected.
+
 On the observe build, a tracing tool provides the trace instead of the header:
 
 ```ts
@@ -320,6 +338,7 @@ Under `vite dev` the labels are present by default.
 
 The runtime did not know the trace was recorded: the incoming `traceparent` had no sampled flag, or there was none and no provider returned one.
 Install a provider, or send a sampled `traceparent` from the edge.
+Otherwise, the response has a `Cache-Control` a shared cache may store, which withholds the trace on purpose.
 
 ### My tool's own effects show up as findings
 

@@ -9,7 +9,7 @@ import * as prettier from "prettier";
 const REPO_URL = "https://github.com/solidjs/solid.git";
 const DEFAULT_SOURCE = "/tmp/solid-v2-source";
 const DEFAULT_OUT = "src/routes/reference";
-const DEFAULT_REF = "next";
+const DEFAULT_REF = "main";
 const SPARSE_PATHS = [
 	"packages/solid",
 	"packages/web",
@@ -2952,7 +2952,7 @@ function printHelp() {
 node scripts/extract-solid-ref.mjs [options]
 
 Options:
-  --source-ref <ref>   Solid source ref to fetch. Defaults to "next".
+  --source-ref <ref>   Solid source ref to fetch. Defaults to "main".
   --source <path>      Local solidjs/solid checkout. Defaults to /tmp/solid-v2-source.
   --out <path>         Output directory. Defaults to src/routes/reference.
   --dry-run            Print planned files without writing MDX.

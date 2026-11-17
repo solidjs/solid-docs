@@ -396,6 +396,7 @@ import { useSubmissions } from "@solidjs/router";
 
 function AddToCartForm(props: { productId: string }) {
 	const submissions = useSubmissions(addToCartForm);
+	addToCartForm.onSubmit(() => submissions.forEach((s) => s.clear()));
 	const failure = () => submissions.at(-1)?.error as Error | undefined;
 
 	return (
@@ -414,6 +415,11 @@ function AddToCartForm(props: { productId: string }) {
 Submit a quantity of `0` and "Quantity must be a whole number" appears under the button.
 Each submission carries the `input` that was sent, the `result` or `error`, and `retry()` and `clear()`.
 A submission that redirected or returned nothing does not stay in the list; use `.onSettled` when you need to observe those too.
+
+The list is history, so a later submission does not remove an earlier one.
+That keeps every failed row of a list retryable, but a form that shows only its latest outcome has to clear the old records itself.
+The `.onSubmit` callback above does that: the old error goes away when the next submission lands, even if that submission returns nothing.
+Every navigation also clears the list, so records do not follow the user to another page.
 
 ### Optimistic writes from a form
 

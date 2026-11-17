@@ -14,10 +14,10 @@ The site is organized as four products (Solid, Router, Start, Meta), each with i
 
 Split into two sites, the way Vite handles major versions:
 
-| Site                    | Contents                                                                                                                   | Status                                                 |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| **v1.docs.solidjs.com** | The current site as it stands: core at `/`, Router 1, Meta 0.29, Start v1 + v2 (Start 2 runs on Solid 1, so it lives here) | Branched off and frozen in shape, maintained for fixes |
-| **docs.solidjs.com**    | One unified doc tree covering the Solid 2.0 platform, rebuilt from a clean starting point                                  | The active effort                                      |
+| Site                 | Contents                                                                                                                   | Status                                                 |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| **v1.solidjs.com**   | The current site as it stands: core at `/`, Router 1, Meta 0.29, Start v1 + v2 (Start 2 runs on Solid 1, so it lives here) | Branched off and frozen in shape, maintained for fixes |
+| **docs.solidjs.com** | One unified doc tree covering the Solid 2.0 platform, rebuilt from a clean starting point                                  | The active effort                                      |
 
 Since everything is touched by Solid 2.0, branching the whole site beats threading version switches through every page. Each site links to the other from a banner. This is a one-time split for this transition, not a policy for every major version.
 

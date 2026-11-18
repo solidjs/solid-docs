@@ -262,9 +262,9 @@ The [Mutations](/concepts/mutations) page builds this up from the client-only ca
 ## Store a class instance
 
 A class instance in a store is wrapped like a plain object, and `instanceof` still answers its class.
-Its getters are reactive reads: they run on the store proxy and track the fields they read.
-Its methods are actions: called on the store, a method runs on the instance itself, so an object that manages its own state, such as a state machine actor or an API client, keeps working.
-Called on the setter's draft, a method writes through the store and notifies readers.
+Its getters and methods run on the store proxy, so they track the fields they read.
+Writes follow the usual rule: a method called on the setter's draft writes through the store and notifies readers, and a write from a method called outside the setter is ignored.
+An object that manages its own state, such as a state machine actor or an API client, needs its writes to land on itself, so keep it out of the store or hold it in a store created with `{ shallow: true }`.
 
 ```tsx
 class Totals {
@@ -317,11 +317,10 @@ Development prints `[STRICT_READ_UNTRACKED]` with the component name.
 Plain objects, arrays, and class instances are wrapped in proxies; platform objects such as `Map`, `Set`, and `Date` are stored as they are.
 Reassign the property to a new instance through the setter to notify readers, or keep the data in plain objects and arrays.
 
-### A value computed by a class method never updates
+### A class instance in the store stopped working
 
-A method on a class instance runs on the instance itself, so the fields it reads are not tracked: `{cart.summary.total()}` renders once.
-Write the value as a getter instead, `get total() { ... }`, and read it as `cart.summary.total`.
-A getter runs on the store proxy, so it tracks every field it reads.
+A method on the instance changes its own fields, such as a state machine actor recording a subscriber, and the change is ignored because it was not made through the setter.
+Keep objects that manage their own state outside the store, or hold them in a store created with `{ shallow: true }`, which stores its values as they are.
 
 ## Recap
 
@@ -332,7 +331,7 @@ A getter runs on the store proxy, so it tracks every field it reads.
 - Derive a collection with `createProjection`, which reconciles results by `id`; derive a scalar with `createMemo`.
 - Load server data with `createStore(async () => ...)`; each response reconciles into the same proxy, and an array root takes a `[]` seed.
 - Make optimistic writes inside an `action` on a `createOptimisticStore`, and `refresh` the source when the request settles.
-- Put values derived from a class instance in getters; its methods run on the instance and do not track.
+- Class instances in a store track through their getters and methods; keep objects that manage their own state out of the store, or in a `shallow` one.
 
 ## Next steps
 

@@ -259,6 +259,40 @@ When the request completes, the refreshed cart from the server replaces the tent
 
 The [Mutations](/concepts/mutations) page builds this up from the client-only cart above, one change at a time.
 
+## Store a class instance
+
+A class instance in a store is wrapped like a plain object, and `instanceof` still answers its class.
+Its getters and methods run on the store proxy, so they track the fields they read.
+Writes follow the usual rule: a method called on the setter's draft writes through the store and notifies readers, and a write from a method called outside the setter is ignored.
+An object that manages its own state, such as a state machine actor or an API client, needs its writes to land on itself, so keep it out of the store or hold it in a store created with `{ shallow: true }`.
+
+```tsx
+class Totals {
+	items: CartItem[] = [];
+
+	get total() {
+		return this.items.reduce(
+			(sum, item) => sum + item.price * item.quantity,
+			0
+		);
+	}
+
+	add(item: CartItem) {
+		this.items.push(item);
+	}
+}
+
+const [cart, setCart] = createStore({ summary: new Totals() });
+
+<p>Total: {cart.summary.total}</p>;
+
+setCart((draft) => {
+	draft.summary.add({ id: "mug", name: "Mug", price: 12, quantity: 1 });
+});
+```
+
+`cart.summary.total` re-renders when `add` pushes an item through the draft.
+
 ## Common problems
 
 ### A store write did nothing
@@ -278,10 +312,15 @@ The read happened in the component body, outside a tracking scope.
 Store reads follow the same rule as signal reads: put the read in the JSX, a memo, or an effect's compute function.
 Development prints `[STRICT_READ_UNTRACKED]` with the component name.
 
-### A `Map`, `Date`, or class instance inside the store does not track
+### A `Map` or `Date` inside the store does not track
 
 Plain objects, arrays, and class instances are wrapped in proxies; platform objects such as `Map`, `Set`, and `Date` are stored as they are.
 Reassign the property to a new instance through the setter to notify readers, or keep the data in plain objects and arrays.
+
+### A class instance in the store stopped working
+
+A method on the instance changes its own fields, such as a state machine actor recording a subscriber, and the change is ignored because it was not made through the setter.
+Keep objects that manage their own state outside the store, or hold them in a store created with `{ shallow: true }`, which stores its values as they are.
 
 ## Recap
 
@@ -292,6 +331,7 @@ Reassign the property to a new instance through the setter to notify readers, or
 - Derive a collection with `createProjection`, which reconciles results by `id`; derive a scalar with `createMemo`.
 - Load server data with `createStore(async () => ...)`; each response reconciles into the same proxy, and an array root takes a `[]` seed.
 - Make optimistic writes inside an `action` on a `createOptimisticStore`, and `refresh` the source when the request settles.
+- Class instances in a store track through their getters and methods; keep objects that manage their own state out of the store, or in a `shallow` one.
 
 ## Next steps
 

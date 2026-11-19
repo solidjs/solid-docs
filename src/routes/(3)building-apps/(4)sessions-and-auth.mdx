@@ -235,17 +235,14 @@ When many entry points need the same answer, a [middleware](/building-apps/middl
 
 ```ts
 // src/middleware.ts
-import { getRequestEvent } from "@solidjs/web";
+import type { StartMiddleware } from "@solidjs/vite-plugin";
 import { getSession } from "./server/session";
 
-async function attachCustomer(
-	_request: Request,
-	next: () => Promise<Response>
-) {
+const attachCustomer: StartMiddleware = async (event, next) => {
 	const session = await getSession();
-	getRequestEvent()!.locals.userId = session?.userId;
+	event.locals.userId = session?.userId;
 	return next();
-}
+};
 ```
 
 Server functions, API handlers, and the page render for that request read that request's event, so `locals.userId` set here is visible to all of them; a server function called during the render gets a derived event with a copy of `locals`, so what it writes stays with the call.

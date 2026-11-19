@@ -227,33 +227,28 @@ Add a middleware after the one that reads the session:
 
 ```ts
 // src/middleware.ts
-import { getRequestEvent } from "@solidjs/web";
+import type { StartMiddleware } from "@solidjs/vite-plugin";
+import { redirect } from "@solidjs/web";
 import { createAPIHandler } from "filesystem-routing/api";
 import routes from "virtual:file-routes";
 import { paths } from "./router";
 
 // attachCustomer from Sessions and auth is defined above this line
 
-function requireAccountSession(
-	request: Request,
-	next: () => Promise<Response>
-) {
-	const url = new URL(request.url);
-	if (
-		url.pathname.startsWith("/account") &&
-		!getRequestEvent()?.locals.userId
-	) {
+const requireAccountSession: StartMiddleware = (event, next) => {
+	const url = new URL(event.request.url);
+	if (url.pathname.startsWith("/account") && !event.locals.userId) {
 		const target = paths["sign-in"]({ next: url.pathname + url.search });
-		return Response.redirect(new URL(target, request.url), 302);
+		return redirect(String(target));
 	}
 	return next();
-}
+};
 
 export default [
 	attachCustomer,
 	requireAccountSession,
 	createAPIHandler(routes),
-];
+] satisfies StartMiddleware[];
 ```
 
 Request `/account/orders` with no cookie and the server answers `302` with `Location: /sign-in?next=%2Faccount%2Forders`, and no component runs.

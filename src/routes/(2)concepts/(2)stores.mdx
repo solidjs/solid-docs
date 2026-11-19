@@ -264,7 +264,7 @@ The [Mutations](/concepts/mutations) page builds this up from the client-only ca
 A class instance in a store is wrapped like a plain object, and `instanceof` still answers its class.
 Its getters and methods run on the store proxy, so they track the fields they read.
 Writes follow the usual rule: a method called on the setter's draft writes through the store and notifies readers, and a write from a method called outside the setter is ignored.
-An object that manages its own state, such as a state machine actor or an API client, needs its writes to land on itself, so keep it out of the store or hold it in a store created with `{ shallow: true }`.
+Fields declared with `#`, such as `#count`, are not reachable through the proxy, so a getter or method that reads one throws when called on a store value.
 
 ```tsx
 class Totals {
@@ -293,6 +293,35 @@ setCart((draft) => {
 
 `cart.summary.total` re-renders when `add` pushes an item through the draft.
 
+### Keep a class out of the store
+
+An object that manages its own state, such as a state machine actor or an API client, needs its writes to land on itself.
+Pass its class to `markRaw` once, and every store keeps instances of that class and its subclasses as they are:
+
+```tsx
+import { createStore, markRaw } from "solid-js";
+
+class Connection {
+	#socket: WebSocket | undefined;
+
+	get open() {
+		return this.#socket !== undefined;
+	}
+
+	connect(url: string) {
+		this.#socket = new WebSocket(url);
+	}
+}
+markRaw(Connection);
+
+const [session] = createStore({ connection: new Connection() });
+
+session.connection instanceof Connection; // the instance itself, not a proxy
+```
+
+The instance does not track its own fields; the property that holds it still tracks reassignment through the setter.
+Mark the class before any store reads an instance of it.
+
 ## Common problems
 
 ### A store write did nothing
@@ -320,7 +349,8 @@ Reassign the property to a new instance through the setter to notify readers, or
 ### A class instance in the store stopped working
 
 A method on the instance changes its own fields, such as a state machine actor recording a subscriber, and the change is ignored because it was not made through the setter.
-Keep objects that manage their own state outside the store, or hold them in a store created with `{ shallow: true }`, which stores its values as they are.
+A getter or method that reads a `#` field throws for the same reason: it runs on the proxy.
+Pass the class to `markRaw` so stores keep its instances as they are, or keep the object outside the store.
 
 ## Recap
 
@@ -331,7 +361,7 @@ Keep objects that manage their own state outside the store, or hold them in a st
 - Derive a collection with `createProjection`, which reconciles results by `id`; derive a scalar with `createMemo`.
 - Load server data with `createStore(async () => ...)`; each response reconciles into the same proxy, and an array root takes a `[]` seed.
 - Make optimistic writes inside an `action` on a `createOptimisticStore`, and `refresh` the source when the request settles.
-- Class instances in a store track through their getters and methods; keep objects that manage their own state out of the store, or in a `shallow` one.
+- Class instances in a store track through their getters and methods; pass the class of an object that manages its own state to `markRaw`.
 
 ## Next steps
 

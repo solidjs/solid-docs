@@ -35,8 +35,27 @@ The read got the current value once and will never update.
 
 ## How to fix it
 
-Move the read into a tracking scope: JSX, a memo, or an effect's compute function.
-If you intentionally want a one-time snapshot, wrap the read in `untrack()` to say so explicitly.
+Move the read to where the value is used, inside a tracking scope: JSX, a memo, an effect's compute function, or an API that takes an accessor.
+
+Do NOT wrap the read in `untrack()` to make the warning go away.
+That keeps the bug (the value still never updates) and only hides the report.
+`untrack` exists for the rare case where a person has decided a value must never follow its source; an agent should not make that call because a warning appeared.
+Pick the repair by what the value is for:
+
+- Rendered: read it in JSX, `<h1>{props.title}</h1>`.
+- Derived: use a function, `const total = () => props.price * props.qty`, or `createMemo`.
+- An input to async data: read it in the compute, `createMemo(() => fetchUser(props.id))`.
+- Passed to a hook or primitive: pass an accessor, `useThing(() => props.id)`, not `useThing(props.id)`.
+- The seed of local editable state: use a writable derived signal, `createSignal(() => props.initial)`, which resets when the source changes.
+- The initial value of a form control: `defaultValue={props.initial}` on the element.
+- Needed by a side effect: `createEffect(() => props.id, (id) => ...)`.
+- Needed when an event fires: read it inside the handler, `onClick={() => save(props.id)}`.
+- An argument of a flow callback (`<For>`, `<Show>`): read the accessor in JSX inside the callback, not at its top.
+- Config for an object built once (a client, an actor, a chart): build it in a memo over the reads so it is rebuilt, or apply changes to it in an effect.
+
+Writing a hook or library adapter: take `() => T` (or `T | (() => T)`) and read it inside your own memos and effects.
+A hook that wraps its argument reads in `untrack` to be "warning-free" freezes every caller's value; the warning was pointing at that.
+Destructuring props (`function C({ id })`) is the same read: use `props.id`.
 
 When the context is "an event handler expression", the read is in the expression an element's handler is bound from (`onClick={selected() ? a : b}`, `onClick={makeHandler(id())}`, or a component prop forwarded to an element that the parent passed a reactive expression).
 Handlers are bound once and are not reactive: move the read inside the handler function (`onClick={() => (selected() ? a() : b())}`), and pass plain functions down as handler props.

@@ -100,8 +100,8 @@ Reserve `ownedWrite: true` for an internal signal that intentionally accepts in-
 
 Solid 2 warns when a component body reads a reactive value at top level because the read is outside a tracking scope.
 Keep reactive props and store properties inside JSX expressions or computations.
-Wrapping the read in [`untrack`](/reference/solid-js/reactivity/untrack) silences the warning but keeps the value stale, so it is not a fix.
 Move the read to where the value is used, or pass an accessor to the hook that needs it.
+Use [`untrack`](/reference/solid-js/reactivity/untrack) only for an intentional one-time read of a value that must never update, not to silence the warning.
 
 ```tsx
 // Solid 1 code that loses reactivity in Solid 2
@@ -343,7 +343,7 @@ On native elements, `classList`, `use:`, `on:`, `oncapture:`, `attr:`, and `bool
   Only `on` followed by an uppercase letter is an event handler; a lowercase `onclick` compiles to a plain attribute without an error, and development warns `[LOWERCASE_EVENT_ATTRIBUTE]` when it receives a function.
 - Replace `attr:` and `bool:` with standard attributes and boolean presence.
 - Remove `/*@once*/`.
-  Keep values reactive, and use DOM default properties such as `defaultValue` for initial state.
+  Keep values reactive, use DOM default properties such as `defaultValue` for initial state, or take a narrow JavaScript snapshot with `untrack`.
 
 Rendering into nested roots, `ShadowRoot` instances, or portals needs integration testing.
 Solid 2 scopes delegated events to each render root and disposes those listeners with the root.

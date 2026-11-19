@@ -81,10 +81,16 @@ return <p>Subtotal: ${subtotal()}</p>;
 
 Now the read of `quantity()` happens when the JSX calls `subtotal()`, inside a tracking scope, and the subtotal updates.
 
-Do not wrap the read in [`untrack`](/reference/solid-js/reactivity/untrack) to make the warning go away.
-`untrack` reads without subscribing and without the warning, so the value is still computed once and the only sign of the bug is gone.
-Move the read to where the value is used: JSX, a function or memo, an effect's compute function, the event handler, or an accessor passed to a hook.
-To seed editable state from a value, use a writable derived signal, `createSignal(() => props.initial)`, which resets when the source changes.
+Occasionally you want the one-time snapshot, a value that must never update.
+Say so with [`untrack`](/reference/solid-js/reactivity/untrack), which reads without subscribing and without the warning:
+
+```tsx
+const initialQuantity = untrack(quantity);
+```
+
+Use `untrack` only when you have decided the value never follows its source.
+It silences the warning without changing what happens, so it does not fix a value that should update.
+To seed editable state that resets when the source changes, use a writable derived signal, `createSignal(() => props.initial)`, instead.
 
 The setter accepts a value or an updater function.
 The updater receives the latest value, including one that was set earlier in the same event and has not landed yet:

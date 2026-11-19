@@ -1,11 +1,11 @@
 ---
 title: "Middleware and API routes"
 version: "2.0"
-description: "Run code in front of every request with fetch-style middleware, share state with pages and server functions through the request event, and answer HTTP requests from route modules."
+description: "Run code in front of every request with start-mode middleware, share state with pages and server functions through the request event, and answer HTTP requests from route modules."
 ---
 
 Some work belongs in front of the app rather than inside it: reading the session cookie once instead of in every server function, turning an uncaught error into a 500 instead of a blank page, answering `GET /api/products` for a partner's script that is not a browser.
-Start mode runs a chain of fetch-style middleware before its request handler, and the `fullstack` project shape puts an API-route dispatcher in that chain.
+Start mode runs a chain of middleware before its request handler, and the `fullstack` project shape puts an API-route dispatcher in that chain.
 
 Most apps need one or two middleware of the first shape below and, if anything outside the app needs the data, an API route.
 This page builds on the chain the template ships, then covers API routes.
@@ -26,10 +26,11 @@ The module exports an array of middleware functions:
 
 ```ts
 // src/middleware.ts
+import type { StartMiddleware } from "@solidjs/vite-plugin";
 import { createAPIHandler } from "filesystem-routing/api";
 import routes from "virtual:file-routes";
 
-export default [createAPIHandler(routes)];
+export default [createAPIHandler(routes)] satisfies StartMiddleware[];
 ```
 
 Every request the server handles, whether a page render, a server-function call, or an API route, passes through this array in order before reaching the handler.
@@ -41,14 +42,16 @@ The named `pageRoutes` export is the page tree with grouping segments stripped, 
 
 ## Add a middleware
 
-A middleware is a function of the request and a `next` continuation:
+A middleware is a function of the request event and a `next` continuation:
 
 ```ts
-type Middleware = (
-	request: Request,
-	next: (request?: Request) => Promise<Response>
-) => Response | Promise<Response>;
+import type { StartMiddleware } from "@solidjs/vite-plugin";
+
+// (event: StartRequestEvent, next: () => Promise<Response>) => Response | Promise<Response>
+const middleware: StartMiddleware = (event, next) => next();
 ```
+
+The request is `event.request`, and `next()` takes no arguments.
 
 Three shapes cover most needs.
 
@@ -57,20 +60,17 @@ Three shapes cover most needs.
 Read the session and put the customer where every later step can see it:
 
 ```ts
-import { getRequestEvent } from "@solidjs/web";
+import type { StartMiddleware } from "@solidjs/vite-plugin";
 import { getSession } from "./server/session";
 
-async function attachCustomer(
-	_request: Request,
-	next: () => Promise<Response>
-) {
+const attachCustomer: StartMiddleware = async (event, next) => {
 	const session = await getSession();
-	getRequestEvent()!.locals.userId = session?.userId;
+	event.locals.userId = session?.userId;
 	return next();
-}
+};
 ```
 
-`getRequestEvent()` returns this request's event, which the page render sees directly and a server function sees as a derived copy with the same `locals`, so `locals.userId` set here is readable from a server function without being passed around.
+`event` is this request's event, which the page render sees directly and a server function sees as a derived copy with the same `locals`, so `locals.userId` set here is readable from a server function without being passed around.
 [Sessions and auth](/building-apps/sessions-and-auth) builds `getSession()`, which reads the signed cookie from that same event.
 
 ### Continue, then change the response
@@ -79,23 +79,17 @@ Nothing is written to the network until the outermost middleware returns, so hea
 
 ```ts
 // Avoid: headers on the request never reach the browser
-async function securityHeaders(
-	request: Request,
-	next: () => Promise<Response>
-) {
-	request.headers.set("x-frame-options", "DENY");
+const securityHeaders: StartMiddleware = (event, next) => {
+	event.request.headers.set("x-frame-options", "DENY");
 	return next();
-}
+};
 
 // Prefer: headers on the response that comes back
-async function securityHeaders(
-	_request: Request,
-	next: () => Promise<Response>
-) {
+const securityHeaders: StartMiddleware = async (_event, next) => {
 	const response = await next();
 	response.headers.set("x-frame-options", "DENY");
 	return response;
-}
+};
 ```
 
 With the `Avoid` version the header never reaches the browser: the request's headers describe what the browser sent, not what the server answers, and some runtimes make an incoming request's headers immutable so the write throws.
@@ -106,15 +100,20 @@ With the `Prefer` version, the header is on every response, page and API alike.
 Return a `Response` without calling `next()`:
 
 ```ts
-function requireHttps(request: Request, next: () => Promise<Response>) {
-	const url = new URL(request.url);
+import { redirect } from "@solidjs/web";
+
+const requireHttps: StartMiddleware = (event, next) => {
+	const url = new URL(event.request.url);
 	if (url.protocol === "http:" && !url.hostname.endsWith("localhost")) {
 		url.protocol = "https:";
-		return Response.redirect(url, 308);
+		return redirect(url.href, 308);
 	}
 	return next();
-}
+};
 ```
+
+Use `redirect()` from `@solidjs/web` rather than `Response.redirect()`.
+`Response.redirect()` returns a response with immutable headers, so a middleware earlier in the chain that sets a header on the way out, such as `securityHeaders`, throws a `TypeError` and the request fails with a `500`.
 
 Add the functions to the array in the order they should run:
 
@@ -124,7 +123,7 @@ export default [
 	securityHeaders,
 	attachCustomer,
 	createAPIHandler(routes),
-];
+] satisfies StartMiddleware[];
 ```
 
 The request travels down the array and the response travels back up it.
@@ -134,7 +133,19 @@ The request travels down the array and the response travels back up it.
 `securityHeaders` runs before `attachCustomer` on the way in and receives its response on the way out.
 Put the session reader before anything that needs `locals.userId`, and put the API handler after it if API routes need the customer.
 
-Pass a `Request` to `next(request)` to replace the request for the rest of the chain, for example after rewriting a URL.
+To replace the request for the rest of the chain, for example after rewriting a URL, assign `event.request` before calling `next()`:
+
+```ts
+const rewriteLegacy: StartMiddleware = (event, next) => {
+	const url = new URL(event.request.url);
+	if (url.pathname === "/legacy") {
+		url.pathname = "/products";
+		event.request = new Request(url, event.request);
+	}
+	return next();
+};
+```
+
 Do not call `next()` twice from one invocation.
 
 :::note[In development, unhandled non-page requests fall through to Vite]
@@ -147,16 +158,16 @@ Production has no Vite pipeline, so every request that reaches the end of the ch
 A middleware that wraps `next()` in `try`/`catch` sees anything the rest of the chain throws:
 
 ```ts
-import { getRequestEvent, reportRequestFailure } from "@solidjs/web";
+import { reportRequestFailure } from "@solidjs/web";
 
-async function catchErrors(_request: Request, next: () => Promise<Response>) {
+const catchErrors: StartMiddleware = async (event, next) => {
 	try {
 		return await next();
 	} catch (error) {
-		reportRequestFailure(error, getRequestEvent()!);
+		reportRequestFailure(error, event);
 		return Response.json({ error: "Internal Server Error" }, { status: 500 });
 	}
-}
+};
 ```
 
 Report the real error and return a generic body.
@@ -242,7 +253,7 @@ API routes are for everything else: webhooks, other services, scripts, and publi
 
 :::deep-dive[What is Solid's and what is the router's]
 The method-export convention, the route matching, and `createAPIHandler` come from `filesystem-routing`, the same package that scans `src/routes` for pages.
-The contract Solid's server runtime exposes is the fetch-style `(request, next)` middleware shape and the request event it runs under; any dispatcher that fits that shape can sit in the chain, so a project on another router or another file convention swaps the dispatcher, not the chain.
+The contract start mode exposes is the `(event, next)` middleware shape and the request event it runs under; any dispatcher that fits that shape can sit in the chain, so a project on another router or another file convention swaps the dispatcher, not the chain.
 Under the hood, the dispatcher matches the URL against the flat manifest with a radix tree, writes the matched params onto the request event, and imports the handler module on demand, so handler code and the server-only modules it imports never enter the client bundle.
 :::
 
@@ -263,6 +274,17 @@ Return a `Response` or remove the component.
 A non-`GET` handler returned `undefined`.
 Only a `GET` may decline; return a `Response`, a string, or a JSON value.
 
+### `start.middleware: next() takes no arguments`
+
+The middleware called `next(request)`, the shape from before `@solidjs/vite-plugin` 3.0.
+Assign `event.request` and call `next()` instead.
+A middleware written as `(request, next)` also receives the event as its first argument, so `request.url` is `undefined`; read `event.request.url`.
+
+### A redirect from middleware answers `500` with a `TypeError`
+
+A middleware returned `Response.redirect()`, and a middleware before it set a header on that response on the way out.
+Return `redirect()` from `@solidjs/web` instead; its headers can still be changed.
+
 ### Headers set in middleware are missing on a streamed page
 
 They were set on the request before `await next()`, not on the returned response.
@@ -275,8 +297,8 @@ Keep one.
 
 ## Recap
 
-- Middleware is `(request, next) => Response`; export an array and the request runs down it, the response back up.
-- Read the request and write `locals` before `next()`; change headers on the response after it.
+- Middleware is `(event, next) => Response`, typed `StartMiddleware`; export an array and the request runs down it, the response back up.
+- Read `event.request` and write `event.locals` before `next()`; change headers on the response after it.
 - Return without calling `next()` to stop the chain, and never call `next()` twice.
 - Catch errors in one middleware that logs the real error and returns a generic body.
 - A file under `src/routes` is a route when it has a default export or, with `httpMethods`, an uppercase method export; anything else there is ignored.

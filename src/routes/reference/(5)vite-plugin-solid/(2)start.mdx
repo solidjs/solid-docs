@@ -103,11 +103,15 @@ The handler removes an authored hydration script from that static shell.
 Specifies a server-only module whose default export is one middleware function or an array.
 
 ```ts
-type Middleware = (
-	request: Request,
-	next: (request?: Request) => Response | Promise<Response>
+type StartMiddleware = (
+	event: StartRequestEvent,
+	next: () => Promise<Response>
 ) => Response | Promise<Response>;
 ```
+
+A middleware receives the request event; the request is `event.request`.
+`next()` takes no arguments: assign `event.request` before calling it to pass a different request down the chain.
+Set per-request render inputs, such as `event.renderMode` and `event.nonce`, before calling `next()`, because the page render runs inside it.
 
 Middleware runs in array order inside the request-event scope.
 The middleware fronts every request dispatched by the generated handler, including pages and the server-function endpoint.

@@ -58,7 +58,7 @@ The host runs that handler on Node, a Fetch-based runtime, or a provider adapter
 import { serverFunctions } from "@solidjs/prerender/integration";
 import { prerender } from "prerender-crawler/vite";
 
-solid({ start: true, ssr: true, serverFunctions: true });
+solid({ start: { renderMode: "async" }, ssr: true, serverFunctions: true });
 prerender({ mode: "static", integrations: [serverFunctions()] });
 ```
 
@@ -68,6 +68,10 @@ This is the `fullstack` shape with the crawler plugin added; no shape ships it p
 The server rendering happens once, during `vite build`.
 The `prerender-crawler` plugin starts at `/`, renders each page through the server build, writes the HTML, and follows same-origin links to find the rest.
 Server functions wrapped in `prerendered()` from `@solidjs/prerender` run during the build and their results are written as JSON files that the deployed client fetches instead of calling a server.
+
+`renderMode: "async"` makes each page wait for every `Loading` boundary before it is written.
+With the default `"stream"` mode, a page whose data is still loading when the shell is ready is written with the `Loading` fallback in place and the content in a `<template>` that an inline script swaps in.
+A client that does not run JavaScript, such as a crawler or a browser with scripts disabled, then sees the fallback instead of the content.
 
 What the user sees first is the complete page, as with SSR.
 What you deploy is `dist/client` only, as with the static shell.

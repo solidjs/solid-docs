@@ -141,6 +141,36 @@ Return nothing to keep `App`.
 The plugin ignores `serverRenderSetup` in client mode and rejects it when SSR uses authored entries.
 The function does not run for server-function endpoint dispatch.
 
+### `renderMode`
+
+- **Type:** `"stream" | "async"`
+- **Default:** `"stream"`
+
+Sets how an SSR page render becomes a response body.
+
+`"stream"` flushes the document shell as soon as it is ready, with every `Loading` fallback in place, and streams each boundary's content in later chunks.
+Inline scripts swap that content into the page as it arrives.
+A client that does not run JavaScript, such as a crawler or `curl`, sees the fallbacks.
+
+`"async"` waits until every boundary has settled and sends one complete document with no fallbacks, swap templates, or swap scripts.
+Hydration data is still serialized, so the browser hydrates the page the same way.
+The first byte waits for the slowest boundary, and the whole page is buffered in memory.
+`deferStream` has no effect, and a `Location` header written during the render becomes a real `3xx` response.
+Prerendered sites use `"async"` so that each written page contains its content.
+
+To choose per request, set `event.renderMode` in [`middleware`](#middleware) before calling `next()`:
+
+```ts
+if (/bot|crawler/i.test(event.request.headers.get("user-agent") ?? "")) {
+	event.renderMode = "async";
+}
+```
+
+A host that calls the handler directly can pass `handleRequest(request, { renderMode: "async" })`.
+That option takes precedence over `event.renderMode`, which takes precedence over this setting.
+The mode applies to generated and authored entries alike.
+In client mode the served shell has no boundaries to settle, so `renderMode` has no effect.
+
 ### `productionErrorBoundary`
 
 - **Type:** `boolean`

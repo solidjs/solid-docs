@@ -88,7 +88,9 @@ Say so with [`untrack`](/reference/solid-js/reactivity/untrack), which reads wit
 const initialQuantity = untrack(quantity);
 ```
 
-Use `untrack` only when you have decided the value never follows its source.
+Use `untrack` only when you have decided the value never follows its source, and only when the value is never downstream of async.
+A value that comes from async data can still be pending, and then the read throws, or be in the middle of a transition, and then the snapshot is the old committed value.
+A component rarely knows where its props come from, so a prop is seldom safe to snapshot.
 It silences the warning without changing what happens, so it does not fix a value that should update.
 To seed editable state that resets when the source changes, use a writable derived signal, `createSignal(() => props.initial)`, instead.
 

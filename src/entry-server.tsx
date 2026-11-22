@@ -12,11 +12,18 @@ export default createHandler(() => (
 							name="viewport"
 							content="width=device-width, initial-scale=1"
 						/>
-						<link rel="icon" href="/favicon.ico" />
+						<link rel="icon" href="/favicon.ico" sizes="48x48" />
 						<link
-							rel="alternate icon"
+							rel="icon"
 							href="/favicon.svg"
 							type="image/svg+xml"
+							media="(prefers-color-scheme: light)"
+						/>
+						<link
+							rel="icon"
+							href="/favicon-dark.svg"
+							type="image/svg+xml"
+							media="(prefers-color-scheme: dark)"
 						/>
 						<script src="/scripts/browser-specific.js" type="module" />
 						{assets}

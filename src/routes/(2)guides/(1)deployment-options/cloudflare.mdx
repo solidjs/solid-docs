@@ -8,6 +8,7 @@ use_cases: >-
   publishing
 tags:
   - cloudflare
+  - workers
   - pages
   - deployment
   - wrangler
@@ -15,14 +16,76 @@ tags:
   - jamstack
 version: "1.0"
 description: >-
-  Deploy Solid apps to Cloudflare Pages for fast, global edge hosting with
-  built-in CDN and simple Git integration setup.
+  Deploy Solid apps to Cloudflare Workers or Cloudflare Pages for fast, global
+  edge hosting with built-in CDN and simple Git integration setup.
 ---
+
+Cloudflare offers two platforms for deploying Solid apps:
+
+- [Cloudflare Workers](https://workers.cloudflare.com/) is Cloudflare's recommended platform, which serves static assets through [Workers Assets](https://developers.cloudflare.com/workers/static-assets/) and can also run server-side code on the edge.
+- [Cloudflare Pages](https://pages.cloudflare.com/) is Cloudflare's original JAMstack platform for frontend projects.
+
+Both are covered below.
+
+## Deploying to Cloudflare Workers
+
+:::note
+Support for SolidStart projects on Cloudflare Workers is currently in beta.
+:::
+
+The steps below follow Cloudflare's [Solid framework guide for Workers](https://developers.cloudflare.com/workers/framework-guides/web-apps/more-web-frameworks/solid/).
+
+### Deploying an existing SolidStart project
+
+If you already have a SolidStart project, run `wrangler deploy` in the project directory.
+Wrangler automatically detects SolidStart, generates the necessary configuration, and deploys your project:
+
+```bash frame="none"
+npx wrangler deploy
+```
+
+You can read more about this in Cloudflare's [automatic project configuration](https://developers.cloudflare.com/workers/framework-guides/automatic-configuration/) documentation.
+
+### Creating a new project
+
+Use the [create-cloudflare](https://www.npmjs.com/package/create-cloudflare) CLI (C3) to set up a new project.
+C3 creates a new project directory, starts Solid's official setup tool, and offers to deploy right away:
+
+```package-create
+cloudflare@latest -- my-solid-app --framework=solid --experimental
+```
+
+Then move into the project directory:
+
+```bash frame="none"
+cd my-solid-app
+```
+
+### Developing locally
+
+Run the following command in the project directory to start a local dev server and preview your project while you work:
+
+```package-run
+dev
+```
+
+### Deploying
+
+The following command builds and deploys your project to a `*.workers.dev` subdomain (or a [custom domain](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/)), from your machine or from CI:
+
+```package-run
+deploy
+```
+
+Once deployed, your Solid app is live on Cloudflare Workers.
+Your app can also use [bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/) to access Cloudflare's compute, storage, AI, and other platform primitives.
+
+## Deploying to Cloudflare Pages
 
 [Cloudflare Pages](https://pages.cloudflare.com/) is a JAMstack platform for frontend developers, where JAMstack stands for JavaScript, APIs, and Markup.
 For additional details and features, you can [visit the Cloudflare website](https://pages.cloudflare.com/).
 
-## Using the Cloudflare's web interface
+### Using the Cloudflare's web interface
 
 1. Navigate to the [Cloudflare login page](https://dash.cloudflare.com/login) and log in or sign up.
 
@@ -64,10 +127,10 @@ For additional details and features, you can [visit the Cloudflare website](http
 5. Once you've configured the settings, click "Save and Deploy."
    In a few minutes, your Solid project will be live on Cloudflare Pages, accessible via a URL formatted as `project_name.pages.dev`.
 
-## Using the Wrangler CLI
+### Using the Wrangler CLI with Pages
 
-Wrangler is a command-line tool for building Cloudflare Workers.
-Here are the steps to deploy your Solid project using Wrangler.
+Wrangler is a command-line tool for building Cloudflare Workers and Pages projects.
+Here are the steps to deploy your Solid project to Pages using Wrangler.
 
 1. Use your package manager of choice to install the Wrangler command-line tool:
 

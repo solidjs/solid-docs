@@ -161,6 +161,7 @@ export default defineConfig({
 					minDepth: 2,
 				},
 				packageManagers: {
+					show: ["npm", "pnpm", "yarn", "bun", "deno", "vlt"],
 					presets: {
 						npm: {
 							install: "npm i :content",
@@ -216,6 +217,17 @@ export default defineConfig({
 							run: "deno run :content",
 							exec: "dpx :content",
 							create: "deno init --npm :content",
+						},
+						vlt: {
+							install: "vlt install :content",
+							"install-dev": "vlt install :content -D",
+							"install-global": "vlt install :content -g",
+							"install-local": "vlt install",
+							remove: "vlt uninstall :content",
+							update: "vlt update :content",
+							run: "vlt run :content",
+							exec: "vlx -- :content",
+							create: "vlt create :content",
 						},
 					},
 				},
